@@ -1,5 +1,5 @@
-ATOM
-----
+# ATOM
+* * *
 
 ###  What is this?
 ATOM (Atmospheric and Ocean Model) is a fast climate model.
@@ -44,6 +44,8 @@ In your browser window (Safari, Firefox, Chrome), type:
            https://**YOUR USERNAME**@bitbucket.org/nickywright/atom/get/**COMMITNUMBER**.tar.gz
 
 COMMITNUMBER can be found under the Commit heading on https://bitbucket.org/nickywright/atom/commits/all
+
+* * *
 
 ### Summary of changes
 07 Jan 2015: Version 1.0
