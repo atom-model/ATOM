@@ -11,14 +11,13 @@ ADD MORE DETAILS
 - Present day precipitation: included from NASA
 - Present day salinity: included from NASA
 
-This bitbucket repository requires mercurial ([http://mercurial.selenic.com/downloads]
-(http://mercurial.selenic.com/downloads)). Macports:  sudo port install mercurial
+This bitbucket repository requires mercurial (http://mercurial.selenic.com/downloads). Macports:  sudo port install mercurial
 
 * * *
 
 ### How do I download ATOM?
-In terminal: `hg clone https://yourusername@bitbucket.org/nickywright/atom`
-
+In terminal: `hg clone https://**YOUR USERNAME**@bitbucket.org/nickywright/atom`
+The appropriate link can also be found at the top of this page.
 
 ### How do I add or change stuff?
 
@@ -46,6 +45,5 @@ In your browser window (Safari, Firefox, Chrome), type:
 COMMITNUMBER can be found under the Commit heading on https://bitbucket.org/nickywright/atom/commits/all
 
 * * *
-
 ### Summary of changes
 07 Jan 2015: Version 1.0
