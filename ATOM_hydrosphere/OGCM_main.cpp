@@ -159,25 +159,61 @@ int main ( int argc, char *argv[ ] )
 // 	classe Array for 1-D, 2-D und 3-D field declarations
 
 // time slices to be run after actualizing 
-	i_time_slice_max = 15;
+	i_time_slice_max = 50;
 	int *time_slice = new int [ i_time_slice_max ]; 	// time slices in Ma
 
 	time_slice [ 0 ] = 0;							// Golonka-Bathymetry
-	time_slice [ 1 ] = 10;
-	time_slice [ 2 ] = 20;
-	time_slice [ 3 ] = 30;
-	time_slice [ 4 ] = 40;
-	time_slice [ 5 ] = 50;
-	time_slice [ 6 ] = 60;
-	time_slice [ 7 ] = 70;
-	time_slice [ 8 ] = 80;
-	time_slice [ 9 ] = 90;
-	time_slice [ 10 ] = 100;
-	time_slice [ 11 ] = 110;
-	time_slice [ 12 ] = 120;
-	time_slice [ 13 ] = 130;
-	time_slice [ 14 ] = 140;
-
+	time_slice [ 1 ] = 1;
+	time_slice [2] = 2;
+	time_slice [3] = 3;
+	time_slice [4] = 4;
+	time_slice [5] = 5;
+	time_slice [6] = 6;
+	time_slice [7] = 7;
+	time_slice [8] = 8;
+	time_slice [9] = 9;
+	time_slice [10] = 10;
+	time_slice [11] = 11;
+	time_slice [12] = 12;
+	time_slice [12] = 12;
+	time_slice [13] = 13;
+	time_slice [14] = 14;
+	time_slice [15] = 15;
+	time_slice [16] = 16;
+	time_slice [17] = 17;
+	time_slice [18] = 18;
+	time_slice [19] = 19;
+	time_slice [20] = 20;
+	time_slice [21] = 21;
+	time_slice [22] = 22;
+	time_slice [23] = 23;
+	time_slice [24] = 24;
+	time_slice [25] = 25;
+	time_slice [26] = 26;
+	time_slice [27] = 27;
+	time_slice [28] = 28;
+	time_slice [29] = 29;
+	time_slice [30] = 30;
+	time_slice [31] = 31;
+	time_slice [32] = 32;
+	time_slice [33] = 33;
+	time_slice [34] = 34;
+	time_slice [35] = 35;
+	time_slice [36] = 36;
+	time_slice [37] = 37;
+	time_slice [38] = 38;
+	time_slice [39] = 39;
+	time_slice [40] = 40;
+	time_slice [41] = 41;
+	time_slice [42] = 42;
+	time_slice [43] = 43;
+	time_slice [44] = 44;
+	time_slice [45] = 45;
+	time_slice [46] = 46;
+	time_slice [47] = 47;
+	time_slice [48] = 48;
+	time_slice [49] = 49;
+	time_slice [50] = 50;
 
 
 	Array_1D	rad ( im, 0., r0, dr );							// radial coordinate direction

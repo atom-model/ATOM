@@ -74,12 +74,12 @@ using namespace std;
 // "IceShield 0"				without inclusion of ice shields
 
 // Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
-// for 20 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005 
+// for 20 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005
 
-// Definition of meridional and longitudinal step sizes 
+// Definition of meridional and longitudinal step sizes
 // for example: dthe = the_Grad / pi180 = 1.125 / 57.3 = 0.01963
 
-// maximum velocity in the subtropical jet  w_max = 1.2 [ / ] compares to 30 m/s = 108 km/h as annual mean 
+// maximum velocity in the subtropical jet  w_max = 1.2 [ / ] compares to 30 m/s = 108 km/h as annual mean
 
 // minimum temperature at the tropopause t_min = .789 compares to -60° C compares to 213 K
 // temperature t_0 = 1.0 compares to 0° C compares to 273,15 K
@@ -92,13 +92,16 @@ using namespace std;
 
 int main ( int argc, char *argv[ ] )
 {
-// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km ), 
+// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km ),
 // maximum number of overall iterations ( nm ),
 // maximum number of inner velocity loop iterations ( velocity_iter_max and velocity_iter_max_2D ),
 // maximum number of outer pressure loop iterations ( pressure_iter_max and pressure_iter_max_2D )
+//	slice_mode <= multiple_mode runs a series of multiple time slices
+//	slice_mode <= single_mode runs one single time slice
 
 	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;
 	int velocity_iter_max_2D = 10, pressure_iter_max_2D = 5;
+	string slice_mode( "multiple_mode" );
 
 	int n, i_radial, j_longal, k_zonal, i_max;
 	int velocity_iter, pressure_iter, pressure_iter_aux, velocity_iter_2D, pressure_iter_2D;
@@ -118,7 +121,7 @@ int main ( int argc, char *argv[ ] )
 	const double buoyancy = 1.;								// computation with buoyancy
 	const double CO2 = 1.;									// computation with CO2
 
-	const int declination = 0;									// position of sun axis, today 23,4° 
+	const int declination = 0;									// position of sun axis, today 23,4°
 																				// 21.12.: -23,4°, am 21.3. und 23.9.: 0°
 																				// 21.6.: +23,4°, in between sin form
 	const int sun_position_lat = 0;							// position of sun j = 120 means 30°S, j = 60 means 30°N
@@ -161,8 +164,8 @@ int main ( int argc, char *argv[ ] )
 	const double cp_l = 1870.;								// specific heat capacity of water vapour at constant pressure and 20°C in J/( kg K )
 	const double r_0_air = 1.2041;							// density of air in kg/m3 at 20°C
 	const double r_0_water_vapour = 0.0094;		// density of water vapour in kg/m3 at 25°C and dewpoint temperature at 10°C
-	const double mue_air = 17.1;							// dynamic viscosity of air in muePa * s at 20°C
-	const double mue_water = 1000.;					// dynamic viscosity of water in muePa * s at 20°C
+//	const double mue_air = 17.1;							// dynamic viscosity of air in muePa * s at 20°C
+//	const double mue_water = 1000.;					// dynamic viscosity of water in muePa * s at 20°C
 	const double r_0_co2 = 0.0019767;					// density of CO2 in kg/m3 at 25°C
 	const double c_0 = .035;									// maximum value of water vapour in kg / kg
 	const double co2_0 = 280.;								// maximum value of CO2 in ppm
@@ -194,7 +197,7 @@ int main ( int argc, char *argv[ ] )
 	double c_ocean_minus = 1.;								// water vapour reduction on sea surface ( 100% )
 
 	double co2_Average = 280.;								// rate of CO2 at preindustrial times
-	double co2_equator = 280.;								// maximum rate of CO2 at sea level at equator, 1. compares to 280 ppm
+	double co2_equator = 280.;								// maximum rate of CO2 at sea level at equator, 1. compares to 280 ppmweird
 	double co2_tropopause = 280.;							// minimum rate of CO2 at tropopause  0 ppm
 	double co2_pole = 260.;									// percentage of CO2 of the sea surface
 	double co2_vegetation = 0.16667;					// value compares to 100/600Gt per year on the global surface for the purpose of testing
@@ -205,25 +208,62 @@ int main ( int argc, char *argv[ ] )
 	double epsilon_atmos = .77;								// capability of emissions in the atmosphere
 
 
-// time slices to be run after actualizing 
-	i_time_slice_max = 15;
+// time slices to be run after actualizing
+	i_time_slice_max = 50;
 	int *time_slice = new int [ i_time_slice_max ]; 	// time slices in Ma
 
 	time_slice [ 0 ] = 0;												// Golonka Bathymetry and Topography
-	time_slice [ 1 ] = 10;
-	time_slice [ 2 ] = 20;
-	time_slice [ 3 ] = 30;
-	time_slice [ 4 ] = 40;
-	time_slice [ 5 ] = 50;
-	time_slice [ 6 ] = 60;
-	time_slice [ 7 ] = 70;
-	time_slice [ 8 ] = 80;
-	time_slice [ 9 ] = 90;
-	time_slice [ 10 ] = 100;
-	time_slice [ 11 ] = 110;
-	time_slice [ 12 ] = 120;
-	time_slice [ 13 ] = 130;
-	time_slice [ 14 ] = 140;
+	time_slice [ 1 ] = 1;
+	time_slice [2] = 2;
+	time_slice [3] = 3;
+	time_slice [4] = 4;
+	time_slice [5] = 5;
+	time_slice [6] = 6;
+	time_slice [7] = 7;
+	time_slice [8] = 8;
+	time_slice [9] = 9;
+	time_slice [10] = 10;
+	time_slice [11] = 11;
+	time_slice [12] = 12;
+	time_slice [12] = 12;
+	time_slice [13] = 13;
+	time_slice [14] = 14;
+	time_slice [15] = 15;
+	time_slice [16] = 16;
+	time_slice [17] = 17;
+	time_slice [18] = 18;
+	time_slice [19] = 19;
+	time_slice [20] = 20;
+	time_slice [21] = 21;
+	time_slice [22] = 22;
+	time_slice [23] = 23;
+	time_slice [24] = 24;
+	time_slice [25] = 25;
+	time_slice [26] = 26;
+	time_slice [27] = 27;
+	time_slice [28] = 28;
+	time_slice [29] = 29;
+	time_slice [30] = 30;
+	time_slice [31] = 31;
+	time_slice [32] = 32;
+	time_slice [33] = 33;
+	time_slice [34] = 34;
+	time_slice [35] = 35;
+	time_slice [36] = 36;
+	time_slice [37] = 37;
+	time_slice [38] = 38;
+	time_slice [39] = 39;
+	time_slice [40] = 40;
+	time_slice [41] = 41;
+	time_slice [42] = 42;
+	time_slice [43] = 43;
+	time_slice [44] = 44;
+	time_slice [45] = 45;
+	time_slice [46] = 46;
+	time_slice [47] = 47;
+	time_slice [48] = 48;
+	time_slice [49] = 49;
+	time_slice [50] = 50;
 
 
 // 	class Array for 1-D, 2-D and 3-D field declarations
@@ -332,13 +372,13 @@ int main ( int argc, char *argv[ ] )
 	stringstream My;
 
 // naming a file to read the surface temperature of the modern world
-	string Name_SurfaceTemperature_File; 
+	string Name_SurfaceTemperature_File;
 	stringstream ssNameSurfaceTemperature;
 	ssNameSurfaceTemperature << "SurfaceTemperature.xyz";
 	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
 
 // naming a file to read the surface precipitation by NASA
-	string Name_SurfacePrecipitation_File; 
+	string Name_SurfacePrecipitation_File;
 	stringstream ssNameSurfacePrecipitation;
 	ssNameSurfacePrecipitation << "SurfacePrecipitation_NASA.xyz";
 	Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
@@ -437,17 +477,31 @@ int main ( int argc, char *argv[ ] )
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
+
+
 //	choice of the time slice to be computed
 	time_slice_sequel:
 
-// choice of the time slice by Ma and by author
-	if ( Ma == 0 )
+//	slice_mode <= multiple_mode runs a series of multiple time slices
+//	slice_mode <= single_mode runs one single time slice
+	if ( slice_mode == ( "multiple_mode" ) )
 	{
-		Name_Bathymetry_File = "0Ma_etopo.xyz";
-		Name_Sequel_File = "[0Ma_etopo.xyz]_Sequel_Atm.seq";
-		Name_netCDF_File = "[0Ma_etopo.xyz]_atmosphere.nc";
+// choice of the time slice by Ma and by author
+		if ( Ma == 0 )
+		{
+			Name_Bathymetry_File = "0Ma_etopo.xyz";
+			Name_Sequel_File = "[0Ma_etopo.xyz]_Sequel_Atm.seq";
+			Name_netCDF_File = "[0Ma_etopo.xyz]_atmosphere.nc";
+		}
+		else
+		{
+			My << time_slice [ i_time_slice ] << "Ma_Golonka.xyz";
+			Name_Bathymetry_File = My.str();
+			My.str("");
+			My.ignore(My.rdbuf()->in_avail());
+		}
 	}
-	else 
+	else
 	{
 		My << time_slice [ i_time_slice ] << "Ma_Golonka.xyz";
 		Name_Bathymetry_File = My.str();
@@ -586,7 +640,7 @@ Pressure_loop:
 		n++;
 		if ( n > nm )
 		{
-			cout << endl; 
+			cout << endl;
 			cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
 			cout << endl;
 			break;
@@ -678,7 +732,7 @@ Pressure_iteration_2D:
 //	statements on the convergence und iterational process
 	velocity_iter_2D = 0;
 
-	if ( pressure_iter_2D >= pressure_iter_max_2D + 1 ) 
+	if ( pressure_iter_2D >= pressure_iter_max_2D + 1 )
 	{
 		switch_2D = 1;
 		goto process_3D;
@@ -839,7 +893,7 @@ Pressure_iteration_2D:
 //	if ( ( pressure_iter > pressure_iter_max ) || ( min >= epsres ) )
 	if ( pressure_iter > pressure_iter_max )
 	{
- 
+
 		pressure_iter_aux = pressure_iter - 1;
 
 //		results written in netCDF format
@@ -898,7 +952,96 @@ Pressure_iteration_2D:
 
 
 
+
+//	choice of the next time slice
 	time_slice_change:
+//	slice_mode = single_mode runs one single time slice
+	if ( slice_mode == ( "single_mode" ) ) goto finish;
+
+
+
+// 3D default adjustment
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				for ( int i = 0; i < im; i++ )
+				{
+/*
+					t.x[ i ][ j ][ k ] = tau;											// default
+					u.x[ i ][ j ][ k ] = ua;											// default
+					v.x[ i ][ j ][ k ] = va;											// default
+					w.x[ i ][ j ][ k ] = wa;											// default
+					p.x[ i ][ j ][ k ] = pa;											// default
+					c.x[ i ][ j ][ k ] = ca;											// default
+					co2.x[ i ][ j ][ k ] = co2a;									// default
+
+					tn.x[ i ][ j ][ k ] = tau;											// default
+					un.x[ i ][ j ][ k ] = ua;											// default
+					vn.x[ i ][ j ][ k ] = va;											// default
+					wn.x[ i ][ j ][ k ] = wa;										// default
+					pn.x[ i ][ j ][ k ] = pa;											// default
+					cn.x[ i ][ j ][ k ] = ca;											// default
+					co2n.x[ i ][ j ][ k ] = co2a;									// default
+*/
+					rhs_t.x[ i ][ j ][ k ] = 0.;										// default
+					rhs_u.x[ i ][ j ][ k ] = 0.;										// default
+					rhs_v.x[ i ][ j ][ k ] = 0.;										// default
+					rhs_w.x[ i ][ j ][ k ] = 0.;									// default
+					rhs_p.x[ i ][ j ][ k ] = 0.;										// default
+					rhs_c.x[ i ][ j ][ k ] = 0.;										// default
+					rhs_co2.x[ i ][ j ][ k ] = 0.;									// default
+					aux_u.x[ i ][ j ][ k ] = 0.;									// default
+					aux_v.x[ i ][ j ][ k ] = 0.;									// default
+					aux_w.x[ i ][ j ][ k ] = 0.;									// default
+
+					Latency.x[ i ][ j ][ k ] = 0.;									// default
+					Rain.x[ i ][ j ][ k ] = 0.;										// default
+					Rain_super.x[ i ][ j ][ k ] = 0.;							// default
+					Ice.x[ i ][ j ][ k ] = 0.;											// default
+					IceLayer.x[ i ][ j ][ k ] = 0.;								// default
+					Condensation_3D.x[ i ][ j ][ k ] = 0.;					// default
+					Evaporation_3D.x[ i ][ j ][ k ] = 0.;					// default
+				}
+			}
+		}
+
+
+// 2D default adjustment
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				Vegetation.y[ j ][ k ] = 0.;												// default
+				Evaporation.y[ j ][ k ] = 0.;											// default
+				Condensation.y[ j ][ k ] = 0.;										// default
+				IceAir.y[ j ][ k ] = 0.;														// default
+				Precipitation.y[ j ][ k ] = 0.;											// default
+				precipitable_water.y[ j ][ k ] = 0.;									// default
+				Q_Evaporation.y[ j ][ k ] = 0.;										// default
+				Q_latent.y[ j ][ k ] = 0.;													// default
+				Q_sensible.y[ j ][ k ] = 0.;												// default
+				Q_diff.y[ j ][ k ] = 0.;														// default
+				Evaporation_Haude.y[ j ][ k ] = 0.;								// default
+				Evaporation_Penman.y[ j ][ k ] = 0.;							// default
+				Q_Balance_Radiation.y[ j ][ k ] = 0.;							// default
+				Water_super.y[ j ][ k ] = 0.;											// default
+				Water.y[ j ][ k ] = 0.;														// default
+//				t_j.y[ j ][ k ] = 0.;															// default
+//				c_j.y[ j ][ k ] = 0.;															// default
+//				p_j.y[ j ][ k ] = 0.;															// default
+				Ice_Balance.y[ j ][ k ] = 0.;											// default
+				Ice_Balance_add.y[ j ][ k ] = 0.;									// default
+				Ik.y[ j ][ k ] = 0.;															// default
+				Radiation_Balance_atm.y[ j ][ k ] = 0.;						// default
+				Radiation_Balance_bot.y[ j ][ k ] = 0.;							// default
+				temp_eff_atm.y[ j ][ k ] = 0.;										// default
+				temp_eff_bot.y[ j ][ k ] = 0.;											// default
+				aux_2D_v.y[ j ][ k ] = 0.;												// default
+				aux_2D_w.y[ j ][ k ] = 0.;												// default
+			}
+		}
+
 
 //	choice of the next time slice after nm iterations reached
 	i_time_slice++;
@@ -908,6 +1051,7 @@ Pressure_iteration_2D:
 
 
 //   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 
 
 

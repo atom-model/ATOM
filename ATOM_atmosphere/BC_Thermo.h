@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to prepare the boundary and initial conditions for diverse variables
 */
 
@@ -52,7 +52,7 @@ class BC_Thermo
 		double rR, rg, jmkm, u_sum, v_sum, w_sum, t_sum, c_sum;
 
 		char Temperature_West[50], Salinity_West[50], Temperature_East[50], Salinity_East[50];
- 
+
 		string time_slice_comment, time_slice_number, time_slice_unit;
 		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit;
 		string co2_comment, co2_gain, co2_modern, co2_average, co2_unit;
@@ -79,5 +79,6 @@ class BC_Thermo
 		void BC_Surface_Precipitation ( const string &, Array_2D & );
 
 		void BC_Pressure ( double const, double const, double const, double const, Array_2D &, Array_2D &, Array &, Array &, Array & );
+		void IC_v_w_Smoothing ( int, Array &, Array &, Array &, Array &, Array &, Array & );
 };
 #endif
