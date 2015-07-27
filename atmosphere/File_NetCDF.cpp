@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <netcdf.h>
 #include <cstring>
 //#include <string>
 

@@ -72,7 +72,7 @@ BC_Thermo::~BC_Thermo()
 
 
 
-void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half, int sun_position_lat, int sun_position_lon, int declination, double sun, double ep, double hp, double t_0, double p_0, double t_land_plus, double t_cretaceous_max, double t_average, double co2_Average, double t_equator, double t_pole, double t_tropopause, Array_2D &t_j, Array_2D &aux_2D_h, Array &h, Array &t, Array &tn, Array &p )
+void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half, int sun_position_lat, int sun_position_lon, int declination, double sun, double ep, double hp, double t_0, double p_0, double t_land_plus, double t_Cretaceous_max, double t_Average, double co2_Average, double t_equator, double t_pole, double t_tropopause, Array_2D &t_j, Array_2D &c_j, Array &h, Array &t, Array &p )
 {
 // boundary condition of  temperature on land 
 // parabolic distribution from pole to pole accepted
@@ -91,15 +91,15 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 	t_coeff = t_pole - t_equator;
 
 
-	t_Cretaceous_coeff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
+	t_Cretaceous_coeff = t_Cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
 	if ( Ma == 0 ) 	t_Cretaceous_coeff = 0.;
 	t_Cretaceous = t_Cretaceous_coeff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
 
 
 // CO2-distribution by Ruddiman approximated by a parabola
-	co2_cretaceous = 3.2886 * pow ( ( t_Cretaceous + t_average ), 2 ) - 32.8859 * ( t_Cretaceous + t_average ) + 102.2148;  // in ppm
-	co2_cretaceous = co2_cretaceous - co2_Average;
-	if ( Ma == 0 ) 	co2_cretaceous = 0.;
+	co2_Cretaceous = 3.2886 * pow ( ( t_Cretaceous + t_Average ), 2 ) - 32.8859 * ( t_Cretaceous + t_Average ) + 102.2148;  // in ppm
+	co2_Cretaceous = co2_Cretaceous - co2_Average;
+	if ( Ma == 0 ) 	co2_Cretaceous = 0.;
 
 	cout.precision ( 3 );
 
@@ -116,7 +116,7 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 	temperature_average = " t modern";
 	temperature_unit =  "°C ";
 
-	cout << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_Cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 50 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl;
+	cout << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_Cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 50 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_Average << setw ( 5 ) << temperature_unit << endl;
 
 
 	co2_comment = "      co2 increase at cretaceous times: ";
@@ -125,32 +125,13 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 	co2_average = " co2 modern";
 	co2_unit = "ppm ";
 
-	cout << endl << setiosflags ( ios::left ) << setw ( 48 ) << setfill ( '.' ) << co2_comment << resetiosflags ( ios::left ) << setw ( 12 ) << co2_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << co2_cretaceous << setw ( 5 ) << co2_unit << endl << setw ( 48 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co2_modern << resetiosflags ( ios::left ) << setw ( 15 ) << co2_average << " = "  << setw ( 7 ) << setfill ( ' ' ) << co2_Average << setw ( 5 ) << co2_unit << endl << endl;
+	cout << endl << setiosflags ( ios::left ) << setw ( 48 ) << setfill ( '.' ) << co2_comment << resetiosflags ( ios::left ) << setw ( 12 ) << co2_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << co2_Cretaceous << setw ( 5 ) << co2_unit << endl << setw ( 48 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co2_modern << resetiosflags ( ios::left ) << setw ( 15 ) << co2_average << " = "  << setw ( 7 ) << setfill ( ' ' ) << co2_Average << setw ( 5 ) << co2_unit << endl << endl;
 
 
-	t_Cretaceous = ( t_Cretaceous + t_average + t_0 ) / t_0 - ( ( t_average + t_0 ) / t_0 );    // non-dimensional
-	t_coeff = t_pole - t_equator;
-
-
+	t_Cretaceous = ( t_Cretaceous + t_Average + t_0 ) / t_0 - ( ( t_Average + t_0 ) / t_0 );    // non-dimensional
 
 
 // parabolic temperature distribution
-/*
-		if ( ( Ma == 0 ) && ( h.x[ 0 ][ j ][ k ]  == 1. ) )
-		{
-			for ( k = 0; k < km; k++ )
-			{
-				for ( j = 0; j < jm; j++ )
-				{
-					d_j = ( double ) j;
-					t_j.y[ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_Cretaceous;		// quadratic
-				}
-			}
-		}
-*/
-
-
-
 
 // mean zonal parabolic temperature distribution
 // parabolic temperature distribution from pole to pole accepted
@@ -158,108 +139,21 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 	{
 		if ( sun == 0 )
 		{
-/*
-			for ( j = 0; j < jm; j++ )
+			for ( int k = 0; k < km; k++ )
 			{
-				for ( k = 1; k < km; k++ )
+				for ( int j = 0; j < jm; j++ )
 				{
-					if ( aux_2D_h.y[ j ][ k ]  == 1. )								// gap location to fill with artificial temperature values
+					d_j = ( double ) j;
+					t.x[ 0 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_Cretaceous;
+
+					if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
 					{
-						if ( ( aux_2D_h.y[ j ][ k - 1 ]  == 0. ) && ( aux_2D_h.y[ j ][ k ]  == 1. ) ) l = k;
-//						t_j.y[ j ][ k ] = t_j.y[ j ][ l - 2 ] + t_Cretaceous;
-						t_j.y[ j ][ k ] = t_j.y[ j ][ l - 1 ];
-//						t_j.y[ j ][ k ] = t_j.y[ j ][ l ];
-
-//						t_j.y[ j ][ k ] = .33 * ( t_j.y[ l - 1 ][ k ] + t_j.y[ l - 1 ][ k - 1 ] + t_j.y[ l - 1 ][ k + 1 ] ) + t_Cretaceous;
-//						t_j.y[ j ][ k ] =  t_j.y[ j ][ l - 3 ] - 3. * t_j.y[ j ][ l - 2 ] + 3. * t_j.y[ j ][ l - 1 ] + t_Cretaceous;				// extrapolation
-//						t_j.y[ j ][ k ] = 4. / 3. * t_j.y[ l - 1 ][ k - 1 ] - 1. / 3. * t_j.y[ l - 1 ][ k - 2 ] + t_Cretaceous;				// von Neumann
-// parabolic temperature profil assumed for paleo times, 0.014644 = 4 °C is a correction value to equalize to NASA temperature
-//						d_j = ( double ) j;
-//						t_j.y[ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole;		// quadratic
-
-						t.x[ 0 ][ j ][ k ] = t_j.y[ j ][ k ];
+						t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_land_plus;
 					}
 				}
-
-
-				for ( k = km - 2; k >= 0; k-- )
-				{
-					if ( aux_2D_h.y[ j ][ k ]  == 1. )								// gap location to fill with artificial temperature values
-					{
-						if ( ( aux_2D_h.y[ j ][ k + 1 ]  == 0. ) && ( aux_2D_h.y[ j ][ k ]  == 1. ) ) l = k;
-//						t_j.y[ j ][ k ] = t_j.y[ j ][ l + 1 ] + t_Cretaceous;
-						t_j.y[ j ][ k ] = t_j.y[ j ][ l + 1 ];
-//						t_j.y[ j ][ k ] = t_j.y[ j ][ l ];
-
-//						t_j.y[ j ][ k ] = .33 * ( t_j.y[ l - 1 ][ k ] + t_j.y[ l - 1 ][ k - 1 ] + t_j.y[ l - 1 ][ k + 1 ] ) + t_Cretaceous;
-//						t_j.y[ j ][ k ] =  t_j.y[ j ][ l - 3 ] - 3. * t_j.y[ j ][ l - 2 ] + 3. * t_j.y[ j ][ l - 1 ] + t_Cretaceous;				// extrapolation
-//						t_j.y[ j ][ k ] = 4. / 3. * t_j.y[ l - 1 ][ k - 1 ] - 1. / 3. * t_j.y[ l - 1 ][ k - 2 ] + t_Cretaceous;				// von Neumann
-
-// parabolic temperature profil assumed for paleo times, 0.014644 = 4 °C is a correction value to equalize to NASA temperature
-//						d_j = ( double ) j;
-//						t_j.y[ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole;		// quadratic
-
-						t.x[ 0 ][ j ][ k ] = t_j.y[ j ][ k ];
-					}
-				}
-			}
-*/
-
-
-			for ( j = 0; j < jm; j++ )
-			{
-				for ( k = 1; k < km; k++ )
-				{
-					if ( h.x[ 0 ][ j ][ k ]  == 1. )										// new continent location
-					{
-						d_j = ( double ) j;
-						t_j.y[ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_land_plus + t_Cretaceous;		// quadratic
-						t.x[ 0 ][ j ][ k ] = tn.x[ 0 ][ j ][ k ] = t_j.y[ j ][ k ];
-					}
-
-					if ( h.x[ 0 ][ j ][ k ]  == 0. )										// new ocean location
-					{
-						d_j = ( double ) j;
-						t_j.y[ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_Cretaceous;		// quadratic
-						t.x[ 0 ][ j ][ k ] = tn.x[ 0 ][ j ][ k ] = t_j.y[ j ][ k ];
-
-//						t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_Cretaceous;
-					}
-				}
-			}
+			}                                                           
 		}																							// end parabolic temperature distribution
-	}																								// end of if (  Ma > 0 )
-
-
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int k = 0; k < km; k++ )
-				{
-					for ( int i = 1; i < i_max; i++ )
-					{
-						d_i = ( double ) i;
-						t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];			// linear temperature decay up to tropopause
-//						t.x[ i ][ j ][ k ] = ( t_tropopause - t_j.y[ j ][ k ] ) / d_i_max * d_i + t_j.y[ j ][ k ];				// linear temperature decay up to tropopause
-//						t.x[ i ][ j ][ k ] = pow ( p.x[ i ][ j ][ k ], .28596 );																// temperature from adiabatic formula
-//						t.x[ i ][ j ][ k ] = ( t_j.y[ j ][ k ] * t_0 - .9433 * d_i * 5. ) / t_0;											// temperature from dry adiabatic formula ( correct ))
-					}
-				}
-			}
-
-
-
-	// temperature values for the tropopause
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int k = 0; k < km; k++ )
-				{
-					for ( int i = i_max; i < im; i++ )
-					{
-						t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = t_tropopause;
-					}
-				}
-			}
-
+	}																								// end of while (  Ma > 0 )
 
 
 // temperature computation by radiation flux density
@@ -294,11 +188,11 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 					d_j = ( double ) j;
 					if ( d_j <= j_d )
 					{
-						t_j.y[ j ][ k ] = d * d_j + e + t_Cretaceous;
+						t.x[ 0 ][ j ][ k ] = d * d_j + e + t_Cretaceous;
 					}
 					if ( d_j > j_d )
 					{
-						t_j.y[ j ][ k ] = a * d_j * d_j + b * d_j + cc + t_Cretaceous;
+						t.x[ 0 ][ j ][ k ] = a * d_j * d_j + b * d_j + cc + t_Cretaceous;
 					}
 				}
 			}
@@ -307,7 +201,7 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 	// transfer of zonal constant temperature into a 1D-temperature field
 			for ( int j = 0; j < jm; j++ )
 			{
-				jm_temp_asym[ j ] = t_j.y[ j ][ 20 ];
+				jm_temp_asym[ j ] = t.x[ 0 ][ j ][ 20 ];
 			}
 
 
@@ -330,12 +224,11 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 					b = - 2. * a * k_par_f;
 					cc = jm_temp_asym[ j ] + a * k_par_f * k_par_f;
 
-					t_j.y[ j ][ k ] = a * d_k * d_k + b * d_k + cc;
+					t.x[ 0 ][ j ][ k ] = a * d_k * d_k + b * d_k + cc;
 				}
 			}
 		}																							// end of temperature computation by radiation flux density
 	}																								// end of if-loop ( Ma > 0 )
-/*
 	else
 	{
 // temperature decreasing approaching the tropopause, above constant temperature following Standard Atmosphere
@@ -343,13 +236,15 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				for ( int i = 1; i < i_max; i++ )
+				for ( int i = 1; i < im; i++ )
 				{
-					d_i = ( double ) i;
-					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];			// linear temperature decay up to tropopause
-//					t.x[ i ][ j ][ k ] = ( t_tropopause - t_j.y[ j ][ k ] ) / d_i_max * d_i + t_j.y[ j ][ k ];				// linear temperature decay up to tropopause
-//					t.x[ i ][ j ][ k ] = pow ( p.x[ i ][ j ][ k ], .28596 );																// temperature from adiabatic formula
-//					t.x[ i ][ j ][ k ] = ( t_j.y[ j ][ k ] * t_0 - .9433 * d_i * 5. ) / t_0;											// temperature from dry adiabatic formula ( correct ))
+					if ( i <= i_max )
+					{
+						d_i = ( double ) i;
+						t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause
+//						t.x[ i ][ j ][ k ] = pow ( p.x[ i ][ j ][ k ], .28596 );																// temperature from adiabatic formula
+//						t.x[ i ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] * t_0 - .9433 * d_i * 5. ) / t_0;											// temperature from dry adiabatic formula ( correct ))
+					}
 				}
 			}
 		}
@@ -367,7 +262,6 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 			}
 		}
 	}
-*/
 }
 
 
@@ -376,7 +270,7 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 
 
 
-void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, double c_0, double p_0, double c_land_minus, double c_ocean_minus, Array_2D &c_j, Array &h, Array &t, Array &p, Array &c, Array &cn, Array_2D &t_j )
+void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, double c_0, double p_0, double c_land_minus, double c_ocean_minus, Array_2D &c_j, Array &h, Array &t, Array &p, Array &c, Array_2D &t_j )
 {
 // initial and boundary conditions of water vapour on water and land surfaces
 // parabolic water vapour distribution from pole to pole accepted
@@ -395,6 +289,9 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 
+//	r_0_water_vapour = 0.0094;
+//	R_WaterVapour = 461.6;
+
 // water vapour contents computed by Clausius-Clapeyron-formula
 	for ( int k = 0; k < km; k++ )
 	{
@@ -403,16 +300,21 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 			d_j = ( double ) j;
 			if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
 			{
-				c_j.y[ j ][ k ]  = hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0; // 100% saturation of relative water vapour 
+//				e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;								// water vapour pressure at local hight h
+//				c_j.y[ j ][ k ] = ep * e_h / p_0;
+				c_j.y[ j ][ k ]  = .5 * hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0; // 100% saturation of relative water vapour 
 				c_j.y[ j ][ k ] = c_ocean_minus * c_j.y[ j ][ k ];				// relativ water vapour contents on ocean surface reduced by factor
-				c.x[ 0 ][ j ][ k ] = cn.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];				// restore
+				c.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];										// relativ water vapour contents increased by by factor
 			}
 
 			if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
 			{
-				c_j.y[ j ][ k ]  = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0;
+//				e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;								// water vapour pressure at local hight h
+//				c_j.y[ j ][ k ] = ep * e_h / p_0;
+
+				c_j.y[ j ][ k ]  = .5 * hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0;
 				c_j.y[ j ][ k ] = c_land_minus * c_j.y[ j ][ k ];					// relativ water vapour contents on land reduced by factor
-				c.x[ 0 ][ j ][ k ] = cn.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];				// restore
+				c.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];										// relativ water vapour contents increased by factor
 			}
 		}
 	}
@@ -425,7 +327,7 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-			for ( int i = 1; i < im; i++ )
+			for ( int i = 0; i < im; i++ )
 			{
 					if ( i <= i_max )
 					{
@@ -436,30 +338,6 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 			}
 		}
 	}
-
-/*
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
-			{
-				c_j.y[ j ][ k ]  = .5 * c_j.y[ j ][ k ];									// 100% saturation of relative water vapour 
-				c_j.y[ j ][ k ] = c_ocean_minus * c_j.y[ j ][ k ];				// relativ water vapour contents on ocean surface reduced by factor
-				c.x[ 0 ][ j ][ k ] = cn.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];				// restore
-			}
-
-			if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
-			{
-				c_j.y[ j ][ k ]  =  .5 * c_j.y[ j ][ k ];
-				c_j.y[ j ][ k ] = c_land_minus * c_j.y[ j ][ k ];					// relativ water vapour contents on land reduced by factor
-				c.x[ 0 ][ j ][ k ] = cn.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];				// restore
-			}
-		}
-	}
-*/
-
-
 }
 
 
@@ -2427,7 +2305,8 @@ void BC_Thermo::BC_Surface_Temperature ( const string &Name_SurfaceTemperature_F
 			Name_SurfaceTemperature_File_Read >> dummy_2;
 			Name_SurfaceTemperature_File_Read >> dummy_3;
 
-			t.x[ 0 ][ j ][ k ] = t_j.y[ j ][ k ] = ( dummy_3 + 273.15 ) / 273.15;
+//			t.x[ 0 ][ j ][ k ] = t_j.y[ j ][ k ] = ( dummy_3 + 273.15 ) / 273.15;
+			t.x[ 0 ][ j ][ k ] = ( dummy_3 + 273.15 ) / 273.15;
 			j++;
 		}
 	j = 0;
@@ -2617,12 +2496,10 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
 			{
 				for ( int l = 0; l < k_grad; l++ )									// extension of change, sign change in v-velocity and distribution of u-velocity with depth
 				{
-//					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];					// existing velocity changes sign
-					v.x[ 0 ][ j ][ k + l ] = 0.;					// existing velocity changes sign
-					w.x[ 0 ][ j ][ k + l ] = 0.;					// existing velocity changes sign
+					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];					// existing velocity changes sign
 				}
 
-/*
+
 				for ( int l = ( k + k_grad - k_a ); l < ( k + k_grad + k_b + 1 ); l++ ) // starting at local longitude + max extension - begin of smoothing k_a  until ending at  + k_b
 				{
 					v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] - v.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) -  ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) + v.x[ 0 ][ j ][ k + k_grad - k_a ];	 // extension of v-velocity, smoothing algorithm by a linear equation 
@@ -2646,7 +2523,7 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
 					}
 
 				}
-*/
+
 				k_sequel = 1;																// looking for another east coast
 			}
 		}																							// end of longitudinal loop
@@ -2674,35 +2551,33 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
 			{
 				for ( int l = 0; l < k_grad; l++ )
 				{
-//					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];
-					v.x[ 0 ][ j ][ k + l ] = 0.;
-					w.x[ 0 ][ j ][ k + l ] = 0.;
+					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];
 				}
-/*
+
 				for ( int l = ( k + k_grad - k_a ); l < ( k + k_grad + k_b + 1 ); l++ )
 				{
 					v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] - v.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) -  ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) + v.x[ 0 ][ j ][ k + k_grad - k_a ];
-
+/*
 					for ( int i = 1; i <= 11; i++ )										// loop in radial direction, extension for u -velocity component, downwelling here
 					{
 						d_i = ( double ) i;
 						v.x[ i ][ j ][ k ] = - ( 0. - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - v.x[ 0 ][ j ][ l ];					// radial distribution approximated by a straight line
 					}
-
+*/
 				}
 
 				for ( int l = k; l < ( k + k_grad + k_b + 1 ); l++ )
 				{
 					w.x[ 0 ][ j ][ l ] = w.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k );
-
+/*
 					for ( int i = 1; i <= 11; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
 					{
 						d_i = ( double ) i;
 						w.x[ i ][ j ][ k ] = - ( 0. - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - w.x[ 0 ][ j ][ l ];					// radial distribution approximated by a straight line
 					}
-
-				}
 */
+				}
+
 				k_sequel = 1;
 			}
 		}
@@ -2831,3 +2706,124 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
 	}
 */
 }
+
+
+
+
+
+
+
+void BC_Thermo::IC_v_w_Smoothing ( int velocity_iter, Array &h, Array &u, Array &v, Array &w, Array &t, Array &c )
+{
+// initial conditions for v and w velocity components at the sea surface
+// after reading wind data, applying Ekman motion and formulation of west/east coast corretions 
+
+	jmkm = ( double ) ( ( jm -1 ) * ( km -1 ) );
+
+	if ( velocity_iter == 0 )
+	{
+		v_sum = 0.;
+		w_sum = 0.;
+		t_sum = 0.;
+		c_sum = 0.;
+		n_smooth = 0;
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					v_sum += fabs ( v.x[ im-1 ][ j ][ k ] );
+					w_sum += fabs ( w.x[ im-1 ][ j ][ k ] );
+					n_smooth++;
+				}
+				else
+				{
+					v.x[ im-1 ][ j ][ k ] = 0.;
+					w.x[ im-1 ][ j ][ k ] = 0.;
+				}
+			}
+		}
+
+
+		v_sum = v_sum / ( double ) n_smooth;
+		w_sum = w_sum / ( double ) n_smooth;
+		t_sum = t_sum / ( double ) n_smooth;
+		c_sum = c_sum / ( double ) n_smooth;
+
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					if ( fabs ( v.x[ im-1 ][ j ][ k ] ) > v_sum )			v.x[ im-1 ][ j ][ k ] = 0.;
+					if ( fabs ( w.x[ im-1 ][ j ][ k ] ) > w_sum )			w.x[ im-1 ][ j ][ k ] = 0.;
+				}
+				else
+				{
+					v.x[ im-1 ][ j ][ k ] = 0.;
+					w.x[ im-1 ][ j ][ k ] = 0.;
+				}
+			}
+		}
+	}
+
+
+
+/*
+	v_sum = 0.;
+	w_sum = 0.;
+	t_sum = 0.;
+	c_sum = 0.;
+	n_smooth = 0;
+
+
+	for ( int i = 1; i < im-2; i++ )
+	{
+		for ( int j = 1; j < jm-2; j++ )
+		{
+			for ( int k = 1; k < km-2; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					v_sum += fabs ( v.x[ i ][ j ][ k ] );
+					w_sum += fabs ( w.x[ i ][ j ][ k ] );
+					t_sum += t.x[ i ][ j ][ k ];
+					c_sum += c.x[ i ][ j ][ k ];
+					n_smooth++;
+				}
+			}
+		}
+	}
+
+
+	u_sum = u_sum / ( double ) n_smooth;
+	v_sum = v_sum / ( double ) n_smooth;
+	w_sum = w_sum / ( double ) n_smooth;
+	t_sum = t_sum / ( double ) n_smooth;
+	c_sum = c_sum / ( double ) n_smooth;
+
+
+	for ( int i = 1; i < im-2; i++ )
+	{
+		for ( int j = 1; j < jm-2; j++ )
+		{
+			for ( int k = 1; k < km-2; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					if ( fabs ( u.x[ i ][ j ][ k ] ) > u_sum )			u.x[ i ][ j ][ k ] = ( u.x[ i+1 ][ j ][ k ] + u.x[ i-1 ][ j ][ k ] + u.x[ i ][ j+1 ][ k ] + u.x[ i ][ j-1 ][ k ] + u.x[ i ][ j ][ k+1 ] + u.x[ i ][ j ][ k-1 ] ) / 6.;
+					if ( fabs ( v.x[ i ][ j ][ k ] ) > v_sum )			v.x[ i ][ j ][ k ] = ( v.x[ i+1 ][ j ][ k ] + v.x[ i-1 ][ j ][ k ] + v.x[ i ][ j+1 ][ k ] + v.x[ i ][ j-1 ][ k ] + v.x[ i ][ j ][ k+1 ] + v.x[ i ][ j ][ k-1 ] ) / 6.;
+					if ( fabs ( w.x[ i ][ j ][ k ] ) > w_sum )		w.x[ i ][ j ][ k ] = ( w.x[ i+1 ][ j ][ k ] + w.x[ i-1 ][ j ][ k ] + w.x[ i ][ j+1 ][ k ] + w.x[ i ][ j-1 ][ k ] + w.x[ i ][ j ][ k+1 ] + w.x[ i ][ j ][ k-1 ] ) / 6.;
+					if ( t.x[ i ][ j ][ k ] > t_sum )						t.x[ i ][ j ][ k ] = ( t.x[ i+1 ][ j ][ k ] + t.x[ i-1 ][ j ][ k ] + t.x[ i ][ j+1 ][ k ] + t.x[ i ][ j-1 ][ k ] + t.x[ i ][ j ][ k+1 ] + t.x[ i ][ j ][ k-1 ] ) / 6.;
+					if ( c.x[ i ][ j ][ k ] > c_sum )						c.x[ i ][ j ][ k ] = ( c.x[ i+1 ][ j ][ k ] + c.x[ i-1 ][ j ][ k ] + c.x[ i ][ j+1 ][ k ] + c.x[ i ][ j-1 ][ k ] + c.x[ i ][ j ][ k+1 ] + c.x[ i ][ j ][ k-1 ] ) / 6.;
+				}
+			}
+		}
+	}
+*/
+}
+

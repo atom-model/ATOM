@@ -35,7 +35,7 @@ class BC_Thermo
 		int n_smooth;
 
 		double dummy_1, dummy_2, dummy_3, t_equator, t_tropopause, t_coeff, t_pole, c_equator, c_tropopause, c_coeff, c_pol, p_equator, p_tropopause, p_coeff, p_pol;
-		double co2_equator, co2_tropopause, co2_coeff, co2_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous;
+		double co2_equator, co2_tropopause, co2_coeff, co2_pol, co2_vegetation, co2_ocean, co2_land, co2_Cretaceous;
 		double ca, ua_00, ua_30, ua_60, ua_90;
 		double va_Hadley_Tropopause, va_Hadley_Tropopause_15, va_Ferrel_Tropopause, va_Ferrel_Tropopause_45, va_Polar_Tropopause, va_Polar_Tropopause_75, va_Hadley_SL, va_Hadley_SL_15, va_Ferrel_SL, va_Ferrel_SL_45, va_Polar_SL, va_Polar_SL_75;
 		double wa_Ferrel_Tropopause, wa_Polar_Tropopause, wa_Ferrel_SL, wa_Polar_SL;
@@ -50,6 +50,7 @@ class BC_Thermo
 		double *jm_temp_asym;
 		double water_wind, t_pol;
 		double rR, rg, jmkm, u_sum, v_sum, w_sum, t_sum, c_sum;
+//		double r_0_water_vapour, R_WaterVapour, e_h;
 
 		char Temperature_West[50], Salinity_West[50], Temperature_East[50], Salinity_East[50];
  
@@ -66,9 +67,9 @@ class BC_Thermo
 
 		void IC_v_w_WestEastCoast ( Array &, Array &, Array &, Array & );
 
-		void BC_Temperature ( int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, Array_2D &, Array_2D &, Array &, Array &, Array &, Array & );
+		void BC_Temperature ( int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, Array_2D &, Array_2D &, Array &, Array &, Array & );
 
-		void BC_WaterVapour ( int, double, double, double, double, double, double, double, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array_2D & );
+		void BC_WaterVapour ( int, double, double, double, double, double, double, double, Array_2D &, Array &, Array &, Array &, Array &, Array_2D & );
 
 		void BC_CO2 ( int, double, double, double, double, double, double, double, double, Array_2D &, Array_2D &, Array &, Array &, Array &, Array & );
 
@@ -79,5 +80,7 @@ class BC_Thermo
 		void BC_Surface_Precipitation ( const string &, Array_2D & );
 
 		void BC_Pressure ( double const, double const, double const, double const, Array_2D &, Array_2D &, Array &, Array &, Array & );
+
+		void IC_v_w_Smoothing ( int, Array &, Array &, Array &, Array &, Array &, Array & );
 };
 #endif
