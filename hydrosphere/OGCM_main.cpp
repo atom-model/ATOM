@@ -32,7 +32,7 @@
 #include "Restore.h"
 #include "MinMax.h"
 #include "Results_MSL_Hyd.h"
-#include "File_NetCDF.h"
+//#include "File_NetCDF.h"
 
 
 using namespace std;
@@ -59,7 +59,7 @@ using namespace std;
 
 
 // Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
-// for 20 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005 
+// for 6 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005 
 
 // Definition of meridional and longitudinal step sizes 
 // for example: dthe = the_Grad / pi180 = 1.125 / 57.3 = 0.01963
@@ -89,15 +89,12 @@ using namespace std;
 int main ( int argc, char *argv[ ] )
 {
 // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km ), 
-// maximum number of overall iterations ( nm ),
-// maximum number of inner velocity loop iterations ( velocity_iter_max and velocity_iter_max_2D ),
-// maximum number of outer pressure loop iterations ( pressure_iter_max and pressure_iter_max_2D )
-//	slice_mode <= multiple_mode runs a series of multiple time slices
-//	slice_mode <= single_mode runs one single time slice
+// maximum number of overall iterations ( n ),
+// maximum number of inner velocity loop iterations ( velocity_iter_max ),
+// maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;
-	int velocity_iter_max_2D = 1, pressure_iter_max_2D =1;
-	string slice_mode( "multi_mode" );
+	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 2, pressure_iter_max = 2;
+	int velocity_iter_max_2D = 10, pressure_iter_max_2D =5;
 
 	int n, i_radial, j_longal, k_zonal;
 	int velocity_iter, pressure_iter, pressure_iter_aux, velocity_iter_2D, pressure_iter_2D;
@@ -117,9 +114,9 @@ int main ( int argc, char *argv[ ] )
 	const int Ma_max = 300;									// parabolic temperature distribution 300 Ma back
 	const int Ma_max_half = 150;							// half of time scale
 
-	const double L_hyd = - 6000.;							// extension of the hydrosphere shell in m
+	const double L_hyd = 6000.;							// extension of the hydrosphere shell in m
 	const double dt = 0.0001;									// time step coincides with the CFL condition
-	const double dr = 0.025;									// compares to 150m depth
+	const double dr = 0.0005;									// compares to 150m depth
 	const double the_Grad = 1.;								// compares to 1° step size laterally
 	const double phi_Grad = 1.;								// compares to 1° step size longitudinally
 	const double pi180 = 180./M_PI;						// pi180 = 57.3
@@ -134,28 +131,27 @@ int main ( int argc, char *argv[ ] )
 	const double omega = 7.29e-5;						// rotation number of the earth
 	const double p_0 = 1013.25;							// pressure at sea level
 	const double t_0 = 273.15;								// temperature in K compares to 0°C
-	const double c_0 = 34.6;									// rate of salt in psu as maximum value, average value
+	const double c_0 = 35.0;									// rate of salt in psu as maximum value
 	const double u_0 = 0.45;									// maximum value of velocity in m/s
 	const double r_0_water = 1026.0;					// density of salt water in kg/m3
-//	const double mue_air = 17.1;							// dynamic viscosity of air in muePa * s at 20°C
-//	const double mue_water = 1000.;					// dynamic viscosity of water in muePa * s at 20°C
+	const double mue_air = 17.1;							// dynamic viscosity of air in muePa * s at 20°C
+	const double mue_water = 1000.;					// dynamic viscosity of water in muePa * s at 20°C
 	const double epsres = 0.0005;							// accuracy for relative and absolute errors
 
 	const double ua = 0.;										// initial velocity component in r-direction
 	const double va = 0.;										// initial velocity component in theta-direction
 	const double wa = 0.;										// initial velocity component in phi-direction
 	const double pa = 0.;										// initial value for the pressure field
-	const double ta = 1.0146;									// compares to 4°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effects
-//	const double ca = 0.9686;									// c = 0.9686 compares to a salinity of 33.51 psu
-	const double ca = 1.01156;								// ca = 1.01156 compares to a salinity of 35.0 psu
-	const double c_Boussinesq = 1.043;				// c = 1.043 compares to a salinity of 36.1 psu, mean value, ca corresponds to ta = 15.0°C = 288.15 K
+	const double ta = 1.0146;									// compares to 4°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect
+	const double ca = 0.9686;								// c = 0.9686 compares to a salinity of 33.9 psu, mean value, ca corresponds to ta
+	const double t_Cretaceous_max = 10.;			// maximum add of mean temperature during cretaceous
+	const double c_Boussinesq = 1.;						// compares to 20°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect
 	const double r0 = 6.731; 									// Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
 	const double the0 = 0.;										// North Pole
 	const double phi0 = 0.;										// zero meridian in Greenwich
 	const double t_Average = 15.;							// mean temperature of the modern earth
-	const double t_equator = 1.1263;						// temperature t_0 = 1.119 compares to 34.5° C compares to 307.65 K
-	const double t_pole =  1.0146;							// compares to 4°C
-	const double t_Cretaceous_max = 10.;			// maximum add of mean temperature during cretaceous
+	const double t_equator = 1.1355;						// temperature t_0 = 1.1355 compares to 37° C compares to 310 K
+	const double t_pole = .7803;							// temperature at the poles t_pole = 0.8 compares to -60°C compares to 213.15 K
 
 
 // 	classe Array for 1-D, 2-D und 3-D field declarations
@@ -204,19 +200,19 @@ int main ( int argc, char *argv[ ] )
 	Array	w ( im, jm, km, wa );								// w-component velocity component in phi-direction
 	Array	p ( im, jm, km, pa );									// pressure
 	Array	c ( im, jm, km, ca );									// salt
-	Array	tn ( im, jm, km, ta );									// temperature new
+	Array	tn ( im, jm, km, ta );								// temperature new
 	Array	un ( im, jm, km, ua );								// u-component velocity component in r-direction new
 	Array	vn ( im, jm, km, va );								// v-component velocity component in theta-direction new
 	Array	wn ( im, jm, km, wa );								// w-component velocity component in phi-direction new
 	Array	pn ( im, jm, km, pa );								// pressure new
 	Array	cn ( im, jm, km, ca );								// salt new
 	Array	h ( im, jm, km, 0. );									// bathymetry, depth from sea level
-	Array	rhs_t ( im, jm, km, 0. );							// auxilliar field RHS temperature
-	Array	rhs_u ( im, jm, km, 0. );							// auxilliar field RHS
-	Array	rhs_v ( im, jm, km, 0. );							// auxilliar field RHS
-	Array	rhs_w ( im, jm, km, 0. );							// auxilliar field RHS
-	Array	rhs_p ( im, jm, km, 0. );							// auxilliar field RHS pressure
-	Array	rhs_c ( im, jm, km, 0. );							// auxilliar field RHS salt
+	Array	rhs_t ( im, jm, km, 0. );								// auxilliar field RHS temperature
+	Array	rhs_u ( im, jm, km, 0. );								// auxilliar field RHS
+	Array	rhs_v ( im, jm, km, 0. );								// auxilliar field RHS
+	Array	rhs_w ( im, jm, km, 0. );								// auxilliar field RHS
+	Array	rhs_p ( im, jm, km, 0. );								// auxilliar field RHS pressure
+	Array	rhs_c ( im, jm, km, 0. );								// auxilliar field RHS salt
 	Array	aux_u ( im, jm, km, 0. );							// auxilliar field u
 	Array	aux_v ( im, jm, km, 0. );							// auxilliar field v
 	Array	aux_w ( im, jm, km, 0. );							// auxilliar field w
@@ -240,9 +236,7 @@ int main ( int argc, char *argv[ ] )
 	time = dt;
 	velocity_iter = 1;
 	pressure_iter = 1;
-	velocity_iter_2D = 1;
-	pressure_iter_2D = 1;
-	switch_2D = 0;
+
 
 // time slice to start with is the modern world
 	i_time_slice = 0;
@@ -357,6 +351,12 @@ int main ( int argc, char *argv[ ] )
 // class File_NetCDF to write results in the format of a netCDF-file
 //	File_NetCDF		printoutNetCDF ( im, jm, km );
 
+/*
+//  constant hydrostatic pressure gradient
+	double dpdr_hyd;
+	dpdr_hyd = - r_0_water * gr * L_hyd / ( 100. * p_0 );
+*/
+
 
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -366,40 +366,24 @@ int main ( int argc, char *argv[ ] )
 //	choice of the time slice to be computed
 	time_slice_sequel:
 
-//	slice_mode <= multiple_mode runs a series of multiple time slices
-//	slice_mode <= single_mode runs one single time slice
-	if ( slice_mode == ( "multi_mode" ) )
-	{
 // choice of the time slice by Ma and by author
 // choice of the transfer file for the surface velocity components
-		if ( Ma == 0 )
-		{
-			Name_Bathymetry_File = "0Ma_etopo.xyz";
-			Name_v_w_Transfer_File = "[0Ma_etopo.xyz]_Transfer_Atm.vw";
-			Name_Sequel_File = "[0Ma_etopo.xyz]_Sequel_Hyd.seq";
-			Name_netCDF_File = "[0Ma_etopo.xyz]_atmosphere.nc";
-		}
-		else 
-		{
-			My << time_slice [ i_time_slice ] << "Ma_Golonka.xyz";
-			Name_Bathymetry_File = My.str();
-			My.str("");
-			My.ignore(My.rdbuf()->in_avail());
-		}
-	}
-
-
-
-
-	if ( slice_mode == ( "single_mode" ) )
+	if ( Ma == 0 )
 	{
+		Name_Bathymetry_File = "0Ma_etopo.xyz";
+		Name_v_w_Transfer_File = "[0Ma_etopo.xyz]_Transfer_Atm.vw";
+		Name_Sequel_File = "[0Ma_etopo.xyz]_Sequel_Hyd.seq";
+		Name_netCDF_File = "[0Ma_etopo.xyz]_atmosphere.nc";
+	}
+	else 
+	{
+//		n = 0;
+		n = 1;
 		My << time_slice [ i_time_slice ] << "Ma_Golonka.xyz";
 		Name_Bathymetry_File = My.str();
 		My.str("");
 		My.ignore(My.rdbuf()->in_avail());
 	}
-
-
 
 	ssName_v_w_Transfer_File << "[" << Name_Bathymetry_File << "]_Transfer_Atm.vw";
 	Name_v_w_Transfer_File = ssName_v_w_Transfer_File.str();
@@ -481,19 +465,13 @@ int main ( int argc, char *argv[ ] )
 
 
 
-
 //	initial conditions for u-v-w-velocity components and salinity
-
-
-//	class Print_Hydrosphaere for the printout of results
-	Print_Hydrosphere		printout ( im, jm, km, nm, n, time );
 
 // class BC_Bathymetry_Hydrosphere for the geometrical boundary condition of the computational area
 	BC_Bathymetry_Hydrosphere		depth ( im, jm, km );
 
 // 	class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-	depth.BC_SeaGround ( Name_Bathymetry_File, L_hyd, h, aux_w );
-
+	depth.BC_SeaGround ( Name_Bathymetry_File, h, aux_w );
 
 //	surface temperature from World Ocean Atlas 2009 given as boundary condition
 	if ( Ma == 0 ) oceanflow.BC_Surface_Temperature ( Name_SurfaceTemperature_File, t_j, t );
@@ -502,62 +480,68 @@ int main ( int argc, char *argv[ ] )
 	if ( Ma == 0 ) oceanflow.BC_Surface_Salinity ( Name_SurfaceSalinity_File, c_j, c );
 
 //	surface pressure computed by surface temperature with gas equation
-//	oceanflow.BC_Surface_Pressure ( pa, gr, r_0_air, r_0_water, R_Air, p_0, t_0, p_j, t_j, h, p, t );
+//	oceanflow.BC_Surface_Pressure ( pa, gr, r_0_water, p_0, t_0, p_j, t_j, h, p, t );
 
 //	salinity distribution as initial condition in 3 dimensions
-	oceanflow.BC_Temperature_Salinity ( Ma, Ma_max, Ma_max_half, t_0, p_0, c_0, t_Cretaceous_max, t_Average, t_equator, t_pole, ua, va, wa, ta, ca, pa, t_j, c_j, p_j, h, t, c, tn, cn, p );
+	oceanflow.BC_Temperature_Salinity ( Ma, Ma_max, Ma_max_half, t_0, p_0, c_0, t_Cretaceous_max, t_Average, t_equator, t_pole, ua, va, wa, ta, ca, pa, t_j, c_j, p_j, h, t, c, p );
 
-// Restore from new to old values to fill the gaps from time slice to time slice: seems not to be necessary
+// Restore from new to old values to fill the gaps from time slice to time slice
 //	if ( Ma > 0 ) depth.IC_SeaGroundGaps ( h, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
 
 //	import of surface v- and w-velocity components from AGCM, surface velocity reduced to 3% of the wind velocity
-	oceanflow.IC_v_w_Atmosphere ( h, u, v, w, vn, wn );
+	oceanflow.IC_v_w_Atmosphere ( h, u, v, w );
 
 //	initial conditions for v and w velocity components at the sea surface, reduction of velocity with increasing depth for the purpose of the Ekman spiral
-//	not necessary once initial gyres prescribed
-	oceanflow.IC_v_w_Ekman ( h, v, w, vn, wn );
+//	oceanflow.IC_v_w_Ekman ( h, v, w );
 
 //	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
-	oceanflow.IC_v_w_WestEastCoast ( h, u, v, w, un, vn, wn );
-
-//		here follow some prescribed initial conditions for certain known currents
-
+	oceanflow.IC_v_w_WestEastCoast ( h, u, v, w, c );
 
 //	initial conditions for u-, v- and w-velocity components in deep flows, assumptions for thermohaline transveyor belt
-	if ( Ma == 0 ) oceanflow.IC_DeepWater ( h, u, v, w, un, vn, wn, c );
-	oceanflow.IC_DeepWater ( h, u, v, w, un, vn, wn, c );
+//	if ( Ma == 0 ) oceanflow.IC_DeepWater ( h, u, v, w, c );
+//	oceanflow.IC_DeepWater ( h, u, v, w, c );
 
 //	currents along the equator
-//	if ( Ma == 0 ) oceanflow.IC_EquatorialCurrents ( h, u, v, w, un, vn, wn );
-//	oceanflow.IC_EquatorialCurrents ( h, u, v, w, un, vn, wn );
+//	if ( Ma == 0 ) oceanflow.IC_EquatorialCurrents ( h, u, v, w );
+//	oceanflow.IC_EquatorialCurrents ( h, u, v, w );
 
 //	antarctic circumpolar current
-	if ( Ma == 0 ) oceanflow.IC_South_Polar_Sea ( h, u, v, w, un, vn, wn, c );
-	oceanflow.IC_South_Polar_Sea ( h, u, v, w, un, vn, wn, c );
+//	if ( Ma == 0 ) oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
+//	oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
 
 //	arctic currents
-//	if ( Ma == 0 ) oceanflow.IC_Nord_Polar_Meer ( h, u, v, w, un, vn, wn );
-//	oceanflow.IC_Nord_Polar_Meer ( h, u, v, w, un, vn, wn );
+//	if ( Ma == 0 ) oceanflow.IC_Nord_Polar_Meer ( h, u, v, w );
+//	oceanflow.IC_Nord_Polar_Meer ( h, u, v, w );
 
 //	Atlantic ocean currents
-//	if ( Ma == 0 ) oceanflow.IC_Atlantischer_Ozean ( h, u, v, w, un, vn, wn, c );
+//	if ( Ma == 0 ) oceanflow.IC_Atlantischer_Ozean ( h, u, v, w, c );
 
 //	Pacific ocean currents
-//	if ( Ma == 0 ) oceanflow.IC_Pazifischer_Ozean ( h, u, v, w, un, vn, wn );
+//	if ( Ma == 0 ) oceanflow.IC_Pazifischer_Ozean ( h, u, v, w );
 
 //	Indic ocean currents
-//	if ( Ma == 0 ) oceanflow.IC_Indischer_Ozean ( h, u, v, w, un, vn, wn );
+//	if ( Ma == 0 ) oceanflow.IC_Indischer_Ozean ( h, u, v, w );
+
+//	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
+//	if ( Ma == 0 ) oceanflow.IC_v_w_Smoothing ( h, v, w, t, c );
+//	oceanflow.IC_v_w_Smoothing ( iter, h, u, v, w, t, c );
+
 
 
 //	storing of velocity components, pressure and temperature for iteration start
-	if ( n > 0 )   	oldnew.restoreOldNew ( 1., u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
-	else    	  oldnew.restoreOldNew_2D ( 1., v, w, p, vn, wn, pn );
+//	if ( n > 0 )   	oldnew.restoreOldNew ( .99, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
+//	else    	  oldnew.restoreOldNew_2D ( .99, v, w, p, vn, wn, pn );
+	oldnew.restoreOldNew ( .99, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
+	oldnew.restoreOldNew_2D ( .99, v, w, p, vn, wn, pn );
+
+	cout << " |||||||||||||||||||||||||||||||||      after restoreOldNew, before begin of pressure loop     ||||||||||||||||||||||||||||||||||||| " << endl;
+	cout << " ***** printout of 3D-fields ***** " << endl;
+	w.printArray();
 
 
 // computation of the ratio ocean to land areas
 	calculate_MSL.land_oceanFraction ( h );
 
-//	if ( i_time_slice >= 0 ) goto printout_finish;
 
 
 // ******************************************   start of pressure and velocity iterations ************************************************************************
@@ -615,27 +599,30 @@ Pressure_loop_2D:
 			velocity_iter_2D++;
 			if ( velocity_iter_2D > velocity_iter_max_2D )
 			{
+//				velocity_iter_2D--;
+//				break;
 				goto Pressure_iteration_2D;
 			}
 
+	cout << " |||||||||||||||||||||||||||||||||      begin of velocity loop_2D     ||||||||||||||||||||||||||||||||||||| " << endl;
+	cout << " ***** printout of 3D-fields ***** " << endl;
+	w.printArray();
 
 
 //		class BC_Atmosphaere for the geometry of a shell of a sphere
 			boundary.RB_theta ( ca, ta, pa, t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
-			boundary.RB_phi ( t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance, BottomWater, Upwelling, Downwelling );
-
-//		difference equations explicitely solved using surrounding values for comparison with local results gained by the Finite Difference Method
+			boundary.RB_phi ( t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
 //			if ( velocity_iter_2D == 1 )  boundary.BC_NST_control_2D ( dr, dthe, dphi, re, mue_air, mue_water, h, v, w, p, aux_2D_v, aux_2D_w, rad, the );
-//			boundary.BC_NST_control_2D ( dr, dthe, dphi, re, mue_air, mue_water, h, v, w, p, aux_2D_v, aux_2D_w, rad, the );
+			boundary.BC_NST_control_2D ( dr, dthe, dphi, re, mue_air, mue_water, h, v, w, p, aux_2D_v, aux_2D_w, rad, the );
 
-//		not to use once pressure loops take place, it would follow another pressure computation
 //		pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-//			startPressure.computePressure_2D ( pa, rad, the, p, h, rhs_v, rhs_w, aux_v, aux_w );
+			startPressure.computePressure_2D ( pa, rad, the, p, h, rhs_v, rhs_w, aux_v, aux_w );
 
 // 		old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 			Accuracy		min_Residuum_old_2D ( n, im, jm, km, dr, dthe, dphi );
 			min_Residuum_old_2D.residuumQuery_2D ( j_res, k_res, min, rad, the, v, w );
 			residuum_old = min;
+
 
 //		class RungeKutta for the solution of the differential equations describing the flow properties
 			result.solveRungeKutta_2D_Hydrosphere ( prepare, rad, the, phi, rhs_v, rhs_w, h, v, w, p, vn, wn, aux_v, aux_w );
@@ -663,6 +650,9 @@ Pressure_loop_2D:
 
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of loop_2D: while ( min >= epsres )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+
+
+
 Pressure_iteration_2D:
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
@@ -685,6 +675,9 @@ Pressure_iteration_2D:
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D )   :::::::::::::::::::::::::::::::::::::::::::
 
+	cout << " |||||||||||||||||||||||||||||||||      end of velocity loop_2D     ||||||||||||||||||||||||||||||||||||| " << endl;
+	cout << " ***** printout of 3D-fields ***** " << endl;
+	w.printArray();
 
 	process_3D:
 
@@ -701,17 +694,24 @@ Pressure_iteration_2D:
 // 		class RB_Hydrosphaere for the geometry of a shell of a sphere
 		boundary.RB_radius ( ca, ta, pa, dr, rad, t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
 		boundary.RB_theta ( ca, ta, pa, t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
-		boundary.RB_phi ( t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance, BottomWater, Upwelling, Downwelling );
-
-//		difference equations explicitely solved using surrounding values for comparison with local results gained by the Finite Difference Method
+		boundary.RB_phi ( t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
 //		if ( velocity_iter == 1 )  boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, co2, aux_u, aux_v, aux_w, rad, the );
-//		boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, aux_u, aux_v, aux_w, rad, the );
+		boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, aux_u, aux_v, aux_w, rad, the );
 
 // 		class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 		depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p, c, tn, un, vn, wn, pn, cn, t_j, c_j, p_j );
 
 // 		class RungeKutta for the solution of the differential equations describing the flow properties
 		result.solveRungeKutta_Hydrosphere ( prepare, L_hyd, gr, cp_w, c_Boussinesq, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, p, c, tn, un, vn, wn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, Salt_Balance );
+
+//	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
+//	if ( Ma == 0 ) oceanflow.IC_v_w_Smoothing ( h, v, w, t, c );
+//	oceanflow.IC_v_w_Smoothing ( iter, h, u, v, w, t, c );
+
+
+// 		class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
+		depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p, c, tn, un, vn, wn, pn, cn, t_j, c_j, p_j );
+
 
 //		state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
 		Accuracy		min_Stationary ( n, im, jm, km, dr, dthe, dphi );
@@ -735,7 +735,7 @@ Pressure_iteration_2D:
 
 //	total salinity as the sum along a normally extended virtual column
 //	in r-direction salinity above the average value is added
-		calculate_MSL.run_MSL_data ( u_0, c_0, h, u, v, w, c, Salt_Finger, Salt_Diffusion, Upwelling, Downwelling, SaltFinger, SaltDiffusion, Salt_total, BottomWater );
+		calculate_MSL.run_MSL_data ( c_0, h, u, v, w, c, Salt_Finger, Salt_Diffusion, Upwelling, Downwelling, SaltFinger, SaltDiffusion, Salt_total, BottomWater );
 
 
 //	searching of maximum and minimum values of total salt volume in a column
@@ -780,8 +780,11 @@ Pressure_iteration_2D:
 
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of loop: while ( min >= epsres )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+	cout << " |||||||||||||||||||||||||||||||||      end of loop: while, before printout    ||||||||||||||||||||||||||||||||||||| " << endl;
+	cout << " ***** printout of 3D-fields ***** " << endl;
+	w.printArray();
 
-//printout_finish:
+
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
 	startPressure.computePressure ( pa, rad, the, p, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
@@ -790,7 +793,8 @@ Pressure_iteration_2D:
 	pressure_iter++;
 	switch_2D = 0;
 
-
+//	class Print_Hydrosphaere for the printout of results
+	Print_Hydrosphere		printout ( im, jm, km, nm, n, time );
 
 //	printout in ParaView files, netCDF files and sequel files
 	if ( pressure_iter > pressure_iter_max )
@@ -816,7 +820,7 @@ Pressure_iteration_2D:
 		write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_aux, h, p, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BottomWater );
 
 //		3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-//		write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, h, t, p, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, Salt_Balance );
+		write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, h, t, p, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, Salt_Balance );
 
 //		3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
 //		write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p, u, v, w, c, rhs_u, rhs_v, rhs_w, rhs_c, rhs_p, rhs_t, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, Salt_Balance );
@@ -831,7 +835,7 @@ Pressure_iteration_2D:
 
 //		writing of plot data in the PlotData file
 		PostProcess_Hydrosphere		write_PlotData_File ( im, jm, km );
-		write_PlotData_File.Hydrosphere_PlotData ( Name_Bathymetry_File, h, v, w, t, c, BottomWater, Upwelling, Downwelling );
+		write_PlotData_File.Hydrosphere_PlotData ( Name_Bathymetry_File, v, w, t, c, BottomWater, Upwelling, Downwelling );
 
 	}                                             //  end of loop: 			if ( pressure_iter > pressure_iter_max )
 
@@ -848,91 +852,22 @@ Pressure_iteration_2D:
 
 
 
-
-//	choice of the next time slice
 	time_slice_change:
-//	slice_mode = single_mode runs one single time slice
-	if ( slice_mode == ( "single_mode" ) ) goto finish;
-
-//	if ( i_time_slice >= 0 ) goto finish;
-
-
-// 3D default adjustment
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-/*
-					t.x[ i ][ j ][ k ] = tau;											// default
-					u.x[ i ][ j ][ k ] = ua;											// default
-					v.x[ i ][ j ][ k ] = va;											// default
-					w.x[ i ][ j ][ k ] = wa;											// default
-					p.x[ i ][ j ][ k ] = pa;											// default
-					c.x[ i ][ j ][ k ] = ca;											// default
-					co2.x[ i ][ j ][ k ] = co2a;									// default
-
-					tn.x[ i ][ j ][ k ] = tau;											// default
-					un.x[ i ][ j ][ k ] = ua;											// default
-					vn.x[ i ][ j ][ k ] = va;											// default
-					wn.x[ i ][ j ][ k ] = wa;										// default
-					pn.x[ i ][ j ][ k ] = pa;											// default
-					cn.x[ i ][ j ][ k ] = ca;											// default
-					co2n.x[ i ][ j ][ k ] = co2a;									// default
-*/
-					rhs_t.x[ i ][ j ][ k ] = 0.;										// default
-					rhs_u.x[ i ][ j ][ k ] = 0.;										// default
-					rhs_v.x[ i ][ j ][ k ] = 0.;										// default
-					rhs_w.x[ i ][ j ][ k ] = 0.;									// default
-					rhs_p.x[ i ][ j ][ k ] = 0.;										// default
-					rhs_c.x[ i ][ j ][ k ] = 0.;										// default
-//					rhs_co2.x[ i ][ j ][ k ] = 0.;									// default
-					aux_u.x[ i ][ j ][ k ] = 0.;									// default
-					aux_v.x[ i ][ j ][ k ] = 0.;									// default
-					aux_w.x[ i ][ j ][ k ] = 0.;									// default
-
-				}
-			}
-		}
-
-
-// 2D default adjustment
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-
-//				t_j.y[ j ][ k ] = 0.;															// default
-//				c_j.y[ j ][ k ] = 0.;															// default
-//				p_j.y[ j ][ k ] = 0.;															// default
-
-				aux_2D_v.y[ j ][ k ] = 0.;												// default
-				aux_2D_w.y[ j ][ k ] = 0.;												// default
-			}
-		}
-
-
-
-
-
 
 
 //	choice of the next time slice after nm iterations reached
+
 	i_time_slice++;
 	Ma = time_slice [ i_time_slice ];
 	if ( i_time_slice >= i_time_slice_max ) goto finish;
 	else goto time_slice_sequel;
 
-
 //   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
 
 
 	finish:
 
-// delete temporary arrays
+// delete temporary files
 	delete [ ] time_slice;
 
 // 	final remarks

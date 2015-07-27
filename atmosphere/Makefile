@@ -3,9 +3,11 @@
 # ----------------------------------------------------------------------------
 
 
-CC = g++
+# CC = g++
+CC = clang++
 CFLAGS = -g -Wall
-LD = g++
+# LD = g++
+LD = clang++
 #LDFLAGS = -lm -lnetcdf
 LDFLAGS = -lm
 

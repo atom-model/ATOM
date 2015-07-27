@@ -474,7 +474,7 @@ void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, 
 
 
 
-/*
+
 // writing rot_u, rot_v and rot_w components of velocity in cartesian coordinates
 
 		Atmosphere_vts_File <<  "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" Name=\"Rotation\" format=\"ascii\">\n"  << endl;
@@ -503,7 +503,7 @@ void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, 
 		}
 		Atmosphere_vts_File <<  "\n"  << endl;
 		Atmosphere_vts_File <<  "    </DataArray>\n" << endl;
-*/
+
 
 
 

@@ -75,12 +75,12 @@ using namespace std;
 // "IceShield 0"				without inclusion of ice shields
 
 // Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
-// for 20 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005 
+// for 20 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005
 
-// Definition of meridional and longitudinal step sizes 
+// Definition of meridional and longitudinal step sizes
 // for example: dthe = the_Grad / pi180 = 1.125 / 57.3 = 0.01963
 
-// maximum velocity in the subtropical jet  w_max = 1.2 [ / ] compares to 30 m/s = 108 km/h as annual mean 
+// maximum velocity in the subtropical jet  w_max = 1.2 [ / ] compares to 30 m/s = 108 km/h as annual mean
 
 // minimum temperature at the tropopause t_min = .789 compares to -60° C compares to 213 K
 // temperature t_0 = 1.0 compares to 0° C compares to 273,15 K
@@ -93,14 +93,15 @@ using namespace std;
 
 int main ( int argc, char *argv[ ] )
 {
-// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km ), 
+// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km ),
 // maximum number of overall iterations ( nm ),
 // maximum number of inner velocity loop iterations ( velocity_iter_max and velocity_iter_max_2D ),
 // maximum number of outer pressure loop iterations ( pressure_iter_max and pressure_iter_max_2D )
 //	slice_mode <= multiple_mode runs a series of multiple time slices
 //	slice_mode <= single_mode runs one single time slice
 
-	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;
+	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;   // 1 deg spacing
+    // int im = 41, jm = 361, km = 721, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;   // 0.5 deg spacing
 	int velocity_iter_max_2D = 10, pressure_iter_max_2D = 5;
 	string slice_mode( "multi_mode" );
 
@@ -122,7 +123,7 @@ int main ( int argc, char *argv[ ] )
 	const double buoyancy = 1.;								// computation with buoyancy
 	const double CO2 = 1.;									// computation with CO2
 
-	const int declination = 0;									// position of sun axis, today 23,4° 
+	const int declination = 0;									// position of sun axis, today 23,4°
 																				// 21.12.: -23,4°, am 21.3. und 23.9.: 0°
 																				// 21.6.: +23,4°, in between sin form
 	const int sun_position_lat = 0;							// position of sun j = 120 means 30°S, j = 60 means 30°N
@@ -365,15 +366,15 @@ int main ( int argc, char *argv[ ] )
 	stringstream My;
 
 // naming a file to read the surface temperature of the modern world
-	string Name_SurfaceTemperature_File; 
+	string Name_SurfaceTemperature_File;
 	stringstream ssNameSurfaceTemperature;
-	ssNameSurfaceTemperature << "SurfaceTemperature.xyz";
+	ssNameSurfaceTemperature << "SurfaceTemperature0.5.xyz";
 	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
 
 // naming a file to read the surface precipitation by NASA
-	string Name_SurfacePrecipitation_File; 
+	string Name_SurfacePrecipitation_File;
 	stringstream ssNameSurfacePrecipitation;
-	ssNameSurfacePrecipitation << "SurfacePrecipitation_NASA.xyz";
+	ssNameSurfacePrecipitation << "SurfacePrecipitation_NASA0.5.xyz";
 	Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
 
 // naming a possibly available sequel file
@@ -483,10 +484,11 @@ int main ( int argc, char *argv[ ] )
 		if ( Ma == 0 )
 		{
 			Name_Bathymetry_File = "0Ma_etopo.xyz";
+//            Name_Bathymetry_File = "0Ma_etopo0.5.xyz";
 			Name_Sequel_File = "[0Ma_etopo.xyz]_Sequel_Atm.seq";
 			Name_netCDF_File = "[0Ma_etopo.xyz]_atmosphere.nc";
 		}
-		else 
+		else
 		{
 			My << time_slice [ i_time_slice ] << "Ma_Golonka.xyz";
 			Name_Bathymetry_File = My.str();
@@ -658,7 +660,7 @@ Pressure_loop:
 		n++;
 		if ( n > nm )
 		{
-			cout << endl; 
+			cout << endl;
 			cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
 			cout << endl;
 			break;
@@ -749,7 +751,7 @@ Pressure_iteration_2D:
 //	statements on the convergence und iterational process
 	velocity_iter_2D = 0;
 
-	if ( pressure_iter_2D >= pressure_iter_max_2D + 1 ) 
+	if ( pressure_iter_2D >= pressure_iter_max_2D + 1 )
 	{
 		switch_2D = 1;
 		goto process_3D;
@@ -908,7 +910,7 @@ Pressure_iteration_2D:
 //	if ( ( pressure_iter > pressure_iter_max ) || ( min >= epsres ) )
 	if ( pressure_iter > pressure_iter_max )
 	{
- 
+
 		pressure_iter_aux = pressure_iter - 1;
 
 //		results written in netCDF format
@@ -930,10 +932,10 @@ Pressure_iteration_2D:
 		write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_aux, h, p, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer, Precipitation, Evaporation, IceAir, Condensation, precipitable_water, Q_diff, Q_Balance_Radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, precipitation_j, Water_super, Water );
 
 //		3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-//		write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, h, t, p, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
+		write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, h, t, p, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
 
-//		3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
-//		write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p, u, v, w, c, co2, rhs_u, rhs_v, rhs_w, rhs_c, rhs_p, rhs_t, aux_u, aux_v, aux_w );
+		// // 3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
+		// write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p, u, v, w, c, co2, rhs_u, rhs_v, rhs_w, rhs_c, rhs_p, rhs_t, aux_u, aux_v, aux_w );
 
 
 //		writing of sequential data for the sequel file

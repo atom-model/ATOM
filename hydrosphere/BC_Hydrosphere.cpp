@@ -48,7 +48,8 @@ void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, double dr, Arr
 
 			t.x[ 0 ][ j ][ k ] = ta;
 			c.x[ 0 ][ j ][ k ] = ca;
-//			p.x[ 0 ][ j ][ k ] = pa;
+			p.x[ 0 ][ j ][ k ] = pa;
+			p.x[ im-1 ][ j ][ k ] = pa;
 
 			u.x[ 0 ][ j ][ k ] = 0.;
 			u.x[ im-1 ][ j ][ k ] = 0.;
@@ -58,6 +59,13 @@ void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, double dr, Arr
 
 
 // open development of the velocity components through von Neumann condition, dv/dr = dw/dr = 0 
+//			v.x[ im-1 ][ j ][ k ] = c43 * v.x[ im-2 ][ j ][ k ] - c13 * v.x[ im-3 ][ j ][ k ];
+//			w.x[ im-1 ][ j ][ k ] = c43 * w.x[ im-2 ][ j ][ k ] - c13 * w.x[ im-3 ][ j ][ k ];
+//			v.x[ im-1 ][ j ][ k ] = 2. * dr / rad.z[ im-2 ] * v.x[ im-2 ][ j ][ k ] + v.x[ im-3 ][ j ][ k ];
+//			w.x[ im-1 ][ j ][ k ] = 2. * dr / rad.z[ im-2 ] * w.x[ im-2 ][ j ][ k ] + w.x[ im-3 ][ j ][ k ];
+
+//			v.x[ im-1 ][ j ][ k ] = c43 * v.x[ im-2 ][ j ][ k ] - c13 * v.x[ im-3 ][ j ][ k ];
+//			w.x[ im-1 ][ j ][ k ] = c43 * w.x[ im-2 ][ j ][ k ] - c13 * w.x[ im-3 ][ j ][ k ];
 
 // *********************  various boundary conditions at sea level ***************
 
@@ -118,7 +126,7 @@ void BC_Hydrosphere::RB_theta ( double ca, double ta, double pa, Array &t, Array
 {
 // boundary conditions for the the-direction, loop index j
 
-	for ( int i = 0; i < im; i++ )
+	for ( int i = 0; i < im-1; i++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
@@ -132,18 +140,26 @@ void BC_Hydrosphere::RB_theta ( double ca, double ta, double pa, Array &t, Array
 				u.x[ i ][ 0 ][ k ] = c43 * u.x[ i ][ 1 ][ k ] - c13 * u.x[ i ][ 2 ][ k ];
 				u.x[ i ][ jm-1 ][ k ] = c43 * u.x[ i ][ jm-2 ][ k ] - c13 * u.x[ i ][ jm-3 ][ k ];
 
+//				u.x[ i ][ 0 ][ k ] = 0.;
+//				u.x[ i ][ jm-1 ][ k ] = 0.;
+
 				v.x[ i ][ 0 ][ k ] = c43 * v.x[ i ][ 1 ][ k ] - c13 * v.x[ i ][ 2 ][ k ];
 				v.x[ i ][ jm-1 ][ k ] = c43 * v.x[ i ][ jm-2 ][ k ] - c13 * v.x[ i ][ jm-3 ][ k ];
 
 				w.x[ i ][ 0 ][ k ] = c43 * w.x[ i ][ 1 ][ k ] - c13 * w.x[ i ][ 2 ][ k ];
 				w.x[ i ][ jm-1 ][ k ] = c43 * w.x[ i ][ jm-2 ][ k ] - c13 * w.x[ i ][ jm-3 ][ k ];
 
+//				v.x[ i ][ 0 ][ k ] = 0.;
+//				v.x[ i ][ jm-1 ][ k ] = 0.;
+
+//				w.x[ i ][ 0 ][ k ] = 0.;
+//				w.x[ i ][ jm-1 ][ k ] = 0.;
+
 				p.x[ i ][ 0 ][ k ] = c43 * p.x[ i ][ 1 ][ k ] - c13 * p.x[ i ][ 2 ][ k ];
 				p.x[ i ][ jm-1 ][ k ] = c43 * p.x[ i ][ jm-2 ][ k ] - c13 * p.x[ i ][ jm-3 ][ k ];
 
 				c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
 				c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
-
 
 				rhs_u.x[ i ][ 0 ][ k ] = c43 * rhs_u.x[ i ][ 1 ][ k ] - c13 * rhs_u.x[ i ][ 2 ][ k ];
 				rhs_u.x[ i ][ jm-1 ][ k ] = c43 * rhs_u.x[ i ][ jm-2 ][ k ] - c13 * rhs_u.x[ i ][ jm-3 ][ k ];
@@ -179,6 +195,59 @@ void BC_Hydrosphere::RB_theta ( double ca, double ta, double pa, Array &t, Array
 				Salt_Finger.x[ i ][ 0 ][ k ] = c43 * Salt_Finger.x[ i ][ 1 ][ k ] - c13 * Salt_Finger.x[ i ][ 2 ][ k ];
 				Salt_Finger.x[ i ][ jm-1 ][ k ] = c43 * Salt_Finger.x[ i ][ jm-2 ][ k ] - c13 * Salt_Finger.x[ i ][ jm-3 ][ k ];
 
+
+/*
+				t.x[ i ][ 0 ][ k ] = ta;
+				t.x[ i ][ jm-1 ][ k ] = ta;
+
+				u.x[ i ][ 0 ][ k ] = 0.;
+				u.x[ i ][ jm-1 ][ k ] = 0.;
+
+				v.x[ i ][ 0 ][ k ] = 0.;
+				v.x[ i ][ jm-1 ][ k ] = 0.;
+
+				w.x[ i ][ 0 ][ k ] = 0.;
+				w.x[ i ][ jm-1 ][ k ] = 0.;
+
+				p.x[ i ][ 0 ][ k ] = pa;
+				p.x[ i ][ jm-1 ][ k ] = pa;
+*/
+//				c.x[ i ][ 0 ][ k ] = ca;
+//				c.x[ i ][ jm-1 ][ k ] = ca;
+/*
+				rhs_u.x[ i ][ 0 ][ k ] = 0.;
+				rhs_u.x[ i ][ jm-1 ][ k ] = 0.;
+
+				rhs_v.x[ i ][ 0 ][ k ] = 0.;
+				rhs_v.x[ i ][ jm-1 ][ k ] = 0.;
+
+				rhs_w.x[ i ][ 0 ][ k ] = 0.;
+				rhs_w.x[ i ][ jm-1 ][ k ] = 0.;
+
+				rhs_t.x[ i ][ 0 ][ k ] = 0.;
+				rhs_t.x[ i ][ jm-1 ][ k ] = 0.;
+
+				rhs_c.x[ i ][ 0 ][ k ] = 0.;
+				rhs_c.x[ i ][ jm-1 ][ k ] = 0.;
+
+				aux_u.x[ i ][ 0 ][ k ] = 0.;
+				aux_u.x[ i ][ jm-1 ][ k ] = 0.;
+
+				aux_v.x[ i ][ 0 ][ k ] = 0.;
+				aux_v.x[ i ][ jm-1 ][ k ] = 0.;
+
+				aux_w.x[ i ][ 0 ][ k ] = 0.;
+				aux_w.x[ i ][ jm-1 ][ k ] = 0.;
+
+				Salt_Balance.x[ i ][ 0 ][ k ] = 0.;
+				Salt_Balance.x[ i ][ jm-1 ][ k ] = 0.;
+
+				Salt_Diffusion.x[ i ][ 0 ][ k ] = 0.;
+				Salt_Diffusion.x[ i ][ jm-1 ][ k ] = 0.;
+
+				Salt_Finger.x[ i ][ 0 ][ k ] = 0.;
+				Salt_Finger.x[ i ][ jm-1 ][ k ] = 0.;
+*/
 			}
 		}
 	}
@@ -189,11 +258,12 @@ void BC_Hydrosphere::RB_theta ( double ca, double ta, double pa, Array &t, Array
 
 
 
-void BC_Hydrosphere::RB_phi ( Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &aux_u, Array &aux_v, Array &aux_w, Array &h, Array &Salt_Finger, Array &Salt_Diffusion, Array &Salt_Balance, Array_2D &BottomWater, Array_2D &Upwelling, Array_2D &Downwelling )
+void BC_Hydrosphere::RB_phi ( Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &aux_u, Array &aux_v, Array &aux_w, Array &h, Array &Salt_Finger, Array &Salt_Diffusion, Array &Salt_Balance )
 {
 // boundary conditions for the phi-direction, loop index k
 
-	for ( int i = 0; i < im; i++ )
+	for ( int i = 0; i < im-1; i++ )
+//	for ( int i = 0; i < im; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -203,27 +273,31 @@ void BC_Hydrosphere::RB_phi ( Array &t, Array &u, Array &v, Array &w, Array &p, 
 
 				t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
 				t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];
-//				t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ km-1 ] = ( t.x[ i ][ j ][ 0 ] + t.x[ i ][ j ][ km-1 ] ) / 2.;
+				t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ km-1 ] = ( t.x[ i ][ j ][ 0 ] + t.x[ i ][ j ][ km-1 ] ) / 2.;
 
 				u.x[ i ][ j ][ 0 ] = c43 * u.x[ i ][ j ][ 1 ] - c13 * u.x[ i ][ j ][ 2 ];
 				u.x[ i ][ j ][ km-1 ] = c43 * u.x[ i ][ j ][ km-2 ] - c13 * u.x[ i ][ j ][ km-3 ];
+				u.x[ i ][ j ][ 0 ] = u.x[ i ][ j ][ km-1 ] = ( u.x[ i ][ j ][ 0 ] + u.x[ i ][ j ][ km-1 ] ) / 2.;
+
+//				u.x[ i ][ j ][ 0 ] = 0.;
+//				u.x[ i ][ j ][ km-1 ] = 0.;
 //				u.x[ i ][ j ][ 0 ] = u.x[ i ][ j ][ km-1 ] = ( u.x[ i ][ j ][ 0 ] + u.x[ i ][ j ][ km-1 ] ) / 2.;
 
 				v.x[ i ][ j ][ 0 ] = c43 * v.x[ i ][ j ][ 1 ] - c13 * v.x[ i ][ j ][ 2 ];
 				v.x[ i ][ j ][ km-1 ] = c43 * v.x[ i ][ j ][ km-2 ] - c13 * v.x[ i ][ j ][ km-3 ];
-//				v.x[ i ][ j ][ 0 ] = v.x[ i ][ j ][ km-1 ] = ( v.x[ i ][ j ][ 0 ] + v.x[ i ][ j ][ km-1 ] ) / 2.;
+				v.x[ i ][ j ][ 0 ] = v.x[ i ][ j ][ km-1 ] = ( v.x[ i ][ j ][ 0 ] + v.x[ i ][ j ][ km-1 ] ) / 2.;
 
 				w.x[ i ][ j ][ 0 ] = c43 * w.x[ i ][ j ][ 1 ] - c13 * w.x[ i ][ j ][ 2 ];
 				w.x[ i ][ j ][ km-1 ] = c43 * w.x[ i ][ j ][ km-2 ] - c13 * w.x[ i ][ j ][ km-3 ];
-//				w.x[ i ][ j ][ 0 ] = w.x[ i ][ j ][ km-1 ] = ( w.x[ i ][ j ][ 0 ] + w.x[ i ][ j ][ km-1 ] ) / 2.;
+				w.x[ i ][ j ][ 0 ] = w.x[ i ][ j ][ km-1 ] = ( w.x[ i ][ j ][ 0 ] + w.x[ i ][ j ][ km-1 ] ) / 2.;
 
 				p.x[ i ][ j ][ 0 ] = c43 * p.x[ i ][ j ][ 1 ] - c13 * p.x[ i ][ j ][ 2 ];
 				p.x[ i ][ j ][ km-1 ] = c43 * p.x[ i ][ j ][ km-2 ] - c13 * p.x[ i ][ j ][ km-3 ];
-//				p.x[ i ][ j ][ 0 ] = p.x[ i ][ j ][ km-1 ] = ( p.x[ i ][ j ][ 0 ] + p.x[ i ][ j ][ km-1 ] ) / 2.;
+				p.x[ i ][ j ][ 0 ] = p.x[ i ][ j ][ km-1 ] = ( p.x[ i ][ j ][ 0 ] + p.x[ i ][ j ][ km-1 ] ) / 2.;
 
 				c.x[ i ][ j ][ 0 ] = c43 * c.x[ i ][ j ][ 1 ] - c13 * c.x[ i ][ j ][ 2 ];
 				c.x[ i ][ j ][ km-1 ] = c43 * c.x[ i ][ j ][ km-2 ] - c13 * c.x[ i ][ j ][ km-3 ];
-//				c.x[ i ][ j ][ 0 ] = c.x[ i ][ j ][ km-1 ] = ( c.x[ i ][ j ][ 0 ] + c.x[ i ][ j ][ km-1 ] ) / 2.;
+				c.x[ i ][ j ][ 0 ] = c.x[ i ][ j ][ km-1 ] = ( c.x[ i ][ j ][ 0 ] + c.x[ i ][ j ][ km-1 ] ) / 2.;
 
 				rhs_u.x[ i ][ j ][ 0 ] = c43 * rhs_u.x[ i ][ j ][ 1 ] - c13 * rhs_u.x[ i ][ j ][ 2 ];
 				rhs_u.x[ i ][ j ][ km-1 ] = c43 * rhs_u.x[ i ][ j ][ km-2 ] - c13 * rhs_u.x[ i ][ j ][ km-3 ];
@@ -268,18 +342,6 @@ void BC_Hydrosphere::RB_phi ( Array &t, Array &u, Array &v, Array &w, Array &p, 
 				Salt_Finger.x[ i ][ j ][ 0 ] = c43 * Salt_Finger.x[ i ][ j ][ 1 ] - c13 * Salt_Finger.x[ i ][ j ][ 2 ];
 				Salt_Finger.x[ i ][ j ][ km-1 ] = c43 * Salt_Finger.x[ i ][ j ][ km-2 ] - c13 * Salt_Finger.x[ i ][ j ][ km-3 ];
 				Salt_Finger.x[ i ][ j ][ 0 ] = Salt_Finger.x[ i ][ j ][ km-1 ] = ( Salt_Finger.x[ i ][ j ][ 0 ] + Salt_Finger.x[ i ][ j ][ km-1 ] ) / 2.;
-
-				BottomWater.y[ j ][ 0 ] = c43 * BottomWater.y[ j ][ 1 ] - c13 * BottomWater.y[ j ][ 2 ];
-				BottomWater.y[ j ][ km-1 ] = c43 * BottomWater.y[ j ][ km-2 ] - c13 * BottomWater.y[ j ][ km-3 ];
-				BottomWater.y[ j ][ 0 ] = BottomWater.y[ j ][ km-1 ] = ( BottomWater.y[ j ][ 0 ] + BottomWater.y[ j ][ km-1 ] ) / 2.;
-
-				Upwelling.y[ j ][ 0 ] = c43 * Upwelling.y[ j ][ 1 ] - c13 * Upwelling.y[ j ][ 2 ];
-				Upwelling.y[ j ][ km-1 ] = c43 * Upwelling.y[ j ][ km-2 ] - c13 * Upwelling.y[ j ][ km-3 ];
-				Upwelling.y[ j ][ 0 ] = Upwelling.y[ j ][ km-1 ] = ( Upwelling.y[ j ][ 0 ] + Upwelling.y[ j ][ km-1 ] ) / 2.;
-
-				Downwelling.y[ j ][ 0 ] = c43 * Downwelling.y[ j ][ 1 ] - c13 * Downwelling.y[ j ][ 2 ];
-				Downwelling.y[ j ][ km-1 ] = c43 * Downwelling.y[ j ][ km-2 ] - c13 * Downwelling.y[ j ][ km-3 ];
-				Downwelling.y[ j ][ 0 ] = Downwelling.y[ j ][ km-1 ] = ( Downwelling.y[ j ][ 0 ] + Downwelling.y[ j ][ km-1 ] ) / 2.;
 
 			}
 		}

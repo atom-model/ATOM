@@ -30,33 +30,31 @@ IC_Thermohalin::IC_Thermohalin ( int im, int jm, int km )
 
 // assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m
 
-	i_beg = 32;				// compares to an ocean depth of 1200 m
-//	i_beg = 30;				// compares to an ocean depth of 1500 m
+	i_beg = 27;				// compares to an ocean depth of 1950 m
 //	i_beg = 25;				// compares to an ocean depth of 2250 m
 
 	i_max = im - 1;
 	i_bottom = 8;
 	i_deep = i_bottom + 6;
-//	i_half = i_beg;
-	i_half = i_max -2;
+	i_half = i_beg;
 	i_middle = i_beg - 5;
 	j_half = ( jm - 1 ) / 2;
 
 	d_i_half = ( double ) i_half;
-	d_i_middle = ( double ) i_middle;
-	d_i_max = ( double ) ( i_max );
+	d_i_max = ( double ) ( im - 1 );
 
 
 // reduction or amplification of flow velocities along coasts 
 // for the artificial initial and boundary conditions
+// u_0 = .45 m/s
 
-	IC_water = 100.;
-//	IC_water = 10.;
+//	IC_water = 1.;
+//	IC_water = .1;
+	IC_water = .5;					// no dimension, ( average velocity compares to          u_0 * IC_water = 0,25 m/s )
 
 // ocean surface velocity is about 3% of the wind velocity at the surface
 
-	water_wind = 1.;
-//	water_wind = .03;
+	water_wind = .03;
 
 	pi180 = 180./M_PI;
 
@@ -75,7 +73,7 @@ IC_Thermohalin::~IC_Thermohalin() {}
 
 
 
-void IC_Thermohalin::IC_v_w_Atmosphere ( Array &h, Array &u, Array &v, Array &w, Array &vn, Array &wn )
+void IC_Thermohalin::IC_v_w_Atmosphere ( Array &h, Array &u, Array &v, Array &w )
 {
 // initial conditions for v and w velocity components at the sea surface
 
@@ -89,15 +87,14 @@ void IC_Thermohalin::IC_v_w_Atmosphere ( Array &h, Array &u, Array &v, Array &w,
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = water_wind * v.x[ i_max ][ j ][ k ] * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = water_wind * w.x[ i_max ][ j ][ k ] * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = water_wind * v.x[ i_max ][ j ][ k ] * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = water_wind * w.x[ i_max ][ j ][ k ] * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 				else
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = 0.;
 				}
-				
 			}
 		}
 	}
@@ -119,7 +116,7 @@ void IC_Thermohalin::IC_v_w_Atmosphere ( Array &h, Array &u, Array &v, Array &w,
 				{
 					m = i_half - i;
 					d_i = ( double ) i;
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = d_i / d_i_half * water_wind / ( double )( k + 1 );	// increase with depth, decrease with distance from coast
+					u.x[ i ][ j ][ k ] = d_i / d_i_half * water_wind / ( double )( k + 1 );	// increase with depth, decrease with distance from coast
 					u.x[ m ][ j ][ k ] = d_i / d_i_half * water_wind / ( double )( k + 1 );// decrease with depth, decrease with distance from coast
 				}
 			}
@@ -132,7 +129,128 @@ void IC_Thermohalin::IC_v_w_Atmosphere ( Array &h, Array &u, Array &v, Array &w,
 
 
 
-void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn )
+void IC_Thermohalin::IC_v_w_Smoothing ( int iter, Array &h, Array &u, Array &v, Array &w, Array &t, Array &c )
+{
+// initial conditions for v and w velocity components at the sea surface
+// after reading wind data, applying Ekman motion and formulation of west/east coast corretions 
+
+	jmkm = ( double ) ( ( jm -1 ) * ( km -1 ) );
+
+	if ( iter == 0 )
+	{
+		v_sum = 0.;
+		w_sum = 0.;
+		t_sum = 0.;
+		c_sum = 0.;
+		n_smooth = 0;
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					v_sum += fabs ( v.x[ im-1 ][ j ][ k ] );
+					w_sum += fabs ( w.x[ im-1 ][ j ][ k ] );
+	//				t_sum += t.x[ im-1 ][ j ][ k ];
+	//				c_sum += c.x[ im-1 ][ j ][ k ];
+					n_smooth++;
+				}
+				else
+				{
+					v.x[ im-1 ][ j ][ k ] = 0.;
+					w.x[ im-1 ][ j ][ k ] = 0.;
+				}
+			}
+		}
+
+
+		v_sum = v_sum / ( double ) n_smooth;
+		w_sum = w_sum / ( double ) n_smooth;
+		t_sum = t_sum / ( double ) n_smooth;
+		c_sum = c_sum / ( double ) n_smooth;
+
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					if ( fabs ( v.x[ im-1 ][ j ][ k ] ) > v_sum )			v.x[ im-1 ][ j ][ k ] = 0.;
+					if ( fabs ( w.x[ im-1 ][ j ][ k ] ) > w_sum )			w.x[ im-1 ][ j ][ k ] = 0.;
+	//				if ( fabs ( t.x[ im-1 ][ j ][ k ] ) > t_sum )				t.x[ im-1 ][ j ][ k ] = t_sum;
+	//				if ( fabs ( c.x[ im-1 ][ j ][ k ] ) > c_sum )			c.x[ im-1 ][ j ][ k ] = c_sum;
+				}
+				else
+				{
+					v.x[ im-1 ][ j ][ k ] = 0.;
+					w.x[ im-1 ][ j ][ k ] = 0.;
+				}
+			}
+		}
+	}
+
+
+
+/*
+	v_sum = 0.;
+	w_sum = 0.;
+	t_sum = 0.;
+	c_sum = 0.;
+	n_smooth = 0;
+
+
+	for ( int i = 1; i < im-2; i++ )
+	{
+		for ( int j = 1; j < jm-2; j++ )
+		{
+			for ( int k = 1; k < km-2; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					v_sum += fabs ( v.x[ i ][ j ][ k ] );
+					w_sum += fabs ( w.x[ i ][ j ][ k ] );
+					t_sum += t.x[ i ][ j ][ k ];
+					c_sum += c.x[ i ][ j ][ k ];
+					n_smooth++;
+				}
+			}
+		}
+	}
+
+
+	u_sum = u_sum / ( double ) n_smooth;
+	v_sum = v_sum / ( double ) n_smooth;
+	w_sum = w_sum / ( double ) n_smooth;
+	t_sum = t_sum / ( double ) n_smooth;
+	c_sum = c_sum / ( double ) n_smooth;
+
+
+	for ( int i = 1; i < im-2; i++ )
+	{
+		for ( int j = 1; j < jm-2; j++ )
+		{
+			for ( int k = 1; k < km-2; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					if ( fabs ( u.x[ i ][ j ][ k ] ) > u_sum )			u.x[ i ][ j ][ k ] = ( u.x[ i+1 ][ j ][ k ] + u.x[ i-1 ][ j ][ k ] + u.x[ i ][ j+1 ][ k ] + u.x[ i ][ j-1 ][ k ] + u.x[ i ][ j ][ k+1 ] + u.x[ i ][ j ][ k-1 ] ) / 6.;
+					if ( fabs ( v.x[ i ][ j ][ k ] ) > v_sum )			v.x[ i ][ j ][ k ] = ( v.x[ i+1 ][ j ][ k ] + v.x[ i-1 ][ j ][ k ] + v.x[ i ][ j+1 ][ k ] + v.x[ i ][ j-1 ][ k ] + v.x[ i ][ j ][ k+1 ] + v.x[ i ][ j ][ k-1 ] ) / 6.;
+					if ( fabs ( w.x[ i ][ j ][ k ] ) > w_sum )		w.x[ i ][ j ][ k ] = ( w.x[ i+1 ][ j ][ k ] + w.x[ i-1 ][ j ][ k ] + w.x[ i ][ j+1 ][ k ] + w.x[ i ][ j-1 ][ k ] + w.x[ i ][ j ][ k+1 ] + w.x[ i ][ j ][ k-1 ] ) / 6.;
+					if ( t.x[ i ][ j ][ k ] > t_sum )						t.x[ i ][ j ][ k ] = ( t.x[ i+1 ][ j ][ k ] + t.x[ i-1 ][ j ][ k ] + t.x[ i ][ j+1 ][ k ] + t.x[ i ][ j-1 ][ k ] + t.x[ i ][ j ][ k+1 ] + t.x[ i ][ j ][ k-1 ] ) / 6.;
+					if ( c.x[ i ][ j ][ k ] > c_sum )						c.x[ i ][ j ][ k ] = ( c.x[ i+1 ][ j ][ k ] + c.x[ i-1 ][ j ][ k ] + c.x[ i ][ j+1 ][ k ] + c.x[ i ][ j-1 ][ k ] + c.x[ i ][ j ][ k+1 ] + c.x[ i ][ j ][ k-1 ] ) / 6.;
+				}
+			}
+		}
+	}
+*/
+}
+
+
+
+
+void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w, Array &c )
 {
 // initial conditions for v and w velocity components at the sea surface close to east or west coasts
 // reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
@@ -154,23 +272,24 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 	{
 		for ( int k = 0; k < km; k++ )											// inner loop: longitude
 		{
-			if ( h.x[ i_half ][ j ][ k ] == 1. ) k_sequel = 0;				// if solid ground: k_sequel = 0
+			if ( h.x[ i_max ][ j ][ k ] == 1. ) k_sequel = 0;				// if solid ground: k_sequel = 0
 
-			if ( ( h.x[ i_half ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;	// if water and and k_sequel = 0 then is water closest to coast
+			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;// if water and and k_sequel = 0 then is water closest to coast
 			else k_water = 1;														// somewhere on water
 
-			if ( ( h.x[ i_half ][ j ][ k ] == 0. ) && ( k_water == 0 ) )	// if water is closest to coast, change of velocity components begins
+			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_water == 0 ) )	// if water is closest to coast, change of velocity components begins
 			{
 				for ( int l = 0; l < k_grad; l++ )								// extension of change, sign change in v-velocity and distribution of u-velocity with depth
 				{
 //					v.x[ i_max ][ j ][ k + l ] = - v.x[ i_max ][ j ][ k + l ];	// existing velocity changes sign
 
-					for ( int i = i_beg; i < i_half; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
+					for ( int i = i_middle; i <= i_half; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
 					{
-						m = i + ( i_half - i_middle );
+						m = i_half - i;
 						d_i = ( double ) i;
-						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * water_wind / ( ( double )( l + 1 ) ) * .01;	// increase with depth, decrease with distance from coast
-//						u.x[ m ][ j ][ k + l ] = - d_i / d_i_middle * water_wind / ( ( double )( l + 1 ) ) * .01;// decrease with depth, decrease with distance from coast
+						c.x[ i ][ j ][ k ] = 1.11;
+						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
+						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
 				}
 
@@ -203,23 +322,24 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-			if ( h.x[ i_half ][ j ][ k ] == 1. ) k_sequel = 0;
+			if ( h.x[ i_max ][ j ][ k ] == 1. ) k_sequel = 0;
 
-			if ( ( h.x[ i_half ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;
+			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;
 			else k_water = 1;
 
-			if ( ( h.x[ i_half ][ j ][ k ] == 0. ) && ( k_water == 0 ) )
+			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_water == 0 ) )
 			{
 				for ( int l = 0; l < k_grad; l++ )
 				{
 //					v.x[ i_max ][ j ][ k + l ] = - v.x[ i_max ][ j ][ k + l ];
 
-					for ( int i = i_beg; i < i_half; i++ )
+					for ( int i = i_middle; i <= i_half; i++ )
 					{
-						m = i + ( i_half - i_middle );
+						m = i_half - i;
 						d_i = ( double ) i;
-						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * water_wind / ( ( double )( l + 1 ) ) * .01;	// increase with depth, decrease with distance from coast
-//						u.x[ m ][ j ][ k + l ] = - d_i / d_i_middle * water_wind / ( ( double )( l + 1 ) ) * .01;// decrease with depth, decrease with distance from coast
+						c.x[ i ][ j ][ k ] = 1.11;
+						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
+						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
 				}
 /*
@@ -257,7 +377,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 	{
 		for ( int k = 0; k < km; k++ )											// inner loop: longitude
 		{
-			if ( h.x[ i_half ][ j ][ k ] == 0. )										// if somewhere on water
+			if ( h.x[ i_max ][ j ][ k ] == 0. )										// if somewhere on water
 			{
 				k_water = 0;															// somewhere on water: k_water = 0
 				flip = 0;																	// somewhere on water: flip = 0
@@ -268,17 +388,18 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 			{
 				for ( int l = k; l > ( k - k_grad + 1 ); l-- )						// backward extention of velocity change: nothing changes
 				{
-//					w.x[ i_max ][ j ][ l ] = - w.x[ i_max ][ j ][ l ];
+					w.x[ i_max ][ j ][ l ] = - w.x[ i_max ][ j ][ l ];
 
-					for ( int i = i_beg; i < i_half; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
+					for ( int i = i_middle; i <= i_half; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
 					{
-						m = i + ( i_half - i_middle );
+						m = i_half - i;
 						d_i = ( double ) i;
-						u.x[ i ][ j ][ l ] = + d_i / d_i_half * water_wind / ( ( double )( k - l + 1 ) ) * .01;	// increase with depth, decrease with distance from coast
-//						u.x[ m ][ j ][ l ] = + d_i / d_i_middle * water_wind / ( ( double )( k - l + 1 ) ) * .01;	// decrease with depth, decrease with distance from coast
+						c.x[ i ][ j ][ k ] = 1.11;
+						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// increase with depth, decrease with distance from coast
+						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
 				}
-/*
+
 				for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
 				{
 					v.x[ i_max ][ j ][ l ] = v.x[ i_max ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k ); // extension of v-velocity
@@ -288,7 +409,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 				{
 					w.x[ i_max ][ j ][ l ] = (  - w.x[ i_max ][ j ][ k - k_grad - 3 ] + w.x[ i_max ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ i_max ][ j ][ k - k_grad + 3 ];
 				}
-*/
+
 				flip = 1;
 			}
 		}
@@ -309,7 +430,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-			if ( h.x[ i_half ][ j ][ k ] == 0. )
+			if ( h.x[ i_max ][ j ][ k ] == 0. )
 			{
 				k_water = 0;
 				flip = 0;
@@ -320,17 +441,18 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 			{
 				for ( int l = k; l > ( k - k_grad + 1 ); l-- )
 				{
-//					w.x[ i_max ][ j ][ l ] = - w.x[ i_max ][ j ][ l ];
+					w.x[ i_max ][ j ][ l ] = - w.x[ i_max ][ j ][ l ];
 
-					for ( int i = i_beg; i < i_half; i++ )
+					for ( int i = i_middle; i <= i_half; i++ )
 					{
-						m = i + ( i_half - i_middle );
+						m = i_half - i;
 						d_i = ( double ) i;
-						u.x[ i ][ j ][ l ] = + d_i / d_i_half * water_wind / ( ( double )( k - l + 1 ) ) * .01;
-//						u.x[ m ][ j ][ l ] = + d_i / d_i_middle * water_wind / ( ( double )( k - l + 1 ) ) * .01;
+						c.x[ i ][ j ][ k ] = 1.11;
+						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
+						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
 					}
 				}
-/*
+
 				for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- )
 				{
 					v.x[ i_max ][ j ][ l ] = v.x[ i_max ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k );
@@ -340,7 +462,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 				{
 					w.x[ i_max ][ j ][ l ] = ( - w.x[ i_max ][ j ][ k - k_grad - 3 ] + w.x[ i_max ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ i_max ][ j ][ k - k_grad + 3 ];
 				}
-*/
+
 				flip = 1;
 			}
 		}
@@ -354,15 +476,14 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 
 
-void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Array &wn )
+void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w )
 {
 //	initial conditions for v and w velocity components at the sea surface
 //	reduction of velocity with increasing depth for the purpose of the Ekman spiral
 
 //	north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° )
 
-	for ( int i = i_beg; i < im-1; i++ )
-//	for ( int i = i_beg; i < im; i++ )
+	for ( int i = i_beg; i < im; i++ )
 	{
 		for ( int j = 0; j < 31; j++ )
 		{
@@ -372,8 +493,8 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 				{
 					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 1.e-6;
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
 					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
 
 					alfa = asin ( fabs ( w.x[ i ][ j ][ k ] ) / vel_magnitude );
@@ -390,26 +511,26 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle > 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle < 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if (  w.x[ im-1 ][ j ][ k ] < 0. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 				}
 				else
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = 0.;
 				}
 			}
 		}
@@ -419,8 +540,7 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 // north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° )
 
-	for ( int i = i_beg; i < im-1; i++ )
-//	for ( int i = i_beg; i < im; i++ )
+	for ( int i = i_beg; i < im; i++ )
 	{
 		for ( int j = 31; j < 60; j++ )
 		{
@@ -430,8 +550,8 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 				{
 					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 1.e-6;
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
 					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
 
 					alfa = asin ( fabs ( w.x[ i ][ j ][ k ] ) / vel_magnitude );
@@ -448,26 +568,26 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle > 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle < 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
 					}
 
 					if (  v.x[ i ][ j ][ k ] < 0. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
 					}
 				}
 				else
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = 0.;
 				}
 			}
 		}
@@ -478,8 +598,7 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 // north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° )
 
-	for ( int i = i_beg; i < im-1; i++ )
-//	for ( int i = i_beg; i < im; i++ )
+	for ( int i = i_beg; i < im; i++ )
 	{
 		for ( int j = 60; j < 91; j++ )
 		{
@@ -489,8 +608,8 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 				{
 					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 1.e-6;
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
 					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
 
 					alfa = asin ( fabs ( w.x[ i ][ j ][ k ] ) / vel_magnitude );
@@ -507,26 +626,26 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle > 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle < 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if (  w.x[ im-1 ][ j ][ k ] < 0. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 				}
 				else
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = 0.;
 				}
 			}
 		}
@@ -537,8 +656,7 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 // south equatorial Hadley cell ( from j=90 till j=120 compares to 0° till 30° )
 
-	for ( int i = i_beg; i < im-1; i++ )
-//	for ( int i = i_beg; i < im; i++ )
+	for ( int i = i_beg; i < im; i++ )
 	{
 		for ( int j = 91; j < 122; j++ )
 		{
@@ -548,8 +666,8 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 				{
 					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 1.e-6;
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
 					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
 
 					beta = asin ( fabs( w.x[ i ][ j ][ k ] ) / vel_magnitude );
@@ -566,26 +684,26 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle > 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle < 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if (  w.x[ im-1 ][ j ][ k ] < 0. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 				}
 				else
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = 0.;
 				}
 			}
 		}
@@ -594,8 +712,7 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 // south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° )
 
-	for ( int i = i_beg; i < im-1; i++ )
-//	for ( int i = i_beg; i < im; i++ )
+	for ( int i = i_beg; i < im; i++ )
 	{
 		for ( int j = 121; j < 151; j++ )
 		{
@@ -605,8 +722,8 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 				{
 					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 1.e-6;
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
 					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
 
 					beta = asin ( fabs( w.x[ i ][ j ][ k ] ) / vel_magnitude );
@@ -623,26 +740,26 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle > 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle < 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
 					}
 
 					if (  v.x[ i ][ j ][ k ] > 0. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
 					}
 				}
 				else
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = 0.;
 				}
 			}
 		}
@@ -651,8 +768,7 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 // south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° )
 
-	for ( int i = i_beg; i < im-1; i++ )
-//	for ( int i = i_beg; i < im; i++ )
+	for ( int i = i_beg; i < im; i++ )
 	{
 		for ( int j = 151; j < jm; j++ )
 		{
@@ -662,8 +778,8 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 				{
 					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 1.e-6;
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
 					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
 
 					beta = asin ( fabs( w.x[ i ][ j ][ k ] ) / vel_magnitude );
@@ -680,31 +796,30 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle > 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if ( ( w.x[ im-1 ][ j ][ k ] > 0. ) && ( angle < 0. ) )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 
 					if (  w.x[ im-1 ][ j ][ k ] < 0. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
 					}
 				}
 				else
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = 0.;
 				}
 			}
 		}
 	}
-
 
 }
 
@@ -714,7 +829,7 @@ void IC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w, Array &vn, Arr
 
 
 
-void IC_Thermohalin::BC_Temperature_Salinity ( int Ma, int Ma_max, int Ma_max_half, double t_0, double p_0, double c_0, double t_Cretaceous_max, double t_Average, double t_equator, double t_pole, double ua, double va, double wa, double ta, double ca, double pa, Array_2D &t_j, Array_2D & c_j, Array_2D &p_j, Array &h, Array &t, Array &c, Array &tn, Array &cn, Array &p )
+void IC_Thermohalin::BC_Temperature_Salinity ( int Ma, int Ma_max, int Ma_max_half, double t_0, double p_0, double c_0, double t_Cretaceous_max, double t_Average, double t_equator, double t_pole, double ua, double va, double wa, double ta, double ca, double pa, Array_2D &t_j, Array_2D & c_j, Array_2D &p_j, Array &h, Array &t, Array &c, Array &p )
 {
 // initial conditions for salt content and temperature and salinity decrease below the sea surface
 
@@ -773,27 +888,6 @@ void IC_Thermohalin::BC_Temperature_Salinity ( int Ma, int Ma_max, int Ma_max_ha
 	t_Cretaceous = ( t_Cretaceous + t_Average + t_0 ) / t_0 - ( ( t_Average + t_0 ) / t_0 );    // non-dimensional
 
 
-	if (  Ma == 0 )																			// when time slices are run, modern world excluded
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				if ( h.x[ im-1 ][ j ][ k ] == 0. )
-				{
-					if ( t_j.y[ j ][ k ] <= t_pole )	t.x[ im-1 ][ j ][ k ] = tn.x[ im-1 ][ j ][ k ] = t_j.y[ j ][ k ] = t_pole;
-				}
-			}
-		}
-	}
-
-
-
-// reference value for the determination of salinity following the T-S diagramm from "Ocen Circulation".
-// approach by linear equation
-// describes the salinity at the actual temperature
-// a deviation of this value causes up or down thrust or diffusion effects
-
 	if (  Ma > 0 )																			// when time slices are run, modern world excluded
 	{
 		for ( int k = 0; k < km; k++ )
@@ -803,16 +897,16 @@ void IC_Thermohalin::BC_Temperature_Salinity ( int Ma, int Ma_max, int Ma_max_ha
 				if ( h.x[ im-1 ][ j ][ k ] == 0. )
 				{
 					d_j = ( double ) j;
-					t.x[ im-1 ][ j ][ k ] = tn.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_Cretaceous;
+					t.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_Cretaceous;
 					t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
 					if ( t_Celsius <= 0. ) t_Celsius = 0.;
-					c.x[ im-1 ][ j ][ k ] = cn.x[ im-1 ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
-					if ( c.x[ im-1 ][ j ][ k ] <= ca ) c.x[ im-1 ][ j ][ k ] = cn.x[ im-1 ][ j ][ k ] = ca;
+					c.x[ im-1 ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
+					if ( c.x[ im-1 ][ j ][ k ] <= ca ) c.x[ im-1 ][ j ][ k ] = ca;
 				}
 				else
 				{
-					t.x[ im-1 ][ j ][ k ] = tn.x[ im-1 ][ j ][ k ] = ta;
-					c.x[ im-1 ][ j ][ k ] = cn.x[ im-1 ][ j ][ k ] = ca;
+					t.x[ im-1 ][ j ][ k ] = ta;
+					c.x[ im-1 ][ j ][ k ] = 0.;
 				}
 			}
 		}
@@ -822,7 +916,7 @@ void IC_Thermohalin::BC_Temperature_Salinity ( int Ma, int Ma_max, int Ma_max_ha
 
 // distribution of t and c with increasing depth till i_beg valid for all time slices including the modern world
 
-	for ( int i = i_beg; i < im-1; i++ )
+	for ( int i = i_beg; i < im; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -830,15 +924,15 @@ void IC_Thermohalin::BC_Temperature_Salinity ( int Ma, int Ma_max, int Ma_max_ha
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k ] - ta ) * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg ) + ta;
+					t.x[ i ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k ] - ta ) * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg ) + ta;
 					t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
-					c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
-					if ( t.x[ i ][ j ][ k ] < ta ) c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ca;
+					if ( t_Celsius <= 0. ) t_Celsius = 0.;
+					c.x[ i ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
 				}
 				else
 				{
-					t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ta;
-					c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ca;
+					t.x[ i ][ j ][ k ] = ta;
+					c.x[ i ][ j ][ k ] = ca;
 				}
 			}
 		}
@@ -856,15 +950,15 @@ void IC_Thermohalin::BC_Temperature_Salinity ( int Ma, int Ma_max, int Ma_max_ha
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ta;
+					t.x[ i ][ j ][ k ] = ta;
 					t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
-					c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
-					if ( t.x[ i ][ j ][ k ] < ta ) c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ca;
+					if ( t_Celsius <= 0. ) t_Celsius = 0.;
+					c.x[ i ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
 				}
 				else
 				{
-					t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ta;
-					c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ca;
+					t.x[ i ][ j ][ k ] = ta;
+					c.x[ i ][ j ][ k ] = ca;
 				}
 			}
 		}
@@ -877,7 +971,7 @@ void IC_Thermohalin::BC_Temperature_Salinity ( int Ma, int Ma_max, int Ma_max_ha
 
 
 
-void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn, Array &c )
+void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array &w, Array &c )
 {
 // Ströme entlang der Küsten
 // Schliessen der polaren, subpolaren und subtropischen atmosphärischen Wirbelsysteme
@@ -912,8 +1006,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0008 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -951,8 +1045,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run ] - v.x[ i ][ j ][ k_beg + k_run - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run - k_exp ];
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run ] - w.x[ i ][ j ][ k_beg + k_run - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run - k_exp ];
+						v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run ] - v.x[ i ][ j ][ k_beg + k_run - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run - k_exp ];
+						w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run ] - w.x[ i ][ j ][ k_beg + k_run - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run - k_exp ];
 					}
 				}
 			}
@@ -991,8 +1085,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - v.x[ i ][ j ][ k_beg + k_run + k_step ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run + k_step ];
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - w.x[ i ][ j ][ k_beg + k_run + k_step ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run + k_step ];
+						v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - v.x[ i ][ j ][ k_beg + k_run + k_step ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run + k_step ];
+						w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - w.x[ i ][ j ][ k_beg + k_run + k_step ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run + k_step ];
 					}
 				}
 			}
@@ -1037,8 +1131,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0008 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -1078,8 +1172,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run ] - v.x[ i ][ j ][ k_beg + k_run - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run - k_exp ];
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run ] - w.x[ i ][ j ][ k_beg + k_run - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run - k_exp ];
+						v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run ] - v.x[ i ][ j ][ k_beg + k_run - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run - k_exp ];
+						w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run ] - w.x[ i ][ j ][ k_beg + k_run - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run - k_exp ];
 					}
 				}
 			}
@@ -1118,8 +1212,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - v.x[ i ][ j ][ k_beg + k_run + k_step ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run + k_step ];
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - w.x[ i ][ j ][ k_beg + k_run + k_step ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run + k_step ];
+						v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - v.x[ i ][ j ][ k_beg + k_run + k_step ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run + k_step ];
+						w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - w.x[ i ][ j ][ k_beg + k_run + k_step ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run + k_step ];
 					}
 				}
 			}
@@ -1188,8 +1282,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -1200,8 +1294,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 8 ] ) * ( double ) ( k - ( k_b + 8 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 8 ) ) + v.x[ i ][ j ][ k_b + 8 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 8 ] ) * ( double ) ( k - ( k_b + 8 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 8 ) ) + w.x[ i ][ j ][ k_b + 8 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 8 ] ) * ( double ) ( k - ( k_b + 8 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 8 ) ) + v.x[ i ][ j ][ k_b + 8 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 8 ] ) * ( double ) ( k - ( k_b + 8 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 8 ) ) + w.x[ i ][ j ][ k_b + 8 ];
 			}
 		}
 
@@ -1225,8 +1319,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = + 0.0;
+						w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -1250,8 +1344,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = + 0.0;
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -1274,8 +1368,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.00;
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = - 0.00;
 					}
 				}
 			}
@@ -1308,9 +1402,9 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+//					u.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -1345,8 +1439,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -1409,8 +1503,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -1421,8 +1515,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 
@@ -1456,8 +1550,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -1483,9 +1577,9 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+//					u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -1523,8 +1617,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0006 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0010 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -1562,8 +1656,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -1604,8 +1698,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0006 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0010 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -1640,8 +1734,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -1676,8 +1770,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -1746,8 +1840,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -1759,8 +1853,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
 			}
 		}
 	}
@@ -1826,8 +1920,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -1839,8 +1933,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
 			}
 		}
 	}
@@ -1866,8 +1960,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0008 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = + 0.0;
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -1902,8 +1996,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -1970,9 +2064,9 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.001 * IC_water;
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+//					u.x[ i ][ j ][ k ] = - IC_water;
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -1983,8 +2077,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step ] - v.x[ i ][ j ][ k_b + k_w ] ) * ( double ) ( k - ( k_b + k_w ) ) / ( double ) ( ( k_b + k_step ) - ( k_b + k_w ) ) + v.x[ i ][ j ][ k_b + k_w ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step ] - w.x[ i ][ j ][ k_b + k_w ] ) * ( double ) ( k - ( k_b + k_w ) ) / ( double ) ( ( k_b + k_step ) - ( k_b + k_w ) ) + w.x[ i ][ j ][ k_b + k_w ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step ] - v.x[ i ][ j ][ k_b + k_w ] ) * ( double ) ( k - ( k_b + k_w ) ) / ( double ) ( ( k_b + k_step ) - ( k_b + k_w ) ) + v.x[ i ][ j ][ k_b + k_w ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step ] - w.x[ i ][ j ][ k_b + k_w ] ) * ( double ) ( k - ( k_b + k_w ) ) / ( double ) ( ( k_b + k_step ) - ( k_b + k_w ) ) + w.x[ i ][ j ][ k_b + k_w ];
 			}
 		}
 
@@ -2010,9 +2104,9 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.000 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -2047,9 +2141,9 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = ( u.x[ i ][ j_end ][ k ] - u.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + u.x[ i ][ j_beg ][ k ];
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_end ][ k ] - u.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + u.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -2084,9 +2178,9 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					u.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -2120,9 +2214,9 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					u.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -2152,11 +2246,11 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					c.x[ i ][ j ][ k ] = c.x[ im-1 ][ j ][ k ];
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.00001 * IC_water;
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.040 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-//					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.010 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0005 * IC_water;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.000 * IC_water;
+					u.x[ i ][ j ][ k ] = - IC_water;
+//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water;
+					w.x[ i ][ j ][ k ] = + IC_water;
 				}
 			}
 		}
@@ -2219,8 +2313,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -2229,8 +2323,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 
@@ -2297,8 +2391,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -2310,8 +2404,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 
@@ -2343,8 +2437,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -2411,8 +2505,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -2424,8 +2518,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
 			}
 		}
 
@@ -2490,8 +2584,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -2503,8 +2597,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
 			}
 		}
 
@@ -2539,8 +2633,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -2571,8 +2665,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -2607,8 +2701,8 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -2627,7 +2721,7 @@ void IC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 
 
 
-void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn )
+void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w )
 {
 // Ströme entlang der Küsten
 // Schliessen der polaren, subpolaren und subtropischen atmosphärischen Wirbelsysteme
@@ -2662,8 +2756,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.0005 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -2701,8 +2795,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run + k_step - 1 ] - v.x[ i ][ j ][ k_beg + k_run + k_step - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run + k_step - k_exp ];
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run + k_step - 1 ] - w.x[ i ][ j ][ k_beg + k_run + k_step - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run + k_step - k_exp ];
+						v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run + k_step - 1 ] - v.x[ i ][ j ][ k_beg + k_run + k_step - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run + k_step - k_exp ];
+						w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run + k_step - 1 ] - w.x[ i ][ j ][ k_beg + k_run + k_step - k_exp ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run + k_step - k_exp ];
 					}
 				}
 			}
@@ -2741,8 +2835,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - v.x[ i ][ j ][ k_beg + k_run + k_step  - 1 ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run + k_step - 1 ];
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - w.x[ i ][ j ][ k_beg + k_run + k_step  - 1 ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run + k_step - 1 ];
+						v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - v.x[ i ][ j ][ k_beg + k_run + k_step  - 1 ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg + k_run + k_step - 1 ];
+						w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_beg + k_run + k_step + k_exp ] - w.x[ i ][ j ][ k_beg + k_run + k_step  - 1 ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg + k_run + k_step - 1 ];
 					}
 				}
 			}
@@ -2809,8 +2903,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -2822,8 +2916,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 
@@ -2889,8 +2983,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -2902,8 +2996,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 
@@ -2928,8 +3022,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0008 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = + 0.0;
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -2959,8 +3053,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -2988,8 +3082,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -3018,8 +3112,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -3084,8 +3178,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -3096,8 +3190,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 
@@ -3131,8 +3225,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -3201,8 +3295,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -3213,8 +3307,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
 			}
 		}
 
@@ -3282,8 +3376,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.1 * v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + 0.1 * v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -3295,8 +3389,8 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
 			}
 		}
 	}
@@ -3312,7 +3406,7 @@ void IC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 
 
 
-void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn )
+void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array &w )
 {
 // Thermohalin Conveyor Belt und Ströme entlang der Küsten
 // Schliessen der hydrosphärischen Wirbelsysteme
@@ -3369,8 +3463,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -3394,8 +3488,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int k = 169; k < 231; k++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.;
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.015 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+				v.x[ i ][ j ][ k ] = + 0.;
+				w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 			}
 		}
 	}
@@ -3418,8 +3512,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int k = 160; k < 221; k++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.000 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+				v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+				w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 			}
 		}
 	}
@@ -3451,8 +3545,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -3484,8 +3578,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -3517,8 +3611,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -3547,8 +3641,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -3571,8 +3665,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int k = 195; k < 201; k++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.00 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+				v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+				w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 			}
 		}
 	}
@@ -3592,8 +3686,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int k = 195; k < 201; k++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.00 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+				v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+				w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 			}
 		}
 	}
@@ -3625,8 +3719,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -3662,8 +3756,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -3696,8 +3790,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -3726,8 +3820,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int k = 701; k < 261; k++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.015 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+				v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+				w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 			}
 		}
 	}
@@ -3791,8 +3885,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -3856,8 +3950,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -3926,8 +4020,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -3939,8 +4033,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b - k_w ] - v.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + v.x[ i ][ j ][ k_b - k_step - k_exp ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b - k_w ] - w.x[ i ][ j ][ k_b - k_step - k_exp ] ) * ( double ) ( k - ( k_b - k_step - k_exp ) ) / ( double ) ( ( k_b - k_w ) - ( k_b - k_step - k_exp ) ) + w.x[ i ][ j ][ k_b - k_step - k_exp ];
 			}
 		}
 	}
@@ -3974,8 +4068,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -4039,8 +4133,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.5 * v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + 0.5 * v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4049,8 +4143,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 
@@ -4117,8 +4211,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4127,8 +4221,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 
@@ -4195,8 +4289,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4208,8 +4302,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 	}
@@ -4242,8 +4336,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -4278,8 +4372,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -4313,8 +4407,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -4349,8 +4443,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -4375,8 +4469,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0015 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0005 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4404,8 +4498,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 				{
 					if ( l <= 3 )
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0008 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0015 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 						l++;
 					}
 				}
@@ -4471,8 +4565,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4498,8 +4592,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0007 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0007 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4533,8 +4627,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -4566,8 +4660,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -4600,8 +4694,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -4631,8 +4725,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -4695,8 +4789,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4708,8 +4802,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 	}
@@ -4772,8 +4866,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.4 * v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - 0.4 * v_grad * ( double ) ( k_grad ) * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4785,8 +4879,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
+				v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_b + k_step +1 ] - v.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + v.x[ i ][ j ][ k_b + 4 ];
+				w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_b + k_step +1 ] - w.x[ i ][ j ][ k_b + 4 ] ) * ( double ) ( k - ( k_b + 4 ) ) / ( double ) ( ( k_b + k_step -1 ) - ( k_b + 4 ) ) + w.x[ i ][ j ][ k_b + 4 ];
 			}
 		}
 	}
@@ -4819,8 +4913,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -4846,8 +4940,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4877,8 +4971,8 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -4890,7 +4984,7 @@ void IC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 
 
 
-void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn )
+void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w )
 {
 // Ströme entlang der Küsten
 // Schliessen der polaren, subpolaren und subtropischen atmosphärischen Wirbelsysteme
@@ -4898,7 +4992,7 @@ void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w
 
 // Arktische Strömungen
 
-// Verlängerung until zum Nordpol und Verbreiterung ( depth -45 m )
+// Verlängerung zum Nordpol und Verbreiterung ( depth -45 m )
 // Durchströmung der Bering-Straße ( from j=0 until j=30 compares to 60°N until 90°N,
 //                                                           from k=180 until k=194 compares to 180°W until 166°W )
 
@@ -4911,8 +5005,8 @@ void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0005 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0003 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -4947,8 +5041,8 @@ void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -4983,9 +5077,9 @@ void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+//					u.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -5020,9 +5114,9 @@ void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+//					u.x[ i ][ j ][ k ] = ( u.x[ i ][ j ][ k_end ] - u.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + u.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -5046,8 +5140,8 @@ void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0005 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0003 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -5061,7 +5155,7 @@ void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w
 
 
 
-void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn, Array &c )
+void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w, Array &c )
 {
 // flow along coasts
 // closing the polar, subpolar and subtropic atmospheric circulation systems
@@ -5083,11 +5177,11 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.000 * IC_water * ( double ) ( i - 5 ) / ( double ) ( im-2 - 5 );
-//					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.0010 * IC_water * ( double ) ( i - 5 ) / ( double ) ( im-2 - 5 );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.000 * IC_water;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.0010 * IC_water;
+					c.x[ i ][ j ][ k ] = 1.11;
+//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - 5 ) / ( double ) ( im-2 - 5 );
+//					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - 5 ) / ( double ) ( im-2 - 5 );
+					v.x[ i ][ j ][ k ] = - IC_water;
+					w.x[ i ][ j ][ k ] = IC_water;
 				}
 			}
 		}
@@ -5117,9 +5211,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = ( c.x[ i ][ j_end ][ k ] - c.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + c.x[ i ][ j_beg ][ k ];
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					c.x[ i ][ j ][ k ] = ( c.x[ i ][ j_end ][ k ] - c.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + c.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5150,9 +5244,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = ( c.x[ i ][ j_end ][ k ] - c.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + c.x[ i ][ j_beg ][ k ];
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					c.x[ i ][ j ][ k ] = ( c.x[ i ][ j_end ][ k ] - c.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + c.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5178,8 +5272,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.000 * IC_water * ( double ) ( i - i_beg + 5 ) / ( double ) ( i_max - i_beg + 5 );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.0005 * IC_water * ( double ) ( i - i_beg + 5 ) / ( double ) ( i_max - i_beg + 5 );
+//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg + 5 ) / ( double ) ( i_max - i_beg + 5 );
+					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_beg + 5 ) / ( double ) ( i_max - i_beg + 5 );
 				}
 			}
 		}
@@ -5207,8 +5301,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5237,8 +5331,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5276,8 +5370,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-//						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.000 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0002 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+//						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -5309,8 +5403,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5340,8 +5434,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0002 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -5361,8 +5455,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0002 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -5385,8 +5479,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -5425,8 +5519,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-//						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.000 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0002 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+//						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -5462,8 +5556,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5494,8 +5588,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0002 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -5515,8 +5609,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0002 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
@@ -5539,8 +5633,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -5565,8 +5659,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -5606,8 +5700,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-//						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.000 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0002 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+//						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
 				}
 			}
@@ -5640,8 +5734,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5665,14 +5759,12 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
 	}
-
-
 }
 
 
@@ -5680,7 +5772,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 
 
-void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn )
+void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array &w )
 {
 // currents along the equator
 // equatorial undercurrent - Cromwell flow, EUC
@@ -5725,8 +5817,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.001 * IC_water;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = + IC_water;
 				}
 			}
 		}
@@ -5748,8 +5840,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0002 * IC_water;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0001 * IC_water;
+						u.x[ i ][ j ][ k ] = + IC_water;
+						w.x[ i ][ j ][ k ] = - IC_water;
 					}
 				}
 			}
@@ -5770,8 +5862,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0002 * IC_water;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0001 * IC_water;
+						u.x[ i ][ j ][ k ] = - IC_water;
+						w.x[ i ][ j ][ k ] = + IC_water;
 					}
 				}
 			}
@@ -5794,8 +5886,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.001 * IC_water * ( double ) ( i - i_EIC_u ) / ( double ) ( i_EIC_o - i_EIC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_EIC_u ) / ( double ) ( i_EIC_o - i_EIC_u );
 				}
 			}
 		}
@@ -5820,8 +5912,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.0008 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
 				}
 			}
 		}
@@ -5842,8 +5934,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.0004 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
 				}
 			}
 		}
@@ -5869,8 +5961,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  + 0.001 * IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
 				}
 			}
 		}
@@ -5900,8 +5992,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  - 0.0005 * IC_water;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] =  - IC_water;
 				}
 			}
 		}
@@ -5931,8 +6023,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  + 0.001 * IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
 				}
 			}
 		}
@@ -5958,9 +6050,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0002 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0005 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -5985,9 +6077,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] =  + 0.0002 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] =  + 0.0001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  - 0.0005 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] =  - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -6013,9 +6105,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0002 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0005 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -6039,9 +6131,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] =  - 0.0002 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] =  - 0.0001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  - 0.0005 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] =  - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] =  - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] =  - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -6072,8 +6164,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.001 * IC_water;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = IC_water;
 				}
 			}
 		}
@@ -6096,8 +6188,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0002 * IC_water;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0001 * IC_water;
+						u.x[ i ][ j ][ k ] = + IC_water;
+						w.x[ i ][ j ][ k ] = - IC_water;
 					}
 				}
 			}
@@ -6121,8 +6213,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0002 * IC_water;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0001 * IC_water;
+						u.x[ i ][ j ][ k ] = - IC_water;
+						w.x[ i ][ j ][ k ] = + IC_water;
 					}
 				}
 			}
@@ -6147,8 +6239,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.001 * IC_water * ( double ) ( i - i_EIC_u ) / ( double ) ( i_EIC_o - i_EIC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_EIC_u ) / ( double ) ( i_EIC_o - i_EIC_u );
 				}
 			}
 		}
@@ -6175,8 +6267,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.0004 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
 				}
 			}
 		}
@@ -6198,8 +6290,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.0004 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
 				}
 			}
 		}
@@ -6224,8 +6316,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  + 0.001 * IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
 				}
 			}
 		}
@@ -6253,8 +6345,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  - 0.0005 * IC_water;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] =  - IC_water;
 				}
 			}
 		}
@@ -6282,8 +6374,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  + 0.001 * IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
 				}
 			}
 		}
@@ -6308,9 +6400,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0002 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =   0.0005 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -6337,9 +6429,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] =  + 0.0002 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] =  + 0.0001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  + 0.0005 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -6367,9 +6459,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0002 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =   0.0005 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -6396,9 +6488,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] =  - 0.0002 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] =  - 0.0001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  + 0.0005 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] =  - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] =  - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -6433,8 +6525,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.001 * IC_water;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = IC_water;
 				}
 			}
 		}
@@ -6460,8 +6552,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0002 * IC_water;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0001 * IC_water;
+						u.x[ i ][ j ][ k ] = - IC_water;
+						w.x[ i ][ j ][ k ] = + IC_water;
 					}
 				}
 			}
@@ -6486,8 +6578,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0002 * IC_water;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0001 * IC_water;
+						u.x[ i ][ j ][ k ] = + IC_water;
+						w.x[ i ][ j ][ k ] = - IC_water;
 					}
 				}
 			}
@@ -6511,8 +6603,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.001 * IC_water * ( double ) ( i - i_EIC_u ) / ( double ) ( i_EIC_o - i_EIC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_EIC_u ) / ( double ) ( i_EIC_o - i_EIC_u );
 				}
 			}
 		}
@@ -6536,8 +6628,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.0008 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
 				}
 			}
 		}
@@ -6560,8 +6652,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.0004 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_SCC_o - i_SCC_u );
 				}
 			}
 		}
@@ -6588,8 +6680,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  + 0.001 * IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
 				}
 			}
 		}
@@ -6617,8 +6709,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  - 0.0005 * IC_water;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] =  - IC_water;
 				}
 			}
 		}
@@ -6646,8 +6738,8 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  + 0.001 * IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_ECC_u ) / ( double ) ( i_ECC_o - i_ECC_u );
 				}
 			}
 		}
@@ -6678,9 +6770,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0015 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -6709,9 +6801,9 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] =  + 0.001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] =  + 0.001 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
-//						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =  + 0.0005 * IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						u.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+						v.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
+//						w.x[ i ][ j ][ k ] =  + IC_water * ( double ) ( i - i_SCC_u ) / ( double ) ( i_ECC_o - 1 - i_SCC_u );
 					}
 				}
 			}
@@ -6726,7 +6818,7 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 
 
 
-void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn, Array &c )
+void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Array &c )
 {
 // initial conditions for v- and w-velocity components in deep flows
 // Atlantic ocean
@@ -6744,10 +6836,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0015 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_deep - i_deep );
-//					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0005 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_deep - i_deep );
+					c.x[ i ][ j ][ k ] = 1.11;
+					u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+//					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_deep - i_deep );
+//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_deep - i_deep );
 				}
 			}
 		}
@@ -6773,10 +6865,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0005 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					c.x[ i ][ j ][ k ] = 1.11;
+//					u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -6814,10 +6906,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-//						c.x[ i ][ j ][ k ] = 1.00;
-//						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						c.x[ i ][ j ][ k ] = 1.11;
+//						u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 					}
 				}
 			}
@@ -6844,10 +6936,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.;
+					c.x[ i ][ j ][ k ] = 1.11;
+//					u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					w.x[ i ][ j ][ k ] = + 0.;
 				}
 			}
 		}
@@ -6884,10 +6976,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-//						c.x[ i ][ j ][ k ] = 1.00;
-//						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] =   0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =   0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						c.x[ i ][ j ][ k ] = 1.11;
+//						u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						v.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 					}
 				}
 			}
@@ -6914,8 +7006,8 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] =   0.005 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] =   0.020 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -6939,10 +7031,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = - 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.000 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					c.x[ i ][ j ][ k ] = 1.11;
+//					u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+//					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -7001,8 +7093,8 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -7024,11 +7116,11 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0050 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.000 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					c.x[ i ][ j ][ k ] = 1.11;
+//					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -7051,11 +7143,11 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.000 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0050 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					c.x[ i ][ j ][ k ] = 1.11;
+//					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -7077,11 +7169,11 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0050 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.000 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					c.x[ i ][ j ][ k ] = 1.11;
+//					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -7116,10 +7208,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-//						c.x[ i ][ j ][ k ] = 1.00;
-//						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						c.x[ i ][ j ][ k ] = 1.11;
+//						u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 					}
 				}
 			}
@@ -7145,11 +7237,11 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0050 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0002 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.000 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					c.x[ i ][ j ][ k ] = 1.11;
+					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+//					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -7174,11 +7266,11 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0015 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0030 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0002 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+					c.x[ i ][ j ][ k ] = 1.11;
+					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+//					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+//					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
 				}
 			}
 		}
@@ -7204,10 +7296,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 			if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.00;
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0050 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.000 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					c.x[ i ][ j ][ k ] = 1.11;
+//					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -7231,11 +7323,11 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 			if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-//					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0050 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.0010 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					//w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.000 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					c.x[ i ][ j ][ k ] = 1.11;
+//					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					//w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 				}
 			}
 		}
@@ -7259,10 +7351,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.0015 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.0005 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+					c.x[ i ][ j ][ k ] = 1.11;
+					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+//					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
 				}
 			}
 		}
@@ -7289,10 +7381,10 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.00;
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.0001 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] =   0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.0002 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+					c.x[ i ][ j ][ k ] = 1.11;
+					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
 				}
 			}
 		}
@@ -7317,9 +7409,9 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				{
 					{
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = + 0.001 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.003 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = + 0.030 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 					}
 				}
 			}
@@ -7345,8 +7437,8 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				{
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = + 0.030 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.005 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 					}
 				}
 			}
@@ -7371,15 +7463,14 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 				{
 					{
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = - 0.025 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = - 0.002 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 					}
 				}
 			}
 		}
 	}
 */
-
 }
 
 
@@ -7556,11 +7647,11 @@ void IC_Thermohalin::BC_Surface_Salinity ( const string &Name_SurfaceSalinity_Fi
 
 
 
-void IC_Thermohalin::BC_Surface_Pressure ( double pa, double const gr, double const r_0_air, double const r_0_water, double const R_Air, const double p_0, const double t_0, Array_2D &p_j, Array_2D &t_j, Array &h, Array &p, Array &t )
+void IC_Thermohalin::BC_Surface_Pressure ( double pa, double const gr, double const r_0_water, const double p_0, const double t_0, Array_2D &p_j, Array_2D &t_j, Array &h, Array &p, Array &t )
 {
 // boundary condition of surface pressure given by surface temperature through gas equation
 
-	rR = r_0_air * R_Air;
+//	rR = r_0_air * R_Air;
 	rg = r_0_water * gr;
 /*
 	for ( int k = 0; k < km; k++ )
