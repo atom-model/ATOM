@@ -14,25 +14,25 @@
 #include <cstring>
 #include <iomanip>
 #include <sstream>
-//#include <netcdf.h>
+#include <netcdf.h>
 #include <vector>
 
 #include "Array.h"
 #include "Array_2D.h"
 #include "Array_1D.h"
-#include "BC_Hydrosphere.h"
-#include "BC_Bathymetry_Hydrosphere.h"
+#include "BC_Hyd.h"
+#include "BC_Bath_Hyd.h"
 #include "IC_Thermohalin.h"
-#include "Accuracy.h"
-#include "RHS_Hydrosphere.h"
-#include "RungeKutta_Hydrosphere.h"
-#include "Print_Hydrosphere.h"
-#include "PostProcess_Hydrosphere.h"
-#include "Pressure.h"
-#include "Restore.h"
-#include "MinMax.h"
-#include "Results_MSL_Hyd.h"
-//#include "File_NetCDF.h"
+#include "Accuracy_Hyd.h"
+#include "RHS_Hyd.h"
+#include "RungeKutta_Hyd.h"
+#include "Print_Hyd.h"
+#include "PostProcess_Hyd.h"
+#include "Pressure_Hyd.h"
+#include "Restore_Hyd.h"
+#include "MinMax_Hyd.h"
+#include "Results_Hyd.h"
+#include "File_NetCDF.h"
 
 
 using namespace std;
@@ -236,7 +236,9 @@ int main ( int argc, char *argv[ ] )
 	time = dt;
 	velocity_iter = 1;
 	pressure_iter = 1;
-
+	velocity_iter_2D = 1;
+	pressure_iter_2D = 1;
+	switch_2D = 0;
 
 // time slice to start with is the modern world
 	i_time_slice = 0;
@@ -377,7 +379,6 @@ int main ( int argc, char *argv[ ] )
 	}
 	else 
 	{
-//		n = 0;
 		n = 1;
 		My << time_slice [ i_time_slice ] << "Ma_Golonka.xyz";
 		Name_Bathymetry_File = My.str();
@@ -533,11 +534,11 @@ int main ( int argc, char *argv[ ] )
 //	else    	  oldnew.restoreOldNew_2D ( .99, v, w, p, vn, wn, pn );
 	oldnew.restoreOldNew ( .99, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
 	oldnew.restoreOldNew_2D ( .99, v, w, p, vn, wn, pn );
-
+/*
 	cout << " |||||||||||||||||||||||||||||||||      after restoreOldNew, before begin of pressure loop     ||||||||||||||||||||||||||||||||||||| " << endl;
 	cout << " ***** printout of 3D-fields ***** " << endl;
 	w.printArray();
-
+*/
 
 // computation of the ratio ocean to land areas
 	calculate_MSL.land_oceanFraction ( h );
@@ -562,7 +563,6 @@ Pressure_loop:
 //	query to realize zero divergence of the continuity equation ( div c = 0 )
 	while ( min >= epsres ) 
 	{
-
 //		limit of the computation in the sense of time steps
 		n++;
 		if ( n > nm )
@@ -577,6 +577,7 @@ Pressure_loop:
 		velocity_iter++;
 		if ( velocity_iter > velocity_iter_max )
 		{
+			n--;
 			velocity_iter--;
 			break;
 		}
@@ -599,21 +600,19 @@ Pressure_loop_2D:
 			velocity_iter_2D++;
 			if ( velocity_iter_2D > velocity_iter_max_2D )
 			{
-//				velocity_iter_2D--;
-//				break;
 				goto Pressure_iteration_2D;
 			}
-
+/*
 	cout << " |||||||||||||||||||||||||||||||||      begin of velocity loop_2D     ||||||||||||||||||||||||||||||||||||| " << endl;
 	cout << " ***** printout of 3D-fields ***** " << endl;
 	w.printArray();
-
+*/
 
 //		class BC_Atmosphaere for the geometry of a shell of a sphere
 			boundary.RB_theta ( ca, ta, pa, t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
 			boundary.RB_phi ( t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
 //			if ( velocity_iter_2D == 1 )  boundary.BC_NST_control_2D ( dr, dthe, dphi, re, mue_air, mue_water, h, v, w, p, aux_2D_v, aux_2D_w, rad, the );
-			boundary.BC_NST_control_2D ( dr, dthe, dphi, re, mue_air, mue_water, h, v, w, p, aux_2D_v, aux_2D_w, rad, the );
+//			boundary.BC_NST_control_2D ( dr, dthe, dphi, re, mue_air, mue_water, h, v, w, p, aux_2D_v, aux_2D_w, rad, the );
 
 //		pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
 			startPressure.computePressure_2D ( pa, rad, the, p, h, rhs_v, rhs_w, aux_v, aux_w );
@@ -622,7 +621,6 @@ Pressure_loop_2D:
 			Accuracy		min_Residuum_old_2D ( n, im, jm, km, dr, dthe, dphi );
 			min_Residuum_old_2D.residuumQuery_2D ( j_res, k_res, min, rad, the, v, w );
 			residuum_old = min;
-
 
 //		class RungeKutta for the solution of the differential equations describing the flow properties
 			result.solveRungeKutta_2D_Hydrosphere ( prepare, rad, the, phi, rhs_v, rhs_w, h, v, w, p, vn, wn, aux_v, aux_w );
@@ -650,9 +648,6 @@ Pressure_loop_2D:
 
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of loop_2D: while ( min >= epsres )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-
-
-
 Pressure_iteration_2D:
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
@@ -674,10 +669,15 @@ Pressure_iteration_2D:
 
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D )   :::::::::::::::::::::::::::::::::::::::::::
-
+/*
 	cout << " |||||||||||||||||||||||||||||||||      end of velocity loop_2D     ||||||||||||||||||||||||||||||||||||| " << endl;
 	cout << " ***** printout of 3D-fields ***** " << endl;
 	w.printArray();
+*/
+
+
+
+
 
 	process_3D:
 
@@ -780,10 +780,12 @@ Pressure_iteration_2D:
 
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of loop: while ( min >= epsres )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+
+/*
 	cout << " |||||||||||||||||||||||||||||||||      end of loop: while, before printout    ||||||||||||||||||||||||||||||||||||| " << endl;
 	cout << " ***** printout of 3D-fields ***** " << endl;
 	w.printArray();
-
+*/
 
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
@@ -791,53 +793,68 @@ Pressure_iteration_2D:
 
 //	statements on the convergence und iterational process
 	pressure_iter++;
-	switch_2D = 0;
+	velocity_iter = 0;
+
+	if ( pressure_iter >= pressure_iter_max + 1 ) 
+	{
+		goto Print_commands;
+	}
+	else 
+	{
+		velocity_iter_2D = velocity_iter_max_2D;
+		pressure_iter_2D = pressure_iter_max_2D;
+		switch_2D = 1;
+		goto Pressure_loop;
+	}
+
+                                            //  end of loop: 			if ( pressure_iter > pressure_iter_max )
+
+
+Print_commands:
 
 //	class Print_Hydrosphaere for the printout of results
 	Print_Hydrosphere		printout ( im, jm, km, nm, n, time );
 
 //	printout in ParaView files, netCDF files and sequel files
-	if ( pressure_iter > pressure_iter_max )
+
+	pressure_iter_aux = pressure_iter - 1;
+
+//	results written in netCDF format
+//	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Upwelling, Downwelling, BottomWater );
+
+//	class PostProcess_Hydrosphaere for the printing of results
+	PostProcess_Hydrosphere		write_File ( im, jm, km );
+
+
+	j_longal = 75;
+	write_File.paraview_vtk_longal ( Name_Bathymetry_File, j_longal, pressure_iter_aux, h, p, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, Salt_Balance );
+
+//	zonal data along constant longitudes
+	k_zonal = 185;
+	write_File.paraview_vtk_zonal ( Name_Bathymetry_File, k_zonal, pressure_iter_aux, h, p, t, u, v, w, c, Salt_Finger, Salt_Diffusion, Salt_Balance );
+
+//	radial data along constant hight above ground
+	i_radial = 40;
+	write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_aux, h, p, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BottomWater );
+
+//	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
+	write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, h, t, p, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, Salt_Balance );
+
+//	3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
+//	write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p, u, v, w, c, rhs_u, rhs_v, rhs_w, rhs_c, rhs_p, rhs_t, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, Salt_Balance );
+
+
+//	writing of sequential data for the sequel file
+	if ( SequelFile == 1 )
 	{
-		pressure_iter_aux = pressure_iter - 1;
-
-//		results written in netCDF format
-//		printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Upwelling, Downwelling, BottomWater );
-
-//		class PostProcess_Hydrosphaere for the printing of results
-		PostProcess_Hydrosphere		write_File ( im, jm, km );
+		write_File.Hydrosphere_SequelFile_write ( Name_Bathymetry_File, n, pressure_iter, time, rad, the, phi, h, t, u, v, w, c, tn, un, vn, wn, cn, aux_u, aux_v, aux_w, t_j, c_j  );
+	}
 
 
-		j_longal = 75;
-		write_File.paraview_vtk_longal ( Name_Bathymetry_File, j_longal, pressure_iter_aux, h, p, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, Salt_Balance );
+//	writing of plot data in the PlotData file
+	PostProcess_Hydrosphere		write_PlotData_File ( im, jm, km );
+	write_PlotData_File.Hydrosphere_PlotData ( Name_Bathymetry_File, v, w, t, c, BottomWater, Upwelling, Downwelling );
 
-//		zonal data along constant longitudes
-		k_zonal = 185;
-		write_File.paraview_vtk_zonal ( Name_Bathymetry_File, k_zonal, pressure_iter_aux, h, p, t, u, v, w, c, Salt_Finger, Salt_Diffusion, Salt_Balance );
-
-//		radial data along constant hight above ground
-		i_radial = 40;
-		write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_aux, h, p, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BottomWater );
-
-//		3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-		write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, h, t, p, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, Salt_Balance );
-
-//		3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
-//		write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p, u, v, w, c, rhs_u, rhs_v, rhs_w, rhs_c, rhs_p, rhs_t, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, Salt_Balance );
-
-
-//		writing of sequential data for the sequel file
-		if ( SequelFile == 1 )
-		{
-			write_File.Hydrosphere_SequelFile_write ( Name_Bathymetry_File, n, pressure_iter, time, rad, the, phi, h, t, u, v, w, c, tn, un, vn, wn, cn, aux_u, aux_v, aux_w, t_j, c_j  );
-		}
-
-
-//		writing of plot data in the PlotData file
-		PostProcess_Hydrosphere		write_PlotData_File ( im, jm, km );
-		write_PlotData_File.Hydrosphere_PlotData ( Name_Bathymetry_File, v, w, t, c, BottomWater, Upwelling, Downwelling );
-
-	}                                             //  end of loop: 			if ( pressure_iter > pressure_iter_max )
 
 
 
@@ -854,8 +871,13 @@ Pressure_iteration_2D:
 
 	time_slice_change:
 
-
 //	choice of the next time slice after nm iterations reached
+	time = dt;
+	velocity_iter = 1;
+	pressure_iter = 1;
+	velocity_iter_2D = 1;
+	pressure_iter_2D = 1;
+	switch_2D = 0;
 
 	i_time_slice++;
 	Ma = time_slice [ i_time_slice ];
