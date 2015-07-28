@@ -534,11 +534,11 @@ int main ( int argc, char *argv[ ] )
 //	else    	  oldnew.restoreOldNew_2D ( .99, v, w, p, vn, wn, pn );
 	oldnew.restoreOldNew ( .99, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
 	oldnew.restoreOldNew_2D ( .99, v, w, p, vn, wn, pn );
-/*
+
 	cout << " |||||||||||||||||||||||||||||||||      after restoreOldNew, before begin of pressure loop     ||||||||||||||||||||||||||||||||||||| " << endl;
 	cout << " ***** printout of 3D-fields ***** " << endl;
 	w.printArray();
-*/
+
 
 // computation of the ratio ocean to land areas
 	calculate_MSL.land_oceanFraction ( h );
@@ -602,11 +602,11 @@ Pressure_loop_2D:
 			{
 				goto Pressure_iteration_2D;
 			}
-/*
+
 	cout << " |||||||||||||||||||||||||||||||||      begin of velocity loop_2D     ||||||||||||||||||||||||||||||||||||| " << endl;
 	cout << " ***** printout of 3D-fields ***** " << endl;
 	w.printArray();
-*/
+
 
 //		class BC_Atmosphaere for the geometry of a shell of a sphere
 			boundary.RB_theta ( ca, ta, pa, t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
@@ -669,11 +669,11 @@ Pressure_iteration_2D:
 
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D )   :::::::::::::::::::::::::::::::::::::::::::
-/*
+
 	cout << " |||||||||||||||||||||||||||||||||      end of velocity loop_2D     ||||||||||||||||||||||||||||||||||||| " << endl;
 	cout << " ***** printout of 3D-fields ***** " << endl;
 	w.printArray();
-*/
+
 
 
 
@@ -781,11 +781,11 @@ Pressure_iteration_2D:
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of loop: while ( min >= epsres )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-/*
+
 	cout << " |||||||||||||||||||||||||||||||||      end of loop: while, before printout    ||||||||||||||||||||||||||||||||||||| " << endl;
 	cout << " ***** printout of 3D-fields ***** " << endl;
 	w.printArray();
-*/
+
 
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )

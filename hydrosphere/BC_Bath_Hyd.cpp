@@ -13,7 +13,8 @@
 #include <fstream>
 #include <cmath>
 
-#include "BC_Bathymetry_Hydrosphere.h"
+
+#include "BC_Bath_Hyd.h"
 
 using namespace std;
 
@@ -32,7 +33,7 @@ BC_Bathymetry_Hydrosphere::~BC_Bathymetry_Hydrosphere() {}
 
 
 
-void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_File, double L_hyd, Array &h, Array &aux_w )
+void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_File, Array &h, Array &aux_w )
 {
 	streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
 
@@ -51,6 +52,9 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 				}
 			}
 		}
+
+
+	h_max = - 6000.;    //	compares to 	150m per step when im = 41, minus sign due to negativ hight
 
 
 // reading data from file Name_Bathymetry_File_Read
@@ -80,13 +84,15 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 
 			if ( dummy_3 > 0. ) dummy_3 = 0.;
 
-			i = ( im - 1 ) - im * ( dummy_3 / L_hyd );
+			i = ( im -1 ) - im * ( dummy_3 / h_max );
 			i_boden = i;
 
 			for ( i = 0; i <= i_boden; i++ ) h.x[ i ][ j ][ k ] = 1.;
 
 			k++;
 
+//			cout << "\n***** Name_Bathymetry_File_Read:   Länge = " << dummy_1 << "  Breite = " << dummy_2 << "  Tiefe = " << dummy_3 << endl;
+//			cout << "***** Name_Bathymetry_File_Read:   i = " << i_boden << "  j = " << j << "  k = " << k << endl;
 		}
 	k = 0;
 	j++;
@@ -122,6 +128,9 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: could not be closed" << endl;
 
 // end reading Name_Bathymetry_File_Read
+
+
+
 
 
 
@@ -179,7 +188,7 @@ void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa
 {
 // boundary conditions for the total solid ground
 
-	for ( int i = 0; i < im; i++ )
+	for ( int i = 0; i < im-1; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
