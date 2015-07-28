@@ -134,8 +134,8 @@ int main ( int argc, char *argv[ ] )
 	const double c_0 = 35.0;									// rate of salt in psu as maximum value
 	const double u_0 = 0.45;									// maximum value of velocity in m/s
 	const double r_0_water = 1026.0;					// density of salt water in kg/m3
-	const double mue_air = 17.1;							// dynamic viscosity of air in muePa * s at 20°C
-	const double mue_water = 1000.;					// dynamic viscosity of water in muePa * s at 20°C
+//	const double mue_air = 17.1;							// dynamic viscosity of air in muePa * s at 20°C
+//	const double mue_water = 1000.;					// dynamic viscosity of water in muePa * s at 20°C
 	const double epsres = 0.0005;							// accuracy for relative and absolute errors
 
 	const double ua = 0.;										// initial velocity component in r-direction
@@ -655,9 +655,6 @@ Pressure_iteration_2D:
 
 //	statements on the convergence und iterational process
 	pressure_iter_2D++;
-
-
-//	statements on the convergence und iterational process
 	velocity_iter_2D = 0;
 
 	if ( pressure_iter_2D >= pressure_iter_max_2D + 1 ) 
@@ -696,7 +693,7 @@ Pressure_iteration_2D:
 		boundary.RB_theta ( ca, ta, pa, t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
 		boundary.RB_phi ( t, u, v, w, p, c, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, aux_u, aux_v, aux_w, h, Salt_Finger, Salt_Diffusion, Salt_Balance );
 //		if ( velocity_iter == 1 )  boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, co2, aux_u, aux_v, aux_w, rad, the );
-		boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, aux_u, aux_v, aux_w, rad, the );
+//		boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, aux_u, aux_v, aux_w, rad, the );
 
 // 		class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 		depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p, c, tn, un, vn, wn, pn, cn, t_j, c_j, p_j );
@@ -725,6 +722,9 @@ Pressure_iteration_2D:
 //		statements on the convergence und iterational process
 		Accuracy		printout ( im, Ma, n, velocity_iter, pressure_iter, min, L_hyd );
 		printout.iterationPrintout ( nm, velocity_iter_max, pressure_iter_max, i_res, j_res, k_res, i_u, j_u, k_u, i_v, j_v, k_v, i_w, j_w, k_w, i_t, j_t, k_t, i_c, j_c, k_c, i_p, j_p, k_p, min_u, min_v, min_w, min_t, min_c, min_p );
+
+
+
 
 
 //	searching of maximum and minimum values of salt concentration
@@ -889,7 +889,7 @@ Print_commands:
 
 	finish:
 
-// delete temporary files
+// delete temporary arrays
 	delete [ ] time_slice;
 
 // 	final remarks
