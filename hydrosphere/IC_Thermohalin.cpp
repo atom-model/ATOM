@@ -270,18 +270,18 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 	for ( int j = 0; j < 91; j++ )													// outer loop: latitude
 	{
-		for ( int k = 0; k < km; k++ )											// inner loop: longitude
+		for ( int k = 0; k < km - k_grad; k++ )											// inner loop: longitude
 		{
 			if ( h.x[ i_max ][ j ][ k ] == 1. ) k_sequel = 0;				// if solid ground: k_sequel = 0
 
-			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;// if water and and k_sequel = 0 then is water closest to coast
+			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;	// if water and and k_sequel = 0 then is water closest to coast
 			else k_water = 1;														// somewhere on water
 
 			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_water == 0 ) )	// if water is closest to coast, change of velocity components begins
 			{
 				for ( int l = 0; l < k_grad; l++ )								// extension of change, sign change in v-velocity and distribution of u-velocity with depth
 				{
-//					v.x[ i_max ][ j ][ k + l ] = - v.x[ i_max ][ j ][ k + l ];	// existing velocity changes sign
+					v.x[ i_max ][ j ][ k + l ] = - v.x[ i_max ][ j ][ k + l ];	// existing velocity changes sign
 
 					for ( int i = i_middle; i <= i_half; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
 					{
@@ -290,6 +290,10 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 						c.x[ i ][ j ][ k ] = 1.11;
 						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
 						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
+
+//cout << l << "     " << i << "     " << j << "     " << k << "     " << u.x[ i ][ j ][ k + l ] << "     " << u.x[ m ][ j ][ k + l ] << "     " << d_i << "     " << d_i_half << "     " << IC_water << endl << endl;
+
+
 					}
 				}
 
@@ -331,7 +335,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 			{
 				for ( int l = 0; l < k_grad; l++ )
 				{
-//					v.x[ i_max ][ j ][ k + l ] = - v.x[ i_max ][ j ][ k + l ];
+					v.x[ i_max ][ j ][ k + l ] = - v.x[ i_max ][ j ][ k + l ];
 
 					for ( int i = i_middle; i <= i_half; i++ )
 					{
@@ -375,7 +379,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 	for ( int j = 0; j < 91; j++ )													// outer loop: latitude
 	{
-		for ( int k = 0; k < km; k++ )											// inner loop: longitude
+		for ( int k = k_grad; k < km; k++ )											// inner loop: longitude
 		{
 			if ( h.x[ i_max ][ j ][ k ] == 0. )										// if somewhere on water
 			{
@@ -386,7 +390,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 			if ( ( flip == 0 ) && ( k_water == 1 ) )							// on water closest to land
 			{
-				for ( int l = k; l > ( k - k_grad + 1 ); l-- )						// backward extention of velocity change: nothing changes
+				for ( int l = k; l > ( k - k_grad - 1 ); l-- )						// backward extention of velocity change: nothing changes
 				{
 					w.x[ i_max ][ j ][ l ] = - w.x[ i_max ][ j ][ l ];
 
@@ -399,8 +403,8 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
 				}
-
-				for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
+/*
+				for ( int l = k; l > ( k - k_grad - k_a + 1 ); l-- )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
 				{
 					v.x[ i_max ][ j ][ l ] = v.x[ i_max ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k ); // extension of v-velocity
 				}
@@ -409,7 +413,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 				{
 					w.x[ i_max ][ j ][ l ] = (  - w.x[ i_max ][ j ][ k - k_grad - 3 ] + w.x[ i_max ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ i_max ][ j ][ k - k_grad + 3 ];
 				}
-
+*/
 				flip = 1;
 			}
 		}
@@ -428,7 +432,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 	for ( int j = 91; j < jm; j++ )
 	{
-		for ( int k = 0; k < km; k++ )
+		for ( int k = k_grad; k < km; k++ )
 		{
 			if ( h.x[ i_max ][ j ][ k ] == 0. )
 			{
@@ -452,7 +456,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
 					}
 				}
-
+/*
 				for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- )
 				{
 					v.x[ i_max ][ j ][ l ] = v.x[ i_max ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k );
@@ -462,7 +466,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 				{
 					w.x[ i_max ][ j ][ l ] = ( - w.x[ i_max ][ j ][ k - k_grad - 3 ] + w.x[ i_max ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ i_max ][ j ][ k - k_grad + 3 ];
 				}
-
+*/
 				flip = 1;
 			}
 		}

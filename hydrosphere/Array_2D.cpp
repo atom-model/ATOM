@@ -1,5 +1,5 @@
 /*
- * Ocean General Circulation Modell ( OGCM ) applied to laminar flow
+ * Atmosphere General Circulation Modell ( AGCM ) applied to laminar flow
  * Program for the computation of geo-atmospherical circulating flows in a spherical shell
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
@@ -45,7 +45,7 @@ Array_2D::Array_2D ( int jm, int km, double bb )
 // 		cout << endl;
 	}
 // 	cout << endl;
-	}
+}
 
 
 
@@ -55,7 +55,6 @@ Array_2D::~Array_2D()
 	{
 		delete y[ j ];
 	}
-
 	delete [  ] y;
 }
 
@@ -63,20 +62,23 @@ Array_2D::~Array_2D()
 
 
 
+
+
 void Array_2D::printArray_2D()
 {
-	cout.precision ( 4 );
+	cout.precision ( 3 );
 	cout.setf ( ios::fixed );
 
 	cout << "  phi = k-direction ======>  theta = j-direction downwards :::::::::: r-level " << endl;
 	cout << endl;
 
 	for ( int j = 0; j < jm; j+=4 )
-//	for ( int j = 0; j < 20; j++ )
+//	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int k = 0; k < km; k+=16 )
+		for ( int k = 0; k < km; k+=20 )
+//		for ( int k = 0; k < km; k++ )
 		{
-			cout.width ( 6 );
+			cout.width ( 4 );
 			cout.fill( ' ' );
 
 // 			cout << y[ j ][ k ] << " (" << &y[ j ][ k ] << ")" << " ";

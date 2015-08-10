@@ -25,13 +25,14 @@ using namespace std;
 class IC_Thermohalin
 {
 	private:
-		int i, j, k, l, im, jm, km, k_half, m, i_beg, j_max, i_max, i_down, j_half, i_bottom, i_deep, i_middle, i_EIC_o, i_EIC_u, i_SCC_o, i_SCC_u, i_ECC_o, i_ECC_u;
+		int i, j, k, im, jm, km, k_half, m, i_beg, j_max, i_max, i_down, j_half, i_bottom, i_deep, i_middle, i_EIC_o, i_EIC_u, i_SCC_o, i_SCC_u, i_ECC_o, i_ECC_u;
 		int i_end, i_run, i_step, i_half, j_beg, j_end, j_run, j_step, k_beg, k_end, k_run, k_step, k_finish, k_exp, j_z, j_n, k_z, k_n, k_w, k_o;
 		int k_a, k_b, flip, k_grad;
 		int k_aa, k_bb, k_aaa, k_bbb, k_aaaa, k_bbbb;
 		int k_water, k_sequel;
 		int Ma_max, Ma_max_half;
 		int n_smooth;
+		int k1, k2;
 
 		double dummy_1, dummy_2, dummy_3, IC_water, water_wind, c_0, gr, c_salt, Ekman_angle, vel_magnitude, alfa, beta, angle, Ekman_angle_add, Ekman, pi180;
 		double t_equator, t_pole, d_i, d_i_half, d_i_max, d_j, d_j_half, d_j_max, t_coeff, c_equator, c_pole, c_coeff, ep, hp, p_0, t_0;
