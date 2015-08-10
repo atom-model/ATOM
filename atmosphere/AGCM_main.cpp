@@ -97,7 +97,7 @@ int main ( int argc, char *argv[ ] )
 // maximum number of inner velocity loop iterations ( velocity_iter_max ),
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 2, pressure_iter_max = 2;
+	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;
 	int velocity_iter_max_2D = 10, pressure_iter_max_2D = 5;
 
 	int n, i_radial, j_longal, k_zonal, i_max;
@@ -186,6 +186,8 @@ int main ( int argc, char *argv[ ] )
 
 	double t_Average = 15.;									// mean temperature of the modern earth
 	double t_equator = 1.119;									// temperature t_0 = 1.119 compares to 32.5° C compares to 305.65 K
+//	double t_equator = 1.139;									// temperature t_0 = 1.139 compares to 38.0° C compares to 311.15 K
+//	double t_equator = 1.165;									// temperature t_0 = 1.139 compares to 45.0° C compares to 318.15 K
 	double t_pole = .8;												// temperature at the poles t_pole = 0.8 compares to -54.63°C compares to 218.52 K
 	double t_tropopause = .78;								// temperature in the tropopause
 	double t_land_plus = .007322;							// temperature increase on land ( 1°C compare to t_land_plus = 0.003661 )
@@ -931,6 +933,7 @@ Print_commands:
 
 	i_time_slice++;
 	Ma = time_slice [ i_time_slice ];
+	if ( Ma > 30 ) goto finish;
 	if ( i_time_slice >= i_time_slice_max ) goto finish;
 	else goto time_slice_sequel;
 

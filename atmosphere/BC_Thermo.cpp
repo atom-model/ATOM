@@ -302,7 +302,9 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 			{
 //				e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;								// water vapour pressure at local hight h
 //				c_j.y[ j ][ k ] = ep * e_h / p_0;
-				c_j.y[ j ][ k ]  = .5 * hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0; // 100% saturation of relative water vapour 
+				c_j.y[ j ][ k ]  = .8 * hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0; // 80% saturation of relative water vapour 
+//				c_j.y[ j ][ k ]  = .5 * hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0; // 50% saturation of relative water vapour 
+//				c_j.y[ j ][ k ]  = .2 * hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0; // 20% saturation of relative water vapour 
 				c_j.y[ j ][ k ] = c_ocean_minus * c_j.y[ j ][ k ];				// relativ water vapour contents on ocean surface reduced by factor
 				c.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];										// relativ water vapour contents increased by by factor
 			}
@@ -312,7 +314,9 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 //				e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;								// water vapour pressure at local hight h
 //				c_j.y[ j ][ k ] = ep * e_h / p_0;
 
-				c_j.y[ j ][ k ]  = .5 * hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0;
+				c_j.y[ j ][ k ]  = .8 * hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0;
+//				c_j.y[ j ][ k ]  = .5 * hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0;
+//				c_j.y[ j ][ k ]  = .2 * hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0;
 				c_j.y[ j ][ k ] = c_land_minus * c_j.y[ j ][ k ];					// relativ water vapour contents on land reduced by factor
 				c.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];										// relativ water vapour contents increased by factor
 			}
