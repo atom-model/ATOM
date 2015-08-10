@@ -14,7 +14,7 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
-#include <netcdf.h>
+//#include <netcdf.h>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -31,7 +31,7 @@
 #include "Restore_Atm.h"
 #include "Results_Atm.h"
 #include "MinMax_Atm.h"
-#include "File_NetCDF.h"
+//#include "File_NetCDF.h"
 
 
 using namespace std;
@@ -298,6 +298,22 @@ int main ( int argc, char *argv[ ] )
 	Array	Evaporation_3D ( im, jm, km, 0. );			// 3D Evaporation
 
 
+/*
+	for ( int i = 0; i < im; i++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
+				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
+				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+			}
+		}
+	}
+*/
+
+
 //	cout << " ***** printout of 3D-fields ***** " << endl;
 //	v.printArray();
 //	cout << " ***** printout of 2D-fields ***** " << endl;
@@ -427,7 +443,7 @@ int main ( int argc, char *argv[ ] )
 	Results_MSL_Atm		calculate_MSL ( im, jm, km, sun, ep, hp, p_0, t_0, c_0, sigma, albedo, lv, cp_l, L_atm, dr, r_0_air, R_Air, r_0_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land );
 
 //	class File_NetCDF to write results in the format of a netCDF-file
-	File_NetCDF		printoutNetCDF ( im, jm, km );
+//	File_NetCDF		printoutNetCDF ( im, jm, km );
 
 
 
@@ -507,6 +523,8 @@ int main ( int argc, char *argv[ ] )
 
 
 
+
+
 // 	class BC_Bathymetry_Atmosphere for the geometrical boundary condition of the computational area
 	BC_Bathymetry_Atmosphere		LandArea ( im, jm, km );
 
@@ -555,8 +573,8 @@ int main ( int argc, char *argv[ ] )
 
 
 //	storeing of velocity components, pressure and temperature for iteration start
-	oldnew.restoreOldNew ( .99, u, v, w, t, p, c, co2, un, vn, wn, tn, pn, cn, co2n );
-	oldnew.restoreOldNew_2D ( .99, v, w, p, vn, wn, pn );
+	oldnew.restoreOldNew ( .9, u, v, w, t, p, c, co2, un, vn, wn, tn, pn, cn, co2n );
+	oldnew.restoreOldNew_2D ( .9, v, w, p, vn, wn, pn );
 
 // computation of the ratio ocean to land areas, also supply and removal of CO2 on land, ocean and by vegetation
 	calculate_MSL.land_oceanFraction ( h );
@@ -624,12 +642,11 @@ Pressure_loop_2D:
 
 //		class BC_Atmosphaere for the geometry of a shell of a sphere
 			boundary.BC_theta ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
-			boundary.BC_phi    ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
-//			if ( velocity_iter_2D == 1 )  boundary.BC_NST_control_2D ( dr, dthe, dphi, re, mue_air, mue_water, h, v, w, p, aux_2D_v, aux_2D_w, rad, the );
+			boundary.BC_phi ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
 //			boundary.BC_NST_control_2D ( dr, dthe, dphi, re, mue_air, mue_water, h, v, w, p, aux_2D_v, aux_2D_w, rad, the );
 
 //		pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-			startPressure.computePressure_2D ( pa, rad, the, p, h, rhs_v, rhs_w, aux_v, aux_w );
+//			startPressure.computePressure_2D ( pa, rad, the, p, h, rhs_v, rhs_w, aux_v, aux_w );
 
 // 		old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 			Accuracy		min_Residuum_old_2D ( n, im, jm, km, dr, dthe, dphi );
@@ -641,7 +658,7 @@ Pressure_loop_2D:
 
 //		state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
 			Accuracy		min_Stationary_2D ( n, im, jm, km, dr, dthe, dphi );
-			min_Stationary_2D.steadyQuery_2D ( i_v, j_v, k_v, i_w, j_w, k_w, i_p, j_p, k_p, min_v, min_w, min_p, v, vn, w, wn, p, pn );
+			min_Stationary_2D.steadyQuery_2D ( j_v, k_v, j_w, k_w, j_p, k_p, min_v, min_w, min_p, v, vn, w, wn, p, pn );
 
 // 		new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 			Accuracy		min_Residuum_2D ( n, im, jm, km, dr, dthe, dphi );
@@ -652,7 +669,7 @@ Pressure_loop_2D:
 
 //		statements on the convergence und iterational process
 			Accuracy		printout_2D ( im, Ma, n, velocity_iter_2D, pressure_iter_2D, min, L_atm );
-			printout_2D.iterationPrintout_2D ( nm, velocity_iter_max_2D, pressure_iter_max_2D, j_res, k_res, i_v, j_v, k_v, i_w, j_w, k_w, i_p, j_p, k_p, min_v, min_w, min_p );
+			printout_2D.iterationPrintout_2D ( nm, velocity_iter_max_2D, pressure_iter_max_2D, j_res, k_res, j_v, k_v, j_w, k_w, j_p, k_p, min, min_v, min_w, min_p );
 
 			oldnew.restoreOldNew_2D ( 1., v, w, p, vn, wn, pn );
 
@@ -669,9 +686,6 @@ Pressure_iteration_2D:
 
 //	statements on the convergence und iterational process
 	pressure_iter_2D++;
-
-
-//	statements on the convergence und iterational process
 	velocity_iter_2D = 0;
 
 	if ( pressure_iter_2D >= pressure_iter_max_2D + 1 ) 
@@ -703,7 +717,6 @@ Pressure_iteration_2D:
 		boundary.BC_radius ( tao, tau, pa, ca, co2a, dr, rad, co2_vegetation, co2_ocean, co2_land, Vegetation, h, t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
 		boundary.BC_theta ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
 		boundary.BC_phi    ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
-//		if ( velocity_iter == 1 )  boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, co2, aux_u, aux_v, aux_w, rad, the );
 //		boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, co2, aux_u, aux_v, aux_w, rad, the );
 
 // initial condition for u-v-w-velocity components on west/east coasts
@@ -713,13 +726,6 @@ Pressure_iteration_2D:
 
 // 		class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 		LandArea.BC_SolidGround ( Ma, hp, ep, c_land_minus, co2_vegetation, t_0, p_0, pa, h, t, u, v, w, p, c, co2, tn, un, vn, wn, pn, cn, co2n, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, t_j, c_j, co2_j, Vegetation );
-
-
-//	cout << " ***** printout of 3D-fields ***** " << endl;
-//	c.printArray();
-
-
-
 
 // 		class RungeKutta for the solution of the differential equations describing the flow properties
 		result.solveRungeKutta_Atmosphere ( prepare, lv, ls, ep, hp, u_0, t_0, t_Boussinesq, c_0, co2_0, p_0, r_0_air, r_0_water_vapour, r_0_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_co2, h, t, u, v, w, p, c, co2, tn, un, vn, wn, cn, co2n, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
@@ -742,6 +748,9 @@ Pressure_iteration_2D:
 //		statements on the convergence und iterational process
 		Accuracy		printout ( im, Ma, n, velocity_iter, pressure_iter, min, L_atm );
 		printout.iterationPrintout ( nm, velocity_iter_max, pressure_iter_max, i_res, j_res, k_res, i_u, j_u, k_u, i_v, j_v, k_v, i_w, j_w, k_w, i_t, j_t, k_t, i_c, j_c, k_c, i_co2, j_co2, k_co2, i_p, j_p, k_p, min_u, min_v, min_w, min_t, min_c, min_co2, min_p );
+
+
+
 
 
 //		searching of maximum and minimum values of water vapour
@@ -826,7 +835,7 @@ Pressure_iteration_2D:
 
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-	startPressure.computePressure ( pa, rad, the, t, p, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+	startPressure.computePressure ( pa, rad, the, p, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
 
 //	statements on the convergence und iterational process
 	pressure_iter++;
@@ -931,7 +940,7 @@ Print_commands:
 	finish:
 
 // delete temporary arrays
-	delete [  ]time_slice;
+	delete [ ] time_slice;
 
 // 	final remarks
 	cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;

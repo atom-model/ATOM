@@ -63,10 +63,10 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( const string &Name_Bathymetr
 
 	im_tropopause = new int[ jm ];
 
-	for ( int ll = 0; l < jm; l++ )
+	for ( int ll = 0; ll < jm; ll++ )
 	{
 		im_tropopause[ ll ] = 0;
-//		cout << im_tropopause[ l ] << endl;
+//		cout << im_tropopause[ ll ] << endl;
 	}
 
 
@@ -75,10 +75,10 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( const string &Name_Bathymetr
 
 	jm_temp_asym = new double[ jm ];
 
-	for ( int ll = 0; l < jm; l++ )
+	for ( int ll = 0; ll < jm; ll++ )
 	{
 		jm_temp_asym[ ll ] = 0;
-//		cout << jm_temp_asym[ l ] << endl;
+//		cout << jm_temp_asym[ ll ] << endl;
 	}
 
 

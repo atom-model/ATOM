@@ -52,11 +52,11 @@ Array::Array ( int im, int jm, int km, double aa )
 // 				cout << x[ i ][ j ][ k ] << " (" << &x[ i ][ j ][ k ] << ")" << "  ";
 // 				cout << x[ i ][ j ][ k ] << "  ";
 			}
-// 			cout << endl;
+//			cout << endl;
 		}
-// 		cout << endl;
+//		cout << endl;
 	}
-// 	cout << endl;
+//	cout << endl;
 }
 
 
