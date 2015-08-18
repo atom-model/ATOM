@@ -11,7 +11,7 @@
 
 #include <iostream>
 
-#include "RungeKutta_Hydrosphere.h"
+#include "RungeKutta_Hyd.h"
 
 using namespace std;
 
@@ -119,6 +119,7 @@ void RungeKutta_Hydrosphere::solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &p
 	cout.precision ( 9 );
 	cout.setf ( ios::fixed );
 
+
 	for ( int j = 1; j < jm-1; j++ )
 	{
 		for ( int k = 1; k < km-1; k++ )
@@ -151,7 +152,7 @@ void RungeKutta_Hydrosphere::solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &p
 			kw3 = dt * rhs_w.x[ im-1 ][ j ][ k ] * .5;
 
 			v.x[ im-1 ][ j ][ k ] = vn.x[ im-1 ][ j ][ k ] + kv3;
-			w.x[ im-1 ][ j ][ k ] = w.x[ im-1 ][ j ][ k ] + kw3;
+			w.x[ im-1 ][ j ][ k ] = wn.x[ im-1 ][ j ][ k ] + kw3;
 
 		// Runge-Kutta 4. order for k4 step ( dt )
 			prepare.RK_RHS_2D_Hydrosphere ( j, k, rad, the, phi, h, v, w, p, vn, wn, rhs_v, rhs_w, aux_v, aux_w );

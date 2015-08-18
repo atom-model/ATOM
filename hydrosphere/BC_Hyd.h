@@ -45,7 +45,7 @@ class BC_Hydrosphere
 
 		void RB_theta ( double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void RB_phi ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
+		void RB_phi ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void BC_NST_control_2D ( double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_1D &, Array_1D & );
 

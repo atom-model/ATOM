@@ -14,7 +14,7 @@
 #include <cstring>
 #include <iomanip>
 
-#include "Results_MSL_Hyd.h"
+#include "Results_Hyd.h"
 
 using namespace std;
 
@@ -33,7 +33,7 @@ Results_MSL_Hyd::Results_MSL_Hyd ( int im, int jm, int km )
 Results_MSL_Hyd::~Results_MSL_Hyd () {}
 
 
-void Results_MSL_Hyd::run_MSL_data ( double u_0, double c_0, Array &hc, Array &uc, Array &vc, Array &wc, Array &cc, Array &SF, Array &SD, Array_2D &Up, Array_2D &Do, Array_2D &Sf, Array_2D &Sd, Array_2D &St, Array_2D &Bw )
+void Results_MSL_Hyd::run_MSL_data ( double c_0, Array &hc, Array &uc, Array &vc, Array &wc, Array &cc, Array &SF, Array &SD, Array_2D &Up, Array_2D &Do, Array_2D &Sf, Array_2D &Sd, Array_2D &St, Array_2D &Bw )
 {
 // total upwelling as sum on normal velocity component values in a virtual vertical column
 
@@ -60,8 +60,8 @@ void Results_MSL_Hyd::run_MSL_data ( double u_0, double c_0, Array &hc, Array &u
 			{
 				if ( hc.x[ i ][ j ][ k ] == 0. )
 				{
-					if ( uc.x[ i ][ j ][ k ] > 0. ) Up.y[ j ][ k ] += uc.x[ i ][ j ][ k ] / u_0;
-					if ( uc.x[ i ][ j ][ k ] < 0. ) Do.y[ j ][ k ] += - uc.x[ i ][ j ][ k ] / u_0;
+					if ( uc.x[ i ][ j ][ k ] > 0. ) Up.y[ j ][ k ] += uc.x[ i ][ j ][ k ];
+					if ( uc.x[ i ][ j ][ k ] < 0. ) Do.y[ j ][ k ] += uc.x[ i ][ j ][ k ];
 
 					Sf.y[ j ][ k ] += SF.x[ i ][ j ][ k ] * c_0;
 					Sd.y[ j ][ k ] += SD.x[ i ][ j ][ k ] * c_0;
@@ -72,7 +72,6 @@ void Results_MSL_Hyd::run_MSL_data ( double u_0, double c_0, Array &hc, Array &u
 	}
 
 
-
 //	ideal age		corresponds to deep currents
 
 	for ( int k = 0; k < km; k++ )
@@ -81,7 +80,7 @@ void Results_MSL_Hyd::run_MSL_data ( double u_0, double c_0, Array &hc, Array &u
 		{
 			for ( int i = 0; i < 30; i++ )
 			{
-				Bw.y[ j ][ k ] += sqrt ( uc.x[ i ][ j ][ k ] * uc.x[ i ][ j ][ k ] + vc.x[ i ][ j ][ k ] * vc.x[ i ][ j ][ k ] + wc.x[ i ][ j ][ k ] * wc.x[ i ][ j ][ k ] ) / u_0;
+				Bw.y[ j ][ k ] += sqrt ( uc.x[ i ][ j ][ k ] * uc.x[ i ][ j ][ k ] + vc.x[ i ][ j ][ k ] * vc.x[ i ][ j ][ k ] + wc.x[ i ][ j ][ k ] * wc.x[ i ][ j ][ k ] );
 			}
 		}
 	}

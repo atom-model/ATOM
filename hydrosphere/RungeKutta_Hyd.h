@@ -12,7 +12,7 @@
 
 #include "Array.h"
 #include "Array_1D.h"
-#include "RHS_Hydrosphere.h"
+#include "RHS_Hyd.h"
 
 #ifndef _RUNGEKUTTA_HYDROSPHERE_
 #define _RUNGEKUTTA_HYDROSPHERE_

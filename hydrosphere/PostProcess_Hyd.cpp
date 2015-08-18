@@ -14,7 +14,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "PostProcess_Hydrosphere.h"
+#include "PostProcess_Hyd.h"
 
 using namespace std;
 
@@ -1891,7 +1891,7 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 
 
 
-void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymetry_File, Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &BottomWater, Array_2D & Upwelling, Array_2D & Downwelling )
+void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymetry_File, Array &v, Array &w, Array &t, Array &c, Array_2D &BottomWater, Array_2D & Upwelling, Array_2D & Downwelling )
 {
 	stringstream Name_PlotData_File;
 
@@ -1920,13 +1920,13 @@ void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymet
 
 
 
-		PlotData_File << " latitude ( ° )" << ",  " << "longitude ( ° )" << ",    " << "h-level ( / )" << ",    " << "v-velocity ( 0.724 * x * m/s )" << ",    " << "w-velocity ( 0.724 * x * m/s )" << ",   " << "temperature ( 273.15 * x - 273.15 )" << ",   " << "salinity ( 35 * x * psu )" << ",   " << "bottom_water" << ",   " <<  "upwelling" << ",   " <<  "downwelling" << endl;
+		PlotData_File << " latitude ( ° )" << "  ,  " << "longitude ( ° )" << "  ,    " << "v-velocity ( 0.724 * x * m/s )" << "  ,    " << "w-velocity ( 0.724 * x * m/s )" << "   ,   " << "temperature ( 273.15 * x - 273.15 )" << "  ,   " << "salinity ( 35 * x * psu )" << "   ,   " << "bottom_water" << "   ,   " <<  "upwelling" << "   ,   " <<  "downwelling" << endl;
 
 		for ( int j = 0; j < jm; j++ )
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				PlotData_File << j << " " << k << " " << h.x[ im-1 ][ j ][ k ] << " " << v.x[ im-1 ][ j ][ k ] * .724 << " " << w.x[ im-1 ][ j ][ k ] * .724 << " " << t.x[ im-1 ][ j ][ k ] * 273.15 - 273.15 << " " << c.x[ im-1 ][ j ][ k ] * 35. << " " << BottomWater.y[ j ][ k ] << " " << Upwelling.y[ j ][ k ] << "   " << Downwelling.y[ j ][ k ] << " " <<  endl;
+				PlotData_File << j << " " << k << " " << v.x[ im-1 ][ j ][ k ] * .724 << " " << w.x[ im-1 ][ j ][ k ] * .724 << " " << t.x[ im-1 ][ j ][ k ] * 273.15 - 273.15 << " " << c.x[ im-1 ][ j ][ k ] * 35. << " " << BottomWater.y[ j ][ k ] << " " << Upwelling.y[ j ][ k ] << "   " << Downwelling.y[ j ][ k ] << " " <<  endl;
 
 			}
 		}

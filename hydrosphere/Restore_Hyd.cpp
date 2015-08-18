@@ -11,7 +11,7 @@
 
 #include <iostream>
 
-#include "Restore.h"
+#include "Restore_Hyd.h"
 
 using namespace std;
 
@@ -39,18 +39,12 @@ void Restore::restoreOldNew ( double coeff, Array &u, Array &v, Array &w, Array 
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-//				cout << "   i = " << i << "  " << "   j = " << j << "  " << "   k = " << k << "  " << " w = " << w.x[ i ][ j ][ k ] << endl;
-//				if ( i == 40 )   cout << "   i = " << i << "  " << "   j = " << j << "  " << "   k = " << k << "  " << " p = " << p.x[ i ][ j ][ k ] << "  " << " pn = " << pn.x[ i ][ j ][ k ] << " v = " << v.x[ i ][ j ][ k ] << "  " << " vn = " << vn.x[ i ][ j ][ k ] << "  " << " w = " << w.x[ i ][ j ][ k ] << "  " << " wn = " << wn.x[ i ][ j ][ k ] << "  " << " t = " << t.x[ i ][ j ][ k ] << "  " << " tn = " << tn.x[ i ][ j ][ k ] << "  " << " c = " << c.x[ i ][ j ][ k ] << "  " << " cn = " << cn.x[ i ][ j ][ k ] << endl;
-
 				tn.x[ i ][ j ][ k ] = coeff * t.x[ i ][ j ][ k ];
 				cn.x[ i ][ j ][ k ] = coeff * c.x[ i ][ j ][ k ];
 				un.x[ i ][ j ][ k ] = coeff * u.x[ i ][ j ][ k ];
 				vn.x[ i ][ j ][ k ] = coeff * v.x[ i ][ j ][ k ];
 				wn.x[ i ][ j ][ k ] = coeff * w.x[ i ][ j ][ k ];
 				pn.x[ i ][ j ][ k ] = coeff * p.x[ i ][ j ][ k ];
-//				if ( coeff == 1. )		pn.x[ i ][ j ][ k ] = coeff * p.x[ i ][ j ][ k ];
-//				else 						pn.x[ i ][ j ][ k ] = p.x[ i ][ j ][ k ];
-
 			}
 		}
 	}

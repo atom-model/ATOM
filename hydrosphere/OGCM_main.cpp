@@ -93,7 +93,7 @@ int main ( int argc, char *argv[ ] )
 // maximum number of inner velocity loop iterations ( velocity_iter_max ),
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 2, pressure_iter_max = 2;
+	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;
 	int velocity_iter_max_2D = 10, pressure_iter_max_2D =5;
 
 	int n, i_radial, j_longal, k_zonal;
@@ -136,22 +136,22 @@ int main ( int argc, char *argv[ ] )
 	const double r_0_water = 1026.0;					// density of salt water in kg/m3
 	const double mue_air = 17.1;							// dynamic viscosity of air in muePa * s at 20°C
 	const double mue_water = 1000.;					// dynamic viscosity of water in muePa * s at 20°C
-	const double epsres = 0.0005;							// accuracy for relative and absolute errors
+	const double epsres = 0.0005;							// accuracy for relative and absolute errors0,988571429
 
 	const double ua = 0.;										// initial velocity component in r-direction
 	const double va = 0.;										// initial velocity component in theta-direction
 	const double wa = 0.;										// initial velocity component in phi-direction
 	const double pa = 0.;										// initial value for the pressure field
 	const double ta = 1.0146;									// compares to 4°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect
-	const double ca = 0.9686;								// c = 0.9686 compares to a salinity of 33.9 psu, mean value, ca corresponds to ta
+	const double ca = 0.9886;								// c = 0.9686 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta
 	const double t_Cretaceous_max = 10.;			// maximum add of mean temperature during cretaceous
-	const double c_Boussinesq = 1.;						// compares to 20°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect
+	const double c_Boussinesq = 1.;						// compares to 35,0 psu, threshhold salinity for the Boussinesq-approximation concerning bouyancy effect
 	const double r0 = 6.731; 									// Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
 	const double the0 = 0.;										// North Pole
 	const double phi0 = 0.;										// zero meridian in Greenwich
 	const double t_Average = 15.;							// mean temperature of the modern earth
 	const double t_equator = 1.1355;						// temperature t_0 = 1.1355 compares to 37° C compares to 310 K
-	const double t_pole = .7803;							// temperature at the poles t_pole = 0.8 compares to -60°C compares to 213.15 K
+	const double t_pole = 1.0146;							// compares to 4°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect
 
 
 // 	classe Array for 1-D, 2-D und 3-D field declarations
@@ -239,6 +239,7 @@ int main ( int argc, char *argv[ ] )
 	velocity_iter_2D = 1;
 	pressure_iter_2D = 1;
 	switch_2D = 0;
+	residuum = residuum_old = 0.;
 
 // time slice to start with is the modern world
 	i_time_slice = 0;
@@ -483,14 +484,14 @@ int main ( int argc, char *argv[ ] )
 //	surface pressure computed by surface temperature with gas equation
 //	oceanflow.BC_Surface_Pressure ( pa, gr, r_0_water, p_0, t_0, p_j, t_j, h, p, t );
 
+//	import of surface v- and w-velocity components from AGCM, surface velocity reduced to 3% of the wind velocity
+	oceanflow.IC_v_w_Atmosphere ( h, u, v, w );
+
 //	salinity distribution as initial condition in 3 dimensions
 	oceanflow.BC_Temperature_Salinity ( Ma, Ma_max, Ma_max_half, t_0, p_0, c_0, t_Cretaceous_max, t_Average, t_equator, t_pole, ua, va, wa, ta, ca, pa, t_j, c_j, p_j, h, t, c, p );
 
 // Restore from new to old values to fill the gaps from time slice to time slice
 //	if ( Ma > 0 ) depth.IC_SeaGroundGaps ( h, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
-
-//	import of surface v- and w-velocity components from AGCM, surface velocity reduced to 3% of the wind velocity
-	oceanflow.IC_v_w_Atmosphere ( h, u, v, w );
 
 //	initial conditions for v and w velocity components at the sea surface, reduction of velocity with increasing depth for the purpose of the Ekman spiral
 //	oceanflow.IC_v_w_Ekman ( h, v, w );
@@ -499,16 +500,16 @@ int main ( int argc, char *argv[ ] )
 	oceanflow.IC_v_w_WestEastCoast ( h, u, v, w, c );
 
 //	initial conditions for u-, v- and w-velocity components in deep flows, assumptions for thermohaline transveyor belt
-//	if ( Ma == 0 ) oceanflow.IC_DeepWater ( h, u, v, w, c );
-	oceanflow.IC_DeepWater ( h, u, v, w, c );
+	if ( Ma == 0 ) oceanflow.IC_DeepWater ( h, u, v, w, c );
+//	oceanflow.IC_DeepWater ( h, u, v, w, c );
 
 //	currents along the equator
 //	if ( Ma == 0 ) oceanflow.IC_EquatorialCurrents ( h, u, v, w );
 //	oceanflow.IC_EquatorialCurrents ( h, u, v, w );
 
 //	antarctic circumpolar current
-//	if ( Ma == 0 ) oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
-	oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
+	if ( Ma == 0 ) oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
+//	oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
 
 //	arctic currents
 //	if ( Ma == 0 ) oceanflow.IC_Nord_Polar_Meer ( h, u, v, w );
@@ -857,6 +858,7 @@ Print_commands:
 
 	i_time_slice++;
 	Ma = time_slice [ i_time_slice ];
+//	if ( Ma > 30 ) goto finish;
 	if ( i_time_slice >= i_time_slice_max ) goto finish;
 	else goto time_slice_sequel;
 

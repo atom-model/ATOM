@@ -13,7 +13,7 @@
 #include <iomanip>
 #include <cstring>
 
-#include "MinMax.h"
+#include "MinMax_Hyd.h"
 
 using namespace std;
 

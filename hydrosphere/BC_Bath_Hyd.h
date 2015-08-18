@@ -24,10 +24,10 @@ using namespace std;
 class BC_Bathymetry_Hydrosphere
 {
 	private:
-		int i, j, k, im, jm, km, i_boden, l, i_SL;
+		int i, j, k, im, jm, km, i_boden, l;
 		int k_water, k_sequel, flip;
 
-		double dummy_1, dummy_2, dummy_3, L_hyd;
+		double dummy_1, dummy_2, dummy_3, h_max;
 
 	public:
 
@@ -35,7 +35,7 @@ class BC_Bathymetry_Hydrosphere
 		BC_Bathymetry_Hydrosphere ( int, int, int );
 		~BC_Bathymetry_Hydrosphere();
 
-		void BC_SeaGround ( const string &, double, Array &, Array & );
+		void BC_SeaGround ( const string &, Array &, Array & );
 
 		void BC_SolidGround ( double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
 
