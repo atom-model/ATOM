@@ -12,7 +12,7 @@
 #include <iostream>
 #include <cmath>
 
-#include "Print_Atmosphere.h"
+#include "Print_Atm.h"
 
 using namespace std;
 

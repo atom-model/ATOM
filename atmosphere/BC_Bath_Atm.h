@@ -26,7 +26,7 @@ class BC_Bathymetry_Atmosphere
 {
 	private:
 
-		int i, j, k, im, jm, km, l, i_SL, i_land, i_max;
+		int i, j, k, im, jm, km, l, ll, i_SL, i_land, i_max;
 		int i_anf, i_end, j_anf, j_end, j_halb, j_max, k_halb, k_max, k_anf, k_end;
 		int *im_tropopause;
 		int Ma, Ma_max, Ma_max_halb, i_Ice, i_Ice_lauf;
@@ -52,15 +52,13 @@ class BC_Bathymetry_Atmosphere
 		BC_Bathymetry_Atmosphere ( int, int, int );
 		~BC_Bathymetry_Atmosphere();
 
-		void BC_MountainSurface ( const string &, double, Array_2D &, Array &, Array & );
+		void BC_MountainSurface ( const string &, double, Array &, Array & );
 
 		void BC_IceShield ( int, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 
 		void BC_Radiation ( double, double, double, double, double, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array & );
 
-		void BC_SolidGround ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
-		void BC_SolidGround_2D ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_SolidGround ( int, double, double, double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 };
 #endif

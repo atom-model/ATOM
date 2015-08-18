@@ -14,32 +14,29 @@
 #include <iomanip>
 #include <cstring>
 
-#include "Results_MSL_Atm.h"
+#include "Results_Atm.h"
 
 using namespace std;
 
 
-Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo, double lv, double cp_l, double L_atm, double dr, double dthe, double dphi, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land )
-:	coeff_Diffusion_latent ( 2.5 ),													// diffusion coefficient for latent heat in [m2/s]
-	coeff_Diffusion_sensibel ( 10. ),												// diffusion coefficient for sensible heat in [m2/s]
-	f_Haude ( .28 )																		// Haude factor for evapotranspiration, 0.3 for low gras, 
+Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double ep, double hp, double p_0, double t_0, double c_0, double sigma, double albedo, double lv, double cp_l, double L_atm, double dr, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land )
+:	coeff_Diffusion_latent ( 1. ),													// diffusion coefficient for latent heat in [m2/s]
+	coeff_Diffusion_sensibel ( .01 ),												// diffusion coefficient for sensible heat in [m2/s]
+	f_Haude ( 12. * .30 )																// Haude factor for evapotranspiration, 12 for day, 0.3 for low, 
 																									// dense vegetation as raw average value by Kuttler
 
 {
-//	coeff_mmWS = r_0_air / r_0_water_vapour;
-	coeff_mmWS = r_0_air / r_0_water_vapour / 2.;
+	coeff_mmWS = r_0_air / r_0_water_vapour;
+	f_Haude = f_Haude * .5;															// test factor
 
 	this-> im = im;
 	this-> jm = jm;
 	this-> km = km;
 	this-> L_atm = L_atm;
 	this-> dr = dr;
-	this-> dthe = dthe;
-	this-> dphi = dphi;
 	this-> sun = sun;
 	this-> ep = ep;
 	this-> hp = hp;
-	this-> u_0 = u_0;
 	this-> p_0 = p_0;
 	this-> t_0 = t_0;
 	this-> c_0 = c_0;
@@ -60,9 +57,8 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double ep, d
 Results_MSL_Atm::~Results_MSL_Atm () {}
 
 
-void Results_MSL_Atm::run_MSL_data ( Array &hc, Array &cc, Array &tc, Array &pc, Array &vc, Array &wc, Array &Rai, Array &Rai_su, Array &Ic, Array &Lat, Array &cond_3D, Array &evap_3D, Array_2D &prec, Array_2D &rai, Array_2D &rai_su, Array_2D &ice, Array_2D &evap, Array_2D &cond, Array_2D &prec_wat, Array_2D &Q_Bal, Array_2D &Q_evap, Array_2D &Q_lat, Array_2D &Q_sen, Array_2D &Q_dif, Array_2D &evap_Pen, Array_2D &evap_Hau, Array_2D &t_j, Array_2D &c_j, Array_1D &radc, Array_1D &thec )
+void Results_MSL_Atm::run_MSL_data ( Array &hc, Array &cc, Array &tc, Array &pc, Array &uc, Array &Rai, Array &Rai_su, Array &Ic, Array &Lat, Array &cond_3D, Array &evap_3D, Array_2D &prec, Array_2D &rai, Array_2D &rai_su, Array_2D &ice, Array_2D &evap, Array_2D &cond, Array_2D &prec_wat, Array_2D &Q_Bal, Array_2D &Q_evap, Array_2D &Q_lat, Array_2D &Q_sen, Array_2D &Q_dif, Array_2D &evap_Pen, Array_2D &evap_Hau, Array_2D &t_j, Array_2D &c_j )
 {
-
 // calculation of a total quantity as sum on all values in a virtual column in r-direction
 
 	for ( int k = 0; k < km; k++ )
@@ -86,50 +82,26 @@ void Results_MSL_Atm::run_MSL_data ( Array &hc, Array &cc, Array &tc, Array &pc,
 	}
 
 
-	coeff_lv = ( lv * c_0 ) / ( r_0_air * cp_l * t_0 * u_0 );				// coeff_lv = 0.009484
-	rm = radc.z[ 0 ];
-
-	for ( int k = 1; k < km-1; k++ )
-	{
-		for ( int j = 1; j < jm-1; j++ )
-		{
-			sinthe = sin( thec.z[ j ] );
-			rmsinthe = rm * sinthe;
-
-			dcdr = ( - 3. * cc.x[ 0 ][ j ][ k ] + 4. * cc.x[ 1 ][ j ][ k ] - cc.x[ 2 ][ j ][ k ] ) / ( 2. * dr );
-			dcdthe = ( cc.x[ 0 ][ j+1 ][ k ] - cc.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
-			dcdphi = ( cc.x[ 0 ][ j ][ k+1 ] - cc.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi );
-
-			if ( hc.x[ 0 ][ j ][ k ] == 0. )	Lat.x[ 0 ][ j ][ k ] = coeff_lv * ( dcdr + dcdthe / rm + dcdphi / rmsinthe );
-			else   									Lat.x[ 0 ][ j ][ k ] = 0.;
-		}
-	}
-
-
-
-
-
-
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			p_baro = ( r_0_air * R_Air * t_j.y[ j ][ k ] * t_0 ) / 100.;														// surface pressure from gas equation in hPa
+			p_baro = ( r_0_air * 287.1 * tc.x[ 0 ][ j ][ k ] * ( t_0 + 20. ) ) / 100.;											// surface pressure from barometric formula in hPa
 
-			Q_evap.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t_j.y[ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;							// heat of evaporation of water in [MJ/kg] (Kuttler)
+			Q_evap.y[ j ][ k ] = ( 2500.8 - 2.372 * ( tc.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;							// heat of evaporation of water in [MJ/kg] (Kuttler)
 
-			t_Celsius_SL = t_j.y[ j ][ k ] * t_0 - t_0;																				// transforming Kelvin into Celsius
-			e_SL = ( r_0_water_vapour * R_WaterVapour * t_j.y[ j ][ k ] * t_0 ) * .01;							// water vapour pressure in hPa
-			a_SL = 216.6 * e_SL / ( t_j.y[ j ][ k ] * t_0 );																		// absolute humidity in kg/m3
+			t_Celsius_SL = tc.x[ 0 ][ j ][ k ] * t_0 - t_0;																				// transforming Kelvin into Celsius
+			e_SL = ( r_0_water_vapour * R_WaterVapour * tc.x[ 0 ][ j ][ k ] * t_0 ) * .01;
+			a_SL = 216.6 * e_SL / ( tc.x[ 0 ][ j ][ k ] * t_0 );																		// absolute humidity in kg/m3
 
-			c_grad = ( - 3. * cc.x[ 0 ][ j ][ k ] + 4. * cc.x[ 1 ][ j ][ k ] - cc.x[ 2 ][ j ][ k ] ) / ( 2. * dr ) /  L_atm;	// water vapour pressure gradient in g/(Kg m)
-			t_grad = ( - 3. * tc.x[ 0 ][ j ][ k ] + 4. * tc.x[ 1 ][ j ][ k ] - tc.x[ 2 ][ j ][ k ] ) / ( 2. * dr ) * t_0 / L_atm;	// temperature gradient in K/m
+			c_grad = ( - 3. * cc.x[ 0 ][ j ][ k ] + 4. * cc.x[ 1 ][ j ][ k ] - cc.x[ 2 ][ j ][ k ] ) / ( 2. * dr );				// water vapour pressure gradient in Kg/(Kg m)
+			t_grad = ( - 3. * tc.x[ 0 ][ j ][ k ] + 4. * tc.x[ 1 ][ j ][ k ] - tc.x[ 2 ][ j ][ k ] ) / ( 2. * dr );					// temperature gradient in K/m
 
 			if ( hc.x[ 0 ][ j ][ k ] == 0. )
 			{
-				if ( sun == 0. ) Q_Bal.y[ j ][ k ] = sigma * ( 1. - albedo ) * pow ( t_j.y[ j ][ k ] * t_0, 4. );	// radiation balance by prescription of the surface temperature in W/m2
-				Q_lat.y[ j ][ k ] = - a_SL * lv * coeff_Diffusion_latent * c_grad;										// latente heat in [W/m2] from energy transport equation
-				Q_sen.y[ j ][ k ] = - r_0_air * cp_l * coeff_Diffusion_sensibel * t_grad;							// sensible heat in [W/m2] from energy transport equation
+				if ( sun == 0. ) Q_Bal.y[ j ][ k ] = sigma * ( 1. - albedo ) * pow ( tc.x[ 0 ][ j ][ k ] * t_0, 4. );	// radiation balance by prescription of the surface temperature in W/m2
+				Q_lat.y[ j ][ k ] = - a_SL * lv * c_0 * coeff_Diffusion_latent * c_grad / L_atm;					// latente heat in [W/m2] from energy transport equation
+				Q_sen.y[ j ][ k ] = - r_0_air * cp_l * coeff_Diffusion_sensibel * tc.x[ 0 ][ j ][ k ] * t_0 * t_grad / L_atm;	// sensible heat in [W/m2] from energy transport equation
 			}
 			else 
 			{
@@ -138,34 +110,27 @@ void Results_MSL_Atm::run_MSL_data ( Array &hc, Array &cc, Array &tc, Array &pc,
 				Q_sen.y[ j ][ k ] = 0.;
 			}
 
-			t_denom = t_Celsius_SL + t_0;
+			t_denom = t_Celsius_SL + 237.3;
+			Delta = 4098. * ( .6108 * exp ( ( 17.27 * t_Celsius_SL )  / t_denom ) ) / ( t_denom * t_denom );// gradient of the water vapour pressure curve
 			E_Rain = hp * exp ( 17.0809 * t_Celsius_SL / ( 234.175 + t_Celsius_SL ) );					// saturation vapour pressure in the water phase for t > 0°C in hPa
-			Delta = E_Rain * lv / ( R_WaterVapour * t_denom * t_denom );										// gradient of the water vapour pressure curve [ hPa/K ]
-			sat_deficit = E_Rain - e_SL;																								// saturation deficit in hPa
-			gamma = p_baro * cp_l / ( ep * lv );																					// Psychrometer constant [ hPa/K ]
-			E_a = .35 * ( 1. + .15 * ( vc.x[ 0 ][ j ][ k ] + wc.x[ 0 ][ j ][ k ] ) / 2. ) * sat_deficit;					// ventilation-humidity part, u [ m/s ] at 2m above ground
+			sat_deficit = E_Rain - e_SL;																								// saturation deficit
+			gamma = p_baro * cp_l / ( ep * lv );																					// Psychrometer constant
+			E_a = .35 * ( 1. + .15 * uc.x[ 1 ][ j ][ k ] * .01 ) * sat_deficit * .75;										// ventilation-humidity member for Penmans formula
 
-			Q_dif.y[ j ][ k ] = Q_Bal.y[ j ][ k ] - Q_lat.y[ j ][ k ] - Q_sen.y[ j ][ k ];										// difference understood as heat of the ground
-
-			evap_Pen.y[ j ][ k ] = ( ( Q_Bal.y[ j ][ k ] - Q_dif.y[ j ][ k ] ) * Delta + 100. * gamma * E_a ) / ( Delta + gamma ) * .0035; // 100 W/m² compares to 3.5 mm/d
+			evap_Pen.y[ j ][ k ] = ( Q_Bal.y[ j ][ k ] * Delta * .75 + gamma * E_a ) / ( Delta * .75 + gamma );
 			evap_Hau.y[ j ][ k ] = f_Haude * sat_deficit;
 			if ( evap_Pen.y[ j ][ k ] <= 0. ) evap_Pen.y[ j ][ k ] = 0.;
 			if ( evap_Hau.y[ j ][ k ] <= 0. ) evap_Hau.y[ j ][ k ] = 0.;
 																																						// simplified formula for evaporation over day length of 12h by Haude, Häckel
 																																						// coefficient per day about 0.30 for gras-evapotranspiration given, Kuttler
-/*
-			cout << endl << "     Q_Pen = " << Q_Bal.y[ j ][ k ] - Q_dif.y[ j ][ k ] << "   Delta = " << Delta << "   gamma = " << gamma << "   E_a = " << E_a << "   evap_Pen = " << evap_Pen.y[ j ][ k ] << "   evap_Hau = " << evap_Hau.y[ j ][ k ] << "   sat_deficit= " << sat_deficit << "   Latency = " << Lat.x[ 0 ][ j ][ k ] << endl << endl;
+			Q_dif.y[ j ][ k ] = Q_Bal.y[ j ][ k ] - Q_lat.y[ j ][ k ] - Q_sen.y[ j ][ k ];										// difference understood as heat of the ground
 
-			cout << "     Q_Bal = " << Q_Bal.y[ j ][ k ] << "   Q_lat = " << Q_lat.y[ j ][ k ] << "   Q_sen = " << Q_sen.y[ j ][ k ] << "   Q_dif = " << Q_dif.y[ j ][ k ] << "   c_grad = " << c_grad << "   t_grad = " << t_grad << endl << endl;
-
-			cout << "     t_Celsius_SL = " << t_Celsius_SL << "   E_Rain = " << E_Rain << "   Delta = " << Delta << "   Delta + gamma = " << Delta + gamma << "   Delta / ( Delta + gamma ) = " << Delta / ( Delta + gamma ) << "   E_Rain / ( Delta + gamma ) = " << E_Rain / ( Delta + gamma ) << "   gamma / Delta = " << gamma / Delta << endl << endl;
-*/
 
 			for ( int i = 0; i < im; i++ )
 			{
-				p_h = exp ( - 9.8066 * (  double ) i * 500. / ( R_Air * tc.x[ i ][ j ][ k ] * t_0 ) ) * p_0;	// current air pressure, step size in 500 m, from barometric formula in hPa
-				e_h = ( r_0_water_vapour * R_WaterVapour * tc.x[ i ][ j ][ k ] * t_0 ) * .01;
-				a_h = 216.6 * e_h / ( tc.x[ i ][ j ][ k ] * t_0 );																	// absolute humidity in kg/m3 compares to density of water vapour
+//				p_h = exp ( - 9.8066 * (  double ) i * 500. / ( R_Air * tc.x[ i ][ j ][ k ] * t_0 ) ) * p_0;	// current air pressure, step size in 500 m, from barometric formula in hPa
+//				e_h = ( r_0_water_vapour * R_WaterVapour * tc.x[ i ][ j ][ k ] * t_0 ) * .01;
+//				a_h = 216.6 * e_h / ( tc.x[ i ][ j ][ k ] * t_0 );																	// absolute humidity in kg/m3 compares to density of water vapour
 
 				rai.y[ j ][ k ] += Rai.x[ i ][ j ][ k ];
 				rai_su.y[ j ][ k ] += Rai_su.x[ i ][ j ][ k ];
@@ -174,18 +139,16 @@ void Results_MSL_Atm::run_MSL_data ( Array &hc, Array &cc, Array &tc, Array &pc,
 				prec_wat.y[ j ][ k ] += cc.x[ i ][ j ][ k ];
 			}
 
-
-
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( ( Lat.x[ i ][ j ][ k ] >= 0. ) && ( hc.x[ i ][ j ][ k ] == 0. ) )			evap.y[ j ][ k ] += Lat.x[ i ][ j ][ k ];
-				if ( ( Lat.x[ i ][ j ][ k ] <= 0. ) && ( hc.x[ i ][ j ][ k ] == 0. ) )			cond.y[ j ][ k ] += - Lat.x[ i ][ j ][ k ];
+				if ( Lat.x[ i ][ j ][ k ] >= .0 )			evap.y[ j ][ k ] += Lat.x[ i ][ j ][ k ];
+				if ( Lat.x[ i ][ j ][ k ] <= .0 )			cond.y[ j ][ k ] += - Lat.x[ i ][ j ][ k ];
 			}
 
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( ( Lat.x[ i ][ j ][ k ] >= 0. ) && ( hc.x[ i ][ j ][ k ] == 0. ) )			evap_3D.x[ i ][ j ][ k ] = Lat.x[ i ][ j ][ k ];
-				if ( ( Lat.x[ i ][ j ][ k ] <= 0. ) && ( hc.x[ i ][ j ][ k ] == 0. ) )			cond_3D.x[ i ][ j ][ k ] = - Lat.x[ i ][ j ][ k ];
+				if ( Lat.x[ i ][ j ][ k ] >= .0 )			evap_3D.x[ i ][ j ][ k ] = Lat.x[ i ][ j ][ k ];
+				if ( Lat.x[ i ][ j ][ k ] <= .0 )			cond_3D.x[ i ][ j ][ k ] = - Lat.x[ i ][ j ][ k ];
 			}
 		}
 	}

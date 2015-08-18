@@ -35,7 +35,7 @@ class PostProcess_Atmosphere
 		~PostProcess_Atmosphere();
 
 
-		void paraview_vts ( const string &, int &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void paraview_vts ( const string &, int &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void paraview_panorama_vts ( const string &, int &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
@@ -51,6 +51,6 @@ class PostProcess_Atmosphere
 
 		void Atmosphere_v_w_Transfer ( const string &, Array &, Array &, Array & );
 
-		void Atmosphere_PlotData ( const string &, double, double, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
+		void Atmosphere_PlotData ( const string &, double, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 };
 #endif

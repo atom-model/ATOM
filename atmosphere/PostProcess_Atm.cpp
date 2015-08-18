@@ -14,7 +14,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "PostProcess_Atmosphere.h"
+#include "PostProcess_Atm.h"
 
 using namespace std;
 
@@ -399,7 +399,7 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, int &n, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &p, Array &u, Array &v, Array &w, Array &c, Array &fup, Array &fvp, Array &fwp, Array &fcp, Array &fpp, Array &ftp, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
+void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, int &n, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &p, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
 {
 	double x, y, z, sinthe, sinphi, costhe, cosphi;
 
@@ -456,11 +456,11 @@ void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, 
 
 				for ( int i = 0; i < im; i++ )
 				{
-					fup.x[ i ][ j ][ k ] = sinthe * cosphi * u.x[ i ][ j ][ k ] + costhe * cosphi * v.x[ i ][ j ][ k ] - sinphi * w.x[ i ][ j ][ k ];
-					fvp.x[ i ][ j ][ k ] = sinthe * sinphi * u.x[ i ][ j ][ k ] + sinphi * costhe * v.x[ i ][ j ][ k ] + cosphi * w.x[ i ][ j ][ k ];
-					fwp.x[ i ][ j ][ k ] = costhe * u.x[ i ][ j ][ k ] - sinthe * v.x[ i ][ j ][ k ];
+					aux_u.x[ i ][ j ][ k ] = sinthe * cosphi * u.x[ i ][ j ][ k ] + costhe * cosphi * v.x[ i ][ j ][ k ] - sinphi * w.x[ i ][ j ][ k ];
+					aux_v.x[ i ][ j ][ k ] = sinthe * sinphi * u.x[ i ][ j ][ k ] + sinphi * costhe * v.x[ i ][ j ][ k ] + cosphi * w.x[ i ][ j ][ k ];
+					aux_w.x[ i ][ j ][ k ] = costhe * u.x[ i ][ j ][ k ] - sinthe * v.x[ i ][ j ][ k ];
 
-					Atmosphere_vts_File << fup.x[ i ][ j ][ k ] << " " << fvp.x[ i ][ j ][ k ] << " " << fwp.x[ i ][ j ][ k ]  << endl;
+					Atmosphere_vts_File << aux_u.x[ i ][ j ][ k ] << " " << aux_v.x[ i ][ j ][ k ] << " " << aux_w.x[ i ][ j ][ k ]  << endl;
 				}
 				Atmosphere_vts_File <<  "\n"  << endl;
 			}
@@ -474,7 +474,7 @@ void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, 
 
 
 
-
+/*
 // writing rot_u, rot_v and rot_w components of velocity in cartesian coordinates
 
 		Atmosphere_vts_File <<  "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" Name=\"Rotation\" format=\"ascii\">\n"  << endl;
@@ -503,7 +503,7 @@ void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, 
 		}
 		Atmosphere_vts_File <<  "\n"  << endl;
 		Atmosphere_vts_File <<  "    </DataArray>\n" << endl;
-
+*/
 
 
 
@@ -613,7 +613,7 @@ void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, 
 			{
 				for ( int i = 0; i < im; i++ )
 				{
-					Atmosphere_vts_File << fup.x[ i ][ j ][ k ]  << endl;
+					Atmosphere_vts_File << aux_u.x[ i ][ j ][ k ]  << endl;
 				}
 				Atmosphere_vts_File <<  "\n"  << endl;
 			}
@@ -638,7 +638,7 @@ void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, 
 			{
 				for ( int i = 0; i < im; i++ )
 				{
-					Atmosphere_vts_File << fvp.x[ i ][ j ][ k ]  << endl;
+					Atmosphere_vts_File << aux_v.x[ i ][ j ][ k ]  << endl;
 				}
 				Atmosphere_vts_File <<  "\n"  << endl;
 			}
@@ -661,7 +661,7 @@ void PostProcess_Atmosphere::paraview_vts ( const string &Name_Bathymetry_File, 
 			{
 				for ( int i = 0; i < im; i++ )
 				{
-					Atmosphere_vts_File << fwp.x[ i ][ j ][ k ]  << endl;
+					Atmosphere_vts_File << aux_w.x[ i ][ j ][ k ]  << endl;
 				}
 				Atmosphere_vts_File <<  "\n"  << endl;
 			}
@@ -1448,7 +1448,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 			}
 		}
 
-
+/*
 		Atmosphere_vtk_radial_File <<  "SCALARS EvaporationPenman float" << 1 << endl;
 		Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
 
@@ -1477,7 +1477,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 				Atmosphere_vtk_radial_File << Evaporation_Haude.y[ j ][ k ] << endl;
 			}
 		}
-
+*/
 
 		Atmosphere_vtk_radial_File <<  "SCALARS Q_Evaporation float" << 1 << endl;
 		Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
@@ -2262,7 +2262,7 @@ return;
 
 
 
-void PostProcess_Atmosphere::Atmosphere_PlotData ( const string &Name_Bathymetry_File, double u_0, double t_0, Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water, Array_2D &Evaporation_Penman )
+void PostProcess_Atmosphere::Atmosphere_PlotData ( const string &Name_Bathymetry_File, double u_0, double t_0, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water )
 {
 	stringstream Name_PlotData_File;
 
@@ -2288,13 +2288,13 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( const string &Name_Bathymetry
 		cout << "\n\n”***** Atmosphere_PlotData_File_write:   begin of writing!" << endl << endl;
 
 
-		PlotData_File << " latitude ( ° )" << ", " << "longitude ( ° )" << ",    " << "h-level ( / )" << ",    " << "v-velocity ( m/s )" << " ,   " << "w-velocity ( m/s )" << ",   " << "temperature ( °C )" << ",  " << "water_vapour ( g/kg )" << ",   " << "precipitation ( mm )" << ",   " <<  "precipitable water ( mm )" << ",   " <<  "evaporation_Penman ( mm )" << endl;
+		PlotData_File << " latitude ( ° )" << "  , " << "longitude ( ° )" << "  ,    " << "v-velocity ( m/s )" << "   ,   " << "w-velocity ( m/s )" << "   ,   " << "temperature ( °C )" << "   ,  " << "water_vapour ( g/kg )" << "   ,   " << "precipitation ( mm )" << "   ,   " <<  "precipitable water ( mm )" << endl;
 
-		for ( int j = 0; j < jm; j++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int k = 0; k < km; k++ )
+			for ( int j = 0; j < jm; j++ )
 			{
-				PlotData_File << j << " " << k << " " << h.x[ 0 ][ j ][ k ] << " " << v.x[ 0 ][ j ][ k ] * u_0 << " " << w.x[ 0 ][ j ][ k ] * u_0 << " " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << " " << c.x[ 0 ][ j ][ k ] * 1000. << " " << Precipitation.y[ j ][ k ] << " " << precipitable_water.y[ j ][ k ] << " " << Evaporation_Penman.y[ j ][ k ] <<  endl;
+				PlotData_File << k << " " << j << " " << v.x[ 0 ][ j ][ k ] * u_0 << " " << w.x[ 0 ][ j ][ k ] * u_0 << " " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << " " << c.x[ 0 ][ j ][ k ] * 1000. << " " << Precipitation.y[ j ][ k ] << " " << precipitable_water.y[ j ][ k ] << " " <<  endl;
 			}
 		}
 

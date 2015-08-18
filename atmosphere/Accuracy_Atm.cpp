@@ -14,7 +14,7 @@
 #include <iomanip>
 #include <cstring>
 
-#include "Accuracy.h"
+#include "Accuracy_Atm.h"
 
 using namespace std;
 
@@ -61,16 +61,15 @@ double Accuracy::residuumQuery ( int &i_res, int &j_res, int &k_res, double &min
 
 	for ( int i = 1; i < im-1; i++ )
 	{
-		rmsinthe = rad.z[ i ] * sinthe;
-
 		for ( int j = 1; j < jm-1; j++ )
 		{
 			sinthe = sin( the.z[ j ] );
 			costhe = cos( the.z[ j ] );
+			rmsinthe = rad.z[ i ] * sinthe;
 
 			for ( int k = 1; k < km-1; k++ )
 			{
-				dudr   = ( u.x[ i+1 ][ j ][ k ] - u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
+				dudr = ( u.x[ i+1 ][ j ][ k ] - u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 				dvdthe = ( v.x[ i ][ j+1 ][ k ] - v.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
 				dwdphi = ( w.x[ i ][ j ][ k+1 ] - w.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
 
@@ -97,12 +96,11 @@ double Accuracy::residuumQuery_2D ( int &j_res, int &k_res, double &min, Array_1
 
 	min = 0.;
 
-	rmsinthe = rad.z[ 0 ] * sinthe;
-
 	for ( int j = 1; j < jm-1; j++ )
 	{
 		sinthe = sin( the.z[ j ] );
 		costhe = cos( the.z[ j ] );
+		rmsinthe = rad.z[ 0 ] * sinthe;
 
 	for ( int k = 1; k < km-1; k++ )
 		{
@@ -136,11 +134,11 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 	min_c = 0.;
 	min_p = 0.;
 
-	for ( int i = 1; i < im-2; i++ )
+	for ( int i = 0; i < im; i++ )
 	{
-		for ( int j = 1; j < jm-2; j++ )
+		for ( int j = 0; j < jm; j++ )
 		{
-			for ( int k = 1; k < km-2; k++ )
+			for ( int k = 0; k < km; k++ )
 			{
 				max_u = fabs ( ( u.x[ i ][ j ][ k ] - un.x[ i ][ j ][ k ] ) );
 				if ( max_u >= min_u )
@@ -214,19 +212,19 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 
 
 
-double Accuracy::steadyQuery_2D ( int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_p, int &j_p, int &k_p, int &i_t, int &j_t, int &k_t, double &min_v, double &min_w, double &min_p, double &min_t, Array &v, Array &vn, Array &w, Array &wn, Array &p, Array &pn, Array &t, Array &tn )
+double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min_v, double &min_w, double &min_p, Array &v, Array &vn, Array &w, Array &wn, Array &p, Array &pn )
 {
 // state of a steady solution ( min )
-	min_v = 0.;
-	min_w = 0.;
-	min_p = 0.;
-	min_t = 0.;
+	max_v = min_v = 0.;
+	max_w = min_w = 0.;
+	max_p = min_p = 0.;
 
-	for ( int j = 2; j < jm-2; j++ )
+	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int k = 2; k < km-2; k++ )
+		for ( int k = 0; k < km; k++ )
 		{
 			max_v = fabs ( ( v.x[ 0 ][ j ][ k ] - vn.x[ 0 ][ j ][ k ] ) );
+
 			if ( max_v >= min_v )
 			{
 				min_v = max_v;
@@ -249,14 +247,6 @@ double Accuracy::steadyQuery_2D ( int &i_v, int &j_v, int &k_v, int &i_w, int &j
 				j_p = j;
 				k_p = k;
 			}
-
-			max_t = fabs ( ( t.x[ 0 ][ j ][ k ] - tn.x[ 0 ][ j ][ k ] ) );
-			if ( max_t >= min_t )
-			{
-				min_t = max_t;
-				j_t = j;
-				k_t = k;
-			}
 		}
 	}
 	return 0;
@@ -273,7 +263,7 @@ void Accuracy::iterationPrintout ( int &nm, int &velocity_iter_max, int &pressur
 
 	cout << endl << endl;
 	cout << "      >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-	cout << "      3D iterational process" << endl;
+	cout << "      3D AGCM iterational process" << endl;
 	cout << "      max total iteration number nm = " << nm << endl;
 	cout << "      outer pressure loop:  max iteration number pressure_iter_max = " << pressure_iter_max << endl;
 	cout << "      inner velocity loop:  max iteration number velocity_iter_max = " << velocity_iter_max << endl << endl;
@@ -398,19 +388,20 @@ void Accuracy::iterationPrintout ( int &nm, int &velocity_iter_max, int &pressur
 
 
 
-void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &pressure_iter_max_2D, int &j_res, int &k_res, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w,  int &i_p, int &j_p, int &k_p,  int &i_t, int &j_t, int &k_t, double &min_v, double &min_w, double &min_p, double &min_t )
+void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &pressure_iter_max_2D, int &j_res, int &k_res, int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min, double &min_v, double &min_w, double &min_p )
 {
 // statements on the convergence und iterational process
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
 
+	cout << endl << endl;
 	cout << "      >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-	cout << "      2D iterational process" << endl;
+	cout << "      2D AGCM iterational process" << endl;
 	cout << "      max total iteration number nm = " << nm << endl;
 	cout << "      outer pressure loop:  max iteration number pressure_iter_max_2D = " << pressure_iter_max_2D << endl;
 	cout << "      inner velocity loop:  max iteration number velocity_iter_max_2D = " << velocity_iter_max_2D << endl << endl;
 
-	cout << "      n = " << n << "     " << "velocity_iter = " << velocity_iter << "     " << "pressure_iter = " << pressure_iter<< "     " << "Ma = " << Ma << endl;
+	cout << "      n = " << n << "     " << "velocity_iter_2D = " << velocity_iter << "     " << "pressure_iter_2D = " << pressure_iter<< "     " << "Ma = " << Ma << endl;
 	cout << endl;
 
 
@@ -455,12 +446,6 @@ void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &p
 						k_loc = k_w;
 						break;
 
-		case 5 :	name_Value = " dt: energy eauation ";
-						Value = min_t;
-						j_loc = j_t;
-						k_loc = k_t;
-						break;
-
 
 		default : 	cout << choice << "error in iterationPrintout member function in class Accuracy" << endl;
 	}
@@ -494,7 +479,7 @@ void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &p
 	cout << setiosflags ( ios::left ) << setw ( 36 ) << setfill ( '.' ) << name_Value << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << Value << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon << endl;
 
 	choice++;
-	if ( choice <= 5 ) goto preparation;
+	if ( choice <= 4 ) goto preparation;
 
 	cout << endl << endl;
 }

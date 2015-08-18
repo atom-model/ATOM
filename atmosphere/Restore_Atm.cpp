@@ -12,7 +12,7 @@
 #include <iostream>
 #include <cmath>
 
-#include "Restore.h"
+#include "Restore_Atm.h"
 
 using namespace std;
 
@@ -56,7 +56,7 @@ void Restore::restoreOldNew ( double coeff, Array &u, Array &v, Array &w, Array 
 
 
 
-void Restore::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p, Array &t, Array &vn, Array &wn, Array &pn, Array &tn )
+void Restore::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p, Array &vn, Array &wn, Array &pn )
 {
 // Restore of velocity components and temperature at sea surface for the next time step
 
@@ -67,7 +67,6 @@ void Restore::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p, Arr
 					pn.x[ 0 ][ j ][ k ] = coeff * p.x[ 0 ][ j ][ k ];
 					vn.x[ 0 ][ j ][ k ] = coeff * v.x[ 0 ][ j ][ k ];
 					wn.x[ 0 ][ j ][ k ] = coeff * w.x[ 0 ][ j ][ k ];
-					tn.x[ 0 ][ j ][ k ] = coeff * t.x[ 0 ][ j ][ k ];
 				}
 			}
 }

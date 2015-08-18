@@ -12,7 +12,7 @@
 #include <iostream>
 #include <cmath>
 
-#include "BC_Atmosphere.h"
+#include "BC_Atm.h"
 
 using namespace std;
 
@@ -35,26 +35,24 @@ BC_Atmosphere::~BC_Atmosphere() {}
 
 
 
-void BC_Atmosphere::BC_radius ( int Ma, double tao, double tau, double pa, double ca, double co2a, double dr, Array_1D &rad, double co2_vegetation, double co2_ocean, double co2_land, Array_2D &Vegetation, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice )
+void BC_Atmosphere::BC_radius ( double tao, double tau, double pa, double ca, double co2a, double dr, Array_1D &rad, double co2_vegetation, double co2_ocean, double co2_land, Array_2D &Vegetation, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice )
 {
 // boundary conditions for the r-direction, loop index i
 	for ( int j = 0; j < jm; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-			if ( h.x[ 0 ][ j ][ k ] == 0. )																					// sea surface
+//			if ( h.x[ 0 ][ j ][ k ] == 0. )																					// sea surface
 			{
 				u.x[ 0 ][ j ][ k ] = 0.;
 //				v.x[ 0 ][ j ][ k ] = 0.;
 //				w.x[ 0 ][ j ][ k ] = 0.;
 //				v.x[ 0 ][ j ][ k ] = 2. * dr / rad.z[ 1 ] * v.x[ 1 ][ j ][ k ] + v.x[ 2 ][ j ][ k ];				// sea surface
 //				w.x[ 0 ][ j ][ k ] = 2. * dr / rad.z[ 1 ] * w.x[ 1 ][ j ][ k ] + w.x[ 2 ][ j ][ k ];			// sea surface
-				v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
-				w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
-//				c.x[ 0 ][ j ][ k ] = c43 * c.x[ 1 ][ j ][ k ] - c13 * c.x[ 2 ][ j ][ k ];
-//				if ( Ma != 0 ) t.x[ 0 ][ j ][ k ] = c43 * t.x[ 1 ][ j ][ k ] - c13 * t.x[ 2 ][ j ][ k ];
-//				v.x[ 0 ][ j ][ k ] = v.x[ 3 ][ j ][ k ] - 3. * v.x[ 2 ][ j ][ k ] + 3. * v.x[ 1 ][ j ][ k ];				// extrapolation
-//				w.x[ 0 ][ j ][ k ] = w.x[ 3 ][ j ][ k ] - 3. * w.x[ 2 ][ j ][ k ] + 3. * w.x[ 1 ][ j ][ k ];			// leads to round harmonic profiles
+//				v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
+//				w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
+				v.x[ 0 ][ j ][ k ] = v.x[ 3 ][ j ][ k ] - 3. * v.x[ 2 ][ j ][ k ] + 3. * v.x[ 1 ][ j ][ k ];				// extrapolation
+				w.x[ 0 ][ j ][ k ] = w.x[ 3 ][ j ][ k ] - 3. * w.x[ 2 ][ j ][ k ] + 3. * w.x[ 1 ][ j ][ k ];			// leads to round harmonic profiles
 //				p.x[ im-1 ][ j ][ k ] = pa;
 
 				u.x[ im-1 ][ j ][ k ] = 0.;
@@ -62,8 +60,8 @@ void BC_Atmosphere::BC_radius ( int Ma, double tao, double tau, double pa, doubl
 				w.x[ im-1 ][ j ][ k ] = 0.;
 				t.x[ im-1 ][ j ][ k ] = tao;
 
-//				p.x[ im-1 ][ j ][ k ] = c43 * p.x[ im-2 ][ j ][ k ] - c13 * p.x[ im-3 ][ j ][ k ];			// stratosphere
-				p.x[ 0 ][ j ][ k ] = c43 * p.x[ 1 ][ j ][ k ] - c13 * p.x[ 2 ][ j ][ k ];							// sea surface
+				p.x[ im-1 ][ j ][ k ] = c43 * p.x[ im-2 ][ j ][ k ] - c13 * p.x[ im-3 ][ j ][ k ];			// stratosphere
+//				p.x[ 0 ][ j ][ k ] = c43 * p.x[ 1 ][ j ][ k ] - c13 * p.x[ 2 ][ j ][ k ];							// sea surface
 
 				c.x[ im-1 ][ j ][ k ] = 0.;
 				co2.x[ im-1 ][ j ][ k ] = c43 * co2.x[ im-2 ][ j ][ k ] - c13 * co2.x[ im-3 ][ j ][ k ];			// stratosphere
@@ -119,7 +117,7 @@ void BC_Atmosphere::BC_radius ( int Ma, double tao, double tau, double pa, doubl
 				Ice.x[ im-1 ][ j ][ k ] = 0.;												// stratosphere
 */
 			}
-
+/*
 			else
 			{
 //  continental surface
@@ -128,19 +126,19 @@ void BC_Atmosphere::BC_radius ( int Ma, double tao, double tau, double pa, doubl
 				w.x[ 0 ][ j ][ k ] = 0.;
 
 				u.x[ im-1 ][ j ][ k ] = 0.;																					// stratosphere
-//				v.x[ im-1 ][ j ][ k ] = 0.;
-//				w.x[ im-1 ][ j ][ k ] = 0.;
-				v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
-				w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
+				v.x[ im-1 ][ j ][ k ] = 0.;
+				w.x[ im-1 ][ j ][ k ] = 0.;
 
 				t.x[ im-1 ][ j ][ k ] = tao;
 				c.x[ im-1 ][ j ][ k ] = 0.;
-//				p.x[ im-1 ][ j ][ k ] = pa;
-//				p.x[ im-1 ][ j ][ k ] = c43 * p.x[ im-2 ][ j ][ k ] - c13 * p.x[ im-3 ][ j ][ k ];			// stratosphere
+				p.x[ im-1 ][ j ][ k ] = pa;
+
+				p.x[ im-1 ][ j ][ k ] = c43 * p.x[ im-2 ][ j ][ k ] - c13 * p.x[ im-3 ][ j ][ k ];			// stratosphere
 				p.x[ 0 ][ j ][ k ] = c43 * p.x[ 1 ][ j ][ k ] - c13 * p.x[ 2 ][ j ][ k ];							// continent surface
 
-				co2.x[ im-1 ][ j ][ k ] = c43 * co2.x[ im-2 ][ j ][ k ] - c13 * co2.x[ im-3 ][ j ][ k ];			// stratosphere
-/*
+				c.x[ im-1 ][ j ][ k ] = 0.;
+				co2.x[ im-1 ][ j ][ k ] = 1.;
+
 				rhs_u.x[ 0 ][ j ][ k ] = 0.;
 				rhs_v.x[ 0 ][ j ][ k ] = 0.;
 				rhs_w.x[ 0 ][ j ][ k ] = 0.;
@@ -155,10 +153,11 @@ void BC_Atmosphere::BC_radius ( int Ma, double tao, double tau, double pa, doubl
 				Latency.x[ 0 ][ j ][ k ] = 0.;
 				Rain.x[ 0 ][ j ][ k ] = 0.;
 				Ice.x[ 0 ][ j ][ k ] = 0.;
-*/
 			}
+*/
 		}
 	}
+
 }
 
 
@@ -178,7 +177,7 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p,
 
 			t.x[ i ][ 0 ][ k ] = c43 * t.x[ i ][ 1 ][ k ] - c13 * t.x[ i ][ 2 ][ k ];
 			t.x[ i ][ jm-1 ][ k ] = c43 * t.x[ i ][ jm-2 ][ k ] - c13 * t.x[ i ][ jm-3 ][ k ];
-
+/*
 			u.x[ i ][ 0 ][ k ] = c43 * u.x[ i ][ 1 ][ k ] - c13 * u.x[ i ][ 2 ][ k ];
 			u.x[ i ][ jm-1 ][ k ] = c43 * u.x[ i ][ jm-2 ][ k ] - c13 * u.x[ i ][ jm-3 ][ k ];
 
@@ -187,18 +186,8 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p,
 
 			w.x[ i ][ 0 ][ k ] = c43 * w.x[ i ][ 1 ][ k ] - c13 * w.x[ i ][ 2 ][ k ];
 			w.x[ i ][ jm-1 ][ k ] = c43 * w.x[ i ][ jm-2 ][ k ] - c13 * w.x[ i ][ jm-3 ][ k ];
+*/
 
-			p.x[ i ][ 0 ][ k ] = c43 * p.x[ i ][ 1 ][ k ] - c13 * p.x[ i ][ 2 ][ k ];
-			p.x[ i ][ jm-1 ][ k ] = c43 * p.x[ i ][ jm-2 ][ k ] - c13 * p.x[ i ][ jm-3 ][ k ];
-
-			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
-			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
-
-			co2.x[ i ][ 0 ][ k ] = c43 * co2.x[ i ][ 1 ][ k ] - c13 * co2.x[ i ][ 2 ][ k ];
-			co2.x[ i ][ jm-1 ][ k ] = c43 * co2.x[ i ][ jm-2 ][ k ] - c13 * co2.x[ i ][ jm-3 ][ k ];
-
-
-/*
 			u.x[ i ][ 0 ][ k ] = 0.;
 			u.x[ i ][ jm-1 ][ k ] = 0.;
 
@@ -207,9 +196,17 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p,
 
 			w.x[ i ][ 0 ][ k ] = 0.;
 			w.x[ i ][ jm-1 ][ k ] = 0.;
-*/
 
-/*
+			p.x[ i ][ 0 ][ k ] = c43 * p.x[ i ][ 1 ][ k ] - c13 * p.x[ i ][ 2 ][ k ];
+			p.x[ i ][ jm-1 ][ k ] = c43 * p.x[ i ][ jm-2 ][ k ] - c13 * p.x[ i ][ jm-3 ][ k ];
+
+
+			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
+			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
+
+			co2.x[ i ][ 0 ][ k ] = c43 * co2.x[ i ][ 1 ][ k ] - c13 * co2.x[ i ][ 2 ][ k ];
+			co2.x[ i ][ jm-1 ][ k ] = c43 * co2.x[ i ][ jm-2 ][ k ] - c13 * co2.x[ i ][ jm-3 ][ k ];
+
 			rhs_u.x[ i ][ 0 ][ k ] = c43 * rhs_u.x[ i ][ 1 ][ k ] - c13 * rhs_u.x[ i ][ 2 ][ k ];
 			rhs_u.x[ i ][ jm-1 ][ k ] = c43 * rhs_u.x[ i ][ jm-2 ][ k ] - c13 * rhs_u.x[ i ][ jm-3 ][ k ];
 
@@ -245,7 +242,7 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p,
 
 			Ice.x[ i ][ 0 ][ k ] = c43 * Ice.x[ i ][ 1 ][ k ] - c13 * Ice.x[ i ][ 2 ][ k ];
 			Ice.x[ i ][ jm-1 ][ k ] = c43 * Ice.x[ i ][ jm-2 ][ k ] - c13 * Ice.x[ i ][ jm-3 ][ k ];
-*/
+
 		}
 	}
 }
@@ -293,7 +290,7 @@ void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p, A
 			co2.x[ i ][ j ][ 0 ] = c43 * co2.x[ i ][ j ][ 1 ] - c13 * co2.x[ i ][ j ][ 2 ];
 			co2.x[ i ][ j ][ km-1 ] = c43 * co2.x[ i ][ j ][ km-2 ] - c13 * co2.x[ i ][ j ][ km-3 ];
 			co2.x[ i ][ j ][ 0 ] = co2.x[ i ][ j ][ km-1 ] = ( co2.x[ i ][ j ][ 0 ] + co2.x[ i ][ j ][ km-1 ] ) / 2.;
-/*
+
 			rhs_u.x[ i ][ j ][ 0 ] = c43 * rhs_u.x[ i ][ j ][ 1 ] - c13 * rhs_u.x[ i ][ j ][ 2 ];
 			rhs_u.x[ i ][ j ][ km-1 ] = c43 * rhs_u.x[ i ][ j ][ km-2 ] - c13 * rhs_u.x[ i ][ j ][ km-3 ];
 			rhs_u.x[ i ][ j ][ 0 ] = rhs_u.x[ i ][ j ][ km-1 ] = ( rhs_u.x[ i ][ j ][ 0 ] + rhs_u.x[ i ][ j ][ km-1 ] ) / 2.;
@@ -345,7 +342,7 @@ void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p, A
 			Ice.x[ i ][ j ][ 0 ] = c43 * Ice.x[ i ][ j ][ 1 ] - c13 * Ice.x[ i ][ j ][ 2 ];
 			Ice.x[ i ][ j ][ km-1 ] = c43 * Ice.x[ i ][ j ][ km-2 ] - c13 * Ice.x[ i ][ j ][ km-3 ];
 			Ice.x[ i ][ j ][ 0 ] = Ice.x[ i ][ j ][ km-1 ] = ( Ice.x[ i ][ j ][ 0 ] + Ice.x[ i ][ j ][ km-1 ] ) / 2.;
-*/
+
 		}
 	}
 }
