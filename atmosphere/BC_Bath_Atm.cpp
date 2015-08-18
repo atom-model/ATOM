@@ -402,7 +402,7 @@ void BC_Bathymetry_Atmosphere::BC_Radiation ( double t_0, double ik, double sigm
 
 
 
-void BC_Bathymetry_Atmosphere::BC_SolidGround ( int Ma, double hp, double ep, double c_land_minus, double co2_vegetation, double t_0, double p_0, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &pn, Array &cn, Array &co2n, Array &fup, Array &fvp, Array &fwp, Array &ftp, Array &fcp, Array &fco2p, Array_2D &t_j, Array_2D &c_j, Array_2D &co2_j, Array_2D &Vegetation )
+void BC_Bathymetry_Atmosphere::BC_SolidGround ( int Ma, double hp, double ep, double c_land_minus, double co2_vegetation, double t_0, double tau, double p_0, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &pn, Array &cn, Array &co2n, Array &fup, Array &fvp, Array &fwp, Array &ftp, Array &fcp, Array &fco2p, Array_2D &t_j, Array_2D &c_j, Array_2D &co2_j, Array_2D &Vegetation )
 {
 // boundary conditions for the total solid ground
 
@@ -416,6 +416,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int Ma, double hp, double ep, do
 				{
 					if ( Ma == 0 )
 					{
+//						t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = tau;
 						p.x[ i ][ j ][ k ] = pn.x[ i ][ j ][ k ] = pa;
 
 						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
@@ -434,6 +435,8 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int Ma, double hp, double ep, do
 					}
 					else
 					{
+//						t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = tau;
+
 						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
 						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
 						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;

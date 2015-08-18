@@ -350,12 +350,15 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 // force and source terms presented one by one:
 
 	Rain_aux = + WaterVapour * coeff_lv * ep * ( dcdr + dcdthe / rm + dcdphi / rmsinthe ); 									// only the latent heat of water vapour is used!!!!!!!
+	RS_LatentHeat_Energy_Rain = Rain_aux;
+
 //	Rain_super_aux = + WaterVapour * coeff_lv * ep * ( dcdr + dcdthe / rm + dcdphi / rmsinthe );
 //	Ice_aux = + WaterVapour * coeff_ls * ep * ( dcdr + dcdthe / rm + dcdphi / rmsinthe );
-
-//	if ( ( Rain_aux < 0. ) && ( q_h > q_Rain ) && ( t_Celsius >= 0. ) )	RS_LatentHeat_Energy_Rain = Rain_aux;
+/*
 	if ( ( Rain_aux < 0. ) && ( q_h > q_Rain ) )	RS_LatentHeat_Energy_Rain = Rain_aux;						// only the latent heat of water vapour is used!!!!!!!
 	else     RS_LatentHeat_Energy_Rain = 0.;
+*/
+
 //	if ( ( Rain_aux > 0. ) && ( t_Celsius >= 0. ) )	RS_LatentHeat_Energy_Rain = Rain_aux;
 //	if ( ( Rain_super_aux < 0. ) && ( q_h > q_Rain_super ) && ( t_Celsius <= 0. ) && ( t_Celsius >= - 12. ) )	RS_LatentHeat_Energy_Rain_super = Rain_super_aux;
 //	if ( ( Rain_super_aux > 0. ) && ( t_Celsius <= 0. ) )	RS_LatentHeat_Energy_Rain_super = Rain_super_aux;
@@ -439,7 +442,7 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 
 	rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
 			+ ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-			+ ( t.x[ i ][ j ][ k ] - t_Boussinesq ) / t_Boussinesq
+			- ( t.x[ i ][ j ][ k ] - t_Boussinesq ) / t_Boussinesq
 			- h_c_i * c.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 
