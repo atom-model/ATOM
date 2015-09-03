@@ -48,9 +48,14 @@ IC_Thermohalin::IC_Thermohalin ( int im, int jm, int km )
 // for the artificial initial and boundary conditions
 // u_0 = .45 m/s
 
-//	IC_water = 1.;
-//	IC_water = .1;
-	IC_water = .5;					// no dimension, ( average velocity compares to          u_0 * IC_water = 0,225 m/s )
+//	IC_water = .01;				// no dimension, ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,0045 m/s )
+	IC_water = .03;				// no dimension, ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,0135 m/s )
+
+
+//	max value for salinity as initial condition
+
+	ca_max = 1.11;
+
 
 // ocean surface velocity is about 3% of the wind velocity at the surface
 
@@ -286,7 +291,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 // northern hemisphere: east coast
 
-	k_grad = 6;																			// extension of velocity change
+	k_grad = 10;																			// extension of velocity change
 	k_a = k_grad;																		// left distance
 	k_b = 0;																				// right distance
 
@@ -312,7 +317,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 					{
 						m = i_half - i;
 						d_i = ( double ) i;
-						c.x[ i ][ j ][ k ] = 1.11;
+						c.x[ i ][ j ][ k ] = ca_max;
 						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
 						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
@@ -362,7 +367,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 					{
 						m = i_half - i;
 						d_i = ( double ) i;
-						c.x[ i ][ j ][ k ] = 1.11;
+						c.x[ i ][ j ][ k ] = ca_max;
 						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
 						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
@@ -392,7 +397,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 // northern hemisphere: west coast
 
-	k_grad = 6;																			// extension of velocity change
+	k_grad = 10;																			// extension of velocity change
 	k_a = 0;																				// left distance
 
 	k_water = 0;																		// somewhere on water
@@ -419,7 +424,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 					{
 						m = i_half - i;
 						d_i = ( double ) i;
-						c.x[ i ][ j ][ k ] = 1.11;
+						c.x[ i ][ j ][ k ] = ca_max;
 						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// increase with depth, decrease with distance from coast
 						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
@@ -472,7 +477,7 @@ void IC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 					{
 						m = i_half - i;
 						d_i = ( double ) i;
-						c.x[ i ][ j ][ k ] = 1.11;
+						c.x[ i ][ j ][ k ] = ca_max;
 						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
 						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
 					}
@@ -5182,7 +5187,7 @@ void IC_Thermohalin::IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w
 void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w, Array &c )
 {
 // flow along coasts
-// closing the polar, subpolar and subtropic atmospheric circulation systems
+// closing the polar, subpolar and subtropic circulation systems
 
 
 // south polar sea
@@ -5201,7 +5206,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
+					c.x[ i ][ j ][ k ] = ca_max;
 //					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - 5 ) / ( double ) ( im-2 - 5 );
 //					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - 5 ) / ( double ) ( im-2 - 5 );
 //					v.x[ i ][ j ][ k ] = - IC_water;
@@ -5236,8 +5241,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					c.x[ i ][ j ][ k ] = ( c.x[ i ][ j_end ][ k ] - c.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + c.x[ i ][ j_beg ][ k ];
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] =  .5 * IC_water * ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+//					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5269,8 +5274,8 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
 					c.x[ i ][ j ][ k ] = ( c.x[ i ][ j_end ][ k ] - c.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + c.x[ i ][ j_beg ][ k ];
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5285,10 +5290,10 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 // subantarctic  mode water ( -1000m deep )
 
-// subantarctcic front parallel to the circumpolar current ( from j=144 until j=146 compares to 54°S until 56°S,
+// subantarctic front parallel to the circumpolar current ( from j=144 until j=146 compares to 54°S until 56°S,
 //                                                                                        from k=0 until k=km compares to 0° until 360° )
 
-	for ( int i = i_beg+10; i < im; i++ )
+	for ( int i = i_beg+10; i < im-2; i++ )
 	{
 		for ( int j = 144; j < 147; j++ )
 		{
@@ -5296,8 +5301,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
+					c.x[ i ][ j ][ k ] = ca_max;
 //					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg + 5 ) / ( double ) ( i_max - i_beg + 5 );
-					w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_beg + 5 ) / ( double ) ( i_max - i_beg + 5 );
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( double ) ( i - i_beg + 5 ) / ( double ) ( i_max - i_beg + 5 );
 				}
 			}
 		}
@@ -5306,7 +5312,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 
 // north of the constant velocity belt of the subantarctic mode water ( -1000m deep )
-// subantarctcic front parallel to the circumpolar current ( from j=144 until j=146 compares to 54°S until 56°S,
+// subantarctic front parallel to the circumpolar current ( from j=144 until j=146 compares to 54°S until 56°S,
 //                                                                                        from k=0 until k=km compares to 0° until 360° )
 
 	j_beg = 144;
@@ -5314,7 +5320,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 	k_beg = 0;
 	k_end = km;
 
-	for ( int i = i_beg+10; i < im; i++ )
+	for ( int i = i_beg+10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end + 1; j++ )
 		{
@@ -5325,8 +5331,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5336,7 +5343,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 
 // north of the constant velocity belt of the subantarctic mode water ( -1000m deep )
-// subantarctcic front parallel to the circumpolar current ( from j=144 until j=146 compares to 54°S until 56°S,
+// subantarctic front parallel to the circumpolar current ( from j=144 until j=146 compares to 54°S until 56°S,
 //                                                                                        from k=0 until k=km compares to 0° until 360° )
 
 	j_beg = 144;
@@ -5344,7 +5351,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 	k_beg = 0;
 	k_end = km;
 
-	for ( int i = i_beg+10; i < im; i++ )
+	for ( int i = i_beg+10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end + 1; j++ )
 		{
@@ -5355,8 +5362,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5364,7 +5372,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 
 
-
+/*
 // south polar sea
 
 // Weddell sea
@@ -5374,7 +5382,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 // south-west directed flow at the surface ( from j=155 until j=165 compares to 65°S until 75°S,
 //                                                                  from k=299 until k=km compares to 61°W until 0° )
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 166;
 	k_beg = 299;
 	k_end = km;
@@ -5390,10 +5398,11 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 		{
 			for ( int k = ( k_beg + k_run ); k < ( k_beg + k_step + k_run ); k++ )
 			{
-				for ( int i = 10; i < im; i++ )
+				for ( int i = 10; i < im-2; i++ )
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
+						c.x[ i ][ j ][ k ] = ca_max;
 //						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
@@ -5411,12 +5420,12 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 // south-west directed flow at the surface ( from j=155 until j=165 compares to 65°S until 75°S,
 //                                                                  from k=299 until k=km compares to 61°W until 0° )
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 166;
 	k_beg = 299;
 	k_end = km;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end + 1; j++ )
 		{
@@ -5427,8 +5436,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5445,12 +5455,12 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 // south-west directed flow at the surface ( from j=155 until j=165 compares to 65°S until 75°S,
 //                                                                  from k=352 until k=km compares to 8°W until 0° )
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 166;
 	k_beg = km - 8;
 	k_end = km;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end; j++ )
 		{
@@ -5458,20 +5468,21 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = + .5 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + .5 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
 	}
 
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 166;
 	k_beg = km - 8;
 	k_end = km;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end; j++ )
 		{
@@ -5479,20 +5490,21 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = + .5 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - .5 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
 	}
 
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 166;
 	k_beg = km - 43;
 	k_end = km - 1;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end; j++ )
 		{
@@ -5503,8 +5515,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -5523,7 +5536,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 // south-west directed flow at the surface ( from j=155 until j=168 compares to 65°S until 78°S,
 //                                                                  from k=180 until k=280 compares to 180°W until 80°W )
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 169;
 	k_beg = 180;
 	k_end = 281;
@@ -5539,10 +5552,11 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 		{
 			for ( int k = ( k_beg + k_run ); k < ( k_beg + k_step + k_run ); k++ )
 			{
-				for ( int i = 10; i < im; i++ )
+				for ( int i = 10; i < im-2; i++ )
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
+						c.x[ i ][ j ][ k ] = ca_max;
 //						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
@@ -5564,12 +5578,12 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 // south-west directed flow at the surface ( from j=155 until j=168 compares to 65°S until 78°S,
 //                                                                  from k=180 until k=245 compares to 180°W until 115°W )
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 169;
 	k_beg = 180;
 	k_end = 246;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end + 1; j++ )
 		{
@@ -5580,8 +5594,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5599,12 +5614,12 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 //                                                                  from k=180 until k=245 compares to 180°W until 115°W )
 
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 169;
 	k_beg = 254;
 	k_end = 262;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end; j++ )
 		{
@@ -5612,20 +5627,21 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = + .5 * IC_water * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = + .5 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
 	}
 
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 169;
 	k_beg = 254;
 	k_end = 262;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end; j++ )
 		{
@@ -5633,20 +5649,21 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = + .5 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
+					w.x[ i ][ j ][ k ] = - .5 * IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 				}
 			}
 		}
 	}
 
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 169;
 	k_beg = 190;
 	k_end = 250;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end; j++ )
 		{
@@ -5657,8 +5674,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -5667,12 +5685,12 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 
 
-	j_beg = 155;
+	j_beg = 153;
 	j_end = 169;
 	k_beg = 246;
 	k_end = 255;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end; j++ )
 		{
@@ -5683,8 +5701,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
@@ -5720,10 +5739,11 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 		{
 			for ( int k = ( k_beg + k_run ); k < ( k_beg + k_step + k_run ); k++ )
 			{
-				for ( int i = 10; i < im; i++ )
+				for ( int i = 10; i < im-2; i++ )
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
+						c.x[ i ][ j ][ k ] = ca_max;
 //						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
 					}
@@ -5747,7 +5767,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 	k_beg = 0;
 	k_end = 161;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end + 1; j++ )
 		{
@@ -5758,8 +5778,9 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j_end ][ k ] - v.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + v.x[ i ][ j_beg ][ k ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j_end ][ k ] - w.x[ i ][ j_beg ][ k ] ) * ( double ) ( j_z ) / ( double ) ( j_n ) + w.x[ i ][ j_beg ][ k ];
 				}
 			}
 		}
@@ -5772,7 +5793,7 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 	k_beg = 132;
 	k_end = 138;
 
-	for ( int i = 10; i < im; i++ )
+	for ( int i = 10; i < im-2; i++ )
 	{
 		for ( int j = j_beg; j < j_end; j++ )
 		{
@@ -5783,12 +5804,14 @@ void IC_Thermohalin::IC_South_Polar_Sea ( Array &h, Array &u, Array &v, Array &w
 
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
-					w.x[ i ][ j ][ k ] = ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
+					c.x[ i ][ j ][ k ] = ca_max;
+					v.x[ i ][ j ][ k ] = .5 * IC_water * ( v.x[ i ][ j ][ k_end ] - v.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + v.x[ i ][ j ][ k_beg ];
+					w.x[ i ][ j ][ k ] = .5 * IC_water * ( w.x[ i ][ j ][ k_end ] - w.x[ i ][ j ][ k_beg ] ) * ( double ) ( k_z ) / ( double ) ( k_n ) + w.x[ i ][ j ][ k_beg ];
 				}
 			}
 		}
 	}
+*/
 }
 
 
@@ -6842,7 +6865,7 @@ void IC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 
 
 
-void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Array &c )
+void IC_Thermohalin::IC_DeepWater ( double ca, Array &h, Array &u, Array &v, Array &w, Array &c )
 {
 // initial conditions for v- and w-velocity components in deep flows
 // Atlantic ocean
@@ -6852,18 +6875,16 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 // Greenland until middel atlantic ridge       from k=317 until k=327 compares to 43°W until 33°W )
 
 
-	for ( int i = i_bottom; i < im; i++ )
+	for ( int i = i_bottom; i < im-1; i++ )
 	{
 		for ( int j = 32; j < 37; j++ )
 		{
-			for ( int k = 317; k < 328; k++ )
+			for ( int k = 322; k < 334; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-					u.x[ i ][ j ][ k ] = - .1 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_deep - i_deep );
-//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_deep - i_deep );
+					c.x[ i ][ j ][ k ] = ca_max;
+					u.x[ i ][ j ][ k ] = - .1 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 				}
 			}
 		}
@@ -6880,19 +6901,23 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 // southerly directed current as deep flow ( from j=32 until j=50 compares to 58°N until 40°N,
 // Greenland until middel atlantic ridge       from k=317 until k=327 compares to 43°W until 33°W )
 
+	k1 = 322;
+	k3 = 332;
+	k2 = ( k3 - k1 ) / 2 + k1;
+	kd = ( k1 - k2 ) * ( k1 - k2 );
 
 	for ( int i = i_bottom; i < i_deep + 1; i++ )
 	{
 		for ( int j = 32; j < 51; j++ )
 		{
-			for ( int k = 317; k < 328; k++ )
+			for ( int k = k1; k <=k3; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-//					c.x[ i ][ j ][ k ] = 1.11;
-//					u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+					v.x[ i ][ j ][ k ] = + .5 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 				}
 			}
 		}
@@ -6912,28 +6937,33 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 
 	j_beg = 45;
 	j_end = 61;
-	k_beg = 306;
-	k_end = 321;
+	k_beg = 308;
+	k_end = 323;
 	j_run = 0;
 	k_run = 0;
 	j_step = 1;
 	k_step = 11;
 
-
 	while ( ( j_end - j_run ) >= j_beg && ( k_beg + k_run ) <= k_end )
 	{
 		for ( int j = ( j_end - j_run ); j > ( j_end - j_step - j_run ); j-- )
 		{
+			k1 = k_beg + k_run;
+			k3 = k_beg + k_step + k_run;
+			k2 = ( k3 - k1 ) / 2 + k1;
+			kd = ( k1 - k2 ) * ( k1 - k2 );
+
 			for ( int k = ( k_beg + k_run ); k < ( k_beg + k_step + k_run ); k++ )
 			{
 				for ( int i = i_bottom; i < i_deep + 1; i++ )
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						c.x[ i ][ j ][ k ] = 1.11;
-//						u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+						c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+						v.x[ i ][ j ][ k ] = + .5 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
+						w.x[ i ][ j ][ k ] = - .5 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 					}
 				}
 			}
@@ -6951,19 +6981,23 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 
 // south of Newfoundland Guayana-fault ( from j=60 until j=88 compares to 2°N until 30°N,
 //                                                                 from k=307 until k=316 compares to 53°W until 44°W )
+	k1 = 309;
+	k3 = 319;
+	k2 = ( k3 - k1 ) / 2 + k1;
+	kd = ( k1 - k2 ) * ( k1 - k2 );
 
 	for ( int i = i_bottom; i < i_deep + 1; i++ )
 	{
 		for ( int j = 60; j < 89; j++ )
 		{
-			for ( int k = 307; k < 317; k++ )
+			for ( int k = k1; k <= k3; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-//					u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = + 0.;
+					kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 				}
 			}
 		}
@@ -6982,8 +7016,8 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 
 	j_beg = 80;
 	j_end = 100;
-	k_beg = 307;
-	k_end = 328;
+	k_beg = 310;
+	k_end = 331;
 	j_run = 0;
 	k_run = 0;
 	j_step = 1;
@@ -6994,16 +7028,22 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 	{
 		for ( int j = j_beg + j_run; j < ( j_beg + j_step + j_run ); j++ )
 		{
+			k1 = k_beg + k_run;
+			k3 = k_beg + k_step + k_run;
+			k2 = ( k3 - k1 ) / 2 + k1;
+			kd = ( k1 - k2 ) * ( k1 - k2 );
+
 			for ( int k = k_beg + k_run; k < ( k_beg + k_step + k_run ); k++ )
 			{
 				for ( int i = i_bottom; i < i_deep + 1; i++ )
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						c.x[ i ][ j ][ k ] = 1.11;
-//						u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						v.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+						c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+						v.x[ i ][ j ][ k ] = + .5 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
+						w.x[ i ][ j ][ k ] = + .5 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 					}
 				}
 			}
@@ -7046,105 +7086,54 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 
 // Parallel to the Brasil-current as deep flow ( from j=99 until j=149 compares to 9°S until 59°S,
 //                                                                      from k=334 until k=339 compares to 26°W until 21°W )
+	k1 = 330;
+	k3 = 340;
+	k2 = ( k3 - k1 ) / 2 + k1;
+	kd = ( k1 - k2 ) * ( k1 - k2 );
 
 	for ( int i = i_bottom; i < i_deep + 1; i++ )
 	{
-		for ( int j = 99; j < 150; j++ )
+		for ( int j = 99; j < 153; j++ )
 		{
-			for ( int k = 334; k < 340; k++ )
+			for ( int k = k1; k <= k3; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-//					u.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 				}
 			}
 		}
 	}
 
 
+//		%%%%%%%%%%%%%%%%%%%%%%%%%%%%     Pacific ocean     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-// Pacific ocean
-
-// Peru-current ( Humboldt-current ) coming from circumpolar current ( from j=107 until j=132 compares to 30°S until 58°S,
-//                                                                                                               from k=246 until k=258 compares to 70°W until 83°W )
-/*
-	j_beg = 107;
-	j_end = 133;
-	k_beg = 246;
-	k_end = 259;
-
-	v_grad = + 0.001;
-	k_step = 8;
-
-	k_a = k_b = 0;
-
-	flip = 0;
-
-	for ( int k = k_beg; k < k_end; k++ )
-	{
-		if ( h.x[ i_max ][ j_beg ][ k ] == 1. )
-		{
-			k_a = k;
-			flip = 1;
-		}
-		if ( flip == 1 ) break;
-	}
-
-	flip = 0;
-
-	for ( int j = j_beg+1; j < j_end; j++ )
-	{
-		for ( int k = k_beg; k < k_end; k++ )
-		{
-			if ( h.x[ i_max ][ j ][ k ] == 1. )
-			{
-				k_b = k;
-				k_grad = k_b - k_a;
-				if ( k_grad <= - 3 ) k_grad = - 2;
-				flip = 1;
-			}
-		if ( flip == 1 ) break;
-		}
-
-
-		for ( int k = k_b; k > ( k_b - k_step ); k-- )
-		{
-			for ( int i = 5; i < i_beg+2; i++ )
-			{
-				if ( h.x[ i ][ j ][ k ] == 0. )
-				{
-					v.x[ i ][ j ][ k ] = + v_grad * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = + v_grad * ( double ) ( k_grad ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-				}
-			}
-		}
-		k_a = k_b;
-		flip = 0;
-	}
-*/
 
 
 // Pacific ocean
 
 // Peru-current ( Humboldt-current ) coming from circumpolar current ( from j=120 until j=148 compares to 30°S until 58°S,
 //                                                                                                              from k=277 until k=290 compares to 70°W until 83°W )
+	k1 = 277;
+	k3 = 291;
+	k2 = ( k3 - k1 ) / 2 + k1;
+	kd = ( k1 - k2 ) * ( k1 - k2 );
+
 	for ( int i = i_bottom; i < i_deep + 1; i++ )
 	{
-		for ( int j = 120; j < 149; j++ )
+		for ( int j = 118; j < 153; j++ )
 		{
-			for ( int k = 277; k < 291; k++ )
+			for ( int k = k1; k <= k3; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-//					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 				}
 			}
 		}
@@ -7159,19 +7148,23 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 // deep flow to west out of Peru-current ( Humboldt-current ) ( from j=120 until j=125 compares to 30°S until 35°S,
 // parallel to the equator                                                             from k=190 until k=285 compares to 75°W until 170°W )
 
+	j1 = 118;
+	j3 = 126;
+	j2 = ( j3 - j1 ) / 2 + j1;
+	jd = ( j1 - j2 ) * ( j1 - j2 );
+
 	for ( int i = i_bottom; i < i_deep + 1; i++ )
 	{
-		for ( int j = 120; j < 126; j++ )
+		for ( int j = j1; j <= j3; j++ )
 		{
-			for ( int k = 190; k < 286; k++ )
+			for ( int k = 193; k < 286; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-//					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					jn = j * j - 2 * j2 * j - j1 * j1 + 2 * j1 * j2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - jn ) / ( double ) ( jd ) + ca;
+					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - jn ) / ( double ) ( jd );
 				}
 			}
 		}
@@ -7185,19 +7178,23 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 // Newseeland in the east coming from circumpolar current ( from j=92 until j=152 compares to 2°S until 62°S,
 // in direction to Japan                                                             from k=188 until k=197 compares to 172°W until 163°W )
 
+	k1 = 188;
+	k3 = 198;
+	k2 = ( k3 - k1 ) / 2 + k1;
+	kd = ( k1 - k2 ) * ( k1 - k2 );
+
 	for ( int i = i_bottom; i < i_deep + 1; i++ )
 	{
 		for ( int j = 92; j < 153; j++ )
 		{
-			for ( int k = 188; k < 198; k++ )
+			for ( int k = k1; k <= k3; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-//					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 				}
 			}
 		}
@@ -7226,16 +7223,22 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 	{
 		for ( int j = j_beg + j_run; j < ( j_beg + j_step + j_run ); j++ )
 		{
+			k1 = k_beg + k_run;
+			k3 = k_beg + k_step + k_run;
+			k2 = ( k3 - k1 ) / 2 + k1;
+			kd = ( k1 - k2 ) * ( k1 - k2 );
+
 			for ( int k = k_beg + k_run; k < ( k_beg + k_step + k_run ); k++ )
 			{
 				for ( int i = i_bottom; i < i_deep + 1; i++ )
 				{
 					if ( h.x[ i ][ j ][ k ] != 1. )
 					{
-						c.x[ i ][ j ][ k ] = 1.11;
-//						u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-						w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+						kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+						c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+						v.x[ i ][ j ][ k ] = - .5 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
+						w.x[ i ][ j ][ k ] = - .5 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 					}
 				}
 			}
@@ -7253,19 +7256,23 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 // upward flow east of Japan ( from j=54 until j=67 compares to 23°N until 36°N
 //                                              from k=162 until k=171 compares to 162°O until 171°O )
 
+	k1 = 162;
+	k3 = 172;
+	k2 = ( k3 - k1 ) / 2 + k1;
+	kd = ( k1 - k2 ) * ( k1 - k2 );
+
 	for ( int i = i_bottom; i < i_deep + 1; i++ )
 	{
 		for ( int j = 54; j < 68; j++ )
 		{
-			for ( int k = 162; k < 172; k++ )
+			for ( int k = k1; k <= k3; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-					u.x[ i ][ j ][ k ] = + .1 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+					v.x[ i ][ j ][ k ] = - .5 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 				}
 			}
 		}
@@ -7282,19 +7289,24 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 // upward flow east of Japan ( from j=50 until j=58 compares to 32°N until 40°N
 //                                              from k=162 until k=210 compares to 162°O until 150°W )
 
-	for ( int i = i_deep; i < im - 1; i++ )
+	j1 = 54;
+	j3 = 64;
+	j2 = ( j3 - j1 ) / 2 + j1;
+	jd = ( j1 - j2 ) * ( j1 - j2 );
+
+	for ( int i = i_deep-1; i < im - 1; i++ )
 	{
-		for ( int j = 50; j < 59; j++ )
+		for ( int j = j1; j <= j3; j++ )
 		{
-			for ( int k = 162; k < 210; k++ )
+			for ( int k = 171; k < 210; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-					u.x[ i ][ j ][ k ] = + .1 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+					jn = j * j - 2 * j2 * j - j1 * j1 + 2 * j1 * j2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - jn ) / ( double ) ( jd ) + ca;
+					u.x[ i ][ j ][ k ] = + .1 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
+					w.x[ i ][ j ][ k ] = + .5 *  IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - jn ) / ( double ) ( jd );
 				}
 			}
 		}
@@ -7320,7 +7332,7 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 			{
 			if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
+					c.x[ i ][ j ][ k ] = ca_max;
 //					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
 					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
@@ -7338,54 +7350,27 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 
 // south east of Southafrica coming from  the circumpolar current ( from j=93 until j=152 compares to 3°S until 62°S,
 //                                                                                                       from k=55 until k=60 compares to 55°O until 60°O )
+	k1 = 55;
+	k3 = 61;
+	k2 = ( k3 - k1 ) / 2 + k1;
+	kd = ( k1 - k2 ) * ( k1 - k2 );
 
 	for ( int i = i_bottom; i < i_deep + 1; i++ )
 	{
 		for ( int j = 93; j < 153; j++ )
 		{
-			for ( int k = 55; k < 61; k++ )
+			for ( int k = k1; k <= k3; k++ )
 			{
 			if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-//					u.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-//					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
-					//w.x[ i ][ j ][ k ] = IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom );
+					kn = k * k - 2 * k2 * k - k1 * k1 + 2 * k1 * k2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd ) + ca;
+					v.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
 				}
 			}
 		}
 	}
-
-
-
-
-// Indic ocean
-
-// south east of Southafrica		east coasts
-
-// upwards flow north of Madagaskar ( from j=93 until j=97 compares to 3°S until 7°S,
-//                                                           from k=55 until k=65 compares to 55°O until 65°O )
-
-	for ( int i = i_deep; i < im - 2; i++ )
-	{
-		for ( int j = 93; j < 98; j++ )
-		{
-			for ( int k = 55; k < 66; k++ )
-			{
-				if ( h.x[ i ][ j ][ k ] != 1. )
-				{
-					c.x[ i ][ j ][ k ] = 1.11;
-					u.x[ i ][ j ][ k ] = + .1 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					v.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-//					w.x[ i ][ j ][ k ] = - IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-				}
-			}
-		}
-	}
-
-
-
 
 
 
@@ -7397,18 +7382,24 @@ void IC_Thermohalin::IC_DeepWater ( Array &h, Array &u, Array &v, Array &w, Arra
 // deep flow south of India ( from j=93 until j=97 compares to 3°S until 7°S,
 // upwards flow                    from k=64 until k=95 compares to 64°O until 95°O )
 
-	for ( int i = i_deep; i < im - 2; i++ )
+	j1 = 93;
+	j3 = 99;
+	j2 = ( j3 - j1 ) / 2 + j1;
+	jd = ( j1 - j2 ) * ( j1 - j2 );
+
+	for ( int i = i_deep-1; i < im - 2; i++ )
 	{
-		for ( int j = 93; j < 98; j++ )
+		for ( int j = j1; j <= j3; j++ )
 		{
-			for ( int k = 64; k < 96; k++ )
+			for ( int k = 60; k < 96; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					c.x[ i ][ j ][ k ] = 1.11;
-					u.x[ i ][ j ][ k ] = + .1 * IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
-					v.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = + IC_water * ( double ) ( i - i_deep ) / ( double ) ( i_max - i_deep );
+					jn = j * j - 2 * j2 * j - j1 * j1 + 2 * j1 * j2;
+
+					c.x[ i ][ j ][ k ] = ( ca_max - ca ) * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - jn ) / ( double ) ( jd ) + ca;
+					u.x[ i ][ j ][ k ] = + .1 * IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - kn ) / ( double ) ( kd );
+					w.x[ i ][ j ][ k ] = + .5 *  IC_water * ( double ) ( i - i_bottom ) / ( double ) ( i_deep - i_bottom ) * ( double ) ( - jn ) / ( double ) ( jd );
 				}
 			}
 		}

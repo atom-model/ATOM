@@ -32,11 +32,11 @@ class IC_Thermohalin
 		int k_water, k_sequel;
 		int Ma_max, Ma_max_half;
 		int n_smooth;
-		int k1, k2;
+		int j1, j2, j3, jn, jd, k1, k2, k3, kn, kd;
 
 		double dummy_1, dummy_2, dummy_3, IC_water, water_wind, c_0, gr, c_salt, Ekman_angle, vel_magnitude, alfa, beta, angle, Ekman_angle_add, Ekman, pi180;
 		double t_equator, t_pole, d_i, d_i_half, d_i_max, d_j, d_j_half, d_j_max, t_coeff, c_equator, c_pole, c_coeff, ep, hp, p_0, t_0;
-		double v_grad, p_beg, t_Celsius, t_max, c_max;
+		double v_grad, p_beg, t_Celsius, t_max, ca_max;
 		double max_v, max_w, residuum_v, residuum_w;
 		double t_Cretaceous, t_Cretaceous_max, t_Cretaceous_coeff;
 		double c_Average, c_Cretaceous, c_diff;
@@ -54,7 +54,7 @@ class IC_Thermohalin
 
 		void IC_South_Polar_Sea ( Array &, Array &, Array &, Array &, Array & );
 
-		void IC_DeepWater ( Array &, Array &, Array &, Array &, Array & );
+		void IC_DeepWater ( double, Array &, Array &, Array &, Array &, Array & );
 
 		void IC_v_w_Atmosphere ( Array &, Array &, Array &, Array & );
 

@@ -42,7 +42,7 @@ class Results_MSL_Hyd
 
 		~Results_MSL_Hyd (  );
 
-		void run_MSL_data ( double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+		void run_MSL_data ( double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 		void land_oceanFraction ( Array & );
 

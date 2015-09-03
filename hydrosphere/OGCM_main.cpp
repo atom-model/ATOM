@@ -65,6 +65,7 @@ using namespace std;
 // for example: dthe = the_Grad / pi180 = 1.125 / 57.3 = 0.01963
 
 // maximum velocity on the sea surface  w_max = 0.29 [ / ] compares to 0.21 m/s = 0.78 km/h as annual mean 
+// mean velocity for sea level is 0.5 to 1 km/h compares to 0.14 to 0.28 m/s
 
 // maximum temperature of earth's surface at equator t_max = 1.1355 compares to 37° C compares to 310 K
 // maximum temperature of earth's surface at equator t_max = 1.0974 compares to 27° C compares to 300 K
@@ -73,8 +74,6 @@ using namespace std;
 // temperature t_0 = 1.000 compares to 0° C compares to 273,15 K
 // temperature t_0 = 1.073 compares to 20° C compares to 293,15 K
 // temperature t_0 = 0.003661 compares to 1° C compares to 1 K
-
-// mean velocity for sea level is 0.5 to 1 km/h compares to 0.14 to 0.28 m/s
 
 // mass of water compares to 1.0, rate of salt compares to 0.035,
 // c_0 compares to the total mass for mean salinity of 35.0 psu or dimensionsless 1.
@@ -93,7 +92,7 @@ int main ( int argc, char *argv[ ] )
 // maximum number of inner velocity loop iterations ( velocity_iter_max ),
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;
+	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 2, pressure_iter_max = 2;
 	int velocity_iter_max_2D = 10, pressure_iter_max_2D =5;
 
 	int n, i_radial, j_longal, k_zonal;
@@ -223,8 +222,10 @@ int main ( int argc, char *argv[ ] )
 
 //	cout << " ***** printout of 3D-fields ***** " << endl;
 //	p.printArray();
+
 //	cout << " ***** printout of 2D-fields ***** " << endl;
 //	Vegetation.printArray_2D();
+
 //	cout << " ***** printout of 1D-fields ***** " << endl;
 //	rad.printArray_1D();
 
@@ -369,6 +370,7 @@ int main ( int argc, char *argv[ ] )
 //	choice of the time slice to be computed
 	time_slice_sequel:
 
+
 // choice of the time slice by Ma and by author
 // choice of the transfer file for the surface velocity components
 	if ( Ma == 0 )
@@ -494,22 +496,22 @@ int main ( int argc, char *argv[ ] )
 //	if ( Ma > 0 ) depth.IC_SeaGroundGaps ( h, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
 
 //	initial conditions for v and w velocity components at the sea surface, reduction of velocity with increasing depth for the purpose of the Ekman spiral
-//	oceanflow.IC_v_w_Ekman ( h, v, w );
+	oceanflow.IC_v_w_Ekman ( h, v, w );
 
 //	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
 	oceanflow.IC_v_w_WestEastCoast ( h, u, v, w, c );
 
 //	initial conditions for u-, v- and w-velocity components in deep flows, assumptions for thermohaline transveyor belt
-	if ( Ma == 0 ) oceanflow.IC_DeepWater ( h, u, v, w, c );
-//	oceanflow.IC_DeepWater ( h, u, v, w, c );
+//	if ( Ma == 0 ) oceanflow.IC_DeepWater ( h, u, v, w, c );
+	oceanflow.IC_DeepWater ( ca, h, u, v, w, c );
 
 //	currents along the equator
 //	if ( Ma == 0 ) oceanflow.IC_EquatorialCurrents ( h, u, v, w );
 //	oceanflow.IC_EquatorialCurrents ( h, u, v, w );
 
 //	antarctic circumpolar current
-	if ( Ma == 0 ) oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
-//	oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
+//	if ( Ma == 0 ) oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
+	oceanflow.IC_South_Polar_Sea ( h, u, v, w, c );
 
 //	arctic currents
 //	if ( Ma == 0 ) oceanflow.IC_Nord_Polar_Meer ( h, u, v, w );
@@ -531,11 +533,8 @@ int main ( int argc, char *argv[ ] )
 
 
 //	storing of velocity components, pressure and temperature for iteration start
-//	if ( n > 0 )   	oldnew.restoreOldNew ( .99, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
-//	else    	  oldnew.restoreOldNew_2D ( .99, v, w, p, vn, wn, pn );
-	oldnew.restoreOldNew ( .99, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
-	oldnew.restoreOldNew_2D ( .99, v, w, p, vn, wn, pn );
-
+	oldnew.restoreOldNew ( .9, u, v, w, t, p, c, un, vn, wn, tn, pn, cn );
+	oldnew.restoreOldNew_2D ( .9, v, w, p, vn, wn, pn );
 
 // computation of the ratio ocean to land areas
 	calculate_MSL.land_oceanFraction ( h );
@@ -618,7 +617,7 @@ Pressure_loop_2D:
 
 //		state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
 			Accuracy		min_Stationary_2D ( n, im, jm, km, dr, dthe, dphi );
-			min_Stationary_2D.steadyQuery_2D ( j_v, k_v, j_w, k_w, j_p, k_p, min_v, min_w, min_p, v, vn, w, wn, p, pn );
+			min_Stationary_2D.steadyQuery_2D ( j_v, k_v, j_w, k_w, j_p, k_p, min_v, min_w, min_p, h, v, vn, w, wn, p, pn );
 
 // 		new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 			Accuracy		min_Residuum_2D ( n, im, jm, km, dr, dthe, dphi );
@@ -712,43 +711,41 @@ Pressure_iteration_2D:
 //	searching of maximum and minimum values of salt concentration
 		string str_max_salt_concentration = " max salt concentration ", str_min_salt_concentration = " min salt concentration ", str_unit_salt_concentration = "psu";
 		MinMax		minmaxSalt ( im, jm, km, c_0, L_hyd );
-		minmaxSalt.searchMinMax_3D ( str_max_salt_concentration, str_min_salt_concentration, str_unit_salt_concentration, c );
-
+		minmaxSalt.searchMinMax_3D ( str_max_salt_concentration, str_min_salt_concentration, str_unit_salt_concentration, c, h );
 
 //	total salinity as the sum along a normally extended virtual column
 //	in r-direction salinity above the average value is added
-		calculate_MSL.run_MSL_data ( c_0, h, u, v, w, c, Salt_Finger, Salt_Diffusion, Upwelling, Downwelling, SaltFinger, SaltDiffusion, Salt_total, BottomWater );
-
+		calculate_MSL.run_MSL_data ( u_0, c_0, h, u, v, w, c, Salt_Finger, Salt_Diffusion, Upwelling, Downwelling, SaltFinger, SaltDiffusion, Salt_total, BottomWater );
 
 //	searching of maximum and minimum values of total salt volume in a column
 		string str_max_salt_total = " max salt total ", str_min_salt_total = " min salt total ", str_unit_salt_total = "psu";
 		MinMax		minmaxSalt_total ( jm, km, c_0 );
-		minmaxSalt_total.searchMinMax ( str_max_salt_total, str_min_salt_total, str_unit_salt_total, Salt_total );
+		minmaxSalt_total.searchMinMax ( str_max_salt_total, str_min_salt_total, str_unit_salt_total, Salt_total, h );
 
 //	searching of maximum and minimum values of salt finger volume in a column
 		string str_max_salt_finger = " max salt finger ", str_min_salt_finger = " min salt finger ", str_unit_salt_finger = "psu";
 		MinMax		minmaxSalt_finger ( jm, km, c_0 );
-		minmaxSalt_finger.searchMinMax ( str_max_salt_finger, str_min_salt_finger, str_unit_salt_finger, SaltFinger );
+		minmaxSalt_finger.searchMinMax ( str_max_salt_finger, str_min_salt_finger, str_unit_salt_finger, SaltFinger, h );
 
 //	searching of maximum and minimum values of salt diffusion volume in a column
 		string str_max_salt_diffusion = " max salt diffusion ", str_min_salt_diffusion = " min salt diffusion ", str_unit_salt_diffusion = "psu";
 		MinMax		minmaxSalt_diffusion ( jm, km, c_0 );
-		minmaxSalt_diffusion.searchMinMax ( str_max_salt_diffusion, str_min_salt_diffusion, str_unit_salt_diffusion, SaltDiffusion );
+		minmaxSalt_diffusion.searchMinMax ( str_max_salt_diffusion, str_min_salt_diffusion, str_unit_salt_diffusion, SaltDiffusion, h );
 
 //	searching of maximum and minimum values of upwelling volume in a column
 		string str_max_upwelling = " max upwelling ", str_min_upwelling = " min upwelling ", str_unit_upwelling = "m/s";
 		MinMax		minmaxUpwelling ( jm, km, c_0 );
-		minmaxUpwelling.searchMinMax ( str_max_upwelling, str_min_upwelling, str_unit_upwelling, Upwelling );
+		minmaxUpwelling.searchMinMax ( str_max_upwelling, str_min_upwelling, str_unit_upwelling, Upwelling, h );
 
-//	searching of maximum and minimum values of upwelling volume in a column
+//	searching of maximum and minimum values of downwelling volume in a column
 		string str_max_downwelling = " max downwelling ", str_min_downwelling = " min downwelling ", str_unit_downwelling = "m/s";
 		MinMax		minmaxDownwelling ( jm, km, c_0 );
-		minmaxDownwelling.searchMinMax ( str_max_downwelling, str_min_downwelling, str_unit_downwelling, Downwelling );
+		minmaxDownwelling.searchMinMax ( str_max_downwelling, str_min_downwelling, str_unit_downwelling, Downwelling, h );
 
 //	searching of maximum and minimum values of bottom water volume in a column
 		string str_max_bottom_water = " max bottom water ", str_min_bottom_water = " min bottom water ", str_unit_bottom_water = "m/s";
 		MinMax		minmaxBottom_water ( jm, km, c_0 );
-		minmaxBottom_water.searchMinMax ( str_max_bottom_water, str_min_bottom_water, str_unit_bottom_water, BottomWater );
+		minmaxBottom_water.searchMinMax ( str_max_bottom_water, str_min_bottom_water, str_unit_bottom_water, BottomWater, h );
 
 
 //	total values of properties in a normally extended virtual column are added
@@ -858,7 +855,7 @@ Print_commands:
 
 	i_time_slice++;
 	Ma = time_slice [ i_time_slice ];
-//	if ( Ma > 30 ) goto finish;
+	if ( Ma > 30 ) goto finish;
 	if ( i_time_slice >= i_time_slice_max ) goto finish;
 	else goto time_slice_sequel;
 

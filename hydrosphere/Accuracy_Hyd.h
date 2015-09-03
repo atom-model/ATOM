@@ -34,6 +34,8 @@ class Accuracy
 		double residuum, max_u, max_v, max_w, max_t, max_c, max_p;
 		double Value, L_hyd;
 
+		Array				hc ( int, int, int, double ), vc ( int, int, int, double ), vnc ( int, int, int, double ), wc ( int, int, int, double ), wnc ( int, int, int, double ), pc ( int, int, int, double ), pnc ( int, int, int, double );
+
 		string name_Value;
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading;
 
@@ -54,9 +56,34 @@ class Accuracy
 
 		double residuumQuery_2D ( int &, int &, double &, Array_1D &, Array_1D &, Array &, Array & );
 
-		double steadyQuery_2D ( int &, int &, int &, int &, int &, int &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array & );
+		double steadyQuery_2D ( int &, int &, int &, int &, int &, int &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void iterationPrintout_2D ( int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, double &, double &, double &, double & );
+
+
+		double out_max_v (  ) const;
+
+		double out_min_v (  ) const;
+
+		double out_max_w (  ) const;
+
+		double out_min_w (  ) const;
+
+		double out_max_p (  ) const;
+
+		double out_min_p (  ) const;
+
+		int out_j_v (  ) const;
+
+		int out_j_w (  ) const;
+
+		int out_j_p (  ) const;
+
+		int out_k_v (  ) const;
+
+		int out_k_w (  ) const;
+
+		int out_k_p (  ) const;
 
 };
 #endif

@@ -119,7 +119,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				max_u = fabs ( ( u.x[ i ][ j ][ k ] - un.x[ i ][ j ][ k ] ) );
+				max_u = fabs ( u.x[ i ][ j ][ k ] - un.x[ i ][ j ][ k ] );
 				if ( max_u >= min_u )
 				{
 					min_u = max_u;
@@ -128,7 +128,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_u = k;
 				}
 
-				max_v = fabs ( ( v.x[ i ][ j ][ k ] - vn.x[ i ][ j ][ k ] ) );
+				max_v = fabs ( v.x[ i ][ j ][ k ] - vn.x[ i ][ j ][ k ] );
 				if ( max_v >= min_v )
 				{
 					min_v = max_v;
@@ -137,7 +137,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_v = k;
 				}
 
-				max_w = fabs ( ( w.x[ i ][ j ][ k ] - wn.x[ i ][ j ][ k ] ) );
+				max_w = fabs ( w.x[ i ][ j ][ k ] - wn.x[ i ][ j ][ k ] );
 				if ( max_w >= min_w )
 				{
 					min_w = max_w;
@@ -146,7 +146,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_w = k;
 				}
 
-				max_t = fabs ( ( t.x[ i ][ j ][ k ] - tn.x[ i ][ j ][ k ] ) );
+				max_t = fabs ( t.x[ i ][ j ][ k ] - tn.x[ i ][ j ][ k ] );
 				if ( max_t >= min_t )
 				{
 					min_t = max_t;
@@ -155,7 +155,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_t = k;
 				}
 
-				max_c = fabs ( ( c.x[ i ][ j ][ k ] - cn.x[ i ][ j ][ k ] ) );
+				max_c = fabs ( c.x[ i ][ j ][ k ] - cn.x[ i ][ j ][ k ] );
 				if ( max_c >= min_c )
 				{
 					min_c = max_c;
@@ -165,7 +165,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 				}
 
 
-				max_p = fabs ( ( p.x[ i ][ j ][ k ] - pn.x[ i ][ j ][ k ] ) );
+				max_p = fabs ( p.x[ i ][ j ][ k ] - pn.x[ i ][ j ][ k ] );
 				if ( max_p >= min_p )
 				{
 					min_p = max_p;
@@ -304,6 +304,7 @@ void Accuracy::iterationPrintout ( int &nm, int &velocity_iter_max, int &pressur
 	if ( choice <= 7 ) goto preparation;
 
 	cout << endl << endl;
+
 }
 
 
@@ -336,13 +337,6 @@ double Accuracy::residuumQuery_2D ( int &j_res, int &k_res, double &min, Array_1
 				k_res = k;
 			}
 
-			else
-			{
-				min = 0.;
-				j_res = 0;
-				k_res = 0;
-			}
-
 		}
 	}
 
@@ -354,7 +348,7 @@ double Accuracy::residuumQuery_2D ( int &j_res, int &k_res, double &min, Array_1
 
 
 
-double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min_v, double &min_w, double &min_p, Array &v, Array &vn, Array &w, Array &wn, Array &p, Array &pn )
+double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min_v, double &min_w, double &min_p, Array &hc, Array &vc, Array &vnc, Array &wc, Array &wnc, Array &pc, Array &pnc )
 {
 // state of a steady solution ( min )
 
@@ -364,34 +358,40 @@ double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j
 	j_v = j_w = j_p = 0;
 	k_v = k_w = k_p = 0;
 
-	for ( int j = 1; j < jm-1; j++ )
+	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int k = 1; k < km-1; k++ )
+		for ( int k = 0; k < km; k++ )
 		{
-//			cout << j << "     " << k << endl;
-//			v.x[ im-1 ][ j ][ k ] = vn.x[ im-1 ][ j ][ k ];
-			max_v = fabs ( v.x[ im-1 ][ j ][ k ] - vn.x[ im-1 ][ j ][ k ] );
-			if ( max_v >= min_v )
+			if ( hc.x[ im-1 ][ j ][ k ] == 0. )
 			{
-				min_v = max_v;
-				j_v = j;
-				k_v = k;
-			}
 
-			max_w = fabs ( w.x[ im-1 ][ j ][ k ] - wn.x[ im-1 ][ j ][ k ] );
-			if ( max_w >= min_w )
-			{
-				min_w = max_w;
-				j_w = j;
-				k_w = k;
-			}
+//			cout << j << "     " << k << "     " << vc.x[ im-1 ][ j ][ k ] << "     " << vnc.x[ im-1 ][ j ][ k ]<< "     " << wc.x[ im-1 ][ j ][ k ] << "     " << wnc.x[ im-1 ][ j ][ k ]<< "     " << pc.x[ im-1 ][ j ][ k ] << "     " << pnc.x[ im-1 ][ j ][ k ] << endl;
+//			cout << j << "     " << k << "     " << pn.x[ im-1 ][ j ][ k ] << endl;
 
-			max_p = fabs ( p.x[ im-1 ][ j ][ k ] - pn.x[ im-1 ][ j ][ k ] );
-			if ( max_p >= min_p )
-			{
-				min_p = max_p;
-				j_p = j;
-				k_p = k;
+				max_v = fabs ( vc.x[ im-1 ][ j ][ k ] - vnc.x[ im-1 ][ j ][ k ] );
+				if ( max_v >= min_v )
+				{
+					min_v = max_v;
+					j_v = j;
+					k_v = k;
+				}
+				
+
+				max_w = fabs ( wc.x[ im-1 ][ j ][ k ] - wnc.x[ im-1 ][ j ][ k ] );
+				if ( max_w >= min_w )
+				{
+					min_w = max_w;
+					j_w = j;
+					k_w = k;
+				}
+
+				max_p = fabs ( pc.x[ im-1 ][ j ][ k ] - pnc.x[ im-1 ][ j ][ k ] );
+				if ( max_p >= min_p )
+				{
+					min_p = max_p;
+					j_p = j;
+					k_p = k;
+				}
 			}
 		}
 	}
@@ -495,4 +495,30 @@ void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &p
 
 	cout << endl << endl;
 }
+
+
+
+double Accuracy::out_max_v (  ) const { return max_v; }
+
+double Accuracy::out_min_v (  ) const { return min_v; }
+
+double Accuracy::out_max_w (  ) const { return max_w; }
+
+double Accuracy::out_min_w (  ) const { return min_w; }
+
+double Accuracy::out_max_p (  ) const { return max_p; }
+
+double Accuracy::out_min_p (  ) const { return min_p; }
+
+int Accuracy::out_j_v (  ) const { return j_v; }
+
+int Accuracy::out_j_w (  ) const { return j_w; }
+
+int Accuracy::out_j_p (  ) const { return j_p; }
+
+int Accuracy::out_k_v (  ) const { return k_v; }
+
+int Accuracy::out_k_w (  ) const { return k_w; }
+
+int Accuracy::out_k_p (  ) const { return k_p; }
 

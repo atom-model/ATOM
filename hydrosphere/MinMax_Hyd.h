@@ -30,7 +30,7 @@ class MinMax
 		double maxValue, minValue, c_0, L_hyd;
 
 		Array_2D		value ( int, int, double );
-		Array				value_3D ( int, int, int, double );
+		Array				value_3D ( int, int, int, double ), hc ( int, int, int, double );
 
 		string name_maxValue, name_minValue, name_unitValue, heading;
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat_max, deg_lon_max, deg_lat_min, deg_lon_min;
@@ -41,9 +41,9 @@ class MinMax
 
 		~MinMax ();
 
-		void searchMinMax ( string &, string &, string &, Array_2D & );
+		void searchMinMax ( string &, string &, string &, Array_2D &, Array & );
 
-		void searchMinMax_3D ( string &, string &, string &, Array & );
+		void searchMinMax_3D ( string &, string &, string &, Array &, Array & );
 
 		double out_maxValue (  ) const;
 

@@ -33,7 +33,7 @@ Results_MSL_Hyd::Results_MSL_Hyd ( int im, int jm, int km )
 Results_MSL_Hyd::~Results_MSL_Hyd () {}
 
 
-void Results_MSL_Hyd::run_MSL_data ( double c_0, Array &hc, Array &uc, Array &vc, Array &wc, Array &cc, Array &SF, Array &SD, Array_2D &Up, Array_2D &Do, Array_2D &Sf, Array_2D &Sd, Array_2D &St, Array_2D &Bw )
+void Results_MSL_Hyd::run_MSL_data ( double u_0, double c_0, Array &hc, Array &uc, Array &vc, Array &wc, Array &cc, Array &SF, Array &SD, Array_2D &Up, Array_2D &Do, Array_2D &Sf, Array_2D &Sd, Array_2D &St, Array_2D &Bw )
 {
 // total upwelling as sum on normal velocity component values in a virtual vertical column
 
@@ -60,14 +60,23 @@ void Results_MSL_Hyd::run_MSL_data ( double c_0, Array &hc, Array &uc, Array &vc
 			{
 				if ( hc.x[ i ][ j ][ k ] == 0. )
 				{
-					if ( uc.x[ i ][ j ][ k ] > 0. ) Up.y[ j ][ k ] += uc.x[ i ][ j ][ k ];
-					if ( uc.x[ i ][ j ][ k ] < 0. ) Do.y[ j ][ k ] += uc.x[ i ][ j ][ k ];
-
+					if ( uc.x[ i ][ j ][ k ] > 0. ) Up.y[ j ][ k ] += uc.x[ i ][ j ][ k ] * u_0;
+					if ( uc.x[ i ][ j ][ k ] < 0. ) Do.y[ j ][ k ] += uc.x[ i ][ j ][ k ] * u_0;
 					Sf.y[ j ][ k ] += SF.x[ i ][ j ][ k ] * c_0;
 					Sd.y[ j ][ k ] += SD.x[ i ][ j ][ k ] * c_0;
 					St.y[ j ][ k ] += cc.x[ i ][ j ][ k ] * c_0;
 				}
 			}
+		}
+	}
+
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			Do.y[ j ][ k ] = fabs ( Do.y[ j ][ k ] );
+			Sd.y[ j ][ k ] = fabs ( Sd.y[ j ][ k ] );
 		}
 	}
 
@@ -80,7 +89,10 @@ void Results_MSL_Hyd::run_MSL_data ( double c_0, Array &hc, Array &uc, Array &vc
 		{
 			for ( int i = 0; i < 30; i++ )
 			{
-				Bw.y[ j ][ k ] += sqrt ( uc.x[ i ][ j ][ k ] * uc.x[ i ][ j ][ k ] + vc.x[ i ][ j ][ k ] * vc.x[ i ][ j ][ k ] + wc.x[ i ][ j ][ k ] * wc.x[ i ][ j ][ k ] );
+				if ( hc.x[ i ][ j ][ k ] == 0. )
+				{
+					Bw.y[ j ][ k ] += sqrt ( uc.x[ i ][ j ][ k ] * uc.x[ i ][ j ][ k ] + vc.x[ i ][ j ][ k ] * vc.x[ i ][ j ][ k ] + wc.x[ i ][ j ][ k ] * wc.x[ i ][ j ][ k ] ) * u_0;
+				}
 			}
 		}
 	}
@@ -182,8 +194,8 @@ void Results_MSL_Hyd::show_MSL_data ( double c_0, Array &hc, Array &cc, Array &t
 	}
 
 
-	Value_1 = Up.y[ j_loc ][ k_loc ];
-	Value_2 = Do.y[ j_loc ][ k_loc ];
+	Value_1 = Do.y[ j_loc ][ k_loc ];
+	Value_2 = Up.y[ j_loc ][ k_loc ];
 	Value_3 = Bw.y[ j_loc ][ k_loc ];
 	Value_4 = Sf.y[ j_loc ][ k_loc ];
 	Value_5 = Sd.y[ j_loc ][ k_loc ];
