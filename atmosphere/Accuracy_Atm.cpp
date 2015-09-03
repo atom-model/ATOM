@@ -140,7 +140,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				max_u = fabs ( ( u.x[ i ][ j ][ k ] - un.x[ i ][ j ][ k ] ) );
+				max_u = fabs ( u.x[ i ][ j ][ k ] - un.x[ i ][ j ][ k ] );
 				if ( max_u >= min_u )
 				{
 					min_u = max_u;
@@ -149,16 +149,16 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_u = k;
 				}
 
-				max_v = fabs ( ( v.x[ i ][ j ][ k ] - vn.x[ i ][ j ][ k ] ) );
+				max_v = fabs ( v.x[ i ][ j ][ k ] - vn.x[ i ][ j ][ k ] );
 				if ( max_v >= min_v )
 				{
 					min_v = max_v;
 					i_v = i;
-					j_v= j;
+					j_v = j;
 					k_v = k;
 				}
 
-				max_w = fabs ( ( w.x[ i ][ j ][ k ] - wn.x[ i ][ j ][ k ] ) );
+				max_w = fabs ( w.x[ i ][ j ][ k ] - wn.x[ i ][ j ][ k ] );
 				if ( max_w >= min_w )
 				{
 					min_w = max_w;
@@ -167,7 +167,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_w = k;
 				}
 
-				max_t = fabs ( ( t.x[ i ][ j ][ k ] - tn.x[ i ][ j ][ k ] ) );
+				max_t = fabs ( t.x[ i ][ j ][ k ] - tn.x[ i ][ j ][ k ] );
 				if ( max_t >= min_t )
 				{
 					min_t = max_t;
@@ -176,7 +176,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_t = k;
 				}
 
-				max_c = fabs ( ( c.x[ i ][ j ][ k ] - cn.x[ i ][ j ][ k ] ) );
+				max_c = fabs ( c.x[ i ][ j ][ k ] - cn.x[ i ][ j ][ k ] );
 				if ( max_c >= min_c )
 				{
 					min_c = max_c;
@@ -185,7 +185,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_c = k;
 				}
 
-				max_co2 = fabs ( ( co2.x[ i ][ j ][ k ] - co2n.x[ i ][ j ][ k ] ) );
+				max_co2 = fabs ( co2.x[ i ][ j ][ k ] - co2n.x[ i ][ j ][ k ] );
 				if ( max_co2 >= min_co2 )
 				{
 					min_co2 = max_co2;
@@ -194,7 +194,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_co2 = k;
 				}
 
-				max_p = fabs ( ( p.x[ i ][ j ][ k ] - pn.x[ i ][ j ][ k ] ) );
+				max_p = fabs ( p.x[ i ][ j ][ k ] - pn.x[ i ][ j ][ k ] );
 				if ( max_p >= min_p )
 				{
 					min_p = max_p;
@@ -223,16 +223,15 @@ double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-			max_v = fabs ( ( v.x[ 0 ][ j ][ k ] - vn.x[ 0 ][ j ][ k ] ) );
-
+			max_v = fabs ( v.x[ 0 ][ j ][ k ] - vn.x[ 0 ][ j ][ k ] );
 			if ( max_v >= min_v )
 			{
 				min_v = max_v;
-				j_v= j;
+				j_v = j;
 				k_v = k;
 			}
 
-			max_w = fabs ( ( w.x[ 0 ][ j ][ k ] - wn.x[ 0 ][ j ][ k ] ) );
+			max_w = fabs ( w.x[ 0 ][ j ][ k ] - wn.x[ 0 ][ j ][ k ] );
 			if ( max_w >= min_w )
 			{
 				min_w = max_w;
@@ -240,7 +239,7 @@ double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j
 				k_w = k;
 			}
 
-			max_p = fabs ( ( p.x[ 0 ][ j ][ k ] - pn.x[ 0 ][ j ][ k ] ) );
+			max_p = fabs ( p.x[ 0 ][ j ][ k ] - pn.x[ 0 ][ j ][ k ] );
 			if ( max_p >= min_p )
 			{
 				min_p = max_p;

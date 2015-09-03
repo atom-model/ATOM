@@ -97,7 +97,7 @@ int main ( int argc, char *argv[ ] )
 // maximum number of inner velocity loop iterations ( velocity_iter_max ),
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;
+	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 2, pressure_iter_max = 2;
 	int velocity_iter_max_2D = 10, pressure_iter_max_2D = 5;
 
 	int n, i_radial, j_longal, k_zonal, i_max;
@@ -162,8 +162,6 @@ int main ( int argc, char *argv[ ] )
 	const double cp_l = 1870.;								// specific heat capacity of water vapour at constant pressure and 20°C in J/( kg K )
 	const double r_0_air = 1.2041;							// density of air in kg/m3 at 20°C
 	const double r_0_water_vapour = 0.0094;		// density of water vapour in kg/m3 at 25°C and dewpoint temperature at 10°C
-//	const double mue_air = 17.1;							// dynamic viscosity of air in muePa * s at 20°C
-//	const double mue_water = 1000.;					// dynamic viscosity of water in muePa * s at 20°C
 	const double r_0_co2 = 0.0019767;					// density of CO2 in kg/m3 at 25°C
 	const double c_0 = .035;									// maximum value of water vapour in kg / kg
 	const double co2_0 = 280.;								// maximum value of CO2 in ppm
@@ -575,7 +573,7 @@ int main ( int argc, char *argv[ ] )
 //	circulation.IC_v_w_Smoothing ( velocity_iter, h, u, v, w, t, c );
 
 
-//	storeing of velocity components, pressure and temperature for iteration start
+//	storing of velocity components, pressure and temperature for iteration start
 	oldnew.restoreOldNew ( .9, u, v, w, t, p, c, co2, un, vn, wn, tn, pn, cn, co2n );
 	oldnew.restoreOldNew_2D ( .9, v, w, p, vn, wn, pn );
 
@@ -641,7 +639,6 @@ Pressure_loop_2D:
 			{
 				goto Pressure_iteration_2D;
 			}
-
 
 //		class BC_Atmosphaere for the geometry of a shell of a sphere
 			boundary.BC_theta ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
@@ -753,18 +750,15 @@ Pressure_iteration_2D:
 		printout.iterationPrintout ( nm, velocity_iter_max, pressure_iter_max, i_res, j_res, k_res, i_u, j_u, k_u, i_v, j_v, k_v, i_w, j_w, k_w, i_t, j_t, k_t, i_c, j_c, k_c, i_co2, j_co2, k_co2, i_p, j_p, k_p, min_u, min_v, min_w, min_t, min_c, min_co2, min_p );
 
 
-
-
-
 //		searching of maximum and minimum values of water vapour
 		string str_max_water_vapour = " max water vapour ", str_min_water_vapour = " min water vapour ", str_unit_water_vapour = "g/kg";
 		MinMax		minmaxWaterVapour ( im, jm, km );
-		minmaxWaterVapour.searchMinMax_3D ( str_max_water_vapour, str_min_water_vapour, str_unit_water_vapour, c );
+		minmaxWaterVapour.searchMinMax_3D ( str_max_water_vapour, str_min_water_vapour, str_unit_water_vapour, c, h );
 
 //		searching of maximum and minimum values of co2
 		string str_max_co2 = " max co2 ", str_min_co2 = " min co2 ", str_unit_co2 = "ppm";
 		MinMax		minmaxCO2 ( im, jm, km );
-		minmaxCO2.searchMinMax_3D ( str_max_co2, str_min_co2, str_unit_co2, co2 );
+		minmaxCO2.searchMinMax_3D ( str_max_co2, str_min_co2, str_unit_co2, co2, h );
 
 
 //		total precipitation as the sum on rain and snow along a normally extended virtual column
@@ -775,7 +769,7 @@ Pressure_iteration_2D:
 //		searching of maximum and minimum values of precipitation
 		string str_max_precipitation = " max precipitation ", str_min_precipitation = " min precipitation ", str_unit_precipitation = "mm";
 		MinMax		minmaxPrecipitation ( jm, km, coeff_mmWS );
-		minmaxPrecipitation.searchMinMax ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, Precipitation );
+		minmaxPrecipitation.searchMinMax ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, Precipitation, h );
 		max_Precipitation = minmaxPrecipitation.out_maxValue (  );
 
 
@@ -786,42 +780,42 @@ Pressure_iteration_2D:
 //		searching of maximum and minimum values of precipitable water
 		string str_max_precipitable_water = " max precipitable water ", str_min_precipitable_water = " min precipitable water ", str_unit_precipitable_water = "mm";
 		MinMax		minmaxPrecipitable_water ( jm, km, coeff_mmWS );
-		minmaxPrecipitable_water.searchMinMax ( str_max_precipitable_water, str_min_precipitable_water, str_unit_precipitable_water, precipitable_water );
+		minmaxPrecipitable_water.searchMinMax ( str_max_precipitable_water, str_min_precipitable_water, str_unit_precipitable_water, precipitable_water, h );
 
 //		searching of maximum and minimum values of radiation balance
 		string str_max_Q_Balance_Radiation = " max Q Balance Radiation ", str_min_Q_Balance_Radiation = " min Q Balance Radiation ", str_unit_Q_Balance_Radiation = " W/m2";
 		MinMax		minmaxQ_Balance_Radiation ( jm, km, coeff_mmWS );
-		minmaxQ_Balance_Radiation.searchMinMax ( str_max_Q_Balance_Radiation, str_min_Q_Balance_Radiation, str_unit_Q_Balance_Radiation, Q_Balance_Radiation );
+		minmaxQ_Balance_Radiation.searchMinMax ( str_max_Q_Balance_Radiation, str_min_Q_Balance_Radiation, str_unit_Q_Balance_Radiation, Q_Balance_Radiation, h );
 
 //		searching of maximum and minimum values of latent energy
 		string str_max_Q_latent = " max Q latent ", str_min_Q_latent = " min Q latent ", str_unit_Q_latent = " W/m2";
 		MinMax		minmaxQ_latent ( jm, km, coeff_mmWS );
-		minmaxQ_latent.searchMinMax ( str_max_Q_latent, str_min_Q_latent, str_unit_Q_latent, Q_latent );
+		minmaxQ_latent.searchMinMax ( str_max_Q_latent, str_min_Q_latent, str_unit_Q_latent, Q_latent, h );
 
 //		searching of maximum and minimum values of sensible energy
 		string str_max_Q_sensible = " max Q sensible ", str_min_Q_sensible = " min Q sensible ", str_unit_Q_sensible = " W/m2";
 		MinMax		minmaxQ_sensible ( jm, km, coeff_mmWS );
-		minmaxQ_sensible.searchMinMax ( str_max_Q_sensible, str_min_Q_sensible, str_unit_Q_sensible, Q_sensible );
+		minmaxQ_sensible.searchMinMax ( str_max_Q_sensible, str_min_Q_sensible, str_unit_Q_sensible, Q_sensible, h );
 
 //		searching of maximum and minimum values of difference in energy
 		string str_max_bottom_heat = " max bottom heat ", str_min_bottom_heat = " min bottom heat ", str_unit_bottom_heat = " W/m2";
 		MinMax		minmaxQ_diff ( jm, km, coeff_mmWS );
-		minmaxQ_diff.searchMinMax ( str_max_bottom_heat, str_min_bottom_heat, str_unit_bottom_heat, Q_diff );
+		minmaxQ_diff.searchMinMax ( str_max_bottom_heat, str_min_bottom_heat, str_unit_bottom_heat, Q_diff, h );
 
 //		searching of maximum and minimum values of evaporation
 		string str_max_heat_evaporation = " max heat evaporation ", str_min_heat_evaporation = " min heat evaporation ", str_unit_heat_evaporation = " W/m2";
 		MinMax		minmaxQ_Evaporation ( jm, km, coeff_mmWS );
-		minmaxQ_Evaporation.searchMinMax ( str_max_heat_evaporation, str_min_heat_evaporation, str_unit_heat_evaporation, Q_Evaporation );
+		minmaxQ_Evaporation.searchMinMax ( str_max_heat_evaporation, str_min_heat_evaporation, str_unit_heat_evaporation, Q_Evaporation, h );
 
 //		searching of maximum and minimum values of evaporation by Haude
 		string str_max_evaporation_Haude = " max evaporation Haude ", str_min_evaporation_Haude = " min evaporation Haude ", str_unit_evaporation_Haude = "mm/d";
 		MinMax		minmaxEvaporation_Haude ( jm, km, coeff_mmWS );
-		minmaxEvaporation_Haude.searchMinMax ( str_max_evaporation_Haude, str_min_evaporation_Haude, str_unit_evaporation_Haude, Evaporation_Haude );
+		minmaxEvaporation_Haude.searchMinMax ( str_max_evaporation_Haude, str_min_evaporation_Haude, str_unit_evaporation_Haude, Evaporation_Haude, h );
 
 //		searching of maximum and minimum values of evaporation by Penman
-		string str_max_evaporation_Penman = " max evaporation Penman ", str_min_evaporation_Penman = " max evaporation Penman ", str_unit_evaporation_Penman = "mm/d";
+		string str_max_evaporation_Penman = " max evaporation Penman ", str_min_evaporation_Penman = " min evaporation Penman ", str_unit_evaporation_Penman = "mm/d";
 		MinMax		minmaxEvaporation_Penman ( jm, km, coeff_mmWS );
-		minmaxEvaporation_Penman.searchMinMax ( str_max_evaporation_Penman, str_min_evaporation_Penman, str_unit_evaporation_Penman, Evaporation_Penman );
+		minmaxEvaporation_Penman.searchMinMax ( str_max_evaporation_Penman, str_min_evaporation_Penman, str_unit_evaporation_Penman, Evaporation_Penman, h );
 
 
 // printout of results at certain positions
@@ -934,7 +928,7 @@ Print_commands:
 
 	i_time_slice++;
 	Ma = time_slice [ i_time_slice ];
-//	if ( Ma > 30 ) goto finish;
+	if ( Ma > 30 ) goto finish;
 	if ( i_time_slice >= i_time_slice_max ) goto finish;
 	else goto time_slice_sequel;
 

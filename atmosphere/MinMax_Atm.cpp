@@ -45,7 +45,7 @@ MinMax::MinMax ( int im, int jm, int km )
 MinMax::~MinMax () {}
 
 
-void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &value_3D )
+void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &value_3D, Array &hc )
 {
 // search for minimum and maximum values of the 3-dimensional data sets
 
@@ -71,12 +71,15 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( value_3D.x[ i ][ j ][ k ] > maxValue ) 
+				if ( hc.x[ i ][ j ][ k ] == 0. )
 				{
-					maxValue = value_3D.x[ i ][ j ][ k ];
-					imax = i;
-					jmax = j;
-					kmax = k;
+					if ( value_3D.x[ i ][ j ][ k ] > maxValue ) 
+					{
+						maxValue = value_3D.x[ i ][ j ][ k ];
+						imax = i;
+						jmax = j;
+						kmax = k;
+					}
 				}
 			}
 		}
@@ -90,12 +93,15 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( value_3D.x[ i ][ j ][ k ] < minValue ) 
+				if ( hc.x[ i ][ j ][ k ] == 0. )
 				{
-					minValue = value_3D.x[ i ][ j ][ k ];
-					imin = i;
-					jmin = j;
-					kmin = k;
+					if ( value_3D.x[ i ][ j ][ k ] < minValue ) 
+					{
+						minValue = value_3D.x[ i ][ j ][ k ];
+						imin = i;
+						jmin = j;
+						kmin = k;
+					}
 				}
 			}
 		}
@@ -175,7 +181,7 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 
 
 
-void MinMax::searchMinMax ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &value )
+void MinMax::searchMinMax ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &value, Array &hc )
 {
 // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
 
@@ -195,11 +201,14 @@ void MinMax::searchMinMax ( string &name_maxValue, string &name_minValue, string
 	{
 		for ( int k = 1; k < km-1; k++ )
 		{
-			if ( value.y[ j ][ k ] > maxValue ) 
+			if ( hc.x[ 0 ][ j ][ k ] == 0. )
 			{
-				maxValue = value.y[ j ][ k ];
-				jmax = j;
-				kmax = k;
+				if ( value.y[ j ][ k ] > maxValue ) 
+				{
+					maxValue = value.y[ j ][ k ];
+					jmax = j;
+					kmax = k;
+				}
 			}
 		}
 	}
@@ -210,11 +219,14 @@ void MinMax::searchMinMax ( string &name_maxValue, string &name_minValue, string
 	{
 		for ( int k = 1; k < km-1; k++ )
 		{
-			if ( value.y[ j ][ k ] < minValue ) 
+			if ( hc.x[ 0 ][ j ][ k ] == 0. )
 			{
-				minValue = value.y[ j ][ k ];
-				jmin = j;
-				kmin = k;
+				if ( value.y[ j ][ k ] < minValue ) 
+				{
+					minValue = value.y[ j ][ k ];
+					jmin = j;
+					kmin = k;
+				}
 			}
 		}
 	}
