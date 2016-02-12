@@ -27,17 +27,12 @@ class RungeKutta_Atmosphere
 		int im, jm, km;
 		double dt, kt1, ku1, kv1, kw1, kc1, kco21, kt2, ku2, kv2, kw2, kc2, kco22, kt3, ku3, kv3, kw3, kc3, kco23, kt4, ku4, kv4, kw4, kc4, kco24;
 
-//		Array				h1 ( int, int, int, double ), v1 ( int, int, int, double ), w1 ( int, int, int, double ), p1 ( int, int, int, double ), vn1 ( int, int, int, double ), wn1 ( int, int, int, double ), rhs_v1 ( int, int, int, double ), rhs_w1 ( int, int, int, double ), aux_v1 ( int, int, int, double ), aux_w1 ( int, int, int, double );
-
-//		Array_1D		rad1 ( int, double, double, double ), phi1 ( int, double, double, double ), the1 ( int, double, double, double );
-
-
 	public:
 		RungeKutta_Atmosphere ( int, int, int, double );
 		~RungeKutta_Atmosphere ();
 
 
-		void solveRungeKutta_Atmosphere ( RHS_Atmosphere &, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void solveRungeKutta_Atmosphere ( RHS_Atmosphere &, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };

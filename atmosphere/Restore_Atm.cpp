@@ -30,7 +30,7 @@ Restore::Restore ( int im, int jm, int km )
 Restore::~Restore () {}
 
 
-void Restore::restoreOldNew ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p, Array &c, Array &co2, Array &un, Array &vn, Array &wn, Array &tn, Array &pn, Array &cn, Array &co2n )
+void Restore::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p, Array &c, Array &co2, Array &un, Array &vn, Array &wn, Array &tn, Array &pn, Array &cn, Array &co2n )
 {
 
 // Restore from old to new values

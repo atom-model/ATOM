@@ -77,7 +77,7 @@ using namespace std;
 // for 20 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005 
 
 // Definition of meridional and longitudinal step sizes 
-// for example: dthe = the_Grad / pi180 = 1.125 / 57.3 = 0.01963
+// for example: dthe = the_degree / pi180 = 1.125 / 57.3 = 0.01963
 
 // maximum velocity in the subtropical jet  w_max = 1.2 [ / ] compares to 30 m/s = 108 km/h as annual mean 
 
@@ -114,101 +114,104 @@ int main ( int argc, char *argv[ ] )
 	double residuum, residuum_old, min, min_u, min_v, min_w, min_t, min_c, min_co2, min_p;
 	double max_Precipitation;
 
-	const int SequelFile = 0;									// sequel file will be written
+	const int SequelFile = 0;									// sequel file will not be written
+
 	const double coriolis = 1.;									// computation with Coriolis force
 	const double centrifugal = 1.;							// computation with centrifugal force
 	const double WaterVapour = 1.;						// computation with water vapour
 	const double buoyancy = 1.;								// computation with buoyancy
 	const double CO2 = 1.;									// computation with CO2
 
-	const int declination = 0;									// position of sun axis, today 23,4° 
-																				// 21.12.: -23,4°, am 21.3. und 23.9.: 0°
-																				// 21.6.: +23,4°, in between sin form
-	const int sun_position_lat = 0;							// position of sun j = 120 means 30°S, j = 60 means 30°N
-	const int sun_position_lon = 180;						// position of sun k = 180 means 0° or 180° O ( Greenwich, zero meridian )
+	const double epsres = 0.00001;						// accuracy of relative and absolute errors
 
 	const int  sun = 0;												// while no variable sun position wanted
+	const int RadiationFluxDensity = 0;					// surface temperature computation by radiation flux density
 	const int  IceShield = 0;										// while no ice shields wanted
+
+	const int declination = 0;									// position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form
+	const int sun_position_lat = 60;							// position of sun j = 120 means 30°S, j = 60 means 30°N
+	const int sun_position_lon = 180;						// position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
 
 	const int Ma_max = 300;									// parabolic temperature distribution 300 Ma (From Ruddiman)
 	const int Ma_max_half = 150;							// half of time scale
 
+	const double pi180 = 180./M_PI;						// pi180 = 57.3
+
 	const double L_atm = 20000.;							// extension of the atmosphere shell in m
 	const double dt = 0.0001;									// time step coincides with the CFL condition
 	const double dr = 0.0005;									// compares to 500m hight
-	const double the_Grad = 1.;								// compares to 1° step size laterally
-	const double phi_Grad = 1.;								// compares to 1° step size longitudinally
-	const double pi180 = 180./M_PI;						// pi180 = 57.3
-	const double dthe = the_Grad / pi180, dphi = phi_Grad / pi180;//dthe = the_Grad / pi180 = 1.125 / 57.3 = 0.01963
-	const double epsres = 0.00001;						// accuracy of relative and absolute errors
+	const double the_degree = 1.;							// compares to 1° step size laterally
+	const double phi_degree = 1.;							// compares to 1° step size longitudinally
+	const double dthe = the_degree / pi180, dphi = phi_degree / pi180;//dthe = the_degree / pi180 = 1.125 / 57.3 = 0.01963
+
+	const double r0 = 6.731; 									// Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
+	const double the0 = 0.;										// North Pole
+	const double phi0 = 0.;										// zero meridian in Greenwich
 
 	const double re = 1000.;									// Reynolds number: ratio viscous to inertia forces, Re = u * L / nue
-	const double ec = .00044;								// Eckert number: ratio kinetic energy to enthalpy, Ec  = u² / cp T
-	const double sc_WaterVapour = .6;					// Schmidt number of water vapour
+	const double ec = .00044;								// Eckert number: ratio kinetic energy to enthalpy, Ec = u² / cp T
+	const double sc_WaterVapour = .6;					// Schmidt number of water vapour, Sc = nue / D
 	const double sc_CO2 = .96;								// Schmidt number of CO2
 	const double pr = .7179;									// Prandtl number of air for laminar flows
 	const double gr = 9.8066;									// gravitational acceleration of the earth
 	const double omega = 7.29e-5;						// rotation number of the earth
-	const double ep = .623;									// ratio of the gas constants of dry air to water vapour
+	const double ep = .623;									// ratio of the gas constants of dry air to water vapour [ / ]
 	const double hp = 6.1078;								// water vapour pressure at T = 0°C: E = 6.1 hPa
-	const double u_0 = 15.;									// maximum value of velocity in m/s
-	const double p_0 = 1013.25;							// pressure at sea level 1000 hPa
-	const double t_0 = 273.15;								// temperature in K compare to 0°C
-	const double ik = 1366.;									// solar constant in W/m2
-	const double sigma = 5.670280e-8;					// Stefan-Boltzmann constant W/( m2*K4 )
-	const double albedo = .3;									// capability of reflection of short wave radiation
 	const double R_Air = 287.1;								// specific gas constant of air in J/( kg*K ))
 	const double R_WaterVapour = 461.6;			// specific gas constant of water vapour in J/( kg*K ))
 	const double R_co2 = 188.91;							// specific gas constant of CO2 in J/( kg*K ))
 	const double lv = 2.5e6;									// specific latent evaporation heat ( condensation heat ) in J/kg
 	const double ls = 2.83e6;									// specific latent vaporisation heat ( sublimation heat ) in J/kg
-	const double cp_l = 1870.;								// specific heat capacity of water vapour at constant pressure and 20°C in J/( kg K )
-	const double r_0_air = 1.2041;							// density of air in kg/m3 at 20°C
-	const double r_0_water_vapour = 0.0094;		// density of water vapour in kg/m3 at 25°C and dewpoint temperature at 10°C
-	const double r_0_co2 = 0.0019767;					// density of CO2 in kg/m3 at 25°C
+	const double cp_l = 1005.;								// specific heat capacity of dry air at constant pressure and 20°C in J/( kg K )
+	const double r_0_air = 1.2041;							// density of air in kg/m³ at 20°C
+	const double r_0_water_vapour = 0.0094;		// density of water vapour in kg/m³ at 25°C and dewpoint temperature at 10°C
+	const double r_0_co2 = 0.0019767;					// density of CO2 in kg/m³ at 25°C
+
+	const double ik = 1366.;									// solar constant in W/m2
+	const double sigma = 5.670280e-8;					// Stefan-Boltzmann constant W/( m²*K4 )
+	const double albedo = .3;									// capability of reflection of short wave radiation, global albedo extraterrestric
+	const double epsilon = .77;								// capability of emissions in the atmosphere
+
+	const double u_0 = 15.;									// maximum value of velocity in m/s
+	const double p_0 = 1013.25;							// pressure at sea level 1000 hPa
+	const double t_0 = 273.15;								// temperature in K compare to 0°C
 	const double c_0 = .035;									// maximum value of water vapour in kg / kg
 	const double co2_0 = 280.;								// maximum value of CO2 in ppm
-
-	const double r0 = 6.731; 									// Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
-	const double the0 = 0.;										// North Pole
-	const double phi0 = 0.;										// zero meridian in Greenwich
 
 	const double ua = 0.;										// initial velocity component in r-direction
 	const double va = 0.;										// initial velocity component in theta-direction
 	const double wa = 0.;										// initial velocity component in phi-direction
 	const double pa = 0.;										// initial value for the pressure field
 	const double ca = 0.;										// value 1.0 stands for the maximum value of 35 g/kg water vapour
-	const double tau = 1.;										// initial value for the temperature field,1.0 compares to 0° C compares to 273.15 K
-	const double tao = .78;										// initial value for the temperature field in the tropopause, tao = 0.78 compares to -60.093°C compares to 213,057 K
-	const double t_Boussinesq = 1.07;					// compares to 20°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect
+	const double ta = 1.;											// initial value for the temperature field, 1.0 compares to 0° C compares to 273.15 K
+
+	const double t_Boussinesq = 1.073;				// compares to 20°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect
+	const double c_Boussinesq = .035;					// compares to 35 g/kg water vapour, threshhold water vapour for the Boussinesq-approximation concerning bouyancy effect
 	const double t_cretaceous_max = 10.;				// maximum add of mean temperature in °C during cretaceous times
 	const double co2a = 280.;								// 280 ppm CO2 at preindustrial times
 	const double coeff_mmWS = r_0_air / r_0_water_vapour / 1000.;	// air density [kg/m3] / water vapour density [kg/m3]   coeff_mmWS = 0.12766
 
-	double t_Average = 15.;									// mean temperature of the modern earth
-	double t_equator = 1.119;									// temperature t_0 = 1.119 compares to 32.5° C compares to 305.65 K
-//	double t_equator = 1.139;									// temperature t_0 = 1.139 compares to 38.0° C compares to 311.15 K
-//	double t_equator = 1.165;									// temperature t_0 = 1.139 compares to 45.0° C compares to 318.15 K
+	const double radiation_ocean = 40.;				// increase of radiation at equator in W/m²
+	const double radiation_pole = - 40.;					// negative amount of radiation at poles in W/m²
+	const double radiation_equator = 100.;			// positive amount of radiation at equator in W/m²
+
+	double t_average = 15.;										// mean temperature of the modern earth
+	double t_equator = 1.1103;								// temperature t_0 = 1.119 compares to 30.13° C compares to 303.28 K
 	double t_pole = .8;												// temperature at the poles t_pole = 0.8 compares to -54.63°C compares to 218.52 K
-	double t_tropopause = .78;								// temperature in the tropopause
-	double t_land_plus = .007322;							// temperature increase on land ( 1°C compares to t_land_plus = 0.003661 )
+	double t_tropopause = .78;								// temperature in the tropopause, t = 0.78 compares to -60.093°C compares to 213,057 K
+	double t_land_plus = .007322;							// temperature increase on land by 2°C ( 1°C compares to t_land_plus = 0.003661 )
 
 	double c_tropopause = 0.;									// minimum water vapour at tropopause c_tropopause = 0.01429 compares to 0.05 g/kg
-//	double c_land_minus = .9;									// water vapour reduction on land ( 90% )
-//	double c_ocean_minus = 1.;								// water vapour reduction on sea surface ( 100% )
-	double c_land_minus = 1.3;								// water vapour reduction on land ( 90% )
-	double c_ocean_minus = 1.4;							// water vapour reduction on sea surface ( 100% )
+	double c_land_minus = 1.4;								// water vapour reduction on land ( 140% of the saturation value )
+	double c_ocean_minus = 1.5;							// water vapour reduction on sea surface ( 150% of the saturation value )
 
-	double co2_Average = 280.;								// rate of CO2 at preindustrial times
-	double co2_equator = 280.;								// maximum rate of CO2 at sea level at equator, 1. compares to 280 ppm
-	double co2_tropopause = 280.;							// minimum rate of CO2 at tropopause  0 ppm
-	double co2_pole = 260.;									// percentage of CO2 of the sea surface
-	double co2_vegetation = 0.16667;					// value compares to 100/600Gt per year on the global surface for the purpose of testing
-	double co2_ocean = 0.1;									// value compares to 0.6/600Gt per year on the sea surface for the purpose of testing
-	double co2_land = 0.033;									// value compares to 0.2/600Gt per year on land for the purpose of testing
-
-	double albedo_extra = .3;									// global albedo extraterrestric, capability of reflection
-	double epsilon_atmos = .77;								// capability of emissions in the atmosphere
+	double co2_Average = 372.;								// rate of CO2 at preindustrial times
+	double co2_equator = 330.;								// maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm
+	double co2_tropopause = 0.;								// minimum rate of CO2 at tropopause  0 ppm
+	double co2_pole = 305.;									// maximum rate of CO2 of the sea surface at poles
+	double co2_vegetation = 45.;							// value compares to 100/600Gt per year on the global surface by vegetation
+	double co2_ocean = 30.;									// value compares to 0.6/600Gt per year on the sea surface
+	double co2_land = 10.;										// value compares to 0.2/600Gt per year on land
 
 
 // time slices to be run after actualizing 
@@ -241,17 +244,18 @@ int main ( int argc, char *argv[ ] )
 // 2D arrays
 	Array_2D	Vegetation ( jm, km, 0. );					// vegetation via precipitation
 	Array_2D	Evaporation ( jm, km, 0. );				// areas of higher evaporation
-	Array_2D	IceAir ( jm, km, 0. );							// areas of higher IceAir
 	Array_2D	Condensation ( jm, km, 0. );			// areas of highercondensation
 	Array_2D	Precipitation ( jm, km, 0. );				// areas of precipitation
 	Array_2D	precipitable_water ( jm, km, 0. );		// areas of total water in the air
 	Array_2D	t_j ( jm, km, 0. );								// auxilliar field for the surface temperature
-	Array_2D	c_j ( jm, km, 0. );								// auxilliar field for water vapour  at the surface
+	Array_2D	c_j ( jm, km, 0. );								// auxilliar field for water vapour at the surface
 	Array_2D	p_j ( jm, km, 0. );								// auxilliar field for pressure  at the surface
 	Array_2D	co2_j ( jm, km, 0. );							// auxilliar field for rate of CO2 at the surface
 	Array_2D	Ice_Balance ( jm, km, 0. );				// rate of the ice shield
 	Array_2D	Ice_Balance_add ( jm, km, 0. );		// addition of all ice layers
-	Array_2D	Ik ( jm, km, 0. );								// radiation in the atmosphere
+	Array_2D	Ik ( jm, km, 0. );								// direct sun radiation, short wave
+	Array_2D	Radiation_Balance ( jm, km, 0. );	// radiation balance at the surface
+	Array_2D	Radiation_Balance_par ( jm, km, 0. );// radiation balance at the surface parabolic distribution
 	Array_2D	Radiation_Balance_atm ( jm, km, 0. );// radiation balance of the atmosphere
 	Array_2D	Radiation_Balance_bot ( jm, km, 0. );// radiation balance of the ground
 	Array_2D	temp_eff_atm ( jm, km, 0. );			// effektive temperature in the atmosphere
@@ -259,25 +263,26 @@ int main ( int argc, char *argv[ ] )
 	Array_2D	Q_Evaporation ( jm, km, 0. );			// evaporation heat of water by Kuttler
 	Array_2D	Q_latent ( jm, km, 0. );					// latent heat from bottom values by the energy transport equation
 	Array_2D	Q_sensible ( jm, km, 0. );				// sensible heat from bottom values by the energy transport equation
-	Array_2D	Q_diff ( jm, km, 0. );						// difference by Q_Balance_Radiation - Q_latent - Q_sensible
+	Array_2D	Q_bottom ( jm, km, 0. );					// difference by Q_Radiation - Q_latent - Q_sensible
 	Array_2D	Evaporation_Haude ( jm, km, 0. );	// evaporation by Haude in [mm/d]
 	Array_2D	Evaporation_Penman ( jm, km, 0. );// evaporation by Penman in [mm/d]
-	Array_2D	Q_Balance_Radiation ( jm, km, 0. );// heat from the radiation balance in [W/m2]
+	Array_2D	Q_Radiation ( jm, km, 0. );				// heat from the radiation balance in [W/m2]
 	Array_2D	precipitation_j ( jm, km, 0. );			// surface precipitation from NASA
-	Array_2D	Water_super ( jm, km, 0. );				// supercooled rain
 	Array_2D	Water ( jm, km, 0. );						// rain water
+	Array_2D	Water_super ( jm, km, 0. );				// supercooled rain
+	Array_2D	IceAir ( jm, km, 0. );							// areas of higher IceAir
 	Array_2D	aux_2D_v ( jm, km, 0. );					// auxilliar field v
 	Array_2D	aux_2D_w ( jm, km, 0. );					// auxilliar field w
 
 // 3D arrays
-	Array	t ( im, jm, km, tau );									// temperature
+	Array	t ( im, jm, km, ta );									// temperature
 	Array	u ( im, jm, km, ua );									// u-component velocity component in r-direction
 	Array	v ( im, jm, km, va );									// v-component velocity component in theta-direction
 	Array	w ( im, jm, km, wa );								// w-component velocity component in phi-direction
 	Array	p ( im, jm, km, pa );									// pressure
 	Array	c ( im, jm, km, ca );									// salt
 	Array	co2 ( im, jm, km, co2a );							// CO2
-	Array	tn ( im, jm, km, tau );								// temperature new
+	Array	tn ( im, jm, km, ta );								// temperature new
 	Array	un ( im, jm, km, ua );								// u-component velocity component in r-direction new
 	Array	vn ( im, jm, km, va );								// v-component velocity component in theta-direction new
 	Array	wn ( im, jm, km, wa );								// w-component velocity component in phi-direction new
@@ -285,13 +290,13 @@ int main ( int argc, char *argv[ ] )
 	Array	cn ( im, jm, km, ca );								// salt new
 	Array	co2n ( im, jm, km, co2a );						// CO2 new
 	Array	h ( im, jm, km, 0. );									// bathymetry, depth from sea level
-	Array	rhs_t ( im, jm, km, 0. );								// auxilliar field RHS temperature
-	Array	rhs_u ( im, jm, km, 0. );								// auxilliar field RHS
-	Array	rhs_v ( im, jm, km, 0. );								// auxilliar field RHS
-	Array	rhs_w ( im, jm, km, 0. );								// auxilliar field RHS
-	Array	rhs_p ( im, jm, km, 0. );								// auxilliar field RHS pressure
-	Array	rhs_c ( im, jm, km, 0. );								// auxilliar field RHS salt
-	Array	rhs_co2 ( im, jm, km, 0. );							// auxilliar field RHS CO2
+	Array	rhs_t ( im, jm, km, 0. );							// auxilliar field RHS temperature
+	Array	rhs_u ( im, jm, km, 0. );							// auxilliar field RHS
+	Array	rhs_v ( im, jm, km, 0. );							// auxilliar field RHS
+	Array	rhs_w ( im, jm, km, 0. );							// auxilliar field RHS
+	Array	rhs_p ( im, jm, km, 0. );							// auxilliar field RHS pressure
+	Array	rhs_c ( im, jm, km, 0. );							// auxilliar field RHS salt
+	Array	rhs_co2 ( im, jm, km, 0. );						// auxilliar field RHS CO2
 	Array	aux_u ( im, jm, km, 0. );							// auxilliar field u
 	Array	aux_v ( im, jm, km, 0. );							// auxilliar field v
 	Array	aux_w ( im, jm, km, 0. );							// auxilliar field w
@@ -304,28 +309,13 @@ int main ( int argc, char *argv[ ] )
 	Array	Evaporation_3D ( im, jm, km, 0. );			// 3D Evaporation
 
 
-/*
-	for ( int i = 0; i < im; i++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
-			{
-				u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
-				v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
-			}
-		}
-	}
-*/
+//	cout << endl << " ***** printout of 3D-field Latency ***** " << endl << endl;
+//	Latency.printArray();
 
-
-
-//	cout << " ***** printout of 3D-fields ***** " << endl;
-//	v.printArray();
-//	cout << " ***** printout of 2D-fields ***** " << endl;
+//	cout << endl << " ***** printout of 2D-field Vegetation ***** " << << endl endl;
 //	Vegetation.printArray_2D();
-//	cout << " ***** printout of 1D-fields ***** " << endl;
+
+//	cout << endl << " ***** printout of 1D-field rad ***** " << endl << endl;
 //	rad.printArray_1D();
 
 	cout.precision ( 6 );
@@ -449,7 +439,7 @@ int main ( int argc, char *argv[ ] )
 	Restore		oldnew( im, jm, km );
 
 //	class Results_MSL_Atm to compute and show results on the mean sea level, MSL
-	Results_MSL_Atm		calculate_MSL ( im, jm, km, sun, ep, hp, p_0, t_0, c_0, sigma, albedo, lv, cp_l, L_atm, dr, r_0_air, R_Air, r_0_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land );
+	Results_MSL_Atm		calculate_MSL ( im, jm, km, sun, gr, ep, hp, u_0, p_0, t_0, c_0, sigma, albedo, lv, cp_l, L_atm, dr, r_0_air, R_Air, r_0_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land );
 
 //	class File_NetCDF to write results in the format of a netCDF-file
 //	File_NetCDF		printoutNetCDF ( im, jm, km );
@@ -537,8 +527,11 @@ int main ( int argc, char *argv[ ] )
 // 	class BC_Bathymetry_Atmosphere for the geometrical boundary condition of the computational area
 	BC_Bathymetry_Atmosphere		LandArea ( im, jm, km );
 
-// 	class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
+// 	topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 	LandArea.BC_MountainSurface ( Name_Bathymetry_File, L_atm, h, aux_w );
+
+//  tropopause location as a parabolic distribution from pole to pole 
+	circulation.TropopauseLocation ( i_max, i_beg );
 
 //  configuration of the initial and boundary conditions for the temperature, CO2 und water vapour on land and ocean surface
 
@@ -548,26 +541,29 @@ int main ( int argc, char *argv[ ] )
 //  surface precipitation from NASA for comparison
 	if ( Ma == 0 ) circulation.BC_Surface_Precipitation ( Name_SurfacePrecipitation_File, precipitation_j );
 
+//  parabolic temperature distribution from pol to pol, maximum temperature at equator
+	circulation.BC_Temperature ( i_max, i_beg, RadiationFluxDensity, Ma, Ma_max, Ma_max_half, sun_position_lat, sun_position_lon, declination, sun, ep, hp, t_0, p_0, t_land_plus, t_cretaceous_max, t_average, t_equator, t_pole, t_tropopause, t_j, h, t, p );
+
+// surface temperature computation by radiation flux density
+	if ( RadiationFluxDensity == 1 ) circulation.BC_RadiationBalance_comp ( t_0, ik, sigma, albedo, epsilon, r_0_water_vapour, R_WaterVapour, Precipitation, Ik, Radiation_Balance, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, t_j, t );
+
+//  parabolic radiation balance distribution from pole to pole, maximum radiation balance amount at equator
+	if ( RadiationFluxDensity == 0 ) circulation.BC_RadiationBalance_parab ( sigma, epsilon, radiation_ocean, radiation_pole, radiation_equator, Radiation_Balance_par, h );
+
 //  surface pressure computed by surface temperature with gas equation
 //	circulation.BC_Pressure ( r_0_air, R_Air, p_0, t_0, p_j, t_j, p, t, h );
-
-//  parabolic temperature distribution from pol to pol, maximum temperature at equator
-	circulation.BC_Temperature ( i_max, i_beg, Ma, Ma_max, Ma_max_half, sun_position_lat, sun_position_lon, declination, sun, ep, hp, t_0, p_0, t_land_plus, t_cretaceous_max, t_Average, co2_Average, t_equator, t_pole, t_tropopause, t_j, c_j, h, t, p );
-
-//  computation of radiation at variable sun position
-	if ( sun == 1 ) LandArea.BC_Radiation ( t_0, ik, sigma, albedo_extra, epsilon_atmos, Precipitation, Ik, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, t_j, t );
 
 //	computation of ice shield following the theorie by Milankowitsch
 	if ( IceShield == 1 ) LandArea.BC_IceShield ( Ma, t_0, h, t, c, IceLayer, Ice_Balance, Ice_Balance_add );
 
 //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-	circulation.BC_WaterVapour ( i_max, i_beg, ep, hp, t_0, c_0, p_0, c_land_minus, c_ocean_minus, c_tropopause, c_j, h, t, p, c, t_j );
+	circulation.BC_WaterVapour ( i_max, i_beg, ep, hp, t_0, c_0, p_0, c_land_minus, c_ocean_minus, c_tropopause, c_j, h, t, p, c, t_j, precipitation_j );
 
 //  parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-	circulation.BC_CO2 ( i_max, i_beg, co2_0, co2_Average, co2_equator, co2_pole, co2_tropopause, co2_vegetation, co2_ocean, co2_land, co2_j, Vegetation, h, t, p, co2 );
+	circulation.BC_CO2 ( i_max, i_beg, Ma, co2_0, co2_Average, co2_equator, co2_pole, co2_tropopause, co2_vegetation, co2_ocean, co2_land, t_cretaceous_max, t_average, co2_j, Vegetation, h, t, p, co2 );
 
 // 	initial conditions for u-v-w-velocity components
-	if ( Ma == 0 ) circulation.IC_CellStructure ( i_max, i_beg, u, v, w );
+	circulation.IC_CellStructure ( i_max, i_beg, u_0, u, v, w );
 
 //	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
 //	if ( Ma == 0 ) circulation.IC_v_w_WestEastCoast ( h, u, v, w );
@@ -579,8 +575,8 @@ int main ( int argc, char *argv[ ] )
 
 
 //	storing of velocity components, pressure and temperature for iteration start
-	oldnew.restoreOldNew ( .9, u, v, w, t, p, c, co2, un, vn, wn, tn, pn, cn, co2n );
-	oldnew.restoreOldNew_2D ( .9, v, w, p, vn, wn, pn );
+	oldnew.restoreOldNew_3D ( .96, u, v, w, t, p, c, co2, un, vn, wn, tn, pn, cn, co2n );
+	oldnew.restoreOldNew_2D ( .96, v, w, p, vn, wn, pn );
 
 // computation of the ratio ocean to land areas, also supply and removal of CO2 on land, ocean and by vegetation
 	calculate_MSL.land_oceanFraction ( h );
@@ -647,8 +643,8 @@ Pressure_loop_2D:
 			}
 
 //		class BC_Atmosphaere for the geometry of a shell of a sphere
-			boundary.BC_theta ( t_tropopause, c_tropopause, t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
-			boundary.BC_phi ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
+			boundary.BC_theta ( t_tropopause, c_tropopause, t, u, v, w, p, c, co2 );
+			boundary.BC_phi ( t, u, v, w, p, c, co2 );
 
 // 		old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 			Accuracy		min_Residuum_old_2D ( n, im, jm, km, dr, dthe, dphi );
@@ -715,9 +711,9 @@ Pressure_iteration_2D:
 		residuum_old = min;
 
 // 		class BC_Atmosphaere for the geometry of a shell of a sphere
-		boundary.BC_radius ( tao, tau, pa, ca, co2a, dr, t_tropopause, c_tropopause, rad, co2_vegetation, co2_ocean, co2_land, Vegetation, h, t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
-		boundary.BC_theta ( t_tropopause, c_tropopause, t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
-		boundary.BC_phi    ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
+		boundary.BC_radius ( t_tropopause, c_tropopause, co2_tropopause, h, t, u, v, w, p, c, co2 );
+		boundary.BC_theta ( t_tropopause, c_tropopause, t, u, v, w, p, c, co2 );
+		boundary.BC_phi    ( t, u, v, w, p, c, co2 );
 //		boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, co2, aux_u, aux_v, aux_w, rad, the );
 
 // initial condition for u-v-w-velocity components on west/east coasts
@@ -726,13 +722,13 @@ Pressure_iteration_2D:
 
 
 // 		class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-		LandArea.BC_SolidGround ( Ma, hp, ep, c_land_minus, co2_vegetation, t_0, tau, p_0, pa, h, t, u, v, w, p, c, co2, tn, un, vn, wn, pn, cn, co2n, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, t_j, c_j, co2_j, Vegetation );
+		LandArea.BC_SolidGround ( i_beg, i_max, Ma, hp, ep, t_equator, t_pole, t_tropopause, c_tropopause, co2_equator, co2_pole, co2_tropopause, co2_vegetation, co2_land, co2_ocean, t_0, ta, p_0, pa, h, t, u, v, w, p, c, co2, tn, un, vn, wn, pn, cn, co2n, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, t_j, c_j, co2_j, Vegetation );
 
 // 		class RungeKutta for the solution of the differential equations describing the flow properties
-		result.solveRungeKutta_Atmosphere ( prepare, lv, ls, ep, hp, u_0, t_0, t_Boussinesq, c_0, co2_0, p_0, r_0_air, r_0_water_vapour, r_0_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_co2, h, t, u, v, w, p, c, co2, tn, un, vn, wn, cn, co2n, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
+		result.solveRungeKutta_Atmosphere ( prepare, lv, ls, ep, hp, u_0, t_0, t_Boussinesq, c_Boussinesq, c_0, co2_0, p_0, r_0_air, r_0_water_vapour, r_0_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_co2, h, t, u, v, w, p, c, co2, tn, un, vn, wn, cn, co2n, aux_u, aux_v, aux_w, Latency, Condensation_3D, Evaporation_3D, Rain, Ice, Rain_super, IceLayer );
 
 // 		class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-		LandArea.BC_SolidGround ( Ma, hp, ep, c_land_minus, co2_vegetation, t_0, tau, p_0, pa, h, t, u, v, w, p, c, co2, tn, un, vn, wn, pn, cn, co2n, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, t_j, c_j, co2_j, Vegetation );
+		LandArea.BC_SolidGround ( i_beg, i_max, Ma, hp, ep, t_equator, t_pole, t_tropopause, c_tropopause, co2_equator, co2_pole, co2_tropopause, co2_vegetation, co2_land, co2_ocean, t_0, ta, p_0, pa, h, t, u, v, w, p, c, co2, tn, un, vn, wn, pn, cn, co2n, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, t_j, c_j, co2_j, Vegetation );
 
 //		state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
 		Accuracy		min_Stationary ( n, im, jm, km, dr, dthe, dphi );
@@ -751,6 +747,23 @@ Pressure_iteration_2D:
 		printout.iterationPrintout ( nm, velocity_iter_max, pressure_iter_max, i_res, j_res, k_res, i_u, j_u, k_u, i_v, j_v, k_v, i_w, j_w, k_w, i_t, j_t, k_t, i_c, j_c, k_c, i_co2, j_co2, k_co2, i_p, j_p, k_p, min_u, min_v, min_w, min_t, min_c, min_co2, min_p );
 
 
+
+//		computation of vegetation areas
+		calculate_MSL.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
+
+
+
+
+
+//		total precipitation as the sum on rain and snow along a normally extended virtual column
+//		in r-direction water vapour volume above the saturation vapour pressure is added
+		calculate_MSL.run_MSL_data ( RadiationFluxDensity, max_Precipitation, h, c, co2, t, p, u, v, w, Rain, Rain_super, Ice, Latency, Condensation_3D, Evaporation_3D, aux_u, aux_v, aux_w, Precipitation, precipitation_j, Water, Water_super, IceAir, Evaporation, Condensation, precipitable_water, Q_Radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, t_j, c_j, co2_j, Vegetation, Radiation_Balance, Radiation_Balance_par, Radiation_Balance_bot );
+
+
+
+
+// 3D_fields
+
 //		searching of maximum and minimum values of temperature
 		string str_max_temperature = " max temperature ", str_min_temperature = " min temperature ", str_unit_temperature = "°C";
 		MinMax		minmaxTemperature ( im, jm, km );
@@ -761,75 +774,116 @@ Pressure_iteration_2D:
 		MinMax		minmaxWaterVapour ( im, jm, km );
 		minmaxWaterVapour.searchMinMax_3D ( str_max_water_vapour, str_min_water_vapour, str_unit_water_vapour, c, h );
 
+//		searching of maximum and minimum values of pressure
+		string str_max_pressure = " max pressure ", str_min_pressure = " min pressure ", str_unit_pressure = "/";
+		MinMax		minmaxPressure ( im, jm, km );
+		minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, p, h );
+
+//		searching of maximum and minimum values of latency
+		string str_max_latency = " max latency ", str_min_latency = " min latency ", str_unit_latency = "W/m2";
+		MinMax		minmaxLatency ( im, jm, km );
+		minmaxLatency.searchMinMax_3D ( str_max_latency, str_min_latency, str_unit_latency, Latency, h );
+
+//		searching of maximum and minimum values of condensation
+		string str_max_condensation = " max condensation heat ", str_min_condensation = " min condensation heat ", str_unit_condensation = "W/m2";
+		MinMax		minmaxCondensation ( im, jm, km );
+		minmaxCondensation.searchMinMax_3D ( str_max_condensation, str_min_condensation, str_unit_condensation, Condensation_3D, h );
+
+//		searching of maximum and minimum values of evaporation
+		string str_max_evaporation = " max evaporation heat ", str_min_evaporation = " min evaporation heat ", str_unit_evaporation = "W/m2";
+		MinMax		minmaxEvaporation ( im, jm, km );
+		minmaxEvaporation.searchMinMax_3D ( str_max_evaporation, str_min_evaporation, str_unit_evaporation, Evaporation_3D, h );
+
 //		searching of maximum and minimum values of co2
 		string str_max_co2 = " max co2 ", str_min_co2 = " min co2 ", str_unit_co2 = "ppm";
 		MinMax		minmaxCO2 ( im, jm, km );
 		minmaxCO2.searchMinMax_3D ( str_max_co2, str_min_co2, str_unit_co2, co2, h );
 
 
-//		total precipitation as the sum on rain and snow along a normally extended virtual column
-//		in r-direction water vapour volume above the saturation vapour pressure is added
-		calculate_MSL.run_MSL_data ( h, c, t, p, u, Rain, Rain_super, Ice, Latency, Condensation_3D, Evaporation_3D, Precipitation, Water, Water_super, IceAir, Evaporation, Condensation, precipitable_water, Q_Balance_Radiation, Q_Evaporation, Q_latent, Q_sensible, Q_diff, Evaporation_Penman, Evaporation_Haude, t_j, c_j );
 
+
+// 2D-fields
 
 //		searching of maximum and minimum values of precipitation
 		string str_max_precipitation = " max precipitation ", str_min_precipitation = " min precipitation ", str_unit_precipitation = "mm";
 		MinMax		minmaxPrecipitation ( jm, km, coeff_mmWS );
-		minmaxPrecipitation.searchMinMax ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, Precipitation, h );
+		minmaxPrecipitation.searchMinMax_2D ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, Precipitation, h );
 		max_Precipitation = minmaxPrecipitation.out_maxValue (  );
 
-
-//		description of vegetation areas following the local dimensionles precipitation values, maximum value now is 1
-		calculate_MSL.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
-
+//		searching of maximum and minimum values of NASA precipitation
+		if ( Ma == 0 )
+		{
+			string str_max_precipitation = " max precipitation_NASA ", str_min_precipitation = " min precipitation_NASA ", str_unit_precipitation = "mm";
+			MinMax		minmaxPrecipitation_NASA ( jm, km, coeff_mmWS );
+			minmaxPrecipitation_NASA.searchMinMax_2D ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, precipitation_j, h );
+		}
 
 //		searching of maximum and minimum values of precipitable water
 		string str_max_precipitable_water = " max precipitable water ", str_min_precipitable_water = " min precipitable water ", str_unit_precipitable_water = "mm";
 		MinMax		minmaxPrecipitable_water ( jm, km, coeff_mmWS );
-		minmaxPrecipitable_water.searchMinMax ( str_max_precipitable_water, str_min_precipitable_water, str_unit_precipitable_water, precipitable_water, h );
+		minmaxPrecipitable_water.searchMinMax_2D ( str_max_precipitable_water, str_min_precipitable_water, str_unit_precipitable_water, precipitable_water, h );
 
 //		searching of maximum and minimum values of radiation balance
-		string str_max_Q_Balance_Radiation = " max Q Balance Radiation ", str_min_Q_Balance_Radiation = " min Q Balance Radiation ", str_unit_Q_Balance_Radiation = " W/m2";
-		MinMax		minmaxQ_Balance_Radiation ( jm, km, coeff_mmWS );
-		minmaxQ_Balance_Radiation.searchMinMax ( str_max_Q_Balance_Radiation, str_min_Q_Balance_Radiation, str_unit_Q_Balance_Radiation, Q_Balance_Radiation, h );
+		string str_max_Q_Radiation_Balance = " max Q radiation balance ", str_min_Q_Radiation_Balance = " min Q radiation balance ", str_unit_Q_Radiation_Balance = " W/m2";
+		MinMax		minmaxQ_Radiation_Balance ( jm, km, coeff_mmWS );
+		minmaxQ_Radiation_Balance.searchMinMax_2D ( str_max_Q_Radiation_Balance, str_min_Q_Radiation_Balance, str_unit_Q_Radiation_Balance, Radiation_Balance, h );
+//		min_Q_Radiation_Balance = minmaxQ_Radiation_Balance.out_minValue (  );
 
 //		searching of maximum and minimum values of latent energy
 		string str_max_Q_latent = " max Q latent ", str_min_Q_latent = " min Q latent ", str_unit_Q_latent = " W/m2";
 		MinMax		minmaxQ_latent ( jm, km, coeff_mmWS );
-		minmaxQ_latent.searchMinMax ( str_max_Q_latent, str_min_Q_latent, str_unit_Q_latent, Q_latent, h );
+		minmaxQ_latent.searchMinMax_2D ( str_max_Q_latent, str_min_Q_latent, str_unit_Q_latent, Q_latent, h );
 
 //		searching of maximum and minimum values of sensible energy
 		string str_max_Q_sensible = " max Q sensible ", str_min_Q_sensible = " min Q sensible ", str_unit_Q_sensible = " W/m2";
 		MinMax		minmaxQ_sensible ( jm, km, coeff_mmWS );
-		minmaxQ_sensible.searchMinMax ( str_max_Q_sensible, str_min_Q_sensible, str_unit_Q_sensible, Q_sensible, h );
+		minmaxQ_sensible.searchMinMax_2D ( str_max_Q_sensible, str_min_Q_sensible, str_unit_Q_sensible, Q_sensible, h );
 
 //		searching of maximum and minimum values of difference in energy
-		string str_max_bottom_heat = " max bottom heat ", str_min_bottom_heat = " min bottom heat ", str_unit_bottom_heat = " W/m2";
-		MinMax		minmaxQ_diff ( jm, km, coeff_mmWS );
-		minmaxQ_diff.searchMinMax ( str_max_bottom_heat, str_min_bottom_heat, str_unit_bottom_heat, Q_diff, h );
+		string str_max_Q_bottom = " max Q bottom ", str_min_Q_bottom = " min Q bottom heat ", str_unit_Q_bottom = " W/m2";
+		MinMax		minmaxQ_bottom ( jm, km, coeff_mmWS );
+		minmaxQ_bottom.searchMinMax_2D ( str_max_Q_bottom, str_min_Q_bottom, str_unit_Q_bottom, Q_bottom, h );
 
+/*
 //		searching of maximum and minimum values of evaporation
 		string str_max_heat_evaporation = " max heat evaporation ", str_min_heat_evaporation = " min heat evaporation ", str_unit_heat_evaporation = " W/m2";
 		MinMax		minmaxQ_Evaporation ( jm, km, coeff_mmWS );
-		minmaxQ_Evaporation.searchMinMax ( str_max_heat_evaporation, str_min_heat_evaporation, str_unit_heat_evaporation, Q_Evaporation, h );
+		minmaxQ_Evaporation.searchMinMax_2D ( str_max_heat_evaporation, str_min_heat_evaporation, str_unit_heat_evaporation, Q_Evaporation, h );
+*/
 
 //		searching of maximum and minimum values of evaporation by Haude
 		string str_max_evaporation_Haude = " max evaporation Haude ", str_min_evaporation_Haude = " min evaporation Haude ", str_unit_evaporation_Haude = "mm/d";
 		MinMax		minmaxEvaporation_Haude ( jm, km, coeff_mmWS );
-		minmaxEvaporation_Haude.searchMinMax ( str_max_evaporation_Haude, str_min_evaporation_Haude, str_unit_evaporation_Haude, Evaporation_Haude, h );
+		minmaxEvaporation_Haude.searchMinMax_2D ( str_max_evaporation_Haude, str_min_evaporation_Haude, str_unit_evaporation_Haude, Evaporation_Haude, h );
 
 //		searching of maximum and minimum values of evaporation by Penman
 		string str_max_evaporation_Penman = " max evaporation Penman ", str_min_evaporation_Penman = " min evaporation Penman ", str_unit_evaporation_Penman = "mm/d";
 		MinMax		minmaxEvaporation_Penman ( jm, km, coeff_mmWS );
-		minmaxEvaporation_Penman.searchMinMax ( str_max_evaporation_Penman, str_min_evaporation_Penman, str_unit_evaporation_Penman, Evaporation_Penman, h );
+		minmaxEvaporation_Penman.searchMinMax_2D ( str_max_evaporation_Penman, str_min_evaporation_Penman, str_unit_evaporation_Penman, Evaporation_Penman, h );
+
+//		searching of maximum and minimum values of evaporation by Penman
+		string str_max_water = " max max water ", str_min_max_water = " min max water ", str_unit_max_water = "mm/d";
+		MinMax		minmaxWater ( jm, km, coeff_mmWS );
+		minmaxWater.searchMinMax_2D ( str_max_water, str_min_max_water, str_unit_max_water, Water, h );
+
+//		searching of maximum and minimum values of evaporation by Penman
+		string str_max_water_super = " max water super ", str_min_water_super = " min water super ", str_unit_water_super = "mm/d";
+		MinMax		minmaxWater_super ( jm, km, coeff_mmWS );
+		minmaxWater_super.searchMinMax_2D ( str_max_water_super, str_min_water_super, str_unit_water_super, Water_super, h );
+
+//		searching of maximum and minimum values of evaporation by Penman
+		string str_max_ice_air = " max ice air ", str_min_ice_air = " min ice air ", str_unit_ice_air = "mm/d";
+		MinMax		minmaxIceAir ( jm, km, coeff_mmWS );
+		minmaxIceAir.searchMinMax_2D ( str_max_ice_air, str_min_ice_air, str_unit_ice_air, IceAir, h );
+
 
 
 // printout of results at certain positions
-		calculate_MSL.show_MSL_data ( h, c, t, p, u, Rain, Ice, Latency, Precipitation, IceAir, Evaporation, Condensation, precipitable_water, Q_Balance_Radiation, Q_Evaporation, Q_latent, Q_sensible, Q_diff, Evaporation_Penman, Evaporation_Haude );
+		calculate_MSL.show_MSL_data ( h, c, t, p, u, Rain, Ice, Latency, Precipitation, precipitation_j, IceAir, Evaporation, Condensation, precipitable_water, Radiation_Balance, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude );
 
 
 //	restoring the velocity component and the temperature for the new time step
-		oldnew.restoreOldNew ( 1., u, v, w, t, p, c, co2, un, vn, wn, tn, pn, cn, co2n );
+		oldnew.restoreOldNew_3D ( 1., u, v, w, t, p, c, co2, un, vn, wn, tn, pn, cn, co2n );
 	}
 
 
@@ -877,17 +931,17 @@ Print_commands:
 //	writing of data in ParaView files
 //	londitudinal data along constant latitudes
 	j_longal = 75;
-	write_File.paraview_vtk_longal ( Name_Bathymetry_File, j_longal, pressure_iter_aux, h, p, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
+	write_File.paraview_vtk_longal ( Name_Bathymetry_File, j_longal, pressure_iter_aux, u_0, t_0, p_0, c_0, co2_0, radiation_equator, h, p, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Condensation_3D, Evaporation_3D, Rain, Ice, Rain_super, IceLayer );
 
-	k_zonal = 185;
-	write_File.paraview_vtk_zonal ( Name_Bathymetry_File, k_zonal, pressure_iter_aux, h, p, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, Condensation_3D, Evaporation_3D );
+	k_zonal = 135;
+	write_File.paraview_vtk_zonal ( Name_Bathymetry_File, k_zonal, pressure_iter_aux, u_0, t_0, p_0, c_0, co2_0, radiation_equator, h, p, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, Condensation_3D, Evaporation_3D );
 
 //	radial data along constant hight above ground
 	i_radial = 0;
-	write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_aux, h, p, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer, Precipitation, Evaporation, IceAir, Condensation, precipitable_water, Q_diff, Q_Balance_Radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, precipitation_j, Water_super, Water );
+	write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_aux, u_0, t_0, p_0, c_0, co2_0, radiation_equator, h, p, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer, Precipitation, Evaporation, IceAir, Condensation, precipitable_water, Q_bottom, Radiation_Balance, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, precipitation_j, Water_super, Water, Vegetation );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-	write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, h, t, p, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
+//	write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, u_0, t_0, p_0, c_0, co2_0, h, t, p, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
 
 //	3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
 //	write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
@@ -934,7 +988,7 @@ Print_commands:
 
 	i_time_slice++;
 	Ma = time_slice [ i_time_slice ];
-	if ( Ma > 0 ) goto finish;
+//	if ( Ma >= 10 ) goto finish;
 	if ( i_time_slice >= i_time_slice_max ) goto finish;
 	else goto time_slice_sequel;
 

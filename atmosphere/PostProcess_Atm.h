@@ -29,6 +29,8 @@ class PostProcess_Atmosphere
 
 		double rotu, rotv, rotw;
 
+		double max_u, max_v, max_w, max_t, max_c, max_co2, max_p, max_Rain, max_Rain_super, max_Ice, max_Latency, max_Precipitation, max_Evaporation, max_Condensation, max_Evaporation_3D, max_Condensation_3D, max_precipitable_water, max_IceAir, max_Q_bottom, max_Q_latent, max_Q_sensible, max_Evaporation_Penman, max_Evaporation_Haude, max_Radiation_Balance, max_Q_Evaporation, max_precipitation_j, max_Water, max_Water_super, max_Vegetation,  max_IceLayer;
+
 
 	public:
 		PostProcess_Atmosphere ( int, int, int );
@@ -37,13 +39,13 @@ class PostProcess_Atmosphere
 
 		void paraview_vts ( const string &, int &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void paraview_panorama_vts ( const string &, int &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void paraview_panorama_vts ( const string &, int &, const double &, const double &, const double &, const double &, const double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void paraview_vtk_zonal ( const string &, int &, int &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void paraview_vtk_zonal ( const string &, int &, int &, const double &, const double &, const double &,const double &,const double &, const double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void paraview_vtk_longal ( const string &, int &, int &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void paraview_vtk_longal ( const string &, int &, int &, const double &, const double &, const double &, const double &, const double &, const double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void paraview_vtk_radial ( const string &, int &, int &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+		void paraview_vtk_radial ( const string &, int &, int &, const double &, const double &,const double &, const double &, const double &, const double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 		void Atmosphere_SequelFile_write ( const string &, int &, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 

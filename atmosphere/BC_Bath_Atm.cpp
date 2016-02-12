@@ -25,6 +25,19 @@ BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int im, int jm, int km )
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;
+
+
+// array "im_tropopause" for configuring data due to latitude dependent tropopause
+
+	im_tropopause = new int[ jm ];
+
+	for ( int l = 0; l < jm; l++ )
+	{
+		im_tropopause[ l ] = 0;
+//		cout << im_tropopause[ l ] << endl;
+	}
+
+
 }
 
 
@@ -284,7 +297,7 @@ void BC_Bathymetry_Atmosphere::BC_IceShield ( int Ma, double t_0, Array &h, Arra
 	}
 
 
-	Ice_Balance_add_diff = max - min;														// maximum crosswise extension of ice balance
+	Ice_Balance_add_diff = max - min;										// maximum crosswise extension of ice balance
 
 // presentation of ice shield hight following the local dimensionless ice balance values, maximum value now 1
 
@@ -309,72 +322,49 @@ void BC_Bathymetry_Atmosphere::BC_IceShield ( int Ma, double t_0, Array &h, Arra
 
 
 
-void BC_Bathymetry_Atmosphere::BC_Radiation ( double t_0, double ik, double sigma, double albedo_extra, double epsilon_atmos, Array_2D &Precipitation, Array_2D &Ik, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array_2D &t_j, Array &t )
+
+
+void BC_Bathymetry_Atmosphere::BC_SolidGround ( int i_beg, int i_max, int Ma, double hp, double ep, double t_equator, double t_pole, double t_tropopause, double c_tropopause, double co2_equator, double co2_pole, double co2_tropopause, double co2_vegetation, double co2_land, double co2_ocean, double t_0, double ta, double p_0, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &pn, Array &cn, Array &co2n, Array &fup, Array &fvp, Array &fwp, Array &ftp, Array &fcp, Array &fco2p, Array_2D &t_j, Array_2D &c_j, Array_2D &co2_j, Array_2D &Vegetation )
 {
-// class element for the computation of the radiation balance
-// computation of the local temperature of the radiation balance
 
-	cout.precision ( 6 );
-	cout.setf ( ios::fixed );
+// boundary conditions for the total solid ground
 
-	pi180 = 180./M_PI;
-
-	j_halb = ( jm -1 ) / 2 + 30;													// position of the sun at 30°S ( 90 + 30 = 120 )
+	j_half = ( jm -1 ) / 2;
 	j_max = jm - 1;
 
-	d_j_halb = ( double ) j_halb;
+	d_i_max = ( double ) i_max;
+	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 
-	k_halb = ( km -1 ) / 2;															// position of the sun at 0° oder 180° ( Greenwich )
-	k_max = km - 1;
-
-	d_k_halb = ( double ) k_halb;
-	d_k_max = ( double ) k_max;
+	t_coeff = t_pole - t_equator;
+	co2_coeff = co2_pole - co2_equator;
 
 
-	t_eff_Erde = 255.;														// effectiv radiation temperature of 255 K compares to -18 °C for 30% albedo
-																						// comparable with measurements of temperature in 5000 m hight and pressure 550 hPa
-																						// sigma * T-Erde 4 = ( 1- albedo ) Ik / 4 = 239 W/m2, valid as reference value
-
-	j_sun = 30;
+// CO2-content as boundary condition at the sea and ground surface
 
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			epsilon_atmos = 2. * ( 1. - 1. / pow ( ( t_j.y[ j ][ k ] * t_0 / t_eff_Erde ), 4. ) );
-//			epsilon_atmos = 1.;
- 
-			Ik.y[ j ][ k ] = ik * sin ( ( ( double ) j - j_sun ) / pi180 ) * sin ( ( ( double ) k - 90 ) / pi180 );
-
-			r = sqrt ( ( ( double ) j - 30 ) * ( ( double ) j - 30 ) + ( ( double ) k - 180 ) * ( ( double ) k - 180 ) );
-
-			if ( Ik.y[ j ][ k ] < 400. )
-//			if ( ( j >= ( int ) r ) || ( k >= ( int ) r ) )
+			if ( h.x[ 0 ][ j ][ k ] == 0. ) 
 			{
-				j_r = j;
-				k_r = k;
-//				Ik.y[ j ][ k ] = Ik.y[ j ][ k_r ];
-				Ik.y[ j ][ k ] = 400.;
+				d_j = ( double ) j;
+				co2_j.y[ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole;
+				co2.x[ 0 ][ j ][ k ] = co2_j.y[ j ][ k ] = co2_j.y[ j ][ k ] + co2_ocean;															// 0.6/600Gt CO2-source on oceans per year 
 			}
-
-			Radiation_Balance_bot.y[ j ][ k ] = ( 1. - albedo_extra ) / ( 1. - epsilon_atmos / 2. ) * .25 * Ik.y[ j ][ k ];
-			Radiation_Balance_atm.y[ j ][ k ] = ( 1. - albedo_extra ) / ( 2. - epsilon_atmos ) * .25 * Ik.y[ j ][ k ];
-			temp_eff_bot.y[ j ][ k ] = pow ( Radiation_Balance_bot.y[ j ][ k ] / sigma, 1. / 4. );
-			temp_eff_atm.y[ j ][ k ] = pow ( Radiation_Balance_atm.y[ j ][ k ] / sigma, 1. / 4. );
-			temp_eff_bot.y[ j ][ k ] = t.x[ 0 ][ j ][ k ] = temp_eff_bot.y[ j ][ k ] / t_0;
+			if ( h.x[ 0 ][ j ][ k ] == 1. ) 
+			{
+				d_j = ( double ) j;
+				co2_j.y[ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole; // parabolic distribution from pole to pole
+				co2_j.y[ j ][ k ] = co2_j.y[ j ][ k ] - co2_vegetation * Vegetation.y[ j ][ k ];						// 100/600Gt CO2-sink by vegetation on land per year
+				co2.x[ 0 ][ j ][ k ] = co2_j.y[ j ][ k ] = co2_j.y[ j ][ k ] + co2_land;																// 0.2/600Gt CO2-source on land per year everywhere
+			}
 		}
 	}
-}
 
 
 
-
-
-void BC_Bathymetry_Atmosphere::BC_SolidGround ( int Ma, double hp, double ep, double c_land_minus, double co2_vegetation, double t_0, double tau, double p_0, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &pn, Array &cn, Array &co2n, Array &fup, Array &fvp, Array &fwp, Array &ftp, Array &fcp, Array &fco2p, Array_2D &t_j, Array_2D &c_j, Array_2D &co2_j, Array_2D &Vegetation )
-{
-// boundary conditions for the total solid ground
-
+// boundary conditions for solid ground areas
 	for ( int i = 0; i < im-1; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -383,46 +373,30 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int Ma, double hp, double ep, do
 			{
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
-					if ( Ma == 0 )
-					{
-//						t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = tau;
-						p.x[ i ][ j ][ k ] = pn.x[ i ][ j ][ k ] = pa;
+					p.x[ i ][ j ][ k ] = pn.x[ i ][ j ][ k ] = pa;
 
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+					d_i_max = .5 * ( double ) i_max;
+					d_i = ( double ) i;
 
-						c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = 0.;
-						co2.x[ i ][ j ][ k ] = co2n.x[ i ][ j ][ k ] = 0.;
+					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];										// linear temperature decay up to tropopause
+					c.x[ i ][ j ][ k ] = c_j.y[ j ][ k ] - ( c_tropopause - c_j.y[ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola ( Weischet )
+					co2.x[ i ][ j ][ k ] = co2_j.y[ j ][ k ] - ( co2_tropopause - co2_j.y[ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola
+					if ( co2.x[ i ][ j ][ k ] < 0. ) co2.x[ i ][ j ][ k ] = 0.;
 
-						fup.x[ i ][ j ][ k ] = 0.;
-						fvp.x[ i ][ j ][ k ] = 0.;
-						fwp.x[ i ][ j ][ k ] = 0.;
-						ftp.x[ i ][ j ][ k ] = 0.;
-						fcp.x[ i ][ j ][ k ] = 0.;
-						fco2p.x[ i ][ j ][ k ] = 0.;
-					}
-					else
-					{
-//						t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = tau;
+					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
+					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
 
-						u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
-						v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-						w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
-
-						c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = 0.;
-						co2.x[ i ][ j ][ k ] = co2n.x[ i ][ j ][ k ] = 0.;
-
-						fup.x[ i ][ j ][ k ] = 0.;
-						fvp.x[ i ][ j ][ k ] = 0.;
-						fwp.x[ i ][ j ][ k ] = 0.;
-						ftp.x[ i ][ j ][ k ] = 0.;
-						fcp.x[ i ][ j ][ k ] = 0.;
-						fco2p.x[ i ][ j ][ k ] = 0.;
-					}
+					fup.x[ i ][ j ][ k ] = 0.;
+					fvp.x[ i ][ j ][ k ] = 0.;
+					fwp.x[ i ][ j ][ k ] = 0.;
+					ftp.x[ i ][ j ][ k ] = 0.;
+					fcp.x[ i ][ j ][ k ] = 0.;
+					fco2p.x[ i ][ j ][ k ] = 0.;
 				}
 			}
 		}
 	}
+
 }
 

@@ -38,7 +38,7 @@ class RHS_Atmosphere
 		double tanthe, kpr, kpthe, kpphi, kphi;
 		double RS_Coriolis_Energy, RS_centrifugal_Energy;
 		double RS_WaterVapour_Balance_Rain, RS_WaterVapour_Balance_Ice, RS_co2_Balance_co2;
-		double RS_buoyancy_Energy_Rain, RS_buoyancy_Energy_Ice, RS_buoyancy_Energy_co2, RS_buoyancy_Momentum_Rain, RS_buoyancy_Momentum_Ice, RS_buoyancy_Momentum_co2; 
+		double RS_buoyancy_Energy, RS_buoyancy_Momentum, RS_buoyancy_Water_Vapour; 
 		double RS_LatentHeat_Energy_Rain, RS_LatentHeat_Energy_Rain_super, RS_LatentHeat_Energy_Ice, Rain_aux, Rain_super_aux, Ice_aux;
 		double RS_Coriolis_Momentum_rad, RS_Coriolis_Momentum_the, RS_Coriolis_Momentum_phi, RS_centrifugal_Momentum_rad, RS_centrifugal_Momentum_the;
 		double q_i_plus, q_i_minus, q_j_plus, q_j_minus, q_k_plus, q_k_minus, q_Rain, q_Rain_super, q_Ice;
@@ -59,7 +59,7 @@ class RHS_Atmosphere
 		~RHS_Atmosphere ();
 
 
-		void RK_RHS_Atmosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void RK_RHS_Atmosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void RK_RHS_2D_Atmosphere ( int, int, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };

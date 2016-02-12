@@ -35,129 +35,43 @@ BC_Atmosphere::~BC_Atmosphere() {}
 
 
 
-void BC_Atmosphere::BC_radius ( double tao, double tau, double pa, double ca, double co2a, double dr, double t_tropopause, double c_tropopause, Array_1D &rad, double co2_vegetation, double co2_ocean, double co2_land, Array_2D &Vegetation, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice )
+void BC_Atmosphere::BC_radius ( double t_tropopause, double c_tropopause, double co2_tropopause, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2 )
 {
 // boundary conditions for the r-direction, loop index i
 	for ( int j = 0; j < jm; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-//			if ( h.x[ 0 ][ j ][ k ] == 0. )																					// sea surface
-			{
-				u.x[ 0 ][ j ][ k ] = 0.;
-//				v.x[ 0 ][ j ][ k ] = 0.;
-//				w.x[ 0 ][ j ][ k ] = 0.;
-//				v.x[ 0 ][ j ][ k ] = 2. * dr / rad.z[ 1 ] * v.x[ 1 ][ j ][ k ] + v.x[ 2 ][ j ][ k ];				// sea surface
-//				w.x[ 0 ][ j ][ k ] = 2. * dr / rad.z[ 1 ] * w.x[ 1 ][ j ][ k ] + w.x[ 2 ][ j ][ k ];			// sea surface
-//				v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
-//				w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
-				v.x[ 0 ][ j ][ k ] = v.x[ 3 ][ j ][ k ] - 3. * v.x[ 2 ][ j ][ k ] + 3. * v.x[ 1 ][ j ][ k ];				// extrapolation
-				w.x[ 0 ][ j ][ k ] = w.x[ 3 ][ j ][ k ] - 3. * w.x[ 2 ][ j ][ k ] + 3. * w.x[ 1 ][ j ][ k ];			// leads to round harmonic profiles
-//				p.x[ im-1 ][ j ][ k ] = pa;
+			u.x[ 0 ][ j ][ k ] = 0.;
+//			v.x[ 0 ][ j ][ k ] = 2. * dr / rad.z[ 1 ] * v.x[ 1 ][ j ][ k ] + v.x[ 2 ][ j ][ k ];				// sea surface
+//			w.x[ 0 ][ j ][ k ] = 2. * dr / rad.z[ 1 ] * w.x[ 1 ][ j ][ k ] + w.x[ 2 ][ j ][ k ];			// sea surface
+//			v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];							// zero tangent
+//			w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];						// zero tangent
+			v.x[ 0 ][ j ][ k ] = v.x[ 3 ][ j ][ k ] - 3. * v.x[ 2 ][ j ][ k ] + 3. * v.x[ 1 ][ j ][ k ];		// extrapolation
+			w.x[ 0 ][ j ][ k ] = w.x[ 3 ][ j ][ k ] - 3. * w.x[ 2 ][ j ][ k ] + 3. * w.x[ 1 ][ j ][ k ];	// leads to round harmonic profiles
 
-				u.x[ im-1 ][ j ][ k ] = 0.;
-				v.x[ im-1 ][ j ][ k ] = 0.;																					// stratosphere
-				w.x[ im-1 ][ j ][ k ] = 0.;
-				t.x[ im-1 ][ j ][ k ] = t_tropopause;
+			u.x[ im-1 ][ j ][ k ] = 0.;
+//			v.x[ im-1 ][ j ][ k ] = 0.;																					// stratosphere
+//			w.x[ im-1 ][ j ][ k ] = 0.;
 
-				p.x[ im-1 ][ j ][ k ] = c43 * p.x[ im-2 ][ j ][ k ] - c13 * p.x[ im-3 ][ j ][ k ];			// stratosphere
-//				p.x[ 0 ][ j ][ k ] = c43 * p.x[ 1 ][ j ][ k ] - c13 * p.x[ 2 ][ j ][ k ];							// sea surface
+//			u.x[ im-1 ][ j ][ k ] = c43 * u.x[ im-2 ][ j ][ k ] - c13 * u.x[ im-3 ][ j ][ k ];			// stratosphere
+//			v.x[ im-1 ][ j ][ k ] = c43 * v.x[ im-2 ][ j ][ k ] - c13 * v.x[ im-3 ][ j ][ k ];			// stratosphere
+//			w.x[ im-1 ][ j ][ k ] = c43 * w.x[ im-2 ][ j ][ k ] - c13 * w.x[ im-3 ][ j ][ k ];			// stratosphere
 
-				c.x[ im-1 ][ j ][ k ] = c_tropopause;
-				co2.x[ im-1 ][ j ][ k ] = c43 * co2.x[ im-2 ][ j ][ k ] - c13 * co2.x[ im-3 ][ j ][ k ];			// stratosphere
-/*
-				rhs_u.x[ 0 ][ j ][ k ] = c43 * rhs_u.x[ 1 ][ j ][ k ] - c13 * rhs_u.x[ 2 ][ j ][ k ];
-				rhs_v.x[ 0 ][ j ][ k ] = c43 * rhs_v.x[ 1 ][ j ][ k ] - c13 * rhs_v.x[ 2 ][ j ][ k ];
-				rhs_w.x[ 0 ][ j ][ k ] = c43 * rhs_w.x[ 1 ][ j ][ k ] - c13 * rhs_w.x[ 2 ][ j ][ k ];
-				rhs_t.x[ 0 ][ j ][ k ] = c43 * rhs_t.x[ 1 ][ j ][ k ] - c13 * rhs_t.x[ 2 ][ j ][ k ];
-				rhs_c.x[ 0 ][ j ][ k ] = c43 * rhs_c.x[ 1 ][ j ][ k ] - c13 * rhs_c.x[ 2 ][ j ][ k ];
-				rhs_co2.x[ 0 ][ j ][ k ] = c43 * rhs_co2.x[ 1 ][ j ][ k ] - c13 * rhs_co2.x[ 2 ][ j ][ k ];
-*/
-/*
-				rhs_u.x[ 0 ][ j ][ k ] = 0.;
-				rhs_v.x[ 0 ][ j ][ k ] = 0.;
-				rhs_w.x[ 0 ][ j ][ k ] = 0.;
-				rhs_t.x[ 0 ][ j ][ k ] = 0.;
-				rhs_c.x[ 0 ][ j ][ k ] = 0.;
-				rhs_co2.x[ 0 ][ j ][ k ] = 0.;
+//			u.x[ im-1 ][ j ][ k ] = u.x[ im-4 ][ j ][ k ] - 3. * u.x[ im-3 ][ j ][ k ] + 3. * u.x[ im-2 ][ j ][ k ];		// extrapolation
+			v.x[ im-1 ][ j ][ k ] = v.x[ im-4 ][ j ][ k ] - 3. * v.x[ im-3 ][ j ][ k ] + 3. * v.x[ im-2 ][ j ][ k ];		// extrapolation
+			w.x[ im-1 ][ j ][ k ] = w.x[ im-4 ][ j ][ k ] - 3. * w.x[ im-3 ][ j ][ k ] + 3. * w.x[ im-2 ][ j ][ k ];	// leads to round harmonic profiles
 
-				rhs_u.x[ im-1 ][ j ][ k ] = c43 * rhs_u.x[ im-2 ][ j ][ k ] - c13 * rhs_u.x[ im-3 ][ j ][ k ];			// stratosphere
-				rhs_v.x[ im-1 ][ j ][ k ] = c43 * rhs_v.x[ im-2 ][ j ][ k ] - c13 * rhs_v.x[ im-3 ][ j ][ k ];			// stratosphere
-				rhs_w.x[ im-1 ][ j ][ k ] = c43 * rhs_w.x[ im-2 ][ j ][ k ] - c13 * rhs_w.x[ im-3 ][ j ][ k ];		// stratosphere
-				rhs_t.x[ im-1 ][ j ][ k ] = c43 * rhs_t.x[ im-2 ][ j ][ k ] - c13 * rhs_t.x[ im-3 ][ j ][ k ];			// stratosphere
-				rhs_c.x[ im-1 ][ j ][ k ] = c43 * rhs_c.x[ im-2 ][ j ][ k ] - c13 * rhs_c.x[ im-3 ][ j ][ k ];
-				rhs_co2.x[ im-1 ][ j ][ k ] = c43 * rhs_co2.x[ im-2 ][ j ][ k ] - c13 * rhs_co2.x[ im-3 ][ j ][ k ];
-*/
-/*
-				aux_u.x[ 0 ][ j ][ k ] = c43 * aux_u.x[ 1 ][ j ][ k ] - c13 * aux_u.x[ 2 ][ j ][ k ];
-				aux_v.x[ 0 ][ j ][ k ] = c43 * aux_v.x[ 1 ][ j ][ k ] - c13 * aux_v.x[ 2 ][ j ][ k ];
-				aux_w.x[ 0 ][ j ][ k ] = c43 * aux_w.x[ 1 ][ j ][ k ] - c13 * aux_w.x[ 2 ][ j ][ k ];
-*/
-/*
-				aux_u.x[ 0 ][ j ][ k ] = 0.;
-				aux_v.x[ 0 ][ j ][ k ] = 0.;
-				aux_w.x[ 0 ][ j ][ k ] = 0.;
+			t.x[ im-1 ][ j ][ k ] = t_tropopause;
 
-				aux_u.x[ im-1 ][ j ][ k ] = c43 * aux_u.x[ im-2 ][ j ][ k ] - c13 * aux_u.x[ im-3 ][ j ][ k ];			// stratosphere
-				aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-2 ][ j ][ k ] - c13 * aux_v.x[ im-3 ][ j ][ k ];			// stratosphere
-				aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-2 ][ j ][ k ] - c13 * aux_w.x[ im-3 ][ j ][ k ];			// stratosphere
 
-				Latency.x[ 0 ][ j ][ k ] = c43 * Latency.x[ 1 ][ j ][ k ] - c13 * Latency.x[ 2 ][ j ][ k ];
-				Rain.x[ 0 ][ j ][ k ] = c43 * Rain.x[ 1 ][ j ][ k ] - c13 * Rain.x[ 2 ][ j ][ k ];
-				Ice.x[ 0 ][ j ][ k ] = c43 * Ice.x[ 1 ][ j ][ k ] - c13 * Ice.x[ 2 ][ j ][ k ];
-*/
-/*
-				Latency.x[ im-1 ][ j ][ k ] = c43 * Latency.x[ im-2 ][ j ][ k ] - c13 * Latency.x[ im-3 ][ j ][ k ];			// stratosphere
-				Rain.x[ im-1 ][ j ][ k ] = c43 * Rain.x[ im-2 ][ j ][ k ] - c13 * Rain.x[ im-3 ][ j ][ k ];			// stratosphere
-				Ice.x[ im-1 ][ j ][ k ] = c43 * Ice.x[ im-2 ][ j ][ k ] - c13 * Ice.x[ im-3 ][ j ][ k ];								// stratosphere
-*/
-/*
-				Latency.x[ im-1 ][ j ][ k ] = 0.;										// stratosphere
-				Rain.x[ im-1 ][ j ][ k ] = 0.;											// stratosphere
-				Ice.x[ im-1 ][ j ][ k ] = 0.;												// stratosphere
-*/
-			}
-/*
-			else
-			{
-//  continental surface
-				u.x[ 0 ][ j ][ k ] = 0.;
-				v.x[ 0 ][ j ][ k ] = 0.;
-				w.x[ 0 ][ j ][ k ] = 0.;
+			p.x[ 0 ][ j ][ k ] = p.x[ 3 ][ j ][ k ] - 3. * p.x[ 2 ][ j ][ k ] + 3. * p.x[ 1 ][ j ][ k ];		// extrapolation
+			p.x[ im-1 ][ j ][ k ] = p.x[ im-4 ][ j ][ k ] - 3. * p.x[ im-3 ][ j ][ k ] + 3. * p.x[ im-2 ][ j ][ k ];		// extrapolation
 
-				u.x[ im-1 ][ j ][ k ] = 0.;																					// stratosphere
-				v.x[ im-1 ][ j ][ k ] = 0.;
-				w.x[ im-1 ][ j ][ k ] = 0.;
-
-				t.x[ im-1 ][ j ][ k ] = tao;
-				c.x[ im-1 ][ j ][ k ] = 0.;
-				p.x[ im-1 ][ j ][ k ] = pa;
-
-				p.x[ im-1 ][ j ][ k ] = c43 * p.x[ im-2 ][ j ][ k ] - c13 * p.x[ im-3 ][ j ][ k ];			// stratosphere
-				p.x[ 0 ][ j ][ k ] = c43 * p.x[ 1 ][ j ][ k ] - c13 * p.x[ 2 ][ j ][ k ];							// continent surface
-
-				c.x[ im-1 ][ j ][ k ] = 0.;
-				co2.x[ im-1 ][ j ][ k ] = 1.;
-
-				rhs_u.x[ 0 ][ j ][ k ] = 0.;
-				rhs_v.x[ 0 ][ j ][ k ] = 0.;
-				rhs_w.x[ 0 ][ j ][ k ] = 0.;
-				rhs_t.x[ 0 ][ j ][ k ] = 0.;
-				rhs_c.x[ 0 ][ j ][ k ] = 0.;
-				rhs_co2.x[ 0 ][ j ][ k ] = 0.;
-
-				aux_u.x[ 0 ][ j ][ k ] = 0.;
-				aux_v.x[ 0 ][ j ][ k ] = 0.;
-				aux_w.x[ 0 ][ j ][ k ] = 0.;
-
-				Latency.x[ 0 ][ j ][ k ] = 0.;
-				Rain.x[ 0 ][ j ][ k ] = 0.;
-				Ice.x[ 0 ][ j ][ k ] = 0.;
-			}
-*/
+			c.x[ im-1 ][ j ][ k ] = c_tropopause;
+			co2.x[ im-1 ][ j ][ k ] = co2_tropopause;														// stratosphere
 		}
 	}
-
 }
 
 
@@ -165,7 +79,7 @@ void BC_Atmosphere::BC_radius ( double tao, double tau, double pa, double ca, do
 
 
 
-void BC_Atmosphere::BC_theta ( double t_tropopause, double c_tropopause, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice )
+void BC_Atmosphere::BC_theta ( double t_tropopause, double c_tropopause, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2 )
 {
 // boundary conditions for the the-direction, loop index j
 
@@ -176,9 +90,9 @@ void BC_Atmosphere::BC_theta ( double t_tropopause, double c_tropopause, Array &
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
 
 			t.x[ i ][ 0 ][ k ] = c43 * t.x[ i ][ 1 ][ k ] - c13 * t.x[ i ][ 2 ][ k ];
-			t.x[ i ][ jm-1 ][ k ] = c43 * t.x[ i ][ jm-2 ][ k ] - c13 * t.x[ i ][ jm-3 ][ k ];
-//			t.x[ i ][ jm-1 ][ k ] = t_tropopause;
-/*
+//			t.x[ i ][ jm-1 ][ k ] = c43 * t.x[ i ][ jm-2 ][ k ] - c13 * t.x[ i ][ jm-3 ][ k ];
+			t.x[ i ][ jm-1 ][ k ] = t_tropopause;
+
 			u.x[ i ][ 0 ][ k ] = c43 * u.x[ i ][ 1 ][ k ] - c13 * u.x[ i ][ 2 ][ k ];
 			u.x[ i ][ jm-1 ][ k ] = c43 * u.x[ i ][ jm-2 ][ k ] - c13 * u.x[ i ][ jm-3 ][ k ];
 
@@ -187,64 +101,15 @@ void BC_Atmosphere::BC_theta ( double t_tropopause, double c_tropopause, Array &
 
 			w.x[ i ][ 0 ][ k ] = c43 * w.x[ i ][ 1 ][ k ] - c13 * w.x[ i ][ 2 ][ k ];
 			w.x[ i ][ jm-1 ][ k ] = c43 * w.x[ i ][ jm-2 ][ k ] - c13 * w.x[ i ][ jm-3 ][ k ];
-*/
-
-			u.x[ i ][ 0 ][ k ] = 0.;
-			u.x[ i ][ jm-1 ][ k ] = 0.;
-
-			v.x[ i ][ 0 ][ k ] = 0.;
-			v.x[ i ][ jm-1 ][ k ] = 0.;
-
-			w.x[ i ][ 0 ][ k ] = 0.;
-			w.x[ i ][ jm-1 ][ k ] = 0.;
 
 			p.x[ i ][ 0 ][ k ] = c43 * p.x[ i ][ 1 ][ k ] - c13 * p.x[ i ][ 2 ][ k ];
 			p.x[ i ][ jm-1 ][ k ] = c43 * p.x[ i ][ jm-2 ][ k ] - c13 * p.x[ i ][ jm-3 ][ k ];
 
-
 			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
 			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
-//			c.x[ i ][ jm-1 ][ k ] = c_tropopause;
 
 			co2.x[ i ][ 0 ][ k ] = c43 * co2.x[ i ][ 1 ][ k ] - c13 * co2.x[ i ][ 2 ][ k ];
 			co2.x[ i ][ jm-1 ][ k ] = c43 * co2.x[ i ][ jm-2 ][ k ] - c13 * co2.x[ i ][ jm-3 ][ k ];
-
-			rhs_u.x[ i ][ 0 ][ k ] = c43 * rhs_u.x[ i ][ 1 ][ k ] - c13 * rhs_u.x[ i ][ 2 ][ k ];
-			rhs_u.x[ i ][ jm-1 ][ k ] = c43 * rhs_u.x[ i ][ jm-2 ][ k ] - c13 * rhs_u.x[ i ][ jm-3 ][ k ];
-
-			rhs_v.x[ i ][ 0 ][ k ] = c43 * rhs_v.x[ i ][ 1 ][ k ] - c13 * rhs_v.x[ i ][ 2 ][ k ];
-			rhs_v.x[ i ][ jm-1 ][ k ] = c43 * rhs_v.x[ i ][ jm-2 ][ k ] - c13 * rhs_v.x[ i ][ jm-3 ][ k ];
-
-			rhs_w.x[ i ][ 0 ][ k ] = c43 * rhs_w.x[ i ][ 1 ][ k ] - c13 * rhs_w.x[ i ][ 2 ][ k ];
-			rhs_w.x[ i ][ jm-1 ][ k ] = c43 * rhs_w.x[ i ][ jm-2 ][ k ] - c13 * rhs_w.x[ i ][ jm-3 ][ k ];
-
-			aux_u.x[ i ][ 0 ][ k ] = c43 * aux_u.x[ i ][ 1 ][ k ] - c13 * aux_u.x[ i ][ 2 ][ k ];
-			aux_u.x[ i ][ jm-1 ][ k ] = c43 * aux_u.x[ i ][ jm-2 ][ k ] - c13 * aux_u.x[ i ][ jm-3 ][ k ];
-
-			aux_v.x[ i ][ 0 ][ k ] = c43 * aux_v.x[ i ][ 1 ][ k ] - c13 * aux_v.x[ i ][ 2 ][ k ];
-			aux_v.x[ i ][ jm-1 ][ k ] = c43 * aux_v.x[ i ][ jm-2 ][ k ] - c13 * aux_v.x[ i ][ jm-3 ][ k ];
-
-			aux_w.x[ i ][ 0 ][ k ] = c43 * aux_w.x[ i ][ 1 ][ k ] - c13 * aux_w.x[ i ][ 2 ][ k ];
-			aux_w.x[ i ][ jm-1 ][ k ] = c43 * aux_w.x[ i ][ jm-2 ][ k ] - c13 * aux_w.x[ i ][ jm-3 ][ k ];
-
-			rhs_t.x[ i ][ 0 ][ k ] = c43 * rhs_t.x[ i ][ 1 ][ k ] - c13 * rhs_t.x[ i ][ 2 ][ k ];
-			rhs_t.x[ i ][ jm-1 ][ k ] = c43 * rhs_t.x[ i ][ jm-2 ][ k ] - c13 * rhs_t.x[ i ][ jm-3 ][ k ];
-
-			rhs_c.x[ i ][ 0 ][ k ] = c43 * rhs_c.x[ i ][ 1 ][ k ] - c13 * rhs_c.x[ i ][ 2 ][ k ];
-			rhs_c.x[ i ][ jm-1 ][ k ] = c43 * rhs_c.x[ i ][ jm-2 ][ k ] - c13 * rhs_c.x[ i ][ jm-3 ][ k ];
-
-			rhs_co2.x[ i ][ 0 ][ k ] = c43 * rhs_co2.x[ i ][ 1 ][ k ] - c13 * rhs_co2.x[ i ][ 2 ][ k ];
-			rhs_co2.x[ i ][ jm-1 ][ k ] = c43 * rhs_co2.x[ i ][ jm-2 ][ k ] - c13 * rhs_co2.x[ i ][ jm-3 ][ k ];
-
-			Latency.x[ i ][ 0 ][ k ] = c43 * Latency.x[ i ][ 1 ][ k ] - c13 * Latency.x[ i ][ 2 ][ k ];
-			Latency.x[ i ][ jm-1 ][ k ] = c43 * Latency.x[ i ][ jm-2 ][ k ] - c13 * Latency.x[ i ][ jm-3 ][ k ];
-
-			Rain.x[ i ][ 0 ][ k ] = c43 * Rain.x[ i ][ 1 ][ k ] - c13 * Rain.x[ i ][ 2 ][ k ];
-			Rain.x[ i ][ jm-1 ][ k ] = c43 * Rain.x[ i ][ jm-2 ][ k ] - c13 * Rain.x[ i ][ jm-3 ][ k ];
-
-			Ice.x[ i ][ 0 ][ k ] = c43 * Ice.x[ i ][ 1 ][ k ] - c13 * Ice.x[ i ][ 2 ][ k ];
-			Ice.x[ i ][ jm-1 ][ k ] = c43 * Ice.x[ i ][ jm-2 ][ k ] - c13 * Ice.x[ i ][ jm-3 ][ k ];
-
 		}
 	}
 }
@@ -255,7 +120,7 @@ void BC_Atmosphere::BC_theta ( double t_tropopause, double c_tropopause, Array &
 
 
 
-void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice )
+void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2 )
 {
 // boundary conditions for the phi-direction, loop index k
 
@@ -265,86 +130,54 @@ void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p, A
 		{
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
 
-			t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
-			t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];
+//			t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
+//			t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];
+
+			t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ 3 ] - 3. * t.x[ i ][ j ][ 2 ] + 3. * t.x[ i ][ j ][ 1 ];		// extrapolation
+			t.x[ i ][ j ][ km-1 ] = t.x[ i ][ j ][ km-4 ] - 3. * t.x[ i ][ j ][ km-3 ] + 3. * t.x[ i ][ j ][ km-2 ];		// extrapolation
 			t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ km-1 ] = ( t.x[ i ][ j ][ 0 ] + t.x[ i ][ j ][ km-1 ] ) / 2.;
 
-			u.x[ i ][ j ][ 0 ] = c43 * u.x[ i ][ j ][ 1 ] - c13 * u.x[ i ][ j ][ 2 ];
-			u.x[ i ][ j ][ km-1 ] = c43 * u.x[ i ][ j ][ km-2 ] - c13 * u.x[ i ][ j ][ km-3 ];
+//			u.x[ i ][ j ][ 0 ] = c43 * u.x[ i ][ j ][ 1 ] - c13 * u.x[ i ][ j ][ 2 ];
+//			u.x[ i ][ j ][ km-1 ] = c43 * u.x[ i ][ j ][ km-2 ] - c13 * u.x[ i ][ j ][ km-3 ];
+
+			u.x[ i ][ j ][ 0 ] = u.x[ i ][ j ][ 3 ] - 3. * u.x[ i ][ j ][ 2 ] + 3. * u.x[ i ][ j ][ 1 ];		// extrapolation
+			u.x[ i ][ j ][ km-1 ] = u.x[ i ][ j ][ km-4 ] - 3. * u.x[ i ][ j ][ km-3 ] + 3. * u.x[ i ][ j ][ km-2 ];		// extrapolation
 			u.x[ i ][ j ][ 0 ] = u.x[ i ][ j ][ km-1 ] = ( u.x[ i ][ j ][ 0 ] + u.x[ i ][ j ][ km-1 ] ) / 2.;
 
-			v.x[ i ][ j ][ 0 ] = c43 * v.x[ i ][ j ][ 1 ] - c13 * v.x[ i ][ j ][ 2 ];
-			v.x[ i ][ j ][ km-1 ] = c43 * v.x[ i ][ j ][ km-2 ] - c13 * v.x[ i ][ j ][ km-3 ];
+//			v.x[ i ][ j ][ 0 ] = c43 * v.x[ i ][ j ][ 1 ] - c13 * v.x[ i ][ j ][ 2 ];
+//			v.x[ i ][ j ][ km-1 ] = c43 * v.x[ i ][ j ][ km-2 ] - c13 * v.x[ i ][ j ][ km-3 ];
+
+			v.x[ i ][ j ][ 0 ] = v.x[ i ][ j ][ 3 ] - 3. * v.x[ i ][ j ][ 2 ] + 3. * v.x[ i ][ j ][ 1 ];		// extrapolation
+			v.x[ i ][ j ][ km-1 ] = v.x[ i ][ j ][ km-4 ] - 3. * v.x[ i ][ j ][ km-3 ] + 3. * v.x[ i ][ j ][ km-2 ];		// extrapolation
 			v.x[ i ][ j ][ 0 ] = v.x[ i ][ j ][ km-1 ] = ( v.x[ i ][ j ][ 0 ] + v.x[ i ][ j ][ km-1 ] ) / 2.;
 
-			w.x[ i ][ j ][ 0 ] = c43 * w.x[ i ][ j ][ 1 ] - c13 * w.x[ i ][ j ][ 2 ];
-			w.x[ i ][ j ][ km-1 ] = c43 * w.x[ i ][ j ][ km-2 ] - c13 * w.x[ i ][ j ][ km-3 ];
+//			w.x[ i ][ j ][ 0 ] = c43 * w.x[ i ][ j ][ 1 ] - c13 * w.x[ i ][ j ][ 2 ];
+//			w.x[ i ][ j ][ km-1 ] = c43 * w.x[ i ][ j ][ km-2 ] - c13 * w.x[ i ][ j ][ km-3 ];
+
+			w.x[ i ][ j ][ 0 ] = w.x[ i ][ j ][ 3 ] - 3. * w.x[ i ][ j ][ 2 ] + 3. * w.x[ i ][ j ][ 1 ];		// extrapolation
+			w.x[ i ][ j ][ km-1 ] = w.x[ i ][ j ][ km-4 ] - 3. * w.x[ i ][ j ][ km-3 ] + 3. * w.x[ i ][ j ][ km-2 ];		// extrapolation
 			w.x[ i ][ j ][ 0 ] = w.x[ i ][ j ][ km-1 ] = ( w.x[ i ][ j ][ 0 ] + w.x[ i ][ j ][ km-1 ] ) / 2.;
 
-			p.x[ i ][ j ][ 0 ] = c43 * p.x[ i ][ j ][ 1 ] - c13 * p.x[ i ][ j ][ 2 ];
-			p.x[ i ][ j ][ km-1 ] = c43 * p.x[ i ][ j ][ km-2 ] - c13 * p.x[ i ][ j ][ km-3 ];
+//			p.x[ i ][ j ][ 0 ] = c43 * p.x[ i ][ j ][ 1 ] - c13 * p.x[ i ][ j ][ 2 ];
+//			p.x[ i ][ j ][ km-1 ] = c43 * p.x[ i ][ j ][ km-2 ] - c13 * p.x[ i ][ j ][ km-3 ];
+
+			p.x[ i ][ j ][ 0 ] = p.x[ i ][ j ][ 3 ] - 3. * p.x[ i ][ j ][ 2 ] + 3. * p.x[ i ][ j ][ 1 ];		// extrapolation
+			p.x[ i ][ j ][ km-1 ] = p.x[ i ][ j ][ km-4 ] - 3. * p.x[ i ][ j ][ km-3 ] + 3. * p.x[ i ][ j ][ km-2 ];		// extrapolation
 			p.x[ i ][ j ][ 0 ] = p.x[ i ][ j ][ km-1 ] = ( p.x[ i ][ j ][ 0 ] + p.x[ i ][ j ][ km-1 ] ) / 2.;
 
-			c.x[ i ][ j ][ 0 ] = c43 * c.x[ i ][ j ][ 1 ] - c13 * c.x[ i ][ j ][ 2 ];
-			c.x[ i ][ j ][ km-1 ] = c43 * c.x[ i ][ j ][ km-2 ] - c13 * c.x[ i ][ j ][ km-3 ];
+//			c.x[ i ][ j ][ 0 ] = c43 * c.x[ i ][ j ][ 1 ] - c13 * c.x[ i ][ j ][ 2 ];
+//			c.x[ i ][ j ][ km-1 ] = c43 * c.x[ i ][ j ][ km-2 ] - c13 * c.x[ i ][ j ][ km-3 ];
+
+			c.x[ i ][ j ][ 0 ] = c.x[ i ][ j ][ 3 ] - 3. * c.x[ i ][ j ][ 2 ] + 3. * c.x[ i ][ j ][ 1 ];		// extrapolation
+			c.x[ i ][ j ][ km-1 ] = c.x[ i ][ j ][ km-4 ] - 3. * c.x[ i ][ j ][ km-3 ] + 3. * c.x[ i ][ j ][ km-2 ];		// extrapolation
 			c.x[ i ][ j ][ 0 ] = c.x[ i ][ j ][ km-1 ] = ( c.x[ i ][ j ][ 0 ] + c.x[ i ][ j ][ km-1 ] ) / 2.;
 
-			co2.x[ i ][ j ][ 0 ] = c43 * co2.x[ i ][ j ][ 1 ] - c13 * co2.x[ i ][ j ][ 2 ];
-			co2.x[ i ][ j ][ km-1 ] = c43 * co2.x[ i ][ j ][ km-2 ] - c13 * co2.x[ i ][ j ][ km-3 ];
+//			co2.x[ i ][ j ][ 0 ] = c43 * co2.x[ i ][ j ][ 1 ] - c13 * co2.x[ i ][ j ][ 2 ];
+//			co2.x[ i ][ j ][ km-1 ] = c43 * co2.x[ i ][ j ][ km-2 ] - c13 * co2.x[ i ][ j ][ km-3 ];
+
+			co2.x[ i ][ j ][ 0 ] = co2.x[ i ][ j ][ 3 ] - 3. * co2.x[ i ][ j ][ 2 ] + 3. * co2.x[ i ][ j ][ 1 ];		// extrapolation
+			co2.x[ i ][ j ][ km-1 ] = co2.x[ i ][ j ][ km-4 ] - 3. * co2.x[ i ][ j ][ km-3 ] + 3. * co2.x[ i ][ j ][ km-2 ];		// extrapolation
 			co2.x[ i ][ j ][ 0 ] = co2.x[ i ][ j ][ km-1 ] = ( co2.x[ i ][ j ][ 0 ] + co2.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			rhs_u.x[ i ][ j ][ 0 ] = c43 * rhs_u.x[ i ][ j ][ 1 ] - c13 * rhs_u.x[ i ][ j ][ 2 ];
-			rhs_u.x[ i ][ j ][ km-1 ] = c43 * rhs_u.x[ i ][ j ][ km-2 ] - c13 * rhs_u.x[ i ][ j ][ km-3 ];
-			rhs_u.x[ i ][ j ][ 0 ] = rhs_u.x[ i ][ j ][ km-1 ] = ( rhs_u.x[ i ][ j ][ 0 ] + rhs_u.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			rhs_t.x[ i ][ j ][ 0 ] = c43 * rhs_t.x[ i ][ j ][ 1 ] - c13 * rhs_t.x[ i ][ j ][ 2 ];
-			rhs_t.x[ i ][ j ][ km-1 ] = c43 * rhs_t.x[ i ][ j ][ km-2 ] - c13 * rhs_t.x[ i ][ j ][ km-3 ];
-			rhs_t.x[ i ][ j ][ 0 ] = rhs_t.x[ i ][ j ][ km-1 ] = ( rhs_t.x[ i ][ j ][ 0 ] + rhs_t.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			rhs_v.x[ i ][ j ][ 0 ] = c43 * rhs_v.x[ i ][ j ][ 1 ] - c13 * rhs_v.x[ i ][ j ][ 2 ];
-			rhs_v.x[ i ][ j ][ km-1 ] = c43 * rhs_v.x[ i ][ j ][ km-2 ] - c13 * rhs_v.x[ i ][ j ][ km-3 ];
-			rhs_v.x[ i ][ j ][ 0 ] = rhs_v.x[ i ][ j ][ km-1 ] = ( rhs_v.x[ i ][ j ][ 0 ] + rhs_v.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			rhs_w.x[ i ][ j ][ 0 ] = c43 * rhs_w.x[ i ][ j ][ 1 ] - c13 * rhs_w.x[ i ][ j ][ 2 ];
-			rhs_w.x[ i ][ j ][ km-1 ] = c43 * rhs_w.x[ i ][ j ][ km-2 ] - c13 * rhs_w.x[ i ][ j ][ km-3 ];
-			rhs_w.x[ i ][ j ][ 0 ] = rhs_w.x[ i ][ j ][ km-1 ] = ( rhs_w.x[ i ][ j ][ 0 ] + rhs_w.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			aux_u.x[ i ][ j ][ 0 ] = c43 * aux_u.x[ i ][ j ][ 1 ] - c13 * aux_u.x[ i ][ j ][ 2 ];
-			aux_u.x[ i ][ j ][ km-1 ] = c43 * aux_u.x[ i ][ j ][ km-2 ] - c13 * aux_u.x[ i ][ j ][ km-3 ];
-			aux_u.x[ i ][ j ][ 0 ] = aux_u.x[ i ][ j ][ km-1 ] = ( aux_u.x[ i ][ j ][ 0 ] + aux_u.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			aux_v.x[ i ][ j ][ 0 ] = c43 * aux_v.x[ i ][ j ][ 1 ] - c13 * aux_v.x[ i ][ j ][ 2 ];
-			aux_v.x[ i ][ j ][ km-1 ] = c43 * aux_v.x[ i ][ j ][ km-2 ] - c13 * aux_v.x[ i ][ j ][ km-3 ];
-			aux_v.x[ i ][ j ][ 0 ] = aux_v.x[ i ][ j ][ km-1 ] = ( aux_v.x[ i ][ j ][ 0 ] + aux_v.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			aux_w.x[ i ][ j ][ 0 ] = c43 * aux_w.x[ i ][ j ][ 1 ] - c13 * aux_w.x[ i ][ j ][ 2 ];
-			aux_w.x[ i ][ j ][ km-1 ] = c43 * aux_w.x[ i ][ j ][ km-2 ] - c13 * aux_w.x[ i ][ j ][ km-3 ];
-			aux_w.x[ i ][ j ][ 0 ] = aux_w.x[ i ][ j ][ km-1 ] = ( aux_w.x[ i ][ j ][ 0 ] + aux_w.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			rhs_t.x[ i ][ j ][ 0 ] = c43 * rhs_t.x[ i ][ j ][ 1 ] - c13 * rhs_t.x[ i ][ j ][ 2 ];
-			rhs_t.x[ i ][ j ][ km-1 ] = c43 * rhs_t.x[ i ][ j ][ km-2 ] - c13 * rhs_t.x[ i ][ j ][ km-3 ];
-			rhs_t.x[ i ][ j ][ 0 ] = rhs_t.x[ i ][ j ][ km-1 ] = ( rhs_t.x[ i ][ j ][ 0 ] + rhs_t.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			rhs_c.x[ i ][ j ][ 0 ] = c43 * rhs_c.x[ i ][ j ][ 1 ] - c13 * rhs_c.x[ i ][ j ][ 2 ];
-			rhs_c.x[ i ][ j ][ km-1 ] = c43 * rhs_c.x[ i ][ j ][ km-2 ] - c13 * rhs_c.x[ i ][ j ][ km-3 ];
-			rhs_c.x[ i ][ j ][ 0 ] = rhs_c.x[ i ][ j ][ km-1 ] = ( rhs_c.x[ i ][ j ][ 0 ] + rhs_c.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			rhs_co2.x[ i ][ j ][ 0 ] = c43 * rhs_co2.x[ i ][ j ][ 1 ] - c13 * rhs_co2.x[ i ][ j ][ 2 ];
-			rhs_co2.x[ i ][ j ][ km-1 ] = c43 * rhs_co2.x[ i ][ j ][ km-2 ] - c13 * rhs_co2.x[ i ][ j ][ km-3 ];
-			rhs_co2.x[ i ][ j ][ 0 ] = rhs_co2.x[ i ][ j ][ km-1 ] = ( rhs_co2.x[ i ][ j ][ 0 ] + rhs_co2.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			Latency.x[ i ][ j ][ 0 ] = c43 * Latency.x[ i ][ j ][ 1 ] - c13 * Latency.x[ i ][ j ][ 2 ];
-			Latency.x[ i ][ j ][ km-1 ] = c43 * Latency.x[ i ][ j ][ km-2 ] - c13 * Latency.x[ i ][ j ][ km-3 ];
-			Latency.x[ i ][ j ][ 0 ] = Latency.x[ i ][ j ][ km-1 ] = ( Latency.x[ i ][ j ][ 0 ] + Latency.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			Rain.x[ i ][ j ][ 0 ] = c43 * Rain.x[ i ][ j ][ 1 ] - c13 * Rain.x[ i ][ j ][ 2 ];
-			Rain.x[ i ][ j ][ km-1 ] = c43 * Rain.x[ i ][ j ][ km-2 ] - c13 * Rain.x[ i ][ j ][ km-3 ];
-			Rain.x[ i ][ j ][ 0 ] = Rain.x[ i ][ j ][ km-1 ] = ( Rain.x[ i ][ j ][ 0 ] + Rain.x[ i ][ j ][ km-1 ] ) / 2.;
-
-			Ice.x[ i ][ j ][ 0 ] = c43 * Ice.x[ i ][ j ][ 1 ] - c13 * Ice.x[ i ][ j ][ 2 ];
-			Ice.x[ i ][ j ][ km-1 ] = c43 * Ice.x[ i ][ j ][ km-2 ] - c13 * Ice.x[ i ][ j ][ km-3 ];
-			Ice.x[ i ][ j ][ 0 ] = Ice.x[ i ][ j ][ km-1 ] = ( Ice.x[ i ][ j ][ 0 ] + Ice.x[ i ][ j ][ km-1 ] ) / 2.;
-
 		}
 	}
 }

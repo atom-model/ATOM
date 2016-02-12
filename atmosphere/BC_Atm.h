@@ -42,11 +42,11 @@ class BC_Atmosphere
 		~BC_Atmosphere();
 
 
-		void BC_radius ( double, double, double, double, double, double, double, double, Array_1D &, double, double, double, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_radius ( double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_theta ( double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_theta ( double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_phi ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_phi ( Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void BC_NST_control_2D ( double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_1D &, Array_1D & );
 

@@ -30,7 +30,7 @@ class Restore
 		Restore ( int, int, int );
 		~Restore ();
 
-		void restoreOldNew ( double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void restoreOldNew_3D ( double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void restoreOldNew_2D ( double, Array &, Array &, Array &, Array &, Array &, Array & );
 };

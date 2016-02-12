@@ -48,19 +48,16 @@ RHS_Atmosphere::~RHS_Atmosphere() {}
 
 
 
-void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double ls, double ep, double hp, double u_0, double t_0, double t_Boussinesq, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
+void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double ls, double ep, double hp, double u_0, double t_0, double t_Boussinesq, double c_Boussinesq, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Condensation_3D, Array &Evaporation_3D, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
 {
 // collection of coefficients for phase transformation
 
-	L_atm = L_atm / ( im - 1 );														// characteristic length for non-dimensionalisation
-
-	coeff_lv = ( lv * c_0 ) / ( r_0_air * cp_l * t_0 * u_0 );				// coeff_lv = 0.009522
-	coeff_ls = ( ls * c_0 ) / (  r_0_air * cp_l * t_0 * u_0 );				// coeff_ls = 0.008916518
+	coeff_lv = lv / ( r_0_air * cp_l * t_0 );					// coefficient for the specific latent evaporation heat ( condensation heat ) in J/kg, coeff_lv = 7.5633
+//	coeff_ls = ls / (  r_0_air * cp_l * t_0 );				// coefficient for the specific latent vaporisation heat ( sublimation heat ) in J/kg
 
 	c43 = 4. / 3.;
 	c13 = 1. / 3.;
 
-//	k_Force = 1.;																			// factor for accelleration of convergence processes inside the immersed boundary conditions
 	k_Force = 10.;																			// factor for accelleration of convergence processes inside the immersed boundary conditions
 
 	cc = + 1.;
@@ -269,145 +266,69 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 
 
 
-// determination of temperature and pressure by the law of Clausius-Clapeyron for water vapour concentration
-// reaching saturation of water vapour pressure leads to formation of rain or ice
-// precipitation and cloud formation by formulas from Häckel
-// dry adiabatic lapse rate and saturated adiabatic lapse rate = temperature decrease with hight
-// SL stands for sea level
-
-	t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;																						// conversion from Kelvin to Celsius
-	t_Celsius_SL = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																				// conversion from Kelvin to Celsius at sea surface = NN
-
-	p_SL = ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;																// surface pressure from barometric formula in hPa
-	p_h = exp ( - 9.8066 * ( double ) i * 500. / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_0;					// current air pressure, step size in 500 m, from barometric formula in hPa
-
-	E_Rain_SL = hp * exp ( 17.0809 * t_Celsius_SL / ( 234.175 + t_Celsius_SL ) );					// saturation vapour pressure in the water phase for t > 0°C in hPa
-	E_Rain = hp * exp ( 17.0809 * t_Celsius / ( 234.175 + t_Celsius ) );										// saturation water vapour pressure for the water phase at t > 0°C in hPa
-	E_Rain_super = hp * exp ( 17.8436 * t_Celsius / ( 245.425 + t_Celsius ) );							// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
-	E_Ice = hp * exp ( 22.4429 * t_Celsius / ( 272.44 + t_Celsius ) );											// saturation water vapour pressure for the ice phase in hPa
-
-	q_Rain  = ep * E_Rain / p_h;																									// water vapour amount at saturation with water formation in kg/kg
-	q_Rain_super  = ep * E_Rain_super / p_h;																			// water vapour amount at saturation with water formation in kg/kg
-	q_Ice  = ep * E_Ice / p_h;																										// water vapour amount at saturation with ice formation in kg/kg
-
-	e_SL = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;							// water vapour pressure  in hPa at sea level
-	a_SL = 216.6 * e_SL / ( t.x[ 0 ][ j ][ k ] * t_0 );																			// absolute humidity in kg/m3 at sea level
-	q_SL = ep * c.x[ 0 ][ j ][ k ];																										// threshold value for water vapour at sea level in kg/kg
-//	q_SL  = ep * e_SL / p_SL;																										// water vapour amount at sea level in kg/kg
-
-	t_tau_SL = ( 423.86 - 234.175 * log ( e_SL ) ) / ( log ( e_SL ) - 18.89 );								// dewpoint temperature on ground in °C 		by Häckel
-	h_level = 122. * ( t_Celsius_SL - t_tau_SL );																			// condensation level in m		by Häckel + correction
-	h_h = - R_Air * t.x[ i ][ j ][ k ] * t_0 / gr * log ( p_h / p_0 );														// barometric elevation formula solved for h corresponding to hight over ground in m
-	i_level = ( int ) ( h_level / 500. );																								// condensation level in radial steps
-
-// precipitation and cloud formation from formulas by Häckel
-// h stands for the local position
-
-	e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;								// water vapour pressure  in hPa
-	a_h = 216.6 * e_h / ( t.x[ i ][ j ][ k ] * t_0 );																				// absolute humidity in kg/m3
-	q_h = ep * c.x[ i ][ j ][ k ];																											// threshold value for water vapour at local hight h in kg/kg
-//	q_h  = ep * e_h / p_h;																												// water vapour amount at local hight h in kg/kg
-
-	t_tau_h = ( 423.86 - 234.175 * log ( e_h ) ) / ( log ( e_h ) - 18.89 );										// current dewpoint temperature in °C
-	sat_Deficit = E_Rain - e_h;																										// saturation deficit, if positive then saturation is less than 100%
-	RF_e = e_h / E_Rain * 100.;																									// relative humidity at any point in %
-	Evaporation_Haude = 3.6 * sat_Deficit;																					// simplified formula for evaporation over day length of 12h by Haude ( from Häckel )
-																																					// coefficient per day about 0.36 for gras-evapotranspiration given in (Kuttler)
-
-// application of threshhold values for water vapour to compute rain, super cooled water and ice
-
-	if ( ( q_h >= q_Rain ) && ( t_Celsius >= 0. ) )	Rain.x[ i ][ j ][ k ] = ( q_h - q_Rain );			// liquid water as surplus from the local saturated water vapour  in g/kg
-	else 	Rain.x[ i ][ j ][ k ] = 0.;
-
-	if ( ( q_h >= q_Rain_super ) && ( t_Celsius < 0. ) && ( t_Celsius >= - 12. ) )	Rain_super.x[ i ][ j ][ k ] = ( q_h - q_Rain_super ); // liquid water as surplus from the  
-																																					// supercooled saturated water vapour in g/kg
-	else 	Rain_super.x[ i ][ j ][ k ] = 0.;
-
-	if ( ( q_h >= q_Ice ) && ( t_Celsius < -12. ) )	Ice.x[ i ][ j ][ k ] = ( q_h - q_Ice );						// ice formation as surplus above the supercooled saturated water vapour in g/kg
-	else  Ice.x[ i ][ j ][ k ] = 0.;
-
-
-
-/*
-// printout for various thermodynamical quantities for the preticipation computations along the equator ( j = 90 )
-	if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) )
-	{
-		cout << endl;
-		cout << " i = " << i << "   j = " << j << "   k = " << k << "   i_level = " << i_level  << "   h_level (m) = " << h_level << "   h_h (m) = " << h_h << endl << endl;
-
-		cout << " t_h (°C) = " << t_Celsius << "   p_h (hPa) = " << p_h << "   a_h (g/m3) = " << a_h << "   c_h (g/Kg) = " << c.x[ i ][ j ][ k ] * 1000. << "   q_Rain (g/Kg) = " << q_Rain * 1000. << "   e_h (hPa) = " << e_h << "   E_Rain (hPa) = " << E_Rain  << endl << endl;
-
-		cout << " Rain (g/kg) = " << Rain.x[ i ][ j ][ k ] * 1000. << "   Rain_super (g/kg) = " << Rain_super.x[ i ][ j ][ k ] * 1000. << "   Ice (g/kg) = " << Ice.x[ i ][ j ][ k ] * 1000. << "   E_Ice (hPa) = " << E_Ice << "   sat_Deficit (hPa) = " << sat_Deficit << "   t_tau_h (°C) = " << t_tau_h << "   E_Rain_SL (hPa) = " << E_Rain_SL << endl << endl;
-
-		cout << " t_SL (°C) = " << t_Celsius_SL << "   p_SL (hPa) = " << p_SL << "   a_SL (g/m3) = " << a_SL << "   c_SL (g/Kg) = " << c.x[ 0 ][ j ][ k ] * 1000. << "   e_SL (hPa) = " << e_SL << "   q_Ice (g/Kg) = " << q_Ice * 1000. << "   t_tau_SL (°C) = " << t_tau_SL << endl << endl;
-
-		cout << " Evap_Haude (mm/d) = " << Evaporation_Haude << "   RF_e (%) = " << RF_e  << "   E_Rain_super (hPa) = " << E_Rain_super << "   q_Rain_super (g/Kg) = " << q_Rain_super * 1000. << "   q_h (g/Kg) = " << q_h * 1000. << "   q_SL (g/Kg) = " << q_SL * 1000. << endl << endl;
-	}
-*/
-
-
 // 0°C limit separates water vapour from condensate/evaporate und sublimate/vaporize
 // water vapour turns to or developes from water or ice
 
 // force and source terms presented one by one:
 
-	Rain_aux = + WaterVapour * coeff_lv * ep * ( dcdr + dcdthe / rm + dcdphi / rmsinthe ); 									// only the latent heat of water vapour is used!!!!!!!
-	RS_LatentHeat_Energy_Rain = Rain_aux;
+// latent heat of water vapour
 
-//	Rain_super_aux = + WaterVapour * coeff_lv * ep * ( dcdr + dcdthe / rm + dcdphi / rmsinthe );
-//	Ice_aux = + WaterVapour * coeff_ls * ep * ( dcdr + dcdthe / rm + dcdphi / rmsinthe );
-/*
-	if ( ( Rain_aux < 0. ) && ( q_h > q_Rain ) )	RS_LatentHeat_Energy_Rain = Rain_aux;						// only the latent heat of water vapour is used!!!!!!!
-	else     RS_LatentHeat_Energy_Rain = 0.;
-*/
+	t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+	p_h = exp ( - 9.8066 * ( double ) i * 500. / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_0;	// current air pressure, step size in 500 m, from barometric formula in hPa
+	e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;				// water vapour pressure  in hPa
+	E_Rain = hp * exp ( 17.0809 * t_Celsius / ( 234.175 + t_Celsius ) );						// saturation water vapour pressure for the water phase at t > 0°C in hPa
+	q_Rain  = ep * E_Rain / p_h;																					// water vapour amount at saturation with water formation in kg/kg
+	q_h = ep * c.x[ i ][ j ][ k ];																							// threshold value for water vapour at local hight h in kg/kg
+//	q_h  = ep * e_h / p_h;																								// water vapour amount at local hight h in kg/kg
 
-//	if ( ( Rain_aux > 0. ) && ( t_Celsius >= 0. ) )	RS_LatentHeat_Energy_Rain = Rain_aux;
-//	if ( ( Rain_super_aux < 0. ) && ( q_h > q_Rain_super ) && ( t_Celsius <= 0. ) && ( t_Celsius >= - 12. ) )	RS_LatentHeat_Energy_Rain_super = Rain_super_aux;
-//	if ( ( Rain_super_aux > 0. ) && ( t_Celsius <= 0. ) )	RS_LatentHeat_Energy_Rain_super = Rain_super_aux;
-
-//	if ( ( Ice_aux < 0. ) && ( q_h > q_Ice ) && ( t_Celsius < -12. ) && ( c.x[ i ][ j ][ k ] > 0. ) )	RS_LatentHeat_Energy_Ice = Ice_aux;
-//	if ( ( Ice_aux > 0. ) && ( t_Celsius <= - 12. ) )	RS_LatentHeat_Energy_Ice = Ice_aux;
+	Latency.x[ i ][ j ][ k ] = + WaterVapour * coeff_lv * ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe );
 
 
-//	Latency.x[ i ][ j ][ k ] = RS_LatentHeat_Energy_Rain + RS_LatentHeat_Energy_Rain_super + RS_LatentHeat_Energy_Ice;
-//	Latency.x[ i ][ j ][ k ] = RS_LatentHeat_Energy_Rain + RS_LatentHeat_Energy_Rain_super;
-	Latency.x[ i ][ j ][ k ] = RS_LatentHeat_Energy_Rain;																				// only the latent heat of water vapour is used!!!!!!!
+//	if ( h.x[ i ][ j ][ k ] == 0. )		Latency.x[ i ][ j ][ k ] = + WaterVapour * coeff_lv * ( dcdr + dcdthe / rm + dcdphi / rmsinthe );
+//	else Latency.x[ i ][ j ][ k ] = 0.;
+
+//	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i+1 ][ j ][ k ] == 0. ) ) 		Latency.x[ i ][ j ][ k ] = c43 * Latency.x[ i+1 ][ j ][ k ] - c13 * Latency.x[ i+2 ][ j ][ k ];
+
+	if (  q_h - q_Rain >= 0. )	Condensation_3D.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ];
+	else Condensation_3D.x[ i ][ j ][ k ] = 0.;
+
+	if ( q_h - q_Rain < 0. )	Evaporation_3D.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ];
+	else Evaporation_3D.x[ i ][ j ][ k ] = 0.;
+
+//	RS_LatentHeat_Energy_Rain = Condensation_3D.x[ i ][ j ][ k ] - Evaporation_3D.x[ i ][ j ][ k ];
+	RS_LatentHeat_Energy_Rain = Latency.x[ i ][ j ][ k ];
 
 
 // Coriolis and centrifugal terms in the energy and momentum equations
-	if ( h.x[ i ][ j ][ k ] == 0. )
-	{
-		RS_Coriolis_Energy = ( + u.x[ i ][ j ][ k ] * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ]
-												- w.x[ i ][ j ][ k ] * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] )
-												+ v.x[ i ][ j ][ k ] * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ] ) * ec * pr;
 
-		RS_centrifugal_Energy = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 ) * ec * pr
-													+ centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 ) * ec * pr;
+	RS_Coriolis_Energy = ( + u.x[ i ][ j ][ k ] * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ]
+											- w.x[ i ][ j ][ k ] * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] )
+											+ v.x[ i ][ j ][ k ] * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ] ) * ec * pr;
 
-		RS_Coriolis_Momentum_rad = + h_d_i * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ];
-		RS_Coriolis_Momentum_the = + h_d_j * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ];
-		RS_Coriolis_Momentum_phi = - h_d_k * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] );
+	RS_centrifugal_Energy = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 ) * ec * pr
+												+ centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 ) * ec * pr;
 
-		RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
-		RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
-	}
-	else
-	{
-		RS_Coriolis_Energy = 0.;
-		RS_centrifugal_Energy = 0.;
-		RS_Coriolis_Momentum_rad = 0.;
-		RS_Coriolis_Momentum_the = 0.;
-		RS_Coriolis_Momentum_phi = 0.;
-		RS_centrifugal_Momentum_rad = 0.;
-		RS_centrifugal_Momentum_the = 0.;
-	}
+	RS_Coriolis_Momentum_rad = + h_d_i * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ];
+	RS_Coriolis_Momentum_the = + h_d_j * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ];
+	RS_Coriolis_Momentum_phi = - h_d_k * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] );
+
+	RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
+	RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
+
+	RS_buoyancy_Energy = + buoyancy * h_d_i * L_atm / ( cp_l * t_0 ) * gr * u.x[ i ][ j ][ k ] * ( t.x[ i ][ j ][ k ] - 2. * t_Boussinesq ) / t_Boussinesq;
+	RS_buoyancy_Momentum = + buoyancy * h_d_i * L_atm / ( u_0 * u_0 ) * gr * u.x[ i ][ j ][ k ] * ( t.x[ i ][ j ][ k ] - 2. * t_Boussinesq ) / t_Boussinesq;
+//	RS_buoyancy_Water_Vapour = + buoyancy * L_atm / ( r_0_air * u_0 ) * ( Rain.x[ i ][ j ][ k ] + Rain_super.x[ i ][ j ][ k ] );
+	RS_buoyancy_Water_Vapour = + buoyancy * ( Rain.x[ i ][ j ][ k ] + Rain_super.x[ i ][ j ][ k ] );
+
+
+//	RS_buoyancy_Energy = - buoyancy * h_d_i * L_atm / ( cp_l * t_0 ) * gr * u.x[ i ][ j ][ k ] * c.x[ i ][ j ][ k ] / c_Boussinesq;
+//	RS_buoyancy_Momentum = - buoyancy * h_d_i * L_atm / ( u_0 * u_0 ) * gr * c.x[ i ][ j ][ k ] / c_Boussinesq;
 
 
 // Right Hand Side of the time derivative ot temperature, pressure, water vapour concentration and velocity components
 
 	rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe )
 			+ ec * ( u.x[ i ][ j ][ k ] * dpdr + v.x[ i ][ j ][ k ] / rm * dpdthe + w.x[ i ][ j ][ k ] / rmsinthe * dpdphi )
-			+ h_d_i * gr * u.x[ i ][ j ][ k ] * ( t.x[ i ][ j ][ k ] - t_Boussinesq ) / t_Boussinesq
 			+ ( d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2 + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2 ) / ( re * pr )
 			+ 2. * ec / re * ( ( dudr * dudr) + pow ( ( dvdthe / rm + h_d_i * u.x[ i ][ j ][ k ] / rm ), 2. )
 			+ pow ( ( dwdphi / rmsinthe + h_d_i * u.x[ i ][ j ][ k ] / rm + h_d_i * v.x[ i ][ j ][ k ] * cotthe / rm ), 2. ) )
@@ -415,15 +336,15 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 			+ pow ( ( dudphi / rmsinthe + dwdr - h_d_i * w.x[ i ][ j ][ k ] / rm ), 2. )
 			+ pow ( ( dwdthe * sinthe / rm2 - h_d_i * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
 			+ RS_Coriolis_Energy + RS_centrifugal_Energy
-			- RS_LatentHeat_Energy_Rain; 																						// only the latent heat of water vapour is used!!!!!!!
-//			- RS_LatentHeat_Energy_Rain - RS_LatentHeat_Energy_Rain_super - RS_LatentHeat_Energy_Ice;
+			+ RS_buoyancy_Energy
+			- RS_LatentHeat_Energy_Rain;
 
 
-	rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
-			- dpdr + h_d_i * gr * ( t.x[ i ][ j ][ k ] - t_Boussinesq ) / t_Boussinesq
-			 + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
+	rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe ) - dpdr
+			+ ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
+			+ RS_buoyancy_Momentum
 			+ RS_Coriolis_Momentum_rad + RS_centrifugal_Momentum_rad
-			- h_c_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
+			- h_c_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
 
 
 	rhs_v.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dvdr + v.x[ i ][ j ][ k ] * dvdthe / rm + w.x[ i ][ j ][ k ] * dvdphi / rmsinthe ) +
@@ -431,7 +352,7 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 			- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_j * v.x[ i ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2
 			+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
 			+ RS_Coriolis_Momentum_the + RS_centrifugal_Momentum_the
-			- h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
+			- h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
 
 
 	rhs_w.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dwdr + v.x[ i ][ j ][ k ] * dwdthe / rm + w.x[ i ][ j ][ k ] * dwdphi / rmsinthe ) +
@@ -439,18 +360,18 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 			- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_k * w.x[ i ][ j ][ k ] / rm + d2wdphi2 / rm2sinthe2
 			+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
 			+ RS_Coriolis_Momentum_phi
-			- h_c_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;					// immersed boundary condition as a negative force addition
+			- h_c_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;						// immersed boundary condition as a negative force addition
 
 
 	rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
 			+ ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-			- ( t.x[ i ][ j ][ k ] - t_Boussinesq ) / t_Boussinesq
-			- h_c_i * c.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
+			- RS_buoyancy_Water_Vapour;
+//			- h_c_i * c.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
 
 
 	rhs_co2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dco2dr + v.x[ i ][ j ][ k ] * dco2dthe / rm + w.x[ i ][ j ][ k ] * dco2dphi / rmsinthe )
-			+ ( d2co2dr2 + dco2dr * 2. / rm + d2co2dthe2 / rm2 + dco2dthe * costhe / rm2sinthe + d2co2dphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
-			- h_c_i * co2.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
+			+ ( d2co2dr2 + dco2dr * 2. / rm + d2co2dthe2 / rm2 + dco2dthe * costhe / rm2sinthe + d2co2dphi2 / rm2sinthe2 ) / ( sc_CO2 * re );
+//			- h_c_i * co2.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 
 // for the Poisson equation to solve for the pressure, pressure gradient substracted from the above RHS

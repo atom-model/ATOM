@@ -9,8 +9,8 @@
 */
 
 
-//#include <iostream>
-//#include <cstring>
+#include <iostream>
+#include <cstring>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -42,7 +42,7 @@ class MinMax
 		MinMax ( int, int, int );
 		~MinMax ();
 
-		void searchMinMax ( string &, string &, string &, Array_2D &, Array & );
+		void searchMinMax_2D ( string &, string &, string &, Array_2D &, Array & );
 
 		void searchMinMax_3D ( string &, string &, string &, Array &, Array & );
 

@@ -16,18 +16,21 @@
 
 #include "Results_Atm.h"
 
+#include "Results_Atm.h"
+
 using namespace std;
 
 
-Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double ep, double hp, double p_0, double t_0, double c_0, double sigma, double albedo, double lv, double cp_l, double L_atm, double dr, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land )
-:	coeff_Diffusion_latent ( 1. ),													// diffusion coefficient for latent heat in [m2/s]
-	coeff_Diffusion_sensibel ( .01 ),												// diffusion coefficient for sensible heat in [m2/s]
-	f_Haude ( 12. * .30 )																// Haude factor for evapotranspiration, 12 for day, 0.3 for low, 
-																									// dense vegetation as raw average value by Kuttler
-
+Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double gr, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo, double lv, double cp_l, double L_atm, double dr, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land )
+:	coeff_Diffusion_latent ( .7 ),													// diffusion coefficient for latent heat in [m²/s]			+40%
+	coeff_Diffusion_sensibel ( .03 ),												// diffusion coefficient for sensible heat in [m²/s]		*18
+	f_Haude ( .3 )																			// Haude factor for evapotranspiration 0.3 for low, dense vegetation as raw average value by Kuttler
 {
-	coeff_mmWS = r_0_air / r_0_water_vapour;
-	f_Haude = f_Haude * .5;															// test factor
+	coeff_mmWS = r_0_air / r_0_water_vapour;							// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
+	coeff_lv = lv / ( r_0_air * cp_l * t_0 );									// coefficient for the specific latent evaporation heat ( condensation heat ) in m²s/kg, coeff_lv = 7.5633
+
+	c43 = 4./3.;
+	c13 = 1./3.;
 
 	this-> im = im;
 	this-> jm = jm;
@@ -35,6 +38,7 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double ep, d
 	this-> L_atm = L_atm;
 	this-> dr = dr;
 	this-> sun = sun;
+	this-> gr = gr;
 	this-> ep = ep;
 	this-> hp = hp;
 	this-> p_0 = p_0;
@@ -57,27 +61,148 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double ep, d
 Results_MSL_Atm::~Results_MSL_Atm () {}
 
 
-void Results_MSL_Atm::run_MSL_data ( Array &h, Array &c, Array &t, Array &p, Array &u, Array &Rain, Array &Rain_super, Array &Ice, Array &Latency, Array &Condensation_3D, Array &Evaporation_3D, Array_2D &Precipitation, Array_2D &Water, Array_2D &Water_super, Array_2D &IceAir, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_Balance_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_diff, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &t_j, Array_2D &c_j )
+
+void Results_MSL_Atm::run_MSL_data ( int RadiationFluxDensity, double max_Precipitation, Array &h, Array &c, Array &co2, Array &t, Array &p, Array &u, Array &v, Array &w, Array &Rain, Array &Rain_super, Array &Ice, Array &Latency, Array &Condensation_3D, Array &Evaporation_3D, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &Precipitation, Array_2D &precipitation_j, Array_2D &Water, Array_2D &Water_super, Array_2D &IceAir, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &t_j, Array_2D &c_j, Array_2D &co2_j, Array_2D &Vegetation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_par, Array_2D &Radiation_Balance_bot )
 {
+// default values for variables
+
+	for ( int i = 0; i < im; i++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				Rain.x[ i ][ j ][ k ] = 0.;
+				Rain_super.x[ i ][ j ][ k ] = 0.;
+				Ice.x[ i ][ j ][ k ] = 0.;
+				aux_u.x[ i ][ j ][ k ] = 0.;
+				aux_v.x[ i ][ j ][ k ] = 0.;
+				aux_w.x[ i ][ j ][ k ] = 0.;
+			}
+		}
+	}
+
+
+// determination of temperature and pressure by the law of Clausius-Clapeyron for water vapour concentration
+// reaching saturation of water vapour pressure leads to formation of rain or ice
+// precipitation and cloud formation by formulas from Häckel
+// dry adiabatic lapse rate and saturated adiabatic lapse rate = temperature decrease with hight
+// SL stands for sea level
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			t_Celsius_SL = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																	// conversion from Kelvin to Celsius at sea surface = NN
+			p_SL = ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;													// surface pressure from barometric formula in hPa
+			E_Rain_SL = hp * exp ( 17.0809 * t_Celsius_SL / ( 234.175 + t_Celsius_SL ) );		// saturation vapour pressure in the water phase for t > 0°C in hPa
+			e_SL = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;				// water vapour pressure  in hPa at sea level
+			a_SL = 216.6 * e_SL / ( t.x[ 0 ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3 at sea level
+			q_SL = ep * c.x[ 0 ][ j ][ k ];																							// threshold value for water vapour at sea level in kg/kg
+//			q_SL  = ep * e_SL / p_SL;																							// water vapour amount at sea level in kg/kg
+
+			E_Rain_SL = hp * exp ( 17.0809 * t_Celsius_SL / ( 234.175 + t_Celsius_SL ) );		// saturation water vapour pressure for the water phase at t > 0°C in hPa
+			E_Rain_super_SL = hp * exp ( 17.8436 * t_Celsius_SL / ( 245.425 + t_Celsius_SL ) );	// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
+			E_Ice_SL = hp * exp ( 22.4429 * t_Celsius_SL / ( 272.44 + t_Celsius_SL ) );			// saturation water vapour pressure for the ice phase in hPa
+
+			q_Rain_SL = ep * E_Rain / p_SL;																				// water vapour amount at saturation with water formation in kg/kg
+			q_Rain_super_SL = ep * E_Rain_super / p_SL;														// water vapour amount at saturation with water formation in kg/kg
+			q_Ice_SL = ep * E_Ice_SL / p_SL;																				// water vapour amount at saturation with ice formation in kg/kg
+
+			Rain.x[ 0 ][ j ][ k ] = ( q_SL - q_Rain_SL );																	// liquid water as surplus from the local saturated water vapour  in g/kg
+			Rain_super.x[ 0 ][ j ][ k ] = ( q_h - q_Rain_super_SL );												// liquid water as surplus from the  
+			Ice.x[ 0 ][ j ][ k ] = ( q_h - q_Ice_SL );																			// ice formation as surplus above the supercooled saturated water vapour in g/kg
+
+			t_dew_SL = ( 423.86 - 234.175 * log ( e_SL ) ) / ( log ( e_SL ) - 18.89 );					// dewpoint temperature on ground in °C 		by Häckel
+			h_level = 122. * ( t_Celsius_SL - t_dew_SL );															// condensation level in m		by Häckel + correction
+			i_level = ( int ) ( h_level / 500. );																					// condensation level in radial steps
+
+			for ( int i = 1; i < im; i++ )
+			{
+				t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+				p_h = exp ( - 9.8066 * ( double ) i * 500. / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_0;	// current air pressure, step size in 500 m, from barometric formula in hPa
+
+				E_Rain = hp * exp ( 17.0809 * t_Celsius / ( 234.175 + t_Celsius ) );						// saturation water vapour pressure for the water phase at t > 0°C in hPa
+				E_Rain_super = hp * exp ( 17.8436 * t_Celsius / ( 245.425 + t_Celsius ) );			// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
+				E_Ice = hp * exp ( 22.4429 * t_Celsius / ( 272.44 + t_Celsius ) );							// saturation water vapour pressure for the ice phase in hPa
+
+				q_Rain  = ep * E_Rain / p_h;																					// water vapour amount at saturation with water formation in kg/kg
+				q_Rain_super  = ep * E_Rain_super / p_h;															// water vapour amount at saturation with water formation in kg/kg
+				q_Ice  = ep * E_Ice / p_h;																						// water vapour amount at saturation with ice formation in kg/kg
+
+// precipitation and cloud formation from formulas by Häckel
+// h stands for the local position
+
+				h_h = - R_Air * t.x[ i ][ j ][ k ] * t_0 / gr * log ( p_h / p_0 );										// barometric elevation formula solved for h corresponding to hight over ground in m
+
+				e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;				// water vapour pressure  in hPa
+				a_h = 216.6 * e_h / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
+				q_h = ep * c.x[ i ][ j ][ k ];																							// threshold value for water vapour at local hight h in kg/kg
+//				q_h  = ep * e_h / p_h;																								// water vapour amount at local hight h in kg/kg
+
+				t_dew = ( 423.86 - 234.175 * log ( e_h ) ) / ( log ( e_h ) - 18.89 );							// current dewpoint temperature in °C
+				sat_deficit = E_Rain - e_h;																						// saturation deficit, if positive then saturation is less than 100%
+				RF_e = e_h / E_Rain * 100.;																					// relative humidity at any point in %
+				Evap_Haude = 3.6 * sat_deficit;																				// simplified formula for evaporation over day length of 12h by Haude ( from Häckel )
+																																				// coefficient per day about 0.36 for gras-evapotranspiration given in (Kuttler)
+
+// application of threshhold values for water vapour to compute rain, super cooled water and ice
+
+				if ( ( q_h >= q_Rain ) && ( t_Celsius >= 0. ) )	Rain.x[ i ][ j ][ k ] = ( q_h - q_Rain );// liquid water as surplus from the local saturated water vapour  in kg/kg
+//				if ( ( q_h >= q_Rain ) && ( t_Celsius >= 0. ) )	aux_u.x[ i ][ j ][ k ] = ( q_h - q_Rain );// liquid water as surplus from the local saturated water vapour  in kg/kg
+//				Rain.x[ i ][ j ][ k ] = ( q_h - q_Rain );																		// liquid water as surplus from the local saturated water vapour  in kg/kg
+
+				if ( ( q_h >= q_Rain_super ) && ( t_Celsius < 0. ) && ( t_Celsius >= - 18. ) )	Rain_super.x[ i ][ j ][ k ] = ( q_h - q_Rain_super ); // liquid water as surplus from the  
+//				if ( ( q_h >= q_Rain_super ) && ( t_Celsius < 0. ) && ( t_Celsius >= - 18. ) )	aux_v.x[ i ][ j ][ k ] = ( q_h - q_Rain_super ); // liquid water as surplus from the  
+//				Rain_super.x[ i ][ j ][ k ] = ( q_h - q_Rain_super );													// liquid water as surplus from the  
+																																				// supercooled saturated water vapour in kg/kg
+
+				if ( ( q_h >= q_Ice ) && ( t_Celsius < -18. ) )	Ice.x[ i ][ j ][ k ] = ( q_h - q_Ice );// ice formation as surplus above the supercooled saturated water vapour in kg/kg
+//				if ( ( q_h >= q_Ice ) && ( t_Celsius < -18. ) )	aux_w.x[ i ][ j ][ k ] = ( q_h - q_Ice );// ice formation as surplus above the supercooled saturated water vapour in kg/kg
+//				Ice.x[ i ][ j ][ k ] = ( q_h - q_Ice );																				// ice formation as surplus above the supercooled saturated water vapour in kg/kg
+
+
+/*
+// printout for various thermodynamical quantities for the preticipation computations along the equator ( j = 90 )
+				if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) )
+				{
+					cout << endl;
+					cout << " i = " << i << "   j = " << j << "   k = " << k << "   i_level = " << i_level  << "   h_level (m) = " << h_level << "   h_h (m) = " << h_h << endl << endl;
+
+					cout << " t_h (°C) = " << t_Celsius << "   p_h (hPa) = " << p_h << "   a_h (g/m3) = " << a_h << "   c_h (g/Kg) = " << c.x[ i ][ j ][ k ] * 1000. << "   q_Rain (g/Kg) = " << q_Rain * 1000. << "   e_h (hPa) = " << e_h << "   E_Rain (hPa) = " << E_Rain  << endl << endl;
+
+					cout << " Rain (g/kg) = " << Rain.x[ i ][ j ][ k ] * 1000. << "   Rain_super (g/kg) = " << Rain_super.x[ i ][ j ][ k ] * 1000. << "   Ice (g/kg) = " << Ice.x[ i ][ j ][ k ] * 1000. << "   E_Ice (hPa) = " << E_Ice << "   sat_Deficit (hPa) = " << sat_Deficit << "   t_dew (°C) = " << t_dew << "   E_Rain_SL (hPa) = " << E_Rain_SL << endl << endl;
+
+					cout << " t_SL (°C) = " << t_Celsius_SL << "   p_SL (hPa) = " << p_SL << "   a_SL (g/m3) = " << a_SL << "   c_SL (g/Kg) = " << c.x[ 0 ][ j ][ k ] * 1000. << "   e_SL (hPa) = " << e_SL << "   q_Ice (g/Kg) = " << q_Ice * 1000. << "   t_dew_SL (°C) = " << t_dew_SL << endl << endl;
+
+					cout << " Evap_Haude (mm/d) = " << Evap_Haude << "   RF_e (%) = " << RF_e  << "   E_Rain_super (hPa) = " << E_Rain_super << "   q_Rain_super (g/Kg) = " << q_Rain_super * 1000. << "   q_h (g/Kg) = " << q_h * 1000. << "   q_SL (g/Kg) = " << q_SL * 1000. << endl << endl;
+				}
+*/
+			}
+		}
+	}
+
+
 // calculation of a total quantity as sum on all values in a virtual column in r-direction
 
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			Precipitation.y[ j ][ k ] = 0.;								// precipitation
-			IceAir.y[ j ][ k ] = 0.; 										// ice
-			Water.y[ j ][ k ] = 0.;											// rain water
-			Water_super.y[ j ][ k ] = 0.;								// supercooled water
-			Evaporation.y[ j ][ k ] = 0.;								// evaporation
-			Condensation.y[ j ][ k ] = 0.;							// condensation
-			precipitable_water.y[ j ][ k ] = 0.;						// precipitable water
-			Q_Balance_Radiation.y[ j ][ k ] = 0.;				// radiation balance
-			Q_latent.y[ j ][ k ] = 0.;										// latent heat
-			Q_sensible.y[ j ][ k ] = 0.;									// sensible heat
-			Q_diff.y[ j ][ k ] = 0.;											// bottom heat
-			Evaporation_Penman.y[ j ][ k ] = 0.;				// evaporation by Penman
-			Evaporation_Haude.y[ j ][ k ] = 0.;					// evaporation by Haude
+			Precipitation.y[ j ][ k ] = 0.;												// precipitation
+			IceAir.y[ j ][ k ] = 0.; 														// ice
+			Water.y[ j ][ k ] = 0.;															// rain water
+			Water_super.y[ j ][ k ] = 0.;												// supercooled water
+			Evaporation.y[ j ][ k ] = 0.;												// evaporation
+			Condensation.y[ j ][ k ] = 0.;											// condensation
+			precipitable_water.y[ j ][ k ] = 0.;										// precipitable water
+			Q_Radiation.y[ j ][ k ] = 0.;												// radiation balance
+			Q_latent.y[ j ][ k ] = 0.;														// latent heat
+			Q_sensible.y[ j ][ k ] = 0.;													// sensible heat
+			Q_bottom.y[ j ][ k ] = 0.;													// bottom heat
+			Evaporation_Penman.y[ j ][ k ] = 0.;								// evaporation by Penman
+			Evaporation_Haude.y[ j ][ k ] = 0.;									// evaporation by Haude
+			if ( RadiationFluxDensity == 0 ) Radiation_Balance.y[ j ][ k ] = Radiation_Balance_par.y[ j ][ k ]; // parabolic radiation balance assumed
 		}
 	}
 
@@ -86,46 +211,79 @@ void Results_MSL_Atm::run_MSL_data ( Array &h, Array &c, Array &t, Array &p, Arr
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			p_baro = ( r_0_air * 287.1 * t.x[ 0 ][ j ][ k ] * ( t_0 + 20. ) ) / 100.;										// surface pressure from barometric formula in hPa
-
-			Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;				// heat of evaporation of water in [MJ/kg] (Kuttler)
-
-			t_Celsius_SL = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																			// transforming Kelvin into Celsius
-			e_SL = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;
-			a_SL = 216.6 * e_SL / ( t.x[ 0 ][ j ][ k ] * t_0 );																		// absolute humidity in kg/m3
-
-			c_grad = ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / ( 2. * dr );				// water vapour pressure gradient in Kg/(Kg m)
-			t_grad = ( - 3. * t.x[ 0 ][ j ][ k ] + 4. * t.x[ 1 ][ j ][ k ] - t.x[ 2 ][ j ][ k ] ) / ( 2. * dr );					// temperature gradient in K/m
-
-			if ( h.x[ 0 ][ j ][ k ] == 0. )
+			for ( int i = 0; i < im; i++ )
 			{
-				if ( sun == 0. ) Q_Balance_Radiation.y[ j ][ k ] = sigma * ( 1. - albedo ) * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );	// radiation balance by the surface temperature in W/m2
-				Q_latent.y[ j ][ k ] = - a_SL * lv * c_0 * coeff_Diffusion_latent * c_grad / L_atm;			// latente heat in [W/m2] from energy transport equation
-				Q_sensible.y[ j ][ k ] = - r_0_air * cp_l * coeff_Diffusion_sensibel * t.x[ 0 ][ j ][ k ] * t_0 * t_grad / L_atm;	// sensible heat in [W/m2] from energy transport equation
+				if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
+				{
+					p_baro = ( r_0_air * 287.1 * t.x[ i ][ j ][ k ] * ( t_0 + 20. ) ) / 100.;						// surface pressure from barometric formula in hPa
+					t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;																	// transforming Kelvin into Celsius
+
+					e = ( r_0_water_vapour * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;				// water vapour pressure at the surface in hPa
+					a = e * 100. / ( R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 );										// absolute humidity in g/m3
+
+					t_denom = t_Celsius + 234.175;
+					E = hp * exp ( 17.0809 * t_Celsius / t_denom );													// saturation vapour pressure in the water phase for t > 0°C in hPa
+					Delta = 4000. * E / ( t_denom * t_denom );														// gradient of the water vapour pressure curve in hPa/K, coef = 234.175 * 17.0809
+					sat_deficit = ( E - e );																							// saturation deficit in hPa/K
+					gamma = p_baro * cp_l / ( ep * lv );																	// Psychrometer constant in hPa/K
+
+					c_grad = ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i + 1 ][ j ][ k ] - c.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr ) / L_atm;	// water vapour pressure gradient in g/(Kg m)
+					t_grad = ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i + 1 ][ j ][ k ] - t.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr ) * t_0 / L_atm;	// temperature gradient in K/m
+
+					E_a = .35 * ( 1. + .15 * sqrt ( v.x[ i + 1 ][ j ][ k ] * v.x[ i + 1 ][ j ][ k ] + w.x[ i + 1 ][ j ][ k ] * w.x[ i + 1 ][ j ][ k ] ) ) * sat_deficit;	// ventilation-humidity Penmans formula
+
+					Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ i ][ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;	// heat of evaporation of water in [MJ/kg] (Kuttler) = variable lv
+
+					if ( sun == 0. ) Q_Radiation.y[ j ][ k ] = sigma * ( 1. - albedo ) * pow ( t.x[ i ][ j ][ k ] * t_0, 4. );	// radiation balance by the surface temperature in W/m2
+					Q_latent.y[ j ][ k ] = - a * lv * c_0 * 1000. * coeff_Diffusion_latent * c_grad;		// latente heat in [W/m2] from energy transport equation
+					Q_sensible.y[ j ][ k ] = - r_0_air * cp_l * coeff_Diffusion_sensibel * t_grad;		// sensible heat in [W/m2] from energy transport equation
+					Q_bottom.y[ j ][ k ] = Radiation_Balance.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ];	// difference understood as heat of the ground
+
+					Evaporation_Haude.y[ j ][ k ] = f_Haude * sat_deficit;										// simplified formula for evaporation over day length of 12h by Haude, Häckel
+					Evaporation_Penman.y[ j ][ k ] = .0346 * ( ( Radiation_Balance.y[ j ][ k ] - Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );
+																																				// coefficient W/m2 corresponds to mm/d (Kraus)
+				}
+
+				if ( h.x[ 0 ][ j ][ k ] == 0. )
+				{
+					p_baro = ( r_0_air * 287.1 * t.x[ 0 ][ j ][ k ] * ( t_0 + 20. ) ) / 100.;						// surface pressure from barometric formula in hPa
+					t_Celsius = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																	// transforming Kelvin into Celsius
+
+					e = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;				// water vapour pressure at the surface in hPa
+					a = e * 100. / ( R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 );										// absolute humidity in g/m3
+
+					t_denom = t_Celsius + 234.175;
+					E = hp * exp ( 17.0809 * t_Celsius / t_denom );													// saturation vapour pressure in the water phase for t > 0°C in hPa
+					Delta = 4000. * E / ( t_denom * t_denom );														// gradient of the water vapour pressure curve in hPa/K, coef = 234.175 * 17.0809
+
+					sat_deficit = ( E - e );																							// saturation deficit in hPa/K
+					gamma = p_baro * cp_l / ( ep * lv );																	// Psychrometer constant in hPa/K
+
+					c_grad = ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / ( 2. * dr ) / L_atm;	// water vapour pressure gradient in g/(Kg m)
+					t_grad = ( - 3. * t.x[ 0 ][ j ][ k ] + 4. * t.x[ 1 ][ j ][ k ] - t.x[ 2 ][ j ][ k ] ) / ( 2. * dr ) * t_0 / L_atm;	// temperature gradient in K/m
+
+					E_a = .35 * ( 1. + .15 * sqrt ( v.x[ 1 ][ j ][ k ] * v.x[ 1 ][ j ][ k ] + w.x[ 1 ][ j ][ k ] * w.x[ 1 ][ j ][ k ] ) ) * sat_deficit;	// ventilation-humidity for Penmans formula
+
+					Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;	// heat of evaporation of water in [MJ/kg] (Kuttler) = lv
+
+					if ( sun == 0. ) Q_Radiation.y[ j ][ k ] = sigma * ( 1. - albedo ) * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );	// radiation balance by the surface temperature in W/m2
+					Q_latent.y[ j ][ k ] = - a * lv * c_0 * 1000. * coeff_Diffusion_latent * c_grad;		// latente heat in [W/m2] from energy transport equation
+					Q_sensible.y[ j ][ k ] = - r_0_air * cp_l * coeff_Diffusion_sensibel * t_grad;		// sensible heat in [W/m2] from energy transport equation
+					Q_bottom.y[ j ][ k ] = Radiation_Balance.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ];	// difference understood as heat of the ground
+
+					Evaporation_Haude.y[ j ][ k ] = f_Haude * sat_deficit;										// simplified formula for evaporation over day length of 12h by Haude, Häckel
+					Evaporation_Penman.y[ j ][ k ] = .0346 * ( ( Radiation_Balance.y[ j ][ k ] - Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );
+																																				// coefficient W/m2 corresponds to mm/d (Kraus)
+					if ( i >= 0 )     break;
+				}
 			}
-			else 
-			{
-				Q_Balance_Radiation.y[ j ][ k ] = 0.;
-				Q_latent.y[ j ][ k ] = 0.;
-				Q_sensible.y[ j ][ k ] = 0.;
-			}
-
-			t_denom = t_Celsius_SL + 237.3;
-			Delta = 4098. * ( .6108 * exp ( ( 17.27 * t_Celsius_SL )  / t_denom ) ) / ( t_denom * t_denom );// gradient of the water vapour pressure curve
-			E_Rain = hp * exp ( 17.0809 * t_Celsius_SL / ( 234.175 + t_Celsius_SL ) );						// saturation vapour pressure in the water phase for t > 0°C in hPa
-			sat_deficit = E_Rain - e_SL;																									// saturation deficit
-			gamma = p_baro * cp_l / ( ep * lv );																						// Psychrometer constant
-			E_a = .35 * ( 1. + .15 * u.x[ 1 ][ j ][ k ] * .01 ) * sat_deficit * .75;												// ventilation-humidity member for Penmans formula
-
-			Evaporation_Penman.y[ j ][ k ] = ( Q_Balance_Radiation.y[ j ][ k ] * Delta * .75 + gamma * E_a ) / ( Delta * .75 + gamma );
-			Evaporation_Haude.y[ j ][ k ] = f_Haude * sat_deficit;
-			if ( Evaporation_Penman.y[ j ][ k ] <= 0. ) Evaporation_Penman.y[ j ][ k ] = 0.;
-			if ( Evaporation_Haude.y[ j ][ k ] <= 0. ) Evaporation_Haude.y[ j ][ k ] = 0.;
-																																						// simplified formula for evaporation over day length of 12h by Haude, Häckel
-																																						// coefficient per day about 0.30 for gras-evapotranspiration given, Kuttler
-			Q_diff.y[ j ][ k ] = Q_Balance_Radiation.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ];										// difference understood as heat of the ground
 
 
+//			if ( Evaporation_Penman.y[ j ][ k ] <= 0. ) Evaporation_Penman.y[ j ][ k ] = 0.;
+//			if ( Evaporation_Haude.y[ j ][ k ] <= 0. ) Evaporation_Haude.y[ j ][ k ] = 0.;				// coefficient per day about 0.30 for gras-evapotranspiration given, Kuttler
+
+
+// surface values of Water, Water_super, IceAir, precipitable_water
 			for ( int i = 0; i < im; i++ )
 			{
 				Water.y[ j ][ k ] += Rain.x[ i ][ j ][ k ];
@@ -134,30 +292,155 @@ void Results_MSL_Atm::run_MSL_data ( Array &h, Array &c, Array &t, Array &p, Arr
 
 				precipitable_water.y[ j ][ k ] += c.x[ i ][ j ][ k ];
 			}
+		}
+	}
 
-			for ( int i = 0; i < im; i++ )
-			{
-				if ( Latency.x[ i ][ j ][ k ] >= .0 )			Evaporation.y[ j ][ k ] += Latency.x[ i ][ j ][ k ];
-				if ( Latency.x[ i ][ j ][ k ] <= .0 )			Condensation.y[ j ][ k ] += - Latency.x[ i ][ j ][ k ];
-			}
 
-			for ( int i = 0; i < im; i++ )
-			{
-				if ( Latency.x[ i ][ j ][ k ] >= .0 )			Evaporation_3D.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ];
-				if ( Latency.x[ i ][ j ][ k ] <= .0 )			Condensation_3D.x[ i ][ j ][ k ] = - Latency.x[ i ][ j ][ k ];
-			}
+// boundaries of Q_bottom, Q_latent, Q_sensible
+	for ( int j = 0; j < jm; j++ )
+	{
+		Q_bottom.y[ j ][ 0 ] = c43 * Q_bottom.y[ j ][ 1 ] - c13 * Q_bottom.y[ j ][ 2 ];
+		Q_bottom.y[ j ][ km-1 ] = c43 * Q_bottom.y[ j ][ km-2 ] - c13 * Q_bottom.y[ j ][ km-3 ];
+		Q_bottom.y[ j ][ 0 ] = Q_bottom.y[ j ][ km-1 ] = ( Q_bottom.y[ j ][ 0 ] + Q_bottom.y[ j ][ km-1 ] ) / 2.;
+
+		Q_latent.y[ j ][ 0 ] = c43 * Q_latent.y[ j ][ 1 ] - c13 * Q_latent.y[ j ][ 2 ];
+		Q_latent.y[ j ][ km-1 ] = c43 * Q_latent.y[ j ][ km-2 ] - c13 * Q_latent.y[ j ][ km-3 ];
+		Q_latent.y[ j ][ 0 ] = Q_latent.y[ j ][ km-1 ] = ( Q_latent.y[ j ][ 0 ] + Q_latent.y[ j ][ km-1 ] ) / 2.;
+
+		Q_sensible.y[ j ][ 0 ] = c43 * Q_sensible.y[ j ][ 1 ] - c13 * Q_sensible.y[ j ][ 2 ];
+		Q_sensible.y[ j ][ km-1 ] = c43 * Q_sensible.y[ j ][ km-2 ] - c13 * Q_sensible.y[ j ][ km-3 ];
+		Q_sensible.y[ j ][ 0 ] = Q_sensible.y[ j ][ km-1 ] = ( Q_sensible.y[ j ][ 0 ] + Q_sensible.y[ j ][ km-1 ] ) / 2.;
+
+		Evaporation_Penman.y[ j ][ 0 ] = c43 * Evaporation_Penman.y[ j ][ 1 ] - c13 * Evaporation_Penman.y[ j ][ 2 ];
+		Evaporation_Penman.y[ j ][ km-1 ] = c43 * Evaporation_Penman.y[ j ][ km-2 ] - c13 * Evaporation_Penman.y[ j ][ km-3 ];
+		Evaporation_Penman.y[ j ][ 0 ] = Evaporation_Penman.y[ j ][ km-1 ] = ( Evaporation_Penman.y[ j ][ 0 ] + Evaporation_Penman.y[ j ][ km-1 ] ) / 2.;
+
+		Evaporation_Haude.y[ j ][ 0 ] = c43 * Evaporation_Haude.y[ j ][ 1 ] - c13 * Evaporation_Haude.y[ j ][ 2 ];
+		Evaporation_Haude.y[ j ][ km-1 ] = c43 * Evaporation_Haude.y[ j ][ km-2 ] - c13 * Evaporation_Haude.y[ j ][ km-3 ];
+		Evaporation_Haude.y[ j ][ 0 ] = Evaporation_Haude.y[ j ][ km-1 ] = ( Evaporation_Haude.y[ j ][ 0 ] + Evaporation_Haude.y[ j ][ km-1 ] ) / 2.;
+	}
+
+
+
+	for ( int k = 0; k < km; k++ )
+	{
+		Q_bottom.y[ 0 ][ k ] = c43 * Q_bottom.y[ 1 ][ k ] - c13 * Q_bottom.y[ 2 ][ k ];
+		Q_bottom.y[ jm-1 ][ k ] = c43 * Q_bottom.y[ jm-2 ][ k ] - c13 * Q_bottom.y[ jm-3 ][ k ];
+
+		Q_latent.y[ 0 ][ k ] = c43 * Q_latent.y[ 1 ][ k ] - c13 * Q_latent.y[ 2 ][ k ];
+		Q_latent.y[ jm-1 ][ k ] = c43 * Q_latent.y[ jm-2 ][ k ] - c13 * Q_latent.y[ jm-3 ][ k ];
+
+		Q_sensible.y[ 0 ][ k ] = c43 * Q_sensible.y[ 1 ][ k ] - c13 * Q_sensible.y[ 2 ][ k ];
+		Q_sensible.y[ jm-1 ][ k ] = c43 * Q_sensible.y[ jm-2 ][ k ] - c13 * Q_sensible.y[ jm-3 ][ k ];
+
+		Evaporation_Penman.y[ 0 ][ k ] = c43 * Evaporation_Penman.y[ 1 ][ k ] - c13 * Evaporation_Penman.y[ 2 ][ k ];
+		Evaporation_Penman.y[ jm-1 ][ k ] = c43 * Evaporation_Penman.y[ jm-2 ][ k ] - c13 * Evaporation_Penman.y[ jm-3 ][ k ];
+
+		Evaporation_Haude.y[ 0 ][ k ] = c43 * Evaporation_Haude.y[ 1 ][ k ] - c13 * Evaporation_Haude.y[ 2 ][ k ];
+		Evaporation_Haude.y[ jm-1 ][ k ] = c43 * Evaporation_Haude.y[ jm-2 ][ k ] - c13 * Evaporation_Haude.y[ jm-3 ][ k ];
+	}
+
+
+
+
+// boundaries of latent heat
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			Latency.x[ 0 ][ j ][ k ] = c43 * Latency.x[ 1 ][ j ][ k ] - c13 * Latency.x[ 2 ][ j ][ k ];
+			Latency.x[ im-1 ][ j ][ k ] = c43 * Latency.x[ im-2 ][ j ][ k ] - c13 * Latency.x[ im-3 ][ j ][ k ];
+
+			Condensation_3D.x[ 0 ][ j ][ k ] = c43 * Condensation_3D.x[ 1 ][ j ][ k ] - c13 * Condensation_3D.x[ 2 ][ j ][ k ];
+			Condensation_3D.x[ im-1 ][ j ][ k ] = c43 * Condensation_3D.x[ im-2 ][ j ][ k ] - c13 * Condensation_3D.x[ im-3 ][ j ][ k ];
+
+			Evaporation_3D.x[ 0 ][ j ][ k ] = c43 * Evaporation_3D.x[ 1 ][ j ][ k ] - c13 * Evaporation_3D.x[ 2 ][ j ][ k ];
+			Evaporation_3D.x[ im-1 ][ j ][ k ] = c43 * Evaporation_3D.x[ im-2 ][ j ][ k ] - c13 * Evaporation_3D.x[ im-3 ][ j ][ k ];
+
+			Rain.x[ 0 ][ j ][ k ] = c43 * Rain.x[ 1 ][ j ][ k ] - c13 * Rain.x[ 2 ][ j ][ k ];
+			Rain.x[ im-1 ][ j ][ k ] = c43 * Rain.x[ im-2 ][ j ][ k ] - c13 * Rain.x[ im-3 ][ j ][ k ];
+
+			Rain_super.x[ 0 ][ j ][ k ] = c43 * Rain_super.x[ 1 ][ j ][ k ] - c13 * Rain_super.x[ 2 ][ j ][ k ];
+			Rain_super.x[ im-1 ][ j ][ k ] = c43 * Rain_super.x[ im-2 ][ j ][ k ] - c13 * Rain_super.x[ im-3 ][ j ][ k ];
+
+			Ice.x[ 0 ][ j ][ k ] = c43 * Ice.x[ 1 ][ j ][ k ] - c13 * Ice.x[ 2 ][ j ][ k ];
+			Ice.x[ im-1 ][ j ][ k ] = c43 * Ice.x[ im-2 ][ j ][ k ] - c13 * Ice.x[ im-3 ][ j ][ k ];
 		}
 	}
 
 
 	for ( int k = 0; k < km; k++ )
 	{
+		for ( int i = 0; i < im; i++ )
+		{
+			Latency.x[ i ][ 0 ][ k ] = c43 * Latency.x[ i ][ 1 ][ k ] - c13 * Latency.x[ i ][ 2 ][ k ];
+			Latency.x[ i ][ jm-1 ][ k ] = c43 * Latency.x[ i ][ jm-2 ][ k ] - c13 * Latency.x[ i ][ jm-3 ][ k ];
+
+			Condensation_3D.x[ i ][ 0 ][ k ] = c43 * Condensation_3D.x[ i ][ 1 ][ k ] - c13 * Condensation_3D.x[ i ][ 2 ][ k ];
+			Condensation_3D.x[ i ][ jm-1 ][ k ] = c43 * Condensation_3D.x[ i ][ jm-2 ][ k ] - c13 * Condensation_3D.x[ i ][ jm-3 ][ k ];
+
+			Evaporation_3D.x[ i ][ 0 ][ k ] = c43 * Evaporation_3D.x[ i ][ 1 ][ k ] - c13 * Evaporation_3D.x[ i ][ 2 ][ k ];
+			Evaporation_3D.x[ i ][ jm-1 ][ k ] = c43 * Evaporation_3D.x[ i ][ jm-2 ][ k ] - c13 * Evaporation_3D.x[ i ][ jm-3 ][ k ];
+		}
+	}
+
+
+	for ( int i = 0; i < im; i++ )
+	{
 		for ( int j = 0; j < jm; j++ )
 		{
-//			Precipitation.y[ j ][ k ] = ( Water.y[ j ][ k ] + Water_super.y[ j ][ k ] + IceAir.y[ j ][ k ] ) * coeff_mmWS;	// precipitation consists of 100% saturated water vapour + 100% supercooled water + 100% ice
-//			Precipitation.y[ j ][ k ] = ( Water.y[ j ][ k ] + .5 * Water_super.y[ j ][ k ] ) * coeff_mmWS;						// precipitation consists of 100% saturated water vapour + 50% supercooled water
-			Precipitation.y[ j ][ k ] = ( Water.y[ j ][ k ] + Water_super.y[ j ][ k ] ) * coeff_mmWS;							// precipitation consists of 100% saturated water vapour + 100% supercooled water
-//			Precipitation.y[ j ][ k ] = Water.y[ j ][ k ] * coeff_mmWS;																		// precipitation consists of 100% saturated water vapour
+			Latency.x[ i ][ j ][ 0 ] = c43 * Latency.x[ i ][ j ][ 1 ] - c13 * Latency.x[ i ][ j ][ 2 ];
+			Latency.x[ i ][ j ][ km-1 ] = c43 * Latency.x[ i ][ j ][ km-2 ] - c13 * Latency.x[ i ][ j ][ km-3 ];
+
+			Condensation_3D.x[ i ][ j ][ 0 ] = Condensation_3D.x[ i ][ j ][ km-1 ] = ( Condensation_3D.x[ i ][ j ][ 0 ] + Condensation_3D.x[ i ][ j ][ km-1 ] ) / 2.;
+			Condensation_3D.x[ i ][ j ][ 0 ] = c43 * Condensation_3D.x[ i ][ j ][ 1 ] - c13 * Condensation_3D.x[ i ][ j ][ 2 ];
+
+			Evaporation_3D.x[ i ][ j ][ km-1 ] = c43 * Evaporation_3D.x[ i ][ j ][ km-2 ] - c13 * Evaporation_3D.x[ i ][ j ][ km-3 ];
+			Evaporation_3D.x[ i ][ j ][ 0 ] = Evaporation_3D.x[ i ][ j ][ km-1 ] = ( Evaporation_3D.x[ i ][ j ][ 0 ] + Evaporation_3D.x[ i ][ j ][ km-1 ] ) / 2.;
+		}
+	}
+
+
+// surface values and 3D values of evaporation, condensation
+	for ( int i = 0; i < im; i++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+				E_Rain = hp * exp ( 17.0809 * t_Celsius / ( 234.175 + t_Celsius ) );						// saturation water vapour pressure for the water phase at t > 0°C in hPa
+				e = ( r_0_water_vapour * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;					// water vapour pressure at the surface in hPa
+				a = e * 100. / ( R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 );											// absolute humidity in g/m3
+
+				if (  e - E_Rain < 0. )
+				{
+					Latency.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ] / coeff_lv * ( a * lv * c_0 * 1000. * coeff_Diffusion_latent /L_atm );
+
+					Evaporation.y[ j ][ k ] += Latency.x[ i ][ j ][ k ];
+					Evaporation_3D.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ];
+				}
+				else
+				{
+					Latency.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ] / coeff_lv * ( a * lv * c_0 * 1000. * coeff_Diffusion_latent /L_atm );
+
+					Condensation.y[ j ][ k ] += Latency.x[ i ][ j ][ k ];
+					Condensation_3D.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ];
+				}
+			}
+		}
+	}
+
+
+// surface values of precipitation and precipitable water
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+//			Precipitation.y[ j ][ k ] = ( Water.y[ j ][ k ] + Water_super.y[ j ][ k ] + IceAir.y[ j ][ k ] ) * coeff_mmWS;// precipitation consists of saturated water vapour + supercooled water + ice
+			Precipitation.y[ j ][ k ] = ( Water.y[ j ][ k ] + Water_super.y[ j ][ k ] ) * coeff_mmWS;	// precipitation consists of 100% saturated water vapour + 100% supercooled water
+//			Precipitation.y[ j ][ k ] = Water.y[ j ][ k ] * coeff_mmWS;	// precipitation consists of 100% saturated water vapour + 100% supercooled water
 			precipitable_water.y[ j ][ k ] = precipitable_water.y[ j ][ k ] * coeff_mmWS;
 		}
 	}
@@ -169,13 +452,22 @@ void Results_MSL_Atm::run_MSL_data ( Array &h, Array &c, Array &t, Array &p, Arr
 		for ( int k = 0; k < km; k++ )
 		{
 			precipitation_average += Precipitation.y[ j ][ k ];
+			precipitation_NASA_average += precipitation_j.y[ j ][ k ];
 			precipitablewater_average += precipitable_water.y[ j ][ k ];
+			evaporation_Penman_average += Evaporation_Penman.y[ j ][ k ];
+			evaporation_Haude_average += Evaporation_Haude.y[ j ][ k ];
+
+			Water.y[ j ][ k ] = Water.y[ j ][ k ] * coeff_mmWS;
+			Water_super.y[ j ][ k ] = Water_super.y[ j ][ k ] * coeff_mmWS;
+			IceAir.y[ j ][ k ] = IceAir.y[ j ][ k ] * coeff_mmWS;
 		}
 	}
 
 	precipitablewater_average = precipitablewater_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
 	precipitation_average = 365. * precipitation_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
-
+	precipitation_NASA_average = 365. * precipitation_NASA_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
+	evaporation_Penman_average = 365. * evaporation_Penman_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
+	evaporation_Haude_average = 365. * evaporation_Haude_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
 }
 
 
@@ -185,7 +477,7 @@ void Results_MSL_Atm::run_MSL_data ( Array &h, Array &c, Array &t, Array &p, Arr
 
 
 
-void Results_MSL_Atm::show_MSL_data ( Array &h, Array &c, Array &t, Array &p, Array &u, Array &Rain, Array &Es, Array &Latency, Array_2D &Precipitation, Array_2D &IceAir, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_Balance_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_diff, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude )
+void Results_MSL_Atm::show_MSL_data ( Array &h, Array &c, Array &t, Array &p, Array &u, Array &Rain, Array &Es, Array &Latency, Array_2D &Precipitation, Array_2D &precipitation_j, Array_2D &IceAir, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Radiation_Balance, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude )
 {
 	cout.precision ( 2 );
 
@@ -197,7 +489,7 @@ void Results_MSL_Atm::show_MSL_data ( Array &h, Array &c, Array &t, Array &p, Ar
 	deg_west = "°W";
 	deg_east = "°E";
 
-	name_Value_1 = " radiation ";
+	name_Value_1 = " radiation balance";
 	name_Value_2 = " latent heat ";
 	name_Value_3 = " sensible heat ";
 	name_Value_4 = " bottom heat ";
@@ -206,6 +498,12 @@ void Results_MSL_Atm::show_MSL_data ( Array &h, Array &c, Array &t, Array &p, Ar
 	name_Value_7 = " precipitable water average ";
 	name_Value_8 = " precipitation average per year ";
 	name_Value_9 = " precipitation average per day ";
+	name_Value_10 = " precipitation NASA average per year ";
+	name_Value_11 = " precipitation NASA average per day ";
+	name_Value_12 = " evaporation_Penman_average per year ";
+	name_Value_13 = " evaporation_Penman_average per day";
+	name_Value_14 = " evaporation_Haude_average per year ";
+	name_Value_15 = " evaporation_Haude_average per day";
 
 	name_unit_wm2 = " W/m2";
 	name_unit_mmd = " mm/d";
@@ -214,9 +512,9 @@ void Results_MSL_Atm::show_MSL_data ( Array &h, Array &c, Array &t, Array &p, Ar
 
 	heading = " printout of surface data at predefinded locations: level, latitude, longitude";
 
-	i_loc_level = 0;
-	j_loc = 90;
-	k_loc = 180;
+	i_loc_level = 0;																		// sea level
+	j_loc = 39;																				// 51°N, Dresden Germany
+	k_loc = 346;																			// 14°W, Dresden Germany
 
 
 	if ( j_loc <= 90 )
@@ -245,10 +543,10 @@ void Results_MSL_Atm::show_MSL_data ( Array &h, Array &c, Array &t, Array &p, Ar
 	}
 
 
-	Value_1 = Q_Balance_Radiation.y[ j_loc ][ k_loc ];
+	Value_1 = Radiation_Balance.y[ j_loc ][ k_loc ];
 	Value_2 = Q_latent.y[ j_loc ][ k_loc ];
 	Value_3 = Q_sensible.y[ j_loc ][ k_loc ];
-	Value_4 = Q_diff.y[ j_loc ][ k_loc ];
+	Value_4 = Q_bottom.y[ j_loc ][ k_loc ];
 
 	cout << endl << endl << heading << endl << endl;
 
@@ -267,6 +565,18 @@ void Results_MSL_Atm::show_MSL_data ( Array &h, Array &c, Array &t, Array &p, Ar
 	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_8 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_8 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_9 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_8 / 365. << setw ( 6 ) << name_unit_mmd << endl << endl;
 
 
+	Value_10 = precipitation_NASA_average;
+
+	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_10 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_10 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_11 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_10 / 365. << setw ( 6 ) << name_unit_mmd << endl << endl;
+
+
+	Value_12 = evaporation_Penman_average;
+
+	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_12 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_13 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 / 365. << setw ( 6 ) << name_unit_mmd << endl << endl;
+
+	Value_13 = evaporation_Haude_average;
+
+	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_14 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_13 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 20 ) << setfill ( '.' ) << name_Value_15 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_13 / 365. << setw ( 6 ) << name_unit_mmd << endl << endl;
 
 
 
@@ -295,10 +605,6 @@ void Results_MSL_Atm::land_oceanFraction ( Array &h )
 
 	h_ocean = h_point_max - h_land;
 
- //																										for the purpose of testing
-	co2_vegetation = co2_vegetation / ( double ) h_land;
-	co2_ocean = co2_ocean / ( double ) h_ocean;
-	co2_land = co2_land / ( double ) h_land;
 	ozean_land = ( double ) h_ocean / ( double ) h_land;
 
 	cout.precision ( 3 );
@@ -306,14 +612,14 @@ void Results_MSL_Atm::land_oceanFraction ( Array &h )
 	cout << endl;
 	cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      total number of points at constant hight " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_point_max << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      number of points on the ocean surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_ocean << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      number of points on the land surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_land << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      ocean/land ratio " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << ozean_land << endl << endl;
 
-//	cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by ocean surface " << " = + " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_ocean << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by land surface " << " = + " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_land << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      substraction of CO2 by vegetation " << " = - " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_vegetation << endl << setiosflags ( ios::left ) << setw ( 50 ) << "      valid for one single point on the surface"<< endl << endl;
+	cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by ocean surface " << " = + " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_ocean << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by land surface " << " = + " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_land << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      substraction of CO2 by vegetation " << " = - " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_vegetation << endl << setiosflags ( ios::left ) << setw ( 50 ) << "      valid for one single point on the surface"<< endl << endl;
 	cout << endl;
 }
 
 
 
 
-void Results_MSL_Atm::vegetationDistribution ( double max_Precipitation, Array_2D &Precipitation, Array_2D &veg, Array &t, Array &h )
+void Results_MSL_Atm::vegetationDistribution ( double max_Precipitation, Array_2D &Precipitation, Array_2D &Vegetation, Array &t, Array &h )
 {
 // description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
 
@@ -321,8 +627,10 @@ void Results_MSL_Atm::vegetationDistribution ( double max_Precipitation, Array_2
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-			if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( t.x[ 0 ][ j ][ k ] >= t_0 ) ) veg.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation;			// actual vegetation areas
-			else veg.y[ j ][ k ] = 0.;
+			if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( t.x[ 0 ][ j ][ k ] >= 1. ) ) Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation;			// actual vegetation areas
+			else Vegetation.y[ j ][ k ] = 0.;
+			if ( max_Precipitation <= 0. ) Vegetation.y[ j ][ k ] = 0.;
 		}
 	}
 }
+
