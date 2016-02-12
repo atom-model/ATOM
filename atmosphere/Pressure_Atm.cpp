@@ -33,7 +33,7 @@ Pressure::Pressure ( int im, int jm, int km, double dr, double dthe, double dphi
 Pressure::~Pressure () {}
 
 
-void Pressure::computePressure ( double pa, Array_1D &rad, Array_1D &the, Array &p, Array &h, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &aux_u, Array &aux_v, Array &aux_w )
+void Pressure::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &aux_p, Array &h, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &aux_u, Array &aux_v, Array &aux_w )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 
@@ -55,10 +55,10 @@ void Pressure::computePressure ( double pa, Array_1D &rad, Array_1D &the, Array 
 			rm2sinthe = rm2 * sinthe;
 			rm2sinthe2 = rm2 * sinthe2;
 			rm2dthe2 = rm2 * dthe2;
-			denom = 2. / dr2 + 2. / ( rm2 * dthe2 ) + 2. / ( rmsinthe * dphi2 );
+			denom = 2. / dr2 + 2. / ( rm2 * dthe2 ) + 2. / ( rm2sinthe2 * dphi2 );
 			num1 = 1. / dr2;
 			num2 = 1. / ( rm2 * dthe2 );
-			num3 = 1. / ( rmsinthe * dphi2 );
+			num3 = 1. / ( rm2sinthe2 * dphi2 );
 
 			for ( int k = 1; k < km-1; k++ )
 			{
@@ -68,15 +68,34 @@ void Pressure::computePressure ( double pa, Array_1D &rad, Array_1D &the, Array 
 
 				if ( h.x[ i ][ j ][ k ] == 0. )
 					{
-						p.x[ i ][ j ][ k ] = ( ( p.x[ i+1 ][ j ][ k ] + p.x[ i-1 ][ j ][ k ] ) / num1 +
-													( p.x[ i ][ j+1 ][ k ] + p.x[ i ][ j-1 ][ k ] ) / num2 +
-													( p.x[ i ][ j ][ k+1 ] + p.x[ i ][ j ][ k-1 ] ) / num3 + 
+						aux_p.x[ i ][ j ][ k ] = ( ( p_dyn.x[ i+1 ][ j ][ k ] + p_dyn.x[ i-1 ][ j ][ k ] ) * num1 +
+													( p_dyn.x[ i ][ j+1 ][ k ] + p_dyn.x[ i ][ j-1 ][ k ] ) * num2 +
+													( p_dyn.x[ i ][ j ][ k+1 ] + p_dyn.x[ i ][ j ][ k-1 ] ) * num3 + 
 													drhs_udr + drhs_vdthe + drhs_wdphi ) / denom;
 					}
-				else    p.x[ i ][ j ][ k ] = pa;
+				else    aux_p.x[ i ][ j ][ k ] = pa;
 			}
 		}
 	}
+
+
+	aux_p.x[ 0 ][ 0 ][ 0 ] = aux_p.x[ 0 ][ jm-1 ][ 0 ] = 0.;
+	aux_p.x[ im-1 ][ 0 ][ 0 ] = aux_p.x[ im-1 ][ jm-1 ][ 0 ] = 0.;
+	aux_p.x[ 0 ][ 0 ][ km-1 ] = aux_p.x[ 0 ][ jm-1 ][ km-1 ] = 0.;
+	aux_p.x[ im-1 ][ 0 ][ km-1 ] = aux_p.x[ im-1 ][ jm-1 ][ km-1 ] = 0.;
+
+
+	for ( int i = 0; i < im; i++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				p_dyn.x[ i ][ j ][ k ] = aux_p.x[ i ][ j ][ k ];
+			}
+		}
+	}
+
 }
 
 
@@ -84,7 +103,7 @@ void Pressure::computePressure ( double pa, Array_1D &rad, Array_1D &the, Array 
 
 
 
-void Pressure::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Array &p, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
+void Pressure::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &aux_p, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 	dr2 = dr * dr;
@@ -104,9 +123,9 @@ void Pressure::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Arr
 		rm2sinthe = rm2 * sinthe;
 		rm2sinthe2 = rm2 * sinthe2;
 		rm2dthe2 = rm2 * dthe2;
-		denom = 2. / ( rm2 * dthe2 ) + 2. / ( rmsinthe * dphi2 );
-		num2 = 1. / rm2dthe2;
-		num3 = 1. / ( rmsinthe * dphi2 );
+		denom = 2. / ( rm2 * dthe2 ) + 2. / ( rm2sinthe2 * dphi2 );
+		num2 = 1. / ( rm2 * dthe2 );
+		num3 = 1. / ( rm2sinthe2 * dphi2 );
 
 		for ( int k = 1; k < km-1; k++ )
 		{
@@ -116,11 +135,20 @@ void Pressure::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Arr
 
 			if ( h.x[ 0 ][ j ][ k ] == 0. )
 			{
-				p.x[ 0 ][ j ][ k ] = ( ( p.x[ 0 ][ j+1 ][ k ] + p.x[ 0 ][ j-1 ][ k ] ) * num2
-										+ ( p.x[ 0 ][ j ][ k+1 ] + p.x[ 0 ][ j ][ k-1 ] ) * num3
+				aux_p.x[ 0 ][ j ][ k ] = ( ( p_dyn.x[ 0 ][ j+1 ][ k ] + p_dyn.x[ 0 ][ j-1 ][ k ] ) * num2
+										+ ( p_dyn.x[ 0 ][ j ][ k+1 ] + p_dyn.x[ 0 ][ j ][ k-1 ] ) * num3
 										- ( drhs_vdthe + drhs_wdphi ) ) / denom;
 			}
-			else    p.x[ 0 ][ j ][ k ] = pa;
+			else    p_dyn.x[ 0 ][ j ][ k ] = pa;
 		}
 	}
+
+	for ( int j = 1; j < jm-1; j++ )
+	{
+		for ( int k = 1; k < km-1; k++ )
+		{
+			p_dyn.x[ 0 ][ j ][ k ] = aux_p.x[ 0 ][ j ][ k ];
+		}
+	}
+
 }

@@ -8,9 +8,7 @@
  * class to restore the old by new values inside the iterational processes
 */
 
-
 #include <iostream>
-
 #include "Array.h"
 
 #ifndef _RESTORE_

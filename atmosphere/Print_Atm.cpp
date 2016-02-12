@@ -33,7 +33,7 @@ Print_Atmosphere::Print_Atmosphere ( int im, int jm, int km, int nm, int n, doub
 Print_Atmosphere::~Print_Atmosphere() {}
 
 
-void Print_Atmosphere::printData ( Array &t, Array &u, Array &v, Array &w, Array &c, Array &p )
+void Print_Atmosphere::printData ( Array &t, Array &u, Array &v, Array &w, Array &c, Array &p_dyn )
 {
 	cout.precision ( 4 );
 	cout.setf ( ios::fixed );
@@ -126,7 +126,6 @@ void Print_Atmosphere::printIntro ( Array_1D &rad, Array_1D &the, Array_1D &phi 
 	cout << "  phi = k-direction showing to the right =========>---( time block = " << n << " ) \n\n\n";
 
 	return;
-
 }
 
 

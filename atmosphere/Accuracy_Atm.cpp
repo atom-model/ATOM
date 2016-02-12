@@ -46,14 +46,14 @@ Accuracy::Accuracy ( int im, int Ma, int n, int velocity_iter, int pressure_iter
 	i_u = j_u = k_u = i_v = j_v = k_v = i_w = j_w = k_w = i_t = j_t = k_t = i_c = j_c = k_c = i_co2 = j_co2 = k_co2 = i_p = j_p = k_p = 0;
 	i_res = j_res = k_res = 0;
 	residuum = max_u = max_v = max_w = max_t = max_c = max_co2 = max_p = 0.;
-	residuum_alt = min = min_u = min_v = min_w = min_t = min_c = min_co2 = min_p = 0.;
+	residuum_old = min = min_u = min_v = min_w = min_t = min_c = min_co2 = min_p = 0.;
 }
 
 
 Accuracy::~Accuracy () {}
 
 
-double Accuracy::residuumQuery ( int &i_res, int &j_res, int &k_res, double &min, Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
+double Accuracy::residuumQuery_3D ( int &i_res, int &j_res, int &k_res, double &min, Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
 {
 // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 
@@ -124,7 +124,7 @@ double Accuracy::residuumQuery_2D ( int &j_res, int &k_res, double &min, Array_1
 
 
 
-double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_co2, int &j_co2, int &k_co2, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_co2, double &min_p, Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &co2, Array &co2n, Array &p, Array &pn )
+double Accuracy::steadyQuery_3D ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_co2, int &j_co2, int &k_co2, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_co2, double &min_p, Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &co2, Array &co2n, Array &p_dyn, Array &pn_dyn )
 {
 // state of a steady solution ( min )
 	min_u = 0.;
@@ -194,7 +194,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 					k_co2 = k;
 				}
 
-				max_p = fabs ( p.x[ i ][ j ][ k ] - pn.x[ i ][ j ][ k ] );
+				max_p = fabs ( p_dyn.x[ i ][ j ][ k ] - pn_dyn.x[ i ][ j ][ k ] );
 				if ( max_p >= min_p )
 				{
 					min_p = max_p;
@@ -212,7 +212,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 
 
 
-double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min_v, double &min_w, double &min_p, Array &v, Array &vn, Array &w, Array &wn, Array &p, Array &pn )
+double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min_v, double &min_w, double &min_p, Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &pn_dyn )
 {
 // state of a steady solution ( min )
 	max_v = min_v = 0.;
@@ -241,7 +241,7 @@ double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j
 				k_w = k;
 			}
 
-			max_p = fabs ( p.x[ 0 ][ j ][ k ] - pn.x[ 0 ][ j ][ k ] );
+			max_p = fabs ( p_dyn.x[ 0 ][ j ][ k ] - pn_dyn.x[ 0 ][ j ][ k ] );
 			if ( max_p >= min_p )
 			{
 				min_p = max_p;
@@ -256,7 +256,7 @@ double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j
 
 
 
-void Accuracy::iterationPrintout ( int &nm, int &velocity_iter_max, int &pressure_iter_max, int &i_res, int &j_res, int &k_res, int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_co2, int &j_co2, int &k_co2, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_co2, double &min_p )
+void Accuracy::iterationPrintout_3D ( int &nm, int &velocity_iter_max, int &pressure_iter_max, int &i_res, int &j_res, int &k_res, int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_co2, int &j_co2, int &k_co2, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_co2, double &min_p )
 {
 // statements on the convergence und iterational process
 	cout.precision ( 6 );
@@ -346,8 +346,9 @@ void Accuracy::iterationPrintout ( int &nm, int &velocity_iter_max, int &pressur
 						k_loc = k_co2;
 						break;
 
-		default : 	cout << choice << "error in iterationPrintout member function in class Accuracy" << endl;
+		default : 	cout << choice << "error in iterationPrintout_3D member function in class Accuracy" << endl;
 	}
+
 						i_loc_level = i_loc * int ( L_atm ) / ( im - 1 );
 
 						if ( j_loc <= 90 )
@@ -448,7 +449,7 @@ void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &p
 						break;
 
 
-		default : 	cout << choice << "error in iterationPrintout member function in class Accuracy" << endl;
+		default : 	cout << choice << "error in iterationPrintout_3D member function in class Accuracy" << endl;
 	}
 
 						if ( j_loc <= 90 )

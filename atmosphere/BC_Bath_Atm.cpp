@@ -25,19 +25,6 @@ BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int im, int jm, int km )
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;
-
-
-// array "im_tropopause" for configuring data due to latitude dependent tropopause
-
-	im_tropopause = new int[ jm ];
-
-	for ( int l = 0; l < jm; l++ )
-	{
-		im_tropopause[ l ] = 0;
-//		cout << im_tropopause[ l ] << endl;
-	}
-
-
 }
 
 
@@ -324,7 +311,7 @@ void BC_Bathymetry_Atmosphere::BC_IceShield ( int Ma, double t_0, Array &h, Arra
 
 
 
-void BC_Bathymetry_Atmosphere::BC_SolidGround ( int i_beg, int i_max, int Ma, double hp, double ep, double t_equator, double t_pole, double t_tropopause, double c_tropopause, double co2_equator, double co2_pole, double co2_tropopause, double co2_vegetation, double co2_land, double co2_ocean, double t_0, double ta, double p_0, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &pn, Array &cn, Array &co2n, Array &fup, Array &fvp, Array &fwp, Array &ftp, Array &fcp, Array &fco2p, Array_2D &t_j, Array_2D &c_j, Array_2D &co2_j, Array_2D &Vegetation )
+void BC_Bathymetry_Atmosphere::BC_SolidGround ( int i_max, double t_equator, double t_pole, double t_tropopause, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_vegetation, double co2_land, double co2_ocean, double pa, double gam, Array &h, Array &t, Array &p_dyn, Array &c, Array &co2, Array &pn_dyn, Array_2D &Vegetation )
 {
 
 // boundary conditions for the total solid ground
@@ -349,15 +336,15 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int i_beg, int i_max, int Ma, do
 			if ( h.x[ 0 ][ j ][ k ] == 0. ) 
 			{
 				d_j = ( double ) j;
-				co2_j.y[ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole;
-				co2.x[ 0 ][ j ][ k ] = co2_j.y[ j ][ k ] = co2_j.y[ j ][ k ] + co2_ocean;															// 0.6/600Gt CO2-source on oceans per year 
+				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole;
+				co2.x[ 0 ][ j ][ k ] = ( co2.x[ 0 ][ j ][ k ] + co2_ocean ) / co2_0;															// 0.6/600Gt CO2-source on oceans per year 
 			}
 			if ( h.x[ 0 ][ j ][ k ] == 1. ) 
 			{
 				d_j = ( double ) j;
-				co2_j.y[ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole; // parabolic distribution from pole to pole
-				co2_j.y[ j ][ k ] = co2_j.y[ j ][ k ] - co2_vegetation * Vegetation.y[ j ][ k ];						// 100/600Gt CO2-sink by vegetation on land per year
-				co2.x[ 0 ][ j ][ k ] = co2_j.y[ j ][ k ] = co2_j.y[ j ][ k ] + co2_land;																// 0.2/600Gt CO2-source on land per year everywhere
+				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole; // parabolic distribution from pole to pole
+				co2.x[ 0 ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - co2_vegetation * Vegetation.y[ j ][ k ];						// 100/600Gt CO2-sink by vegetation on land per year
+				co2.x[ 0 ][ j ][ k ] = ( co2.x[ 0 ][ j ][ k ] + co2_land ) / co2_0;																// 0.2/600Gt CO2-source on land per year everywhere
 			}
 		}
 	}
@@ -373,26 +360,16 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int i_beg, int i_max, int Ma, do
 			{
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
-					p.x[ i ][ j ][ k ] = pn.x[ i ][ j ][ k ] = pa;
+					p_dyn.x[ i ][ j ][ k ] = pn_dyn.x[ i ][ j ][ k ] = pa;
+
+					if ( Ma == 0 ) 		t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];																	// linear temperature decay up to tropopause
+					else 					t.x[ i ][ j ][ k ] = ( - 5. * gam * ( double ) i + t.x[ 0 ][ j ][ k ] * t_0 ) / t_0;			// linear temperature decay up to tropopause
 
 					d_i_max = .5 * ( double ) i_max;
 					d_i = ( double ) i;
-
-					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];										// linear temperature decay up to tropopause
-					c.x[ i ][ j ][ k ] = c_j.y[ j ][ k ] - ( c_tropopause - c_j.y[ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola ( Weischet )
-					co2.x[ i ][ j ][ k ] = co2_j.y[ j ][ k ] - ( co2_tropopause - co2_j.y[ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola
+					c.x[ i ][ j ][ k ] = c.x[ 0 ][ j ][ k ] - ( c_tropopause - c.x[ 0 ][ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola ( Weischet )
+					co2.x[ i ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - ( ( co2_tropopause - co2.x[ 0 ][ j ][ k ] * co2_0 ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ) ) / co2_0;	// radial distribution approximated by a parabola
 					if ( co2.x[ i ][ j ][ k ] < 0. ) co2.x[ i ][ j ][ k ] = 0.;
-
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
-
-					fup.x[ i ][ j ][ k ] = 0.;
-					fvp.x[ i ][ j ][ k ] = 0.;
-					fwp.x[ i ][ j ][ k ] = 0.;
-					ftp.x[ i ][ j ][ k ] = 0.;
-					fcp.x[ i ][ j ][ k ] = 0.;
-					fco2p.x[ i ][ j ][ k ] = 0.;
 				}
 			}
 		}

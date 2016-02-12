@@ -56,7 +56,7 @@ class BC_Bathymetry_Atmosphere
 
 		void BC_IceShield ( int, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 
-		void BC_SolidGround ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+		void BC_SolidGround ( int, double, double, double, double, double, double, double, double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D & );
 
 };
 #endif

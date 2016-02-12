@@ -34,7 +34,7 @@ class Accuracy
 		double sinthe, costhe, rmsinthe;
 		double dudr, dvdthe, dwdphi;
 		double residuum, max_u, max_v, max_w, max_t, max_c, max_p, max_co2;
-		double residuum_alt, min, min_u, min_v, min_w, min_t, min_c, min_co2, min_p;
+		double residuum_old, min, min_u, min_v, min_w, min_t, min_c, min_co2, min_p;
 		double Value, L_atm;
 
 		string name_Value;
@@ -46,11 +46,11 @@ class Accuracy
 
 		~Accuracy ();
 
-		double residuumQuery ( int &, int &, int &, double &, Array_1D &, Array_1D &, Array &, Array &, Array & );
+		double residuumQuery_3D ( int &, int &, int &, double &, Array_1D &, Array_1D &, Array &, Array &, Array & );
 
-		double steadyQuery ( int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, double &, double &, double &, double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		double steadyQuery_3D ( int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, double &, double &, double &, double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void iterationPrintout ( int &, int &, int &,int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, double &, double &, double &, double &, double &, double &, double & );
+		void iterationPrintout_3D ( int &, int &, int &,int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, double &, double &, double &, double &, double &, double &, double & );
 
 		double residuumQuery_2D ( int &, int &, double &, Array_1D &, Array_1D &, Array &, Array & );
 

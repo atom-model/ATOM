@@ -33,9 +33,9 @@ class Pressure
 		Pressure ( int, int, int, double, double, double );
 		~Pressure ();
 
-		void computePressure ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_3D ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void computePressure_2D ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_2D ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };
 #endif
 
