@@ -88,7 +88,9 @@ using namespace std;
 
 // rate of CO2 compares to 600Gt in the atmosphere ( 0.02% ), 100Gt consumed by vegetation ( 0.00333% ), ratio 1/6 = 0.166667 to be checked!
 
-// maximum rate of water vapour for sea level at the equator c_equator = 40 g/kg  = 0.040 kg/kg ( mass of water vapour / mass of air )
+// maximum rate of water vapour for sea level at the equator c_equator = 40 g/kg  = 0.040 kg/kg ( mass of water vapour / mass of air 
+
+
 
 
 int main ( int argc, char *argv[ ] )
@@ -98,10 +100,10 @@ int main ( int argc, char *argv[ ] )
 // maximum number of inner velocity loop iterations ( velocity_iter_max ),
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 5, pressure_iter_max = 5;
+	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;
 	int velocity_iter_max_2D = 10, pressure_iter_max_2D = 5;
 
-	int n, i_radial, j_longal, k_zonal, i_max;
+	int n, i_radial, j_longal, k_zonal, i_max, i_beg;
 	int velocity_iter, pressure_iter, pressure_iter_aux, velocity_iter_2D, pressure_iter_2D;
 	int i_res, j_res, k_res;
 	int i_u, j_u, k_u, i_v, j_v, k_v, i_w, j_w, k_w, i_t, j_t, k_t, i_c, j_c, k_c, i_co2, j_co2, k_co2, i_p, j_p, k_p;
@@ -189,10 +191,13 @@ int main ( int argc, char *argv[ ] )
 //	double t_equator = 1.165;									// temperature t_0 = 1.139 compares to 45.0° C compares to 318.15 K
 	double t_pole = .8;												// temperature at the poles t_pole = 0.8 compares to -54.63°C compares to 218.52 K
 	double t_tropopause = .78;								// temperature in the tropopause
-	double t_land_plus = .007322;							// temperature increase on land ( 1°C compare to t_land_plus = 0.003661 )
+	double t_land_plus = .007322;							// temperature increase on land ( 1°C compares to t_land_plus = 0.003661 )
 
-	double c_land_minus = .9;									// water vapour reduction on land ( 90% )
-	double c_ocean_minus = 1.;								// water vapour reduction on sea surface ( 100% )
+	double c_tropopause = 0.;									// minimum water vapour at tropopause c_tropopause = 0.01429 compares to 0.05 g/kg
+//	double c_land_minus = .9;									// water vapour reduction on land ( 90% )
+//	double c_ocean_minus = 1.;								// water vapour reduction on sea surface ( 100% )
+	double c_land_minus = 1.3;								// water vapour reduction on land ( 90% )
+	double c_ocean_minus = 1.4;							// water vapour reduction on sea surface ( 100% )
 
 	double co2_Average = 280.;								// rate of CO2 at preindustrial times
 	double co2_equator = 280.;								// maximum rate of CO2 at sea level at equator, 1. compares to 280 ppm
@@ -210,7 +215,7 @@ int main ( int argc, char *argv[ ] )
 	i_time_slice_max = 15;
 	int *time_slice = new int [ i_time_slice_max ]; 	// time slices in Ma
 
-	time_slice [ 0 ] = 0;							// Golonka Bathymetry and Topography
+	time_slice [ 0 ] = 0;												// Golonka Bathymetry and Topography
 	time_slice [ 1 ] = 10;
 	time_slice [ 2 ] = 20;
 	time_slice [ 3 ] = 30;
@@ -315,6 +320,7 @@ int main ( int argc, char *argv[ ] )
 */
 
 
+
 //	cout << " ***** printout of 3D-fields ***** " << endl;
 //	v.printArray();
 //	cout << " ***** printout of 2D-fields ***** " << endl;
@@ -337,7 +343,8 @@ int main ( int argc, char *argv[ ] )
 	residuum = residuum_old = 0.;
 
 // radial expansion of the computational field for the computation of initial values
-	i_max = 28;			// corresponds to about 14 km above sea level, maximum hight of the tropopause
+	i_max = 32;			// corresponds to about 16 km above sea level, maximum hight of the tropopause at equator
+	i_beg = 16;			// corresponds to about 8 km above sea level, maximum hight of the tropopause at poles
 
 // time slice to start with is the modern world
 	Ma = 0;
@@ -545,7 +552,7 @@ int main ( int argc, char *argv[ ] )
 //	circulation.BC_Pressure ( r_0_air, R_Air, p_0, t_0, p_j, t_j, p, t, h );
 
 //  parabolic temperature distribution from pol to pol, maximum temperature at equator
-	circulation.BC_Temperature ( i_max, Ma, Ma_max, Ma_max_half, sun_position_lat, sun_position_lon, declination, sun, ep, hp, t_0, p_0, t_land_plus, t_cretaceous_max, t_Average, co2_Average, t_equator, t_pole, t_tropopause, t_j, c_j, h, t, p );
+	circulation.BC_Temperature ( i_max, i_beg, Ma, Ma_max, Ma_max_half, sun_position_lat, sun_position_lon, declination, sun, ep, hp, t_0, p_0, t_land_plus, t_cretaceous_max, t_Average, co2_Average, t_equator, t_pole, t_tropopause, t_j, c_j, h, t, p );
 
 //  computation of radiation at variable sun position
 	if ( sun == 1 ) LandArea.BC_Radiation ( t_0, ik, sigma, albedo_extra, epsilon_atmos, Precipitation, Ik, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, t_j, t );
@@ -554,16 +561,13 @@ int main ( int argc, char *argv[ ] )
 	if ( IceShield == 1 ) LandArea.BC_IceShield ( Ma, t_0, h, t, c, IceLayer, Ice_Balance, Ice_Balance_add );
 
 //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-	circulation.BC_WaterVapour ( i_max, ep, hp, t_0, c_0, p_0, c_land_minus, c_ocean_minus, c_j, h, t, p, c, t_j );
+	circulation.BC_WaterVapour ( i_max, i_beg, ep, hp, t_0, c_0, p_0, c_land_minus, c_ocean_minus, c_tropopause, c_j, h, t, p, c, t_j );
 
 //  parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-	circulation.BC_CO2 ( i_max, co2_0, co2_Average, co2_equator, co2_pole, co2_tropopause, co2_vegetation, co2_ocean, co2_land, co2_j, Vegetation, h, t, p, co2 );
-
-// 	data around the tropopause
-	if ( Ma == 0 ) circulation.BC_Tropopause ( i_max, tao, dr, rad, h, t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c );
+	circulation.BC_CO2 ( i_max, i_beg, co2_0, co2_Average, co2_equator, co2_pole, co2_tropopause, co2_vegetation, co2_ocean, co2_land, co2_j, Vegetation, h, t, p, co2 );
 
 // 	initial conditions for u-v-w-velocity components
-	if ( Ma == 0 ) circulation.IC_CellStructure ( u, v, w );
+	if ( Ma == 0 ) circulation.IC_CellStructure ( i_max, i_beg, u, v, w );
 
 //	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
 //	if ( Ma == 0 ) circulation.IC_v_w_WestEastCoast ( h, u, v, w );
@@ -581,6 +585,7 @@ int main ( int argc, char *argv[ ] )
 // computation of the ratio ocean to land areas, also supply and removal of CO2 on land, ocean and by vegetation
 	calculate_MSL.land_oceanFraction ( h );
 
+//		goto Print_commands;														// only initial conditions wihtout iterations
 
 
 // ******************************************   start of pressure and velocity iterations ************************************************************************
@@ -642,7 +647,7 @@ Pressure_loop_2D:
 			}
 
 //		class BC_Atmosphaere for the geometry of a shell of a sphere
-			boundary.BC_theta ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
+			boundary.BC_theta ( t_tropopause, c_tropopause, t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
 			boundary.BC_phi ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
 
 // 		old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
@@ -710,8 +715,8 @@ Pressure_iteration_2D:
 		residuum_old = min;
 
 // 		class BC_Atmosphaere for the geometry of a shell of a sphere
-		boundary.BC_radius ( tao, tau, pa, ca, co2a, dr, rad, co2_vegetation, co2_ocean, co2_land, Vegetation, h, t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
-		boundary.BC_theta ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
+		boundary.BC_radius ( tao, tau, pa, ca, co2a, dr, t_tropopause, c_tropopause, rad, co2_vegetation, co2_ocean, co2_land, Vegetation, h, t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
+		boundary.BC_theta ( t_tropopause, c_tropopause, t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
 		boundary.BC_phi    ( t, u, v, w, p, c, co2, rhs_u, rhs_v, rhs_w, rhs_t, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, Rain, Ice );
 //		boundary.BC_NST_control_3D ( dr, dthe, dphi, re, mue_air, mue_water, h, u, v, w, t, p, c, co2, aux_u, aux_v, aux_w, rad, the );
 
@@ -745,6 +750,11 @@ Pressure_iteration_2D:
 		Accuracy		printout ( im, Ma, n, velocity_iter, pressure_iter, min, L_atm );
 		printout.iterationPrintout ( nm, velocity_iter_max, pressure_iter_max, i_res, j_res, k_res, i_u, j_u, k_u, i_v, j_v, k_v, i_w, j_w, k_w, i_t, j_t, k_t, i_c, j_c, k_c, i_co2, j_co2, k_co2, i_p, j_p, k_p, min_u, min_v, min_w, min_t, min_c, min_co2, min_p );
 
+
+//		searching of maximum and minimum values of temperature
+		string str_max_temperature = " max temperature ", str_min_temperature = " min temperature ", str_unit_temperature = "°C";
+		MinMax		minmaxTemperature ( im, jm, km );
+		minmaxTemperature.searchMinMax_3D ( str_max_temperature, str_min_temperature, str_unit_temperature, t, h );
 
 //		searching of maximum and minimum values of water vapour
 		string str_max_water_vapour = " max water vapour ", str_min_water_vapour = " min water vapour ", str_unit_water_vapour = "g/kg";

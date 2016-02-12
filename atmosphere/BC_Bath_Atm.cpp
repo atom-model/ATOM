@@ -29,11 +29,7 @@ BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int im, int jm, int km )
 
 
 
-BC_Bathymetry_Atmosphere::~BC_Bathymetry_Atmosphere()
-{
-	delete [  ]im_tropopause;
-	delete [  ]jm_temp_asym;
-}
+BC_Bathymetry_Atmosphere::~BC_Bathymetry_Atmosphere(){}
 
 
 
@@ -57,29 +53,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( const string &Name_Bathymetr
 			}
 		}
 
-
-
-// array "im_tropopause" for configuring data due to latitude dependent tropopause
-
-	im_tropopause = new int[ jm ];
-
-	for ( int ll = 0; ll < jm; ll++ )
-	{
-		im_tropopause[ ll ] = 0;
-//		cout << im_tropopause[ ll ] << endl;
-	}
-
-
-
-// array "jm_temp_asym" for configuring data due to latitude dependent tropopause
-
-	jm_temp_asym = new double[ jm ];
-
-	for ( int ll = 0; ll < jm; ll++ )
-	{
-		jm_temp_asym[ ll ] = 0;
-//		cout << jm_temp_asym[ ll ] << endl;
-	}
 
 
 // reading data from file Name_Bathymetry_File_Read
@@ -119,11 +92,7 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( const string &Name_Bathymetr
 
 				for ( i = 0; i <= i_SL; i++ )			h.x[ i ][ j ][ k ] = 1.;
 			}
-
 			k++;
-
-//			cout << "\n***** Name_Bathymetry_File_Read:   Länge = " << dummy_1 << "  Breite = " << dummy_2 << "  Tiefe = " << dummy_3 << endl;
-//			cout << "***** Name_Bathymetry_File_Read:   i = " << i_SL << "  j = " << j << "  k = " << k << endl;
 		}
 	k = 0;
 	j++;

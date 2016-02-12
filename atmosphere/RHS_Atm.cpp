@@ -279,26 +279,25 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 	t_Celsius_SL = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																				// conversion from Kelvin to Celsius at sea surface = NN
 
 	p_SL = ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;																// surface pressure from barometric formula in hPa
-//	cout << r_0_air << "   " << R_Air << "   " << t_0 << "   " << t.x[ 0 ][ j ][ k ] << "   " << p_SL << endl;
 	p_h = exp ( - 9.8066 * ( double ) i * 500. / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_0;					// current air pressure, step size in 500 m, from barometric formula in hPa
 
 	E_Rain_SL = hp * exp ( 17.0809 * t_Celsius_SL / ( 234.175 + t_Celsius_SL ) );					// saturation vapour pressure in the water phase for t > 0°C in hPa
-	E_Rain = hp * exp ( 17.0809 * t_Celsius / ( 234.175 + t_Celsius ) );										// saturation water vapour pressure for the water phase at t > 0°C
-	E_Rain_super = hp * exp ( 17.8436 * t_Celsius / ( 245.425 + t_Celsius ) );							// saturation water vapour pressure for the water phase at t < 0°C, supercooled
-	E_Ice = hp * exp ( 22.4429 * t_Celsius / ( 272.44 + t_Celsius ) );											// saturation water vapour pressure for the ice phase
+	E_Rain = hp * exp ( 17.0809 * t_Celsius / ( 234.175 + t_Celsius ) );										// saturation water vapour pressure for the water phase at t > 0°C in hPa
+	E_Rain_super = hp * exp ( 17.8436 * t_Celsius / ( 245.425 + t_Celsius ) );							// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
+	E_Ice = hp * exp ( 22.4429 * t_Celsius / ( 272.44 + t_Celsius ) );											// saturation water vapour pressure for the ice phase in hPa
 
-	q_Rain  = ep * E_Rain / p_h;																									// water vapour amount at saturation with water formation
-	q_Rain_super  = ep * E_Rain_super / p_h;																			// water vapour amount at saturation with water formation
-	q_Ice  = ep * E_Ice / p_h;																										// water vapour amount at saturation with ice formation
+	q_Rain  = ep * E_Rain / p_h;																									// water vapour amount at saturation with water formation in kg/kg
+	q_Rain_super  = ep * E_Rain_super / p_h;																			// water vapour amount at saturation with water formation in kg/kg
+	q_Ice  = ep * E_Ice / p_h;																										// water vapour amount at saturation with ice formation in kg/kg
 
 	e_SL = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;							// water vapour pressure  in hPa at sea level
 	a_SL = 216.6 * e_SL / ( t.x[ 0 ][ j ][ k ] * t_0 );																			// absolute humidity in kg/m3 at sea level
 	q_SL = ep * c.x[ 0 ][ j ][ k ];																										// threshold value for water vapour at sea level in kg/kg
-//	q_SL  = ep * e_SL / p_SL;																										// water vapour amount at sea level
+//	q_SL  = ep * e_SL / p_SL;																										// water vapour amount at sea level in kg/kg
 
 	t_tau_SL = ( 423.86 - 234.175 * log ( e_SL ) ) / ( log ( e_SL ) - 18.89 );								// dewpoint temperature on ground in °C 		by Häckel
 	h_level = 122. * ( t_Celsius_SL - t_tau_SL );																			// condensation level in m		by Häckel + correction
-	h_h = - R_Air * t.x[ i ][ j ][ k ] * t_0 / gr * log ( p_h / p_0 );														// barometric elevation formula solved for h corresponding to hight over ground
+	h_h = - R_Air * t.x[ i ][ j ][ k ] * t_0 / gr * log ( p_h / p_0 );														// barometric elevation formula solved for h corresponding to hight over ground in m
 	i_level = ( int ) ( h_level / 500. );																								// condensation level in radial steps
 
 // precipitation and cloud formation from formulas by Häckel
@@ -307,7 +306,7 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 	e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;								// water vapour pressure  in hPa
 	a_h = 216.6 * e_h / ( t.x[ i ][ j ][ k ] * t_0 );																				// absolute humidity in kg/m3
 	q_h = ep * c.x[ i ][ j ][ k ];																											// threshold value for water vapour at local hight h in kg/kg
-//	q_h  = ep * e_h / p_h;																												// water vapour amount at local hight h
+//	q_h  = ep * e_h / p_h;																												// water vapour amount at local hight h in kg/kg
 
 	t_tau_h = ( 423.86 - 234.175 * log ( e_h ) ) / ( log ( e_h ) - 18.89 );										// current dewpoint temperature in °C
 	sat_Deficit = E_Rain - e_h;																										// saturation deficit, if positive then saturation is less than 100%
@@ -317,14 +316,14 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 
 // application of threshhold values for water vapour to compute rain, super cooled water and ice
 
-	if ( ( q_h >= q_Rain ) && ( t_Celsius >= 0. ) )	Rain.x[ i ][ j ][ k ] = ( q_h - q_Rain );			// liquid water as surplus from the local saturated water vapour 
+	if ( ( q_h >= q_Rain ) && ( t_Celsius >= 0. ) )	Rain.x[ i ][ j ][ k ] = ( q_h - q_Rain );			// liquid water as surplus from the local saturated water vapour  in g/kg
 	else 	Rain.x[ i ][ j ][ k ] = 0.;
 
 	if ( ( q_h >= q_Rain_super ) && ( t_Celsius < 0. ) && ( t_Celsius >= - 12. ) )	Rain_super.x[ i ][ j ][ k ] = ( q_h - q_Rain_super ); // liquid water as surplus from the  
-																																					// supercooled saturated water vapour 
+																																					// supercooled saturated water vapour in g/kg
 	else 	Rain_super.x[ i ][ j ][ k ] = 0.;
 
-	if ( ( q_h >= q_Ice ) && ( t_Celsius < -12. ) )	Ice.x[ i ][ j ][ k ] = ( q_h - q_Ice );						// ice formation as surplus above the supercooled saturated water vapour
+	if ( ( q_h >= q_Ice ) && ( t_Celsius < -12. ) )	Ice.x[ i ][ j ][ k ] = ( q_h - q_Ice );						// ice formation as surplus above the supercooled saturated water vapour in g/kg
 	else  Ice.x[ i ][ j ][ k ] = 0.;
 
 
@@ -336,13 +335,13 @@ void RHS_Atmosphere::RK_RHS_Atmosphere ( int i, int j, int k, double lv, double 
 		cout << endl;
 		cout << " i = " << i << "   j = " << j << "   k = " << k << "   i_level = " << i_level  << "   h_level (m) = " << h_level << "   h_h (m) = " << h_h << endl << endl;
 
-		cout << " t_h (°C) = " << t_Celsius << "   p_h (hPa) = " << p_h << "   a_h (g/m3) = " << a_h << "   c_h (hPa/hPa) = " << c.x[ i ][ j ][ k ] << "   q_Rain (hPa/hPa) = " << q_Rain << "   e_h (hPa) = " << e_h << "   E_Rain (hPa) = " << E_Rain  << endl << endl;
+		cout << " t_h (°C) = " << t_Celsius << "   p_h (hPa) = " << p_h << "   a_h (g/m3) = " << a_h << "   c_h (g/Kg) = " << c.x[ i ][ j ][ k ] * 1000. << "   q_Rain (g/Kg) = " << q_Rain * 1000. << "   e_h (hPa) = " << e_h << "   E_Rain (hPa) = " << E_Rain  << endl << endl;
 
-		cout << " Rain (g/kg) = " << Rain.x[ i ][ j ][ k ] << "   Rain_super (g/kg) = " << Rain_super.x[ i ][ j ][ k ] << "   Ice (g/kg) = " << Ice.x[ i ][ j ][ k ] << "   E_Ice (hPa) = " << E_Ice << "   sat_Deficit (hPa) = " << sat_Deficit << "   t_tau_h (°C) = " << t_tau_h << "   E_Rain_SL (hPa) = " << E_Rain_SL << endl << endl;
+		cout << " Rain (g/kg) = " << Rain.x[ i ][ j ][ k ] * 1000. << "   Rain_super (g/kg) = " << Rain_super.x[ i ][ j ][ k ] * 1000. << "   Ice (g/kg) = " << Ice.x[ i ][ j ][ k ] * 1000. << "   E_Ice (hPa) = " << E_Ice << "   sat_Deficit (hPa) = " << sat_Deficit << "   t_tau_h (°C) = " << t_tau_h << "   E_Rain_SL (hPa) = " << E_Rain_SL << endl << endl;
 
-		cout << " t_SL (°C) = " << t_Celsius_SL << "   p_SL (hPa) = " << p_SL << "   a_SL (g/m3) = " << a_SL << "   c_SL (hPa/hPa) = " << c.x[ 0 ][ j ][ k ] << "   e_SL (hPa) = " << e_SL << "   q_Ice (hPa/hPa) = " << q_Ice << "   t_tau_SL (°C) = " << t_tau_SL << endl << endl;
+		cout << " t_SL (°C) = " << t_Celsius_SL << "   p_SL (hPa) = " << p_SL << "   a_SL (g/m3) = " << a_SL << "   c_SL (g/Kg) = " << c.x[ 0 ][ j ][ k ] * 1000. << "   e_SL (hPa) = " << e_SL << "   q_Ice (g/Kg) = " << q_Ice * 1000. << "   t_tau_SL (°C) = " << t_tau_SL << endl << endl;
 
-		cout << " Evap_Haude (mm/d) = " << Evaporation_Haude << "   RF_e (%) = " << RF_e  << "   E_Rain_super (hPa) = " << E_Rain_super << "   q_Rain_super (hPa/hPa) = " << q_Rain_super << "   q_h (hPa/hPa) = " << q_h << "   q_SL (hPa/hPa) = " << q_SL << endl << endl;
+		cout << " Evap_Haude (mm/d) = " << Evaporation_Haude << "   RF_e (%) = " << RF_e  << "   E_Rain_super (hPa) = " << E_Rain_super << "   q_Rain_super (g/Kg) = " << q_Rain_super * 1000. << "   q_h (g/Kg) = " << q_h * 1000. << "   q_SL (g/Kg) = " << q_SL * 1000. << endl << endl;
 	}
 */
 

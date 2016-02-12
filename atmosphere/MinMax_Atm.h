@@ -31,7 +31,7 @@ class MinMax
 		double maxValue, minValue, coeff_mmWS;
 
 		Array_2D		value ( int, int, double );
-		Array				value_3D ( int, int, int, double ), hc ( int, int, int, double );
+		Array				value_3D ( int, int, int, double );
 
 		string name_maxValue, name_minValue, name_unitValue, heading;
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat_max, deg_lon_max, deg_lat_min, deg_lon_min;
@@ -50,17 +50,6 @@ class MinMax
 
 		double out_minValue (  ) const;
 
-		int out_imax (  ) const;
-
-		int out_jmax (  ) const;
-
-		int out_kmax (  ) const;
-
-		int out_imin (  ) const;
-
-		int out_jmin (  ) const;
-
-		int out_kmin (  ) const;
 };
 #endif
 

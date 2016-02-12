@@ -55,8 +55,6 @@ class RHS_Atmosphere
 		double h_0_i, h_c_i, h_d_i, h_0_j, h_c_j, h_d_j, h_0_k, h_c_k, h_d_k, cc; 
 
 	public:
-		friend class RungeKutta_Atmosphere;
-
 		RHS_Atmosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~RHS_Atmosphere ();
 

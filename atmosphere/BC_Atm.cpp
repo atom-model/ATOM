@@ -35,7 +35,7 @@ BC_Atmosphere::~BC_Atmosphere() {}
 
 
 
-void BC_Atmosphere::BC_radius ( double tao, double tau, double pa, double ca, double co2a, double dr, Array_1D &rad, double co2_vegetation, double co2_ocean, double co2_land, Array_2D &Vegetation, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice )
+void BC_Atmosphere::BC_radius ( double tao, double tau, double pa, double ca, double co2a, double dr, double t_tropopause, double c_tropopause, Array_1D &rad, double co2_vegetation, double co2_ocean, double co2_land, Array_2D &Vegetation, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice )
 {
 // boundary conditions for the r-direction, loop index i
 	for ( int j = 0; j < jm; j++ )
@@ -58,12 +58,12 @@ void BC_Atmosphere::BC_radius ( double tao, double tau, double pa, double ca, do
 				u.x[ im-1 ][ j ][ k ] = 0.;
 				v.x[ im-1 ][ j ][ k ] = 0.;																					// stratosphere
 				w.x[ im-1 ][ j ][ k ] = 0.;
-				t.x[ im-1 ][ j ][ k ] = tao;
+				t.x[ im-1 ][ j ][ k ] = t_tropopause;
 
 				p.x[ im-1 ][ j ][ k ] = c43 * p.x[ im-2 ][ j ][ k ] - c13 * p.x[ im-3 ][ j ][ k ];			// stratosphere
 //				p.x[ 0 ][ j ][ k ] = c43 * p.x[ 1 ][ j ][ k ] - c13 * p.x[ 2 ][ j ][ k ];							// sea surface
 
-				c.x[ im-1 ][ j ][ k ] = 0.;
+				c.x[ im-1 ][ j ][ k ] = c_tropopause;
 				co2.x[ im-1 ][ j ][ k ] = c43 * co2.x[ im-2 ][ j ][ k ] - c13 * co2.x[ im-3 ][ j ][ k ];			// stratosphere
 /*
 				rhs_u.x[ 0 ][ j ][ k ] = c43 * rhs_u.x[ 1 ][ j ][ k ] - c13 * rhs_u.x[ 2 ][ j ][ k ];
@@ -165,7 +165,7 @@ void BC_Atmosphere::BC_radius ( double tao, double tau, double pa, double ca, do
 
 
 
-void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice )
+void BC_Atmosphere::BC_theta ( double t_tropopause, double c_tropopause, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice )
 {
 // boundary conditions for the the-direction, loop index j
 
@@ -177,6 +177,7 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p,
 
 			t.x[ i ][ 0 ][ k ] = c43 * t.x[ i ][ 1 ][ k ] - c13 * t.x[ i ][ 2 ][ k ];
 			t.x[ i ][ jm-1 ][ k ] = c43 * t.x[ i ][ jm-2 ][ k ] - c13 * t.x[ i ][ jm-3 ][ k ];
+//			t.x[ i ][ jm-1 ][ k ] = t_tropopause;
 /*
 			u.x[ i ][ 0 ][ k ] = c43 * u.x[ i ][ 1 ][ k ] - c13 * u.x[ i ][ 2 ][ k ];
 			u.x[ i ][ jm-1 ][ k ] = c43 * u.x[ i ][ jm-2 ][ k ] - c13 * u.x[ i ][ jm-3 ][ k ];
@@ -203,6 +204,7 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p,
 
 			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
 			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
+//			c.x[ i ][ jm-1 ][ k ] = c_tropopause;
 
 			co2.x[ i ][ 0 ][ k ] = c43 * co2.x[ i ][ 1 ][ k ] - c13 * co2.x[ i ][ 2 ][ k ];
 			co2.x[ i ][ jm-1 ][ k ] = c43 * co2.x[ i ][ jm-2 ][ k ] - c13 * co2.x[ i ][ jm-3 ][ k ];

@@ -23,7 +23,7 @@ using namespace std;
 class BC_Thermo
 {
 	private:
-		int i, j, k, im, jm, km, k_half, m, j_half, i_half, i_max, j_max, i_beg, i_tropopause, im_1, i_land, l;
+		int i, j, k, im, jm, km, k_half, m, j_half, i_half, i_max, j_max, i_beg, im_1, i_land, l;
 		int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
 		int j_pac_had_n_end, j_pac_had_s_end, k_pac_w, k_pac_w_end, k_pac_e;
 		int j_n, j_s;
@@ -63,17 +63,15 @@ class BC_Thermo
 		~BC_Thermo();
 
 
-		void IC_CellStructure ( Array &, Array &, Array & );
+		void IC_CellStructure ( int, int, Array &, Array &, Array & );
 
 		void IC_v_w_WestEastCoast ( Array &, Array &, Array &, Array & );
 
-		void BC_Temperature ( int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, Array_2D &, Array_2D &, Array &, Array &, Array & );
+		void BC_Temperature ( int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, Array_2D &, Array_2D &, Array &, Array &, Array & );
 
-		void BC_WaterVapour ( int, double, double, double, double, double, double, double, Array_2D &, Array &, Array &, Array &, Array &, Array_2D & );
+		void BC_WaterVapour ( int, int, double, double, double, double, double, double, double, double, Array_2D &, Array &, Array &, Array &, Array &, Array_2D & );
 
-		void BC_CO2 ( int, double, double, double, double, double, double, double, double, Array_2D &, Array_2D &, Array &, Array &, Array &, Array & );
-
-		void BC_Tropopause ( int, double, double, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_CO2 ( int, int, double, double, double, double, double, double, double, double, Array_2D &, Array_2D &, Array &, Array &, Array &, Array & );
 
 		void BC_Surface_Temperature ( const string &, Array_2D &, Array & );
 

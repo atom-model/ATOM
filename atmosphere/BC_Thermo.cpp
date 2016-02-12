@@ -59,6 +59,13 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, Array &t, Array &c, Array &aux_v,
 		jm_temp_asym[ l ] = 0;
 //		cout << jm_temp_asym[ l ] << endl;
 	}
+
+
+
+
+
+
+
 }
 
 
@@ -72,7 +79,7 @@ BC_Thermo::~BC_Thermo()
 
 
 
-void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half, int sun_position_lat, int sun_position_lon, int declination, double sun, double ep, double hp, double t_0, double p_0, double t_land_plus, double t_Cretaceous_max, double t_Average, double co2_Average, double t_equator, double t_pole, double t_tropopause, Array_2D &t_j, Array_2D &c_j, Array &h, Array &t, Array &p )
+void BC_Thermo::BC_Temperature ( int i_max, int i_beg, int Ma, int Ma_max, int Ma_max_half, int sun_position_lat, int sun_position_lon, int declination, double sun, double ep, double hp, double t_0, double p_0, double t_land_plus, double t_Cretaceous_max, double t_Average, double co2_Average, double t_equator, double t_pole, double t_tropopause, Array_2D &t_j, Array_2D &c_j, Array &h, Array &t, Array &p )
 {
 // boundary condition of  temperature on land 
 // parabolic distribution from pole to pole accepted
@@ -129,6 +136,25 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 
 
 	t_Cretaceous = ( t_Cretaceous + t_Average + t_0 ) / t_0 - ( ( t_Average + t_0 ) / t_0 );    // non-dimensional
+
+// computation of the tropopause from pole to pole
+	j_max = jm - 1;
+	j_half = j_max / 2;
+
+	i_coeff_plus = ( double ) ( i_beg - i_max ) / ( double ) j_half;
+	i_coeff_minus = ( double ) ( i_beg - i_max ) / ( ( double ) ( j_max - j_half ) * ( double ) ( j_max - j_half ) );
+
+	for ( int j = 0; j < j_half; j++ )
+	{
+		i_trop = ( double ) ( i_coeff_plus * ( ( j * j / j_half ) - 2. * j ) + i_beg );
+		im_tropopause[ j ] = ( int ) i_trop;
+	}
+
+	for ( int j = j_half; j < jm; j++ )
+	{
+		i_trop = ( double ) ( i_coeff_minus * ( j * j - 2. * j_half * j + j_half * j_half ) + i_max );
+		im_tropopause[ j ] = ( int ) i_trop;
+	}
 
 
 // parabolic temperature distribution
@@ -236,10 +262,10 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				for ( int i = 1; i < im; i++ )
+				for ( int i = 1; i <= im_tropopause[ j ]; i++ )
 				{
-					if ( i <= i_max )
 					{
+						d_i_max = ( double ) im_tropopause[ j ];
 						d_i = ( double ) i;
 						t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause
 //						t.x[ i ][ j ][ k ] = pow ( p.x[ i ][ j ][ k ], .28596 );																// temperature from adiabatic formula
@@ -255,12 +281,13 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				for ( int i = i_max; i < im; i++ )
+				for ( int i = im_tropopause[ j ] + 1; i < im; i++ )
 				{
 					t.x[ i ][ j ][ k ] = t_tropopause;
 				}
 			}
 		}
+
 	}
 }
 
@@ -270,27 +297,43 @@ void BC_Thermo::BC_Temperature ( int i_max, int Ma, int Ma_max, int Ma_max_half,
 
 
 
-void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, double c_0, double p_0, double c_land_minus, double c_ocean_minus, Array_2D &c_j, Array &h, Array &t, Array &p, Array &c, Array_2D &t_j )
+void BC_Thermo::BC_WaterVapour ( int i_max, int i_beg, double ep, double hp, double t_0, double c_0, double p_0, double c_land_minus, double c_ocean_minus, double c_tropopause, Array_2D &c_j, Array &h, Array &t, Array &p, Array &c, Array_2D &t_j )
 {
 // initial and boundary conditions of water vapour on water and land surfaces
 // parabolic water vapour distribution from pole to pole accepted
 
 // maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
 // polar water vapour contents on water surface at North and South Pole c_pol = 1.004 compares to 0.004 volume parts
-// minimum water vapour at tropopause c_tropopause = 1.0 compares to 0.0 volume parts
+// minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
+// value 1.0 stands for the maximum value of 35 g/kg water vapour
 
-	j_half = ( jm -1 ) / 2;
+
+// computation of the tropopause from pole to pole
 	j_max = jm - 1;
+	j_half = j_max / 2;
+
+	i_coeff_plus = ( double ) ( i_beg - i_max ) / ( double ) j_half;
+	i_coeff_minus = ( double ) ( i_beg - i_max ) / ( ( double ) ( j_max - j_half ) * ( double ) ( j_max - j_half ) );
+
+	for ( int j = 0; j < j_half; j++ )
+	{
+		i_trop = ( double ) ( i_coeff_plus * ( ( j * j / j_half ) - 2. * j ) + i_beg );
+		im_tropopause[ j ] = ( int ) i_trop;
+	}
+
+	for ( int j = j_half; j < jm; j++ )
+	{
+		i_trop = ( double ) ( i_coeff_minus * ( j * j - 2. * j_half * j + j_half * j_half ) + i_max );
+		im_tropopause[ j ] = ( int ) i_trop;
+	}
+
+
+
 
 	d_i_max = ( double ) i_max;
 
-	c_tropopause = 0.0;
-
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
-
-//	r_0_water_vapour = 0.0094;
-//	R_WaterVapour = 461.6;
 
 // water vapour contents computed by Clausius-Clapeyron-formula
 	for ( int k = 0; k < km; k++ )
@@ -305,6 +348,7 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 //				c_j.y[ j ][ k ]  = .8 * hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0; // 80% saturation of relative water vapour 
 				c_j.y[ j ][ k ]  = hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0; // 20% saturation of relative water vapour 
 				c_j.y[ j ][ k ] = c_ocean_minus * c_j.y[ j ][ k ];				// relativ water vapour contents on ocean surface reduced by factor
+				if ( c_j.y[ j ][ k ] >= .04 )	c_j.y[ j ][ k ] = .04;				// 40 g is the maximum water vapour in dry air without outfall
 				c.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];										// relativ water vapour contents increased by by factor
 			}
 
@@ -312,10 +356,10 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 			{
 //				e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;								// water vapour pressure at local hight h
 //				c_j.y[ j ][ k ] = ep * e_h / p_0;
-
 //				c_j.y[ j ][ k ]  = .8 * hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0;
 				c_j.y[ j ][ k ]  = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0;
 				c_j.y[ j ][ k ] = c_land_minus * c_j.y[ j ][ k ];					// relativ water vapour contents on land reduced by factor
+				if ( c_j.y[ j ][ k ] >= .04 )	c_j.y[ j ][ k ] = .04;				// 40 g is the maximum water vapour in dry air without outfall
 				c.x[ 0 ][ j ][ k ] = c_j.y[ j ][ k ];										// relativ water vapour contents increased by factor
 			}
 		}
@@ -331,10 +375,11 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-					if ( i <= i_max )
+					if ( i <= im_tropopause[ j ] )
 					{
+						d_i_max = ( double ) im_tropopause[ j ];
 						d_i = ( double ) i;
-						c.x[ i ][ j ][ k ] = c_j.y[ j ][ k ] * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) + 1. );						// radial distribution approximated by a parabola ( Weischet )
+						c.x[ i ][ j ][ k ] = c_j.y[ j ][ k ] - ( c_tropopause - c_j.y[ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola ( Weischet )
 					}
 					else 			c.x[ i ][ j ][ k ] = c_tropopause;
 			}
@@ -346,18 +391,32 @@ void BC_Thermo::BC_WaterVapour ( int i_max, double ep, double hp, double t_0, do
 
 
 
-void BC_Thermo::BC_CO2 ( int i_max, double co2_0, double co2_Average, double co2_equator, double co2_pole, double co2_tropopause, double co2_vegetation, double co2_ocean, double co2_land, Array_2D &co2_j, Array_2D &Vegetation, Array &h, Array &t, Array &p, Array &co2 )
+void BC_Thermo::BC_CO2 ( int i_max, int i_beg, double co2_0, double co2_Average, double co2_equator, double co2_pole, double co2_tropopause, double co2_vegetation, double co2_ocean, double co2_land, Array_2D &co2_j, Array_2D &Vegetation, Array &h, Array &t, Array &p, Array &co2 )
 {
 // initial and boundary conditions of CO2 content on water and land surfaces
 // parabolic CO2 content distribution from pole to pole accepted
-	j_half = ( jm -1 ) / 2;
+
+// computation of the tropopause from pole to pole
 	j_max = jm - 1;
+	j_half = j_max / 2;
 
-	d_i_max = ( double ) i_max;
-	d_j_half = ( double ) j_half;
-	d_j_max = ( double ) j_max;
+	i_coeff_plus = ( double ) ( i_beg - i_max ) / ( double ) j_half;
+	i_coeff_minus = ( double ) ( i_beg - i_max ) / ( ( double ) ( j_max - j_half ) * ( double ) ( j_max - j_half ) );
 
-	co2_coeff = co2_pole - co2_equator;
+	for ( int j = 0; j < j_half; j++ )
+	{
+		i_trop = ( double ) ( i_coeff_plus * ( ( j * j / j_half ) - 2. * j ) + i_beg );
+		im_tropopause[ j ] = ( int ) i_trop;
+	}
+
+	for ( int j = j_half; j < jm; j++ )
+	{
+		i_trop = ( double ) ( i_coeff_minus * ( j * j - 2. * j_half * j + j_half * j_half ) + i_max );
+		im_tropopause[ j ] = ( int ) i_trop;
+	}
+
+
+
 
 // CO2-content as initial solution
 	for ( int k = 0; k < km; k++ )
@@ -379,6 +438,7 @@ void BC_Thermo::BC_CO2 ( int i_max, double co2_0, double co2_Average, double co2
 			}
 		}
 	}
+
 
 
 
@@ -408,6 +468,8 @@ void BC_Thermo::BC_CO2 ( int i_max, double co2_0, double co2_Average, double co2
 	}
 
 
+
+
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -424,65 +486,9 @@ void BC_Thermo::BC_CO2 ( int i_max, double co2_0, double co2_Average, double co2
 
 
 
-void BC_Thermo::BC_Tropopause (  int i_max, double tao, double dr, Array_1D &rad, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &co2, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_t, Array &rhs_c )
-{
-// boundary conditions for the beginn of the tropopause
-// linear increase and decrease from pole to pole accepted
-// maximum hight at equator i_max = 40 compares to 20 km hight
-// polar hight at North and South Pole i_beg = 20 compares to 10 km hight
-// constante distribution in zonal direction
-	i_beg = 20;
-	j_max = jm - 1;
-	j_half = j_max / 2;
-	i_coeff_plus = ( double ) ( i_max - i_beg ) / ( double ) j_half;
-	i_coeff_minus = ( double ) ( i_max - i_beg ) / ( double ) ( j_half - j_max );
-
-	for ( int j = 0; j < j_half; j++ )
-	{
-		i_trop = ( double ) ( i_coeff_plus * j + i_beg );
-		i_tropopause = ( int ) i_trop;
-		im_tropopause[ j ] = i_tropopause;
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int i = i_tropopause; i < im; i++ )
-			{
-				u.x[ i ][ j ][ k ] = 0.;
-				v.x[ i ][ j ][ k ] = 0.;
-				w.x[ i ][ j ][ k ] = 0.;
-				t.x[ i ][ j ][ k ] = tao;
-				c.x[ i ][ j ][ k ] = 0.;
-//				co2.x[ i ][ j ][ k ] = 0.;
-			}
-		}
-	}
-
-	for ( int j = j_half; j < jm; j++ )
-	{
-		i_trop = ( double ) ( i_coeff_minus * j + i_beg - i_coeff_minus * j_max );
-		i_tropopause = ( int ) i_trop;
-		im_tropopause[ j ] = i_tropopause;
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int i = i_tropopause; i < im; i++ )
-			{
-				u.x[ i ][ j ][ k ] = 0.;
-				v.x[ i ][ j ][ k ] = 0.;
-				w.x[ i ][ j ][ k ] = 0.;
-				t.x[ i ][ j ][ k ] = tao;
-				c.x[ i ][ j ][ k ] = 0.;
-//				co2.x[ i ][ j ][ k ] = 0.;
-			}
-		}
-	}
-}
 
 
-
-
-
-void BC_Thermo::IC_CellStructure ( Array &u, Array &v, Array &w )
+void BC_Thermo::IC_CellStructure ( int i_max, int i_beg, Array &u, Array &v, Array &w )
 {
 // boundary condition for the velocity components in the circulation cells
 
@@ -562,29 +568,25 @@ void BC_Thermo::IC_CellStructure ( Array &u, Array &v, Array &w )
 	j_had_v_s = 105;
 
 
-// implantation of the limits for the latitude dependent locations of the tropopause
-	i_beg = 14;
-	i_max = 28;
-	i_half = ( im - 1 ) / 2;
+// computation of the tropopause from pole to pole
 	j_max = jm - 1;
 	j_half = j_max / 2;
 
-	i_coeff_plus = ( double ) ( i_max - i_beg ) / ( double ) j_half;
-	i_coeff_minus = ( double ) ( i_max - i_beg ) / ( double ) ( j_half - j_max );
+	i_coeff_plus = ( double ) ( i_beg - i_max ) / ( double ) j_half;
+	i_coeff_minus = ( double ) ( i_beg - i_max ) / ( ( double ) ( j_max - j_half ) * ( double ) ( j_max - j_half ) );
 
 	for ( int j = 0; j < j_half; j++ )
 	{
-		i_trop = ( double ) ( i_coeff_plus * j + i_beg );
-		i_tropopause = ( int ) i_trop;
-		im_tropopause[ j ] = i_tropopause;
+		i_trop = ( double ) ( i_coeff_plus * ( ( j * j / j_half ) - 2. * j ) + i_beg );
+		im_tropopause[ j ] = ( int ) i_trop;
 	}
 
 	for ( int j = j_half; j < jm; j++ )
 	{
-		i_trop = ( double ) ( i_coeff_minus * j + i_beg - i_coeff_minus * j_max );
-		i_tropopause = ( int ) i_trop;
-		im_tropopause[ j ] = i_tropopause;
+		i_trop = ( double ) ( i_coeff_minus * ( j * j - 2. * j_half * j + j_half * j_half ) + i_max );
+		im_tropopause[ j ] = ( int ) i_trop;
 	}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
