@@ -12,6 +12,8 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
+#include <cstring>
+#include <iomanip>
 
 #include "BC_Bath_Atm.h"
 
@@ -311,7 +313,7 @@ void BC_Bathymetry_Atmosphere::BC_IceShield ( int Ma, double t_0, Array &h, Arra
 
 
 
-void BC_Bathymetry_Atmosphere::BC_SolidGround ( int i_max, double t_equator, double t_pole, double t_tropopause, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_vegetation, double co2_land, double co2_ocean, double pa, double gam, Array &h, Array &t, Array &p_dyn, Array &c, Array &co2, Array &pn_dyn, Array_2D &Vegetation )
+void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationFluxDensity, int i_max, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double co2_vegetation, double co2_land, double co2_ocean, double pa, double gam, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &co2, Array &pn_dyn, Array_2D &Vegetation )
 {
 
 // boundary conditions for the total solid ground
@@ -336,15 +338,12 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int i_max, double t_equator, dou
 			if ( h.x[ 0 ][ j ][ k ] == 0. ) 
 			{
 				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole;
-				co2.x[ 0 ][ j ][ k ] = ( co2.x[ 0 ][ j ][ k ] + co2_ocean ) / co2_0;															// 0.6/600Gt CO2-source on oceans per year 
+				co2.x[ 0 ][ j ][ k ] = ( co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_ocean ) / co2_0;
 			}
 			if ( h.x[ 0 ][ j ][ k ] == 1. ) 
 			{
 				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole; // parabolic distribution from pole to pole
-				co2.x[ 0 ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - co2_vegetation * Vegetation.y[ j ][ k ];						// 100/600Gt CO2-sink by vegetation on land per year
-				co2.x[ 0 ][ j ][ k ] = ( co2.x[ 0 ][ j ][ k ] + co2_land ) / co2_0;																// 0.2/600Gt CO2-source on land per year everywhere
+				co2.x[ 0 ][ j ][ k ] = ( co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;
 			}
 		}
 	}
@@ -361,19 +360,81 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int i_max, double t_equator, dou
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
 					p_dyn.x[ i ][ j ][ k ] = pn_dyn.x[ i ][ j ][ k ] = pa;
-
-					if ( Ma == 0 ) 		t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];																	// linear temperature decay up to tropopause
-					else 					t.x[ i ][ j ][ k ] = ( - 5. * gam * ( double ) i + t.x[ 0 ][ j ][ k ] * t_0 ) / t_0;			// linear temperature decay up to tropopause
+					u.x[ i ][ j ][ k ] = 0.;
+					v.x[ i ][ j ][ k ] = 0.;
+					w.x[ i ][ j ][ k ] = 0.;
 
 					d_i_max = .5 * ( double ) i_max;
 					d_i = ( double ) i;
+
+					if ( ( RadiationFluxDensity == 1 ) && ( Ma >= 0 ) ) 
+					{
+						t.x[ i ][ j ][ k ] = ( - 5. * gam * d_i + t.x[ 0 ][ j ][ k ] * t_0 ) / t_0;			// linear temperature decay up to tropopause
+					}
+
 					c.x[ i ][ j ][ k ] = c.x[ 0 ][ j ][ k ] - ( c_tropopause - c.x[ 0 ][ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola ( Weischet )
-					co2.x[ i ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - ( ( co2_tropopause - co2.x[ 0 ][ j ][ k ] * co2_0 ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ) ) / co2_0;	// radial distribution approximated by a parabola
-					if ( co2.x[ i ][ j ][ k ] < 0. ) co2.x[ i ][ j ][ k ] = 0.;
+					co2.x[ i ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - ( ( co2_tropopause - co2.x[ 0 ][ j ][ k ] * co2_0 ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ) ) / co2_0;
+																																// radial distribution approximated by a parabola
 				}
 			}
 		}
 	}
 
 }
+
+
+
+
+
+void BC_Bathymetry_Atmosphere::vegetationDistribution ( double max_Precipitation, Array_2D &Precipitation, Array_2D &Vegetation, Array &t, Array &h )
+{
+// description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
+
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int k = 0; k < km; k++ )
+		{
+			if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( t.x[ 0 ][ j ][ k ] >= 1. ) ) Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation;			// actual vegetation areas
+			else Vegetation.y[ j ][ k ] = 0.;
+			if ( max_Precipitation <= 0. ) Vegetation.y[ j ][ k ] = 0.;
+		}
+	}
+}
+
+
+
+
+
+void BC_Bathymetry_Atmosphere::land_oceanFraction ( Array &h )
+{
+// calculation of the ratio ocean to land, also addition and substraction of CO2 of land, ocean and vegetation
+
+	h_point_max =  ( jm - 1 ) * ( km - 1 );
+
+	h_land = 0;
+
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int k = 0; k < km; k++ )
+		{
+			if ( h.x[ 0 ][ j ][ k ] == 1. )		h_land++;
+		}
+	}
+
+	h_ocean = h_point_max - h_land;
+
+	ozean_land = ( double ) h_ocean / ( double ) h_land;
+
+	cout.precision ( 3 );
+
+	cout << endl;
+	cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      total number of points at constant hight " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_point_max << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      number of points on the ocean surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_ocean << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      number of points on the land surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_land << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      ocean/land ratio " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << ozean_land << endl << endl;
+
+	cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by ocean surface " << " = + " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_ocean << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by land surface " << " = + " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_land << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      substraction of CO2 by vegetation " << " = - " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_vegetation << endl << setiosflags ( ios::left ) << setw ( 50 ) << "      valid for one single point on the surface"<< endl << endl;
+	cout << endl;
+}
+
+
+
+
 

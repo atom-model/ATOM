@@ -17,11 +17,12 @@
 
 #include "BC_Thermo.h"
 #include "Array.h"
+#include "Array_2D.h"
 
 using namespace std;
 
 
-BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationFluxDensity, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double lv, double cp_l, double L_atm, double dr, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_0, double co2_vegetation, double co2_ocean, double co2_land, double ik, double epsilon, double c_ocean_minus, double c_land_minus, double t_average, double co2_average, double co2_pole, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land_plus, double t_tropopause, double t_equator, double t_pole, double gam )
+BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationFluxDensity, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double epsilon_extra, double lv, double cp_l, double L_atm, double dr, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam )
 {
 	this -> im = im;
 	this -> jm = jm;
@@ -49,23 +50,25 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 	this-> r_0_water_vapour = r_0_water_vapour;
 	this-> R_WaterVapour = R_WaterVapour;
 	this-> co2_0 = co2_0;
+	this-> co2_cretaceous = co2_cretaceous;
 	this-> co2_vegetation = co2_vegetation;
 	this-> co2_ocean = co2_ocean;
 	this-> co2_land = co2_land;
 	this-> ik = ik;
 	this-> epsilon_extra = epsilon_extra;
-	this-> c_ocean_minus = c_ocean_minus;
-	this-> c_land_minus = c_land_minus;
+	this-> c_ocean = c_ocean;
+	this-> c_land = c_land;
 	this-> t_average = t_average;
 	this-> co2_average = co2_average;
 	this-> co2_pole = co2_pole;
 	this-> Ma = Ma;
 	this-> Ma_max = Ma_max;
 	this-> t_cretaceous_max = t_cretaceous_max;
+	this-> t_cretaceous = t_cretaceous;
 	this-> radiation_ocean = radiation_ocean;
 	this-> radiation_pole = radiation_pole;
 	this-> radiation_equator = radiation_equator;
-	this-> t_land_plus = t_land_plus;
+	this-> t_land = t_land;
 	this-> t_tropopause = t_tropopause;
 	this-> t_equator = t_equator;
 	this-> t_pole = t_pole;
@@ -86,7 +89,6 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 	cout.setf ( ios::fixed );
 
 // array "jm_temp_asym" for configuring data due to latitude dependent tropopause
-
 	jm_temp_asym = new double[ jm ];
 
 	for ( int l = 0; l < jm; l++ )
@@ -95,30 +97,53 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 //		cout << jm_temp_asym[ l ] << endl;
 	}
 
+
+// array "alfa" for Thomas algorithm
+	alfa = new double[ im ];
+
+	for ( int l = 0; l < im; l++ )
+	{
+		alfa[ l ] = 0;
+//		cout << alfa[ l ] << endl;
+	}
+
+
+// array "beta" for Thomas algorithm
+	beta = new double[ im ];
+
+	for ( int l = 0; l < im; l++ )
+	{
+		beta[ l ] = 0;
+//		cout << beta[ l ] << endl;
+	}
+
 }
 
 
 
 BC_Thermo::~BC_Thermo()
 {
-	delete [  ]jm_temp_asym;
+	delete [  ] jm_temp_asym;
+	delete [  ] alfa;
+	delete [  ] beta;
 }
 
 
 
 
 
-void BC_Thermo::BC_RadiationBalance_comp ( Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Water, Array_2D &Ik, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array &t, Array &h )
+void BC_Thermo::BC_RadiationBalance_comp ( int *im_tropopause, double max_water, double max_water_super, double max_ice_air, double max_precipitable_water, double max_Precipitation, double max_co2, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &precipitable_water, Array_2D &Water, Array_2D &Water_super, Array_2D &IceAir, Array_2D &Ik, Array_2D &Q_Radiation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array_2D &temp_rad, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D )
 {
 // class element for the computation of the radiation balance
 // computation of the local temperature based on the radiation balance
+// two layer model
 
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
 
 	pi180 = 180./M_PI;
 
-//	j_half = ( jm -1 ) / 2 + 30;														// position of the sun at 30°S ( 90 + 30 = 120 )
+//	j_half = ( jm -1 ) / 2 + 30;															// position of the sun at 30°S ( 90 + 30 = 120 )
 	j_half = ( jm -1 ) / 2;																	// position of the sun at 0°S
 	j_max = jm - 1;
 
@@ -132,91 +157,268 @@ void BC_Thermo::BC_RadiationBalance_comp ( Array_2D &albedo, Array_2D &epsilon, 
 	d_k_max = ( double ) k_max;
 
 
-	t_eff_earth = 255.;																	// effectiv radiation temperature of 255 K compares to -18 °C for 30% albedo_extra
+	t_eff_earth = 255.;																		// effectiv radiation temperature of 255 K compares to -18 °C for 30% albedo_extra
 																									// comparable with measurements of temperature in 5000 m hight and pressure 550 hPa
 																									// sigma * t-earth ** 4 = ( 1- albedo_extra ) Ik / 4 = 239 W/m2, valid as reference value
 
 //	j_sun = 30;																				// lateral sun location, 30 = 60°N
-	j_sun = 0;																				// equatorial sun location
+	j_sun = 0;																					// equatorial sun location
 
-	for ( int k = 0; k < km; k++ )
+
+//	ik_equator = 341.5;
+	ik_equator = 320.;
+	ik_pole = 60.;
+	ik_coeff = ik_pole - ik_equator;
+
+	albedo_equator = albedo_extra;
+	albedo_pole = .7;
+	albedo_coeff = albedo_pole - albedo_equator;
+
+// effective temperature, albedo and emissivity/absorptivity for the two layer model
+	for ( j = 0; j < jm; j++ )
 	{
-		for ( int j = 0; j < jm; j++ )
+		for ( k = 0; k < km; k++ )
 		{
-//			Ik.y[ j ][ k ] = ik * sin ( ( ( double ) j - j_sun ) / pi180 ) * sin ( ( ( double ) k - 90 ) / pi180 ) / 4.;	//	solar short wave radiation on a point location
-			Ik.y[ j ][ k ] = ik * sin ( ( ( double ) j - j_sun ) / pi180 ) / 4.;	// solar short wave radiation as zonal distribution
-			if ( Ik.y[ j ][ k ] < 40. ) Ik.y[ j ][ k ] = 40.;
+			d_j = ( double ) j;
+			if ( h.x[ 0 ][ j ][ k ]  == 0. ) 	albedo.y[ j ][ k ] = albedo_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + albedo_pole;
 
-//			albedo.y[ j ][ k ] = albedo_extra;
-			albedo.y[ j ][ k ] = albedo_extra + .001 * ( 1. - ( 2. - Water.y[ j ][ k ] ) / 2. );
-			if ( albedo.y[ j ][ k ] <= albedo_extra ) albedo.y[ j ][ k ] = albedo_extra;
-//			if ( h.x[ 0 ][ j ][ k ] == 0 ) 	albedo.y[ j ][ k ] = albedo_extra + .001 * ( 2. - Water.y[ j ][ k ] ) / 2.;
-//			if ( h.x[ 0 ][ j ][ k ] == 0 ) 	albedo.y[ j ][ k ] = albedo_extra;
-//			else 								albedo.y[ j ][ k ] = albedo_extra - .15;
+			if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 1 ][ j ][ k ] == 0. ) ) 	albedo.y[ j ][ k ] = albedo_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + albedo_pole + .08;
+
+			for ( i = 1; i < im-1; i++ )
+			{
+				if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i+1 ][ j ][ k ] == 0. ) ) 	albedo.y[ j ][ k ] = albedo_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + albedo_pole + .02 * ( double ) i;
+
+				if ( ( t.x[ i ][ j ][ k ] * t_0 - t_0 <= 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i+1 ][ j ][ k ] == 0. ) ) 	albedo.y[ j ][ k ] = albedo_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + albedo_pole + .015 * ( double ) i;
+			}
 
 
-			epsilon_extra = .71;
-			epsilon.y[ j ][ k ] = 2. * ( 1. - 1. / pow ( ( t.x[ 0 ][ j ][ k ] * t_0 / t_eff_earth ), 4. ) ); // bottom temperature must be known in advance
-//			epsilon.y[ j ][ k ] = epsilon_extra;
-			if ( epsilon.y[ j ][ k ] <= epsilon_extra ) epsilon.y[ j ][ k ] = epsilon_extra;
+//				Ik.y[ j ][ k ] = ik * sin ( ( ( double ) j - j_sun ) / pi180 ) * sin ( ( ( double ) k - 90 ) / pi180 ) / 4.;	//	solar short wave radiation on a point location
+//				Ik.y[ j ][ k ] = ik * sin ( ( ( double ) j - j_sun ) / pi180 ) / 4.;	// solar short wave radiation as zonal distribution
+//				if ( Ik.y[ j ][ k ] < 60. ) Ik.y[ j ][ k ] = 60.;
+				Ik.y[ j ][ k ] = ik_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + ik_pole;
 
+				if ( max_water == 0. ) max_water = 1.;
+				if ( max_water_super == 0. ) max_water_super = 1.;
+				if ( max_ice_air == 0. ) max_ice_air = 1.;
+				if ( max_precipitable_water == 0. ) max_precipitable_water = 1.;
+				if ( max_Precipitation == 0. ) max_Precipitation = 1.;
+				if ( max_co2 == 0. ) max_co2 = 1.;
+
+				t_eff_earth = pow ( ( 1. - albedo.y[ j ][ k ] ) * Ik.y[ j ][ k ] / sigma, 1. / 4. );
+
+				epsilon.y[ j ][ k ] = 2. * ( 1. - 1. / pow ( ( t.x[ 0 ][ j ][ k ] * t_0 / t_eff_earth ), 4. ) ); // bottom temperature must be known in advance
+
+				epsilon.y[ j ][ k ] = epsilon.y[ j ][ k ] + .01 * ( 1. - ( max_water - Water.y[ j ][ k ] ) / max_water );
+//				epsilon.y[ j ][ k ] = epsilon.y[ j ][ k ] + .01 * ( 1. - ( max_water_super - Water_super.y[ j ][ k ] ) / max_water_super );
+//				epsilon.y[ j ][ k ] = epsilon.y[ j ][ k ] + .01 * ( 1. - ( max_ice_air - IceAir.y[ j ][ k ] ) / max_ice_air );
+
+				epsilon.y[ j ][ k ] = epsilon.y[ j ][ k ] + .005 * ( 1. - ( max_co2 - co2_total.y[ j ][ k ] ) / max_co2 );
+
+//				epsilon.y[ j ][ k ] = epsilon.y[ j ][ k ] + .01 * ( 1. - ( max_precipitable_water - precipitable_water.y[ j ][ k ] ) / max_precipitable_water );
+//				epsilon.y[ j ][ k ] = epsilon.y[ j ][ k ] + .01 * ( 1. - ( max_Precipitation - Precipitation.y[ j ][ k ] ) / max_Precipitation );
+		}
+	}
+
+
+// radiation and temperature prediction for the two layer model
+	for ( k = 0; k < km; k++ )
+	{
+		for ( j = 0; j < jm; j++ )
+		{
 			Radiation_Balance_bot.y[ j ][ k ] = ( 1. - albedo.y[ j ][ k ] ) / ( 1. - epsilon.y[ j ][ k ] / 2. ) * Ik.y[ j ][ k ];
-			Radiation_Balance_atm.y[ j ][ k ] = ( 1. - albedo.y[ j ][ k ] ) / ( 2. - epsilon.y[ j ][ k ] ) * Ik.y[ j ][ k ];
+			Radiation_Balance_atm.y[ j ][ k ] = epsilon.y[ j ][ k ] * ( 1. - albedo.y[ j ][ k ] ) / ( 2. - epsilon.y[ j ][ k ] ) * Ik.y[ j ][ k ];
+
+			Radiation_Balance.y[ j ][ k ] = ( 1. - albedo.y[ j ][ k ] ) * Ik.y[ j ][ k ] + Radiation_Balance_bot.y[ j ][ k ] - Radiation_Balance_atm.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ] - Q_bottom.y[ j ][ k ];															 // control, supposed to be zero
+
+			Q_Radiation.y[ j ][ k ] = Radiation_Balance_bot.y[ j ][ k ];
 
 			temp_eff_bot.y[ j ][ k ] = pow ( Radiation_Balance_bot.y[ j ][ k ] / sigma, 1. / 4. );
-			temp_eff_atm.y[ j ][ k ] = pow ( Radiation_Balance_atm.y[ j ][ k ] / sigma, 1. / 4. );
+			temp_eff_atm.y[ j ][ k ] = pow ( Radiation_Balance_atm.y[ j ][ k ] / ( epsilon.y[ j ][ k ] * sigma ), 1. / 4. );
 
-			t.x[ 0 ][ j ][ k ] = temp_eff_bot.y[ j ][ k ] / t_0;
+			t.x[ 0 ][ j ][ k ] = pow ( Radiation_Balance_bot.y[ j ][ k ] / sigma, 1. / 4. ) / t_0;
 
-//			epsilon.y[ j ][ k ] = 2. * ( 1. - 1. / pow ( ( temp_eff_bot.y[ j ][ k ] / t_eff_earth ), 4. ) ); // bottom temperature must be known in advance
+			temp_rad.y[ j ][ k ] = t.x[ 0 ][ j ][ k ] * t_0 - t_0;
 
-			e = ( r_0_water_vapour * R_WaterVapour * temp_eff_bot.y[ j ][ k ] ) * .01;	// water vapour pressure at the surface in hPa
+//	if ( ( j == 90 ) && ( k == 180 ) )		cout << j << "   " << k << "   " << im_tropopause[ j ] << "   " << t_tropopause << "   " << t_eff_earth << "   " << epsilon.y[ j ][ k ] << "   " << t.x[ 0 ][ j ][ k ] * t_0 << endl;
 
-			D = Ik.y[ j ][ k ] * .26;														// direct sun radiation, short-wave (Häckel)
-			H = Ik.y[ j ][ k ] * .29;														// diffusive sky radiation, short-wave (Häckel)
-			G = D + H;																		// total solar radiation from above = global radiation, short-wave
-			R_short = G * albedo.y[ j ][ k ];														// total reflected solar radiation, short-wave
-			Q_short = G - R_short;													// short-wave radiation balance
+// zero layer model
+			D = Ik.y[ j ][ k ] * .26;															// direct sun radiation, short-wave (Häckel)
+			H = Ik.y[ j ][ k ] * .29;															// diffusive sky radiation, short-wave (Häckel)
+			G = D + H;																			// total solar radiation from above = global radiation, short-wave
+			R_short = G * albedo_extra;												// total reflected solar radiation, short-wave (Häckel)
+			Q_short = G - R_short;														// short-wave radiation balance
 
-//			AG = ( .594 + .0416 * sqrt ( e ) ) * sigma * pow ( temp_eff_bot.y[ j ][ k ], 4. ); // downward terrestrial radiation, long-wave (Häckel)
-//			A = epsilon.y[ j ][ k ] * sigma * pow ( temp_eff_bot.y[ j ][ k ], 4. );	// outgoing long-wave radiation of the surface, long-wave
-			AG = Ik.y[ j ][ k ] * 1.14;													// downward terrestrial radiation, long-wave (Häckel)
-			A = Ik.y[ j ][ k ] * .95;														// outgoing long-wave radiation of the surface, long-wave (Häckel)
-			R_long = AG * .05;															// total reflected terrestrial radiation, long-wave (Häckel)
-			Q_long = AG - A - R_long;												// long-wave radiation balance
+			AG = Ik.y[ j ][ k ] * 1.14;														// downward terrestrial radiation, long-wave (Häckel)
+			A = Ik.y[ j ][ k ] * .95;															// outgoing long-wave radiation of the surface, long-wave (Häckel)
+			R_long = Ik.y[ j ][ k ] * .05;													// total reflected terrestrial radiation, long-wave (Häckel)
+			Q_long = AG - A - R_long;													// long-wave radiation balance
 
-			Radiation_Balance.y[ j ][ k ] = Q_short + Q_long;			// total radiation balance, short- and long-wave
+			Q_total = Q_short + Q_long;												// total radiation balance, short- and long-wave
+
+			Q_lat = Ik.y[ j ][ k ] * .27;														// latent energy (Häckel)
+			Q_sen = Ik.y[ j ][ k ] * .05;													// sensible energy (Häckel)
+			Q_bot = Q_total - Q_lat - Q_sen;
+
+			Q_rad = Q_short + AG - Q_lat - Q_sen - Q_bot;
+
+			t_rad = pow ( Q_rad / ( epsilon_extra * sigma ), 1. / 4. );
+		}
+	}
 
 
 
-// printout for various radiation quantities for the terrestrial radiation balance
 /*
+// printout for various radiation quantities for the terrestrial radiation balance
+
 	cout.precision ( 3 );
 
-			cout << endl;
-			cout << "   j = " << j << "   k = " << k << endl << endl;
+			if ( ( j == 90 ) && ( k == 180 ) )
+			{
+				cout << endl;
+				cout << "   j = " << j << "   k = " << k << endl << endl;
 
-			cout << "__________     radiation data in W/m²    _______________" << endl << endl;
+				cout << "__________     radiation data in W/m²    _______________" << endl << endl;
 
-			cout << " t_SL (°C) = " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << "    Ik / 4 (W/m²) = " << Ik.y[ j ][ k ] << "   Radiation_Balance_bot = " << Radiation_Balance_bot.y[ j ][ k ] << "   Radiation_Balance_atm = " << Radiation_Balance_atm.y[ j ][ k ] << "   temp_eff_bot = " << temp_eff_bot.y[ j ][ k ] << "   temp_eff_atm = " << temp_eff_atm.y[ j ][ k ] << endl << endl;
+				cout << " t_SL (°C) = " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << "    Ik / 4 (W/m²) = " << Ik.y[ j ][ k ] << "   Radiation_Balance_bot = " << Radiation_Balance_bot.y[ j ][ k ] << "   Radiation_Balance_atm = " << Radiation_Balance_atm.y[ j ][ k ] << "   temp_eff_bot = " << temp_eff_bot.y[ j ][ k ] - 273.15 << "   temp_eff_atm = " << temp_eff_atm.y[ j ][ k ] - 273.15 << endl << endl;
 
-			cout << " D  = " << D << "   H = " << H << "   G = " << G << "   R_short = " << R_short << "   Q_short = " << Q_short << "   epsilon_extra = " << epsilon_extra  << "   epsilon = " << epsilon.y[ j ][ k ] << "   albedo_extra = " << albedo_extra << "   albedo = " << albedo.y[ j ][ k ] << endl << endl;
+				cout << " D  = " << D << "   H = " << H << "   G = " << G << "   R_short = " << R_short << "   Q_short = " << Q_short << "   epsilon_extra = " << epsilon_extra  << "   epsilon = " << epsilon.y[ j ][ k ] << "   albedo_extra = " << albedo_extra << "   albedo = " << albedo.y[ j ][ k ] << endl << endl;
 
-			cout << " AG = " << AG << "   A = " << A << "               R_long  = " << R_long << "   Q_long  = " << Q_long << "   e = " << e << "   Radiation_Balance = " << Radiation_Balance.y[ j ][ k ] << endl << endl << endl;
+				cout << " AG = " << AG << "   A = " << A << "   R_long  = " << R_long << "   Q_long  = " << Q_long << "   e = " << e << "   Q_total = " << Q_total << endl << endl;
 
-			cout << "__________     radiation data in % are based on the local extra terrestrial sun radiaton Ik in W/m²    _______________" << endl << endl;
+				cout << " Q_lat = " << Q_lat << "   Q_sen = " << Q_sen << "   Q_bot  = " << Q_bot << "   Q_rad  = " << Q_rad << "   t_rad [ °C ] = " << t_rad << "   Q_total = " << Q_total << endl << endl;			Radiation_Balance_bot.y[ j ][ k ] = ( 1. - albedo.y[ j ][ k ] ) / ( 1. - epsilon.y[ j ][ k ] / 2. ) * Ik.y[ j ][ k ];
+			Radiation_Balance_atm.y[ j ][ k ] = epsilon.y[ j ][ k ] * ( 1. - albedo.y[ j ][ k ] ) / ( 2. - epsilon.y[ j ][ k ] ) * Ik.y[ j ][ k ];
 
-			cout << " t_h (°C) = " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << "    Ik / 4 (%) = " << Ik.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Radiation_Balance_bot = " << Radiation_Balance_bot.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Radiation_Balance_atm = " << Radiation_Balance_atm.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   temp_eff_bot = " << temp_eff_bot.y[ j ][ k ] << "   temp_eff_atm = " << temp_eff_atm.y[ j ][ k ] << endl << endl;
 
-			cout << " D  = " << D / Ik.y[ j ][ k ] * 100. << "   H = " << H / Ik.y[ j ][ k ] * 100. << "   G = " << G / Ik.y[ j ][ k ] * 100. << "   R_short = " << R_short / Ik.y[ j ][ k ] * 100. << "   Q_short = " << Q_short / Ik.y[ j ][ k ] * 100. << "   epsilon = " << epsilon << "   albedo = " << albedo.y[ j ][ k ] << endl << endl;
+				cout << " Q_latent = " << Q_latent.y[ j ][ k ] << "   Q_sensible = " <<  + Q_sensible.y[ j ][ k ] << "   Q_bottom  = " << Q_bottom.y[ j ][ k ] << "   Radadiation_Balance  = " << Radiation_Balance.y[ j ][ k ] << "   t [ K ] = " << t.x[ 0 ][ j ][ k ] * t_0 << "   Q_total = " << Q_total << endl << endl << endl;
 
-			cout << " AG = " << AG / Ik.y[ j ][ k ] * 100. << "   A = " << A / Ik.y[ j ][ k ] * 100. << "               R_long  = " << R_long / Ik.y[ j ][ k ] * 100. << "   Q_long  = " << Q_long / Ik.y[ j ][ k ] * 100. << "   e (hPa) = " << e << "   Radiation_Balance = " << Radiation_Balance.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << endl << endl << endl;
+				cout << "__________     radiation data in % are based on the local extra terrestrial sun radiaton Ik in W/m²    _______________" << endl << endl;
+
+				cout << " t_h (°C) = " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << "    Ik / 4 (%) = " << Ik.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Radiation_Balance_bot = " << Radiation_Balance_bot.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Radiation_Balance_atm = " << Radiation_Balance_atm.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   temp_eff_bot = " << temp_eff_bot.y[ j ][ k ] - 273.15 << "   temp_eff_atm = " << temp_eff_atm.y[ j ][ k ] - 273.15 << endl << endl;
+
+				cout << " D  = " << D / Ik.y[ j ][ k ] * 100. << "   H = " << H / Ik.y[ j ][ k ] * 100. << "   G = " << G / Ik.y[ j ][ k ] * 100. << "   R_short = " << R_short / Ik.y[ j ][ k ] * 100. << "   Q_short = " << Q_short / Ik.y[ j ][ k ] * 100. << "   epsilon = " << epsilon.y[ j ][ k ] << "   albedo = " << albedo.y[ j ][ k ] << endl << endl;
+
+				cout << " AG = " << AG / Ik.y[ j ][ k ] * 100. << "   A = " << A / Ik.y[ j ][ k ] * 100. << "   R_long  = " << R_long / Ik.y[ j ][ k ] * 100. << "   Q_long  = " << Q_long / Ik.y[ j ][ k ] * 100. << "   e (hPa) = " << e << "   Q_total = " << Q_total / Ik.y[ j ][ k ] * 100. << endl << endl;
+
+				cout << " Q_lat = " << Q_lat / Ik.y[ j ][ k ] * 100. << "   Q_sen = " << Q_sen / Ik.y[ j ][ k ] * 100. << "   Q_bot  = " << Q_bot / Ik.y[ j ][ k ] * 100. << "   Q_rad  = " << Q_rad / Ik.y[ j ][ k ] * 100. << "   t_rad [ °C ] = " << t_rad << "   Q_total = " << Q_total / Ik.y[ j ][ k ] * 100. << endl << endl;
+
+				cout << " Q_latent = " << Q_latent.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Q_sensible = " <<  + Q_sensible.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Q_bottom  = " << Q_bottom.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Radadiation_Balance  = " << Radiation_Balance.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   t [ °C ] = " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << "   Q_total = " << Q_total << endl << endl << endl;
+
+			}
 
 	cout.precision ( 6 );
 */
 
+
+
+/*
+//	multilayer radiation model in test phase
+	cout.precision ( 10 );
+
+// boundary conditions for solid ground areas
+	for ( j = 0; j < jm; j++ )
+	{
+		for ( k = 0; k < km; k++ )
+		{
+			for ( i = 0; i < im; i++ )
+			{
+
+//				if ( i >= im_tropopause[ j ] )
+//				{
+//					t.x[ i ][ j ][ k ] = t_tropopause;
+//				}
+//				else
+
+				{
+					t_eff_earth = pow ( ( 1. - albedo.y[ j ][ k ] ) * Ik.y[ j ][ k ] / sigma, 1. / 4. );
+					epsilon_3D.x[ i ][ j ][ k ] = 2. * ( 1. - 1. / pow ( ( t.x[ i ][ j ][ k ] * t_0 / t_eff_earth ), 4. ) );
+//					epsilon_3D.x[ i ][ j ][ k ] = 2. * ( 1. - 1. / pow ( ( t.x[ i ][ j ][ k ] * t_0 / t.x[ i + 1 ][ j ][ k ] * t_0 ), 4. ) );
+//					epsilon_3D.x[ i ][ j ][ k ] = 1.;
+
+	if ( ( j == 90 ) && ( k == 180 ) )		cout << i << "   " << j << "   " << k << "   " << im_tropopause[ j ] << "   " << t_tropopause << "   " << t_eff_earth << "   " << epsilon_3D.x[ i ][ j ][ k ] << "   " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "   " << t.x[ i ][ j ][ k ] * t_0 << endl;
+
+				}
+			}
+
+//			radiation_3D.x[ 0 ][ j ][ k ] = ( 1. - albedo.y[ j ][ k ] ) / ( 1. - eps / 2. ) * Ik.y[ j ][ k ];
+			radiation_3D.x[ im - 1 ][ j ][ k ] = sigma * pow ( t_tropopause * t_0, 4. );
+
+			alfa[ 0 ] = epsilon_3D.x[ 1 ][ j ][ k ];
+			beta[ 0 ] = - ( - ( 1. - albedo.y[ j ][ k ] + .05 ) ) * Ik.y[ j ][ k ];
+//			beta[ 0 ] = - ( - ( 1. - albedo.y[ j ][ k ] ) ) * Ik.y[ j ][ k ];
+
+			alfa[ im - 1 ] = - ( - 2. * epsilon_3D.x[ im - 1 ][ j ][ k ] ) / ( sigma * epsilon_3D.x[ im - 2 ][ j ][ k ] );
+			beta[ im - 1 ] = - pow ( t_tropopause, 4. );
+//			beta[ im - 1 ] = 0.; 
+
+			for ( i = 1; i < im-1; i++ )
+			{
+				a = epsilon_3D.x[ i - 1 ][ j ][ k ];
+				b = - 2. * epsilon_3D.x[ i ][ j ][ k ];
+				cc = epsilon_3D.x[ i + 1 ][ j ][ k ];
+				d = 0.;
+//				d = - ( 1. - epsilon_3D.x[ i - 1 ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
+
+				alfa[ i ] = - cc / ( b + alfa[ i - 1 ] * a );
+				beta[ i ] = ( d - a * beta[ i - 1 ] ) / ( b + alfa[ i - 1 ] * a );
+
+	if ( ( j == 90 ) && ( k == 180 ) )		cout << i << "   " << j << "   " << k << "   " << a << "   " << b << "   " << cc << "   " << d << "   " << alfa[ i ] << "   " << beta[ i ] << "   " << epsilon_3D.x[ i ][ j ][ k ] << endl;
+
+			}
+
+			for ( i = im - 2; i >= 0; i-- )
+			{
+				radiation_3D.x[ i ][ j ][ k ] = alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];				// Thomas algorithm, recurrance formula
+
+				t.x[ i ][ j ][ k ] = pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, 1. / 4. ) / t_0;
+
+
+	if ( ( j == 90 ) && ( k == 180 ) )	cout << i << "   " << j << "   " << k << "   " << im_tropopause[ j ] << "   " << t_tropopause << "   " << t_eff_earth - t_0 << "   " << epsilon_3D.x[ i ][ j ][ k ] << "   " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "   " << radiation_3D.x[ i ][ j ][ k ] << endl;
+
+			}
 		}
 	}
+*/
+
+
+
+/*
+	cout << endl << " ***** printout of 2D-field solar radiation ***** " << endl << endl;
+	Ik.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field albedo ***** " << endl << endl;
+	albedo.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field epsilon ***** " << endl << endl;
+	epsilon.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field Radiation_Balance ***** " << endl << endl;
+	Radiation_Balance.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field Radiation_Balance_bot ***** " << endl << endl;
+	Radiation_Balance_bot.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field Radiation_Balance_atm ***** " << endl << endl;
+	Radiation_Balance_atm.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field Q_Radiation ***** " << endl << endl;
+	Q_Radiation.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field Q_latent ***** " << endl << endl;
+	Q_latent.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field Q_sensible ***** " << endl << endl;
+	Q_sensible.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field Q_bottom ***** " << endl << endl;
+	Q_bottom.printArray_2D();
+
+	cout << endl << " ***** printout of 2D-field temperature_rad ***** " << endl << endl;
+	temp_rad.printArray_2D();
+*/
+//	cout << endl << " ***** printout of 2D-field solar radiation ***** " << endl << endl;
+//	Ik.printArray_2D();
+
+
 }
 
 
@@ -265,12 +467,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array &h, Array &t, Array &
 
 	cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_cretaceous << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << temperature_unit << endl;
 
-
 	t_cretaceous = ( t_cretaceous + t_average + t_0 ) / t_0 - ( ( t_average + t_0 ) / t_0 );    // non-dimensional
-
-
-
-
 
 	if ( RadiationFluxDensity == 0 )
 	{
@@ -289,13 +486,12 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array &h, Array &t, Array &
 
 						if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
 						{
-							t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_land_plus;
+							t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_land;
 						}
 					}
 				}
 			}																							// end parabolic temperature distribution
 		}																								// end of while (  Ma > 0 )
-
 
 
 
@@ -373,6 +569,41 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array &h, Array &t, Array &
 	}
 
 
+
+
+
+
+	if ( RadiationFluxDensity == 1 )
+	{
+	// if Ma >= 0 ( modern and paleo times ), parabolic temperature distribution is used
+	// mean zonal parabolic temperature distribution
+		if ( Ma >= 0 )
+		{
+			if ( sun == 0 )
+			{
+				for ( int k = 0; k < km; k++ )
+				{
+					for ( int j = 0; j < jm; j++ )
+					{
+						d_j = ( double ) j;
+						t.x[ 0 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous;
+
+						if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
+						{
+							t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_land;
+						}
+					}
+				}
+			}																							// end parabolic temperature distribution
+		}																								// end of while (  Ma >= 0 )
+	}
+
+
+
+
+
+
+
 // temperature decreasing approaching the tropopause, above constant temperature following Standard Atmosphere
 	for ( int j = 0; j < jm; j++ )
 	{
@@ -384,7 +615,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array &h, Array &t, Array &
 			{
 				d_i = ( double ) i;
 //				t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
-				t.x[ i ][ j ][ k ] = ( - 5. * ( gam * ( double ) i ) + t.x[ 0 ][ j ][ k ] * t_0 ) / t_0;						// linear temperature decay up to tropopause
+				t.x[ i ][ j ][ k ] = ( - 5. * gam * d_i + t.x[ 0 ][ j ][ k ] * t_0 ) / t_0;											// linear temperature decay up to tropopause
 				if ( t.x[ i ][ j ][ k ] <= t_tropopause ) 		t.x[ i ][ j ][ k ] = t_tropopause;
 
 //				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ] / pow ( ( p_0 / p_stat.x[ i ][ j ][ k ] ), ( R_Air / cp_l ) );			// temperature from adiabatic formula in K
@@ -470,14 +701,14 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, Array &h, Array &t, Array &
 			if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
 			{
 				c.x[ 0 ][ j ][ k ]  = hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0; // saturation of relative water vapour 
-				c.x[ 0 ][ j ][ k ] = c_ocean_minus * c.x[ 0 ][ j ][ k ];				// relativ water vapour contents on ocean surface reduced by factor
+				c.x[ 0 ][ j ][ k ] = c_ocean * c.x[ 0 ][ j ][ k ];				// relativ water vapour contents on ocean surface reduced by factor
 				if ( c.x[ 0 ][ j ][ k ] >= .04 )	c.x[ 0 ][ j ][ k ] = .04;				// 40 g is the maximum water vapour in dry air without outfall
 			}
 
 			if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
 			{
 				c.x[ 0 ][ j ][ k ]  = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / p_0;
-				c.x[ 0 ][ j ][ k ] = c_land_minus * c.x[ 0 ][ j ][ k ];					// relativ water vapour contents on land reduced by factor
+				c.x[ 0 ][ j ][ k ] = c_land * c.x[ 0 ][ j ][ k ];					// relativ water vapour contents on land reduced by factor
 				if ( c.x[ 0 ][ j ][ k ] >= .04 )	c.x[ 0 ][ j ][ k ] = .04;				// 40 g is the maximum water vapour in dry air without outfall
 			}
 		}
@@ -558,8 +789,6 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, Array_2D &Vegetation, Array &h, Arr
 
 	co2_coeff = co2_pole - co2_average;
 
-//	cout << Ma << "   " << co2_cretaceous + co2_average << "   " << co2_average << "   " << co2_coeff << "   " << t_average << "   " << t_cretaceous << endl;
-
 // CO2-content as initial solution
 	for ( int k = 0; k < km; k++ )
 	{
@@ -568,15 +797,13 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, Array_2D &Vegetation, Array &h, Arr
 			if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
 			{
 				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous;
-				co2.x[ 0 ][ j ][ k ] = ( co2.x[ 0 ][ j ][ k ] + co2_ocean ) / co2_0;															// 0.6/600Gt CO2-source on oceans per year 
+				co2.x[ 0 ][ j ][ k ] = ( co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_ocean ) / co2_0;
 			}
 			if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
 			{
 				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous; // parabolic distribution from pole to pole
-				co2.x[ 0 ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - co2_vegetation * Vegetation.y[ j ][ k ];						// 100/600Gt CO2-sink by vegetation on land per year
-				co2.x[ 0 ][ j ][ k ] = ( co2.x[ 0 ][ j ][ k ] + co2_land ) / co2_0;																// 0.2/600Gt CO2-source on land per year everywhere
+				co2.x[ 0 ][ j ][ k ] =  ( co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;
+																																										// parabolic distribution from pole to pole
 			}
 		}
 	}
@@ -595,11 +822,11 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, Array_2D &Vegetation, Array &h, Arr
 				{
 					d_i_max = ( double ) im_tropopause[ j ];
 					d_i = ( double ) i;
-					co2.x[ i ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - ( ( co2_tropopause - co2.x[ 0 ][ j ][ k ] * co2_0 ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ) ) / co2_0;	// radial distribution approximated by a parabola
-//					co2.x[ i ][ j ][ k ] = ( co2_tropopause - co2.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + co2.x[ 0 ][ j ][ k ];									// linear co2 decay up to tropopause
+					co2.x[ i ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - ( ( co2_tropopause - co2.x[ 0 ][ j ][ k ] * co2_0 ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ) ) / co2_0;
+																																										// radial distribution approximated by a parabola
+//					co2.x[ i ][ j ][ k ] = ( co2_tropopause - co2.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + co2.x[ 0 ][ j ][ k ];			// linear co2 decay up to tropopause
 				}
 				else 			co2.x[ i ][ j ][ k ] = co2_tropopause / co2_0;
-				if ( co2.x[ i ][ j ][ k ] < 0. ) co2.x[ i ][ j ][ k ] = 0.;
 			}
 		}
 	}
@@ -2606,7 +2833,11 @@ void BC_Thermo::BC_Pressure ( int *im_tropopause, Array &p_stat, Array &t, Array
 
 
 
-void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
+
+
+
+
+void BC_Thermo::IC_v_w_WestEastCoast ( double t_land, Array &h, Array &t, Array &u, Array &v, Array &w )
 {
 // initial conditions for v and w velocity components at the sea surface close to east or west coasts
 // reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
@@ -2615,63 +2846,66 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
 // search for east coasts and associated velocity components to close the circulations
 // transition between coast flows and open sea flows included
 
+
+	t_land = t_land * .3;
+
+
+
 // northern hemisphere: east coast
 
-	d_i_max = ( double ) i_max;
-
-	k_grad = 10;																			// extension of velocity change
+	k_grad = 20;																				// extension of velocity change
 	k_a = k_grad;																			// left distance
 	k_b = 0;																					// right distance
 
-	k_water = 0;																			// on water closest to coast
+	k_water = 0;																				// on water closest to coast
 	k_sequel = 1;																			// on solid ground
 
 	for ( int j = 0; j < 91; j++ )														// outer loop: latitude
 	{
-		for ( int k = 0; k < km; k++ )												// inner loop: longitude
+		for ( int k = 0; k < km - k_grad; k++ )									// inner loop: longitude
 		{
 			if ( h.x[ 0 ][ j ][ k ] == 1. ) k_sequel = 0;							// if solid ground: k_sequel = 0
 
-			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;// if water and and k_sequel = 0 then is water closest to coast
-			else k_water = 1;															// somewhere on water
+			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;	// if water and and k_sequel = 0 then is water closest to coast
+			else k_water = 1;																// somewhere on water
 
-			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) )			// if water is closest to coast, change of velocity components begins
+			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) )				// if water is closest to coast, change of velocity components begins
 			{
-				for ( int l = 0; l < k_grad; l++ )									// extension of change, sign change in v-velocity and distribution of u-velocity with depth
+
+				for ( int l = k; l <= k + k_grad; l++ )									// extension of change, sign change in v-velocity and distribution of u-velocity with depth
 				{
-					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];					// existing velocity changes sign
+//					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];					// existing velocity changes sign
+					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land );
+/*
+					for ( int i = i_middle; i <= i_half; i++ )						// loop in radial direction, extension for u -velocity component, downwelling here
+					{
+						m = i_half - i;
+						d_i = ( double ) i;
+						c.x[ i ][ j ][ k ] = ca_max;
+						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
+						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
+					}
+*/
 				}
 
-
+/*
 				for ( int l = ( k + k_grad - k_a ); l < ( k + k_grad + k_b + 1 ); l++ ) // starting at local longitude + max extension - begin of smoothing k_a  until ending at  + k_b
 				{
-					v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] - v.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) -  ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) + v.x[ 0 ][ j ][ k + k_grad - k_a ];	 // extension of v-velocity, smoothing algorithm by a linear equation 
-
-					for ( int i = 1; i <= 11; i++ )										// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						d_i = ( double ) i;
-						v.x[ i ][ j ][ k ] = - ( 0. - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - v.x[ 0 ][ j ][ l ];	// radial distribution approximated by a straight line
-					}
-
+					v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] - v.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) -  ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) + v.x[ 0 ][ j ][ k + k_grad - k_a ]; // extension of v-velocity, smoothing algorithm by a linear equation 
 				}
-
-				for ( int l = k; l < ( k + k_grad + k_b + 1 ); l++ )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
+*/
+/*
+				for ( int l = k; l < ( k + k_grad + k_b + 1 ); l++ )		// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
 				{
-					w.x[ 0 ][ j ][ l ] = w.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k ); // extension of v-velocity
-
-					for ( int i = 1; i <= 11; i++ )										// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						d_i = ( double ) i;
-						w.x[ i ][ j ][ k ] = - ( 0. - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - w.x[ 0 ][ j ][ l ];					// radial distribution approximated by a straight line
-					}
-
+//					w.x[ 0 ][ j ][ l ] = w.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k ); // extension of v-velocity
+					t.x[ 0 ][ j ][ l ] = t.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k ); // extension of v-velocity
 				}
-
-				k_sequel = 1;																// looking for another east coast
+*/
+				k_sequel = 1;															// looking for another east coast
 			}
-		}																							// end of longitudinal loop
-		k_water = 0;																		// starting at another latitude
-	}																								// end of latitudinal loop
+		}																						// end of longitudinal loop
+		k_water = 0;																	// starting at another latitude
+	}																							// end of latitudinal loop
 
 
 
@@ -2692,35 +2926,41 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
 
 			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) )
 			{
-				for ( int l = 0; l < k_grad; l++ )
+
+				for ( int l = k; l <= k + k_grad; l++ )
 				{
-					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];
+//					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];
+//					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ k + l ] = ( t.x[ 0 ][ j ][ l ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land );
+//					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ k + l ] = ( t.x[ 0 ][ j ][ l + k ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ l + k ] + t_land );
+//					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land ) - t.x[ 0 ][ j ][ l ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land );
+
+					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land );
+
+/*
+					for ( int i = i_middle; i <= i_half; i++ )
+					{
+						m = i_half - i;
+						d_i = ( double ) i;
+						c.x[ i ][ j ][ k ] = ca_max;
+						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
+						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
+					}
+*/
 				}
 
+/*
 				for ( int l = ( k + k_grad - k_a ); l < ( k + k_grad + k_b + 1 ); l++ )
 				{
 					v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] - v.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) -  ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) + v.x[ 0 ][ j ][ k + k_grad - k_a ];
-/*
-					for ( int i = 1; i <= 11; i++ )										// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						d_i = ( double ) i;
-						v.x[ i ][ j ][ k ] = - ( 0. - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - v.x[ 0 ][ j ][ l ];					// radial distribution approximated by a straight line
-					}
-*/
 				}
-
+*/
+/*
 				for ( int l = k; l < ( k + k_grad + k_b + 1 ); l++ )
 				{
-					w.x[ 0 ][ j ][ l ] = w.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k );
-/*
-					for ( int i = 1; i <= 11; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						d_i = ( double ) i;
-						w.x[ i ][ j ][ k ] = - ( 0. - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - w.x[ 0 ][ j ][ l ];					// radial distribution approximated by a straight line
-					}
-*/
+//					w.x[ 0 ][ j ][ l ] = w.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k );
+					t.x[ 0 ][ j ][ l ] = t.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k );
 				}
-
+*/
 				k_sequel = 1;
 			}
 		}
@@ -2730,60 +2970,62 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
 
 
 
-// search for west coasts and associated velocity components to close the circulations
+// search for east coasts and associated velocity components to close the circulations
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: west coast
-/*
-	k_grad = 6;																				// extension of velocity change
-//	k_grad = 20;																			// extension of velocity change
+
+	k_grad = 20;																				// extension of velocity change
 	k_a = 0;																					// left distance
 
-	k_water = 0;																			// somewhere on water
+	k_water = 0;																				// somewhere on water
 	flip = 0;																					// somewhere on water
 
 	for ( int j = 0; j < 91; j++ )														// outer loop: latitude
 	{
-		for ( int k = 0; k < km; k++ )												// inner loop: longitude
+		for ( int k = k_grad; k < km; k++ )										// inner loop: longitude
 		{
 			if ( h.x[ 0 ][ j ][ k ] == 0. )													// if somewhere on water
+
 			{
-				k_water = 0;																// somewhere on water: k_water = 0
+				k_water = 0;																	// somewhere on water: k_water = 0
 				flip = 0;																		// somewhere on water: flip = 0
 			}
-			else k_water = 1;															// first time on land
+			else k_water = 1;																// first time on land
 
 			if ( ( flip == 0 ) && ( k_water == 1 ) )								// on water closest to land
 			{
-				for ( int l = k; l > ( k - k_grad + 1 ); l-- )						// backward extention of velocity change: nothing changes
+
+				for ( int l = k; l >= ( k - k_grad ); l-- )							// backward extention of velocity change: nothing changes
 				{
-					w.x[ 0 ][ j ][ l ] = - w.x[ 0 ][ j ][ l ];
+//					w.x[ 0 ][ j ][ l ] = - w.x[ 0 ][ j ][ l ];
+					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land );
+
+/*
+					for ( int i = i_middle; i <= i_half; i++ )						// loop in radial direction, extension for u -velocity component, downwelling here
+					{
+						m = i_half - i;
+						d_i = ( double ) i;
+						c.x[ i ][ j ][ k ] = ca_max;
+						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// increase with depth, decrease with distance from coast
+						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// decrease with depth, decrease with distance from coast
+					}
+*/
 				}
 
-				for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- )				// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
+/*
+				for ( int l = k; l > ( k - k_grad - k_a + 1 ); l-- )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
 				{
 					v.x[ 0 ][ j ][ l ] = v.x[ 0 ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k ); // extension of v-velocity
-
-					for ( int i = 1; i <= 11; i++ )										// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						d_i = ( double ) i;
-						v.x[ i ][ j ][ k ] = - ( 0. - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - v.x[ 0 ][ j ][ l ];					// radial distribution approximated by a straight line
-					}
-
 				}
-
+*/
+/*
 				for ( int l = ( k - k_grad - 3 ); l < ( k - k_grad + 3 ); l++ )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
 				{
-					w.x[ 0 ][ j ][ l ] = (  - w.x[ 0 ][ j ][ k - k_grad - 3 ] + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ 0 ][ j ][ k - k_grad + 3 ];
-
-					for ( int i = 1; i <= 11; i++ )										// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						d_i = ( double ) i;
-						w.x[ i ][ j ][ k ] = - ( 0. - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - w.x[ 0 ][ j ][ l ];					// radial distribution approximated by a straight line
-					}
-
+//					w.x[ 0 ][ j ][ l ] = (  - w.x[ 0 ][ j ][ k - k_grad - 3 ] + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ 0 ][ j ][ k - k_grad + 3 ];
+					t.x[ 0 ][ j ][ l ] = (  - t.x[ 0 ][ j ][ k - k_grad - 3 ] + t.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - t.x[ 0 ][ j ][ k - k_grad + 3 ];
 				}
-
+*/
 				flip = 1;
 			}
 		}
@@ -2802,7 +3044,7 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
 
 	for ( int j = 91; j < jm; j++ )
 	{
-		for ( int k = 0; k < km; k++ )
+		for ( int k = k_grad; k < km; k++ )
 		{
 			if ( h.x[ 0 ][ j ][ k ] == 0. )
 			{
@@ -2813,41 +3055,51 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w )
 
 			if ( ( flip == 0 ) && ( k_water == 1 ) )
 			{
-				for ( int l = k; l > ( k - k_grad + 1 ); l-- )
+				for ( int l = k; l >= ( k - k_grad ); l-- )
 				{
-					w.x[ 0 ][ j ][ l ] = - w.x[ 0 ][ j ][ l ];
+//					w.x[ 0 ][ j ][ l ] = - w.x[ 0 ][ j ][ l ];
+					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land );
+
+/*
+					for ( int i = i_middle; i <= i_half; i++ )
+					{
+						m = i_half - i;
+						d_i = ( double ) i;
+						c.x[ i ][ j ][ k ] = ca_max;
+						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
+						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
+					}
+*/
 				}
 
+/*
 				for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- )
 				{
 					v.x[ 0 ][ j ][ l ] = v.x[ 0 ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k );
-
-					for ( int i = 1; i <= 11; i++ )										// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						d_i = ( double ) i;
-						v.x[ i ][ j ][ k ] = - ( 0. - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - v.x[ 0 ][ j ][ l ];					// radial distribution approximated by a straight line
-					}
-
 				}
-
+*/
+/*
 				for ( int l = ( k - k_grad - 3 ); l < ( k - k_grad + 3 ); l++ )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
 				{
-					w.x[ 0 ][ j ][ l ] = ( - w.x[ 0 ][ j ][ k - k_grad - 3 ] + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ 0 ][ j ][ k - k_grad + 3 ];
-
-					for ( int i = 1; i <= 11; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						d_i = ( double ) i;
-						w.x[ i ][ j ][ k ] = - ( 0. - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - w.x[ 0 ][ j ][ l ];					// radial distribution approximated by a straight line
-					}
-
+//					w.x[ 0 ][ j ][ l ] = ( - w.x[ 0 ][ j ][ k - k_grad - 3 ] + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ 0 ][ j ][ k - k_grad + 3 ];
+					t.x[ 0 ][ j ][ l ] = ( - t.x[ 0 ][ j ][ k - k_grad - 3 ] + t.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - t.x[ 0 ][ j ][ k - k_grad + 3 ];
 				}
-
+*/
 				flip = 1;
 			}
 		}
 		flip = 0;
 	}
-*/
 }
 
+
+double BC_Thermo::out_temperature (  ) const
+{
+	return t_cretaceous;
+}
+
+double BC_Thermo::out_co2 (  ) const
+{
+	return co2_cretaceous;
+}
 

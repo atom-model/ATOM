@@ -12,7 +12,6 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-//#include <string>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -59,7 +58,7 @@ class File_NetCDF
 
 		~File_NetCDF ();
 
-		double aus_NetCDF ( const string &, Array &, Array &, Array &, Array_2D &, Array_2D & );
+		double out_NetCDF ( const string &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 };
 #endif
 

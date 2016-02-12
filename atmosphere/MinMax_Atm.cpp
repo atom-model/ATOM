@@ -165,12 +165,14 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 		cout << endl << heading << endl << endl;
 
 		maxValue = maxValue * 273.15 - 273.15;
+		minValue = minValue * 273.15 - 273.15;
 	}
 
 
 	if ( name_maxValue == " max water vapour " )
 	{
 		maxValue = maxValue * 1000.;
+		minValue = minValue * 1000.;
 	}
 
 
@@ -218,14 +220,11 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 	{
 		for ( int k = 1; k < km-1; k++ )
 		{
-			if ( h.x[ 0 ][ j ][ k ] == 0. )
+			if ( value.y[ j ][ k ] > maxValue ) 
 			{
-				if ( value.y[ j ][ k ] > maxValue ) 
-				{
-					maxValue = value.y[ j ][ k ];
-					jmax = j;
-					kmax = k;
-				}
+				maxValue = value.y[ j ][ k ];
+				jmax = j;
+				kmax = k;
 			}
 		}
 	}
@@ -236,14 +235,11 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 	{
 		for ( int k = 1; k < km-1; k++ )
 		{
-			if ( h.x[ 0 ][ j ][ k ] == 0. )
+			if ( value.y[ j ][ k ] < minValue ) 
 			{
-				if ( value.y[ j ][ k ] < minValue ) 
-				{
-					minValue = value.y[ j ][ k ];
-					jmin = j;
-					kmin = k;
-				}
+				minValue = value.y[ j ][ k ];
+				jmin = j;
+				kmin = k;
 			}
 		}
 	}

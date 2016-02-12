@@ -47,8 +47,17 @@ void BC_Atmosphere::BC_radius ( double t_tropopause, double c_tropopause, double
 //			w.x[ 0 ][ j ][ k ] = 2. * dr / rad.z[ 1 ] * w.x[ 1 ][ j ][ k ] + w.x[ 2 ][ j ][ k ];			// sea surface
 //			v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];							// zero tangent
 //			w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];						// zero tangent
-			v.x[ 0 ][ j ][ k ] = v.x[ 3 ][ j ][ k ] - 3. * v.x[ 2 ][ j ][ k ] + 3. * v.x[ 1 ][ j ][ k ];		// extrapolation
-			w.x[ 0 ][ j ][ k ] = w.x[ 3 ][ j ][ k ] - 3. * w.x[ 2 ][ j ][ k ] + 3. * w.x[ 1 ][ j ][ k ];	// leads to round harmonic profiles
+
+			if ( h.x[ 0 ][ j ][ k ] == 0 )
+			{
+				v.x[ 0 ][ j ][ k ] = v.x[ 3 ][ j ][ k ] - 3. * v.x[ 2 ][ j ][ k ] + 3. * v.x[ 1 ][ j ][ k ];		// extrapolation
+				w.x[ 0 ][ j ][ k ] = w.x[ 3 ][ j ][ k ] - 3. * w.x[ 2 ][ j ][ k ] + 3. * w.x[ 1 ][ j ][ k ];	// leads to round harmonic profiles
+			}
+			else
+			{
+				v.x[ 0 ][ j ][ k ] = 0.;
+				w.x[ 0 ][ j ][ k ] = 0.;
+			}
 
 //			p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];						// zero tangent
 			p_dyn.x[ 0 ][ j ][ k ] = p_dyn.x[ 3 ][ j ][ k ] - 3. * p_dyn.x[ 2 ][ j ][ k ] + 3. * p_dyn.x[ 1 ][ j ][ k ];	// leads to round harmonic profiles
@@ -126,53 +135,53 @@ void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p_dy
 		{
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
 
-//			t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
-//			t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];
+			t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
+			t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];
 
-			t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ 3 ] - 3. * t.x[ i ][ j ][ 2 ] + 3. * t.x[ i ][ j ][ 1 ];		// extrapolation
-			t.x[ i ][ j ][ km-1 ] = t.x[ i ][ j ][ km-4 ] - 3. * t.x[ i ][ j ][ km-3 ] + 3. * t.x[ i ][ j ][ km-2 ];		// extrapolation
+//			t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ 3 ] - 3. * t.x[ i ][ j ][ 2 ] + 3. * t.x[ i ][ j ][ 1 ];		// extrapolation
+//			t.x[ i ][ j ][ km-1 ] = t.x[ i ][ j ][ km-4 ] - 3. * t.x[ i ][ j ][ km-3 ] + 3. * t.x[ i ][ j ][ km-2 ];		// extrapolation
 //			t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ km-1 ] = ( t.x[ i ][ j ][ 0 ] + t.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			u.x[ i ][ j ][ 0 ] = c43 * u.x[ i ][ j ][ 1 ] - c13 * u.x[ i ][ j ][ 2 ];
-//			u.x[ i ][ j ][ km-1 ] = c43 * u.x[ i ][ j ][ km-2 ] - c13 * u.x[ i ][ j ][ km-3 ];
+			u.x[ i ][ j ][ 0 ] = c43 * u.x[ i ][ j ][ 1 ] - c13 * u.x[ i ][ j ][ 2 ];
+			u.x[ i ][ j ][ km-1 ] = c43 * u.x[ i ][ j ][ km-2 ] - c13 * u.x[ i ][ j ][ km-3 ];
 
-			u.x[ i ][ j ][ 0 ] = u.x[ i ][ j ][ 3 ] - 3. * u.x[ i ][ j ][ 2 ] + 3. * u.x[ i ][ j ][ 1 ];		// extrapolation
-			u.x[ i ][ j ][ km-1 ] = u.x[ i ][ j ][ km-4 ] - 3. * u.x[ i ][ j ][ km-3 ] + 3. * u.x[ i ][ j ][ km-2 ];		// extrapolation
+//			u.x[ i ][ j ][ 0 ] = u.x[ i ][ j ][ 3 ] - 3. * u.x[ i ][ j ][ 2 ] + 3. * u.x[ i ][ j ][ 1 ];		// extrapolation
+//			u.x[ i ][ j ][ km-1 ] = u.x[ i ][ j ][ km-4 ] - 3. * u.x[ i ][ j ][ km-3 ] + 3. * u.x[ i ][ j ][ km-2 ];		// extrapolation
 //			u.x[ i ][ j ][ 0 ] = u.x[ i ][ j ][ km-1 ] = ( u.x[ i ][ j ][ 0 ] + u.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			v.x[ i ][ j ][ 0 ] = c43 * v.x[ i ][ j ][ 1 ] - c13 * v.x[ i ][ j ][ 2 ];
-//			v.x[ i ][ j ][ km-1 ] = c43 * v.x[ i ][ j ][ km-2 ] - c13 * v.x[ i ][ j ][ km-3 ];
+			v.x[ i ][ j ][ 0 ] = c43 * v.x[ i ][ j ][ 1 ] - c13 * v.x[ i ][ j ][ 2 ];
+			v.x[ i ][ j ][ km-1 ] = c43 * v.x[ i ][ j ][ km-2 ] - c13 * v.x[ i ][ j ][ km-3 ];
 
-			v.x[ i ][ j ][ 0 ] = v.x[ i ][ j ][ 3 ] - 3. * v.x[ i ][ j ][ 2 ] + 3. * v.x[ i ][ j ][ 1 ];		// extrapolation
-			v.x[ i ][ j ][ km-1 ] = v.x[ i ][ j ][ km-4 ] - 3. * v.x[ i ][ j ][ km-3 ] + 3. * v.x[ i ][ j ][ km-2 ];		// extrapolation
+//			v.x[ i ][ j ][ 0 ] = v.x[ i ][ j ][ 3 ] - 3. * v.x[ i ][ j ][ 2 ] + 3. * v.x[ i ][ j ][ 1 ];		// extrapolation
+//			v.x[ i ][ j ][ km-1 ] = v.x[ i ][ j ][ km-4 ] - 3. * v.x[ i ][ j ][ km-3 ] + 3. * v.x[ i ][ j ][ km-2 ];		// extrapolation
 //			v.x[ i ][ j ][ 0 ] = v.x[ i ][ j ][ km-1 ] = ( v.x[ i ][ j ][ 0 ] + v.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			w.x[ i ][ j ][ 0 ] = c43 * w.x[ i ][ j ][ 1 ] - c13 * w.x[ i ][ j ][ 2 ];
-//			w.x[ i ][ j ][ km-1 ] = c43 * w.x[ i ][ j ][ km-2 ] - c13 * w.x[ i ][ j ][ km-3 ];
+			w.x[ i ][ j ][ 0 ] = c43 * w.x[ i ][ j ][ 1 ] - c13 * w.x[ i ][ j ][ 2 ];
+			w.x[ i ][ j ][ km-1 ] = c43 * w.x[ i ][ j ][ km-2 ] - c13 * w.x[ i ][ j ][ km-3 ];
 
-			w.x[ i ][ j ][ 0 ] = w.x[ i ][ j ][ 3 ] - 3. * w.x[ i ][ j ][ 2 ] + 3. * w.x[ i ][ j ][ 1 ];		// extrapolation
-			w.x[ i ][ j ][ km-1 ] = w.x[ i ][ j ][ km-4 ] - 3. * w.x[ i ][ j ][ km-3 ] + 3. * w.x[ i ][ j ][ km-2 ];		// extrapolation
+//			w.x[ i ][ j ][ 0 ] = w.x[ i ][ j ][ 3 ] - 3. * w.x[ i ][ j ][ 2 ] + 3. * w.x[ i ][ j ][ 1 ];		// extrapolation
+//			w.x[ i ][ j ][ km-1 ] = w.x[ i ][ j ][ km-4 ] - 3. * w.x[ i ][ j ][ km-3 ] + 3. * w.x[ i ][ j ][ km-2 ];		// extrapolation
 //			w.x[ i ][ j ][ 0 ] = w.x[ i ][ j ][ km-1 ] = ( w.x[ i ][ j ][ 0 ] + w.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			p_dyn.x[ i ][ j ][ 0 ] = c43 * p_dyn.x[ i ][ j ][ 1 ] - c13 * p_dyn.x[ i ][ j ][ 2 ];
-//			p_dyn.x[ i ][ j ][ km-1 ] = c43 * p_dyn.x[ i ][ j ][ km-2 ] - c13 * p_dyn.x[ i ][ j ][ km-3 ];
+			p_dyn.x[ i ][ j ][ 0 ] = c43 * p_dyn.x[ i ][ j ][ 1 ] - c13 * p_dyn.x[ i ][ j ][ 2 ];
+			p_dyn.x[ i ][ j ][ km-1 ] = c43 * p_dyn.x[ i ][ j ][ km-2 ] - c13 * p_dyn.x[ i ][ j ][ km-3 ];
 
-			p_dyn.x[ i ][ j ][ 0 ] = p_dyn.x[ i ][ j ][ 3 ] - 3. * p_dyn.x[ i ][ j ][ 2 ] + 3. * p_dyn.x[ i ][ j ][ 1 ];		// extrapolation
-			p_dyn.x[ i ][ j ][ km-1 ] = p_dyn.x[ i ][ j ][ km-4 ] - 3. * p_dyn.x[ i ][ j ][ km-3 ] + 3. * p_dyn.x[ i ][ j ][ km-2 ];		// extrapolation
+//			p_dyn.x[ i ][ j ][ 0 ] = p_dyn.x[ i ][ j ][ 3 ] - 3. * p_dyn.x[ i ][ j ][ 2 ] + 3. * p_dyn.x[ i ][ j ][ 1 ];		// extrapolation
+//			p_dyn.x[ i ][ j ][ km-1 ] = p_dyn.x[ i ][ j ][ km-4 ] - 3. * p_dyn.x[ i ][ j ][ km-3 ] + 3. * p_dyn.x[ i ][ j ][ km-2 ];		// extrapolation
 //			p_dyn.x[ i ][ j ][ 0 ] = p_dyn.x[ i ][ j ][ km-1 ] = ( p_dyn.x[ i ][ j ][ 0 ] + p_dyn.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			c.x[ i ][ j ][ 0 ] = c43 * c.x[ i ][ j ][ 1 ] - c13 * c.x[ i ][ j ][ 2 ];
-//			c.x[ i ][ j ][ km-1 ] = c43 * c.x[ i ][ j ][ km-2 ] - c13 * c.x[ i ][ j ][ km-3 ];
+			c.x[ i ][ j ][ 0 ] = c43 * c.x[ i ][ j ][ 1 ] - c13 * c.x[ i ][ j ][ 2 ];
+			c.x[ i ][ j ][ km-1 ] = c43 * c.x[ i ][ j ][ km-2 ] - c13 * c.x[ i ][ j ][ km-3 ];
 
-			c.x[ i ][ j ][ 0 ] = c.x[ i ][ j ][ 3 ] - 3. * c.x[ i ][ j ][ 2 ] + 3. * c.x[ i ][ j ][ 1 ];		// extrapolation
-			c.x[ i ][ j ][ km-1 ] = c.x[ i ][ j ][ km-4 ] - 3. * c.x[ i ][ j ][ km-3 ] + 3. * c.x[ i ][ j ][ km-2 ];		// extrapolation
+//			c.x[ i ][ j ][ 0 ] = c.x[ i ][ j ][ 3 ] - 3. * c.x[ i ][ j ][ 2 ] + 3. * c.x[ i ][ j ][ 1 ];		// extrapolation
+//			c.x[ i ][ j ][ km-1 ] = c.x[ i ][ j ][ km-4 ] - 3. * c.x[ i ][ j ][ km-3 ] + 3. * c.x[ i ][ j ][ km-2 ];		// extrapolation
 //			c.x[ i ][ j ][ 0 ] = c.x[ i ][ j ][ km-1 ] = ( c.x[ i ][ j ][ 0 ] + c.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			co2.x[ i ][ j ][ 0 ] = c43 * co2.x[ i ][ j ][ 1 ] - c13 * co2.x[ i ][ j ][ 2 ];
-//			co2.x[ i ][ j ][ km-1 ] = c43 * co2.x[ i ][ j ][ km-2 ] - c13 * co2.x[ i ][ j ][ km-3 ];
+			co2.x[ i ][ j ][ 0 ] = c43 * co2.x[ i ][ j ][ 1 ] - c13 * co2.x[ i ][ j ][ 2 ];
+			co2.x[ i ][ j ][ km-1 ] = c43 * co2.x[ i ][ j ][ km-2 ] - c13 * co2.x[ i ][ j ][ km-3 ];
 
-			co2.x[ i ][ j ][ 0 ] = co2.x[ i ][ j ][ 3 ] - 3. * co2.x[ i ][ j ][ 2 ] + 3. * co2.x[ i ][ j ][ 1 ];		// extrapolation
-			co2.x[ i ][ j ][ km-1 ] = co2.x[ i ][ j ][ km-4 ] - 3. * co2.x[ i ][ j ][ km-3 ] + 3. * co2.x[ i ][ j ][ km-2 ];		// extrapolation
+//			co2.x[ i ][ j ][ 0 ] = co2.x[ i ][ j ][ 3 ] - 3. * co2.x[ i ][ j ][ 2 ] + 3. * co2.x[ i ][ j ][ 1 ];		// extrapolation
+//			co2.x[ i ][ j ][ km-1 ] = co2.x[ i ][ j ][ km-4 ] - 3. * co2.x[ i ][ j ][ km-3 ] + 3. * co2.x[ i ][ j ][ km-2 ];		// extrapolation
 //			co2.x[ i ][ j ][ 0 ] = co2.x[ i ][ j ][ km-1 ] = ( co2.x[ i ][ j ][ 0 ] + co2.x[ i ][ j ][ km-1 ] ) / 2.;
 
 		}

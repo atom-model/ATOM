@@ -40,9 +40,9 @@ class BC_Bathymetry_Atmosphere
 		double t_equi, t_equi_Celsius, t_plus, t_plus_Celsius, t_minus, t_minus_Celsius, t_minuss, t_minuss_Celsius, t_pluss, t_pluss_Celsius;
 		double Hoehe_equi, Hoehe_equi_km, Hoehe_delta;
 		double Ice_Hoehe, t_eff_earth, r;
-		double co2_equator, co2_tropopause, co2_coeff, co2_pol, co2_vegetation, co2_ocean, co2_land, co2_Cretaceous;
+		double co2_equator, co2_tropopause, co2_coeff, co2_pol, co2_cretaceous, co2_vegetation, co2_ocean, co2_land;
 		double j_par_f, j_pol_f, a, b, cc, d, e, j_d, t_d, k_par_f, k_pol_f, d_k;
-		double *jm_temp_asym;
+		double *jm_temp_asym, h_point_max, h_land, h_ocean, ozean_land;
 
 		string Daten_NW;
 
@@ -56,7 +56,11 @@ class BC_Bathymetry_Atmosphere
 
 		void BC_IceShield ( int, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 
-		void BC_SolidGround ( int, double, double, double, double, double, double, double, double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D & );
+		void BC_SolidGround ( int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D & );
+
+		void vegetationDistribution ( double, Array_2D &, Array_2D &, Array &, Array & );
+
+		void land_oceanFraction ( Array & );
 
 };
 #endif

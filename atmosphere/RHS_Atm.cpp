@@ -76,7 +76,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 
 // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
 
-// collection of coefficients
+// collection of coefficients9
 
 	dr2 = dr * dr;
 	dthe2 = dthe * dthe;
@@ -318,8 +318,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 	RS_LatentHeat_Energy_Ice = coeff_ls * q_Ice * ( dtdr * E_dEdr_Ice + g / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) );
 
 
-//	Latency.x[ i ][ j ][ k ] = RS_LatentHeat_Energy_Rain + RS_LatentHeat_Energy_Rain_super + RS_LatentHeat_Energy_Ice;
-	Latency.x[ i ][ j ][ k ] = RS_LatentHeat_Energy_Rain;
+//	Latency.x[ i ][ j ][ k ] = - RS_LatentHeat_Energy_Rain - RS_LatentHeat_Energy_Rain_super - RS_LatentHeat_Energy_Ice;
+	Latency.x[ i ][ j ][ k ] = - RS_LatentHeat_Energy_Rain;
 
 
 
@@ -330,7 +330,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 					cout << endl;
 					cout << " i = " << i << "   j = " << j << "   k = " << k << "   i_level = " << i_level  << "   h_level (m) = " << h_level << "   h_h (m) = " << h_h << endl << endl;
 
-					cout << " t_h (°C) = " << t_Celsius << "   p_h (hPa) = " << p_h << "   a_h (g/m3) = " << a_h << "   c_h (g/Kg) = " << c.x[ i ][ j ][ k ] * 1000. << "   q_Rain (g/Kg) = " << q_Rain * 1000. << "   e_h (hPa) = " << e_h << "   E_Rain (hPa) = " << E_Rain  << endl << endl;
+					cout << " t_h (°C) = " << t_Celsius << "   p_h (hPa) = " << p9_h << "   a_h (g/m3) = " << a_h << "   c_h (g/Kg) = " << c.x[ i ][ j ][ k ] * 1000. << "   q_Rain (g/Kg) = " << q_Rain * 1000. << "   e_h (hPa) = " << e_h << "   E_Rain (hPa) = " << E_Rain  << endl << endl;
 
 					cout << " Rain (g/kg) = " << Rain.x[ i ][ j ][ k ] * 1000. << "   Rain_super (g/kg) = " << Rain_super.x[ i ][ j ][ k ] * 1000. << "   Ice (g/kg) = " << Ice.x[ i ][ j ][ k ] * 1000. << "   E_Ice (hPa) = " << E_Ice << "   sat_Deficit (hPa) = " << sat_Deficit << "   t_dew (°C) = " << t_dew << "   E_Rain_SL (hPa) = " << E_Rain_SL << endl << endl;
 

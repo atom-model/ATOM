@@ -11,9 +11,8 @@
 
 #include <iostream>
 #include <fstream>
-//#include <netcdf.h>
 #include <cstring>
-//#include <string>
+#include <netcdf.h>
 
 #include "File_NetCDF.h"
 
@@ -40,7 +39,7 @@ File_NetCDF::~File_NetCDF () {}
 
 
 
-double File_NetCDF::aus_NetCDF (const string &F_N, Array &v_w, Array &w_w, Array &h_w, Array_2D &prec, Array_2D &precwat )
+double File_NetCDF::out_NetCDF (const string &F_N, Array &v_w, Array &w_w, Array &h_w, Array_2D &prec, Array_2D &precwat )
 {
 	const char LAT_NAME [ ] = "latitude";
 	const char LON_NAME [ ] = "longitude";
@@ -68,7 +67,7 @@ double File_NetCDF::aus_NetCDF (const string &F_N, Array &v_w, Array &w_w, Array
 
 	if ( ( retval = nc_create ( F_N.c_str(), NC_CLOBBER, &ncid ) ) ) ERR ( retval );
 
-	printf ( "***** successful writing of results through class NetCDF -> netCDF-file: %s\n\n", F_N.c_str() );
+	printf ( "***** successful creation of a netCDF-file through class NetCDF -> netCDF-file: %s\n\n", F_N.c_str() );
 
 	if ( ( retval = nc_def_dim ( ncid, LVL_NAME, NLVL, &lvl_dimid ) ) ) ERR ( retval );
 	if ( ( retval = nc_def_dim ( ncid, LAT_NAME, NLAT, &lat_dimid ) ) ) ERR ( retval );
