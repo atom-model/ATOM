@@ -8,9 +8,7 @@
  * class to restore the old by new values inside the iterational processes
 */
 
-
 #include <iostream>
-
 #include "Array.h"
 
 #ifndef _RESTORE_
@@ -28,10 +26,9 @@ class Restore
 
 	public:
 		Restore ( int, int, int );
+		~Restore ();
 
-	~Restore ();
-
-		void restoreOldNew ( double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void restoreOldNew_3D ( double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void restoreOldNew_2D ( double, Array &, Array &, Array &, Array &, Array &, Array & );
 };

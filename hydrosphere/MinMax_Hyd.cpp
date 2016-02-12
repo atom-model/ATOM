@@ -48,9 +48,17 @@ MinMax::MinMax ( int im, int jm, int km, double c_0, double L_hyd )
 MinMax::~MinMax () {}
 
 
-void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &value_3D, Array &hc )
+void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &value_3D, Array &h )
 {
 // search for minimum and maximum values of the 3-dimensional data sets
+
+	maxValue = 0.;
+	imax = 0;
+	jmax = 0;
+	kmax = 0;
+	imin = 0;
+	jmin = 0;
+	kmin = 0;
 
 	level = "m";
 	deg_north = "°N";
@@ -68,15 +76,12 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( hc.x[ i ][ j ][ k ] == 0. )
+				if ( value_3D.x[ i ][ j ][ k ] > maxValue ) 
 				{
-					if ( value_3D.x[ i ][ j ][ k ] > maxValue ) 
-					{
-						maxValue = value_3D.x[ i ][ j ][ k ];
-						imax = i;
-						jmax = j;
-						kmax = k;
-					}
+					maxValue = value_3D.x[ i ][ j ][ k ];
+					imax = i;
+					jmax = j;
+					kmax = k;
 				}
 			}
 		}
@@ -90,15 +95,12 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( hc.x[ i ][ j ][ k ] == 0. )
+				if ( value_3D.x[ i ][ j ][ k ] < minValue ) 
 				{
-					if ( value_3D.x[ i ][ j ][ k ] < minValue ) 
-					{
-						minValue = value_3D.x[ i ][ j ][ k ];
-						imin = i;
-						jmin = j;
-						kmin = k;
-					}
+					minValue = value_3D.x[ i ][ j ][ k ];
+					imin = i;
+					jmin = j;
+					kmin = k;
 				}
 			}
 		}
@@ -106,8 +108,8 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 	if ( minValue < 0. ) minValue =0.;
 
 
-	imax_level = - imax * int ( L_hyd ) / ( im - 1 );
-	imin_level = - imin * int ( L_hyd ) / ( im - 1 );
+	imax_level = imax * int ( L_hyd ) / ( im - 1 ) - int ( L_hyd );
+	imin_level = imin * int ( L_hyd ) / ( im - 1 ) - int ( L_hyd );
 
 
 //	maximum latitude and longitude units recalculated
@@ -126,14 +128,14 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 
 	if ( kmax <= 180 )
 	{
-		kmax_deg = 180 - kmax;
-		deg_lon_max = deg_west;
+		kmax_deg = kmax;
+		deg_lon_max = deg_east;
 	}
 
 	if ( kmax > 180 )
 	{
-		kmax_deg = kmax - 180;
-		deg_lon_max = deg_east;
+		kmax_deg = 360 - kmax;
+		deg_lon_max = deg_west;
 	}
 
 //	minimum latitude and longitude units recalculated
@@ -152,35 +154,40 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 
 	if ( kmin <= 180 )
 	{
-		kmin_deg = 180 - kmin;
-		deg_lon_min = deg_west;
+		kmin_deg = kmin;
+		deg_lon_min = deg_east;
 	}
 
 	if ( kmin > 180 )
 	{
-		kmin_deg = kmin - 180;
-		deg_lon_min = deg_east;
+		kmin_deg = 360 - kmin;
+		deg_lon_min = deg_west;
 	}
 
 	cout.precision ( 6 );
 
 
-	cout << endl << heading << endl << endl;
+	if ( name_maxValue == " max temperature " )
+	{
+		cout << endl << heading << endl << endl;
+		maxValue = maxValue * 273.15 - 273.15;
+		minValue = minValue * 273.15 - 273.15;
+	}
 
-	if ( name_unitValue == "psu" )
+
+	if ( name_maxValue == " max salt concentration " )
 	{
 		maxValue = maxValue * c_0;
 		minValue = minValue * c_0;
 	}
 
-	cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
-
+		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
 }
 
 
 
 
-void MinMax::searchMinMax ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &value, Array &hc )
+void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &value, Array &h )
 {
 // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
 
@@ -196,14 +203,11 @@ void MinMax::searchMinMax ( string &name_maxValue, string &name_minValue, string
 	{
 		for ( int k = 1; k < km-1; k++ )
 		{
-			if ( hc.x[ im-1 ][ j ][ k ] == 0. )
+			if ( value.y[ j ][ k ] > maxValue ) 
 			{
-				if ( value.y[ j ][ k ] > maxValue ) 
-				{
-					maxValue = value.y[ j ][ k ];
-					jmax = j;
-					kmax = k;
-				}
+				maxValue = value.y[ j ][ k ];
+				jmax = j;
+				kmax = k;
 			}
 		}
 	}
@@ -214,14 +218,11 @@ void MinMax::searchMinMax ( string &name_maxValue, string &name_minValue, string
 	{
 		for ( int k = 1; k < km-1; k++ )
 		{
-			if ( hc.x[ im-1 ][ j ][ k ] == 0. )
+			if ( ( value.y[ j ][ k ] < minValue ) && ( value.y[ j ][ k ] != 0. ) )
 			{
-				if ( ( value.y[ j ][ k ] < minValue ) && ( value.y[ j ][ k ] != 0. ) )
-				{
-					minValue = value.y[ j ][ k ];
-					jmin = j;
-					kmin = k;
-				}
+				minValue = value.y[ j ][ k ];
+				jmin = j;
+				kmin = k;
 			}
 		}
 	}
@@ -249,14 +250,14 @@ void MinMax::searchMinMax ( string &name_maxValue, string &name_minValue, string
 
 	if ( kmax <= 180 )
 	{
-		kmax_deg = 180 - kmax;
-		deg_lon_max = deg_west;
+		kmax_deg = kmax;
+		deg_lon_max = deg_east;
 	}
 
 	if ( kmax > 180 )
 	{
-		kmax_deg = kmax - 180;
-		deg_lon_max = deg_east;
+		kmax_deg = 360 - kmax;
+		deg_lon_max = deg_west;
 	}
 
 //	minimum latitude and longitude units recalculated
@@ -275,14 +276,14 @@ void MinMax::searchMinMax ( string &name_maxValue, string &name_minValue, string
 
 	if ( kmin <= 180 )
 	{
-		kmin_deg = 180 - kmin;
-		deg_lon_min = deg_west;
+		kmin_deg = kmin;
+		deg_lon_min = deg_east;
 	}
 
 	if ( kmin > 180 )
 	{
-		kmin_deg = kmin - 180;
-		deg_lon_min = deg_east;
+		kmin_deg = 360 - kmin;
+		deg_lon_min = deg_west;
 	}
 
 
@@ -297,14 +298,4 @@ double MinMax::out_maxValue (  ) const { return maxValue; }
 
 double MinMax::out_minValue (  ) const { return minValue; }
 
-int MinMax::out_imax (  ) const { return imax; }
 
-int MinMax::out_jmax (  ) const { return jmax; }
-
-int MinMax::out_kmax (  ) const { return kmax; }
-
-int MinMax::out_imin (  ) const { return imin; }
-
-int MinMax::out_jmin (  ) const { return jmin; }
-
-int MinMax::out_kmin(  ) const { return kmin; }

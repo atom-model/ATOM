@@ -33,7 +33,7 @@ BC_Bathymetry_Hydrosphere::~BC_Bathymetry_Hydrosphere() {}
 
 
 
-void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_File, Array &h, Array &aux_w )
+void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_File, double L_hyd, Array &h, Array &aux_w )
 {
 	streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
 
@@ -54,9 +54,6 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 		}
 
 
-	h_max = - 6000.;    //	compares to 	150m per step when im = 41, minus sign due to negativ hight
-
-
 // reading data from file Name_Bathymetry_File_Read
 	ifstream Name_Bathymetry_File_Read;
 	Name_Bathymetry_File_Read.open ( Name_Bathymetry_File.c_str(), ios_base::in );
@@ -74,6 +71,8 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 	j = 0;
 	k = 0;
 
+	L_hyd = - L_hyd;
+
 	while ( ( j < jm ) && ( !Name_Bathymetry_File_Read.eof() ) )
 	{
 		while ( k < km )
@@ -84,15 +83,16 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 
 			if ( dummy_3 > 0. ) dummy_3 = 0.;
 
-			i = ( im -1 ) - im * ( dummy_3 / h_max );
+			i = ( im -1 ) - im * ( dummy_3 / L_hyd );
 			i_boden = i;
 
-			for ( i = 0; i <= i_boden; i++ ) h.x[ i ][ j ][ k ] = 1.;
-
+			for ( i = 0; i <= i_boden; i++ ) 
+			{
+				h.x[ i ][ j ][ k ] = 1.;
+//				cout << "\n***** Name_Bathymetry_File_Read:   Länge = " << dummy_1 << "  Breite = " << dummy_2 << "  Tiefe = " << dummy_3 << endl;
+//				cout << "***** Name_Bathymetry_File_Read:   i = " << i << "  i_boden = " << i_boden << "  j = " << j << "  k = " << k << endl;
+			}
 			k++;
-
-//			cout << "\n***** Name_Bathymetry_File_Read:   Länge = " << dummy_1 << "  Breite = " << dummy_2 << "  Tiefe = " << dummy_3 << endl;
-//			cout << "***** Name_Bathymetry_File_Read:   i = " << i_boden << "  j = " << j << "  k = " << k << endl;
 		}
 	k = 0;
 	j++;
@@ -184,7 +184,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 
 
 
-void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &pn, Array &cn, Array_2D &t_j, Array_2D &c_j, Array_2D &p_j )
+void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &pn_dyn, Array &cn )
 {
 // boundary conditions for the total solid ground
 
@@ -196,7 +196,7 @@ void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa
 			{
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
-					p.x[ i ][ j ][ k ] =  pn.x[ i ][ j ][ k ] = pa;
+					p_dyn.x[ i ][ j ][ k ] =  pn_dyn.x[ i ][ j ][ k ] = pa;
 					t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ta;
 					c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ca;
 					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
@@ -208,31 +208,3 @@ void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa
 	}
 
 }
-
-
-
-
-
-void BC_Bathymetry_Hydrosphere::IC_SeaGroundGaps ( Array &h, Array &u, Array &v, Array &w, Array &t, Array &p, Array &c, Array &un, Array &vn, Array &wn, Array &tn, Array &pn, Array &cn )
-{
-// Restore from new to old values to fill the gaps from time slice to time slice
-	for ( int i = 0; i < im; i++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
-			{
-				if ( h.x[ i ][ j ][ k ] == 0. )
-				{
-					t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ];
-					p.x[ i ][ j ][ k ] = pn.x[ i ][ j ][ k ];
-					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ];
-					v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ];
-					w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ];
-					c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ];
-				}
-			}
-		}
-	}
-}
-

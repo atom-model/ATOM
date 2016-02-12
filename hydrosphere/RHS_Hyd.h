@@ -8,9 +8,7 @@
  * class to combine the right hand sides of the differential equations for the Runge-Kutta scheme
 */
 
-
 #include <iostream>
-
 #include "Array.h"
 #include "Array_2D.h"
 #include "Array_1D.h"
@@ -28,7 +26,7 @@ class RHS_Hydrosphere
 		int h_check_i, h_check_j, h_check_k;
 
 		double dt, dr, dthe, dphi;
-		double re, pr, ec, sc, gr, omega, coriolis, centrifugal, salt, c_salt;
+		double re, pr, ec, sc, g, omega, coriolis, centrifugal, c_salt;
 		double a2, dt2, dr2, dthe2, dphi2, rm2;
 		double kr1, kr2, kthe1, kthe2, rm;
 		double sinphi, tanthe, kpr, kpthe, kpphi, kphi;
@@ -44,15 +42,18 @@ class RHS_Hydrosphere
 		double dcdr, dcdthe, dcdphi, d2cdr2, d2cdthe2, d2cdphi2;
 		double RS_Salt_Balance, RS_Salt_Energy, RS_Coriolis_Energy, RS_Centrifugal_Energy;
 		double RS_Salt_Momentum, RS_Coriolis_Momentum_rad, RS_Coriolis_Momentum_the, RS_Coriolis_Momentum_phi, RS_Centrifugal_Momentum_rad, RS_Centrifugal_Momentum_the;
+		double buoyancy, RS_buoyancy_Energy, RS_buoyancy_Momentum, RS_buoyancy_Water_Vapour; 
 		double h_0_i, h_c_i, h_d_i, h_0_j, h_c_j, h_d_j, h_0_k, h_c_k, h_d_k, cc; 
 
 
 	public:
-		RHS_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		RHS_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double ); 
 		~RHS_Hydrosphere ();
 
+		void Pressure_RHS_Hydrosphere ( double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void RK_RHS_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+
+		void RK_RHS_3D_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void RK_RHS_2D_Hydrosphere ( int, int, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 

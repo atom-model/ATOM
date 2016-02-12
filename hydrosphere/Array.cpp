@@ -143,6 +143,7 @@ Array::~Array()
 
 void Array::printArray()
 {
+	cout << im << " " << jm << "  " << km << endl;
 	cout.precision ( 4 );
 	cout.setf ( ios::fixed );
 

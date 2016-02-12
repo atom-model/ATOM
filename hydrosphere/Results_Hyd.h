@@ -8,9 +8,7 @@
  * class to produce resulting data on mean sea level
 */
 
-
 #include <iostream>
-
 #include "Array.h"
 #include "Array_2D.h"
 
@@ -30,9 +28,7 @@ class Results_MSL_Hyd
 		double co2_vegetation, co2_ocean, co2_land, ozean_land;
 		double h_max_salt, h_min_salt, max_Salt_total, min_Salt_total;
 		double Value_1, Value_2, Value_3, Value_4, Value_5, Value_6;
-
-		Array_2D		Up ( int, int, double ), Do ( int, int, double ), Sf ( int, int, double ), Sd ( int, int, double ), St ( int, int, double ), Bw ( int, int, double );
-		Array				hc ( int, int, int, double ), uc ( int, int, int, double ), vc ( int, int, int, double ), wc ( int, int, int, double ), cc ( int, int, int, double ), SF ( int, int, int, double ), SD ( int, int, int, double );
+		double c43, c13;
 
 		string name_Value_1, name_Value_2, name_Value_3, name_Value_4, name_Value_5, name_Value_6, name_unit_ms, name_unit_psu;
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading;
@@ -42,7 +38,7 @@ class Results_MSL_Hyd
 
 		~Results_MSL_Hyd (  );
 
-		void run_MSL_data ( double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+		void run_MSL_data ( double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 		void land_oceanFraction ( Array & );
 

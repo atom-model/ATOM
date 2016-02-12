@@ -27,18 +27,16 @@ class BC_Bathymetry_Hydrosphere
 		int i, j, k, im, jm, km, i_boden, l;
 		int k_water, k_sequel, flip;
 
-		double dummy_1, dummy_2, dummy_3, h_max;
+		double dummy_1, dummy_2, dummy_3, L_hyd;
 
 	public:
 
-//		BC_Bathymetry_Hydrosphere ( const string &, int, int, int, Array &, Array & );
 		BC_Bathymetry_Hydrosphere ( int, int, int );
 		~BC_Bathymetry_Hydrosphere();
 
-		void BC_SeaGround ( const string &, Array &, Array & );
+		void BC_SeaGround ( const string &, double, Array &, Array & );
 
-		void BC_SolidGround ( double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
+		void BC_SolidGround ( double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void IC_SeaGroundGaps ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };
 #endif

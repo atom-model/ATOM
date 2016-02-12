@@ -24,21 +24,21 @@ using namespace std;
 class Pressure
 {
 	private:
-		int im, jm, km, l_anf, l_end;
+		int im, jm, km;
 		double dr, dthe, dphi, dr2, dthe2, dphi2;
 		double rm, rm2, sinthe, sinthe2, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2, rm2dthe2;
 		double dudr, dvdthe, dwdphi, drhs_udr, drhs_vdthe, drhs_wdphi;
 		double d2rhs_udrdt, d2rhs_vdthedt, d2rhs_wdphidt;
-		double d_i, d_i_max, rg, denom, num1, num2, num3;
+		double denom, num1, num2, num3;
 
 	public:
 		Pressure ( int, int, int, double, double, double );
 		~Pressure ();
 
 
-		void computePressure ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_3D ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void computePressure_2D ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_2D ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 };
 #endif

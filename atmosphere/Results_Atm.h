@@ -28,7 +28,7 @@ class Results_MSL_Atm
 		double e_h, a_h, p_h, q_h, t_dew, t_Celsius, c_grad, t_grad, t_denom, Delta, E_a, gamma, g, gam;
 		double i_level, h_level, h_h, sat_deficit, RF_e, RF_c, Evap_Haude, Evaporation_Penman_average, Evaporation_Haude_average;
 
-		double ep, hp, u_0, p_0, t_0, c_0, sigma, albedo, lv, cp_l, r_0_air, dr, ozean_land, p_baro, L_atm, c13, c43;
+		double ep, hp, u_0, p_0, t_0, c_0, sigma, albedo_extra, lv, cp_l, r_0_air, dr, ozean_land, p_baro, L_atm, c13, c43;
 		double R_Air, r_h, r_0_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
 		double coeff_mmWS, coeff_lv, coeff_Diffusion_latent, coeff_Diffusion_sensibel, f_Haude, co2_vegetation, co2_ocean, co2_land;
 		double Value_1, Value_2, Value_3, Value_4, Value_5, Value_6, Value_7, Value_8, Value_10, Value_12, Value_13, Value_14, Value_15, Value_16, Value_17, Value_18, Value_19;
@@ -42,7 +42,7 @@ class Results_MSL_Atm
 
 		~Results_MSL_Atm (  );
 
-		void run_MSL_data ( int, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+		void run_MSL_data ( int, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 		void show_MSL_data ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 

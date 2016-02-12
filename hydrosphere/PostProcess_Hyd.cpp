@@ -33,7 +33,7 @@ PostProcess_Hydrosphere::~PostProcess_Hydrosphere() {}
 
 
 
-void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File, int &n, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &p, Array &u, Array &v, Array &w, Array &c, Array &fup, Array &fvp, Array &fwp, Array &fcp, Array &fpp, Array &ftp, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File, int &n, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &p, Array &u, Array &v, Array &w, Array &c, Array &fup, Array &fvp, Array &fwp, Array &fcp, Array &fpp, Array &ftp, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, sinthe, sinphi, costhe, cosphi;
 
@@ -63,8 +63,8 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
 		Hydrosphere_vts_File <<  " <StructuredGrid WholeExtent=\"" << 1 << " "<< im << " "<< 1 << " " << jm << " "<< 1 << " " << km << "\">\n"  << endl;
 		Hydrosphere_vts_File <<  "  <Piece Extent=\"" << 1 << " "<< im << " "<< 1 << " " << jm << " "<< 1 << " " << km << "\">\n"  << endl;
 
-//		Hydrosphere_vts_File <<  "   <PointData Vectors=\"Velocity Rotation\" Scalars=\"SeaGround Temperature Pressure SaltConcentration u-Component v-Component w-Component\">\n"  << endl;
-		Hydrosphere_vts_File <<  "   <PointData Vectors=\"Velocity\" Scalars=\"SeaGround Temperature Pressure SaltConcentration\">\n"  << endl;
+//		Hydrosphere_vts_File <<  "   <PointData Vectors=\"Velocity Rotation\" Scalars=\"Topography Temperature Pressure Salinity u-Component v-Component w-Component\">\n"  << endl;
+		Hydrosphere_vts_File <<  "   <PointData Vectors=\"Velocity\" Scalars=\"Topography Temperature Pressure Salinity\">\n"  << endl;
 
 
 
@@ -144,7 +144,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
 
 // writing of sea ground
 
-		Hydrosphere_vts_File <<  "    <DataArray type=\"Float32\" Name=\"SeaGround\" format=\"ascii\">\n"  << endl;
+		Hydrosphere_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Topography\" format=\"ascii\">\n"  << endl;
 
 		for ( int k = 0; k < km; k++ )
 		{
@@ -205,7 +205,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
 
 // writing scalar function c
 
-		Hydrosphere_vts_File <<  "    <DataArray type=\"Float32\" Name=\"SaltConcentration\" format=\"ascii\">\n"  << endl;
+		Hydrosphere_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Salinity\" format=\"ascii\">\n"  << endl;
 
 		for ( int k = 0; k < km; k++ )
 		{
@@ -364,7 +364,7 @@ return;
 
 
 
-void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathymetry_File, int &pressure_iter, Array &h, Array &t, Array &p, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathymetry_File, int &pressure_iter, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, dx, dy, dz;
 
@@ -388,23 +388,19 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 		cout << "***** file ::::: " << Hydrosphere_panorama_vts_File_Name.str() << " ::::: starts at ::::::: " << anfangpos << endl;
 
 
-
 // begin writing
-
 		Hydrosphere_panorama_vts_File <<  "<?xml version=\"1.0\"?>\n"  << endl;
 		Hydrosphere_panorama_vts_File <<  "<VTKFile type=\"StructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n"  << endl;
 		Hydrosphere_panorama_vts_File <<  " <StructuredGrid WholeExtent=\"" << 1 << " "<< im << " "<< 1 << " " << jm << " "<< 1 << " " << km << "\">\n"  << endl;
 		Hydrosphere_panorama_vts_File <<  "  <Piece Extent=\"" << 1 << " "<< im << " "<< 1 << " " << jm << " "<< 1 << " " << km << "\">\n"  << endl;
 
-//		Hydrosphere_panorama_vts_File <<  "   <PointData Vectors=\"Velocity\" Scalars=\"SeaGround Temperature Pressure SaltConcentration SaltFinger.y SaltDiffusion.y SaltBalance\">\n"  << endl;
-		Hydrosphere_panorama_vts_File <<  "   <PointData Vectors=\"Velocity\" Scalars=\"SeaGround Temperature Pressure SaltConcentration\">\n"  << endl;
+//		Hydrosphere_panorama_vts_File <<  "   <PointData Vectors=\"Velocity\" Scalars=\"Topography Temperature Pressure Salinity SaltFinger BuoyancyForce SaltBalance\">\n"  << endl;
+		Hydrosphere_panorama_vts_File <<  "   <PointData Vectors=\"Velocity\" Scalars=\"Topography Temperature PressureDynamic PressureStatic Salinity\">\n"  << endl;
 
 
 
 // writing u, v und w velocity components in cartesian coordinates
-
 		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" Name=\"Velocity\" format=\"ascii\">\n"  << endl;
-
 
 
 
@@ -425,11 +421,65 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
 
+// writing u-velocity
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"u-velocity\" format=\"ascii\">\n"  << endl;
+
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				for ( int i = 0; i < im; i++ )
+				{
+					Hydrosphere_panorama_vts_File << u.x[ i ][ j ][ k ]  << endl;
+				}
+				Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+			}
+			Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		}
+		Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
+
+
+// writing v-velocity
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"v-velocity\" format=\"ascii\">\n"  << endl;
+
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				for ( int i = 0; i < im; i++ )
+				{
+					Hydrosphere_panorama_vts_File << v.x[ i ][ j ][ k ]  << endl;
+				}
+				Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+			}
+			Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		}
+		Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
+
+
+// writing w-velocity
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"w-velocity\" format=\"ascii\">\n"  << endl;
+
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				for ( int i = 0; i < im; i++ )
+				{
+					Hydrosphere_panorama_vts_File << w.x[ i ][ j ][ k ]  << endl;
+				}
+				Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+			}
+			Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		}
+		Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
 
 // writing of sea ground
-
-		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"SeaGround\" format=\"ascii\">\n"  << endl;
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Topography\" format=\"ascii\">\n"  << endl;
 
 		for ( int k = 0; k < km; k++ )
 		{
@@ -447,11 +497,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
 
-
-
-
 // writing of temperature
-
 		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Temperature\" format=\"ascii\">\n"  << endl;
 
 		for ( int k = 0; k < km; k++ )
@@ -470,10 +516,23 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
 
+// writing dynamic pressure
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"PressureDynamic\" format=\"ascii\">\n"  << endl;
 
-// writing temperature
-
-		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Pressure\" format=\"ascii\">\n"  << endl;
+		for ( int k = 1; k < km-1; k++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				for ( int i = 1; i < im-1; i++ )
+				{
+					if ( fabs ( p_dyn.x[ i ][ j ][ k ] ) > max_p_dyn ) 
+					{
+						max_p_dyn = fabs ( p_dyn.x[ i ][ j ][ k ] );
+						if ( max_p_dyn == 0. ) max_p_dyn = 1.e-6;
+					}
+				}
+			}
+		}
 
 		for ( int k = 0; k < km; k++ )
 		{
@@ -481,7 +540,8 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 			{
 				for ( int i = 0; i < im; i++ )
 				{
-					Hydrosphere_panorama_vts_File << p.x[ i ][ j ][ k ] << endl;
+//					Hydrosphere_panorama_vts_File << p_dyn.x[ i ][ j ][ k ] / max_p_dyn << endl;
+					Hydrosphere_panorama_vts_File << p_dyn.x[ i ][ j ][ k ] << endl;
 				}
 				Hydrosphere_panorama_vts_File <<  "\n"  << endl;
 			}
@@ -490,10 +550,44 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 		Hydrosphere_panorama_vts_File <<  "\n"  << endl;
 		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
+/*
+// writing static pressure
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"PressureStatic\" format=\"ascii\">\n"  << endl;
+
+		for ( int k = 1; k < km-1; k++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				for ( int i = 1; i < im-1; i++ )
+				{
+					if ( fabs ( p_stat.x[ i ][ j ][ k ] ) > max_p_stat ) 
+					{
+						max_p_stat = fabs ( p_stat.x[ i ][ j ][ k ] );
+						if ( max_p_stat == 0. ) max_p_stat = 1.e-6;
+					}
+				}
+			}
+		}
+
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				for ( int i = 0; i < im; i++ )
+				{
+//					Hydrosphere_panorama_vts_File << p_stat.x[ i ][ j ][ k ] / max_p_stat << endl;
+					Hydrosphere_panorama_vts_File << p_stat.x[ i ][ j ][ k ] << endl;
+				}
+				Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+			}
+			Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		}
+		Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
+*/
 
 // writing scalar function c
-
-		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"SaltConcentration\" format=\"ascii\">\n"  << endl;
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Salinity\" format=\"ascii\">\n"  << endl;
 
 		for ( int k = 0; k < km; k++ )
 		{
@@ -513,8 +607,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 
 // writing salt fingers
 
-/*
-		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"SaltFinger.y\" format=\"ascii\">\n"  << endl;
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"SaltFinger\" format=\"ascii\">\n"  << endl;
 
 		for ( int k = 0; k < km; k++ )
 		{
@@ -532,8 +625,27 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
 
-// writing salt balance
+// writing salt diffusion
 
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"SaltDiffusion\" format=\"ascii\">\n"  << endl;
+
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				for ( int i = 0; i < im; i++ )
+				{
+					Hydrosphere_panorama_vts_File << Salt_Diffusion.x[ i ][ j ][ k ]  << endl;
+				}
+				Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+			}
+			Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		}
+		Hydrosphere_panorama_vts_File <<  "\n"  << endl;
+		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
+
+
+// writing salt balance
 		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"SaltBalance\" format=\"ascii\">\n"  << endl;
 
 		for ( int k = 0; k < km; k++ )
@@ -552,9 +664,8 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
 
-// writing salt diffusion
-
-		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"SaltDiffusion.y\" format=\"ascii\">\n"  << endl;
+// writing buoyancy force
+		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"BuoyancyForce\" format=\"ascii\">\n"  << endl;
 
 		for ( int k = 0; k < km; k++ )
 		{
@@ -562,7 +673,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 			{
 				for ( int i = 0; i < im; i++ )
 				{
-					Hydrosphere_panorama_vts_File << Salt_Diffusion.x[ i ][ j ][ k ]  << endl;
+					Hydrosphere_panorama_vts_File << Buoyancy_Force.x[ i ][ j ][ k ]  << endl;
 				}
 				Hydrosphere_panorama_vts_File <<  "\n"  << endl;
 			}
@@ -570,8 +681,6 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 		}
 		Hydrosphere_panorama_vts_File <<  "\n"  << endl;
 		Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
-*/
-
 
 
 
@@ -580,13 +689,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 		Hydrosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">\n"  << endl;
 
 
-
-
-
-
-// Kartesische Coordinates ausschreiben
-
-
+// writing cartesian coordinates
 		x = 0.;
 		y = 0.;
 		z = 0.;
@@ -661,7 +764,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetry_File, int &j_longal, int &pressure_iter, Array &h, Array &p, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetry_File, int &j_longal, int &pressure_iter, Array &h, Array &p_dyn, Array &p_stat, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, dx, dz;
 
@@ -687,10 +790,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 		cout << "***** file ::::: " << Hydrosphere_longal_File_Name.str() << " ::::: starts at ::::::: " << anfangpos << endl;
 
 
-
-
 // begin writing
-
 		Hydrosphere_vtk_longal_File <<  "# vtk DataFile Version 3.0" << endl;
 		Hydrosphere_vtk_longal_File <<  "Longitudinal_Data_Hydrosphere_Circulation\n";
 		Hydrosphere_vtk_longal_File <<  "ASCII" << endl;
@@ -700,15 +800,12 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
 
 // transformation from spherical to cartesian coordinates
-
 		x = 0.;
 		y = 0.;
 		z = 0.;
 
 		dx = .1;
 		dz = .025;
-//		dx = .025;
-//		dz = .05;
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -728,11 +825,9 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 		Hydrosphere_vtk_longal_File <<  "POINT_DATA " << i_max * k_max << endl;
 
 
+// writing u-component
 		Hydrosphere_vtk_longal_File <<  "SCALARS u-Component float " << 1 << endl;
 		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing u-component
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -743,12 +838,9 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 		}
 
 
-
+// writing v-component
 		Hydrosphere_vtk_longal_File <<  "SCALARS v-Component float " << 1 << endl;
 		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing v-component
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -760,12 +852,9 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 		}
 
 
-
+// writing w-component
 		Hydrosphere_vtk_longal_File <<  "SCALARS w-Component float " << 1 << endl;
 		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" <<endl;
-
-
-// writing w-component
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -777,13 +866,10 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 		}
 
 
-
+// writing of temperature
 		Hydrosphere_vtk_longal_File <<  "SCALARS Temperature float " << 1 << endl;
 		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default"  <<endl;
 
-
-// writing of temperature
-
 		for ( int i = 0; i < im; i++ )
 		{
 			for ( int k = 0; k < km; k++ )
@@ -792,107 +878,133 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 				Hydrosphere_vtk_longal_File << t.x[ i ][ j_longal ][ k ] << endl;
 			}
 		}
-
-
-
-		Hydrosphere_vtk_longal_File <<  "SCALARS Salinity float " << 1 << endl;
-		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
 
 
 // writing salinity
+		Hydrosphere_vtk_longal_File <<  "SCALARS Salinity float " << 1 << endl;
+		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
 
 		for ( int i = 0; i < im; i++ )
 		{
 			for ( int k = 0; k < km; k++ )
 
 			{
-				Hydrosphere_vtk_longal_File << t.x[ i ][ j_longal ][ k ] << endl;
+				Hydrosphere_vtk_longal_File << c.x[ i ][ j_longal ][ k ] << endl;
 			}
 		}
 
 
-
-		Hydrosphere_vtk_longal_File <<  "SCALARS SaltFinger float " << 1 << endl;
+// writing pressure
+		Hydrosphere_vtk_longal_File <<  "SCALARS Pressure_dynamic float " << 1 << endl;
 		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
 
-
-// writing salt finger
+	for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( p_dyn.x[ i ][ j_longal ][ k ] ) > max_p_dyn ) 
+				{
+					max_p_dyn = fabs ( p_dyn.x[ i ][ j_longal ][ k ] );
+					if ( max_p_dyn == 0. ) max_p_dyn = 1.e-6;
+				}
+			}
+		}
 
 		for ( int i = 0; i < im; i++ )
 		{
 			for ( int k = 0; k < km; k++ )
+			{
+//				Hydrosphere_vtk_longal_File << p_dyn.x[ i ][ j_longal ][ k ] / max_p_dyn << endl;
+				Hydrosphere_vtk_longal_File << p_dyn.x[ i ][ j_longal ][ k ] << endl;
+			}
+		}
 
+/*
+// writing static pressure
+		Hydrosphere_vtk_longal_File <<  "SCALARS Pressure_static float " << 1 << endl;
+		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
+
+	for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( p_stat.x[ i ][ j_longal ][ k ] ) > max_p_stat ) 
+				{
+					max_p_stat = fabs ( p_stat.x[ i ][ j_longal ][ k ] );
+					if ( max_p_stat == 0. ) max_p_stat = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+//				Hydrosphere_vtk_longal_File << p_stat.x[ i ][ j_longal ][ k ] / max_p_stat << endl;
+				Hydrosphere_vtk_longal_File << p_stat.x[ i ][ j_longal ][ k ] << endl;
+			}
+		}
+*/
+
+// writing salt finger
+		Hydrosphere_vtk_longal_File <<  "SCALARS SaltFinger float " << 1 << endl;
+		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int k = 0; k < km; k++ )
 			{
 				Hydrosphere_vtk_longal_File << Salt_Finger.x[ i ][ j_longal ][ k ] << endl;
 			}
 		}
 
 
-
-
-
-
+// writing salt diffusion
 		Hydrosphere_vtk_longal_File <<  "SCALARS SaltDiffusion float " << 1 << endl;
 		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing salt diffusion
 
 		for ( int i = 0; i < im; i++ )
 		{
 			for ( int k = 0; k < km; k++ )
-
 			{
 				Hydrosphere_vtk_longal_File << Salt_Diffusion.x[ i ][ j_longal ][ k ] << endl;
 			}
 		}
 
 
-		Hydrosphere_vtk_longal_File <<  "SCALARS SaltBalance float " << 1 << endl;
+// writing buoyancy force
+		Hydrosphere_vtk_longal_File <<  "SCALARS BuoyancyForce float " << 1 << endl;
 		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing salt balance
 
 		for ( int i = 0; i < im; i++ )
 		{
 			for ( int k = 0; k < km; k++ )
+			{
+				Hydrosphere_vtk_longal_File << Buoyancy_Force.x[ i ][ j_longal ][ k ] << endl;
+			}
+		}
 
+
+// writing salt balance
+		Hydrosphere_vtk_longal_File <<  "SCALARS SaltBalance float " << 1 << endl;
+		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int k = 0; k < km; k++ )
 			{
 				Hydrosphere_vtk_longal_File << Salt_Balance.x[ i ][ j_longal ][ k ] << endl;
 			}
 		}
 
 
-
-
-
-		Hydrosphere_vtk_longal_File <<  "SCALARS Pressure float " << 1 << endl;
-		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing pressure
-
-		for ( int i = 0; i < im; i++ )
-		{
-			for ( int k = 0; k < km; k++ )
-
-			{
-				Hydrosphere_vtk_longal_File << p.x[ i ][ j_longal ][ k ] << endl;
-			}
-		}
-
-
-		Hydrosphere_vtk_longal_File <<  "SCALARS SeaGround float " << 1 << endl;
-		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
-
-
 // writing sea ground
+		Hydrosphere_vtk_longal_File <<  "SCALARS Topography float " << 1 << endl;
+		Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
 
 		for ( int i = 0; i < im; i++ )
 		{
 			for ( int k = 0; k < km; k++ )
-
 			{
 				Hydrosphere_vtk_longal_File << h.x[ i ][ j_longal ][ k ] << endl;
 			}
@@ -900,25 +1012,18 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
 
 
-
+// writing longitudinal u-w-cell structure
 		Hydrosphere_vtk_longal_File <<  "VECTORS u-w-Cell float" << endl;
-
-
-// Schreiben der longitudinalen u-w-Zellenstruktur
 
 		for ( int i = 0; i < im; i++ )
 		{
 			for ( int k = 0; k < km; k++ )
-
 			{
 				Hydrosphere_vtk_longal_File << u.x[ i ][ j_longal ][ k ] << " " << y << " " << w.x[ i ][ j_longal ][ k ] << endl;
 			}
 		}
 
-
-
 // end writing
-
 
 
 // final file administration
@@ -951,7 +1056,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, Array &h, Array &p, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BottomWater )
+void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, Array &h, Array &p_dyn, Array &p_stat, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater )
 {
 	double x, y, z, dx, dy;
 
@@ -976,10 +1081,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		cout << "***** file ::::: " << Hydrosphere_radial_File_Name.str() << " ::::: starts at ::::::: " << anfangpos << endl;
 
 
-
-
 // begin writing
-
 		Hydrosphere_vtk_radial_File <<  "# vtk DataFile Version 3.0" << endl;
 		Hydrosphere_vtk_radial_File <<  "Radial_Data_Hydrosphere_Circulation\n";
 		Hydrosphere_vtk_radial_File <<  "ASCII" << endl;
@@ -989,7 +1091,6 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 
 
 // transformation from spherical to cartesian coordinates
-
 		x = 0.;
 		y = 0.;
 		z = 0.;
@@ -1015,11 +1116,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		Hydrosphere_vtk_radial_File <<  "POINT_DATA " << j_max * k_max << endl;
 
 
+// writing u-component
 		Hydrosphere_vtk_radial_File <<  "SCALARS u-Component float " << 1 << endl;
 		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing u-component
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1030,12 +1129,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
-
+// writing v-component
 		Hydrosphere_vtk_radial_File <<  "SCALARS v-Component float " << 1 << endl;
 		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing v-component
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1046,12 +1142,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
-
+// writing w-component
 		Hydrosphere_vtk_radial_File <<  "SCALARS w-Component float " << 1 << endl;
 		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" <<endl;
-
-
-// writing w-component
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1062,12 +1155,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
-
+// writing of temperature
 		Hydrosphere_vtk_radial_File <<  "SCALARS Temperature float " << 1 << endl;
 		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
-
-
-// writing of temperature
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1078,12 +1168,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
-
+// writing salinity
 		Hydrosphere_vtk_radial_File <<  "SCALARS Salinity float " << 1 << endl;
 		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing salinity
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1094,12 +1181,103 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
+// writing salt finger
+		Hydrosphere_vtk_radial_File <<  "SCALARS SaltFinger float " << 1 << endl;
+		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
 
-		Hydrosphere_vtk_radial_File <<  "SCALARS Upwelling float " << 1 << endl;
-		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				Hydrosphere_vtk_radial_File << Salt_Finger.x[ i_radial ][ j ][ k ] << endl;
+			}
+		}
 
+
+// writing salt diffusion
+		Hydrosphere_vtk_radial_File <<  "SCALARS SaltDiffusion float " << 1 << endl;
+		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				Hydrosphere_vtk_radial_File << Salt_Diffusion.x[ i_radial ][ j ][ k ] << endl;
+			}
+		}
+
+
+// writing balance
+		Hydrosphere_vtk_radial_File <<  "SCALARS SaltBalance float " << 1 << endl;
+		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				Hydrosphere_vtk_radial_File << Salt_Balance.x[ i_radial ][ j ][ k ] << endl;
+			}
+		}
+
+
+
+
+
+// writing pressure
+		Hydrosphere_vtk_radial_File <<  "SCALARS Pressure_dynamic float " << 1 << endl;
+		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( p_dyn.x[ i_radial ][ j ][ k ] ) > max_p_dyn ) 
+				{
+					max_p_dyn = fabs ( p_dyn.x[ i_radial ][ j ][ k ] );
+					if ( max_p_dyn == 0. ) max_p_dyn = 1.e-6;
+				}
+			}
+		}
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+//				Hydrosphere_vtk_radial_File << p_dyn.x[ i_radial ][ j ][ k ] / max_p_dyn << endl;
+				Hydrosphere_vtk_radial_File << p_dyn.x[ i_radial ][ j ][ k ] << endl;
+			}
+		}
+
+/*
+// writing static pressure
+		Hydrosphere_vtk_radial_File <<  "SCALARS Pressure_static float " << 1 << endl;
+		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( p_stat.x[ i_radial ][ j ][ k ] ) > max_p_stat ) 
+				{
+					max_p_stat = fabs ( p_stat.x[ i_radial ][ j ][ k ] );
+					if ( max_p_stat == 0. ) max_p_stat = 1.e-6;
+				}
+			}
+		}
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+//				Hydrosphere_vtk_radial_File << p_stat.x[ i_radial ][ j ][ k ] / max_p_stat << endl;
+				Hydrosphere_vtk_radial_File << p_stat.x[ i_radial ][ j ][ k ] << endl;
+			}
+		}
+*/
 
 // writing upwelling
+		Hydrosphere_vtk_radial_File <<  "SCALARS Upwelling float " << 1 << endl;
+		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1110,13 +1288,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
-
-
+// writing downwelling
 		Hydrosphere_vtk_radial_File <<  "SCALARS Downwelling float " << 1 << endl;
 		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
-
-
-// writing downwelling
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1127,11 +1301,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
+// writing BottomWater
 		Hydrosphere_vtk_radial_File <<  "SCALARS BottomWater float " << 1 << endl;
 		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
-
-
-// writing BottomWater
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1142,15 +1314,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
-
-
-
-
+// writing salt finger
 		Hydrosphere_vtk_radial_File <<  "SCALARS SaltFinger float " << 1 << endl;
 		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
-
-
-// writing salt finger
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1161,13 +1327,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
-
-
+// writing salt diffusion
 		Hydrosphere_vtk_radial_File <<  "SCALARS SaltDiffusion float " << 1 << endl;
 		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
-
-
-// writing salt diffusion
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1178,28 +1340,22 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
-
-
-		Hydrosphere_vtk_radial_File <<  "SCALARS Pressure float " << 1 << endl;
-		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing pressure
+// writing bouyancy force
+		Hydrosphere_vtk_radial_File <<  "SCALARS BuoyancyForce float " << 1 << endl;
+		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
 
 		for ( int j = 0; j < jm; j++ )
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				Hydrosphere_vtk_radial_File << p.x[ i_radial ][ j ][ k ] << endl;
+				Hydrosphere_vtk_radial_File << BuoyancyForce.y[ j ][ k ] << endl;
 			}
 		}
 
 
-		Hydrosphere_vtk_radial_File <<  "SCALARS SeaGround float " << 1 << endl;
-		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
-
-
 // writing sea ground
+		Hydrosphere_vtk_radial_File <<  "SCALARS Topography float " << 1 << endl;
+		Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1210,12 +1366,8 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		}
 
 
-
-
-		Hydrosphere_vtk_radial_File <<  "VECTORS v-w-Cell float" << endl;
-
-
 // writing zonal v-w cell structure
+		Hydrosphere_vtk_radial_File <<  "VECTORS v-w-Cell float" << endl;
 
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -1224,7 +1376,6 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 				Hydrosphere_vtk_radial_File << v.x[ i_radial ][ j ][ k ] << " " << w.x[ i_radial ][ j ][ k ] << " " << z << endl;
 			}
 		}
-
 
 
 // end writing
@@ -1261,7 +1412,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int &k_zonal, int &pressure_iter, Array &h, Array &p, Array &t, Array &u, Array &v, Array &w, Array &c, Array &Salt_Finger, Array &Salt_Diffusion, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int &k_zonal, int &pressure_iter, Array &h, Array &p_dyn, Array &p_stat, Array &t, Array &u, Array &v, Array &w, Array &c, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, dx, dy;
 
@@ -1285,11 +1436,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		anfangpos = Hydrosphere_vtk_zonal_File.tellp();
 		cout << "***** file ::::: " << Hydrosphere_zonal_File_Name.str() << " ::::: starts at ::::::: " << anfangpos << endl;
 
-
-
-
 // begin writing
-
 		Hydrosphere_vtk_zonal_File <<  "# vtk DataFile Version 3.0" << endl;
 		Hydrosphere_vtk_zonal_File <<  "Zonal_Data_Hydrosphere_Circulation\n";
 		Hydrosphere_vtk_zonal_File <<  "ASCII" << endl;
@@ -1298,7 +1445,6 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		Hydrosphere_vtk_zonal_File <<  "POINTS " << i_max * j_max << " float" << endl;
 
 // transformation from spherical to cartesian coordinates
-
 		x = 0.;
 		y = 0.;
 		z = 0.;
@@ -1320,15 +1466,11 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
-
 		Hydrosphere_vtk_zonal_File <<  "POINT_DATA " << i_max * j_max << endl;
 
-
+// writing u-component
 		Hydrosphere_vtk_zonal_File <<  "SCALARS u-Component float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing u-component
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1339,12 +1481,9 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
-
+// writing v-component
 		Hydrosphere_vtk_zonal_File <<  "SCALARS v-Component float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing v-component
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1355,12 +1494,9 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
-
+// writing w-component
 		Hydrosphere_vtk_zonal_File <<  "SCALARS w-Component float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" <<endl;
-
-
-// writing w-component
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1371,12 +1507,9 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
-
+// writing of temperature
 		Hydrosphere_vtk_zonal_File <<  "SCALARS Temperature float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default"  <<endl;
-
-
-// writing of temperature
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1387,12 +1520,9 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
-
+// writing salinity
 		Hydrosphere_vtk_zonal_File <<  "SCALARS Salinity float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing salinity
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1403,11 +1533,9 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
+// writing salt finger
 		Hydrosphere_vtk_zonal_File <<  "SCALARS SaltFinger float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing salt finger
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1418,13 +1546,9 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
-
-
+// writing salt diffusion
 		Hydrosphere_vtk_zonal_File <<  "SCALARS SaltDiffusion float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing salt diffusion
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1435,11 +1559,9 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
+// writing salt balance
 		Hydrosphere_vtk_zonal_File <<  "SCALARS SaltBalance float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing salt balance
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1450,31 +1572,88 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
+// writing buoancy force
 
-
-
-
-
-		Hydrosphere_vtk_zonal_File <<  "SCALARS Pressure float " << 1 << endl;
+		Hydrosphere_vtk_zonal_File <<  "SCALARS BuoyancyForce float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
-
-
-// writing pressure
 
 		for ( int i = 0; i < im; i++ )
 		{
 			for ( int j = 0; j < jm; j++ )
 			{
-				Hydrosphere_vtk_zonal_File << p.x[ i ][ j ][ k_zonal ] << endl;
+				Hydrosphere_vtk_zonal_File << Buoyancy_Force.x[ i ][ j ][ k_zonal ] << endl;
 			}
 		}
 
 
-		Hydrosphere_vtk_zonal_File <<  "SCALARS SeaGround float " << 1 << endl;
+// writing salt balance
+		Hydrosphere_vtk_zonal_File <<  "SCALARS SaltBalance float " << 1 << endl;
 		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
 
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				Hydrosphere_vtk_zonal_File << Salt_Balance.x[ i ][ j ][ k_zonal ] << endl;
+			}
+		}
+
+
+// writing dynamic pressure
+		Hydrosphere_vtk_zonal_File <<  "SCALARS Pressure_dynamic float " << 1 << endl;
+		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				if ( fabs ( p_dyn.x[ i ][ j ][ k_zonal ] ) > max_p_dyn ) 
+				{
+					max_p_dyn = fabs ( p_dyn.x[ i ][ j ][ k_zonal ] );
+					if ( max_p_dyn == 0. ) max_p_dyn = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+//				Hydrosphere_vtk_zonal_File << p_dyn.x[ i ][ j ][ k_zonal ] / max_p_dyn << endl;
+				Hydrosphere_vtk_zonal_File << p_dyn.x[ i ][ j ][ k_zonal ] << endl;
+			}
+		}
+
+/*
+// writing static pressure
+		Hydrosphere_vtk_zonal_File <<  "SCALARS Pressure_static float " << 1 << endl;
+		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				if ( fabs ( p_stat.x[ i ][ j ][ k_zonal ] ) > max_p_stat ) 
+				{
+					max_p_stat = fabs ( p_stat.x[ i ][ j ][ k_zonal ] );
+					if ( max_p_stat == 0. ) max_p_stat = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+//				Hydrosphere_vtk_zonal_File << p_stat.x[ i ][ j ][ k_zonal ] / max_p_stat << endl;
+				Hydrosphere_vtk_zonal_File << p_stat.x[ i ][ j ][ k_zonal ] << endl;
+			}
+		}
+*/
 
 // writing sea ground
+		Hydrosphere_vtk_zonal_File <<  "SCALARS Topography float " << 1 << endl;
+		Hydrosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1485,12 +1664,8 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		}
 
 
-
-
-		Hydrosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
-
-
 // writing zonal u-v cell structure
+		Hydrosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
 
 		for ( int i = 0; i < im; i++ )
 		{
@@ -1499,8 +1674,6 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 				Hydrosphere_vtk_zonal_File << u.x[ i ][ j ][ k_zonal ] << " " << v.x[ i ][ j ][ k_zonal ] << " " << z << endl;
 			}
 		}
-
-
 
 // end writing
 
@@ -1535,7 +1708,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 
 
 
-void PostProcess_Hydrosphere::Hydrosphere_SequelFile_write ( const string &Name_Bathymetry_File, int &n, int &iter_RB, double &time, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &t_j, Array_2D &c_j )
+void PostProcess_Hydrosphere::Hydrosphere_SequelFile_write ( const string &Name_Bathymetry_File, int &n, int &iter_RB, double &time, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &aux_u, Array &aux_v, Array &aux_w )
 {
 	stringstream Name_Sequel_File;
 
@@ -1627,16 +1800,6 @@ void PostProcess_Hydrosphere::Hydrosphere_SequelFile_write ( const string &Name_
 			}
 		}
 
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				Sequel_File << t_j.y[ j ][ k ] << " " << c_j.y[ j ][ k ] << endl;
-			}
-		}
-
-
 // end writing
 
 
@@ -1677,7 +1840,7 @@ void PostProcess_Hydrosphere::Hydrosphere_SequelFile_write ( const string &Name_
 
 
 
-void PostProcess_Hydrosphere::Hydrosphere_SequelFile_read ( const string &Name_Bathymetry_File, int &n, int &iter_BC, double &time, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &t_j, Array_2D &c_j )
+void PostProcess_Hydrosphere::Hydrosphere_SequelFile_read ( const string &Name_Bathymetry_File, int &n, int &iter_BC, double &time, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &aux_u, Array &aux_v, Array &aux_w )
 {
 	stringstream Name_Sequel_File;
 
@@ -1775,18 +1938,6 @@ void PostProcess_Hydrosphere::Hydrosphere_SequelFile_read ( const string &Name_B
 				}
 			}
 		}
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				Sequel_File >> t_j.y[ j ][ k ];
-				Sequel_File >> c_j.y[ j ][ k ];
-			}
-		}
-
-
 
 // end reading
 

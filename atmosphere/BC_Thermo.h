@@ -34,7 +34,7 @@ class BC_Thermo
 		int k_water, k_sequel;
 		int n_smooth, i_trop;
 		int j_r, k_r, j_sun;
-		int sun_position_lat, sun_position_lon, declination;
+		int RadiationFluxDensity, sun_position_lat, sun_position_lon, declination;
 
 		double d_k_half, d_k_max, t_eff_earth, r, Q_rad, rad_bal_minus; 
 		double dummy_1, dummy_2, dummy_3, t_equator, t_tropopause, t_coeff, t_pole, c_equator, c_tropopause, c_coeff, c_pol, p_equator, p_tropopause, p_coeff, p_pol;
@@ -55,21 +55,21 @@ class BC_Thermo
 		double rR, rg, jmkm, u_sum, v_sum, w_sum, t_sum, c_sum;
 		double radiation_ocean_coeff, radiation_land_coeff, radiation_ocean;
 		double D, H, G, R_short, Q_short, AG, A, R_long, Q_long;
-		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo, lv, cp_l, r_0_air, dr, ozean_land, p_baro, L_atm, c13, c43;
+		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, cp_l, r_0_air, dr, ozean_land, p_baro, L_atm, c13, c43;
 		double R_Air, r_h, r_0_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
-		double ik, epsilon, c_ocean_minus, c_land_minus, t_average, co2_average, co2_pole, gam;
+		double ik, epsilon_extra, c_ocean_minus, c_land_minus, t_average, co2_average, co2_pole, gam;
 		double radiation_pole, radiation_equator, t_land_plus;
 
 
 		char Temperature_West[50], Salinity_West[50], Temperature_East[50], Salinity_East[50];
  
 		string time_slice_comment, time_slice_number, time_slice_unit;
-		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit;
-		string co2_comment, co2_gain, co2_modern, co2_av, co2_unit;
+		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
+		string co2_comment, co2_gain, co2_modern, co2_av, co2_unit, co2_cretaceous_str, co2_average_cret, co2_average_str;
 
 
 	public:
-		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double,  double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double,  double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
 
@@ -81,7 +81,7 @@ class BC_Thermo
 
 		void TropopauseLocation ( int * );
 
-		void BC_RadiationBalance_comp ( Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array & );
+		void BC_RadiationBalance_comp ( Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array & );
 
 		void BC_RadiationBalance_parab ( Array_2D &, Array & );
 

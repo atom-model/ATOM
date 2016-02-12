@@ -1336,7 +1336,7 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array_2D &Precipitation, Array_2D &Evaporation, Array_2D &IceAir, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Radiation_Balance, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &precipitation_j, Array_2D &Water_super, Array_2D &Water, Array_2D &Vegetation )
+void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array_2D &Precipitation, Array_2D &Evaporation, Array_2D &IceAir, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Radiation_Balance, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &precipitation_j, Array_2D &Water_super, Array_2D &Water, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon )
 {
 	double x, y, z, dx, dy;
 
@@ -1346,7 +1346,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 	k_max = km;
 
 	max_u = max_v = max_w = max_t = max_c = max_co2 = max_p_dyn = max_p_stat = 0.;
-	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Precipitation = 0.;
+	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Precipitation = max_albedo = max_epsilon = 0.;
 	max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
 	max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
 	max_t_Evaporation_Penman = max_t_Evaporation_Haude = max_Radiation_Balance = max_buoyancy_force = 0.;
@@ -1833,6 +1833,58 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 			{
 //				Atmosphere_vtk_radial_File << Precipitation.y[ j ][ k ] / max_Precipitation << endl;
 				Atmosphere_vtk_radial_File << Precipitation.y[ j ][ k ] << endl;
+			}
+		}
+
+
+// writing albedo
+		Atmosphere_vtk_radial_File <<  "SCALARS albedo float " << 1 << endl;
+		Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( albedo.y[ j ][ k ] ) > max_albedo ) 
+				{
+					max_albedo = fabs ( albedo.y[ j ][ k ] );
+					if ( max_albedo == 0. ) max_albedo = 1.e-6;
+				}
+			}
+		}
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+//				Atmosphere_vtk_radial_File << albedo.y[ j ][ k ] / max_albedo << endl;
+				Atmosphere_vtk_radial_File << albedo.y[ j ][ k ] << endl;
+			}
+		}
+
+
+// writing epsilon
+		Atmosphere_vtk_radial_File <<  "SCALARS epsilon float " << 1 << endl;
+		Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( epsilon.y[ j ][ k ] ) > max_epsilon ) 
+				{
+					max_epsilon = fabs ( epsilon.y[ j ][ k ] );
+					if ( max_epsilon == 0. ) max_epsilon = 1.e-6;
+				}
+			}
+		}
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+//				Atmosphere_vtk_radial_File << epsilon.y[ j ][ k ] / max_epsilon << endl;
+				Atmosphere_vtk_radial_File << epsilon.y[ j ][ k ] << endl;
 			}
 		}
 

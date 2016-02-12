@@ -4,12 +4,10 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
  * class to produce results by the Runge-Kutta solution scheme
 */
 
 #include <iostream>
-
 #include "Array.h"
 #include "Array_1D.h"
 #include "RHS_Hyd.h"
@@ -31,7 +29,7 @@ class RungeKutta_Hydrosphere
 		RungeKutta_Hydrosphere ( int, int, int, int, double );
 		~RungeKutta_Hydrosphere ();
 
-		void solveRungeKutta_Hydrosphere ( RHS_Hydrosphere &, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 

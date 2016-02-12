@@ -21,7 +21,7 @@
 using namespace std;
 
 
-BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo, double lv, double cp_l, double L_atm, double dr, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_0, double co2_vegetation, double co2_ocean, double co2_land, double ik, double epsilon, double c_ocean_minus, double c_land_minus, double t_average, double co2_average, double co2_pole, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land_plus, double t_tropopause, double t_equator, double t_pole, double gam )
+BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationFluxDensity, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double lv, double cp_l, double L_atm, double dr, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_0, double co2_vegetation, double co2_ocean, double co2_land, double ik, double epsilon, double c_ocean_minus, double c_land_minus, double t_average, double co2_average, double co2_pole, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land_plus, double t_tropopause, double t_equator, double t_pole, double gam )
 {
 	this -> im = im;
 	this -> jm = jm;
@@ -30,6 +30,7 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int sun, in
 	this -> i_max = i_max;
 	this-> L_atm = L_atm;
 	this-> dr = dr;
+	this-> RadiationFluxDensity = RadiationFluxDensity;
 	this-> sun = sun;
 	this-> g = g;
 	this-> ep = ep;
@@ -39,7 +40,7 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int sun, in
 	this-> t_0 = t_0;
 	this-> c_0 = c_0;
 	this-> sigma = sigma;
-	this-> albedo = albedo;
+	this-> albedo_extra = albedo_extra;
 	this-> gam = gam;
 	this-> lv = lv;
 	this-> cp_l = cp_l;
@@ -52,7 +53,7 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int sun, in
 	this-> co2_ocean = co2_ocean;
 	this-> co2_land = co2_land;
 	this-> ik = ik;
-	this-> epsilon = epsilon;
+	this-> epsilon_extra = epsilon_extra;
 	this-> c_ocean_minus = c_ocean_minus;
 	this-> c_land_minus = c_land_minus;
 	this-> t_average = t_average;
@@ -107,7 +108,7 @@ BC_Thermo::~BC_Thermo()
 
 
 
-void BC_Thermo::BC_RadiationBalance_comp ( Array_2D &Precipitation, Array_2D &Ik, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array &t )
+void BC_Thermo::BC_RadiationBalance_comp ( Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Water, Array_2D &Ik, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array &t, Array &h )
 {
 // class element for the computation of the radiation balance
 // computation of the local temperature based on the radiation balance
@@ -131,9 +132,9 @@ void BC_Thermo::BC_RadiationBalance_comp ( Array_2D &Precipitation, Array_2D &Ik
 	d_k_max = ( double ) k_max;
 
 
-	t_eff_earth = 255.;																	// effectiv radiation temperature of 255 K compares to -18 °C for 30% albedo
+	t_eff_earth = 255.;																	// effectiv radiation temperature of 255 K compares to -18 °C for 30% albedo_extra
 																									// comparable with measurements of temperature in 5000 m hight and pressure 550 hPa
-																									// sigma * t-earth ** 4 = ( 1- albedo ) Ik / 4 = 239 W/m2, valid as reference value
+																									// sigma * t-earth ** 4 = ( 1- albedo_extra ) Ik / 4 = 239 W/m2, valid as reference value
 
 //	j_sun = 30;																				// lateral sun location, 30 = 60°N
 	j_sun = 0;																				// equatorial sun location
@@ -146,27 +147,39 @@ void BC_Thermo::BC_RadiationBalance_comp ( Array_2D &Precipitation, Array_2D &Ik
 			Ik.y[ j ][ k ] = ik * sin ( ( ( double ) j - j_sun ) / pi180 ) / 4.;	// solar short wave radiation as zonal distribution
 			if ( Ik.y[ j ][ k ] < 40. ) Ik.y[ j ][ k ] = 40.;
 
-			epsilon = .71;
-//			epsilon = 2. * ( 1. - 1. / pow ( ( t_j.y[ j ][ k ] * t_0 / t_eff_earth ), 4. ) ); // bottom temperature must be known in advance
+//			albedo.y[ j ][ k ] = albedo_extra;
+			albedo.y[ j ][ k ] = albedo_extra + .001 * ( 1. - ( 2. - Water.y[ j ][ k ] ) / 2. );
+			if ( albedo.y[ j ][ k ] <= albedo_extra ) albedo.y[ j ][ k ] = albedo_extra;
+//			if ( h.x[ 0 ][ j ][ k ] == 0 ) 	albedo.y[ j ][ k ] = albedo_extra + .001 * ( 2. - Water.y[ j ][ k ] ) / 2.;
+//			if ( h.x[ 0 ][ j ][ k ] == 0 ) 	albedo.y[ j ][ k ] = albedo_extra;
+//			else 								albedo.y[ j ][ k ] = albedo_extra - .15;
 
-			Radiation_Balance_bot.y[ j ][ k ] = ( 1. - albedo ) / ( 1. - epsilon / 2. ) * Ik.y[ j ][ k ];
-			Radiation_Balance_atm.y[ j ][ k ] = ( 1. - albedo ) / ( 2. - epsilon ) * Ik.y[ j ][ k ];
+
+			epsilon_extra = .71;
+			epsilon.y[ j ][ k ] = 2. * ( 1. - 1. / pow ( ( t.x[ 0 ][ j ][ k ] * t_0 / t_eff_earth ), 4. ) ); // bottom temperature must be known in advance
+//			epsilon.y[ j ][ k ] = epsilon_extra;
+			if ( epsilon.y[ j ][ k ] <= epsilon_extra ) epsilon.y[ j ][ k ] = epsilon_extra;
+
+			Radiation_Balance_bot.y[ j ][ k ] = ( 1. - albedo.y[ j ][ k ] ) / ( 1. - epsilon.y[ j ][ k ] / 2. ) * Ik.y[ j ][ k ];
+			Radiation_Balance_atm.y[ j ][ k ] = ( 1. - albedo.y[ j ][ k ] ) / ( 2. - epsilon.y[ j ][ k ] ) * Ik.y[ j ][ k ];
 
 			temp_eff_bot.y[ j ][ k ] = pow ( Radiation_Balance_bot.y[ j ][ k ] / sigma, 1. / 4. );
 			temp_eff_atm.y[ j ][ k ] = pow ( Radiation_Balance_atm.y[ j ][ k ] / sigma, 1. / 4. );
 
-			epsilon = 2. * ( 1. - 1. / pow ( ( temp_eff_bot.y[ j ][ k ] / t_eff_earth ), 4. ) ); // bottom temperature must be known in advance
+			t.x[ 0 ][ j ][ k ] = temp_eff_bot.y[ j ][ k ] / t_0;
+
+//			epsilon.y[ j ][ k ] = 2. * ( 1. - 1. / pow ( ( temp_eff_bot.y[ j ][ k ] / t_eff_earth ), 4. ) ); // bottom temperature must be known in advance
 
 			e = ( r_0_water_vapour * R_WaterVapour * temp_eff_bot.y[ j ][ k ] ) * .01;	// water vapour pressure at the surface in hPa
 
 			D = Ik.y[ j ][ k ] * .26;														// direct sun radiation, short-wave (Häckel)
 			H = Ik.y[ j ][ k ] * .29;														// diffusive sky radiation, short-wave (Häckel)
 			G = D + H;																		// total solar radiation from above = global radiation, short-wave
-			R_short = G * albedo;														// total reflected solar radiation, short-wave
+			R_short = G * albedo.y[ j ][ k ];														// total reflected solar radiation, short-wave
 			Q_short = G - R_short;													// short-wave radiation balance
 
 //			AG = ( .594 + .0416 * sqrt ( e ) ) * sigma * pow ( temp_eff_bot.y[ j ][ k ], 4. ); // downward terrestrial radiation, long-wave (Häckel)
-//			A = epsilon * sigma * pow ( temp_eff_bot.y[ j ][ k ], 4. );	// outgoing long-wave radiation of the surface, long-wave
+//			A = epsilon.y[ j ][ k ] * sigma * pow ( temp_eff_bot.y[ j ][ k ], 4. );	// outgoing long-wave radiation of the surface, long-wave
 			AG = Ik.y[ j ][ k ] * 1.14;													// downward terrestrial radiation, long-wave (Häckel)
 			A = Ik.y[ j ][ k ] * .95;														// outgoing long-wave radiation of the surface, long-wave (Häckel)
 			R_long = AG * .05;															// total reflected terrestrial radiation, long-wave (Häckel)
@@ -185,17 +198,17 @@ void BC_Thermo::BC_RadiationBalance_comp ( Array_2D &Precipitation, Array_2D &Ik
 
 			cout << "__________     radiation data in W/m²    _______________" << endl << endl;
 
-			cout << " t_SL (°C) = " << t_j.y[ j ][ k ] * t_0 - t_0 << "    Ik / 4 (W/m²) = " << Ik.y[ j ][ k ] << "   Radiation_Balance_bot = " << Radiation_Balance_bot.y[ j ][ k ] << "   Radiation_Balance_atm = " << Radiation_Balance_atm.y[ j ][ k ] << "   temp_eff_bot = " << temp_eff_bot.y[ j ][ k ] << "   temp_eff_atm = " << temp_eff_atm.y[ j ][ k ] << endl << endl;
+			cout << " t_SL (°C) = " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << "    Ik / 4 (W/m²) = " << Ik.y[ j ][ k ] << "   Radiation_Balance_bot = " << Radiation_Balance_bot.y[ j ][ k ] << "   Radiation_Balance_atm = " << Radiation_Balance_atm.y[ j ][ k ] << "   temp_eff_bot = " << temp_eff_bot.y[ j ][ k ] << "   temp_eff_atm = " << temp_eff_atm.y[ j ][ k ] << endl << endl;
 
-			cout << " D  = " << D << "   H = " << H << "   G = " << G << "   R_short = " << R_short << "   Q_short = " << Q_short << "   epsilon = " << epsilon << "   albedo = " << albedo << endl << endl;
+			cout << " D  = " << D << "   H = " << H << "   G = " << G << "   R_short = " << R_short << "   Q_short = " << Q_short << "   epsilon_extra = " << epsilon_extra  << "   epsilon = " << epsilon.y[ j ][ k ] << "   albedo_extra = " << albedo_extra << "   albedo = " << albedo.y[ j ][ k ] << endl << endl;
 
 			cout << " AG = " << AG << "   A = " << A << "               R_long  = " << R_long << "   Q_long  = " << Q_long << "   e = " << e << "   Radiation_Balance = " << Radiation_Balance.y[ j ][ k ] << endl << endl << endl;
 
 			cout << "__________     radiation data in % are based on the local extra terrestrial sun radiaton Ik in W/m²    _______________" << endl << endl;
 
-			cout << " t_h (°C) = " << t_j.y[ j ][ k ] * t_0 - t_0 << "    Ik / 4 (%) = " << Ik.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Radiation_Balance_bot = " << Radiation_Balance_bot.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Radiation_Balance_atm = " << Radiation_Balance_atm.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   temp_eff_bot = " << temp_eff_bot.y[ j ][ k ] << "   temp_eff_atm = " << temp_eff_atm.y[ j ][ k ] << endl << endl;
+			cout << " t_h (°C) = " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << "    Ik / 4 (%) = " << Ik.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Radiation_Balance_bot = " << Radiation_Balance_bot.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   Radiation_Balance_atm = " << Radiation_Balance_atm.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << "   temp_eff_bot = " << temp_eff_bot.y[ j ][ k ] << "   temp_eff_atm = " << temp_eff_atm.y[ j ][ k ] << endl << endl;
 
-			cout << " D  = " << D / Ik.y[ j ][ k ] * 100. << "   H = " << H / Ik.y[ j ][ k ] * 100. << "   G = " << G / Ik.y[ j ][ k ] * 100. << "   R_short = " << R_short / Ik.y[ j ][ k ] * 100. << "   Q_short = " << Q_short / Ik.y[ j ][ k ] * 100. << "   epsilon = " << epsilon << "   albedo = " << albedo << endl << endl;
+			cout << " D  = " << D / Ik.y[ j ][ k ] * 100. << "   H = " << H / Ik.y[ j ][ k ] * 100. << "   G = " << G / Ik.y[ j ][ k ] * 100. << "   R_short = " << R_short / Ik.y[ j ][ k ] * 100. << "   Q_short = " << Q_short / Ik.y[ j ][ k ] * 100. << "   epsilon = " << epsilon << "   albedo = " << albedo.y[ j ][ k ] << endl << endl;
 
 			cout << " AG = " << AG / Ik.y[ j ][ k ] * 100. << "   A = " << A / Ik.y[ j ][ k ] * 100. << "               R_long  = " << R_long / Ik.y[ j ][ k ] * 100. << "   Q_long  = " << Q_long / Ik.y[ j ][ k ] * 100. << "   e (hPa) = " << e << "   Radiation_Balance = " << Radiation_Balance.y[ j ][ k ] / Ik.y[ j ][ k ] * 100. << endl << endl << endl;
 
@@ -226,12 +239,11 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array &h, Array &t, Array &
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 
-	t_coeff = t_pole - t_equator;
-
 // temperature-distribution by Ruddiman approximated by a parabola
+	t_coeff = t_pole - t_equator;
 	t_cretaceous_coeff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
 	t_cretaceous = t_cretaceous_coeff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
-	if ( Ma == 0 ) 	t_cretaceous_coeff = 0.;
+	if ( Ma == 0 ) 	t_cretaceous = 0.;
 
 	cout.precision ( 3 );
 
@@ -239,118 +251,126 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array &h, Array &t, Array &
 	time_slice_number = " Ma = ";
 	time_slice_unit = " million years";
 
-	cout << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << time_slice_comment << resetiosflags ( ios::left ) << setw ( 6 ) << fixed << setfill ( ' ' ) << time_slice_number << setw ( 3 ) << Ma << setw ( 12 ) << time_slice_unit << endl << endl;
+	cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << time_slice_comment << resetiosflags ( ios::left ) << setw ( 6 ) << fixed << setfill ( ' ' ) << time_slice_number << setw ( 3 ) << Ma << setw ( 12 ) << time_slice_unit << endl << endl;
+
 
 
 	temperature_comment = "      temperature increase at cretaceous times: ";
-	temperature_gain = " t cretaceous";
+	temperature_gain = " t increase";
 	temperature_modern = "      mean temperature at modern times: ";
+	temperature_cretaceous = "      mean temperature at cretaceous times: ";
 	temperature_average = " t modern";
+	temperature_average_cret = " t cretaceous";
 	temperature_unit =  "°C ";
 
-	cout << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 50 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl;
+	cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_cretaceous << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << temperature_unit << endl;
 
 
 	t_cretaceous = ( t_cretaceous + t_average + t_0 ) / t_0 - ( ( t_average + t_0 ) / t_0 );    // non-dimensional
 
-// if Ma = 0 ( modern times ), NASA-temperature distribution is used
-// mean zonal parabolic temperature distribution
-	if ( Ma > 0 )
+
+
+
+
+	if ( RadiationFluxDensity == 0 )
 	{
-		if ( sun == 0 )
+	// if Ma = 0 ( modern times ), NASA-temperature distribution is used
+	// mean zonal parabolic temperature distribution
+		if ( Ma > 0 )
 		{
+			if ( sun == 0 )
+			{
+				for ( int k = 0; k < km; k++ )
+				{
+					for ( int j = 0; j < jm; j++ )
+					{
+						d_j = ( double ) j;
+						t.x[ 0 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous;
+
+						if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
+						{
+							t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_land_plus;
+						}
+					}
+				}
+			}																							// end parabolic temperature distribution
+		}																								// end of while (  Ma > 0 )
+
+
+
+
+	// temperatur distribution at a prescribed sun position
+	// sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
+	// sun_position_lon = 180, position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
+	// asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
+
+		if ( ( Ma > 0 ) && ( sun == 1 ) )
+		{
+			j_par = sun_position_lat;																	// position of maximum temperature, sun position
+			j_par = j_par + declination;																// angle of sun axis, declination = 23,4°
+			j_pol = jm - 1;
+
+			j_par_f = ( double ) j_par;
+			j_pol_f = ( double ) j_pol;
+
+			a = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) - ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * ( j_par_f - j_pol_f ) );
+			b = - 2. * a * j_par_f;
+			cc = t_equator + a * j_par_f * j_par_f;
+			j_d = sqrt ( ( cc - t_pole ) / a );
+			d = 2. * a * j_d + b;
+			t_d = d * j_d + t_pole;
+			e = t_pole;
+
+
+	// asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
 			for ( int k = 0; k < km; k++ )
 			{
 				for ( int j = 0; j < jm; j++ )
 				{
 					d_j = ( double ) j;
-					t.x[ 0 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous;
-
-					if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
+					if ( d_j <= j_d )
 					{
-						t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_land_plus;
+						t.x[ 0 ][ j ][ k ] = d * d_j + e + t_cretaceous;
+					}
+					if ( d_j > j_d )
+					{
+						t.x[ 0 ][ j ][ k ] = a * d_j * d_j + b * d_j + cc + t_cretaceous;
 					}
 				}
 			}
-		}																							// end parabolic temperature distribution
-	}																								// end of while (  Ma > 0 )
 
 
-
-
-// temperatur distribution at a prescribed sun position
-// sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
-// sun_position_lon = 180, position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
-// asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
-
-	if ( ( Ma > 0 ) && ( sun == 1 ) )
-	{
-		j_par = sun_position_lat;																	// position of maximum temperature, sun position
-		j_par = j_par + declination;																// angle of sun axis, declination = 23,4°
-		j_pol = jm - 1;
-
-		j_par_f = ( double ) j_par;
-		j_pol_f = ( double ) j_pol;
-
-		a = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) - ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * ( j_par_f - j_pol_f ) );
-		b = - 2. * a * j_par_f;
-		cc = t_equator + a * j_par_f * j_par_f;
-		j_d = sqrt ( ( cc - t_pole ) / a );
-		d = 2. * a * j_d + b;
-		t_d = d * j_d + t_pole;
-		e = t_pole;
-
-
-// asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
-		for ( int k = 0; k < km; k++ )
-		{
+	// transfer of zonal constant temperature into a 1D-temperature field
 			for ( int j = 0; j < jm; j++ )
 			{
-				d_j = ( double ) j;
-				if ( d_j <= j_d )
-				{
-					t.x[ 0 ][ j ][ k ] = d * d_j + e + t_cretaceous;
-				}
-				if ( d_j > j_d )
-				{
-					t.x[ 0 ][ j ][ k ] = a * d_j * d_j + b * d_j + cc + t_cretaceous;
-				}
+				jm_temp_asym[ j ] = t.x[ 0 ][ j ][ 20 ];
 			}
-		}
 
 
-// transfer of zonal constant temperature into a 1D-temperature field
-		for ( int j = 0; j < jm; j++ )
-		{
-			jm_temp_asym[ j ] = t.x[ 0 ][ j ][ 20 ];
-		}
+	// longitudinally variable temperature distribution from west to east in parabolic form
+	// communicates the impression of local sun radiation on the southern hemisphere
+			k_par = sun_position_lon;												// position of the sun at constant longitude
+			k_pol = km - 1;
 
+			t_360 = (  t_0 + 5. ) / t_0;
 
-// longitudinally variable temperature distribution from west to east in parabolic form
-// communicates the impression of local sun radiation on the southern hemisphere
-		k_par = sun_position_lon;												// position of the sun at constant longitude
-		k_pol = km - 1;
-
-		t_360 = (  t_0 + 5. ) / t_0;
-
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
+			for ( int j = 0; j < jm; j++ )
 			{
-				k_par_f = ( double ) k_par;
-				k_pol_f = ( double ) k_pol;
-				d_k = ( double ) k;
+				for ( int k = 0; k < km; k++ )
+				{
+					k_par_f = ( double ) k_par;
+					k_pol_f = ( double ) k_pol;
+					d_k = ( double ) k;
 
-				a = ( jm_temp_asym[ j ] - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * ( k_par_f - k_pol_f ) );
-				b = - 2. * a * k_par_f;
-				cc = jm_temp_asym[ j ] + a * k_par_f * k_par_f;
+					a = ( jm_temp_asym[ j ] - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * ( k_par_f - k_pol_f ) );
+					b = - 2. * a * k_par_f;
+					cc = jm_temp_asym[ j ] + a * k_par_f * k_par_f;
 
-				t.x[ 0 ][ j ][ k ] = a * d_k * d_k + b * d_k + cc;
+					t.x[ 0 ][ j ][ k ] = a * d_k * d_k + b * d_k + cc;
+				}
 			}
-		}
-	}																								// temperatur distribution at a prescribed sun position
-
-
+		}																								// temperatur distribution at a prescribed sun position
+	}
 
 
 // temperature decreasing approaching the tropopause, above constant temperature following Standard Atmosphere
@@ -515,24 +535,30 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, Array_2D &Vegetation, Array &h, Arr
 
 	t_cretaceous_coeff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
 	t_cretaceous = t_cretaceous_coeff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
-	if ( Ma == 0 ) 	t_cretaceous_coeff = 0.;
+	if ( Ma == 0 ) 	t_cretaceous = 0.;
 
 // CO2-distribution by Ruddiman approximated by a parabola
 	co2_cretaceous = 3.2886 * pow ( ( t_cretaceous + t_average ), 2 ) - 32.8859 * ( t_cretaceous + t_average ) + 102.2148;  // in ppm
+	co2_average = 3.2886 * pow ( t_average, 2 ) - 32.8859 * t_average + 102.2148;  // in ppm
 	co2_cretaceous = co2_cretaceous - co2_average;
 	if ( Ma == 0 ) 	co2_cretaceous = 0.;
 
+	cout.precision ( 3 );
+
 	co2_comment = "      co2 increase at cretaceous times: ";
-	co2_gain = " co2 cretaceous";
+	co2_gain = " co2 increase";
 	co2_modern = "      mean co2 at modern times: ";
-	co2_av = " co2 modern";
-	co2_unit = "ppm ";
+	co2_cretaceous_str = "      mean co2 at cretaceous times: ";
+	co2_average_str = " co2 modern";
+	co2_average_cret = " co2 cretaceous";
+	co2_unit =  "ppm ";
 
-	cout << endl << setiosflags ( ios::left ) << setw ( 48 ) << setfill ( '.' ) << co2_comment << resetiosflags ( ios::left ) << setw ( 12 ) << co2_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << co2_cretaceous << setw ( 5 ) << co2_unit << endl << setw ( 48 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co2_modern << resetiosflags ( ios::left ) << setw ( 15 ) << co2_av << " = "  << setw ( 7 ) << setfill ( ' ' ) << co2_average << setw ( 5 ) << co2_unit << endl << endl;
+	cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << co2_comment << resetiosflags ( ios::left ) << setw ( 12 ) << co2_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << co2_cretaceous << setw ( 5 ) << co2_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co2_modern << resetiosflags ( ios::left ) << setw ( 13 ) << co2_average_str  << " = "  << setw ( 7 )  << setfill ( ' ' ) << co2_average << setw ( 5 ) << co2_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co2_cretaceous_str << resetiosflags ( ios::left ) << setw ( 13 ) << co2_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << co2_average + co2_cretaceous << setw ( 5 ) << co2_unit << endl;
+	cout << endl;
 
+	co2_coeff = co2_pole - co2_average;
 
-	co2_coeff = co2_pole - co2_equator;
-
+//	cout << Ma << "   " << co2_cretaceous + co2_average << "   " << co2_average << "   " << co2_coeff << "   " << t_average << "   " << t_cretaceous << endl;
 
 // CO2-content as initial solution
 	for ( int k = 0; k < km; k++ )
@@ -542,13 +568,13 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, Array_2D &Vegetation, Array &h, Arr
 			if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
 			{
 				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole;
+				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous;
 				co2.x[ 0 ][ j ][ k ] = ( co2.x[ 0 ][ j ][ k ] + co2_ocean ) / co2_0;															// 0.6/600Gt CO2-source on oceans per year 
 			}
 			if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
 			{
 				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole; // parabolic distribution from pole to pole
+				co2.x[ 0 ][ j ][ k ] = co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous; // parabolic distribution from pole to pole
 				co2.x[ 0 ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - co2_vegetation * Vegetation.y[ j ][ k ];						// 100/600Gt CO2-sink by vegetation on land per year
 				co2.x[ 0 ][ j ][ k ] = ( co2.x[ 0 ][ j ][ k ] + co2_land ) / co2_0;																// 0.2/600Gt CO2-source on land per year everywhere
 			}
@@ -590,7 +616,7 @@ void BC_Thermo::BC_RadiationBalance_parab ( Array_2D &Radiation_Balance_par, Arr
 
 	j_half = j_max / 2;
 
-	rad_bal_minus = epsilon * sigma * pow ( t_cretaceous * t_0, 4. );	// decrease of radiation during paleo climate
+	rad_bal_minus = epsilon_extra * sigma * pow ( t_cretaceous * t_0, 4. );	// decrease of radiation during paleo climate
 
 	radiation_land_coeff = radiation_pole - radiation_equator;
 	radiation_ocean_coeff = radiation_pole - radiation_equator - radiation_ocean; // increase by 40 W/m² on ocean

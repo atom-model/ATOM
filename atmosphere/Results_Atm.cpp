@@ -17,7 +17,7 @@
 using namespace std;
 
 
-Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo, double lv, double cp_l, double L_atm, double dr, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam )
+Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double lv, double cp_l, double L_atm, double dr, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam )
 :	coeff_Diffusion_latent ( .015 ),														// diffusion coefficient for latent heat in [m²/s]
 	coeff_Diffusion_sensibel ( .03 ),													// diffusion coefficient for sensible heat in [m²/s]
 	f_Haude ( .3 )																			// Haude factor for evapotranspiration 0.3 for low, dense vegetation as raw average value by Kuttler
@@ -42,7 +42,7 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, do
 	this-> t_0 = t_0;
 	this-> c_0 = c_0;
 	this-> sigma = sigma;
-	this-> albedo = albedo;
+	this-> albedo_extra = albedo_extra;
 	this-> lv = lv;
 	this-> gam = gam;
 	this-> cp_l = cp_l;
@@ -60,7 +60,7 @@ Results_MSL_Atm::~Results_MSL_Atm () {}
 
 
 
-void Results_MSL_Atm::run_MSL_data ( int RadiationFluxDensity, double max_Precipitation, Array &h, Array &c, Array &co2, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Rain, Array &Rain_super, Array &Ice, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &Precipitation, Array_2D &precipitation_j, Array_2D &Water, Array_2D &Water_super, Array_2D &IceAir, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &LatentHeat, Array_2D &precipitable_water, Array_2D &Q_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Vegetation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_par, Array_2D &Radiation_Balance_bot )
+void Results_MSL_Atm::run_MSL_data ( int RadiationFluxDensity, double max_Precipitation, Array &h, Array &c, Array &co2, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Rain, Array &Rain_super, Array &Ice, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &Precipitation, Array_2D &precipitation_j, Array_2D &Water, Array_2D &Water_super, Array_2D &IceAir, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &LatentHeat, Array_2D &precipitable_water, Array_2D &Q_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Vegetation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_par, Array_2D &Radiation_Balance_bot, Array_2D &albedo )
 {
 // default values for variables
 
@@ -227,7 +227,7 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationFluxDensity, double max_Precip
 
 					Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ i ][ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;	// heat of Evaporation of water in [MJ/kg] (Kuttler) = variable lv
 
-					if ( sun == 0 ) Q_Radiation.y[ j ][ k ] = sigma * ( 1. - albedo ) * pow ( t.x[ i ][ j ][ k ] * t_0, 4. );	// radiation balance by the surface temperature in W/m2
+					if ( sun == 0 ) Q_Radiation.y[ j ][ k ] = sigma * ( 1. - albedo.y[ j ][ k ] ) * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );	// radiation balance by the surface temperature in W/m2
 					Q_latent.y[ j ][ k ] = - a * lv * coeff_Diffusion_latent * c_grad / L_atm;		// latente heat in [W/m2] from energy transport equation
 					Q_sensible.y[ j ][ k ] = - r_0_air * cp_l * coeff_Diffusion_sensibel * t_grad * t_0 / L_atm;		// sensible heat in [W/m2] from energy transport equation
 					Q_bottom.y[ j ][ k ] = Radiation_Balance.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ];	// difference understood as heat of the ground
@@ -262,7 +262,7 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationFluxDensity, double max_Precip
 
 					Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;	// heat of Evaporation of water in [MJ/kg] (Kuttler) = lv
 
-					if ( sun == 0 ) Q_Radiation.y[ j ][ k ] = sigma * ( 1. - albedo ) * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );	// radiation balance by the surface temperature in W/m2
+					if ( sun == 0 ) Q_Radiation.y[ j ][ k ] = sigma * ( 1. - albedo.y[ j ][ k ] ) * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );	// radiation balance by the surface temperature in W/m2
 					Q_latent.y[ j ][ k ] = - a * lv * coeff_Diffusion_latent * c_grad / L_atm;		// latente heat in [W/m2] from energy transport equation
 					Q_sensible.y[ j ][ k ] = - r_0_air * cp_l * coeff_Diffusion_sensibel * t_grad * t_0 / L_atm;		// sensible heat in [W/m2] from energy transport equation
 					Q_bottom.y[ j ][ k ] = Radiation_Balance.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ];	// difference understood as heat of the ground

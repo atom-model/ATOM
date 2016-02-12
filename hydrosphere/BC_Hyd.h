@@ -41,15 +41,11 @@ class BC_Hydrosphere
 		~BC_Hydrosphere();
 
 
-		void RB_radius ( double, double, double, double, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void RB_radius ( double, double, double, double, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void RB_theta ( double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void RB_theta ( double, double, double, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void RB_phi ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
-		void BC_NST_control_2D ( double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_1D &, Array_1D & );
-
-		void BC_NST_control_3D ( double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_1D &, Array_1D & );
+		void RB_phi ( Array &, Array &, Array &, Array &, Array &, Array & );
 
 };
 #endif

@@ -121,6 +121,8 @@ void Print_Hydrosphere::printIntro ( Array_1D &rad, Array_1D &the, Array_1D &phi
 
 	n = n + 1;
 	cout << "  phi = k-direction showing to the right =========>---( time block = " << n << " ) \n\n\n";
+
+	return;
 }
 
 

@@ -8,7 +8,8 @@
  * class to surveil the accuracy of the iterations
 */
 
-
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <cmath>
 #include <iomanip>
@@ -65,7 +66,7 @@ Accuracy::Accuracy ( int im, int Ma, int n, int velocity_iter, int pressure_iter
 Accuracy::~Accuracy () {}
 
 
-double Accuracy::residuumQuery ( int &i_res, int &j_res, int &k_res, double &min, Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
+double Accuracy::residuumQuery_3D ( int &i_res, int &j_res, int &k_res, double &min, Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
 {
 // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 
@@ -103,7 +104,7 @@ double Accuracy::residuumQuery ( int &i_res, int &j_res, int &k_res, double &min
 
 
 
-double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_p, Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &p, Array &pn )
+double Accuracy::steadyQuery_3D ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_p, Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &p, Array &pn )
 {
 // state of a steady solution ( min_u )
 	min_u = 0.;
@@ -183,7 +184,7 @@ double Accuracy::steadyQuery ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v,
 
 
 
-void Accuracy::iterationPrintout ( int &nm, int &velocity_iter_max, int &pressure_iter_max, int &i_res, int &j_res, int &k_res, int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_p )
+void Accuracy::iterationPrintout_3D ( int &nm, int &velocity_iter_max, int &pressure_iter_max, int &i_res, int &j_res, int &k_res, int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_p )
 {
 // statements on the convergence und iterational process
 	cout.precision ( 6 );
@@ -267,7 +268,7 @@ void Accuracy::iterationPrintout ( int &nm, int &velocity_iter_max, int &pressur
 						k_loc = k_c;
 						break;
 
-		default : 	cout << choice << "error in iterationPrintout member function in class Accuracy" << endl;
+		default : 	cout << choice << "error in iterationPrintout_3D member function in class Accuracy" << endl;
 	}
 
 						i_loc_level = - i_loc * int ( L_hyd ) / ( im - 1 );
@@ -351,13 +352,11 @@ double Accuracy::residuumQuery_2D ( int &j_res, int &k_res, double &min, Array_1
 double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min_v, double &min_w, double &min_p, Array &h, Array &v, Array &vn, Array &w, Array &wn, Array &p, Array &pn )
 {
 // state of a steady solution ( min )
-
 	max_v = min_v = 0.;
 	max_w = min_w = 0.;
 	max_p = min_p = 0.;
 	j_v = j_w = j_p = 0;
 	k_v = k_w = k_p = 0;
-cout << "%%%%%%%%%%% innnerhalb steadyQuery_2D " << v.x[ im-1 ][ 1 ][ 1 ] << endl;
 
 	for ( int j = 0; j < jm; j++ )
 	{
@@ -365,8 +364,7 @@ cout << "%%%%%%%%%%% innnerhalb steadyQuery_2D " << v.x[ im-1 ][ 1 ][ 1 ] << end
 		{
 			if ( h.x[ im-1 ][ j ][ k ] == 0. )
 			{
-//				max_v = fabs ( v.x[ im-1 ][ j ][ k ] - vn.x[ im-1 ][ j ][ k ] );
-max_v = 0.0001;
+				max_v = fabs ( v.x[ im-1 ][ j ][ k ] - vn.x[ im-1 ][ j ][ k ] );
 				if ( max_v >= min_v )
 				{
 					min_v = max_v;
@@ -457,7 +455,7 @@ void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &p
 						break;
 
 
-		default : 	cout << choice << "error in iterationPrintout member function in class Accuracy" << endl;
+		default : 	cout << choice << "error in iterationPrintout_3D member function in class Accuracy" << endl;
 	}
 
 						if ( j_loc <= 90 )
