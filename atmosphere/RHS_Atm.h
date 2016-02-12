@@ -26,10 +26,10 @@ class RHS_Atmosphere
 		int *im_tropopause;
 
 		double zeit, dt, dr, dthe, dphi;
-		double re, pr, ec, sc_WaterVapour, sc_CO2, g, omega, coriolis, centrifugal, WaterVapour, buoyancy, CO2;
+		double re, pr, ec, sc_WaterVapour, sc_CO2, g, omega, coriolis, centrifugal, WaterVapour, buoyancy, CO2, lambda;
 		double E_Rain_SL, E_Rain, E_Rain_super, E_Ice;
 		double e_SL, a_SL, p_SL, q_SL, t_tau_SL, t_Celsius_SL;
-		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius;
+		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, t_Celsius_ni, t_Celsius_pi, t_Celsius_nj, t_Celsius_pj, t_Celsius_nk, t_Celsius_pk, dp_hdr, dp_hdthe, dp_hdphi;
 		double h_level, h_h, sat_Deficit, RF_e, RF_c, Evaporation_Haude;
 		double a2, dt2, dr2, dthe2, dphi2, rm2;
 		double kr1, kr2, kthe1, kthe2, rm, c43, c13;
@@ -43,7 +43,7 @@ class RHS_Atmosphere
 		double sinthe, sinthe2, kro, lv, ls, ep, hp, coeff_lv, coeff_ls, p_0, p_0_vapour, r_0, t_0, t_Boussinesq, t_Boussinesq_diff, cp_l, R_Air, R_WaterVapour, dqdr, dqdthe, dqdphi, dpdr_c, dpdthe_c, dpdphi_c, dpdr_co2, dpdthe_co2, dpdphi_co2;
 		double costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2, rmtanthe;
 		double resra, resre, dummy_1, dummy_2, dummy_3, k_Force;
-		double dudr, dudthe, dudphi, dvdr, dvdthe, dvdphi, dwdr, dwdthe, dwdphi, drdr, drdthe, drdphi, E_dEdr_Rain, E_dEdr_Rain_super, E_dEdr_Ice, dRaindr, dRaindthe, dRaindphi, dRain_superdr, dRain_superdthe, dRain_superdphi, dIcedr, dIcedthe, dIcedphi;
+		double dudr, dudthe, dudphi, dvdr, dvdthe, dvdphi, dwdr, dwdthe, dwdphi, drdr, drdthe, drdphi, E_dEdr_Rain, E_dEdr_Rain_super, E_dEdr_Ice, E_dEdthe_Rain, E_dEdthe_Rain_super, E_dEdthe_Ice, E_dEdphi_Rain, E_dEdphi_Rain_super, E_dEdphi_Ice, dRaindr, dRaindthe, dRaindphi, dRain_superdr, dRain_superdthe, dRain_superdphi, dIcedr, dIcedthe, dIcedphi;
 		double d2udr2, d2udthe2, d2udphi2, d2vdr2, d2vdthe2, d2vdphi2, d2wdr2, d2wdthe2, d2wdphi2, d2rdr2, d2rdthe2, d2rdphi2;
 		double d2udrdthe, d2udrdphi, d2vdrdthe, d2vdrdphi, d2wdrdthe, d2wdrdphi, d2rdrdthe, d2rdrdphi, d2udthedphi, d2vdthedphi, d2wdthedphi, d2rdthedphi;
 		double d2udrdt, d2vdrdt, d2wdrdt, d2rdrdt, d2udthedt, d2vdthedt, d2wdthedt, d2rdthedt, d2udphidt, d2vdphidt, d2wdphidt, d2rdphidt;
@@ -51,15 +51,15 @@ class RHS_Atmosphere
 		double dcdr, dcdthe, dcdphi, d2cdr2, d2cdthe2, d2cdphi2, c_0;
 		double dco2dr, dco2dthe, dco2dphi, d2co2dr2, d2co2dthe2, d2co2dphi2, co2_0;
 		double h_0_i, h_c_i, h_d_i, h_0_j, h_c_j, h_d_j, h_0_k, h_c_k, h_d_k, cc; 
-		double d_i, d_i_max, t_tropopause, j_half, d_j_half, trop_coeff, d_j, i_max, i_beg, gam;
+		double d_i, d_i_max, t_tropopause, j_half, d_j_half, trop_coeff, d_j, i_max, i_beg, gam, sigma;
 
 	public:
-		RHS_Atmosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		RHS_Atmosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~RHS_Atmosphere ();
 
 		void Pressure_RHS_Atmosphere ( int *, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void RK_RHS_3D_Atmosphere ( int, int, int, int *im_tropopause, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void RK_RHS_3D_Atmosphere ( int, int, int, int *im_tropopause, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void RK_RHS_2D_Atmosphere ( int, int, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };

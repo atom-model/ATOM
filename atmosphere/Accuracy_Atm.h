@@ -48,13 +48,13 @@ class Accuracy
 
 		double residuumQuery_3D ( int &, int &, int &, double &, Array_1D &, Array_1D &, Array &, Array &, Array & );
 
-		double steadyQuery_3D ( int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, double &, double &, double &, double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		double steadyQuery_3D ( int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, double &, double &, double &, double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void iterationPrintout_3D ( int &, int &, int &,int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, double &, double &, double &, double &, double &, double &, double & );
 
 		double residuumQuery_2D ( int &, int &, double &, Array_1D &, Array_1D &, Array &, Array & );
 
-		double steadyQuery_2D ( int &, int &, int &, int &, int &, int &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array & );
+		double steadyQuery_2D ( int &, int &, int &, int &, int &, int &, double &, double &, double &, Array &, Array &, Array &, Array &, Array & );
 
 		void iterationPrintout_2D ( int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, int &, double &, double &, double &, double & );
 };

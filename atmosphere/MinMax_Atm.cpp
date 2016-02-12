@@ -55,7 +55,8 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 	deg_west = "°W";
 	deg_east = "°E";
 
-	heading = " printout of maximum and minimum values of properties at their locations: latitude, longitude, level";
+	heading_1 = " printout of maximum and minimum values of properties at their locations: latitude, longitude, level";
+	heading_2 = " results based on three dimensional considerations of the problem";
 
 	maxValue = 0.;
 	imax = 0;
@@ -160,32 +161,34 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 	cout.precision ( 6 );
 
 
-	if ( name_maxValue == " max temperature " )
+	if ( name_maxValue == " max 3D temperature " )
 	{
-		cout << endl << heading << endl << endl;
+		cout << endl << heading_1 << endl << heading_2 << endl << endl;
 
 		maxValue = maxValue * 273.15 - 273.15;
 		minValue = minValue * 273.15 - 273.15;
 	}
 
 
-	if ( name_maxValue == " max water vapour " )
+	if ( name_maxValue == " max 3D water vapour " )
 	{
 		maxValue = maxValue * 1000.;
 		minValue = minValue * 1000.;
 	}
 
 
-// coefficient for units in hPa for the dynamic pressure 		coeff = 0.5 * r_Air * u_0 * u_0 = 0.5 * 1.2 * 15 * 15 = 135
-	if ( name_maxValue == " max pressure dynamic " )
+// coefficient for units in hPa for the dynamic pressure 		coeff = 0.5 * r_Air * u_0 * u_0 = 0.5 * 1.2 * 15 * 15 = 135 * 500. * 0.01 = 675
+	if ( name_maxValue == " max 3D pressure dynamic " )
 	{
-		maxValue = maxValue * 135.;
+		maxValue = maxValue * 675.;
+		minValue = minValue * 675.;
 	}
 
 
-	if ( name_maxValue == " max co2 " )
+	if ( name_maxValue == " max 3D co2 " )
 	{
 		maxValue = maxValue * 280.;
+		minValue = minValue * 280.;
 	}
 
 
@@ -209,6 +212,9 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 	deg_south = "°S";
 	deg_west = "°W";
 	deg_east = "°E";
+
+	heading_1 = " printout of maximum and minimum values of properties at their locations: latitude, longitude";
+	heading_2 = " results based on two dimensional considerations of the problem";
 
 	maxValue = 0.;
 	jmax = 0;
@@ -303,7 +309,18 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 
 	cout.precision ( 6 );
 
+
 	cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
+
+
+	if ( name_maxValue == " max co2_total " )
+	{
+		cout << endl << endl << heading_1 << endl << heading_2 << endl << endl;
+		maxValue = 280. *  maxValue;
+		minValue = 280. *  minValue;
+
+		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
+	}
 
 	if ( name_maxValue == " max precipitation " )
 	{
@@ -324,6 +341,10 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue / coeff_mmWS << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue / coeff_mmWS << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
 	}
 }
+
+
+
+
 
 
 double MinMax::out_maxValue (  ) const

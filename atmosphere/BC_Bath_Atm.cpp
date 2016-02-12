@@ -313,7 +313,7 @@ void BC_Bathymetry_Atmosphere::BC_IceShield ( int Ma, double t_0, Array &h, Arra
 
 
 
-void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationFluxDensity, int i_max, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double co2_vegetation, double co2_land, double co2_ocean, double pa, double gam, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &co2, Array &pn_dyn, Array_2D &Vegetation )
+void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, double hp, double ep, double r_0_air, double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_land, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double co2_vegetation, double co2_land, double co2_ocean, double pa, double gam, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &co2, Array_2D &Vegetation )
 {
 
 // boundary conditions for the total solid ground
@@ -344,6 +344,8 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationFluxDensity, int i_
 			{
 				d_j = ( double ) j;
 				co2.x[ 0 ][ j ][ k ] = ( co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;
+				c.x[ 0 ][ j ][ k ]  = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );
+				c.x[ 0 ][ j ][ k ] = c_land * c.x[ 0 ][ j ][ k ];					// relativ water vapour contents on land reduced by factor
 			}
 		}
 	}
@@ -359,7 +361,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationFluxDensity, int i_
 			{
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
-					p_dyn.x[ i ][ j ][ k ] = pn_dyn.x[ i ][ j ][ k ] = pa;
+					p_dyn.x[ i ][ j ][ k ] = pa;
 					u.x[ i ][ j ][ k ] = 0.;
 					v.x[ i ][ j ][ k ] = 0.;
 					w.x[ i ][ j ][ k ] = 0.;
@@ -367,9 +369,9 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationFluxDensity, int i_
 					d_i_max = .5 * ( double ) i_max;
 					d_i = ( double ) i;
 
-					if ( ( RadiationFluxDensity == 1 ) && ( Ma >= 0 ) ) 
+					if ( ( RadiationModel >= 2 ) && ( Ma >= 0 ) ) 
 					{
-						t.x[ i ][ j ][ k ] = ( - 5. * gam * d_i + t.x[ 0 ][ j ][ k ] * t_0 ) / t_0;			// linear temperature decay up to tropopause
+						t.x[ i ][ j ][ k ] = ( - 5. * gam * d_i + ( t.x[ 0 ][ j ][ k ] + t_land ) * t_0 ) / t_0;			// linear temperature decay up to tropopause
 					}
 
 					c.x[ i ][ j ][ k ] = c.x[ 0 ][ j ][ k ] - ( c_tropopause - c.x[ 0 ][ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola ( Weischet )

@@ -33,7 +33,7 @@ class MinMax
 		Array_2D		value ( int, int, double );
 		Array			value_3D ( int, int, int, double );
 
-		string name_maxValue, name_minValue, name_unitValue, heading;
+		string name_maxValue, name_minValue, name_unitValue, heading_1, heading_2;
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat_max, deg_lon_max, deg_lat_min, deg_lon_min;
 
 

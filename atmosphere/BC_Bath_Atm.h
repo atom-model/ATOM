@@ -34,7 +34,9 @@ class BC_Bathymetry_Atmosphere
 		int *im_tropopause;
 
 		double dummy_1, dummy_2, dummy_3, L_atm, c13, c43;
-		double d_i, d_i_max, d_j, d_j_half, d_j_max, d_k_half, d_k_max, t_0, t_coeff, t_pole, t_tropopause, t_equator, t_12, p_0, c_tropopause, c_equator, c_coeff, c_pole, ep, hp, p_h, trop_coeff; 
+		double d_i, d_i_max, d_j, d_j_half, d_j_max, d_k_half, d_k_max, t_0, t_coeff, t_pole, t_tropopause, t_equator, t_12, p_0;
+		double r_0_air, R_Air;
+		double c_land, c_tropopause, c_equator, c_coeff, c_pole, ep, hp, p_h, trop_coeff; 
 		double t_delta, t_cretaceous_max, t_Cretaceous_coeff, t_Cretaceous, t_360, pi180;
 		double Akkumulation_1, Akkumulation_2, Ablation, Ice_Balance_add_diff, min, max;
 		double t_equi, t_equi_Celsius, t_plus, t_plus_Celsius, t_minus, t_minus_Celsius, t_minuss, t_minuss_Celsius, t_pluss, t_pluss_Celsius;
@@ -56,7 +58,7 @@ class BC_Bathymetry_Atmosphere
 
 		void BC_IceShield ( int, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 
-		void BC_SolidGround ( int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D & );
+		void BC_SolidGround ( int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D & );
 
 		void vegetationDistribution ( double, Array_2D &, Array_2D &, Array &, Array & );
 

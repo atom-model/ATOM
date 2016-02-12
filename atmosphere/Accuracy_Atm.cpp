@@ -124,7 +124,7 @@ double Accuracy::residuumQuery_2D ( int &j_res, int &k_res, double &min, Array_1
 
 
 
-double Accuracy::steadyQuery_3D ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_co2, int &j_co2, int &k_co2, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_co2, double &min_p, Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &co2, Array &co2n, Array &p_dyn, Array &pn_dyn )
+double Accuracy::steadyQuery_3D ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_co2, int &j_co2, int &k_co2, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_co2, double &min_p, Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &co2, Array &co2n, Array &p_dyn )
 {
 // state of a steady solution ( min )
 	min_u = 0.;
@@ -194,14 +194,6 @@ double Accuracy::steadyQuery_3D ( int &i_u, int &j_u, int &k_u, int &i_v, int &j
 					k_co2 = k;
 				}
 
-				max_p = fabs ( p_dyn.x[ i ][ j ][ k ] - pn_dyn.x[ i ][ j ][ k ] );
-				if ( max_p >= min_p )
-				{
-					min_p = max_p;
-					i_p = i;
-					j_p = j;
-					k_p = k;
-				}
 			}
 		}
 	}
@@ -212,7 +204,7 @@ double Accuracy::steadyQuery_3D ( int &i_u, int &j_u, int &k_u, int &i_v, int &j
 
 
 
-double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min_v, double &min_w, double &min_p, Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &pn_dyn )
+double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min_v, double &min_w, double &min_p, Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn )
 {
 // state of a steady solution ( min )
 	max_v = min_v = 0.;
@@ -239,14 +231,6 @@ double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j
 				min_w = max_w;
 				j_w = j;
 				k_w = k;
-			}
-
-			max_p = fabs ( p_dyn.x[ 0 ][ j ][ k ] - pn_dyn.x[ 0 ][ j ][ k ] );
-			if ( max_p >= min_p )
-			{
-				min_p = max_p;
-				j_p = j;
-				k_p = k;
 			}
 		}
 	}

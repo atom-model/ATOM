@@ -725,14 +725,14 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_panorama_vts (const string &Name_Bathymetry_File, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
+void PostProcess_Atmosphere::paraview_panorama_vts (const string &Name_Bathymetry_File, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
 {
 	double x, y, z, dx, dy, dz;
 
 	stringstream Atmosphere_panorama_vts_File_Name;
 
 	max_u = max_v = max_w = max_t = max_c = max_co2 = max_p_dyn = max_p_stat = 0.;
-	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Precipitation = 0.;
+	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Q_Sensible = max_Precipitation = 0.;
 	max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
 	max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
 	max_t_Evaporation_Penman = max_t_Evaporation_Haude = max_Q_Radiation = max_buoyancy_force = 0.;
@@ -1149,6 +1149,42 @@ void PostProcess_Atmosphere::paraview_panorama_vts (const string &Name_Bathymetr
 		Atmosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
 
+// writing Q_Sensible
+		Atmosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Q_Sensible\" format=\"ascii\">\n"  << endl;
+
+		for ( int k = 1; k < km-1; k++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				for ( int i = 1; i < im-1; i++ )
+				{
+					if ( fabs ( Q_Sensible.x[ i ][ j ][ k ] ) > max_Q_Sensible ) 
+					{
+						max_Q_Sensible = fabs ( Q_Sensible.x[ i ][ j ][ k ] );
+						if ( max_Q_Sensible == 0. ) max_Q_Sensible = 1.e-6;
+					}
+				}
+			}
+		}
+
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				for ( int i = 0; i < im; i++ )
+				{
+//					Atmosphere_panorama_vts_File << Q_Sensible.x[ i ][ j ][ k ] / max_Q_Sensible << endl;
+					Atmosphere_panorama_vts_File << Q_Sensible.x[ i ][ j ][ k ] << endl;
+				}
+				Atmosphere_panorama_vts_File <<  "\n"  << endl;
+			}
+			Atmosphere_panorama_vts_File <<  "\n"  << endl;
+		}
+		Atmosphere_panorama_vts_File <<  "\n"  << endl;
+		Atmosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
+
+
+
 // writing rain
 		Atmosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Rain\" format=\"ascii\">\n"  << endl;
 
@@ -1336,7 +1372,7 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array_2D &Precipitation, Array_2D &Evaporation, Array_2D &IceAir, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Radiation_Balance, Array_2D &Q_Radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &precipitation_j, Array_2D &Water_super, Array_2D &Water, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon )
+void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array_2D &Precipitation, Array_2D &Evaporation, Array_2D &IceAir, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Radiation_Balance, Array_2D &Q_Radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &precipitation_j, Array_2D &Water_super, Array_2D &Water, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon )
 {
 	double x, y, z, dx, dy;
 
@@ -1346,11 +1382,11 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 	k_max = km;
 
 	max_u = max_v = max_w = max_t = max_c = max_co2 = max_p_dyn = max_p_stat = 0.;
-	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Precipitation = max_albedo = max_epsilon = 0.;
+	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Q_Sensible = max_Precipitation = max_albedo = max_epsilon = 0.;
 	max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
 	max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
 	max_t_Evaporation_Penman = max_t_Evaporation_Haude = max_Q_Radiation = max_Radiation_Balance = max_buoyancy_force = 0.;
-	max_Q_t_Evaporation = max_precipitation_j = max_Water = max_Water_super = max_Vegetation = max_IceLayer = 0.;
+	max_Q_t_Evaporation = max_precipitation_j = max_Water = max_Water_super = max_Vegetation = max_IceLayer = max_radiation_3D = 0.;
 
 
  
@@ -1729,6 +1765,33 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 				Atmosphere_vtk_radial_File << Latency.x[ i_radial ][ j ][ k ] << endl;
 			}
 		}
+
+
+// writing sensible heat
+		Atmosphere_vtk_radial_File <<  "SCALARS Q_Sensible float " << 1 << endl;
+		Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( Q_Sensible.x[ i_radial ][ j ][ k ] ) >= max_Q_Sensible ) 
+				{
+					max_Q_Sensible = fabs ( Q_Sensible.x[ i_radial ][ j ][ k ] );
+					if ( max_Q_Sensible == 0. ) max_Q_Sensible = 1.e-6;
+				}
+			}
+		}
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+//				Atmosphere_vtk_radial_File << Q_Sensible.x[ i_radial ][ j ][ k ] / max_Q_Sensible << endl;
+				Atmosphere_vtk_radial_File << Q_Sensible.x[ i_radial ][ j ][ k ] << endl;
+			}
+		}
+
 
 /*
 // writing Evaporation
@@ -2176,7 +2239,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 		}
 */
 
-/*
+
 // writing Water
 		Atmosphere_vtk_radial_File <<  "SCALARS Water float" << 1 << endl;
 		Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
@@ -2197,7 +2260,8 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				Atmosphere_vtk_radial_File << Water.y[ j ][ k ] / max_Water << endl;
+//				Atmosphere_vtk_radial_File << Water.y[ j ][ k ] / max_Water << endl;
+				Atmosphere_vtk_radial_File << Water.y[ j ][ k ] << endl;
 			}
 		}
 
@@ -2221,7 +2285,8 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				Atmosphere_vtk_radial_File << Water_super.y[ j ][ k ] / max_Water_super << endl;
+//				Atmosphere_vtk_radial_File << Water_super.y[ j ][ k ] / max_Water_super << endl;
+				Atmosphere_vtk_radial_File << Water_super.y[ j ][ k ] << endl;
 			}
 		}
 
@@ -2246,10 +2311,11 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				Atmosphere_vtk_radial_File << IceAir.y[ j ][ k ] / max_IceAir << endl;
+//				Atmosphere_vtk_radial_File << IceAir.y[ j ][ k ] / max_IceAir << endl;
+				Atmosphere_vtk_radial_File << IceAir.y[ j ][ k ] << endl;
 			}
 		}
-*/
+
 
 
 // writing Vegetation
@@ -2345,14 +2411,14 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int &k_zonal, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice, Array &Rain_super )
+void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int &k_zonal, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &radiation_3D )
 {
 	double x, y, z, dx, dy;
 
 	stringstream Atmosphere_zonal_File_Name;
 
 	max_u = max_v = max_w = max_t = max_c = max_co2 = max_p_dyn = max_p_stat = 0.;
-	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Precipitation = 0.;
+	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Q_Sensible = max_Precipitation = 0.;
 	max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
 	max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
 	max_t_Evaporation_Penman = max_t_Evaporation_Haude = max_Q_Radiation = max_buoyancy_force = 0.;
@@ -2645,7 +2711,7 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_
 			}
 		}
 
-/*
+
 // writing static pressure
 		Atmosphere_vtk_zonal_File <<  "SCALARS Pressure_static float " << 1 << endl;
 		Atmosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
@@ -2670,7 +2736,7 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_
 				Atmosphere_vtk_zonal_File << p_stat.x[ i ][ j ][ k_zonal ] << endl;
 			}
 		}
-*/
+
 
 
 // writing buoyancy force
@@ -2736,6 +2802,33 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_
 				Atmosphere_vtk_zonal_File << Latency.x[ i ][ j ][ k_zonal ] << endl;
 			}
 		}
+
+
+// writing Q_Sensible
+		Atmosphere_vtk_zonal_File <<  "SCALARS Q_Sensible float " << 1 << endl;
+		Atmosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				if ( fabs ( Q_Sensible.x[ i ][ j ][ k_zonal ] ) > max_Q_Sensible ) 
+				{
+					max_Q_Sensible = fabs ( Q_Sensible.x[ i ][ j ][ k_zonal ] );
+					if ( max_Q_Sensible == 0. ) max_Q_Sensible = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+//				Atmosphere_vtk_zonal_File << Q_Sensible.x[ i ][ j ][ k_zonal ] / max_Q_Sensible << endl;
+				Atmosphere_vtk_zonal_File << Q_Sensible.x[ i ][ j ][ k_zonal ] << endl;
+			}
+		}
+
 
 /*
 // writing t_cond_3D
@@ -2871,6 +2964,32 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_
 		}
 
 
+// writing radiation_3D
+		Atmosphere_vtk_zonal_File <<  "SCALARS radiation_3D float " << 1 << endl;
+		Atmosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				if ( fabs ( radiation_3D.x[ i ][ j ][ k_zonal ] ) > max_radiation_3D ) 
+				{
+					max_radiation_3D = fabs ( radiation_3D.x[ i ][ j ][ k_zonal ] );
+					if ( max_radiation_3D == 0. ) max_radiation_3D = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+//				Atmosphere_vtk_zonal_File << radiation_3D.x[ i ][ j ][ k_zonal ] / max_radiation_3D << endl;
+				Atmosphere_vtk_zonal_File << radiation_3D.x[ i ][ j ][ k_zonal ] << endl;
+			}
+		}
+
+
 // writing zonal u-v cell structure
 		Atmosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
 
@@ -2938,14 +3057,14 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_longal (const string &Name_Bathymetry_File, int &j_longal, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
+void PostProcess_Atmosphere::paraview_vtk_longal (const string &Name_Bathymetry_File, int &j_longal, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
 {
 	double x, y, z, dx, dz;
 
 	stringstream Atmosphere_longal_File_Name;
 
 	max_u = max_v = max_w = max_t = max_c = max_co2 = max_p_dyn = max_p_stat = 0.;
-	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Precipitation = 0.;
+	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Q_Sensible = max_Precipitation = 0.;
 	max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
 	max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
 	max_t_Evaporation_Penman = max_t_Evaporation_Haude = max_Q_Radiation = max_buoyancy_force = 0.;
@@ -3336,6 +3455,33 @@ void PostProcess_Atmosphere::paraview_vtk_longal (const string &Name_Bathymetry_
 				Atmosphere_vtk_longal_File << Latency.x[ i ][ j_longal ][ k ] << endl;
 			}
 		}
+
+
+// writing Q_Sensible
+		Atmosphere_vtk_longal_File <<  "SCALARS Q_Sensible float " << 1 << endl;
+		Atmosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
+
+	for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( Q_Sensible.x[ i ][ j_longal ][ k ] ) > max_Q_Sensible ) 
+				{
+					max_Q_Sensible = fabs ( Q_Sensible.x[ i ][ j_longal ][ k ] );
+					if ( max_Q_Sensible == 0. ) max_Q_Sensible = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+//				Atmosphere_vtk_longal_File << Q_Sensible.x[ i ][ j_longal ][ k ] / max_Q_Sensible << endl;
+				Atmosphere_vtk_longal_File << Q_Sensible.x[ i ][ j_longal ][ k ] << endl;
+			}
+		}
+
 
 /*
 // writing t_cond_3D

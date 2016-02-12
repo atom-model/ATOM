@@ -15,7 +15,7 @@
 using namespace std;
 
 
-RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double ec, double sc_WaterVapour, double sc_CO2, double g, double pr, double omega, double coriolis, double centrifugal, double WaterVapour, double buoyancy, double CO2, double gam )
+RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double ec, double sc_WaterVapour, double sc_CO2, double g, double pr, double omega, double coriolis, double centrifugal, double WaterVapour, double buoyancy, double CO2, double gam, double sigma, double lambda )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -31,12 +31,14 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 	this-> g = g;
 	this-> pr = pr;
 	this-> gam = gam;
+	this-> lambda = lambda;
 	this-> omega = omega;
 	this-> coriolis = coriolis;
 	this-> centrifugal = centrifugal;
 	this-> WaterVapour = WaterVapour;
 	this-> buoyancy = buoyancy;
 	this-> CO2 = CO2;
+	this-> sigma = sigma;
 
 
 // array "im_tropopause" for configuring data due to latitude dependent tropopause
@@ -57,7 +59,7 @@ RHS_Atmosphere::~RHS_Atmosphere() {}
 
 
 
-void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopause, double lv, double ls, double ep, double hp, double u_0, double t_0, double t_Boussinesq, double c_Boussinesq, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array &BuoyancyForce )
+void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopause, double lv, double ls, double ep, double hp, double u_0, double t_0, double t_Boussinesq, double c_Boussinesq, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible )
 {
 // collection of coefficients for phase transformation
 
@@ -283,66 +285,11 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 	d2co2dphi2 = h_d_k * ( co2.x[ i ][ j ][ k+1 ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i ][ j ][ k-1 ] ) / dphi2;
 
 
-
-// 0°C limit separates water vapour from condensate/evaporate und sublimate/vaporize
-// water vapour turns to or developes from water or ice
-
-// force and source terms presented one by one:
-
 // latent heat of water vapour
-
-	t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-	p_h = exp ( - 9.8066 * ( double ) i / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_0;	// current air pressure, step size in 500 m, from barometric formula in hPa
-//	p_h = p_0 * pow ( - 5. * ( gam * ( double ) + t.x[ 0 ][ j ][ k ] * t_0 ) / ( t.x[ 0 ][ j ][ k ] * t_0 ), ( g / (  gam * R_Air ) ) );	//  polytropic atmosphere in hPa
-	e_h = ( r_0_water_vapour * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;				// water vapour pressure  in hPa
-
-	E_Rain = hp * exp ( 17.0809 * t_Celsius / ( 234.175 + t_Celsius ) );						// saturation water vapour pressure for the water phase at t > 0°C in hPa
-	E_Rain_super = hp * exp ( 17.8436 * t_Celsius / ( 245.425 + t_Celsius ) );			// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
-	E_Ice = hp * exp ( 22.4429 * t_Celsius / ( 272.44 + t_Celsius ) );							// saturation water vapour pressure for the ice phase in hPa
-
-	q_Rain = ep * E_Rain / p_h;																					// water vapour amount at saturation with water formation in kg/kg
-	q_Rain_super  = ep * E_Rain_super / p_h;															// water vapour amount at saturation with water formation in kg/kg
-	q_Ice = ep * E_Ice / p_h;																						// water vapour amount at saturation with ice formation in kg/kg
-
-	q_h = ep * c.x[ i ][ j ][ k ];																							// threshold value for water vapour at local hight h in kg/kg
-//	q_h  = ep * e_h / ( p_h - e_h );																								// water vapour amount at local hight h in kg/kg
-//	q_h  = ep * e_h / p_h;																								// water vapour amount at local hight h in kg/kg
-
-	 E_dEdr_Rain = lv / ( R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 * t.x[ i ][ j ][ k ] * t_0 );
-	 E_dEdr_Rain_super = lv / ( R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 * t.x[ i ][ j ][ k ] * t_0 );
-	 E_dEdr_Ice = ls / ( R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 * t.x[ i ][ j ][ k ] * t_0 );
-
-
-	RS_LatentHeat_Energy_Rain = coeff_lv * q_Rain * ( dtdr * E_dEdr_Rain + g / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) );
-	RS_LatentHeat_Energy_Rain_super = coeff_lv * q_Rain_super * ( dtdr * E_dEdr_Rain_super + g / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) );
-	RS_LatentHeat_Energy_Ice = coeff_ls * q_Ice * ( dtdr * E_dEdr_Ice + g / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) );
-
-
-//	Latency.x[ i ][ j ][ k ] = - RS_LatentHeat_Energy_Rain - RS_LatentHeat_Energy_Rain_super - RS_LatentHeat_Energy_Ice;
-	Latency.x[ i ][ j ][ k ] = - RS_LatentHeat_Energy_Rain;
-
-
-
-/*
-// printout for various thermodynamical quantities for the preticipation computations along the equator ( j = 90 )
-				if ( ( i == 0 ) && ( j == 90 ) && ( k == 180 ) )
-				{
-					cout << endl;
-					cout << " i = " << i << "   j = " << j << "   k = " << k << "   i_level = " << i_level  << "   h_level (m) = " << h_level << "   h_h (m) = " << h_h << endl << endl;
-
-					cout << " t_h (°C) = " << t_Celsius << "   p_h (hPa) = " << p9_h << "   a_h (g/m3) = " << a_h << "   c_h (g/Kg) = " << c.x[ i ][ j ][ k ] * 1000. << "   q_Rain (g/Kg) = " << q_Rain * 1000. << "   e_h (hPa) = " << e_h << "   E_Rain (hPa) = " << E_Rain  << endl << endl;
-
-					cout << " Rain (g/kg) = " << Rain.x[ i ][ j ][ k ] * 1000. << "   Rain_super (g/kg) = " << Rain_super.x[ i ][ j ][ k ] * 1000. << "   Ice (g/kg) = " << Ice.x[ i ][ j ][ k ] * 1000. << "   E_Ice (hPa) = " << E_Ice << "   sat_Deficit (hPa) = " << sat_Deficit << "   t_dew (°C) = " << t_dew << "   E_Rain_SL (hPa) = " << E_Rain_SL << endl << endl;
-
-					cout << " t_SL (°C) = " << t_Celsius_SL << "   p_SL (hPa) = " << p_SL << "   a_SL (g/m3) = " << a_SL << "   c_SL (g/Kg) = " << c.x[ 0 ][ j ][ k ] * 1000. << "   e_SL (hPa) = " << e_SL << "   q_Ice (g/Kg) = " << q_Ice * 1000. << "   t_dew_SL (°C) = " << t_dew_SL << endl << endl;
-
-					cout << " Evap_Haude (mm/d) = " << Evap_Haude << "   RF_e (%) = " << RF_e  << "   E_Rain_super (hPa) = " << E_Rain_super << "   q_Rain_super (g/Kg) = " << q_Rain_super * 1000. << "   q_h (g/Kg) = " << q_h * 1000. << "   q_SL (g/Kg) = " << q_SL * 1000. << endl << endl;
-				}
-*/
-
+	RS_LatentHeat_Energy_Rain = - Latency.x[ i ][ j ][ k ] * coeff_lv / ( r_0_air * lv * u_0 / L_atm );
+	Q_Sensible.x[ i ][ j ][ k ] = + cp_l * r_0_air * u_0 * t_0 / L_atm * ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe );																									// sensible heat in [W/m2] from energy transport equation
 
 // Coriolis and centrifugal terms in the energy and momentum equations
-
 	RS_Coriolis_Energy = ( + u.x[ i ][ j ][ k ] * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ]
 									   - w.x[ i ][ j ][ k ] * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] )
 									  + v.x[ i ][ j ][ k ] * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ] ) * ec * pr;
@@ -357,26 +304,19 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 	RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
 	RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
 
+
+//	if ( ( j == 90 ) && ( k == 180 ) )	cout << i << "   " << j << "   " << k << "   " << RS_centrifugal_Momentum_rad << "   " << RS_centrifugal_Momentum_the << "   " << RS_Coriolis_Momentum_rad << "   " << RS_Coriolis_Momentum_the << "   " << RS_Coriolis_Momentum_phi << "   " << RS_centrifugal_Energy << "   " << RS_Coriolis_Energy << "   " << dr << "   " << dthe << "   " << dphi << endl;
+
+
 	t_Boussinesq = tn.x[ i ][ j ][ k ];																					// threshold value for Boussinesq approximation, t -> tn, stable
 	t_Boussinesq_diff = ( t.x[ i ][ j ][ k ] - t_Boussinesq ) * t_0;											// in °C, for  t_Boussinesq_diff = 0 no buoyancy
-
-	if ( t_Boussinesq_diff >= 0. )		t_cond_3D.x[ i ][ j ][ k ] = t_Boussinesq_diff;				// temperature increase due to condensation
-	else 										t_cond_3D.x[ i ][ j ][ k ] = 0.;
-
-	if ( t_Boussinesq_diff < 0. )		t_evap_3D.x[ i ][ j ][ k ] = t_Boussinesq_diff;				// temperature decrease due to evaporation
-	else 										t_evap_3D.x[ i ][ j ][ k ] = 0.;
-
-	if ( h.x[ i ][ j ][ k ] == 1. ) 			t_cond_3D.x[ i ][ j ][ k ] = t_evap_3D.x[ i ][ j ][ k ] = 0.;
-
 
 	RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ i ][ j ][ k ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature, 
 	RS_buoyancy_Energy = ec * RS_buoyancy_Momentum * u.x[ i ][ j ][ k ];		// bouyancy based on temperature
 
-//	RS_buoyancy_Water_Vapour = + buoyancy * L_atm / ( r_0_air * u_0 ) * ( Rain.x[ i ][ j ][ k ] + Rain_super.x[ i ][ j ][ k ] + Ice.x[ i ][ j ][ k ] );		// water vapour reduction
-//	RS_buoyancy_Water_Vapour = + buoyancy * L_atm / ( r_0_air * u_0 ) * Rain.x[ i ][ j ][ k ];		// water vapour reduction based on condensed water
-	RS_buoyancy_Water_Vapour = + buoyancy * Rain.x[ i ][ j ][ k ];		// water vapour reduction based on condensed water
+	RS_buoyancy_Water_Vapour = + buoyancy * ( Rain.x[ i ][ j ][ k ] + Rain_super.x[ i ][ j ][ k ] + Ice.x[ i ][ j ][ k ] );		// water vapour reduction based on condensed water
 
-	BuoyancyForce.x[ i ][ j ][ k ] = RS_buoyancy_Momentum;
+	BuoyancyForce.x[ i ][ j ][ k ] = RS_buoyancy_Momentum * L_atm / ( double ) ( im - 1 );									// in N
 
 	if ( h.x[ i ][ j ][ k ] == 1. ) 	BuoyancyForce.x[ i ][ j ][ k ] = 0.;
 
