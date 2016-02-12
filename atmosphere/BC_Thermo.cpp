@@ -22,7 +22,7 @@
 using namespace std;
 
 
-BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationModel, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double epsilon_extra, double lv, double cp_l, double L_atm, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam )
+BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationModel, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double epsilon_extra, double lv, double cp_l, double L_atm, double r_0_air, double R_Air, double r_0_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam )
 {
 	this -> im = im;
 	this -> jm = jm;
@@ -58,6 +58,7 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 	this-> co2_land = co2_land;
 	this-> ik = ik;
 	this-> epsilon_extra = epsilon_extra;
+	this-> c_tropopause = c_tropopause;
 	this-> c_ocean = c_ocean;
 	this-> c_land = c_land;
 	this-> t_average = t_average;
@@ -949,13 +950,11 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array &h, Array &t, Array &
 // temperature values for the tropopause
 	for ( int j = 0; j < jm; j++ )
 	{
-		i_trop = im_tropopause[ j ];
 		for ( int k = 0; k < km; k++ )
 		{
 			for ( int i = im_tropopause[ j ] + 1; i < im; i++ )
 			{
 				t.x[ i ][ j ][ k ] = t_tropopause;
-//				t.x[ i ][ j ][ k ] = t.x[ i_trop ][ j ][ k ];
 			}
 		}
 	}
@@ -1018,7 +1017,7 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, Array &h, Array &t, Array &
 			d_j = ( double ) j;
 			if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
 			{
-				c.x[ 0 ][ j ][ k ]  = hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 ); 																					// saturation of relative water vapour in kg/kg
+				c.x[ 0 ][ j ][ k ]  = hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );																				// saturation of relative water vapour in kg/kg
 				c.x[ 0 ][ j ][ k ] = c_ocean * c.x[ 0 ][ j ][ k ];				// relativ water vapour contents on ocean surface reduced by factor
 			}
 
@@ -3055,7 +3054,6 @@ void BC_Thermo::BC_Surface_Precipitation ( const string &Name_SurfacePrecipitati
 void BC_Thermo::BC_Pressure ( int *im_tropopause, Array &p_stat, Array &t, Array &h )
 {
 // boundary condition of surface pressure given by surface temperature through gas equation
-
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -3066,7 +3064,6 @@ void BC_Thermo::BC_Pressure ( int *im_tropopause, Array &p_stat, Array &t, Array
 
 
 // only switch on, when you know what you do
-
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -3074,25 +3071,11 @@ void BC_Thermo::BC_Pressure ( int *im_tropopause, Array &p_stat, Array &t, Array
 			for ( int i = 1; i < im; i++ )
 			{
 				p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) ) * p_0;
-//				p_stat.x[ i ][ j ][ k ] = p_stat.x[ i - 1 ][ j ][ k ] * pow ( ( - 5. * gam * ( double ) i + t.x[ 0 ][ j ][ k ] * t_0 ) / ( t.x[ i - 1 ][ j ][ k ] * t_0 ), ( g / ( gam * R_Air ) ) );
-																										// current air pressure, step size in 500 m, from politropic formula in hPa
+																									// current air pressure, step size in 500 m, from politropic formula in hPa
 			}
 		}
 	}
 
-/*
-// pressure values for the tropopause
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int i = im_tropopause[ j ] + 1; i < im; i++ )
-			{
-				p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) ) * p_0;
-			}
-		}
-	}
-*/
 }
 
 
@@ -3102,25 +3085,20 @@ void BC_Thermo::BC_Pressure ( int *im_tropopause, Array &p_stat, Array &t, Array
 
 
 
-void BC_Thermo::IC_v_w_WestEastCoast ( double t_land, Array &h, Array &t, Array &u, Array &v, Array &w )
+void BC_Thermo::IC_WestEastCoast ( double t_land, Array &h, Array &t, Array &u, Array &v, Array &w )
 {
-// initial conditions for v and w velocity components at the sea surface close to east or west coasts
-// reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
-// w component unchanged
-
-// search for east coasts and associated velocity components to close the circulations
-// transition between coast flows and open sea flows included
+// initial conditions for temperature at the sea surface close to eastern or western coasts
+// search for east and west coasts
+// smooth transition of temperature between coast flows and open sea flows
+// due to up/downwelling regions modest increasing or decreasing of surface temperatures
 
 
-//	t_land = t_land * .3;
-	t_land = t_land * .1;
-//	t_land = t_land * .5;
-
-
+	t_land_corr = t_land * .1;															// temperature increase/decrease along coasts depending on est/west coast locations, up/downwelling
 
 // northern hemisphere: east coast
 
-	k_grad = 20;																				// extension of velocity change
+	k_grad_init = 20;																		// maximum extension of the smoothed temperature distribution along coasts
+	k_grad = k_grad_init;																	// extension of the smoothing region
 	k_a = k_grad;																			// left distance
 	k_b = 0;																					// right distance
 
@@ -3136,103 +3114,47 @@ void BC_Thermo::IC_v_w_WestEastCoast ( double t_land, Array &h, Array &t, Array 
 			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;	// if water and and k_sequel = 0 then is water closest to coast
 			else k_water = 1;																// somewhere on water
 
-			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) )				// if water is closest to coast, change of velocity components begins
+			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) )				// if water is closest to coast, start of smoothing
 			{
-
-				for ( int l = k; l <= k + k_grad; l++ )									// extension of change, sign change in v-velocity and distribution of u-velocity with depth
+				if ( ( k + k_grad ) >= ( km - 1 ) ) k_grad = ( km - 1 ) - k;	// no crossing of the boundaries alowed
+				for ( int l = k; l <= k + k_grad; l++ )							// forward extention of smoothing
 				{
-//					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];					// existing velocity changes sign
-//					if ( ( h.x[ 0 ][ j ][ l ] == 0. ) && ( k >= 1 ) ) 	t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land );
-					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land );
-/*
-					for ( int i = i_middle; i <= i_half; i++ )						// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						m = i_half - i;
-						d_i = ( double ) i;
-						c.x[ i ][ j ][ k ] = ca_max;
-						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
-						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
-					}
-*/
+					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land_corr ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land_corr );
 				}
-
-/*
-				for ( int l = ( k + k_grad - k_a ); l < ( k + k_grad + k_b + 1 ); l++ ) // starting at local longitude + max extension - begin of smoothing k_a  until ending at  + k_b
-				{
-					v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] - v.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) -  ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) + v.x[ 0 ][ j ][ k + k_grad - k_a ]; // extension of v-velocity, smoothing algorithm by aa linear equation 
-				}
-*/
-/*
-				for ( int l = k; l < ( k + k_grad + k_b + 1 ); l++ )		// smoothing algorithm by aa linear equation, starting at local longitude until ending at max extension + k_b
-				{
-//					w.x[ 0 ][ j ][ l ] = w.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k ); // extension of v-velocity
-					t.x[ 0 ][ j ][ l ] = t.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k ); // extension of v-velocity
-				}
-*/
 				k_sequel = 1;															// looking for another east coast
 			}
 		}																						// end of longitudinal loop
+		k_grad = k_grad_init;																	// extension of the smoothing region
 		k_water = 0;																	// starting at another latitude
 	}																							// end of latitudinal loop
 
 
 
-
 // southern hemisphere: east coast
 
-	k_water = 0;
-	k_sequel = 1;
+	k_water = 0;																				// on water closest to coast
+	k_sequel = 1;																			// on solid ground
 
-	for ( int j = 91; j < jm; j++ )
+	for ( int j = 91; j < jm; j++ )														// outer loop: latitude
 	{
-		for ( int k = 0; k < km; k++ )
+		for ( int k = 0; k < km; k++ )												// inner loop: longitude
 		{
-			if ( h.x[ 0 ][ j ][ k ] == 1. ) k_sequel = 0;
+			if ( h.x[ 0 ][ j ][ k ] == 1. ) k_sequel = 0;							// if solid ground: k_sequel = 0
 
-			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;
-			else k_water = 1;
+			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;	// if water and and k_sequel = 0 then is water closest to coast
+			else k_water = 1;																// somewhere on water
 
-			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) )
+			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) )				// if water is closest to coast, start of smoothing
 			{
-
-				for ( int l = k; l <= k + k_grad; l++ )
+				if ( ( k + k_grad ) >= ( km - 1 ) ) k_grad = ( km - 1 ) - k;	// no crossing of the boundaries alowed
+				for ( int l = k; l <= k + k_grad; l++ )							// forward extention of smoothing
 				{
-//					v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];
-//					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ k + l ] = ( t.x[ 0 ][ j ][ l ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land );
-//					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ k + l ] = ( t.x[ 0 ][ j ][ l + k ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ l + k ] + t_land );
-//					if ( h.x[ 0 ][ j ][ l ] == 0. ) t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land ) - t.x[ 0 ][ j ][ l ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land );
-
-//					if ( ( h.x[ 0 ][ j ][ l ] == 0. ) && ( k >= 1 ) ) 	t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land );
-					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land );
-
-/*
-					for ( int i = i_middle; i <= i_half; i++ )
-					{
-						m = i_half - i;
-						d_i = ( double ) i;
-						c.x[ i ][ j ][ k ] = ca_max;
-						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
-						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
-					}
-*/
+					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land_corr ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land_corr );
 				}
-
-/*
-				for ( int l = ( k + k_grad - k_a ); l < ( k + k_grad + k_b + 1 ); l++ )
-				{
-					v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] - v.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) -  ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) + v.x[ 0 ][ j ][ k + k_grad - k_a ];
-				}
-*/
-/*
-				for ( int l = k; l < ( k + k_grad + k_b + 1 ); l++ )
-				{
-//					w.x[ 0 ][ j ][ l ] = w.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k );
-					t.x[ 0 ][ j ][ l ] = t.x[ 0 ][ j ][ k + k_grad + k_b ]  / ( double )( ( k + k_grad + k_b ) -  k ) * ( double )( l - k );
-				}
-*/
 				k_sequel = 1;
 			}
 		}
+		k_grad = k_grad_init;																	// extension of the smoothing region
 		k_water = 0;
 	}
 
@@ -3244,7 +3166,8 @@ void BC_Thermo::IC_v_w_WestEastCoast ( double t_land, Array &h, Array &t, Array 
 
 // northern hemisphere: west coast
 
-	k_grad = 20;																				// extension of velocity change
+	k_grad_init = 20;																		// maximum extension of the smoothed temperature distribution along coasts
+	k_grad = k_grad_init;																	// extension of the smoothing region
 	k_a = 0;																					// left distance
 
 	k_water = 0;																				// somewhere on water
@@ -3252,7 +3175,7 @@ void BC_Thermo::IC_v_w_WestEastCoast ( double t_land, Array &h, Array &t, Array 
 
 	for ( int j = 0; j < 91; j++ )														// outer loop: latitude
 	{
-		for ( int k = km - 1; k > k_grad; k-- )
+		for ( int k = km - 1; k > k_grad; k-- )										// inner loop: longitude
 		{
 			if ( h.x[ 0 ][ j ][ k ] == 0. )													// if somewhere on water
 			{
@@ -3261,103 +3184,50 @@ void BC_Thermo::IC_v_w_WestEastCoast ( double t_land, Array &h, Array &t, Array 
 			}
 			else k_water = 1;																// first time on land
 
-			if ( ( flip == 0 ) && ( k_water == 1 ) )								// on water closest to land
+			if ( ( flip == 0 ) && ( k_water == 1 ) )								// on water closest to land, start of smoothing
 			{
-				for ( int l = k; l >= ( k - k_grad ); l-- )							// backward extention of velocity change: nothing changes
+				if ( ( k - k_grad ) <= k_grad ) k_grad = k_grad - k;			// no crossing of the boundaries alowed
+				for ( int l = k; l >= ( k - k_grad ); l-- )							// backward extention of smoothing
 				{
-//					w.x[ 0 ][ j ][ l ] = - w.x[ 0 ][ j ][ l ];
-//					if ( ( h.x[ 0 ][ j ][ l ] == 0. ) && ( k >= 1 ) ) 	t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land );
-					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land );
-
-/*
-					for ( int i = i_middle; i <= i_half; i++ )						// loop in radial direction, extension for u -velocity component, downwelling here
-					{
-						m = i_half - i;
-						d_i = ( double ) i;
-						c.x[ i ][ j ][ k ] = ca_max;
-						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// increase with depth, decrease with distance from coast
-						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// decrease with depth, decrease with distance from coast
-					}
-*/
+					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land_corr ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land_corr );
 				}
-
-/*
-				for ( int l = k; l > ( k - k_grad - k_a + 1 ); l-- )			// smoothing algorithm by aa linear equation, starting at local longitude until ending at max extension + k_b
-				{
-					v.x[ 0 ][ j ][ l ] = v.x[ 0 ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k ); // extension of v-velocity
-				}
-*/
-/*
-				for ( int l = ( k - k_grad - 3 ); l < ( k - k_grad + 3 ); l++ )			// smoothing algorithm by aa linear equation, starting at local longitude until ending at max extension + k_b
-				{
-//					w.x[ 0 ][ j ][ l ] = (  - w.x[ 0 ][ j ][ k - k_grad - 3 ] + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ 0 ][ j ][ k - k_grad + 3 ];
-					t.x[ 0 ][ j ][ l ] = (  - t.x[ 0 ][ j ][ k - k_grad - 3 ] + t.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - t.x[ 0 ][ j ][ k - k_grad + 3 ];
-				}
-*/
 				flip = 1;
 			}
 		}
+		k_grad = k_grad_init;																// extension of the smoothing region
 		flip = 0;
 	}
 
 
 
-
-
-
 // southern hemisphere: west coast
 
-	k_water = 0;
-	flip = 0;
+	k_water = 0;																				// somewhere on water
+	flip = 0;																					// somewhere on water
 
-	for ( int j = 91; j < jm; j++ )
+	for ( int j = 91; j < jm; j++ )														// outer loop: latitude
 	{
-		for ( int k = km - 1; k > k_grad; k-- )
+		for ( int k = km - 1; k > k_grad; k-- )										// inner loop: longitude
 		{
-			if ( h.x[ 0 ][ j ][ k ] == 0. )
+			if ( h.x[ 0 ][ j ][ k ] == 0. )													// if somewhere on water
 			{
-				k_water = 0;
-				flip = 0;
+				k_water = 0;																	// somewhere on water: k_water = 0
+				flip = 0;																		// somewhere on water: flip = 0
 			}
-			else k_water = 1;
+			else k_water = 1;																// first time on land
 
-			if ( ( flip == 0 ) && ( k_water == 1 ) )
+			if ( ( flip == 0 ) && ( k_water == 1 ) )								// on water closest to land, start of smoothing
 			{
-				for ( int l = k; l >= ( k - k_grad ); l-- )
+				if ( ( k - k_grad ) <= k_grad ) k_grad = k_grad - k;			// no crossing of the boundaries alowed
+				for ( int l = k; l >= ( k - k_grad ); l-- )							// backward extention of smoothing
 				{
-//					w.x[ 0 ][ j ][ l ] = - w.x[ 0 ][ j ][ l ];
-//					if ( ( h.x[ 0 ][ j ][ l ] == 0. ) && ( k >= 1 ) ) 	t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land );
-					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land );
-
-/*
-					for ( int i = i_middle; i <= i_half; i++ )
-					{
-						m = i_half - i;
-						d_i = ( double ) i;
-						c.x[ i ][ j ][ k ] = ca_max;
-						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
-						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
-					}
-*/
+					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land_corr ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land_corr );
 				}
-
-/*
-				for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- )
-				{
-					v.x[ 0 ][ j ][ l ] = v.x[ 0 ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k );
-				}
-*/
-/*
-				for ( int l = ( k - k_grad - 3 ); l < ( k - k_grad + 3 ); l++ )			// smoothing algorithm by aa linear equation, starting at local longitude until ending at max extension + k_b
-				{
-//					w.x[ 0 ][ j ][ l ] = ( - w.x[ 0 ][ j ][ k - k_grad - 3 ] + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ 0 ][ j ][ k - k_grad + 3 ];
-					t.x[ 0 ][ j ][ l ] = ( - t.x[ 0 ][ j ][ k - k_grad - 3 ] + t.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - t.x[ 0 ][ j ][ k - k_grad + 3 ];
-				}
-*/
 				flip = 1;
 			}
 		}
 		flip = 0;
+		k_grad = k_grad_init;																// extension of the smoothing region
 	}
 
 }

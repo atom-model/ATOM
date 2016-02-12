@@ -30,9 +30,9 @@ class BC_Thermo
 		int *im_tropopause;
 		int sun, Ma, Ma_max, Ma_max_half;
 		int j_par, j_pol, k_par, k_pol;
-		int k_a, k_b, flip, k_grad, i_middle;
+		int k_a, k_b, flip, k_grad, k_grad_init, i_middle;
 		int k_water, k_sequel;
-		int n_smooth, i_trop;
+		int n_smooth;
 		int j_r, k_r, j_sun;
 		int RadiationModel, sun_position_lat, sun_position_lon, declination;
 
@@ -57,7 +57,7 @@ class BC_Thermo
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, cp_l, r_0_air, ozean_land, p_baro, L_atm, c13, c43;
 		double R_Air, r_h, r_0_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
 		double ik, eps, epsilon_extra, c_ocean, c_land, t_average, co2_average, co2_pole, gam, t_Ik;
-		double radiation_pole, radiation_equator, t_land;
+		double radiation_pole, radiation_equator, t_land, t_land_corr;
 		double albedo_coeff, albedo_equator, albedo_pole, epsilon_tropopause;
 		double ik_coeff, ik_equator, ik_pole;
 		double aa, bb, dd, f;
@@ -82,13 +82,13 @@ class BC_Thermo
 		double t_equator, t_tropopause, t_coeff, t_pole, c_equator, c_tropopause, c_coeff, c_pol, p_equator, p_tropopause, p_coeff, p_pol;
 		double co2_equator, co2_tropopause, co2_coeff, co2_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous;
 
-		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
 
 		void IC_CellStructure ( int *, Array &, Array &, Array & );
 
-		void IC_v_w_WestEastCoast ( double, Array &, Array &, Array &, Array &, Array & );
+		void IC_WestEastCoast ( double, Array &, Array &, Array &, Array &, Array & );
 
 		void BC_Temperature ( int *, Array &, Array &, Array &, Array & );
 

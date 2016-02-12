@@ -107,15 +107,16 @@ using namespace std;
 
 
 
-int main ( int argc, char *argv[ ] )
+//int main ( int argc, char *argv[ ] )
+int main ( )
 {
-// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km ), 
-// maximum number of overall iterations ( n ),
-// maximum number of inner velocity loop iterations ( velocity_iter_max ),
+// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
+// maximum number of overall iterations ( n )
+// maximum number of inner velocity loop iterations ( velocity_iter_max )
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 5, pressure_iter_max = 5;
-	int velocity_iter_max_2D = 2, pressure_iter_max_2D = 2;
+	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 10, pressure_iter_max = 5;
+	int velocity_iter_max_2D = 10, pressure_iter_max_2D = 5;
 
 	int n, i_radial, j_longal, k_zonal, i_max, i_beg;
 	int velocity_iter, pressure_iter, pressure_iter_aux, velocity_iter_2D, pressure_iter_2D;
@@ -541,7 +542,7 @@ int main ( int argc, char *argv[ ] )
 	Results_MSL_Atm		calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, cp_l, L_atm, dr, dthe, dphi, r_0_air, R_Air, r_0_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land, gam );
 
 //	class File_NetCDF to write results in the format of a netCDF-file
-//	File_NetCDF		printoutNetCDF ( im, jm, km );
+	File_NetCDF		printoutNetCDF ( im, jm, km );
 
 
 
@@ -563,7 +564,7 @@ int main ( int argc, char *argv[ ] )
 //  configuration of the initial and boundary conditions for the temperature, CO2 und water vapour on land and ocean surfaces
 
 // 	class BC_Thermo for the initial and boundary conditions of the flow properties
-	BC_Thermo		circulation ( im, jm, km, i_beg, i_max, RadiationModel, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, Ma_max_half, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, albedo_extra, epsilon_extra, lv, cp_l, L_atm, r_0_air, R_Air, r_0_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, ik, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_max, radiation_ocean, radiation_pole, radiation_equator, t_land, t_tropopause, t_equator, t_pole, gam );
+	BC_Thermo		circulation ( im, jm, km, i_beg, i_max, RadiationModel, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, Ma_max_half, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, albedo_extra, epsilon_extra, lv, cp_l, L_atm, r_0_air, R_Air, r_0_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, ik, c_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_max, radiation_ocean, radiation_pole, radiation_equator, t_land, t_tropopause, t_equator, t_pole, gam );
 
 //  class element for the tropopause location as a parabolic distribution from pole to pole 
 	circulation.TropopauseLocation ( im_tropopause );
@@ -586,7 +587,7 @@ int main ( int argc, char *argv[ ] )
 	circulation.IC_CellStructure ( im_tropopause, u, v, w );
 
 //	class element for the initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
-	circulation.IC_v_w_WestEastCoast ( t_land, h, t, u, v, w );
+	circulation.IC_WestEastCoast ( t_land, h, t, u, v, w );
 
 //  class element for the surface pressure computed by surface temperature with gas equation
 	circulation.BC_Pressure ( im_tropopause, p_stat, t, h );
@@ -760,13 +761,13 @@ Pressure_iteration_2D:
 
 
 // 		class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-		LandArea.BC_SolidGround ( RadiationModel, i_max, hp, ep, r_0_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, co2_vegetation, co2_land, co2_ocean, pa, gam, h, u, v, w, t, p_dyn, c, co2, Vegetation );
+		LandArea.BC_SolidGround ( RadiationModel, i_max, im_tropopause, hp, ep, r_0_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, co2_vegetation, co2_land, co2_ocean, pa, gam, h, u, v, w, t, p_dyn, c, co2, Vegetation );
 
 // 		class RungeKutta for the solution of the differential equations describing the flow properties
 		result.solveRungeKutta_3D_Atmosphere ( prepare, im_tropopause, lv, ls, ep, hp, u_0, t_0, t_Boussinesq, c_Boussinesq, c_0, co2_0, p_0, r_0_air, r_0_water_vapour, r_0_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, co2, tn, un, vn, wn, cn, co2n, aux_u, aux_v, aux_w, Latency, t_cond_3D, t_evap_3D, Rain, Ice, Rain_super, IceLayer, BuoyancyForce, Q_Sensible );
 
 // 		class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-		LandArea.BC_SolidGround ( RadiationModel, i_max, hp, ep, r_0_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, co2_vegetation, co2_land, co2_ocean, pa, gam, h, u, v, w, t, p_dyn, c, co2, Vegetation );
+		LandArea.BC_SolidGround ( RadiationModel, i_max, im_tropopause, hp, ep, r_0_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, co2_vegetation, co2_land, co2_ocean, pa, gam, h, u, v, w, t, p_dyn, c, co2, Vegetation );
 
 
 
@@ -780,7 +781,7 @@ Pressure_iteration_2D:
 		if ( RadiationModel >= 2 ) 					circulation.BC_Radiation_two_layer ( im_tropopause, max_water, max_water_super, max_ice_air, max_precipitable_water, max_Precipitation, max_CO2_total, albedo, epsilon, Precipitation, precipitable_water, Water, Water_super, IceAir, Ik, Q_Radiation, Radiation_Balance, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, temp_rad, Q_latent, Q_sensible, Q_bottom, co2_total, t, c, h, epsilon_3D, radiation_3D, Latency );
 
 //	class element for the initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
-		if ( RadiationModel >= 2 ) 					circulation.IC_v_w_WestEastCoast ( t_land, h, t, u, v, w );
+		if ( RadiationModel >= 2 ) 					circulation.IC_WestEastCoast ( t_land, h, t, u, v, w );
 
 //  class element for the surface pressure computed by surface temperature with gas equation
 		if ( RadiationModel >= 2 ) 					circulation.BC_Pressure ( im_tropopause, p_stat, t, h );
@@ -1066,7 +1067,7 @@ Print_commands:
 
 
 //	results written in netCDF format
-//	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Precipitation, precipitable_water );
+	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Precipitation, precipitable_water );
 
 //	class PostProcess_Atmosphaere for the printing of results
 	PostProcess_Atmosphere		write_File ( im, jm, km );

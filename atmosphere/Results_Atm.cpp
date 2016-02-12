@@ -285,15 +285,15 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 
 			t_cond_3D.x[ 0 ][ j ][ k ] = c43 * t_cond_3D.x[ 1 ][ j ][ k ] - c13 * t_cond_3D.x[ 2 ][ j ][ k ];
 			t_cond_3D.x[ im-1 ][ j ][ k ] = c43 * t_cond_3D.x[ im-2 ][ j ][ k ] - c13 * t_cond_3D.x[ im-3 ][ j ][ k ];
-//			t_cond_3D.x[ im-1 ][ j ][ k ] = t_cond_3D.x[ im-4 ][ j ][ k ] - 3. * t_cond_3D.x[ im-3 ][ j ][ k ] + 3. * t_cond_3D.x[ im-2 ][ j ][ k ];		// extrapolation
+			t_cond_3D.x[ im-1 ][ j ][ k ] = t_cond_3D.x[ im-4 ][ j ][ k ] - 3. * t_cond_3D.x[ im-3 ][ j ][ k ] + 3. * t_cond_3D.x[ im-2 ][ j ][ k ];		// extrapolation
 
 			t_evap_3D.x[ 0 ][ j ][ k ] = c43 * t_evap_3D.x[ 1 ][ j ][ k ] - c13 * t_evap_3D.x[ 2 ][ j ][ k ];
 			t_evap_3D.x[ im-1 ][ j ][ k ] = c43 * t_evap_3D.x[ im-2 ][ j ][ k ] - c13 * t_evap_3D.x[ im-3 ][ j ][ k ];
-//			t_evap_3D.x[ im-1 ][ j ][ k ] = t_evap_3D.x[ im-4 ][ j ][ k ] - 3. * t_evap_3D.x[ im-3 ][ j ][ k ] + 3. * t_evap_3D.x[ im-2 ][ j ][ k ];		// extrapolation
+			t_evap_3D.x[ im-1 ][ j ][ k ] = t_evap_3D.x[ im-4 ][ j ][ k ] - 3. * t_evap_3D.x[ im-3 ][ j ][ k ] + 3. * t_evap_3D.x[ im-2 ][ j ][ k ];		// extrapolation
 
 			BuoyancyForce.x[ 0 ][ j ][ k ] = c43 * BuoyancyForce.x[ 1 ][ j ][ k ] - c13 * BuoyancyForce.x[ 2 ][ j ][ k ];
 			BuoyancyForce.x[ im-1 ][ j ][ k ] = c43 * BuoyancyForce.x[ im-2 ][ j ][ k ] - c13 * BuoyancyForce.x[ im-3 ][ j ][ k ];
-//			BuoyancyForce.x[ im-1 ][ j ][ k ] = BuoyancyForce.x[ im-4 ][ j ][ k ] - 3. * BuoyancyForce.x[ im-3 ][ j ][ k ] + 3. * BuoyancyForce.x[ im-2 ][ j ][ k ];		// extrapolation
+			BuoyancyForce.x[ im-1 ][ j ][ k ] = BuoyancyForce.x[ im-4 ][ j ][ k ] - 3. * BuoyancyForce.x[ im-3 ][ j ][ k ] + 3. * BuoyancyForce.x[ im-2 ][ j ][ k ];		// extrapolation
 
 			Rain.x[ 0 ][ j ][ k ] = c43 * Rain.x[ 1 ][ j ][ k ] - c13 * Rain.x[ 2 ][ j ][ k ];
 			Rain.x[ im-1 ][ j ][ k ] = c43 * Rain.x[ im-2 ][ j ][ k ] - c13 * Rain.x[ im-3 ][ j ][ k ];

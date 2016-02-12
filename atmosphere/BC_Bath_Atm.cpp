@@ -313,7 +313,7 @@ void BC_Bathymetry_Atmosphere::BC_IceShield ( int Ma, double t_0, Array &h, Arra
 
 
 
-void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, double hp, double ep, double r_0_air, double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_land, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double co2_vegetation, double co2_land, double co2_ocean, double pa, double gam, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &co2, Array_2D &Vegetation )
+void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, int *im_tropopause, double hp, double ep, double r_0_air, double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_land, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double co2_vegetation, double co2_land, double co2_ocean, double pa, double gam, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &co2, Array_2D &Vegetation )
 {
 
 // boundary conditions for the total solid ground
@@ -329,7 +329,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, d
 	co2_coeff = co2_pole - co2_equator;
 
 
-// CO2-content as boundary condition at the sea and ground surface
+// velocity components, dynamioc pressure, temperature, water vapour and CO2-content as boundary condition at the sea surface and on ground
 
 	for ( int k = 0; k < km; k++ )
 	{
@@ -353,7 +353,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, d
 
 
 // boundary conditions for solid ground areas
-	for ( int i = 0; i < im-1; i++ )
+	for ( int i = 0; i < im-1; i++ )													// i = 0 a must: to keep velocities at surfaces to zero
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
@@ -366,7 +366,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, d
 					v.x[ i ][ j ][ k ] = 0.;
 					w.x[ i ][ j ][ k ] = 0.;
 
-					d_i_max = .5 * ( double ) i_max;
+					d_i_max = ( double ) ( im_tropopause[ j ] - 3 );		// reduction by 5 because water vapour is finished at latest 12 km
 					d_i = ( double ) i;
 
 					if ( ( RadiationModel >= 2 ) && ( Ma >= 0 ) ) 

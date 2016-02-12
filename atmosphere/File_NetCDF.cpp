@@ -12,7 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <netcdf.h>
+//#include <netcdf.h>
 
 #include "File_NetCDF.h"
 
@@ -39,7 +39,7 @@ File_NetCDF::~File_NetCDF () {}
 
 
 
-double File_NetCDF::out_NetCDF (const string &F_N, Array &v_w, Array &w_w, Array &h_w, Array_2D &prec, Array_2D &precwat )
+double File_NetCDF::out_NetCDF (const string &Name_netCDF_File, Array &v, Array &w, Array &h, Array_2D &Precipitation, Array_2D &precipitable_water )
 {
 	const char LAT_NAME [ ] = "latitude";
 	const char LON_NAME [ ] = "longitude";
@@ -65,9 +65,9 @@ double File_NetCDF::out_NetCDF (const string &F_N, Array &v_w, Array &w_w, Array
 	for ( int lat = 0; lat < NLAT; lat++ )		lats[ lat ] = START_LAT - ( double ) lat;
 	for ( int lon = 0; lon < NLON; lon++ )	lons[ lon ] = START_LON + ( double ) lon;
 
-	if ( ( retval = nc_create ( F_N.c_str(), NC_CLOBBER, &ncid ) ) ) ERR ( retval );
+	if ( ( retval = nc_create ( Name_netCDF_File.c_str(), NC_CLOBBER, &ncid ) ) ) ERR ( retval );
 
-	printf ( "***** successful creation of a netCDF-file through class NetCDF -> netCDF-file: %s\n\n", F_N.c_str() );
+	printf ( "***** successful creation of a netCDF-file through class NetCDF -> netCDF-file: %s\n\n", Name_netCDF_File.c_str() );
 
 	if ( ( retval = nc_def_dim ( ncid, LVL_NAME, NLVL, &lvl_dimid ) ) ) ERR ( retval );
 	if ( ( retval = nc_def_dim ( ncid, LAT_NAME, NLAT, &lat_dimid ) ) ) ERR ( retval );
@@ -117,9 +117,9 @@ double File_NetCDF::out_NetCDF (const string &F_N, Array &v_w, Array &w_w, Array
 		{
 			for ( int lon = 0; lon < NLON-1; lon++ )
 			{
-				v_air[ lvl ][ lat ][ lon ] = v_w.x[ im-1-lvl ][ lat ][ lon ];
-				w_air[ lvl ][ lat ][ lon ] = w_w.x[ im-1-lvl ][ lat ][ lon ];
-				h_air[ lvl ][ lat ][ lon ] = h_w.x[ im-1-lvl ][ lat ][ lon ];
+				v_air[ lvl ][ lat ][ lon ] = v.x[ im-1-lvl ][ lat ][ lon ];
+				w_air[ lvl ][ lat ][ lon ] = w.x[ im-1-lvl ][ lat ][ lon ];
+				h_air[ lvl ][ lat ][ lon ] = h.x[ im-1-lvl ][ lat ][ lon ];
 			}
 		}
 	}
@@ -132,12 +132,12 @@ double File_NetCDF::out_NetCDF (const string &F_N, Array &v_w, Array &w_w, Array
 		if ( ( retval = nc_put_vara_double ( ncid, h_varid, start, count, &h_air[ 0 ][ 0 ][ 0 ] ) ) ) ERR ( retval );
 	}
 
-	if ( ( retval = nc_put_var_double ( ncid, prec_varid, &prec.y[ 0 ][ 0 ] ) ) ) ERR ( retval );
-	if ( ( retval = nc_put_var_double ( ncid, precwat_varid, &precwat.y[ 0 ][ 0 ] ) ) ) ERR ( retval );
+	if ( ( retval = nc_put_var_double ( ncid, prec_varid, &Precipitation.y[ 0 ][ 0 ] ) ) ) ERR ( retval );
+	if ( ( retval = nc_put_var_double ( ncid, precwat_varid, &precipitable_water.y[ 0 ][ 0 ] ) ) ) ERR ( retval );
 
 	if ( ( retval = nc_close ( ncid ) ) ) ERR ( retval );
 
-	printf ( "***** successful writing of results through class NetCDF -> netCDF-file: %s\n\n", F_N.c_str() );
+	printf ( "***** successful writing of results through class NetCDF -> netCDF-file: %s\n\n", Name_netCDF_File.c_str() );
 
 	return 0;
 }

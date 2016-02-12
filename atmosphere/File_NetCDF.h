@@ -16,7 +16,7 @@
 #include "Array.h"
 #include "Array_2D.h"
 
-#include <netcdf.h>
+//#include <netcdf.h>
 
 
 #ifndef _FILE_NETCDF_
@@ -52,11 +52,9 @@ class File_NetCDF
 		char V_NAME[ 15 ], W_NAME[ 15 ], H_NAME[ 15 ], PREC_NAME[ 15 ], PRECWAT_NAME[ 15 ];
 		char v_units[ 15 ], w_units[ 15 ], h_units[ 15 ], prec_units[ 15 ], precwat_units[ 15 ];
 
-		Array_2D		prec ( int, int, double ), precwat ( int, int, double );
-		Array				v_w ( int, int, int, double ), w_w ( int, int, int, double ), h_w ( int, int, int, double );
 
 	public:
-		File_NetCDF (  int, int, int );
+		File_NetCDF ( int, int, int );
 
 		~File_NetCDF ();
 
