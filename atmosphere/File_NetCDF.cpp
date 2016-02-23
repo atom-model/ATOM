@@ -12,7 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-//#include <netcdf.h>
+#include <netcdf.h>
 
 #include "File_NetCDF.h"
 

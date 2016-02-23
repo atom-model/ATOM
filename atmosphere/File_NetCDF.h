@@ -16,7 +16,7 @@
 #include "Array.h"
 #include "Array_2D.h"
 
-//#include <netcdf.h>
+#include <netcdf.h>
 
 
 #ifndef _FILE_NETCDF_
