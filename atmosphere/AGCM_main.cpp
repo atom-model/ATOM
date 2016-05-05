@@ -101,6 +101,9 @@ using namespace std;
 // temperature t_0 = 0.9561 compares to -12° C compares to 261,15 K
 // temperature difference from equator to pole   18°C compares to  t_delta = 0.0665  compares to  18 K
 
+// water vapour c = 35 g/kg, means g water vapour per kg dry air
+// density of humid air is r = r_0_air * ( 1 + c ) / ( 1 + R_WaterVapour / R_Air * c )
+
 // rate of CO2 compares to 600Gt in the atmosphere ( 0.02% ), 100Gt consumed by vegetation ( 0.00333% ), ratio 1/6 = 0.166667 to be checked!
 
 
@@ -182,17 +185,17 @@ int main ( )
 	double R_Air = 287.1;								// specific gas constant of air in J/( kg*K ))
 	double R_WaterVapour = 461.6;				// specific gas constant of water vapour in J/( kg*K ))
 	double R_co2 = 188.91;							// specific gas constant of CO2 in J/( kg*4.5K ))
-	double lv = 2.5e6;									// specific latent Evaporation heat ( Condensation heat ) in J/kg
+	double lv = 2.52e6;									// specific latent Evaporation heat ( Condensation heat ) in J/kg
 	double ls = 2.83e6;								 	// specific latent vaporisation heat ( sublimation heat ) in J/kg
 	double cp_l = 1005.;								// specific heat capacity of dry air at constant pressure and 20°C in J/( kg K )
-	double lambda = .0262;								// heat transfer coefficient of air in W/m² K )
-	double r_0_air = 1.2041;							// density of air in kg/m³ at 20°C
-	double r_0_water_vapour = 0.0094;			// density of water vapour in kg/m³ at 25°C and dewpoint temperature at 10°C
+	double lambda = .0262;							// heat transfer coefficient of air in W/m² K )
+	double r_0_air = 1.2041;							// density of dry air in kg/m³ at 20°C
+	double r_0_water_vapour = 0.0094;			// density of saturated water vapour in kg/m³ at 10°C
 	double r_0_co2 = 0.0019767;					// density of CO2 in kg/m³ at 25°C
 	double gam = .65;									// constant slope of temperature 	gam = 0.65 K/100 m
 
 	double u_0 = 15.;										// maximum value of velocity in 15 m/s compares to 54 km/h
-	double p_0 = 1013.25;								// pressure at sea level 1000 hPa
+	double p_0 = 1013.25;								// pressure at sea level in hPa
 	double t_0 = 273.15;								// temperature in K compare to 0°C
 	double c_0 = .035;									// maximum value of water vapour in kg / kg
 	double co2_0 = 280.;								// maximum value of CO2 in ppm at preindustrial times
@@ -205,25 +208,25 @@ int main ( )
 	double ta = 1.;										// initial value for the temperature field, 1.0 compares to 0° C compares to 273.15 K
 	double co2a = 1.;									// initial value of co2 = 1.0 compares to 280 ppm in preindustrial times
 
-	double t_Boussinesq = 1.073;					// compares to 20°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effects
-	double c_Boussinesq = .035;					// compares to 35 g/kg water vapour, threshhold water vapour for the Boussinesq-approximation concerning bouyancy effect
 	double t_cretaceous_max = 10.;				// maximum add of mean temperature in °C during cretaceous times
 	double t_cretaceous = 0.;							// value at modern times
-	double coeff_mmWS = r_0_air / r_0_water_vapour / 1000.;	// air density [kg/m3] / water vapour density [kg/m3]   coeff_mmWS = 0.12766
+	double coeff_mmWS = r_0_air / r_0_water_vapour;	// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 
 	double radiation_ocean = 40.;					// increase of radiation at equator in W/m²
 	double radiation_pole = - 40.;					// negative amount of radiation at poles in W/m²
 	double radiation_equator = 100.;				// positive amount of radiation at equator in W/m²
 
 	double t_average = 15.;							// mean temperature of the modern earth
-	double t_equator = 1.1103;						// temperature t_0 = 1.119 compares to 30.13° C compares to 303.28 K
+	double t_equator = 1.1103;						// temperature t_0 = 1.1103 compares to 30.13° C compares to 303.28 K
 	double t_pole = .8;									// temperature at the poles t_pole = 0.8 compares to -54.63°C compares to 218.52 K
 	double t_tropopause = .78;						// temperature in the tropopause, t = 0.78 compares to -60.093°C compares to 213,057 K
 	double t_land = .003661;							// temperature increase on land by 1°C ( 1°C compares to t_land = 0.003661 )
 
 	double c_tropopause = 0.;						// minimum water vapour at tropopause c_tropopause = 0.01429 compares to 0.05 g/kg
-	double c_land = 1.5;									// water vapour reduction on land ( 90% of the saturation value )
-	double c_ocean = 1.75;								// water vapour reduction on sea surface ( 100% of the saturation value )
+	double c_land = .4;									// water vapour reduction on land ( 90% of the saturation value )
+	double c_ocean = .5;								// water vapour reduction on sea surface ( 100% of the saturation value )
+//	double c_land = .9;									// water vapour reduction on land ( 90% of the saturation value )
+//	double c_ocean = 1.;								// water vapour reduction on sea surface ( 100% of the saturation value )
 
 	double co2_average = 372.;						// rate of CO2 at preindustrial times
 	double co2_equator = 330.;						// maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm
@@ -277,6 +280,7 @@ int main ( )
 	Array_2D	Radiation_Balance_par ( jm, km, 0. );	// radiation balance at the surface parabolic distribution
 	Array_2D	Radiation_Balance_atm ( jm, km, 0. );	// radiation balance of the atmosphere
 	Array_2D	Radiation_Balance_bot ( jm, km, 0. );	// radiation balance of the ground
+	Array_2D	t_j ( jm, km, 0. );								// 2D temperature at the surface
 	Array_2D	temp_eff_atm ( jm, km, 0. );				// effektive temperature in the atmosphere
 	Array_2D	temp_eff_bot ( jm, km, 0. );				// effektive temperature on the ground
 	Array_2D	temp_rad ( jm, km, 0. );				// effektive temperature on the ground
@@ -309,7 +313,6 @@ int main ( )
 	Array	un ( im, jm, km, ua );								// u-component velocity component in r-direction new
 	Array	vn ( im, jm, km, va );								// v-component velocity component in theta-direction new
 	Array	wn ( im, jm, km, wa );							// w-component velocity component in phi-direction new
-	Array	Q_Sensible ( im, jm, km, pa );						// pressure new
 	Array	cn ( im, jm, km, ca );								// salt new
 	Array	co2n ( im, jm, km, co2a );						// CO2 new
 	Array	p_stat ( im, jm, km, pa );						// auxilliar field RHS pressure
@@ -325,6 +328,7 @@ int main ( )
 	Array	aux_w ( im, jm, km, 0. );						// auxilliar field w
 	Array	aux_p ( im, jm, km, pa );						// auxilliar field p
 	Array	Latency ( im, jm, km, 0. );						// latent heat
+	Array	Q_Sensible ( im, jm, km, pa );				// sensible heat
 	Array	Rain ( im, jm, km, 0. );							// rain
 	Array	Ice ( im, jm, km, 0. );								// ice deposit
 	Array	Rain_super ( im, jm, km, 0. );					// Rain_super occurrence
@@ -334,6 +338,7 @@ int main ( )
 	Array	BuoyancyForce ( im, jm, km, 0. );			// 3D buoyancy
 	Array	epsilon_3D ( im, jm, km, 0. );					// 3D emissivity/absorptivity
 	Array	radiation_3D ( im, jm, km, 0. );				// 3D radiation
+	Array	cloud ( im, jm, km, 0. );						// cloud
 
 
 
@@ -410,6 +415,7 @@ int main ( )
 	rad.Coordinates ( );
 	the.Coordinates ( );
 	phi.Coordinates ( );
+
 
 
 // 	reading of the surface temperature file if available
@@ -542,7 +548,7 @@ int main ( )
 	Results_MSL_Atm		calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, cp_l, L_atm, dr, dthe, dphi, r_0_air, R_Air, r_0_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land, gam );
 
 //	class File_NetCDF to write results in the format of a netCDF-file
-	File_NetCDF		printoutNetCDF ( im, jm, km );
+//	File_NetCDF		printoutNetCDF ( im, jm, km );
 
 
 
@@ -597,7 +603,7 @@ int main ( )
 
 
 //  class element for the surface temperature computation by radiation flux density
-	if ( RadiationModel == 3 ) circulation.BC_Radiation_multi_layer ( im_tropopause, max_water, max_water_super, max_ice_air, max_precipitable_water, max_Precipitation, max_CO2_total, albedo, epsilon, Precipitation, precipitable_water, Water, Water_super, IceAir, Ik, Q_Radiation, Radiation_Balance, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, temp_rad, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D );
+	if ( RadiationModel == 3 ) circulation.BC_Radiation_multi_layer ( n, im_tropopause, max_water, max_water_super, max_ice_air, max_precipitable_water, max_Precipitation, max_CO2_total, t_j, albedo, epsilon, Precipitation, precipitable_water, Water, Water_super, IceAir, Ik, Q_Radiation, Radiation_Balance, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, temp_rad, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, Latency, Q_Sensible );
 
 // class element for the surface temperature computation by radiation flux density
 	if ( RadiationModel >= 2 ) circulation.BC_Radiation_two_layer ( im_tropopause, max_water, max_water_super, max_ice_air, max_precipitable_water, max_Precipitation, max_CO2_total, albedo, epsilon, Precipitation, precipitable_water, Water, Water_super, IceAir, Ik, Q_Radiation, Radiation_Balance, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, temp_rad, Q_latent, Q_sensible, Q_bottom, co2_total, t, c, h, epsilon_3D, radiation_3D, Latency );
@@ -606,14 +612,14 @@ int main ( )
 	if ( RadiationModel == 1 ) circulation.BC_Radiation_parabolic ( Radiation_Balance_par, h );
 
 //	class element for the initial conditions the latent heat
-	circulation.Latent_Heat ( lv, ls, ep, hp, u_0, t_0, c_0, p_0, r_0_air, r_0_water_vapour, L_atm, cp_l, R_Air, R_WaterVapour, rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, Latency, Q_Sensible, t_cond_3D, t_evap_3D, radiation_3D );
+	circulation.Latent_Heat ( lv, ls, ep, hp, u_0, t_0, c_0, p_0, r_0_air, r_0_water_vapour, L_atm, cp_l, R_Air, R_WaterVapour, rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, Latency, Q_Sensible, t_cond_3D, t_evap_3D, radiation_3D );
 
 
 
 
 //	class element for the storing of velocity components, pressure and temperature for iteration start
-	oldnew.restoreOldNew_3D ( .96, u, v, w, t, p_dyn, c, co2, un, vn, wn, tn, cn, co2n );
-	oldnew.restoreOldNew_2D ( .96, v, w, p_dyn, vn, wn );
+	oldnew.restoreOldNew_3D ( 1., u, v, w, t, p_dyn, c, co2, un, vn, wn, tn, cn, co2n );
+	oldnew.restoreOldNew_2D ( 1., v, w, p_dyn, vn, wn );
 
 // class element for the computation of the ratio ocean to land areas, also supply and removal of CO2 on land, ocean and by vegetation
 	LandArea.land_oceanFraction ( h );
@@ -764,7 +770,7 @@ Pressure_iteration_2D:
 		LandArea.BC_SolidGround ( RadiationModel, i_max, im_tropopause, hp, ep, r_0_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, co2_vegetation, co2_land, co2_ocean, pa, gam, h, u, v, w, t, p_dyn, c, co2, Vegetation );
 
 // 		class RungeKutta for the solution of the differential equations describing the flow properties
-		result.solveRungeKutta_3D_Atmosphere ( prepare, im_tropopause, lv, ls, ep, hp, u_0, t_0, t_Boussinesq, c_Boussinesq, c_0, co2_0, p_0, r_0_air, r_0_water_vapour, r_0_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, co2, tn, un, vn, wn, cn, co2n, aux_u, aux_v, aux_w, Latency, t_cond_3D, t_evap_3D, Rain, Ice, Rain_super, IceLayer, BuoyancyForce, Q_Sensible );
+		result.solveRungeKutta_3D_Atmosphere ( prepare, im_tropopause, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_0_air, r_0_water_vapour, r_0_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, co2, tn, un, vn, wn, cn, co2n, aux_u, aux_v, aux_w, Latency, t_cond_3D, t_evap_3D, Rain, Ice, Rain_super, IceLayer, cloud, BuoyancyForce, Q_Sensible );
 
 // 		class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 		LandArea.BC_SolidGround ( RadiationModel, i_max, im_tropopause, hp, ep, r_0_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, co2_vegetation, co2_land, co2_ocean, pa, gam, h, u, v, w, t, p_dyn, c, co2, Vegetation );
@@ -775,7 +781,7 @@ Pressure_iteration_2D:
 
 
 // class element for the surface temperature computation by radiation flux density
-		if ( RadiationModel == 3 ) 					circulation.BC_Radiation_multi_layer ( im_tropopause, max_water, max_water_super, max_ice_air, max_precipitable_water, max_Precipitation, max_CO2_total, albedo, epsilon, Precipitation, precipitable_water, Water, Water_super, IceAir, Ik, Q_Radiation, Radiation_Balance, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, temp_rad, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D );
+		if ( RadiationModel == 3 ) 					circulation.BC_Radiation_multi_layer ( n, im_tropopause, max_water, max_water_super, max_ice_air, max_precipitable_water, max_Precipitation, max_CO2_total, t_j, albedo, epsilon, Precipitation, precipitable_water, Water, Water_super, IceAir, Ik, Q_Radiation, Radiation_Balance, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, temp_rad, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, Latency, Q_Sensible );
 
 // class element for the surface temperature computation by radiation flux density
 		if ( RadiationModel >= 2 ) 					circulation.BC_Radiation_two_layer ( im_tropopause, max_water, max_water_super, max_ice_air, max_precipitable_water, max_Precipitation, max_CO2_total, albedo, epsilon, Precipitation, precipitable_water, Water, Water_super, IceAir, Ik, Q_Radiation, Radiation_Balance, Radiation_Balance_atm, Radiation_Balance_bot, temp_eff_atm, temp_eff_bot, temp_rad, Q_latent, Q_sensible, Q_bottom, co2_total, t, c, h, epsilon_3D, radiation_3D, Latency );
@@ -787,10 +793,10 @@ Pressure_iteration_2D:
 		if ( RadiationModel >= 2 ) 					circulation.BC_Pressure ( im_tropopause, p_stat, t, h );
 
 //  class element for the parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-		if ( RadiationModel >= 2 ) 					circulation.BC_WaterVapour ( im_tropopause, h, t, p_stat, c, precipitation_j );
+//		if ( RadiationModel >= 2 ) 					circulation.BC_WaterVapour ( im_tropopause, h, t, p_stat, c, precipitation_j );
 
 //	class element for the initial conditions for the latent heat
-		if ( RadiationModel >= 2 )						circulation.Latent_Heat ( lv, ls, ep, hp, u_0, t_0, c_0, p_0, r_0_air, r_0_water_vapour, L_atm, cp_l, R_Air, R_WaterVapour, rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, Latency, Q_Sensible, t_cond_3D, t_evap_3D, radiation_3D );
+		if ( RadiationModel >= 2 )						circulation.Latent_Heat ( lv, ls, ep, hp, u_0, t_0, c_0, p_0, r_0_air, r_0_water_vapour, L_atm, cp_l, R_Air, R_WaterVapour, rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, Latency, Q_Sensible, t_cond_3D, t_evap_3D, radiation_3D );
 
 
 
@@ -819,7 +825,7 @@ Pressure_iteration_2D:
 
 //		total precipitation as the sum on rain and snow along a normally extended virtual column
 //		in r-direction water vapour volume above the saturation vapour pressure is added
-		calculate_MSL.run_MSL_data ( RadiationModel, max_Precipitation, max_CO2_total, rad, the, phi, h, c, co2, t, p_dyn, p_stat, BuoyancyForce, u, v, w, Rain, Rain_super, Ice, Latency, Q_Sensible, radiation_3D, t_cond_3D, t_evap_3D, aux_u, aux_v, aux_w, Precipitation, precipitation_j, Water, Water_super, IceAir, Evaporation, Condensation, LatentHeat, precipitable_water, Q_Radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, Vegetation, Radiation_Balance, Radiation_Balance_par, Radiation_Balance_bot, albedo, co2_total );
+		calculate_MSL.run_MSL_data ( RadiationModel, max_Precipitation, max_CO2_total, rad, the, phi, h, c, co2, t, p_dyn, p_stat, BuoyancyForce, u, v, w, Rain, Rain_super, Ice, Latency, Q_Sensible, radiation_3D, t_cond_3D, t_evap_3D, cloud, aux_u, aux_v, aux_w, Precipitation, precipitation_j, Water, Water_super, IceAir, Evaporation, Condensation, LatentHeat, precipitable_water, Q_Radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, Vegetation, Radiation_Balance, Radiation_Balance_par, Radiation_Balance_bot, albedo, co2_total );
 
 
 
@@ -880,7 +886,7 @@ Pressure_iteration_2D:
 		minmaxCO2.searchMinMax_3D ( str_max_co2, str_min_co2, str_unit_co2, co2, h );
 
 //		searching of maximum and minimum values of buoyancy force
-		string str_max_buoyancy_force = " max 3D buoyancy force ", str_min_buoyancy_force = " min 3D buoyancy force ", str_unit_buoyancy_force = "N";
+		string str_max_buoyancy_force = " max 3D buoyancy force ", str_min_buoyancy_force = " min 3D buoyancy force ", str_unit_buoyancy_force = "N/m2";
 		MinMax		minmaxBuoyancyForce ( im, jm, km );
 		minmaxBuoyancyForce.searchMinMax_3D ( str_max_buoyancy_force, str_min_buoyancy_force, str_unit_buoyancy_force, BuoyancyForce, h );
 
@@ -1033,8 +1039,6 @@ Pressure_iteration_2D:
 
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-//	prepare.Pressure_RHS_Atmosphere ( im_tropopause, lv, ls, ep, hp, u_0, t_0, t_Boussinesq, c_Boussinesq, c_0, co2_0, p_0, r_0_air, r_0_water_vapour, r_0_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, h, t, u, v, w, p_dyn, p_stat, BuoyancyForce, c, co2, tn, un, vn, wn, cn, co2n, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_co2, aux_u, aux_v, aux_w, Latency, t_cond_3D, t_evap_3D, Rain, Ice, Rain_super, IceLayer );
-
 	startPressure.computePressure_3D ( pa, rad, the, p_dyn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w, aux_p );
 
 //	statements on the convergence und iterational process
@@ -1067,7 +1071,7 @@ Print_commands:
 
 
 //	results written in netCDF format
-	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Precipitation, precipitable_water );
+//	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Precipitation, precipitable_water );
 
 //	class PostProcess_Atmosphaere for the printing of results
 	PostProcess_Atmosphere		write_File ( im, jm, km );
@@ -1075,17 +1079,17 @@ Print_commands:
 //	writing of data in ParaView files
 //	londitudinal data along constant latitudes
 	j_longal = 75;
-	write_File.paraview_vtk_longal ( Name_Bathymetry_File, j_longal, pressure_iter_aux, u_0, t_0, p_0, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Q_Sensible, Rain, Ice, Rain_super, IceLayer );
+	write_File.paraview_vtk_longal ( Name_Bathymetry_File, j_longal, pressure_iter_aux, u_0, t_0, p_0, r_0_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, aux_u, aux_v, aux_w, Latency, Q_Sensible, Rain, Ice, Rain_super, IceLayer, epsilon_3D );
 
 	k_zonal = 135;
-	write_File.paraview_vtk_zonal ( Name_Bathymetry_File, k_zonal, pressure_iter_aux, u_0, t_0, p_0, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Q_Sensible, Rain, Ice, Rain_super, radiation_3D );
+	write_File.paraview_vtk_zonal ( Name_Bathymetry_File, k_zonal, pressure_iter_aux, u_0, t_0, p_0, r_0_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, aux_u, aux_v, aux_w, Latency, Q_Sensible, Rain, Ice, Rain_super, radiation_3D, epsilon_3D );
 
 //	radial data along constant hight above ground
 	i_radial = 0;
-	write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_aux, u_0, t_0, p_0, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D , BuoyancyForce, t, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Q_Sensible, Rain, Ice, Rain_super, IceLayer, Precipitation, Evaporation, IceAir, Condensation, precipitable_water, Q_bottom, Radiation_Balance, Q_Radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, precipitation_j, Water_super, Water, Vegetation, albedo, epsilon );
+	write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_aux, u_0, t_0, p_0, r_0_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D , BuoyancyForce, t, u, v, w, c, co2, cloud, aux_u, aux_v, aux_w, Latency, Q_Sensible, Rain, Ice, Rain_super, IceLayer, Precipitation, Evaporation, IceAir, Condensation, precipitable_water, Q_bottom, Radiation_Balance, Q_Radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, precipitation_j, Water_super, Water, Vegetation, albedo, epsilon, epsilon_3D );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-	write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, u_0, t_0, p_0, c_0, co2_0, h, t, p_dyn, p_stat, BuoyancyForce, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Q_Sensible, Rain, Ice, Rain_super, IceLayer );
+//	write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, u_0, t_0, p_0, r_0_air, c_0, co2_0, h, t, p_dyn, p_stat, BuoyancyForce, u, v, w, c, co2, cloud, aux_u, aux_v, aux_w, Latency, Q_Sensible, Rain, Ice, Rain_super, IceLayer, epsilon_3D );
 
 //	3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
 //	write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p_dyn, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );

@@ -59,10 +59,9 @@ RHS_Atmosphere::~RHS_Atmosphere() {}
 
 
 
-void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopause, double lv, double ls, double ep, double hp, double u_0, double t_0, double t_Boussinesq, double c_Boussinesq, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible )
+void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopause, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array &cloud, Array &BuoyancyForce, Array &Q_Sensible )
 {
 // collection of coefficients for phase transformation
-
 	coeff_lv = lv / ( cp_l * t_0 );					// coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
 	coeff_ls = ls / ( cp_l * t_0 );					// coefficient for the specific latent vaporisation heat ( sublimation heat ) coeff_ls = 10.9031 in [ / ]
 
@@ -77,20 +76,16 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 
 
 // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
-
 // collection of coefficients9
-
 	dr2 = dr * dr;
 	dthe2 = dthe * dthe;
 	dphi2 = dphi * dphi;
 
 // collection of coefficients
-
 	rm = rad.z[ i ];
 	rm2 = rm * rm;
 
 // collection of coefficients
-
 	sinthe = sin( the.z[ j ] );
 	sinthe2 = sinthe * sinthe;
 	costhe = cos( the.z[ j ] );
@@ -102,7 +97,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 
 //  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive r-direction above ground 
-
 	if ( ( h.x[ i - 1 ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
 	{
 		h_0_i = ( double ) ( i ) * dr - dr / 4.;
@@ -119,7 +113,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive the-direction along northerly boundaries 
-
 	if ( ( h.x[ i ][ j - 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
 	{
 		h_0_j = ( double ) ( j ) * dthe + dthe / 4.;
@@ -136,7 +129,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in negative the-direction along southerly boundaries 
-
 	if ( ( h.x[ i ][ j + 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
 	{
 		h_0_j = ( double ) ( j ) * dthe - dthe / 4.;
@@ -153,7 +145,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive phi-direction on westerly boundaries 
-
 	if ( ( h.x[ i ][ j ][ k - 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
 	{
 		h_0_k = ( double ) ( k ) * dphi + dphi / 4.;
@@ -170,7 +161,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in negative phi-direction along easterly boundaries 
-
 	if ( ( h.x[ i ][ j ][ k + 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
 	{
 		h_0_k = ( double ) ( k ) * dphi - dphi / 4.;
@@ -224,9 +214,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 		}
 
 
-
 // 1st order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
-
 	dudr = h_d_i * ( u.x[ i+1 ][ j ][ k ] - u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 	dvdr = h_d_i * ( v.x[ i+1 ][ j ][ k ] - v.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 	dwdr = h_d_i * ( w.x[ i+1 ][ j ][ k ] - w.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
@@ -249,7 +237,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 	dRain_superdthe = h_d_j * ( Rain_super.x[ i ][ j+1 ][ k ] - Rain_super.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
 	dIcedthe = h_d_j * ( Ice.x[ i ][ j+1 ][ k ] - Ice.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
 
-
 	dudphi = h_d_k * ( u.x[ i ][ j ][ k+1 ] - u.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
 	dvdphi = h_d_k * ( v.x[ i ][ j ][ k+1 ] - v.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
 	dwdphi = h_d_k * ( w.x[ i ][ j ][ k+1 ] - w.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
@@ -262,7 +249,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 	dIcedphi = h_d_k * ( Ice.x[ i ][ j ][ k+1 ] - Ice.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
 
 // 2nd order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
-
 	d2udr2 = h_d_i * ( u.x[ i+1 ][ j ][ k ] - 2. * u.x[ i ][ j ][ k ] + u.x[ i-1 ][ j ][ k ] ) / dr2;
 	d2vdr2 = h_d_i * ( v.x[ i+1 ][ j ][ k ] - 2. * v.x[ i ][ j ][ k ] + v.x[ i-1 ][ j ][ k ] ) / dr2;
 	d2wdr2 = h_d_i * ( w.x[ i+1 ][ j ][ k ] - 2. * w.x[ i ][ j ][ k ] + w.x[ i-1 ][ j ][ k ] ) / dr2;
@@ -285,10 +271,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 	d2co2dphi2 = h_d_k * ( co2.x[ i ][ j ][ k+1 ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i ][ j ][ k-1 ] ) / dphi2;
 
 
-// latent heat of water vapour
-	RS_LatentHeat_Energy_Rain = - Latency.x[ i ][ j ][ k ] * coeff_lv / ( r_0_air * lv * u_0 / L_atm );
-	Q_Sensible.x[ i ][ j ][ k ] = + cp_l * r_0_air * u_0 * t_0 / L_atm * ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe );																									// sensible heat in [W/m2] from energy transport equation
-
 // Coriolis and centrifugal terms in the energy and momentum equations
 	RS_Coriolis_Energy = ( + u.x[ i ][ j ][ k ] * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ]
 									   - w.x[ i ][ j ][ k ] * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] )
@@ -305,33 +287,41 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 	RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
 
 
-//	if ( ( j == 90 ) && ( k == 180 ) )	cout << i << "   " << j << "   " << k << "   " << RS_centrifugal_Momentum_rad << "   " << RS_centrifugal_Momentum_the << "   " << RS_Coriolis_Momentum_rad << "   " << RS_Coriolis_Momentum_the << "   " << RS_Coriolis_Momentum_phi << "   " << RS_centrifugal_Energy << "   " << RS_Coriolis_Energy << "   " << dr << "   " << dthe << "   " << dphi << endl;
+// latent heat of water vapour
+	RS_LatentHeat_Energy_Rain = + Latency.x[ i ][ j ][ k ] * coeff_lv / ( r_0_air * lv * u_0 / L_atm );
+	Q_Sensible.x[ i ][ j ][ k ] = - cp_l * r_0_air * u_0 * t_0 / L_atm * ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe );																																						// sensible heat in [W/m2] from energy transport equation
 
+// Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
+	r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );														// density of dry air
+	r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );												// density of humid air, COSMO version
 
-	t_Boussinesq = tn.x[ i ][ j ][ k ];																					// threshold value for Boussinesq approximation, t -> tn, stable
-	t_Boussinesq_diff = ( t.x[ i ][ j ][ k ] - t_Boussinesq ) * t_0;											// in °C, for  t_Boussinesq_diff = 0 no buoyancy
+	RS_buoyancy_Momentum = - L_atm / ( u_0 * u_0 ) * buoyancy * g * ( r_humid / r_dry - 1. );					// any humid air is less dense than dry air, always positive buoyancy force available
 
-	RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ i ][ j ][ k ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature, 
-	RS_buoyancy_Energy = ec * RS_buoyancy_Momentum * u.x[ i ][ j ][ k ];		// bouyancy based on temperature
-
-	RS_buoyancy_Water_Vapour = + buoyancy * ( Rain.x[ i ][ j ][ k ] + Rain_super.x[ i ][ j ][ k ] + Ice.x[ i ][ j ][ k ] );		// water vapour reduction based on condensed water
-
-	BuoyancyForce.x[ i ][ j ][ k ] = RS_buoyancy_Momentum * L_atm / ( double ) ( im - 1 );									// in N
-
+	BuoyancyForce.x[ i ][ j ][ k ] = RS_buoyancy_Momentum * u_0 * u_0 / L_atm * r_0_air;							// in N/m² = Pa
 	if ( h.x[ i ][ j ][ k ] == 1. ) 	BuoyancyForce.x[ i ][ j ][ k ] = 0.;
 
-// Right Hand Side of the time derivative ot temperature, pressure, water vapour concentration and velocity components
 
+// sources and sinks of water vapour
+//	if ( ( q_h > q_Rain ) && ( Latency.x[ i ][ j ][ k ] <= 0. ) ) 		RS_buoyancy_Water_Vapour = buoyancy * L_atm / u_0 * ( - cloud.x[ i ][ j ][ k ] );
+//	if ( ( q_h > q_Rain ) && ( Latency.x[ i ][ j ][ k ] > 0. ) )			RS_buoyancy_Water_Vapour = buoyancy * L_atm / u_0 * ( + cloud.x[ i ][ j ][ k ] );
+
+	if ( Latency.x[ i ][ j ][ k ] <= 0. )										RS_buoyancy_Water_Vapour = buoyancy * L_atm / u_0 * ( - cloud.x[ i ][ j ][ k ] );
+	if ( Latency.x[ i ][ j ][ k ] > 0. )											RS_buoyancy_Water_Vapour = buoyancy * L_atm / u_0 * ( + cloud.x[ i ][ j ][ k ] );
+
+//			if ( ( j == 90 ) && ( k == 180 ) )	cout << i << "   " << j << "   " << k << "  r_ humid = " << r_humid << "  r_dry = " << r_dry << "  BuoMom = " << RS_buoyancy_Momentum << "  BuoFor = " << BuoyancyForce.x[ i ][ j ][ k ] << "  BuoWatVap = " << RS_buoyancy_Water_Vapour << endl;
+
+
+// Right Hand Side of the time derivative ot temperature, pressure, water vapour concentration and velocity components
 	rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe )
 			+ ec * .5 * ( u.x[ i ][ j ][ k ] * dpdr + v.x[ i ][ j ][ k ] / rm * dpdthe + w.x[ i ][ j ][ k ] / rmsinthe * dpdphi )
 			+ ( d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2 + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2 ) / ( re * pr )
 			+ 2. * ec / re * ( ( dudr * dudr) + pow ( ( dvdthe / rm + h_d_i * u.x[ i ][ j ][ k ] / rm ), 2. )
-			+ pow ( ( dwdphi / rmsinthe + h_d_i * u.x[ i ][ j ][ k ] / rm + h_d_i * v.x[ i ][ j ][ k ] * cotthe / rm ), 2. ) )
-			+ ec / re * ( pow ( ( dvdr - h_d_i * v.x[ i ][ j ][ k ] / rm + dudthe / rm ), 2. )
-			+ pow ( ( dudphi / rmsinthe + dwdr - h_d_i * w.x[ i ][ j ][ k ] / rm ), 2. )
-			+ pow ( ( dwdthe * sinthe / rm2 - h_d_i * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
+			+ pow ( ( dwdphi / rmsinthe + h_d_i * u.x[ i ][ j ][ k ] / rm + h_d_j * v.x[ i ][ j ][ k ] * cotthe / rm ), 2. ) )
+			+ ec / re * ( pow ( ( dvdr - h_d_j * v.x[ i ][ j ][ k ] / rm + dudthe / rm ), 2. )
+			+ pow ( ( dudphi / rmsinthe + dwdr - h_d_k * w.x[ i ][ j ][ k ] / rm ), 2. )
+			+ pow ( ( dwdthe * sinthe / rm2 - h_d_k * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
 			+ RS_Coriolis_Energy + RS_centrifugal_Energy
-			+ RS_buoyancy_Energy
+			+ ec * RS_buoyancy_Energy
 			+ WaterVapour * RS_LatentHeat_Energy_Rain;
 
 
@@ -347,7 +337,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 			- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_j * v.x[ i ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2
 			+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
 			+ RS_Coriolis_Momentum_the + RS_centrifugal_Momentum_the
-			- h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
+			- h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;							// immersed boundary condition as a negative force addition
 
 
 	rhs_w.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dwdr + v.x[ i ][ j ][ k ] * dwdthe / rm + w.x[ i ][ j ][ k ] * dwdphi / rmsinthe ) +
@@ -355,22 +345,21 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 			- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_k * w.x[ i ][ j ][ k ] / rm + d2wdphi2 / rm2sinthe2
 			+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
 			+ RS_Coriolis_Momentum_phi
-			- h_c_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;						// immersed boundary condition as a negative force addition
+			- h_c_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;							// immersed boundary condition as a negative force addition
 
 
 	rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
 			+ ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-			- RS_buoyancy_Water_Vapour
-			- h_c_i * c.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
+			+ RS_buoyancy_Water_Vapour
+			- h_c_i * c.x[ i ][ j ][ k ] * k_Force / dthe2;							// immersed boundary condition as a negative force addition
 
 
 	rhs_co2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dco2dr + v.x[ i ][ j ][ k ] * dco2dthe / rm + w.x[ i ][ j ][ k ] * dco2dphi / rmsinthe )
 			+ ( d2co2dr2 + dco2dr * 2. / rm + d2co2dthe2 / rm2 + dco2dthe * costhe / rm2sinthe + d2co2dphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
-			- h_c_i * co2.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
+			- h_c_i * co2.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
 
 
 // for the Poisson equation to solve for the pressure, pressure gradient substracted from the above RHS
-
 	aux_u.x[ i ][ j ][ k ] = rhs_u.x[ i ][ j ][ k ] + dpdr;
 	aux_v.x[ i ][ j ][ k ] = rhs_v.x[ i ][ j ][ k ] + dpdthe / rm;
 	aux_w.x[ i ][ j ][ k ] = rhs_w.x[ i ][ j ][ k ] + dpdphi / rmsinthe;
@@ -387,7 +376,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, int *im_tropopa
 
 
 
-void RHS_Atmosphere::Pressure_RHS_Atmosphere ( int *im_tropopause, double lv, double ls, double ep, double hp, double u_0, double t_0, double t_Boussinesq, double c_Boussinesq, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
+void RHS_Atmosphere::Pressure_RHS_Atmosphere ( int *im_tropopause, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
 {
 // collection of coefficients for phase transformation
 
@@ -456,8 +445,7 @@ void RHS_Atmosphere::Pressure_RHS_Atmosphere ( int *im_tropopause, double lv, do
 			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ 0 ] * pow ( ( omega * sinthe ), 2 );
 			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ 0 ] * sinthe * costhe * pow ( ( omega ), 2 );
 
-			t_Boussinesq = tn.x[ 0 ][ j ][ k ];																					// threshold value for Boussinesq approximation, t -> tn, stable
-			RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ 0 ][ j ][ k ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature
+			RS_buoyancy_Momentum = BuoyancyForce.x[ 0 ][ j ][ k ];
 
 // Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
 			aux_u.x[ 0 ][ j ][ k ] = ( d2udr2 + d2udthe2 / rm2 + 4. * dudr / rm + d2udphi2 / rm2sinthe2 ) / re
@@ -525,8 +513,7 @@ void RHS_Atmosphere::Pressure_RHS_Atmosphere ( int *im_tropopause, double lv, do
 			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ im-1 ] * pow ( ( omega * sinthe ), 2 );
 			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ im-1 ] * sinthe * costhe * pow ( ( omega ), 2 );
 
-			t_Boussinesq = tn.x[ im-1 ][ j ][ k ];																					// threshold value for Boussinesq approximation, t -> tn, stable
-			RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ im-1 ][ j ][ k ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature, 
+			RS_buoyancy_Momentum = BuoyancyForce.x[ im-1 ][ j ][ k ];
 
 // Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
 			aux_u.x[ im-1 ][ j ][ k ] = + ( d2udr2 + d2udthe2 / rm2 + 4. * dudr / rm + d2udphi2 / rm2sinthe2 ) / re
@@ -603,8 +590,7 @@ void RHS_Atmosphere::Pressure_RHS_Atmosphere ( int *im_tropopause, double lv, do
 			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
 			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
 
-			t_Boussinesq = tn.x[ i ][ j ][ 0 ];																					// threshold value for Boussinesq approximation, t -> tn, stable
-			RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ i ][ j ][ 0 ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature, 
+			RS_buoyancy_Momentum = BuoyancyForce.x[ i ][ j ][ 0 ];
 
 // Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
 			aux_u.x[ i ][ j ][ 0 ] = - ( u.x[ i ][ j ][ 0 ] * dudr + v.x[ i ][ j ][ 0 ] * dudthe / rm + w.x[ i ][ j ][ 0 ] * dudphi / rmsinthe )
@@ -675,8 +661,9 @@ void RHS_Atmosphere::Pressure_RHS_Atmosphere ( int *im_tropopause, double lv, do
 			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
 			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
 
-			t_Boussinesq = tn.x[ i ][ j ][ km-1 ];																					// threshold value for Boussinesq approximation, t -> tn, stable
-			RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ i ][ j ][ km-1 ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature, 
+//			t_Boussinesq = tn.x[ i ][ j ][ km-1 ];																					// threshold value for Boussinesq approximation, t -> tn, stable
+//			RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ i ][ j ][ km-1 ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature, 
+			RS_buoyancy_Momentum = BuoyancyForce.x[ i ][ j ][ km-1 ];
 
 // Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
 
@@ -761,8 +748,7 @@ void RHS_Atmosphere::Pressure_RHS_Atmosphere ( int *im_tropopause, double lv, do
 			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
 			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
 
-			t_Boussinesq = tn.x[ i ][ 0 ][ k ];																					// threshold value for Boussinesq approximation, t -> tn, stable
-			RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ i ][ 0 ][ k ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature, 
+			RS_buoyancy_Momentum = BuoyancyForce.x[ i ][ 0 ][ k ];
 
 // Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
 			aux_u.x[ i ][ 0 ][ k ] = - u.x[ i ][ 0 ][ k ] * dudr
@@ -835,8 +821,7 @@ void RHS_Atmosphere::Pressure_RHS_Atmosphere ( int *im_tropopause, double lv, do
 			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
 			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
 
-			t_Boussinesq = tn.x[ i ][ jm-1 ][ k ];																					// threshold value for Boussinesq approximation, t -> tn, stable
-			RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ i ][ jm-1 ][ k ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature, 
+			RS_buoyancy_Momentum = BuoyancyForce.x[ i ][ jm-1 ][ k ];
 
 // Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
 

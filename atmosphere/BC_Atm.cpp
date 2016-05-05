@@ -61,6 +61,9 @@ void BC_Atmosphere::BC_radius ( double t_tropopause, double c_tropopause, double
 */
 //			p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];						// zero tangent
 			p_dyn.x[ 0 ][ j ][ k ] = p_dyn.x[ 3 ][ j ][ k ] - 3. * p_dyn.x[ 2 ][ j ][ k ] + 3. * p_dyn.x[ 1 ][ j ][ k ];	// leads to round harmonic profiles
+//			t.x[ 0 ][ j ][ k ] = t.x[ 3 ][ j ][ k ] - 3. * t.x[ 2 ][ j ][ k ] + 3. * t.x[ 1 ][ j ][ k ];	// leads to round harmonic profiles, divergence
+
+			c.x[ 0 ][ j ][ k ] = c.x[ 3 ][ j ][ k ] - 3. * c.x[ 2 ][ j ][ k ] + 3. * c.x[ 1 ][ j ][ k ];	// extrapolation
 
 			u.x[ im-1 ][ j ][ k ] = 0.;
 			v.x[ im-1 ][ j ][ k ] = 0.;																					// stratosphere

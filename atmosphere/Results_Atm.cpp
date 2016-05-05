@@ -63,7 +63,7 @@ Results_MSL_Atm::~Results_MSL_Atm () {}
 
 
 
-void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitation, double max_CO2_total, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &c, Array &co2, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Rain, Array &Rain_super, Array &Ice, Array &Latency, Array &Q_Sensible, Array &radiation_3D, Array &t_cond_3D, Array &t_evap_3D, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &Precipitation, Array_2D &precipitation_j, Array_2D &Water, Array_2D &Water_super, Array_2D &IceAir, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &LatentHeat, Array_2D &precipitable_water, Array_2D &Q_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Vegetation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_par, Array_2D &Radiation_Balance_bot, Array_2D &albedo, Array_2D &co2_total )
+void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitation, double max_CO2_total, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &c, Array &co2, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Rain, Array &Rain_super, Array &Ice, Array &Latency, Array &Q_Sensible, Array &radiation_3D, Array &t_cond_3D, Array &t_evap_3D, Array &cloud, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &Precipitation, Array_2D &precipitation_j, Array_2D &Water, Array_2D &Water_super, Array_2D &IceAir, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &LatentHeat, Array_2D &precipitable_water, Array_2D &Q_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Vegetation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_par, Array_2D &Radiation_Balance_bot, Array_2D &albedo, Array_2D &co2_total )
 {
 // determination of temperature and pressure by the law of Clausius-Clapeyron for water vapour concentration
 // reaching saturation of water vapour pressure leads to formation of rain or ice
@@ -75,63 +75,107 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			t_Celsius_SL = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																	// conversion from Kelvin to Celsius at sea surface = NN
-			p_SL = p_stat.x[ 0 ][ j ][ k ] = ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;												// from gas equation given in hPa
+			if ( Latency.x[ 0 ][ j ][ k ] <= 0. ) 	t_Celsius_SL = t.x[ 0 ][ j ][ k ] * t_0 - t_0 + ( ( t_cond_3D.x[ 0 ][ j ][ k ] ) / t_0 );
+			else  											t_Celsius_SL = t.x[ 0 ][ j ][ k ] * t_0 - t_0 + ( ( t_evap_3D.x[ 0 ][ j ][ k ] ) / t_0 );
 
-			e_SL = c.x[ 0 ][ j ][ k ] * p_SL / ep; 																						// water vapour pressure in hPa
-			a_SL = 216.6 * e_SL / ( t.x[ 0 ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3 at sea level
+			p_SL = p_stat.x[ 0 ][ j ][ k ] = ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;				// from gas equation given in hPa
+
+			r_dry = 100. * p_stat.x[ 0 ][ j ][ k ] / ( R_Air * t.x[ 0 ][ j ][ k ] * t_0 );
+			r_humid = r_dry * ( 1. + c.x[ 0 ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ 0 ][ j ][ k ] );
+
+			e_SL = c.x[ 0 ][ j ][ k ] * p_SL / ep; 																		// water vapour pressure in hPa
+//			e_SL = ( r_humid * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;								// delivers the same results
+			a_SL = 216.6 * e_SL / ( t.x[ 0 ][ j ][ k ] * t_0 );															// absolute humidity in kg/m3 at sea level
 			q_SL = c.x[ 0 ][ j ][ k ];																							// threshold value for water vapour at sea level in kg/kg
 
-			E_Rain_SL = hp * exp ( 17.0809 * t_Celsius_SL / ( 234.175 + t_Celsius_SL ) );		// saturation water vapour pressure for the water phase at t > 0°C in hPa
+			E_Rain_SL = hp * exp ( 17.0809 * t_Celsius_SL / ( 234.175 + t_Celsius_SL ) );			// saturation water vapour pressure for the water phase at t > 0°C in hPa
 			E_Rain_super_SL = hp * exp ( 17.8436 * t_Celsius_SL / ( 245.425 + t_Celsius_SL ) );	// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
-			E_Ice_SL = hp * exp ( 22.4429 * t_Celsius_SL / ( 272.44 + t_Celsius_SL ) );			// saturation water vapour pressure for the ice phase in hPa
+			E_Ice_SL = hp * exp ( 22.4429 * t_Celsius_SL / ( 272.44 + t_Celsius_SL ) );				// saturation water vapour pressure for the ice phase in hPa
 
-			q_Rain_SL = ep * E_Rain_SL / ( p_SL - E_Rain_SL );																				// water vapour amount at saturation with water formation in kg/kg
-			q_Rain_super_SL = ep * E_Rain_super / ( p_SL - E_Rain_super );														// water vapour amount at saturation with water formation in kg/kg
-			q_Ice_SL = ep * E_Ice_SL / ( p_SL - E_Ice_SL );																				// water vapour amount at saturation with ice formation in kg/kg
+			q_Rain_SL = ep * E_Rain_SL / ( p_SL - E_Rain_SL );													// water vapour amount at saturation with water formation in kg/kg
+			q_Rain_super_SL = ep * E_Rain_super / ( p_SL - E_Rain_super );								// water vapour amount at saturation with water formation in kg/kg
+			q_Ice_SL = ep * E_Ice_SL / ( p_SL - E_Ice_SL );															// water vapour amount at saturation with ice formation in kg/kg
 
-			Rain.x[ 0 ][ j ][ k ] = ( q_SL - q_Rain_SL );																	// liquid water as surplus from the local saturated water vapour  in g/kg
-			Rain_super.x[ 0 ][ j ][ k ] = ( q_SL - q_Rain_super_SL );												// liquid water as surplus from the  
-			Ice.x[ 0 ][ j ][ k ] = ( q_SL - q_Ice_SL );																			// ice formation as surplus above the supercooled saturated water vapour in g/kg
+			Rain.x[ 0 ][ j ][ k ] = ( q_SL - q_Rain_SL );																// liquid water as surplus from the local saturated water vapour  in g/kg
+			Rain_super.x[ 0 ][ j ][ k ] = ( q_SL - q_Rain_super_SL );											// liquid water as surplus from the  
+			Ice.x[ 0 ][ j ][ k ] = ( q_SL - q_Ice_SL );																	// ice formation as surplus above the supercooled saturated water vapour in g/kg
 
-			t_dew_SL = ( 423.86 - 234.175 * log ( e_SL ) ) / ( log ( e_SL ) - 18.89 );					// dewpoint temperature on ground in °C 		by Häckel
-			h_level = 122. * ( t_Celsius_SL - t_dew_SL );															// Condensation level in m		by Häckel + correction
-			i_level = ( int ) ( h_level / 500. );																					// Condensation level in radial steps
-			sat_deficit = E_Rain_SL - e_SL;																						// saturation deficit, if positive then saturation is less than 100%
-			RF_e = e_SL / E_Rain_SL * 100.;																					// relative humidity at any point in %
+			t_dew_SL = ( 423.86 - 234.175 * log ( e_SL ) ) / ( log ( e_SL ) - 18.89 );						// dewpoint temperature on ground in °C 		by Häckel
+			h_level = 122. * ( ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) - t_dew_SL );															// Condensation level in m		by Häckel + correction
+			i_level = ( int ) ( h_level / 500. );																			// Condensation level in radial steps
+			sat_deficit = E_Rain_SL - e_SL;																				// saturation deficit, if positive then saturation is less than 100%
+
+			if ( h.x[ 0 ][ j ][ k ] == 0. )  RF_e = e_SL / E_Rain_SL * 100.;									// relative humidity at any point in %
+			else  RF_e = 0.;
+
+			if ( RF_e > 100. )  RF_e = 100.;																			// remains at 100% relative humidity
+
+			if ( RF_e <= 90 )  cloud.x[ 0 ][ j ][ k ] = 0.;															// 90% relative humidity is a common threshold for cloud formation
+			else
+			{
+				if ( h.x[ 0 ][ j ][ k ] == 0. )  cloud.x[ 0 ][ j ][ k ] = ( RF_e / 100. -.9 ) * 10.;		// cloud fraction 0 <= cloud <= 1
+				else  cloud.x[ 0 ][ j ][ k ] = 0.;
+			}
+
+			cloud.x[ 0 ][ j ][ k ] = 0.;
 
 //	if ( ( j == 67 ) && ( k == 278 ) )		cout << 0 << "   " << t_Celsius_SL << "   " << p_SL << "   " << p_SL << "   " << e_SL << "   " << E_Rain_SL << "   " << a_SL << "   " << q_SL << "   " << q_Rain_SL << "   " << t_dew_SL << "   " << h_level << "   " << sat_deficit << "   " << RF_e << endl;  // Havana comparison with the vertical water vapour distribution 
 
 			for ( int i = 1; i < im; i++ )
 			{
-				t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-				p_h = p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) ) * p_0;
+				if ( Latency.x[ i ][ j ][ k ] <= 0. ) 	t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0 + ( ( t_cond_3D.x[ i ][ j ][ k ] ) / t_0 );
+				else  											t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0 + ( ( t_evap_3D.x[ i ][ j ][ k ] ) / t_0 );
 
-				e_h = c.x[ i ][ j ][ k ] * p_h / ep; 																						// water vapour pressure in hPa
-				a_h = 216.6 * e_h / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
+				r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );						// density of dry air
+				r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );				// density of humid air, COSMO version
+
+				p_h = p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) ) * p_stat.x[ 0 ][ j ][ k ];	// given in hPa
+
+//				e_h = c.x[ i ][ j ][ k ] * p_h / ep; 																			// water vapour pressure in hPa
+				e_h = ( r_humid * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;							// delivers the same results
+
+				a_h = 216.6 * e_h / ( t.x[ i ][ j ][ k ] * t_0 );															// absolute humidity in kg/m3
 				q_h = c.x[ i ][ j ][ k ];																							// threshold value for water vapour at local hight h in kg/kg
 
 				E_Rain = hp * exp ( 17.0809 * t_Celsius / ( 234.175 + t_Celsius ) );						// saturation water vapour pressure for the water phase at t > 0°C in hPa
-				E_Rain_super = hp * exp ( 17.8436 * t_Celsius / ( 245.425 + t_Celsius ) );			// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
+				E_Rain_super = hp * exp ( 17.8436 * t_Celsius / ( 245.425 + t_Celsius ) );				// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
 				E_Ice = hp * exp ( 22.4429 * t_Celsius / ( 272.44 + t_Celsius ) );							// saturation water vapour pressure for the ice phase in hPa
 
-				q_Rain  = ep * E_Rain / ( p_h - E_Rain );																					// water vapour amount at saturation with water formation in kg/kg
-				q_Rain_super  = ep * E_Rain_super / ( p_h - E_Rain_super );															// water vapour amount at saturation with water formation in kg/kg
-				q_Ice  = ep * E_Ice / ( p_h - E_Ice );																						// water vapour amount at saturation with ice formation in kg/kg
+				q_Rain  = ep * E_Rain / ( p_h - E_Rain );																// water vapour amount at saturation with water formation in kg/kg
+				q_Rain_super  = ep * E_Rain_super / ( p_h - E_Rain_super );									// water vapour amount at saturation with water formation in kg/kg
+				q_Ice  = ep * E_Ice / ( p_h - E_Ice );																		// water vapour amount at saturation with ice formation in kg/kg
 
 // precipitation and cloud formation from formulas by Häckel
 // h stands for the local position
 
 				h_h = - R_Air * t.x[ i ][ j ][ k ] * t_0 / g * log ( p_h / p_0 );										// barometric elevation formula solved for h corresponding to hight over ground in m
 				t_dew = ( 423.86 - 234.175 * log ( e_h ) ) / ( log ( e_h ) - 18.89 );							// current dewpoint temperature in °C
-				sat_deficit = E_Rain - e_h;																						// saturation deficit, if positive then saturation is less than 100%
-				RF_e = e_h / E_Rain * 100.;																					// relative humidity at any point in %
+				sat_deficit = E_Rain - e_h;																					// saturation deficit, if positive then saturation is less than 100%
 
-//	if ( ( j == 67 ) && ( k == 278 ) )		cout << i << "   " << t_Celsius << "   " << p_h << "   " << e_h << "   " << E_Rain << "   " << a_h << "   " << q_h << "   " << q_Rain << "   " << t_dew << "   " << h_h << "   " << sat_deficit << "   " << RF_e << endl;  // Havana comparison with the vertical water vapour distribution 
+				if ( h.x[ i ][ j ][ k ] == 0. )  RF_e = e_h / E_Rain * 100.;										// relative humidity at any point in %
+				else  RF_e = 0.;
+
+				if ( RF_e > 100. )  RF_e = 100.;																			// remains at 100% relative humidity
+/*
+				if ( RF_e <= 90 )  cloud.x[ i ][ j ][ k ] = 0.;															// 90% relative humidity is a common threshold for cloud formation
+				else
+				{
+					if ( h.x[ i ][ j ][ k ] == 0. )  cloud.x[ i ][ j ][ k ] = ( RF_e / 100. -.9 ) * 10.;			// cloud fraction 0 <= cloud <= 1
+					else  cloud.x[ i ][ j ][ k ] = 0.;
+				}
+*/
+//		if ( ( j == 90 ) && ( k == 180 ) )	cout << i << "   " << j << "   " << k << "   " << cloud.x[ i ][ j ][ k ] << "   " << e_h << "   " << ( r_0_water_vapour * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01 << endl;
+
+				if ( q_h > q_Rain )			cloud.x[ i ][ j ][ k ] = ( q_h - q_Rain );								// liquid water as surplus from the local saturated water vapour in kg/kg
+				else	cloud.x[ i ][ j ][ k ] = 0.;
+
+
+//	cout.precision ( 4 );
+//	if ( ( j == 90 ) && ( k == 180 ) )		cout << i << "  t = " << t_Celsius << "  p_h = " << p_h << "  e_h = " << e_h << "  E_Rain = " << E_Rain << "  a_h = " << a_h << "  q_h = " << q_h << "  q_Rain = " << q_Rain << "  t_dew = " << t_dew << "  h_h = " << h_h << "  sat_deficit = " << sat_deficit << "  RF_e = " << RF_e << "  cloud = " << cloud.x[ i ][ j ][ k ] << endl;  // Havana comparison with the vertical water vapour distribution 
 
 // application of threshhold values for water vapour to compute rain, super cooled water and ice
 
-				if ( ( q_h > q_Rain ) && ( Latency.x[ i ][ j ][ k ] <= 0. ) && ( t_Celsius >= 0. ) )			Rain.x[ i ][ j ][ k ] = ( q_h - q_Rain );// 		liquid water as surplus from the local saturated water vapour in kg/kg
+				if ( ( q_h > q_Rain ) && ( Latency.x[ i ][ j ][ k ] <= 0. ) && ( t_Celsius >= 0. ) )			Rain.x[ i ][ j ][ k ] = ( q_h - q_Rain );//		liquid water as surplus from the local saturated water vapour in kg/kg
 				else	Rain.x[ i ][ j ][ k ] = 0.;
 
 				if ( ( q_h > q_Rain_super ) && ( Latency.x[ i ][ j ][ k ] <= 0. ) && ( t_Celsius < 0. ) && ( t_Celsius >= - 20. ) )		Rain_super.x[ i ][ j ][ k ] = ( q_h - q_Rain_super );		 // liquid water as surplus from the local saturated supercooled water vapour in kg/kg
@@ -139,7 +183,6 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 
 				if ( ( q_h > q_Ice ) && ( Latency.x[ i ][ j ][ k ] <= 0. ) && ( t_Celsius < -20. ) )			Ice.x[ i ][ j ][ k ] = ( q_h - q_Ice );		// ice as surplus from the local saturated ice kg/kg
 				else	Ice.x[ i ][ j ][ k ] = 0.;
-
 
 /*
 // printout for various thermodynamical quantities for the preticipation computations along the equator ( j = 90 )
@@ -195,12 +238,18 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 // on the boundary between land and air searching for the top of mountains
 				if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
 				{
-					if ( i == 0 ) 	p_stat.x[ 0 ][ j ][ k ] = ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;// given in hPa
-					else 	p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) ) * p_0;
+					if ( i == 0 ) 	p_stat.x[ 0 ][ j ][ k ] = ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;	// given in hPa
+					else 	p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) ) * p_stat.x[ 0 ][ j ][ k ];	// given in hPa
 																																			// current air pressure, step size in 500 m, from a polytropic atmosphere in hPa
-					t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;																	// transforming Kelvin into Celsius
+
+					if ( Latency.x[ i ][ j ][ k ] <= 0. ) 	t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0 + ( ( t_cond_3D.x[ i ][ j ][ k ] ) / t_0 );
+					else  											t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0 + ( ( t_evap_3D.x[ i ][ j ][ k ] ) / t_0 );
+
+					r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );
+					r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
 
 					e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
+//					e = ( r_humid * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;								// delivers the same results
 					a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
 					t_denom = t_Celsius + 234.175;
@@ -230,11 +279,15 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 				if ( ( i == 0 ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
 				{
 					if ( i == 0 ) 	p_stat.x[ 0 ][ j ][ k ] = ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;		// given in hPa
-					else 	p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) ) * p_0;
 
-					t_Celsius = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																	// transforming Kelvin into Celsius
+					if ( Latency.x[ 0 ][ j ][ k ] <= 0. ) 	t_Celsius = t.x[ 0 ][ j ][ k ] * t_0 - t_0 + ( ( t_cond_3D.x[ 0 ][ j ][ k ] ) / t_0 );
+					else  											t_Celsius = t.x[ 0 ][ j ][ k ] * t_0 - t_0 + ( ( t_evap_3D.x[ 0 ][ j ][ k ] ) / t_0 );
+
+					r_dry = 100. * p_stat.x[ 0 ][ j ][ k ] / ( R_Air * t.x[ 0 ][ j ][ k ] * t_0 );
+					r_humid = r_dry * ( 1. + c.x[ 0 ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ 0 ][ j ][ k ] );
 
 					e = c.x[ 0 ][ j ][ k ] * p_stat.x[ 0 ][ j ][ k ] / ep; 													// water vapour pressure in hPa
+//					e = ( r_humid * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;								// delivers the same results
 					a = 216.6 * e / ( t.x[ 0 ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
 					t_denom = t_Celsius + 234.175;
@@ -285,15 +338,12 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 
 			t_cond_3D.x[ 0 ][ j ][ k ] = c43 * t_cond_3D.x[ 1 ][ j ][ k ] - c13 * t_cond_3D.x[ 2 ][ j ][ k ];
 			t_cond_3D.x[ im-1 ][ j ][ k ] = c43 * t_cond_3D.x[ im-2 ][ j ][ k ] - c13 * t_cond_3D.x[ im-3 ][ j ][ k ];
-			t_cond_3D.x[ im-1 ][ j ][ k ] = t_cond_3D.x[ im-4 ][ j ][ k ] - 3. * t_cond_3D.x[ im-3 ][ j ][ k ] + 3. * t_cond_3D.x[ im-2 ][ j ][ k ];		// extrapolation
 
 			t_evap_3D.x[ 0 ][ j ][ k ] = c43 * t_evap_3D.x[ 1 ][ j ][ k ] - c13 * t_evap_3D.x[ 2 ][ j ][ k ];
 			t_evap_3D.x[ im-1 ][ j ][ k ] = c43 * t_evap_3D.x[ im-2 ][ j ][ k ] - c13 * t_evap_3D.x[ im-3 ][ j ][ k ];
-			t_evap_3D.x[ im-1 ][ j ][ k ] = t_evap_3D.x[ im-4 ][ j ][ k ] - 3. * t_evap_3D.x[ im-3 ][ j ][ k ] + 3. * t_evap_3D.x[ im-2 ][ j ][ k ];		// extrapolation
 
 			BuoyancyForce.x[ 0 ][ j ][ k ] = c43 * BuoyancyForce.x[ 1 ][ j ][ k ] - c13 * BuoyancyForce.x[ 2 ][ j ][ k ];
 			BuoyancyForce.x[ im-1 ][ j ][ k ] = c43 * BuoyancyForce.x[ im-2 ][ j ][ k ] - c13 * BuoyancyForce.x[ im-3 ][ j ][ k ];
-			BuoyancyForce.x[ im-1 ][ j ][ k ] = BuoyancyForce.x[ im-4 ][ j ][ k ] - 3. * BuoyancyForce.x[ im-3 ][ j ][ k ] + 3. * BuoyancyForce.x[ im-2 ][ j ][ k ];		// extrapolation
 
 			Rain.x[ 0 ][ j ][ k ] = c43 * Rain.x[ 1 ][ j ][ k ] - c13 * Rain.x[ 2 ][ j ][ k ];
 			Rain.x[ im-1 ][ j ][ k ] = c43 * Rain.x[ im-2 ][ j ][ k ] - c13 * Rain.x[ im-3 ][ j ][ k ];
@@ -303,6 +353,9 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 
 			Ice.x[ 0 ][ j ][ k ] = c43 * Ice.x[ 1 ][ j ][ k ] - c13 * Ice.x[ 2 ][ j ][ k ];
 			Ice.x[ im-1 ][ j ][ k ] = c43 * Ice.x[ im-2 ][ j ][ k ] - c13 * Ice.x[ im-3 ][ j ][ k ];
+
+//			cloud.x[ 0 ][ j ][ k ] = c43 * cloud.x[ 1 ][ j ][ k ] - c13 * cloud.x[ 2 ][ j ][ k ];
+//			cloud.x[ im-1 ][ j ][ k ] = c43 * cloud.x[ im-2 ][ j ][ k ] - c13 * cloud.x[ im-3 ][ j ][ k ];
 
 		}
 	}
@@ -335,6 +388,9 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 
 			Ice.x[ i ][ 0 ][ k ] = c43 * Ice.x[ i ][ 1 ][ k ] - c13 * Ice.x[ i ][ 2 ][ k ];
 			Ice.x[ i ][ jm-1 ][ k ] = c43 * Ice.x[ i ][ jm-2 ][ k ] - c13 * Ice.x[ i ][ jm-3 ][ k ];
+
+			cloud.x[ i ][ 0 ][ k ] = c43 * cloud.x[ i ][ 1 ][ k ] - c13 * cloud.x[ i ][ 2 ][ k ];
+			cloud.x[ i ][ jm-1 ][ k ] = c43 * cloud.x[ i ][ jm-2 ][ k ] - c13 * cloud.x[ i ][ jm-3 ][ k ];
 		}
 	}
 
@@ -374,6 +430,10 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 			Ice.x[ i ][ j ][ 0 ] = c43 * Ice.x[ i ][ j ][ 1 ] - c13 * Ice.x[ i ][ j ][ 2 ];
 			Ice.x[ i ][ j ][ km-1 ] = c43 * Ice.x[ i ][ j ][ km-2 ] - c13 * Ice.x[ i ][ j ][ km-3 ];
 			Ice.x[ i ][ j ][ 0 ] = Ice.x[ i ][ j ][ km-1 ] = ( Ice.x[ i ][ j ][ 0 ] + Ice.x[ i ][ j ][ km-1 ] ) / 2.;
+
+			cloud.x[ i ][ j ][ 0 ] = c43 * cloud.x[ i ][ j ][ 1 ] - c13 * cloud.x[ i ][ j ][ 2 ];
+			cloud.x[ i ][ j ][ km-1 ] = c43 * cloud.x[ i ][ j ][ km-2 ] - c13 * cloud.x[ i ][ j ][ km-3 ];
+			cloud.x[ i ][ j ][ 0 ] = cloud.x[ i ][ j ][ km-1 ] = ( cloud.x[ i ][ j ][ 0 ] + cloud.x[ i ][ j ][ km-1 ] ) / 2.;
 		}
 	}
 
@@ -387,6 +447,7 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 			for ( int i = 0; i < im; i++ )
 			{
 				if ( Rain.x[ i ][ j ][ k ] >= 0. )		Water.y[ j ][ k ] += Rain.x[ i ][ j ][ k ];
+//				if ( Rain.x[ i ][ j ][ k ] >= 0. )		Water.y[ j ][ k ] += cloud.x[ i ][ j ][ k ];
 
 				if ( Rain_super.x[ i ][ j ][ k ] >= 0. )		Water_super.y[ j ][ k ] += Rain_super.x[ i ][ j ][ k ];
 
@@ -395,7 +456,7 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 				e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
 				a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
-				precipitable_water.y[ j ][ k ] += a * ( double ) i * 500.;									//  kg/m³ * m
+				precipitable_water.y[ j ][ k ] += a * L_atm / ( double ) ( im - 1 );						//  kg/m³ * m
 
 				co2_total.y[ j ][ k ] += co2.x[ i ][ j ][ k ];
 
@@ -408,6 +469,9 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 					Evaporation.y[ j ][ k ] = Latency.x[ 0 ][ j ][ k ];
 				}
 				LatentHeat.y[ j ][ k ] = Latency.x[ 0 ][ j ][ k ];
+
+				if ( h.x[ i ][ j ][ k ] == 1. )		cloud.x[ i ][ j ][ k ] = Rain.x[ i ][ j ][ k ] = Rain_super.x[ i ][ j ][ k ] = Ice.x[ i ][ j ][ k ] = BuoyancyForce.x[ i ][ j ][ k ] = t_cond_3D.x[ i ][ j ][ k ] = t_evap_3D.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ] = 0.;
+
 			}
 		}
 	}
@@ -419,8 +483,15 @@ void Results_MSL_Atm::run_MSL_data ( int RadiationModel, double max_Precipitatio
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			Precipitation.y[ j ][ k ] = coeff_mmWS * ( Water.y[ j ][ k ] + Water_super.y[ j ][ k ] + IceAir.y[ j ][ k ] );// precipitation consists of water vapour + supercooled water + ice
-			precipitable_water.y[ j ][ k ] = precipitable_water.y[ j ][ k ] / 1000.;		// divided by water density ( 1000 kg/m³ ) results in m compares as well to mm ( absolute values identical )
+			prec = ( Water.y[ j ][ k ] + Water_super.y[ j ][ k ] + IceAir.y[ j ][ k ] ) / ( 1. - ( Water.y[ j ][ k ] + Water_super.y[ j ][ k ] + IceAir.y[ j ][ k ] ) );
+
+//			prec = ( Water.y[ j ][ k ] + Water_super.y[ j ][ k ] ) / ( 1. - ( Water.y[ j ][ k ] + Water_super.y[ j ][ k ] ) );
+//			prec = ( Water.y[ j ][ k ] + IceAir.y[ j ][ k ] ) / ( 1. - ( Water.y[ j ][ k ] + IceAir.y[ j ][ k ] ) );
+//			prec = ( Water.y[ j ][ k ] ) / ( 1. - ( Water.y[ j ][ k ] ) );
+
+			Precipitation.y[ j ][ k ] = coeff_mmWS * prec;
+
+			precipitable_water.y[ j ][ k ] = precipitable_water.y[ j ][ k ] / 1000.;// divided by water density ( 1000 kg/m³ ) results in m compares as well to mm ( absolute values identical )
 		}
 	}
 

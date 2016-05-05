@@ -371,7 +371,9 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, i
 
 					if ( ( RadiationModel >= 2 ) && ( Ma >= 0 ) ) 
 					{
-						t.x[ i ][ j ][ k ] = ( - 5. * gam * d_i + ( t.x[ 0 ][ j ][ k ] + t_land ) * t_0 ) / t_0;			// linear temperature decay up to tropopause
+//						t.x[ i ][ j ][ k ] = ( - 5. * gam * d_i + ( t.x[ 0 ][ j ][ k ] + t_land ) * t_0 ) / t_0;			// linear temperature decay up to tropopause
+//						t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] + t_land ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ] + t_land;	// linear temperature decay up to tropopause
+						t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];	// linear temperature decay up to tropopause
 					}
 
 					c.x[ i ][ j ][ k ] = c.x[ 0 ][ j ][ k ] - ( c_tropopause - c.x[ 0 ][ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola ( Weischet )

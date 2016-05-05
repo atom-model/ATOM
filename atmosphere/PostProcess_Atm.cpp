@@ -725,13 +725,13 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_panorama_vts (const string &Name_Bathymetry_File, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
+void PostProcess_Atmosphere::paraview_panorama_vts (const string &Name_Bathymetry_File, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &r_0_air, double &c_0, double &co2_0, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array &epsilon_3D )
 {
 	double x, y, z, dx, dy, dz;
 
 	stringstream Atmosphere_panorama_vts_File_Name;
 
-	max_u = max_v = max_w = max_t = max_c = max_co2 = max_p_dyn = max_p_stat = 0.;
+	max_u = max_v = max_w = max_t = max_c = max_co2 = max_clouds = max_p_dyn = max_p_stat = 0.;
 	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Q_Sensible = max_Precipitation = 0.;
 	max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
 	max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
@@ -762,7 +762,7 @@ void PostProcess_Atmosphere::paraview_panorama_vts (const string &Name_Bathymetr
 		Atmosphere_panorama_vts_File <<  "  <Piece Extent=\"" << 1 << " "<< im << " "<< 1 << " " << jm << " "<< 1 << " " << km << "\">\n"  << endl;
 
 //		Atmosphere_panorama_vts_File <<  "   <PointData Vectors=\"Velocity\" Scalars=\"Topography Temperature Pressure WaterVapour Latency Rain Ice Rain_super IceLayer\">\n"  << endl;
-		Atmosphere_panorama_vts_File <<  "   <PointData Vectors=\"Velocity\" Scalars=\"Topography Temperature CondensationTemp EvaporationTemp PressureDynamic PressureStatic WaterVapour CO2-Concentration Latency Rain Rain_super Ice\">\n"  << endl;
+		Atmosphere_panorama_vts_File <<  "   <PointData Vectors=\"Velocity\" Scalars=\"Topography Temperature CondensationTemp EvaporationTemp Epsilon_3D PressureDynamic PressureStatic WaterVapour CO2-Concentration Latency Rain Rain_super Ice\">\n"  << endl;
 
 
 
@@ -939,6 +939,47 @@ void PostProcess_Atmosphere::paraview_panorama_vts (const string &Name_Bathymetr
 		Atmosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 */
 
+
+
+
+// writing of epsilon_3D
+		Atmosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Epsilon_3D\" format=\"ascii\">\n"  << endl;
+
+		for ( int k = 1; k < km-1; k++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				for ( int i = 1; i < im-1; i++ )
+				{
+					if ( fabs ( epsilon_3D.x[ i ][ j ][ k ] ) > max_t ) 
+					{
+						max_t = fabs ( epsilon_3D.x[ i ][ j ][ k ] );
+						if ( max_t == 0. ) max_t = 1.e-6;
+					}
+				}
+			}
+		}
+
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				for ( int i = 0; i < im; i++ )
+				{
+//					Atmosphere_panorama_vts_File << epsilon_3D.x[ i ][ j ][ k ] / max_t << endl;
+					Atmosphere_panorama_vts_File << epsilon_3D.x[ i ][ j ][ k ] << endl;
+				}
+				Atmosphere_panorama_vts_File <<  "\n"  << endl;
+			}
+			Atmosphere_panorama_vts_File <<  "\n"  << endl;
+		}
+		Atmosphere_panorama_vts_File <<  "\n"  << endl;
+		Atmosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
+
+
+
+
+
 // writing dynamic pressure
 		Atmosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"PressureDynamic\" format=\"ascii\">\n"  << endl;
 
@@ -964,7 +1005,7 @@ void PostProcess_Atmosphere::paraview_panorama_vts (const string &Name_Bathymetr
 				for ( int i = 0; i < im; i++ )
 				{
 //					Atmosphere_panorama_vts_File << p_dyn.x[ i ][ j ][ k ] / max_p_dyn << endl;
-					Atmosphere_panorama_vts_File << p_dyn.x[ i ][ j ][ k ] << endl;
+					Atmosphere_panorama_vts_File << p_dyn.x[ i ][ j ][ k ] * u_0 * u_0 * r_0_air << endl;
 				}
 				Atmosphere_panorama_vts_File <<  "\n"  << endl;
 			}
@@ -1070,6 +1111,41 @@ void PostProcess_Atmosphere::paraview_panorama_vts (const string &Name_Bathymetr
 				{
 //					Atmosphere_panorama_vts_File << c.x[ i ][ j ][ k ] / max_c << endl;
 					Atmosphere_panorama_vts_File << c.x[ i ][ j ][ k ] * 1000. << endl;
+				}
+				Atmosphere_panorama_vts_File <<  "\n"  << endl;
+			}
+			Atmosphere_panorama_vts_File <<  "\n"  << endl;
+		}
+		Atmosphere_panorama_vts_File <<  "\n"  << endl;
+		Atmosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
+
+
+// writing cloud
+		Atmosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Clouds\" format=\"ascii\">\n"  << endl;
+
+		for ( int k = 1; k < km-1; k++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				for ( int i = 1; i < im-1; i++ )
+				{
+					if ( fabs ( cloud.x[ i ][ j ][ k ] ) > max_clouds ) 
+					{
+						max_clouds = fabs ( cloud.x[ i ][ j ][ k ] );
+						if ( max_clouds == 0. ) max_clouds = 1.e-6;
+					}
+				}
+			}
+		}
+
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+				for ( int i = 0; i < im; i++ )
+				{
+//					Atmosphere_panorama_vts_File << cloud.x[ i ][ j ][ k ] / max_clouds << endl;
+					Atmosphere_panorama_vts_File << cloud.x[ i ][ j ][ k ] << endl;
 				}
 				Atmosphere_panorama_vts_File <<  "\n"  << endl;
 			}
@@ -1372,7 +1448,7 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array_2D &Precipitation, Array_2D &Evaporation, Array_2D &IceAir, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Radiation_Balance, Array_2D &Q_Radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &precipitation_j, Array_2D &Water_super, Array_2D &Water, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon )
+void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &r_0_air, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &rot_u, Array &rot_v, Array &rot_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array_2D &Precipitation, Array_2D &Evaporation, Array_2D &IceAir, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Radiation_Balance, Array_2D &Q_Radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &precipitation_j, Array_2D &Water_super, Array_2D &Water, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array &epsilon_3D )
 {
 	double x, y, z, dx, dy;
 
@@ -1381,7 +1457,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 	j_max = jm;
 	k_max = km;
 
-	max_u = max_v = max_w = max_t = max_c = max_co2 = max_p_dyn = max_p_stat = 0.;
+	max_u = max_v = max_w = max_t = max_c = max_co2 = max_clouds = max_p_dyn = max_p_stat = 0.;
 	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Q_Sensible = max_Precipitation = max_albedo = max_epsilon = 0.;
 	max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
 	max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
@@ -1598,6 +1674,32 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 		}
 
 
+// writing epsilon_3D
+		Atmosphere_vtk_radial_File <<  "SCALARS Epsilon_3D float " << 1 << endl;
+		Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
+
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( epsilon_3D.x[ i_radial ][ j ][ k ] ) > max_t ) 
+				{
+					max_t = fabs ( epsilon_3D.x[ i_radial ][ j ][ k ] );
+					if ( max_t == 0. ) max_t = 1.e-6;
+				}
+			}
+		}
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+//				Atmosphere_vtk_radial_File << epsilon_3D.x[ i_radial ][ j ][ k ] / max_t << endl;
+				Atmosphere_vtk_radial_File << epsilon_3D.x[ i_radial ][ j ][ k ] << endl;
+			}
+		}
+
+
 // writing water vapour
 		Atmosphere_vtk_radial_File <<  "SCALARS WaterVapour float " << 1 << endl;
 		Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
@@ -1620,6 +1722,32 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 			{
 //				Atmosphere_vtk_radial_File << c.x[ i_radial ][ j ][ k ] / max_c << endl;
 				Atmosphere_vtk_radial_File << c.x[ i_radial ][ j ][ k ] * 1000. << endl;
+			}
+		}
+
+
+// writing cloud
+		Atmosphere_vtk_radial_File <<  "SCALARS Clouds float " << 1 << endl;
+		Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( cloud.x[ i_radial ][ j ][ k ] ) > max_clouds ) 
+				{
+					max_clouds = fabs ( cloud.x[ i_radial ][ j ][ k ] );
+					if ( max_clouds == 0. ) max_clouds = 1.e-6;
+				}
+			}
+		}
+
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+//				Atmosphere_vtk_radial_File << cloud.x[ i_radial ][ j ][ k ] / max_clouds << endl;
+				Atmosphere_vtk_radial_File << cloud.x[ i_radial ][ j ][ k ] << endl;
 			}
 		}
 
@@ -1671,7 +1799,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial ( const string &Name_Bathymetry
 			for ( int k = 0; k < km; k++ )
 			{
 //				Atmosphere_vtk_radial_File << p_dyn.x[ i_radial ][ j ][ k ] / max_p_dyn << endl;
-				Atmosphere_vtk_radial_File << p_dyn.x[ i_radial ][ j ][ k ] << endl;
+				Atmosphere_vtk_radial_File << p_dyn.x[ i_radial ][ j ][ k ] * u_0 * u_0 * r_0_air << endl;
 			}
 		}
 
@@ -2411,13 +2539,13 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int &k_zonal, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &radiation_3D )
+void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int &k_zonal, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &r_0_air, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &radiation_3D, Array &epsilon_3D )
 {
 	double x, y, z, dx, dy;
 
 	stringstream Atmosphere_zonal_File_Name;
 
-	max_u = max_v = max_w = max_t = max_c = max_co2 = max_p_dyn = max_p_stat = 0.;
+	max_u = max_v = max_w = max_t = max_c = max_co2 = max_clouds = max_p_dyn = max_p_stat = 0.;
 	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Q_Sensible = max_Precipitation = 0.;
 	max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
 	max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
@@ -2634,6 +2762,32 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_
 		}
 
 
+// writing of epsilon_3D
+		Atmosphere_vtk_zonal_File <<  "SCALARS Epsilon_3D float " << 1 << endl;
+		Atmosphere_vtk_zonal_File <<  "LOOKUP_TABLE default"  <<endl;
+
+		for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				if ( fabs ( epsilon_3D.x[ i ][ j ][ k_zonal ] ) > max_t ) 
+				{
+					max_t = fabs ( epsilon_3D.x[ i ][ j ][ k_zonal ] );
+					if ( max_t == 0. ) max_t = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+//				Atmosphere_vtk_zonal_File << epsilon_3D.x[ i ][ j ][ k_zonal ] / max_t << endl;
+				Atmosphere_vtk_zonal_File << epsilon_3D.x[ i ][ j ][ k_zonal ] << endl;
+			}
+		}
+
+
 // writing water vapour
 		Atmosphere_vtk_zonal_File <<  "SCALARS WaterVapour float " << 1 << endl;
 		Atmosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
@@ -2656,6 +2810,32 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_
 			{
 //				Atmosphere_vtk_zonal_File << c.x[ i ][ j ][ k_zonal ] / max_c << endl;
 				Atmosphere_vtk_zonal_File << c.x[ i ][ j ][ k_zonal ] * 1000. << endl;
+			}
+		}
+
+
+// writing cloud
+		Atmosphere_vtk_zonal_File <<  "SCALARS Clouds float " << 1 << endl;
+		Atmosphere_vtk_zonal_File <<  "LOOKUP_TABLE default" << endl;
+
+		for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				if ( fabs ( cloud.x[ i ][ j ][ k_zonal ] ) > max_clouds ) 
+				{
+					max_clouds = fabs ( cloud.x[ i ][ j ][ k_zonal ] );
+					if ( max_clouds == 0. ) max_clouds = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int j = 0; j < jm; j++ )
+			{
+//				Atmosphere_vtk_zonal_File << cloud.x[ i ][ j ][ k_zonal ] / max_clouds << endl;
+				Atmosphere_vtk_zonal_File << cloud.x[ i ][ j ][ k_zonal ] << endl;
 			}
 		}
 
@@ -2707,7 +2887,7 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_
 			for ( int j = 0; j < jm; j++ )
 			{
 //				Atmosphere_vtk_zonal_File << p_dyn.x[ i ][ j ][ k_zonal ] / max_p_dyn << endl;
-				Atmosphere_vtk_zonal_File << p_dyn.x[ i ][ j ][ k_zonal ] << endl;
+				Atmosphere_vtk_zonal_File << p_dyn.x[ i ][ j ][ k_zonal ] * u_0 * u_0 * r_0_air << endl;
 			}
 		}
 
@@ -3057,13 +3237,13 @@ return;
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_longal (const string &Name_Bathymetry_File, int &j_longal, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
+void PostProcess_Atmosphere::paraview_vtk_longal (const string &Name_Bathymetry_File, int &j_longal, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &r_0_air, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Q_Sensible, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer, Array &epsilon_3D )
 {
 	double x, y, z, dx, dz;
 
 	stringstream Atmosphere_longal_File_Name;
 
-	max_u = max_v = max_w = max_t = max_c = max_co2 = max_p_dyn = max_p_stat = 0.;
+	max_u = max_v = max_w = max_t = max_c = max_co2 = max_clouds = max_p_dyn = max_p_stat = 0.;
 	max_Rain = max_Rain_super = max_Ice = max_Latency = max_Q_Sensible = max_Precipitation = 0.;
 	max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
 	max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
@@ -3285,6 +3465,33 @@ void PostProcess_Atmosphere::paraview_vtk_longal (const string &Name_Bathymetry_
 		}
 
 
+// writing of epsilon_3D
+		Atmosphere_vtk_longal_File <<  "SCALARS Epsilon_3D float " << 1 << endl;
+		Atmosphere_vtk_longal_File <<  "LOOKUP_TABLE default"  <<endl;
+
+	for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( epsilon_3D.x[ i ][ j_longal ][ k ] ) > max_t ) 
+				{
+					max_t = fabs ( epsilon_3D.x[ i ][ j_longal ][ k ] );
+					if ( max_t == 0. ) max_t = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int k = 0; k < km; k++ )
+
+			{
+//				Atmosphere_vtk_longal_File << epsilon_3D.x[ i ][ j_longal ][ k ] / max_t << endl;
+				Atmosphere_vtk_longal_File << epsilon_3D.x[ i ][ j_longal ][ k ] << endl;
+			}
+		}
+
+
 // writing water vapour
 		Atmosphere_vtk_longal_File <<  "SCALARS WaterVapour float " << 1 << endl;
 		Atmosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
@@ -3308,6 +3515,33 @@ void PostProcess_Atmosphere::paraview_vtk_longal (const string &Name_Bathymetry_
 			{
 //				Atmosphere_vtk_longal_File << c.x[ i ][ j_longal ][ k ] / max_c << endl;
 				Atmosphere_vtk_longal_File << c.x[ i ][ j_longal ][ k ] * 1000. << endl;
+			}
+		}
+
+
+// writing cloud
+		Atmosphere_vtk_longal_File <<  "SCALARS Clouds float " << 1 << endl;
+		Atmosphere_vtk_longal_File <<  "LOOKUP_TABLE default" << endl;
+
+	for ( int i = 1; i < im-1; i++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( fabs ( cloud.x[ i ][ j_longal ][ k ] ) > max_clouds ) 
+				{
+					max_clouds = fabs ( cloud.x[ i ][ j_longal ][ k ] );
+					if ( max_clouds == 0. ) max_clouds = 1.e-6;
+				}
+			}
+		}
+
+		for ( int i = 0; i < im; i++ )
+		{
+			for ( int k = 0; k < km; k++ )
+
+			{
+//				Atmosphere_vtk_longal_File << cloud.x[ i ][ j_longal ][ k ] / max_clouds << endl;
+				Atmosphere_vtk_longal_File << cloud.x[ i ][ j_longal ][ k ] << endl;
 			}
 		}
 
@@ -3360,7 +3594,7 @@ void PostProcess_Atmosphere::paraview_vtk_longal (const string &Name_Bathymetry_
 			for ( int k = 0; k < km; k++ )
 			{
 //				Atmosphere_vtk_longal_File << p_dyn.x[ i ][ j_longal ][ k ] / max_p_dyn << endl;
-				Atmosphere_vtk_longal_File << p_dyn.x[ i ][ j_longal ][ k ] << endl;
+				Atmosphere_vtk_longal_File << p_dyn.x[ i ][ j_longal ][ k ] * u_0 * u_0 * r_0_air << endl;
 			}
 		}
 

@@ -23,9 +23,9 @@ using namespace std;
 class BC_Thermo
 {
 	private:
-		int i, j, k, im, jm, km, k_half, m, j_half, i_half, i_max, j_max, k_max, i_beg, im_1, i_land, l;
+		int i, j, k, im, jm, km, k_half, m, j_half, i_half, i_max, j_max, k_max, i_beg, im_1, i_land, iter_rad;
 		int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
-		int j_pac_had_n_end, j_pac_had_s_end, k_pac_w, k_pac_w_end, k_pac_e;
+		int j_had_n_end, j_had_s_end, k_w, k_w_end, k_e;
 		int j_n, j_s;
 		int *im_tropopause;
 		int sun, Ma, Ma_max, Ma_max_half;
@@ -35,6 +35,7 @@ class BC_Thermo
 		int n_smooth;
 		int j_r, k_r, j_sun;
 		int RadiationModel, sun_position_lat, sun_position_lon, declination;
+		int max_ch, min_ch, max_cm, min_cm, max_cl, min_cl; 
 
 		double d_k_half, d_k_max, t_eff_earth, r, rad_bal_minus; 
 		double dummy_1, dummy_2, dummy_3;
@@ -56,20 +57,22 @@ class BC_Thermo
 		double D, H, G, R_short, Q_short, AG, A, R_long, Q_long, Q_total, Q_lat, Q_sen, Q_bot, Q_rad, t_rad;
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, cp_l, r_0_air, ozean_land, p_baro, L_atm, c13, c43;
 		double R_Air, r_h, r_0_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
-		double ik, eps, epsilon_extra, c_ocean, c_land, t_average, co2_average, co2_pole, gam, t_Ik;
+		double ik, eps, epsilon_extra, c_ocean, c_land, t_average, co2_average, co2_pole, gam, t_Ik, sig, Ik_loss, Ik_tot;
 		double radiation_pole, radiation_equator, t_land, t_land_corr;
 		double albedo_coeff, albedo_equator, albedo_pole, epsilon_tropopause;
 		double ik_coeff, ik_equator, ik_pole;
 		double aa, bb, dd, f;
-		double *AA, *BB, **CC, CCC, DDD;
+		double *AA, **CC, CCC, DDD, *cloud_max, YYY;
 		double epsilon_coeff, epsilon_pole, epsilon_average, rad;
 		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, t_Celsius_ni, t_Celsius_pi, t_Celsius_nj, t_Celsius_pj, t_Celsius_nk, t_Celsius_pk, dp_hdr, dp_hdthe, dp_hdphi;
-		double sinthe, sinthe2, kro, lv, ls, coeff_lv, coeff_ls, p_0_vapour, r_0, t_Boussinesq, t_Boussinesq_diff, dqdr, dqdthe, dqdphi, dpdr_c, dpdthe_c, dpdphi_c, dpdr_co2, dpdthe_co2, dpdphi_co2;
+		double sinthe, sinthe2, kro, lv, ls, coeff_lv, coeff_ls, p_0_vapour, r_0, dqdr, dqdthe, dqdphi, dpdr_c, dpdthe_c, dpdphi_c, dpdr_co2, dpdthe_co2, dpdphi_co2;
 		double dudr, dudthe, dudphi, dvdr, dvdthe, dvdphi, dwdr, dwdthe, dwdphi, drdr, drdthe, drdphi, E_dEdr_Rain, E_dEdr_Rain_super, E_dEdr_Ice, E_dEdthe_Rain, E_dEdthe_Rain_super, E_dEdthe_Ice, E_dEdphi_Rain, E_dEdphi_Rain_super, E_dEdphi_Ice, dRaindr, dRaindthe, dRaindphi, dRain_superdr, dRain_superdthe, dRain_superdphi, dIcedr, dIcedthe, dIcedphi;
 		double dt, dr, dthe, dphi, dt2, dr2, dthe2, dphi2, rm2;
 		double rm, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2, rmtanthe;
 		double E, E_Rain_SL, E_Rain, E_Rain_super, E_Ice, q_Rain, q_Rain_super, q_Ice, E_Rain_super_SL, E_Ice_SL, q_Rain_SL, q_Rain_super_SL, q_Ice_SL, e_1, eps_1, eps_ad, K, e_0;
 		double c12, c32, c42, t_Celsius_0, t_Celsius_1, t_Celsius_2;
+		double TK, sigma_ch, sigma_cm, sigma_cl, rad_lon_terrestic, rad_lon_back;
+		double epsilon_tropo, epsilon_coeff_max;
 
 		char Temperature_West[50], Salinity_West[50], Temperature_East[50], Salinity_East[50];
  
@@ -96,7 +99,7 @@ class BC_Thermo
 
 		void BC_Radiation_two_layer ( int *, double, double, double, double, double, double, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_Radiation_multi_layer ( int *, double, double, double, double, double, double, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_Radiation_multi_layer ( int, int *, double, double, double, double, double, double, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void BC_Radiation_parabolic ( Array_2D &, Array & );
 
@@ -110,7 +113,7 @@ class BC_Thermo
 
 		void BC_Pressure ( int *, Array &, Array &, Array & );
 
-		void Latent_Heat ( double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void Latent_Heat ( double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		double out_temperature (  ) const;
 
