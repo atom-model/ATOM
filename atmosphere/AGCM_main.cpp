@@ -1063,7 +1063,7 @@ Print_commands:
 
 
 //	results written in netCDF format
-//	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Precipitation, precipitable_water );
+	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Precipitation, precipitable_water );
 
 
 //	class PostProcess_Atmosphaere for the printing of results
