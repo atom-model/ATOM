@@ -41,10 +41,10 @@
 #include "Restore_Atm.h"
 #include "Results_Atm.h"
 #include "MinMax_Atm.h"
-//#include "File_NetCDF.h"
+#include "File_NetCDF.h"
 
-#include "memcheck.h"
-#include "valgrind.h"
+// #include "memcheck.h"
+// #include "valgrind.h"
 
 
 using namespace std;
@@ -695,7 +695,7 @@ int main ( int argc, char *argv[ ] )
 	Results_MSL_Atm		calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, ls, cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water, r_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous );
 
 //	class File_NetCDF to write results in the format of a netCDF-file
-//	File_NetCDF		printoutNetCDF ( im, jm, km );
+	File_NetCDF		printoutNetCDF ( im, jm, km );
 
 
 
@@ -1260,7 +1260,7 @@ Print_commands:
 
 
 //	results written in netCDF format
-//	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Precipitation, precipitable_water );
+	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Precipitation, precipitable_water );
 
 
 //	class PostProcess_Atmosphaere for the printing of results
