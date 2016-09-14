@@ -1,2 +1,8 @@
 *.o
+*.nc
+*.vtk
+*.vw
+*.xyz
+atmosphere/AGCM
+atmosphere/atmosphere
 
