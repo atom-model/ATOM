@@ -38,9 +38,9 @@ BC_Atmosphere::~BC_Atmosphere() {}
 void BC_Atmosphere::BC_radius ( double t_tropopause, double c_tropopause, double co2_tropopause, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2 )
 {
 // boundary conditions for the r-direction, loop index i
-	for ( int j = 0; j < jm; j++ )
+	for ( int j = 1; j < jm-1; j++ )
 	{
-		for ( int k = 0; k < km; k++ )
+		for ( int k = 1; k < km-1; k++ )
 		{
 			u.x[ 0 ][ j ][ k ] = 0.;
 			p_dyn.x[ 0 ][ j ][ k ] = p_dyn.x[ 3 ][ j ][ k ] - 3. * p_dyn.x[ 2 ][ j ][ k ] + 3. * p_dyn.x[ 1 ][ j ][ k ];	// leads to round harmonic profiles
@@ -65,13 +65,14 @@ void BC_Atmosphere::BC_radius ( double t_tropopause, double c_tropopause, double
 
 
 
-void BC_Atmosphere::BC_theta ( double t_tropopause, double c_tropopause, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2 )
+void BC_Atmosphere::BC_theta ( double t_tropopause, double t_pole, double t_cretaceous, double c_tropopause, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2 )
 {
 // boundary conditions for the the-direction, loop index j
+//	d_i_max = ( double ) ( im - 1 );
 
-	for ( int i = 0; i < im; i++ )
+	for ( int k = 0; k < km; k++ )
 	{
-		for ( int k = 0; k < km; k++ )
+		for ( int i = 0; i < im; i++ )
 		{
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
 
@@ -80,6 +81,9 @@ void BC_Atmosphere::BC_theta ( double t_tropopause, double c_tropopause, Array &
 
 			u.x[ i ][ 0 ][ k ] = c43 * u.x[ i ][ 1 ][ k ] - c13 * u.x[ i ][ 2 ][ k ];
 			u.x[ i ][ jm-1 ][ k ] = c43 * u.x[ i ][ jm-2 ][ k ] - c13 * u.x[ i ][ jm-3 ][ k ];
+
+//			u.x[ i ][ 0 ][ k ] = 0.;
+//			u.x[ i ][ jm-1 ][ k ] = 0.;
 
 			v.x[ i ][ 0 ][ k ] = 0.;
 			v.x[ i ][ jm-1 ][ k ] = 0.;
@@ -90,16 +94,16 @@ void BC_Atmosphere::BC_theta ( double t_tropopause, double c_tropopause, Array &
 			p_dyn.x[ i ][ 0 ][ k ] = c43 * p_dyn.x[ i ][ 1 ][ k ] - c13 * p_dyn.x[ i ][ 2 ][ k ];
 			p_dyn.x[ i ][ jm-1 ][ k ] = c43 * p_dyn.x[ i ][ jm-2 ][ k ] - c13 * p_dyn.x[ i ][ jm-3 ][ k ];
 
-			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
-			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
+//			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
+//			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
 
-			cloud.x[ i ][ 0 ][ k ] = c43 * cloud.x[ i ][ 1 ][ k ] - c13 * cloud.x[ i ][ 2 ][ k ];
-			cloud.x[ i ][ jm-1 ][ k ] = c43 * cloud.x[ i ][ jm-2 ][ k ] - c13 * cloud.x[ i ][ jm-3 ][ k ];
-			if ( ( cloud.x[ i ][ 0 ][ k ] < 0. ) || ( cloud.x[ i ][ jm-1 ][ k ] < 0. ) ) cloud.x[ i ][ 0 ][ k ] = cloud.x[ i ][ jm-1 ][ k ] = 0.;
+//			cloud.x[ i ][ 0 ][ k ] = c43 * cloud.x[ i ][ 1 ][ k ] - c13 * cloud.x[ i ][ 2 ][ k ];
+//			cloud.x[ i ][ jm-1 ][ k ] = c43 * cloud.x[ i ][ jm-2 ][ k ] - c13 * cloud.x[ i ][ jm-3 ][ k ];
+//			if ( ( cloud.x[ i ][ 0 ][ k ] < 0. ) || ( cloud.x[ i ][ jm-1 ][ k ] < 0. ) ) cloud.x[ i ][ 0 ][ k ] = cloud.x[ i ][ jm-1 ][ k ] = 0.;
 
-			ice.x[ i ][ 0 ][ k ] = c43 * ice.x[ i ][ 1 ][ k ] - c13 * ice.x[ i ][ 2 ][ k ];
-			ice.x[ i ][ jm-1 ][ k ] = c43 * ice.x[ i ][ jm-2 ][ k ] - c13 * ice.x[ i ][ jm-3 ][ k ];
-			if ( ( ice.x[ i ][ 0 ][ k ] < 0. ) || ( ice.x[ i ][ jm-1 ][ k ] < 0. ) ) ice.x[ i ][ 0 ][ k ] = ice.x[ i ][ jm-1 ][ k ] = 0.;
+//			ice.x[ i ][ 0 ][ k ] = c43 * ice.x[ i ][ 1 ][ k ] - c13 * ice.x[ i ][ 2 ][ k ];
+//			ice.x[ i ][ jm-1 ][ k ] = c43 * ice.x[ i ][ jm-2 ][ k ] - c13 * ice.x[ i ][ jm-3 ][ k ];
+//			if ( ( ice.x[ i ][ 0 ][ k ] < 0. ) || ( ice.x[ i ][ jm-1 ][ k ] < 0. ) ) ice.x[ i ][ 0 ][ k ] = ice.x[ i ][ jm-1 ][ k ] = 0.;
 
 			co2.x[ i ][ 0 ][ k ] = c43 * co2.x[ i ][ 1 ][ k ] - c13 * co2.x[ i ][ 2 ][ k ];
 			co2.x[ i ][ jm-1 ][ k ] = c43 * co2.x[ i ][ jm-2 ][ k ] - c13 * co2.x[ i ][ jm-3 ][ k ];
@@ -120,7 +124,7 @@ void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p_dy
 
 	for ( int i = 0; i < im; i++ )
 	{
-		for ( int j = 0; j < jm; j++ )
+		for ( int j = 1; j < jm-1; j++ )
 		{
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
 

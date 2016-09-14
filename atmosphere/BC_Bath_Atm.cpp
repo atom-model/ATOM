@@ -22,11 +22,14 @@ using namespace std;
 
 
 
-BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int im, int jm, int km )
+BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int im, int jm, int km, double co2_vegetation, double co2_land, double co2_ocean )
 {
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;
+	this -> co2_vegetation = co2_vegetation;
+	this -> co2_land = co2_land;
+	this -> co2_ocean = co2_ocean;
 }
 
 
@@ -35,7 +38,7 @@ BC_Bathymetry_Atmosphere::~BC_Bathymetry_Atmosphere(){}
 
 
 
-void BC_Bathymetry_Atmosphere::BC_MountainSurface ( const string &Name_Bathymetry_File, double L_atm, Array &h, Array &aux_w )
+void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File, double L_atm, Array &h, Array &aux_w )
 {
 	streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
 
@@ -134,7 +137,7 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( const string &Name_Bathymetr
 
 
 
-// Umschreiben der bathymetrischen Daten von -180° - 0° - +180° Koordinatnesystem auf 0°- 360°
+// rewriting bathymetrical data from -180° _ 0° _ +180° coordinate system to 0°- 360°
 
 		l = 0;
 
@@ -177,7 +180,7 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( const string &Name_Bathymetr
 			}
 		}
 
-// Ende Umschreiben Bathymetrie
+// end rewriting bathymetry
 }
 
 
@@ -313,7 +316,7 @@ void BC_Bathymetry_Atmosphere::BC_IceShield ( int Ma, double t_0, Array &h, Arra
 
 
 
-void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, int *im_tropopause, double g, double hp, double ep, double r_0_air, double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_land, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double co2_vegetation, double co2_land, double co2_ocean, double pa, double gam, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &co2, Array_2D &Vegetation )
+void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, double g, double hp, double ep, double r_air, double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_land, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double pa, double gam, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2, Array_2D &Vegetation )
 {
 
 // boundary conditions for the total solid ground
@@ -325,8 +328,8 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, i
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 
-	t_coeff = t_pole - t_equator;
-	co2_coeff = co2_pole - co2_equator;
+	t_co2_eff = t_pole - t_equator;
+	co_co2_eff = co2_pole - co2_equator;
 
 
 // velocity components, dynamioc pressure, temperature, water vapour and CO2-content as boundary condition at the sea surface and on ground
@@ -338,17 +341,17 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, i
 			if ( h.x[ 0 ][ j ][ k ] == 0. ) 
 			{
 				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = ( co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_ocean ) / co2_0; // non-dimensional
+				co2.x[ 0 ][ j ][ k ] = ( co_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_ocean ) / co2_0; // non-dimensional
 			}
 			if ( h.x[ 0 ][ j ][ k ] == 1. ) 
 			{
 				d_j = ( double ) j;
-				t.x[ 0 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;
+				t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;
 
-//				c.x[ 0 ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_0_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );
+//				c.x[ 0 ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );
 //				c.x[ 0 ][ j ][ k ] = c_land * c.x[ 0 ][ j ][ k ];					// relativ water vapour contents on land reduced by factor
 
-				co2.x[ 0 ][ j ][ k ] = ( co2_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;	// parabolic distribution from pole to pole
+				co2.x[ 0 ][ j ][ k ] = ( co_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;	// parabolic distribution from pole to pole
 
 				u.x[ 0 ][ j ][ k ] = 0.;
 				v.x[ 0 ][ j ][ k ] = 0.;
@@ -372,7 +375,8 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, i
 					v.x[ i ][ j ][ k ] = 0.;
 					w.x[ i ][ j ][ k ] = 0.;
 
-					d_i_max = ( double ) im_tropopause[ j ];
+					p_dyn.x[ i ][ j ][ k ] = 0.;
+
 					d_i = ( double ) i;
 
 					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];										// linear temperature decay up to tropopause
@@ -424,7 +428,7 @@ void BC_Bathymetry_Atmosphere::land_oceanFraction ( Array &h )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-			if ( h.x[ 0 ][ j ][ k ] == 1. )		h_land++;
+			if ( h.x[ 0 ][ j ][ k ] == 1. )		h_land = h_land + h.x[ 0 ][ j ][ k ];
 		}
 	}
 
@@ -437,9 +441,12 @@ void BC_Bathymetry_Atmosphere::land_oceanFraction ( Array &h )
 	cout << endl;
 	cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      total number of points at constant hight " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_point_max << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      number of points on the ocean surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_ocean << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      number of points on the land surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_land << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      ocean/land ratio " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << ozean_land << endl << endl;
 
-	cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by ocean surface " << " = + " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_ocean << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by land surface " << " = + " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_land << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      subtraction of CO2 by vegetation " << " = - " << resetiosflags ( ios::left ) << setw ( 7 ) << scientific << setfill ( ' ' ) << co2_vegetation << endl << setiosflags ( ios::left ) << setw ( 50 ) << "      valid for one single point on the surface"<< endl << endl;
+
+	cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by ocean surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << co2_ocean << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      addition of CO2 by land surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << co2_land << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      subtraction of CO2 by vegetation " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << co2_vegetation << endl << setiosflags ( ios::left ) << setw ( 50 ) << "      valid for one single point on the surface"<< endl << endl;
 	cout << endl;
 }
+
+
 
 
 

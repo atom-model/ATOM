@@ -143,11 +143,12 @@ void Pressure::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Arr
 		}
 	}
 
-	for ( int j = 1; j < jm-1; j++ )
+	for ( int j = 0; j < jm-1; j++ )
 	{
 		for ( int k = 0; k < km-1; k++ )
 		{
-			p_dyn.x[ 0 ][ j ][ k ] = aux_p.x[ 0 ][ j ][ k ];
+//			p_dyn.x[ 0 ][ j ][ k ] = aux_p.x[ 0 ][ j ][ k ];
+			p_dyn.x[ 0 ][ j ][ k ] = aux_p.x[ 0 ][ j ][ k ] = 0.;			// 2D pressure computation causes a pressure jump in radial direction along coast lines, 3D treatment needed later, 2D velocities are though corrected
 		}
 	}
 

@@ -59,7 +59,7 @@ RHS_Atmosphere::~RHS_Atmosphere() {}
 
 
 
-void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_tropopause, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow )
+void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_air, double r_water, double r_water_vapour, double r_co2_2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2_2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2_2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s )
 {
 // collection of coefficients for phase transformation
 	coeff_lv = lv / ( cp_l * t_0 );					// coefficient for the specific latent vapourisation heat ( condensation heat ), coeff_lv = 9.1069 in [ / ]
@@ -274,7 +274,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 	dcdr = h_d_i * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 	dclouddr = h_d_i * ( cloud.x[ i+1 ][ j ][ k ] - cloud.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 	dicedr = h_d_i * ( ice.x[ i+1 ][ j ][ k ] - ice.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-	dco2dr = h_d_i * ( co2.x[ i+1 ][ j ][ k ] - co2.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
+	dcodr = h_d_i * ( co2.x[ i+1 ][ j ][ k ] - co2.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 
 	dudthe = h_d_j * ( u.x[ i ][ j+1 ][ k ] - u.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
 	dvdthe = h_d_j * ( v.x[ i ][ j+1 ][ k ] - v.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
@@ -284,7 +284,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 	dcdthe = h_d_j * ( c.x[ i ][ j+1 ][ k ] - c.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
 	dclouddthe = h_d_j * ( cloud.x[ i ][ j+1 ][ k ] - cloud.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
 	dicedthe = h_d_j * ( ice.x[ i ][ j+1 ][ k ] - ice.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-	dco2dthe = h_d_j * ( co2.x[ i ][ j+1 ][ k ] - co2.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
+	dcodthe = h_d_j * ( co2.x[ i ][ j+1 ][ k ] - co2.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
 
 	dudphi = h_d_k * ( u.x[ i ][ j ][ k+1 ] - u.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
 	dvdphi = h_d_k * ( v.x[ i ][ j ][ k+1 ] - v.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
@@ -294,7 +294,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 	dcdphi = h_d_k * ( c.x[ i ][ j ][ k+1 ] - c.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
 	dclouddphi = h_d_k * ( cloud.x[ i ][ j ][ k+1 ] - cloud.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
 	dicedphi = h_d_k * ( ice.x[ i ][ j ][ k+1 ] - ice.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-	dco2dphi = h_d_k * ( co2.x[ i ][ j ][ k+1 ] - co2.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
+	dcodphi = h_d_k * ( co2.x[ i ][ j ][ k+1 ] - co2.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
 
 
 // 2nd order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
@@ -305,7 +305,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 	d2cdr2 = h_d_i * ( c.x[ i+1 ][ j ][ k ] - 2. * c.x[ i ][ j ][ k ] + c.x[ i-1 ][ j ][ k ] ) / dr2;
 	d2clouddr2 = h_d_i * ( cloud.x[ i+1 ][ j ][ k ] - 2. * cloud.x[ i ][ j ][ k ] + cloud.x[ i-1 ][ j ][ k ] ) / dr2;
 	d2icedr2 = h_d_i * ( ice.x[ i+1 ][ j ][ k ] - 2. * ice.x[ i ][ j ][ k ] + ice.x[ i-1 ][ j ][ k ] ) / dr2;
-	d2co2dr2 = h_d_i * ( co2.x[ i+1 ][ j ][ k ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i-1 ][ j ][ k ] ) / dr2;
+	d2codr2 = h_d_i * ( co2.x[ i+1 ][ j ][ k ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i-1 ][ j ][ k ] ) / dr2;
 
 	d2udthe2 = h_d_j * ( u.x[ i ][ j+1 ][ k ] - 2. * u.x[ i ][ j ][ k ] + u.x[ i ][ j-1 ][ k ] ) / dthe2;
 	d2vdthe2 = h_d_j * ( v.x[ i ][ j+1 ][ k ] - 2. * v.x[ i ][ j ][ k ] + v.x[ i ][ j-1 ][ k ] ) / dthe2;
@@ -314,7 +314,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 	d2cdthe2 = h_d_j * ( c.x[ i ][ j+1 ][ k ] - 2. * c.x[ i ][ j ][ k ] + c.x[ i ][ j-1 ][ k ] ) / dthe2;
 	d2clouddthe2 = h_d_j * ( cloud.x[ i ][ j+1 ][ k ] - 2. * cloud.x[ i ][ j ][ k ] + cloud.x[ i ][ j-1 ][ k ] ) / dthe2;
 	d2icedthe2 = h_d_j * ( ice.x[ i ][ j+1 ][ k ] - 2. * ice.x[ i ][ j ][ k ] + ice.x[ i ][ j-1 ][ k ] ) / dthe2;
-	d2co2dthe2 = h_d_j * ( co2.x[ i ][ j+1 ][ k ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i ][ j-1 ][ k ] ) / dthe2;
+	d2codthe2 = h_d_j * ( co2.x[ i ][ j+1 ][ k ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i ][ j-1 ][ k ] ) / dthe2;
 
 	d2udphi2 = h_d_k * ( u.x[ i ][ j ][ k+1 ] - 2. * u.x[ i ][ j ][ k ] + u.x[ i ][ j ][ k-1 ] ) / dphi2;
 	d2vdphi2 = h_d_k * ( v.x[ i ][ j ][ k+1 ] - 2. * v.x[ i ][ j ][ k ] + v.x[ i ][ j ][ k-1 ] ) / dphi2;
@@ -323,7 +323,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 	d2cdphi2 = h_d_k * ( c.x[ i ][ j ][ k+1 ] - 2. * c.x[ i ][ j ][ k ] + c.x[ i ][ j ][ k-1 ] ) / dphi2;
 	d2clouddphi2 = h_d_k * ( cloud.x[ i ][ j ][ k+1 ] - 2. * cloud.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k-1 ] ) / dphi2;
 	d2icedphi2 = h_d_k * ( ice.x[ i ][ j ][ k+1 ] - 2. * ice.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k-1 ] ) / dphi2;
-	d2co2dphi2 = h_d_k * ( co2.x[ i ][ j ][ k+1 ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i ][ j ][ k-1 ] ) / dphi2;
+	d2codphi2 = h_d_k * ( co2.x[ i ][ j ][ k+1 ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i ][ j ][ k-1 ] ) / dphi2;
 
 
 // Coriolis and centrifugal terms in the energy and momentum equations
@@ -343,8 +343,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 
 
 // latent heat of water vapour
-	RS_LatentHeat_Energy_Rain = + Latency.x[ i ][ j ][ k ] * coeff_lv / ( r_0_air * lv * u_0 / L_atm );
-	Q_Sensible.x[ i ][ j ][ k ] = - cp_l * r_0_air * u_0 * t_0 / L_atm * ( u.x[ i ][ j ][ k ] * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) + v.x[ i ][ j ][ k ] * ( t.x[ i ][ j+1 ][ k ] - t.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe ) / rm + w.x[ i ][ j ][ k ] * ( t.x[ i ][ j ][ k+1 ] - t.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi ) / rmsinthe );																																							// sensible heat in [W/m2] from energy transport equation
+	RS_LatentHeat_Energy_Rain = + Latency.x[ i ][ j ][ k ] * coeff_lv / ( r_air * lv * u_0 / L_atm );
+	Q_Sensible.x[ i ][ j ][ k ] = - cp_l * r_air * u_0 * t_0 / L_atm * ( u.x[ i ][ j ][ k ] * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) + v.x[ i ][ j ][ k ] * ( t.x[ i ][ j+1 ][ k ] - t.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe ) / rm + w.x[ i ][ j ][ k ] * ( t.x[ i ][ j ][ k+1 ] - t.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi ) / rmsinthe );							// sensible heat in [W/m2] from energy transport equation
 
 // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
 	r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );														// density of dry air
@@ -352,10 +352,22 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 
 	RS_buoyancy_Momentum = - L_atm / ( u_0 * u_0 ) * buoyancy * g * ( r_humid / r_dry - 1. ); 					// any humid air is less dense than dry air
 
-	BuoyancyForce.x[ i ][ j ][ k ] = RS_buoyancy_Momentum * u_0 * u_0 / L_atm * r_0_air;							// in N/m² = Pa
+	BuoyancyForce.x[ i ][ j ][ k ] = RS_buoyancy_Momentum * u_0 * u_0 / L_atm * r_air;							// in N/m² = Pa
 	if ( h.x[ i ][ j ][ k ] == 1. ) 	BuoyancyForce.x[ i ][ j ][ k ] = 0.;
 
 	RS_buoyancy_Water_Vapour = buoyancy * ( cloud.x[ i ][ j ][ k ] - cloudn.x[ i ][ j ][ k ] );
+
+				p_h = p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_stat.x[ 0 ][ j ][ k ];	// given in hPa
+
+				t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
+
+				q_h = c.x[ i ][ j ][ k ];																												// threshold value for water vapour at local hight h in kg/kg
+
+				E_Rain = hp * exp ( 17.0809 * t_Celsius / ( 234.175 + t_Celsius ) );											// saturation water vapour pressure for the water phase at t > 0°C in hPa
+				E_Ice = hp * exp ( 22.4429 * t_Celsius / ( 272.44 + t_Celsius ) );												// saturation water vapour pressure for the ice phase in hPa
+
+				q_Rain = ep * E_Rain / ( p_h - E_Rain );																					// water vapour amount at saturation with water formation in kg/kg
+				q_Ice = ep * E_Ice / ( p_h - E_Ice );																							// water vapour amount at saturation with ice formation in kg/kg
 
 
 				if ( c.x[ i ][ j ][ k ] < 0. ) c.x[ i ][ j ][ k ] = 0.;
@@ -369,10 +381,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 				if ( ( r_humid * ice.x[ i ][ j ][ k ] / N_i <= m_i_max ) && ( ice.x[ i ][ j ][ k ] > 0. ) )			m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
 				else 																			m_i = m_i_max;
 				if ( m_i <= 0. )																m_i = m_i_max;
-
-
-// condensation and evaporation
-				S_c_c = ( cloud.x[ i ][ j ][ k ] - cloudn.x[ i ][ j ][ k ] ) / dt;				 											// rate of condensating or evaporating water vapour to form cloud water
 
 
 // nucleation and depositional growth of cloud ice
@@ -458,12 +466,12 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 				if ( ( t.x[ i ][ j ][ k ] * t_0 > t_0 ) && ( ice.x[ i ][ j ][ k ] > 0. ) ) 	S_i_melt = ice.x[ i ][ j ][ k ] / dt; // cloud ice particles melting to cloud water
 				else 																						S_i_melt = 0.;
 
-				p_t_0 = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_0 ) ) * p_stat.x[ 0 ][ j ][ k ];	// given in hPa
+				p_t_in = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_0 ) ) * p_stat.x[ 0 ][ j ][ k ];	// given in hPa
 				t_Celsius_0 = 0.;
-				E_Rain_t_0 = hp * exp ( 17.0809 * t_Celsius_0 / ( 234.175 + t_Celsius_0 ) );								// saturation water vapour pressure for the water phase at t > 0°C in hPa
-				q_Rain_t_0 = ep * E_Rain_t_0 / ( p_t_0 - E_Rain_t_0 );																// water vapour amount at saturation with water formation in kg/kg
+				E_Rain_t_in = hp * exp ( 17.0809 * t_Celsius_0 / ( 234.175 + t_Celsius_0 ) );								// saturation water vapour pressure for the water phase at t > 0°C in hPa
+				q_Rain_t_in = ep * E_Rain_t_in / ( p_t_in - E_Rain_t_in );																// water vapour amount at saturation with water formation in kg/kg
 
-				if ( t.x[ i ][ j ][ k ] * t_0 > t_0 ) 													S_s_melt = c_s_melt * ( 1. + b_s_melt * pow ( P_snow.x[ i ][ j ][ k ], 5. / 26. ) ) * ( ( t.x[ i ][ j ][ k ] * t_0 - t_0 ) + a_s_melt * ( c.x[ i ][ j ][ k ] - q_Rain_t_0 ) ) * pow ( P_snow.x[ i ][ j ][ k ], 8. / 13. );					// melting rate of snow to form rain
+				if ( t.x[ i ][ j ][ k ] * t_0 > t_0 ) 													S_s_melt = c_s_melt * ( 1. + b_s_melt * pow ( P_snow.x[ i ][ j ][ k ], 5. / 26. ) ) * ( ( t.x[ i ][ j ][ k ] * t_0 - t_0 ) + a_s_melt * ( c.x[ i ][ j ][ k ] - q_Rain_t_in ) ) * pow ( P_snow.x[ i ][ j ][ k ], 8. / 13. );					// melting rate of snow to form rain
 				else 																						S_s_melt = 0.;
 
 //				S_i_melt = 0.;
@@ -484,13 +492,16 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 //				S_if_frz = 0.;
 //				S_cf_frz = 0.;
 
+// condensation and evaporation
+				S_c_c = ( cloud.x[ i ][ j ][ k ] - cloudn.x[ i ][ j ][ k ] ) / dt;				 											// rate of condensating or evaporating water vapour to form cloud water
 
 // sinks and sources
-				S_v = - S_c_c + S_ev - S_i_dep - S_s_dep - S_nuc;
-				S_c = S_c_c - S_c_au - S_ac - S_c_frz + S_i_melt - S_rim - S_shed - S_cf_frz;
-				S_r = S_c_au + S_ac - S_ev + S_shed - S_r_cri - S_if_frz + S_s_melt;
-				S_s = S_i_au + S_d_au + S_agg + S_rim + S_s_dep + S_i_cri + S_r_cri + S_if_frz - S_s_melt;
-				S_i = S_nuc + S_c_frz + S_i_dep - S_i_melt - S_i_au - S_d_au - S_agg - S_i_cri + S_cf_frz;
+				S_v.x[ i ][ j ][ k ] = S_ev - S_i_dep - S_s_dep - S_nuc;
+				S_c.x[ i ][ j ][ k ] = - S_c_au - S_ac - S_c_frz + S_i_melt - S_rim - S_shed - S_cf_frz;
+				S_r.x[ i ][ j ][ k ] = S_c_au + S_ac - S_ev + S_shed - S_r_cri - S_if_frz + S_s_melt;
+				S_s.x[ i ][ j ][ k ] = S_i_au + S_d_au + S_agg + S_rim + S_s_dep + S_i_cri + S_r_cri + S_if_frz - S_s_melt;
+				S_i.x[ i ][ j ][ k ] = S_nuc + S_c_frz + S_i_dep - S_i_melt - S_i_au - S_d_au - S_agg - S_i_cri + S_cf_frz;
+
 
 
 
@@ -504,8 +515,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 			+ pow ( ( dudphi / rmsinthe + dwdr - h_d_k * w.x[ i ][ j ][ k ] / rm ), 2. )
 			+ pow ( ( dwdthe * sinthe / rm2 - h_d_k * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
 			+ RS_Coriolis_Energy + RS_centrifugal_Energy
-			+ coeff_lv  * ( S_c + S_r )
-			+ coeff_ls * ( S_i + S_s );
+			+ coeff_lv  * ( S_c.x[ i ][ j ][ k ] - S_c_c + S_r.x[ i ][ j ][ k ] )
+			+ coeff_ls * ( S_i.x[ i ][ j ][ k ] + S_s.x[ i ][ j ][ k ] );
 
 	rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
 			- .5 * dpdr + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
@@ -529,18 +540,18 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 
 	rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
 			+ ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-			+ S_v;
+			+ S_v.x[ i ][ j ][ k ];
 
 	rhs_cloud.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dclouddr + v.x[ i ][ j ][ k ] * dclouddthe / rm + w.x[ i ][ j ][ k ] * dclouddphi / rmsinthe )
 			+ ( d2clouddr2 + dclouddr * 2. / rm + d2clouddthe2 / rm2 + dclouddthe * costhe / rm2sinthe + d2clouddphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-			+ S_c;
+			+ S_c.x[ i ][ j ][ k ] + S_c_c;
 
 	rhs_ice.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dicedr + v.x[ i ][ j ][ k ] * dicedthe / rm + w.x[ i ][ j ][ k ] * dicedphi / rmsinthe )
 			+ ( d2icedr2 + dicedr * 2. / rm + d2icedthe2 / rm2 + dicedthe * costhe / rm2sinthe + d2icedphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-			+ S_i;
+			+ S_i.x[ i ][ j ][ k ];
 
-	rhs_co2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dco2dr + v.x[ i ][ j ][ k ] * dco2dthe / rm + w.x[ i ][ j ][ k ] * dco2dphi / rmsinthe )
-			+ ( d2co2dr2 + dco2dr * 2. / rm + d2co2dthe2 / rm2 + dco2dthe * costhe / rm2sinthe + d2co2dphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
+	rhs_co2_2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcodr + v.x[ i ][ j ][ k ] * dcodthe / rm + w.x[ i ][ j ][ k ] * dcodphi / rmsinthe )
+			+ ( d2codr2 + dcodr * 2. / rm + d2codthe2 / rm2 + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
 			- h_c_i * co2.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
 
 
@@ -558,484 +569,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, int *im_
 
 
 
-
-
-
-
-void RHS_Atmosphere::Pressure_RHS_Atmosphere ( int *im_tropopause, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_0_air, double r_0_water_vapour, double r_0_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &Rain, Array &Ice, Array &Rain_super, Array &IceLayer )
-{
-// collection of coefficients for phase transformation
-
-	coeff_lv = lv / ( cp_l * t_0 );					// coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
-	coeff_ls = ls / ( cp_l * t_0 );					// coefficient for the specific latent vaporisation heat ( sublimation heat ) coeff_ls = 10.9031 in [ / ]
-
-	c43 = 4. / 3.;
-	c13 = 1. / 3.;
-
-	k_Force = 10.;																			// factor for accelleration of convergence processes inside the immersed boundary conditions
-
-
-// 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
-
-// collection of coefficients
-	dr2 = dr * dr;
-	dthe2 = dthe * dthe;
-	dphi2 = dphi * dphi;
-
-//	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    level i = 0    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-// collection of coefficients
-	rm = rad.z[ 0 ];
-	rm2 = rm * rm;
-
-	for ( int j = 1; j < jm-1; j++ )
-	{
-		for ( int k = 1; k < km-1; k++ )
-		{
-// collection of coefficients
-			sinthe = sin( the.z[ j ] );
-			sinthe2 = sinthe * sinthe;
-			costhe = cos( the.z[ j ] );
-			cotthe = cos( the.z[ j ] ) / sin( the.z[ j ] );
-			rmsinthe = rm * sinthe;
-			rm2sinthe = rm2 * sinthe;
-			rm2sinthe2 = rm2 * sinthe2;
-
-// 1st order derivative for pressure and velocity components
-			dudr = ( 4. * u.x[ 1 ][ j ][ k ] - u.x[ 2 ][ j ][ k ] ) / ( 2. * dr );
-			dvdr = ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 1 ][ j ][ k ] - v.x[ 2 ][ j ][ k ] ) / ( 2. * dr );
-			dwdr = ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 1 ][ j ][ k ] - w.x[ 2 ][ j ][ k ] ) / ( 2. * dr );
-
-			dvdthe = ( v.x[ 0 ][ j+1 ][ k ] - v.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
-			dwdthe = ( w.x[ 0 ][ j+1 ][ k ] - w.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
-
-			dvdphi = ( v.x[ 0 ][ j ][ k+1 ] - v.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi );
-			dwdphi = ( w.x[ 0 ][ j ][ k+1 ] - w.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi );
-
-// 2nd order derivative for pressure and velocity components
-			d2udr2 = ( - 2. * u.x[ 1 ][ j ][ k ] + u.x[ 2 ][ j ][ k ] ) / dr2;
-			d2vdr2 = ( v.x[ 0 ][ j ][ k ] - 2. * v.x[ 1 ][ j ][ k ] + v.x[ 2 ][ j ][ k ] ) / dr2;
-			d2wdr2 = ( w.x[ 0 ][ j ][ k ] - 2. * w.x[ 1 ][ j ][ k ] + w.x[ 2 ][ j ][ k ] ) / dr2;
-
-			d2vdthe2 = ( v.x[ 0 ][ j+1 ][ k ] - 2. * v.x[ 0 ][ j ][ k ] + v.x[ 0 ][ j-1 ][ k ] ) / dthe2;
-			d2wdthe2 = ( w.x[ 0 ][ j+1 ][ k ] - 2. * w.x[ 0 ][ j ][ k ] + w.x[ 0 ][ j-1 ][ k ] ) / dthe2;
-
-			d2vdphi2 = ( v.x[ 0 ][ j ][ k+1 ] - 2. * v.x[ 0 ][ j ][ k ] + v.x[ 0 ][ j ][ k-1 ] ) / dphi2;
-			d2wdphi2 = ( w.x[ 0 ][ j ][ k+1 ] - 2. * w.x[ 0 ][ j ][ k ] + w.x[ 0 ][ j ][ k-1 ] ) / dphi2;
-
-// Coriolis and centrifugal terms in the energy and momentum equations
-			RS_Coriolis_Momentum_rad = + coriolis * 2. * omega * sinthe * w.x[ 0 ][ j ][ k ];
-			RS_Coriolis_Momentum_the = + coriolis * 2. * omega * costhe * w.x[ 0 ][ j ][ k ];
-			RS_Coriolis_Momentum_phi = - coriolis * ( 2. * omega * sinthe * u.x[ 0 ][ j ][ k ] + 2. * omega * costhe * v.x[ 0 ][ j ][ k ] );
-
-			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ 0 ] * pow ( ( omega * sinthe ), 2 );
-			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ 0 ] * sinthe * costhe * pow ( ( omega ), 2 );
-
-			RS_buoyancy_Momentum = BuoyancyForce.x[ 0 ][ j ][ k ];
-
-// Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
-			aux_u.x[ 0 ][ j ][ k ] = ( d2udr2 + d2udthe2 / rm2 + 4. * dudr / rm + d2udphi2 / rm2sinthe2 ) / re
-												+ RS_buoyancy_Momentum
-												+ RS_Coriolis_Momentum_rad + RS_centrifugal_Momentum_rad;
-
-			aux_v.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dvdthe / rm + w.x[ 0 ][ j ][ k ] * dvdphi / rmsinthe ) +
-												+ ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
-												- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * v.x[ 0 ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2
-												+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-												+ RS_Coriolis_Momentum_the + RS_centrifugal_Momentum_the
-												- v.x[ 0 ][ j ][ k ] * k_Force / dthe2;
-
-			aux_w.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dwdthe / rm + w.x[ 0 ][ j ][ k ] * dwdphi / rmsinthe ) +
-												+ ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
-												- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * w.x[ 0 ][ j ][ k ] / rm + d2wdphi2 / rm2sinthe2
-												+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-												+ RS_Coriolis_Momentum_phi
-												- w.x[ 0 ][ j ][ k ] * k_Force / dphi2;
-
-
-
-//	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    level i = im-1    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-// collection of coefficients
-			rm = rad.z[ im-1 ];
-			rm2 = rm * rm;
-
-// collection of coefficients
-			sinthe = sin( the.z[ j ] );
-			sinthe2 = sinthe * sinthe;
-			costhe = cos( the.z[ j ] );
-			cotthe = cos( the.z[ j ] ) / sin( the.z[ j ] );
-			rmsinthe = rm * sinthe;
-			rm2sinthe = rm2 * sinthe;
-			rm2sinthe2 = rm2 * sinthe2;
-
-// 1st order derivative for pressure and velocity components
-			dudr = ( 4. * u.x[ im-2 ][ j ][ k ] - u.x[ im-3 ][ j ][ k ] ) / ( 2. * dr );
-			dvdr = ( - 3. * v.x[ im-1 ][ j ][ k ] + 4. * v.x[ im-2 ][ j ][ k ] - v.x[ im-3 ][ j ][ k ] ) / ( 2. * dr );
-			dwdr = ( - 3. * w.x[ im-1 ][ j ][ k ] + 4. * w.x[ im-2 ][ j ][ k ] - w.x[ im-3 ][ j ][ k ] ) / ( 2. * dr );
-
-			dvdthe = ( v.x[ im-1 ][ j+1 ][ k ] - v.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe );
-			dwdthe = ( w.x[ im-1 ][ j+1 ][ k ] - w.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe );
-
-			dvdphi = ( v.x[ im-1 ][ j ][ k+1 ] - v.x[ im-1 ][ j ][ k-1 ] ) / ( 2. * dphi );
-			dwdphi = ( w.x[ im-1 ][ j ][ k+1 ] - w.x[ im-1 ][ j ][ k-1 ] ) / ( 2. * dphi );
-
-// 2nd order derivative for pressure and velocity components
-			d2udr2 = ( - 2. * u.x[ im-2 ][ j ][ k ] + u.x[ im-3 ][ j ][ k ] ) / dr2;
-			d2vdr2 = ( v.x[ im-1 ][ j ][ k ] - 2. * v.x[ im-2 ][ j ][ k ] + v.x[ im-3 ][ j ][ k ] ) / dr2;
-			d2wdr2 = ( w.x[ im-1 ][ j ][ k ] - 2. * w.x[ im-2 ][ j ][ k ] + w.x[ im-3 ][ j ][ k ] ) / dr2;
-
-			d2vdthe2 = ( v.x[ im-1 ][ j+1 ][ k ] - 2. * v.x[ im-1 ][ j ][ k ] + v.x[ im-1 ][ j-1 ][ k ] ) / dthe2;
-			d2wdthe2 = ( w.x[ im-1 ][ j+1 ][ k ] - 2. * w.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j-1 ][ k ] ) / dthe2;
-
-			d2vdphi2 = ( v.x[ im-1 ][ j ][ k+1 ] - 2. * v.x[ im-1 ][ j ][ k ] + v.x[ im-1 ][ j ][ k-1 ] ) / dphi2;
-			d2wdphi2 = ( w.x[ im-1 ][ j ][ k+1 ] - 2. * w.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k-1 ] ) / dphi2;
-
-// Coriolis and centrifugal terms in the energy and momentum equations
-			RS_Coriolis_Momentum_rad = + coriolis * 2. * omega * sinthe * w.x[ im-1 ][ j ][ k ];
-			RS_Coriolis_Momentum_the = + coriolis * 2. * omega * costhe * w.x[ im-1 ][ j ][ k ];
-			RS_Coriolis_Momentum_phi = - coriolis * ( 2. * omega * sinthe * u.x[ im-1 ][ j ][ k ] + 2. * omega * costhe * v.x[ im-1 ][ j ][ k ] );
-
-			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ im-1 ] * pow ( ( omega * sinthe ), 2 );
-			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ im-1 ] * sinthe * costhe * pow ( ( omega ), 2 );
-
-			RS_buoyancy_Momentum = BuoyancyForce.x[ im-1 ][ j ][ k ];
-
-// Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
-			aux_u.x[ im-1 ][ j ][ k ] = + ( d2udr2 + d2udthe2 / rm2 + 4. * dudr / rm + d2udphi2 / rm2sinthe2 ) / re
-													+ RS_buoyancy_Momentum
-													+ RS_Coriolis_Momentum_rad + RS_centrifugal_Momentum_rad;
-
-			aux_v.x[ im-1 ][ j ][ k ] =  - ( v.x[ im-1 ][ j ][ k ] * dvdthe / rm + w.x[ im-1 ][ j ][ k ] * dvdphi / rmsinthe ) +
-													+ ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
-													- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * v.x[ im-1 ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2
-													+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-													+ RS_Coriolis_Momentum_the + RS_centrifugal_Momentum_the
-													- v.x[ im-1 ][ j ][ k ] * k_Force / dthe2;
-
-			aux_w.x[ im-1 ][ j ][ k ] =  - ( v.x[ im-1 ][ j ][ k ] * dwdthe / rm + w.x[ im-1 ][ j ][ k ] * dwdphi / rmsinthe ) +
-														+ ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
-														- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * w.x[ im-1 ][ j ][ k ] / rm + d2wdphi2 / rm2sinthe2
-														+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-														+ RS_Coriolis_Momentum_phi
-														- w.x[ im-1 ][ j ][ k ] * k_Force / dphi2;
-		}
-	}
-
-
-
-//	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    level k = 0    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-	for ( int i = 1; i < im-1; i++ )
-	{
-		for ( int j = 1; j < jm-1; j++ )
-		{
-// collection of coefficients
-			rm = rad.z[ i ];
-			rm2 = rm * rm;
-			sinthe = sin( the.z[ j ] );
-			sinthe2 = sinthe * sinthe;
-			costhe = cos( the.z[ j ] );
-			cotthe = cos( the.z[ j ] ) / sin( the.z[ j ] );
-			rmsinthe = rm * sinthe;
-			rm2sinthe = rm2 * sinthe;
-			rm2sinthe2 = rm2 * sinthe2;
-
-// 1st order derivative for pressure and velocity components
-			dudr = ( u.x[ i+1 ][ j ][ 0 ] - u.x[ i-1 ][ j ][ 0 ] ) / ( 2. * dr );
-			dvdr = ( v.x[ i+1 ][ j ][ 0 ] - v.x[ i-1 ][ j ][ 0 ] ) / ( 2. * dr );
-			dwdr = ( w.x[ i+1 ][ j ][ 0 ] - w.x[ i-1 ][ j ][ 0 ] ) / ( 2. * dr );
-
-			dudthe = ( u.x[ i ][ j+1 ][ 0 ] - u.x[ i ][ j-1 ][ 0 ] ) / ( 2. * dthe );
-			dvdthe = ( v.x[ i ][ j+1 ][ 0 ] - v.x[ i ][ j-1 ][ 0 ] ) / ( 2. * dthe );
-			dwdthe = ( w.x[ i ][ j+1 ][ 0 ] - w.x[ i ][ j-1 ][ 0 ] ) / ( 2. * dthe );
-
-			dudphi = ( - 3. * u.x[ i ][ j ][ 0 ] + 4. * u.x[ i ][ j ][ 1 ] - u.x[ i ][ j ][ 2 ] ) / ( 2. * dphi );
-			dvdphi = ( - 3. * v.x[ i ][ j ][ 0 ] + 4. * v.x[ i ][ j ][ 1 ] - v.x[ i ][ j ][ 2 ] ) / ( 2. * dphi );
-			dwdphi = ( - 3. * w.x[ i ][ j ][ 0 ] + 4. * w.x[ i ][ j ][ 1 ] - w.x[ i ][ j ][ 2 ] ) / ( 2. * dphi );
-
-// 2nd order derivative for pressure and velocity components
-			d2udr2 = ( u.x[ i ][ j ][ 0 ] - 2. * u.x[ i ][ j ][ 0 ] + u.x[ i ][ j ][ 0 ] ) / dr2;
-			d2vdr2 = ( v.x[ i ][ j ][ 0 ] - 2. * v.x[ i ][ j ][ 0 ] + v.x[ i ][ j ][ 0 ] ) / dr2;
-			d2wdr2 = ( w.x[ i ][ j ][ 0 ] - 2. * w.x[ i ][ j ][ 0 ] + w.x[ i ][ j ][ 0 ] ) / dr2;
-
-			d2udthe2 = ( u.x[ i ][ j+1 ][ 0 ] - 2. * u.x[ i ][ j ][ 0 ] + u.x[ i ][ j-1 ][ 0 ] ) / dthe2;
-			d2vdthe2 = ( v.x[ i ][ j+1 ][ 0 ] - 2. * v.x[ i ][ j ][ 0 ] + v.x[ i ][ j-1 ][ 0 ] ) / dthe2;
-			d2wdthe2 = ( w.x[ i ][ j+1 ][ 0 ] - 2. * w.x[ i ][ j ][ 0 ] + w.x[ i ][ j-1 ][ 0 ] ) / dthe2;
-
-			d2udphi2 = ( u.x[ i ][ j ][ 0 ] - 2. * u.x[ i ][ j ][ 1 ] + u.x[ i ][ j ][ 2 ] ) / dphi2;
-			d2vdphi2 = ( v.x[ i ][ j ][ 0 ] - 2. * v.x[ i ][ j ][ 1 ] + v.x[ i ][ j ][ 2 ] ) / dphi2;
-			d2wdphi2 = ( w.x[ i ][ j ][ 0 ] - 2. * w.x[ i ][ j ][ 1 ] + w.x[ i ][ j ][ 2 ] ) / dphi2;
-
-// Coriolis and centrifugal terms in the energy and momentum equations
-			RS_Coriolis_Momentum_rad = + coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ 0 ];
-			RS_Coriolis_Momentum_the = + coriolis * 2. * omega * costhe * w.x[ i ][ j ][ 0 ];
-			RS_Coriolis_Momentum_phi = - coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ 0 ] + 2. * omega * costhe * v.x[ i ][ j ][ 0 ] );
-
-			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
-			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
-
-			RS_buoyancy_Momentum = BuoyancyForce.x[ i ][ j ][ 0 ];
-
-// Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
-			aux_u.x[ i ][ j ][ 0 ] = - ( u.x[ i ][ j ][ 0 ] * dudr + v.x[ i ][ j ][ 0 ] * dudthe / rm + w.x[ i ][ j ][ 0 ] * dudphi / rmsinthe )
-												- ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ 0 ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
-												+ RS_buoyancy_Momentum
-												+ RS_Coriolis_Momentum_rad + RS_centrifugal_Momentum_rad;
-
-			aux_v.x[ i ][ j ][ 0 ] = - ( u.x[ i ][ j ][ 0 ] * dvdr + v.x[ i ][ j ][ 0 ] * dvdthe / rm + w.x[ i ][ j ][ 0 ] * dvdphi / rmsinthe ) +
-												+ ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
-												- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * v.x[ i ][ j ][ 0 ] / rm + d2vdphi2 / rm2sinthe2
-												+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-												+ RS_Coriolis_Momentum_the + RS_centrifugal_Momentum_the
-												- v.x[ i ][ j ][ 0 ] * k_Force / dthe2;
-
-			aux_w.x[ i ][ j ][ 0 ] = - ( u.x[ i ][ j ][ 0 ] * dwdr + v.x[ i ][ j ][ 0 ] * dwdthe / rm + w.x[ i ][ j ][ 0 ] * dwdphi / rmsinthe ) +
-												+ ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
-												- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * w.x[ i ][ j ][ 0 ] / rm + d2wdphi2 / rm2sinthe2
-												+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-												+ RS_Coriolis_Momentum_phi
-												- w.x[ i ][ j ][ 0 ] * k_Force / dphi2;
-
-
-
-//	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    level k = km-1    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-// collection of coefficients
-			rm = rad.z[ i ];
-			rm2 = rm * rm;
-			sinthe = sin( the.z[ j ] );
-			sinthe2 = sinthe * sinthe;
-			costhe = cos( the.z[ j ] );
-			cotthe = cos( the.z[ j ] ) / sin( the.z[ j ] );
-			rmsinthe = rm * sinthe;
-			rm2sinthe = rm2 * sinthe;
-			rm2sinthe2 = rm2 * sinthe2;
-
-// 1st order derivative for pressure and velocity components
-			dudr = ( u.x[ i+1 ][ j ][ km-1 ] - u.x[ i-1 ][ j ][ km-1 ] ) / ( 2. * dr );
-			dvdr = ( v.x[ i+1 ][ j ][ km-1 ] - v.x[ i-1 ][ j ][ km-1 ] ) / ( 2. * dr );
-			dwdr = ( w.x[ i+1 ][ j ][ km-1 ] - w.x[ i-1 ][ j ][ km-1 ] ) / ( 2. * dr );
-
-			dudthe = ( u.x[ i ][ j+1 ][ km-1 ] - u.x[ i ][ j-1 ][ km-1 ] ) / ( 2. * dthe );
-			dvdthe = ( v.x[ i ][ j+1 ][ km-1 ] - v.x[ i ][ j-1 ][ km-1 ] ) / ( 2. * dthe );
-			dwdthe = ( w.x[ i ][ j+1 ][ km-1 ] - w.x[ i ][ j-1 ][ km-1 ] ) / ( 2. * dthe );
-
-			dudphi = ( - 3. * u.x[ i ][ j ][ km-1 ] + 4. * u.x[ i ][ j ][ km-2 ] - u.x[ i ][ j ][ km-3 ] ) / ( 2. * dphi );
-			dvdphi = ( - 3. * v.x[ i ][ j ][ km-1 ] + 4. * v.x[ i ][ j ][ km-2 ] - v.x[ i ][ j ][ km-3 ] ) / ( 2. * dphi );
-			dwdphi = ( - 3. * w.x[ i ][ j ][ km-1 ] + 4. * w.x[ i ][ j ][ km-2 ] - w.x[ i ][ j ][ km-3 ] ) / ( 2. * dphi );
-
-// 2nd order derivative for pressure and velocity components
-			d2udr2 = ( u.x[ i ][ j ][ km-1 ] - 2. * u.x[ i ][ j ][ km-1 ] + u.x[ i ][ j ][ km-1 ] ) / dr2;
-			d2vdr2 = ( v.x[ i ][ j ][ km-1 ] - 2. * v.x[ i ][ j ][ km-1 ] + v.x[ i ][ j ][ km-1 ] ) / dr2;
-			d2wdr2 = ( w.x[ i ][ j ][ km-1 ] - 2. * w.x[ i ][ j ][ km-1 ] + w.x[ i ][ j ][ km-1 ] ) / dr2;
-
-			d2udthe2 = ( u.x[ i ][ j+1 ][ km-1 ] - 2. * u.x[ i ][ j ][ km-1 ] + u.x[ i ][ j-1 ][ km-1 ] ) / dthe2;
-			d2vdthe2 = ( v.x[ i ][ j+1 ][ km-1 ] - 2. * v.x[ i ][ j ][ km-1 ] + v.x[ i ][ j-1 ][ km-1 ] ) / dthe2;
-			d2wdthe2 = ( w.x[ i ][ j+1 ][ km-1 ] - 2. * w.x[ i ][ j ][ km-1 ] + w.x[ i ][ j-1 ][ km-1 ] ) / dthe2;
-
-			d2udphi2 = ( u.x[ i ][ j ][ km-1 ] - 2. * u.x[ i ][ j ][ km-2 ] + u.x[ i ][ j ][ km-3 ] ) / dphi2;
-			d2vdphi2 = ( v.x[ i ][ j ][ km-1 ] - 2. * v.x[ i ][ j ][ km-2 ] + v.x[ i ][ j ][ km-3 ] ) / dphi2;
-			d2wdphi2 = ( w.x[ i ][ j ][ km-1 ] - 2. * w.x[ i ][ j ][ 2 ] + w.x[ i ][ j ][ km-3 ] ) / dphi2;
-
-// Coriolis and centrifugal terms in the energy and momentum equations
-			RS_Coriolis_Momentum_rad = + coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ km-1 ];
-			RS_Coriolis_Momentum_the = + coriolis * 2. * omega * costhe * w.x[ i ][ j ][ km-1 ];
-			RS_Coriolis_Momentum_phi = - coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ km-1 ] + 2. * omega * costhe * v.x[ i ][ j ][ km-1 ] );
-
-			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
-			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
-
-//			t_Boussinesq = tn.x[ i ][ j ][ km-1 ];																					// threshold value for Boussinesq approximation, t -> tn, stable
-//			RS_buoyancy_Momentum = buoyancy * .5 * g * ( t.x[ i ][ j ][ km-1 ] - t_Boussinesq ) / t_Boussinesq;		// bouyancy based on temperature, 
-			RS_buoyancy_Momentum = BuoyancyForce.x[ i ][ j ][ km-1 ];
-
-// Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
-
-			if ( h.x[ i ][ j ][ km-1 ] == 0. )
-			{
-				aux_u.x[ i ][ j ][ km-1 ] = - ( u.x[ i ][ j ][ km-1 ] * dudr + v.x[ i ][ j ][ km-1 ] * dudthe / rm + w.x[ i ][ j ][ km-1 ] * dudphi / rmsinthe )
-													+ ( d2udr2 + d2udthe2 / rm2 + 4. * dudr / rm + d2udphi2 / rm2sinthe2 ) / re
-													+ RS_buoyancy_Momentum
-													+ RS_Coriolis_Momentum_rad + RS_centrifugal_Momentum_rad;
-
-				aux_v.x[ i ][ j ][ km-1 ] = - ( u.x[ i ][ j ][ km-1 ] * dvdr + v.x[ i ][ j ][ km-1 ] * dvdthe / rm + w.x[ i ][ j ][ km-1 ] * dvdphi / rmsinthe ) +
-													+ ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
-													- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * v.x[ i ][ j ][ km-1 ] / rm + d2vdphi2 / rm2sinthe2
-													+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-													+ RS_Coriolis_Momentum_the + RS_centrifugal_Momentum_the
-													- v.x[ i ][ j ][ km-1 ] * k_Force / dthe2;
-
-				aux_w.x[ i ][ j ][ km-1 ] = - ( u.x[ i ][ j ][ km-1 ] * dwdr + v.x[ i ][ j ][ km-1 ] * dwdthe / rm + w.x[ i ][ j ][ km-1 ] * dwdphi / rmsinthe ) +
-													+ ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
-													- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * w.x[ i ][ j ][ km-1 ] / rm + d2wdphi2 / rm2sinthe2
-													+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-													+ RS_Coriolis_Momentum_phi
-													- w.x[ i ][ j ][ km-1 ] * k_Force / dphi2;
-			}
-			else
-			{
-				aux_u.x[ i ][ j ][ km-1 ] = 0.;
-				aux_v.x[ i ][ j ][ km-1 ] = 0.;
-				aux_w.x[ i ][ j ][ km-1 ] = 0.;
-			}
-
-		}
-	}
-
-
-
-//	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    level j = 0    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-	for ( int i = 1; i < im-1; i++ )
-	{
-		for ( int k = 1; k < km-1; k++ )
-		{
-// collection of coefficients
-			rm = rad.z[ i ];
-			rm2 = rm * rm;
-			sinthe = sin( the.z[ 0 ] );
-			sinthe2 = sinthe * sinthe;
-			costhe = cos( the.z[ 0 ] );
-			cotthe = cos( the.z[ 0 ] ) / sin( the.z[ 0 ] );
-			rmsinthe = rm * sinthe;
-			rm2sinthe = rm2 * sinthe;
-			rm2sinthe2 = rm2 * sinthe2;
-
-// 1st order derivative for pressure and velocity components
-			dudr = ( u.x[ i+1 ][ 0 ][ k ] - u.x[ i-1 ][ 0 ][ k ] ) / ( 2. * dr );
-			dvdr = ( v.x[ i+1 ][ 0 ][ k ] - v.x[ i-1 ][ 0 ][ k ] ) / ( 2. * dr );
-			dwdr = ( w.x[ i+1 ][ 0 ][ k ] - w.x[ i-1 ][ 0 ][ k ] ) / ( 2. * dr );
-
-			dudthe = ( - 3. * u.x[ i ][ 0 ][ k ] + 4. * u.x[ i ][ 1 ][ k ] - u.x[ i ][ 2 ][ k ] ) / ( 2. * dthe );
-			dvdthe = ( - 3. * v.x[ i ][ 0 ][ k ] + 4. * v.x[ i ][ 1 ][ k ] - v.x[ i ][ 2 ][ k ] ) / ( 2. * dthe );
-			dwdthe = ( - 3. * w.x[ i ][ 0 ][ k ] + 4. * w.x[ i ][ 1 ][ k ] - w.x[ i ][ 2 ][ k ] ) / ( 2. * dthe );
-
-			dudphi = ( u.x[ i ][ 0 ][ k+1 ] - u.x[ i ][ 0 ][ k-1 ] ) / ( 2. * dphi );
-			dvdphi = ( v.x[ i ][ 0 ][ k+1 ] - v.x[ i ][ 0 ][ k-1 ] ) / ( 2. * dphi );
-			dwdphi = ( w.x[ i ][ 0 ][ k+1 ] - w.x[ i ][ 0 ][ k-1 ] ) / ( 2. * dphi );
-
-// 2nd order derivative for pressure and velocity components
-			d2udr2 = ( u.x[ i+1 ][ 0 ][ k ] - 2. * u.x[ i ][ 0 ][ k ] + u.x[ i-1 ][ 0 ][ k ] ) / dr2;
-			d2vdr2 = ( v.x[ i+1 ][ 0 ][ k ] - 2. * v.x[ i ][ 0 ][ k ] + v.x[ i-1 ][ 0 ][ k ] ) / dr2;
-			d2wdr2 = ( w.x[ i+1 ][ 0 ][ k ] - 2. * w.x[ i ][ 0 ][ k ] + w.x[ i-1 ][ 0 ][ k ] ) / dr2;
-
-			d2udthe2 = ( u.x[ i ][ 0 ][ k ] - 2. * u.x[ i ][ 1 ][ k ] + u.x[ i ][ 2 ][ k ] ) / dthe2;
-			d2vdthe2 = ( v.x[ i ][ 0 ][ k ] - 2. * v.x[ i ][ 1 ][ k ] + v.x[ i ][ 2 ][ k ] ) / dthe2;
-			d2wdthe2 = ( w.x[ i ][ 0 ][ k ] - 2. * w.x[ i ][ 1 ][ k ] + w.x[ i ][ 2 ][ k ] ) / dthe2;
-
-			d2udphi2 = ( u.x[ i ][ 0 ][ k+1 ] - 2. * u.x[ i ][ 0 ][ k ] + u.x[ i ][ 0 ][ k-1 ] ) / dphi2;
-			d2vdphi2 = ( v.x[ i ][ 0 ][ k+1 ] - 2. * v.x[ i ][ 0 ][ k ] + v.x[ i ][ 0 ][ k-1 ] ) / dphi2;
-			d2wdphi2 = ( w.x[ i ][ 0 ][ k+1 ] - 2. * w.x[ i ][ 0 ][ k ] + w.x[ i ][ 0 ][ k-1 ] ) / dphi2;
-
-// Coriolis and centrifugal terms in the energy and momentum equations
-			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
-			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
-
-			RS_buoyancy_Momentum = BuoyancyForce.x[ i ][ 0 ][ k ];
-
-// Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
-			aux_u.x[ i ][ 0 ][ k ] = - u.x[ i ][ 0 ][ k ] * dudr
-												+ ( d2udr2 + d2udthe2 / rm2 + 4. * dudr / rm + d2udphi2 / rm2sinthe2 ) / re
-												+ RS_buoyancy_Momentum
-												+ RS_centrifugal_Momentum_rad
-												- u.x[ i ][ 0 ][ k ] * k_Force / dr;
-
-
-			aux_v.x[ i ][ 0 ][ k ] = 0.;
-/*
-			aux_v.x[ i ][ 0 ][ k ] = - u.x[ i ][ 0 ][ k ] * dvdr
-												+ ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
-												+ d2vdphi2 / rm2sinthe2
-												+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-												+ RS_centrifugal_Momentum_the
-												- v.x[ i ][ 0 ][ k ] * k_Force / dthe2;
-*/
-//			aux_w.x[ i ][ 0 ][ k ] = 0.;
-
-			aux_w.x[ i ][ 0 ][ k ] = - u.x[ i ][ 0 ][ k ] * dwdr
-												+ ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
-												+ d2wdphi2 / rm2sinthe2
-												+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-												- w.x[ i ][ 0 ][ k ] * k_Force / dphi2;
-
-
-
-//	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    level j = jm-1    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-// collection of coefficients
-			rm = rad.z[ i ];
-			rm2 = rm * rm;
-			sinthe = sin( the.z[ jm-1 ] );
-			sinthe2 = sinthe * sinthe;
-			costhe = cos( the.z[ jm-1 ] );
-			cotthe = cos( the.z[ jm-1 ] ) / sin( the.z[ jm-1 ] );
-			rmsinthe = rm * sinthe;
-			rm2sinthe = rm2 * sinthe;
-			rm2sinthe2 = rm2 * sinthe2;
-
-// 1st order derivative for pressure and velocity components
-			dudr = ( u.x[ i+1 ][ jm-1 ][ k ] - u.x[ i-1 ][ jm-1 ][ k ] ) / ( 2. * dr );
-			dvdr = ( v.x[ i+1 ][ jm-1 ][ k ] - v.x[ i-1 ][ jm-1 ][ k ] ) / ( 2. * dr );
-			dwdr = ( w.x[ i+1 ][ jm-1 ][ k ] - w.x[ i-1 ][ jm-1 ][ k ] ) / ( 2. * dr );
-
-			dudthe = ( - 3. * u.x[ i ][ jm-1 ][ k ] + 4. * u.x[ i ][ 1 ][ k ] - u.x[ i ][ 2 ][ k ] ) / ( 2. * dthe );
-			dvdthe = ( - 3. * v.x[ i ][ jm-1 ][ k ] + 4. * v.x[ i ][ 1 ][ k ] - v.x[ i ][ 2 ][ k ] ) / ( 2. * dthe );
-			dwdthe = ( - 3. * w.x[ i ][ jm-1 ][ k ] + 4. * w.x[ i ][ 1 ][ k ] - w.x[ i ][ 2 ][ k ] ) / ( 2. * dthe );
-
-			dudphi = ( u.x[ i ][ jm-1 ][ k+1 ] - u.x[ i ][ jm-1 ][ k-1 ] ) / ( 2. * dphi );
-			dvdphi = ( v.x[ i ][ jm-1 ][ k+1 ] - v.x[ i ][ jm-1 ][ k-1 ] ) / ( 2. * dphi );
-			dwdphi = ( w.x[ i ][ jm-1 ][ k+1 ] - w.x[ i ][ jm-1 ][ k-1 ] ) / ( 2. * dphi );
-
-// 2nd order derivative for pressure and velocity components
-			d2udr2 = ( u.x[ i+1 ][ jm-1 ][ k ] - 2. * u.x[ i ][ jm-1 ][ k ] + u.x[ i-1 ][ jm-1 ][ k ] ) / dr2;
-			d2vdr2 = ( v.x[ i+1 ][ jm-1 ][ k ] - 2. * v.x[ i ][ jm-1 ][ k ] + v.x[ i-1 ][ jm-1 ][ k ] ) / dr2;
-			d2wdr2 = ( w.x[ i+1 ][ jm-1 ][ k ] - 2. * w.x[ i ][ jm-1 ][ k ] + w.x[ i-1 ][ jm-1 ][ k ] ) / dr2;
-
-			d2udthe2 = ( u.x[ i ][ jm-1 ][ k ] - 2. * u.x[ i ][ 1 ][ k ] + u.x[ i ][ 2 ][ k ] ) / dthe2;
-			d2vdthe2 = ( v.x[ i ][ jm-1 ][ k ] - 2. * v.x[ i ][ 1 ][ k ] + v.x[ i ][ 2 ][ k ] ) / dthe2;
-			d2wdthe2 = ( w.x[ i ][ jm-1 ][ k ] - 2. * w.x[ i ][ 1 ][ k ] + w.x[ i ][ 2 ][ k ] ) / dthe2;
-
-			d2udphi2 = ( u.x[ i ][ jm-1 ][ k+1 ] - 2. * u.x[ i ][ jm-1 ][ k ] + u.x[ i ][ jm-1 ][ k-1 ] ) / dphi2;
-			d2vdphi2 = ( v.x[ i ][ jm-1 ][ k+1 ] - 2. * v.x[ i ][ jm-1 ][ k ] + v.x[ i ][ jm-1 ][ k-1 ] ) / dphi2;
-			d2wdphi2 = ( w.x[ i ][ jm-1 ][ k+1 ] - 2. * w.x[ i ][ jm-1 ][ k ] + w.x[ i ][ jm-1 ][ k-1 ] ) / dphi2;
-
-// Coriolis and centrifugal terms in the energy and momentum equations
-			RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
-			RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
-
-			RS_buoyancy_Momentum = BuoyancyForce.x[ i ][ jm-1 ][ k ];
-
-// Right Hand Side of the Navier-Stokes equations at the boundaries for the pressure Poisson equation
-
-			aux_u.x[ i ][ jm-1 ][ k ] = - u.x[ i ][ jm-1 ][ k ] * dudr
-												+ ( d2udr2 + d2udthe2 / rm2 + 4. * dudr / rm + d2udphi2 / rm2sinthe2 ) / re
-												+ RS_buoyancy_Momentum
-												+ RS_centrifugal_Momentum_rad
-												- u.x[ i ][ jm-1 ][ k ] * k_Force / dr;
-
-
-			aux_v.x[ i ][ jm-1 ][ k ] = - u.x[ i ][ jm-1 ][ k ] * dvdr
-												+ ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
-												+ d2vdphi2 / rm2sinthe2
-												+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-												+ RS_centrifugal_Momentum_the
-												- v.x[ i ][ jm-1 ][ k ] * k_Force / dthe2;
-
-
-			aux_w.x[ i ][ jm-1 ][ k ] = - u.x[ i ][ jm-1 ][ k ] * dwdr
-												+ ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
-												+ d2wdphi2 / rm2sinthe2
-												+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-												- w.x[ i ][ jm-1 ][ k ] * k_Force / dphi2;
-
-		}
-	}
-
-}
 
 
 
