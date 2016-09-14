@@ -1,5 +1,5 @@
 /*
- * Ocean General Circulation Modell ( OGCM ) applied to laminar flow
+ * Atmosphere General Circulation Modell ( AGCM ) applied to laminar flow
  * Program for the computation of geo-atmospherical circulating flows in a spherical shell
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
@@ -16,52 +16,71 @@
 using namespace std;
 
 
-Array_1D::Array_1D ( int i, double cc, double z0, double dz )
+Array_1D::Array_1D ( )
 {
-	im = i;
-	this -> cc = cc;
-	this -> z0 = z0;
-	this -> dz = dz;
+	mm = 361;
 
-	z = new double[ im ];
+	z = new double[ mm ];
 
-
-// initialisation of the z-field
-
-	for ( int l = 0; l < im; l++ )
+// arbitrary initialisation of the z-field
+	for ( int l = 0; l < mm; l++ )
 	{
-		z[ l ] = cc;
-//		cout << z[ l ] << " (" << &z[ l ] << ")" << "  ";
-//		cout << z[ l ] << "  ";
+		z[ l ] = 111.;																		// arbitrary initial values
 	}
-//	cout << endl;
-//	cout << endl;
+
+//	printArray_1D ( mm );
+
 }
 
 
 
-Array_1D::~Array_1D()
+Array_1D::~Array_1D ( )
 {
 	delete [  ] z;
 }
 
 
 
-void Array_1D::printArray_1D()
+void Array_1D::initArray_1D( int mm, double cc )
+{
+// initialisation of the z-field
+	for ( int l = 0; l < mm; l++ )
+	{
+		z[ l ] = cc;
+	}
+}
+
+
+
+void Array_1D::Coordinates ( int mm, double z0, double dz )
+{
+	z[ 0 ] = z0;
+
+	for ( int l = 1; l < mm; l++ )
+	{
+		z[ l ] = z[ l - 1 ] + dz;
+	}
+
+}
+
+
+
+
+void Array_1D::printArray_1D( int mm )
 {
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
 
-	cout << "  coordinate-direction " << endl;
+	cout << endl;
+	cout << " coordinate-direction " << endl;
 	cout << endl;
 
-	for ( int i = 0; i < im; i++ )
-//	for ( int i = 0; i < im; i++ )
+	for ( int i = 0; i < mm; i++ )
 	{
 		cout.width ( 6 );
 		cout.fill( ' ' );
 
-// 		cout << z[ i ] << " (" << &i[ i ] << ")" << " ";
+//		cout << z[ i ] << " (" << &z[ i ] << ")" << " ";
 		cout << z[ i ] << " ";
 	}
 cout << endl;
@@ -69,13 +88,3 @@ cout << endl;
 
 
 
-
-void Array_1D::Coordinates (  )
-{
-	z[ 0 ] = z0;
-
-	for ( int i = 1; i < im; i++ )
-	{
-		z[ i ] = z[ i - 1 ] + dz;
-	}
-}

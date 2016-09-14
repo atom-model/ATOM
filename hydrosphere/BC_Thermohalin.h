@@ -41,6 +41,8 @@ class BC_Thermohalin
 		double t_cretaceous, t_cretaceous_max, t_cretaceous_coeff;
 		double rR, rg, jmkm, u_sum, v_sum, w_sum, t_sum, c_sum;
 		double dr, g, r_0_water, ua, va, wa, ca, pa, ta, u_0, cp_w, L_hyd, t_average;
+		double d_u, d_l, sig_k, beta_k;
+		double *dr_var;
 
 		string time_slice_comment, time_slice_number, time_slice_unit;
 		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;

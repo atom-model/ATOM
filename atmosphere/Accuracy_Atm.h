@@ -27,36 +27,23 @@ class Accuracy
 	private:
 		int n, nm, im, jm, km, l_anf, l_end, velocity_iter_2D, pressure_iter_2D, velocity_iter, pressure_iter, velocity_iter_max, pressure_iter_max, velocity_iter_max_2D, pressure_iter_max_2D, Ma;
 		int i_res, j_res, k_res;
-		int i_u, j_u, k_u, i_v, j_v, k_v, i_w, j_w, k_w, i_t, j_t, k_t, i_c, j_c, k_c, i_cloud, j_cloud, k_cloud, i_ice, j_ice, k_ice, i_co2_, j_co2_, k_co2_, i_p, j_p, k_p;
+		int i_u, j_u, k_u, i_v, j_v, k_v, i_w, j_w, k_w, i_t, j_t, k_t, i_c, j_c, k_c, i_cloud, j_cloud, k_cloud, i_ice, j_ice, k_ice, i_co2, j_co2, k_co2, i_p, j_p, k_p;
 		int i_loc, j_loc, k_loc, i_loc_level, j_loc_deg, k_loc_deg;
 
 		double dr, dthe, dphi;
 		double sinthe, costhe, rmsinthe;
 		double dudr, dvdthe, dwdphi;
-		double residuum, max_u, max_v, max_w, max_t, max_c, max_cloud, max_ice, max_p, max_co2_;
-		double residuum_old, min, min_u, min_v, min_w, min_t, min_c, min_cloud, min_ice, min_co2_, min_p;
+		double residuum, max_u, max_v, max_w, max_t, max_c, max_cloud, max_ice, max_p, max_co2;
+		double residuum_old, min, min_u, min_v, min_w, min_t, min_c, min_cloud, min_ice, min_co2, min_p;
 		double Value, L_atm;
 
 		string name_Value;
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading;
 
-		void set_value ( double val );
-		void set_i_loc ( int i_l );
-		void set_j_loc ( int j_l );
-		void set_k_loc ( int k_l );
-
-		void init ( double val, int i_l, int j_l, int k_l );
-
-		double get_value (  );
-		int get_i_loc (  );
-		int get_j_loc (  );
-		int get_k_loc (  );
-
-
 	public:
-		Accuracy ( int, int, double, double ); 
+		Accuracy ( int, int, int, double, double ); 
 		Accuracy ( int, int, int, double, double, double ); 
-		Accuracy ( int, int, int, int, int, double, int, int, int, int, int, int );
+		Accuracy ( int, int, int, int, int, int, double, int, int, int, int, int, int );
 		Accuracy ( int, int, int, int, int, int, double, int, int, int, int, int, int, int, double );
 
 		~Accuracy ();
@@ -67,8 +54,6 @@ class Accuracy
 
 		double steadyQuery_2D ( Array &, Array &, Array &, Array &, Array &, Array & );
 		double steadyQuery_3D ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
-
 
 		double out_min (  ) const;
 		int out_i_res (  ) const;

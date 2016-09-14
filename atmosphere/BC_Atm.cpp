@@ -19,11 +19,12 @@ using namespace std;
 
 
 
-BC_Atmosphere::BC_Atmosphere ( int im, int jm, int km )
+BC_Atmosphere::BC_Atmosphere ( int im, int jm, int km, double t_tropopause )
 {
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;
+	this -> t_tropopause = t_tropopause;
 
 	c43 = 4./3.;
 	c13 = 1./3.;
@@ -35,7 +36,7 @@ BC_Atmosphere::~BC_Atmosphere() {}
 
 
 
-void BC_Atmosphere::BC_radius ( double t_tropopause, double c_tropopause, double co2_tropopause, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2 )
+void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2 )
 {
 // boundary conditions for the r-direction, loop index i
 	for ( int j = 1; j < jm-1; j++ )
@@ -50,10 +51,10 @@ void BC_Atmosphere::BC_radius ( double t_tropopause, double c_tropopause, double
 			w.x[ im-1 ][ j ][ k ] = 0.;
 
 			t.x[ im-1 ][ j ][ k ] = t_tropopause;
-			c.x[ im-1 ][ j ][ k ] = c_tropopause;
-			cloud.x[ im-1 ][ j ][ k ] = c_tropopause;
-			ice.x[ im-1 ][ j ][ k ] = c_tropopause;
-			co2.x[ im-1 ][ j ][ k ] = co2_tropopause;
+			c.x[ im-1 ][ j ][ k ] = 0.;
+			cloud.x[ im-1 ][ j ][ k ] = 0.;
+			ice.x[ im-1 ][ j ][ k ] = 0.;
+			co2.x[ im-1 ][ j ][ k ] = 0.;
 			p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 3. * p_dyn.x[ im-2 ][ j ][ k ];
 
 		}
@@ -65,7 +66,7 @@ void BC_Atmosphere::BC_radius ( double t_tropopause, double c_tropopause, double
 
 
 
-void BC_Atmosphere::BC_theta ( double t_tropopause, double t_pole, double t_cretaceous, double c_tropopause, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2 )
+void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2 )
 {
 // boundary conditions for the the-direction, loop index j
 //	d_i_max = ( double ) ( im - 1 );

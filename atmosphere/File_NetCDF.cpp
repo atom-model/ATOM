@@ -48,8 +48,8 @@ double File_NetCDF::out_NetCDF (const string &Name_netCDF_File, Array &v, Array 
 	const char UNITS [ ] = "units";
 	const char DEGREES_EAST [ ] = "degrees_east";
 	const char DEGREES_NORTH [ ] = "degrees_north";
-	const char V_NAME [ ] = "v_velocity_component";
-	const char W_NAME [ ] = "w_velocity_component";
+	const char V_NAME [ ] = "v_velocity_co2_mponent";
+	const char W_NAME [ ] = "w_velocity_co2_mponent";
 	const char H_NAME [ ] = "level_over_NN";
 	const char PREC_NAME [ ] = "precipitation";
 	const char PRECWAT_NAME [ ] = "precipitable_water";

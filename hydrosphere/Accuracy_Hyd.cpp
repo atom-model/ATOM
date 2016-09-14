@@ -20,57 +20,75 @@
 using namespace std;
 
 
-
-
-Accuracy::Accuracy( int n, int im, int jm, int km, double dr, double dthe, double dphi )
+Accuracy::Accuracy( int im, int jm, int km, double dthe, double dphi )
 {
-	this-> n = n;
+	this-> im = im;
+	this-> jm = jm;
+	this-> km = km;
+	this-> dthe = dthe;
+	this-> dphi = dphi;
+}
+
+
+Accuracy::Accuracy( int im, int jm, int km, double dr, double dthe, double dphi )
+{
 	this-> im = im;
 	this-> jm = jm;
 	this-> km = km;
 	this-> dr = dr;
 	this-> dthe = dthe;
 	this-> dphi = dphi;
-/*
-	i_u = j_u = k_u = i_v = j_v = k_v = i_w = j_w = k_w = i_t = j_t = k_t = i_c = j_c = k_c = i_p = j_p = k_p = 0;
-	i_res = j_res = k_res = 0;
-	residuum = max_u = max_v = max_w = max_t = max_c = max_p = 0.;
-	residuum_alt = min = min_u = min_v = min_w = min_t = min_c = min_p = 0.;
-*/
 }
 
 
-
-Accuracy::Accuracy ( int im, int Ma, int n, int velocity_iter, int pressure_iter, double min, double L_hyd )
+Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, int j_res, int k_res, int velocity_iter_2D, int pressure_iter_2D, int velocity_iter_max_2D, int pressure_iter_max_2D )
 {
-	this-> im = im;
 	this-> n = n;
+	this-> nm = nm;
+	this-> Ma = Ma;
+	this-> im = im;
+	this-> jm = jm;
+	this-> km = km;
+	this-> min = min;
+	this-> j_res = j_res;
+	this-> k_res = k_res;
+	this-> velocity_iter_2D = velocity_iter_2D;
+	this-> pressure_iter_2D = pressure_iter_2D;
+	this-> velocity_iter_max_2D = velocity_iter_max_2D;
+	this-> pressure_iter_max_2D = pressure_iter_max_2D;
+
+}
+
+
+Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, int i_res, int j_res, int k_res, int velocity_iter, int pressure_iter, int velocity_iter_max, int pressure_iter_max, double L_hyd )
+{
+	this-> n = n;
+	this-> nm = nm;
+	this-> Ma = Ma;
+	this-> im = im;
+	this-> jm = jm;
+	this-> km = km;
+	this-> min = min;
+	this-> i_res = i_res;
+	this-> j_res = j_res;
+	this-> k_res = k_res;
 	this-> velocity_iter = velocity_iter;
 	this-> pressure_iter = pressure_iter;
-	this-> min = min;
-	this-> Ma = Ma;
+	this-> velocity_iter_max = velocity_iter_max;
+	this-> pressure_iter_max = pressure_iter_max;
 	this-> L_hyd = L_hyd;
-/*
-	i_u = j_u = k_u = i_v = j_v = k_v = i_w = j_w = k_w = i_t = j_t = k_t = i_c = j_c = k_c = i_p = j_p = k_p = 0;
-	i_res = j_res = k_res = 0;
-	residuum = max_u = max_v = max_w = max_t = max_c = max_p = 0.;
-	residuum_alt = min = min_u = min_v = min_w = min_t = min_c = min_p = 0.;
-	j_loc = 0;
-	k_loc = 0;
-	name_Value = " A ";
-	Value = 0.;
-*/ 
+
 }
 
 
 Accuracy::~Accuracy () {}
 
 
-double Accuracy::residuumQuery_3D ( int &i_res, int &j_res, int &k_res, double &min, Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
+
+double Accuracy::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
 {
 // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-
-	min = 0.;
+	min = residuum = 0.;
 
 	for ( int i = 1; i < im-1; i++ )
 	{
@@ -104,15 +122,15 @@ double Accuracy::residuumQuery_3D ( int &i_res, int &j_res, int &k_res, double &
 
 
 
-double Accuracy::steadyQuery_3D ( int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_p, Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &p, Array &pn )
+double Accuracy::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &p_dyn, Array &aux_p )
 {
 // state of a steady solution ( min_u )
-	min_u = 0.;
-	min_v = 0.;
-	min_w = 0.;
-	min_t = 0.;
-	min_c = 0.;
-	min_p = 0.;
+	min_u = max_u = 0.;
+	min_v = max_v = 0.;
+	min_w = max_w = 0.;
+	min_t = max_t = 0.;
+	min_c = max_c = 0.;
+	min_p = max_p = 0.;
 
 	for ( int i = 0; i < im; i++ )
 	{
@@ -166,7 +184,7 @@ double Accuracy::steadyQuery_3D ( int &i_u, int &j_u, int &k_u, int &i_v, int &j
 				}
 
 
-				max_p = fabs ( p.x[ i ][ j ][ k ] - pn.x[ i ][ j ][ k ] );
+				max_p = fabs ( p_dyn.x[ i ][ j ][ k ] - aux_p.x[ i ][ j ][ k ] );
 				if ( max_p >= min_p )
 				{
 					min_p = max_p;
@@ -178,14 +196,9 @@ double Accuracy::steadyQuery_3D ( int &i_u, int &j_u, int &k_u, int &i_v, int &j
 		}
 	}
 
-	return 0;
-}
 
 
 
-
-void Accuracy::iterationPrintout_3D ( int &nm, int &velocity_iter_max, int &pressure_iter_max, int &i_res, int &j_res, int &k_res, int &i_u, int &j_u, int &k_u, int &i_v, int &j_v, int &k_v, int &i_w, int &j_w, int &k_w, int &i_t, int &j_t, int &k_t, int &i_c, int &j_c, int &k_c, int &i_p, int &j_p, int &k_p, double &min_u, double &min_v, double &min_w, double &min_t, double &min_c, double &min_p )
-{
 // statements on the convergence und iterational process
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
@@ -306,18 +319,21 @@ void Accuracy::iterationPrintout_3D ( int &nm, int &velocity_iter_max, int &pres
 
 	cout << endl << endl;
 
+
+
+
+	return 0;
 }
 
 
 
 
 
-double Accuracy::residuumQuery_2D ( int &j_res, int &k_res, double &min, Array_1D &rad, Array_1D &the, Array &v, Array &w )
+
+double Accuracy::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Array &w )
 {
 // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-	min = 0.;
-	j_res = 0;
-	k_res = 0;
+	min = residuum = 0.;
 
 	for ( int j = 1; j < jm-1; j++ )
 	{
@@ -330,17 +346,15 @@ double Accuracy::residuumQuery_2D ( int &j_res, int &k_res, double &min, Array_1
 			dvdthe = ( v.x[ im-1 ][ j+1 ][ k ] - v.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe );
 			dwdphi = ( w.x[ im-1 ][ j ][ k+1 ] - w.x[ im-1 ][ j ][ k-1 ] ) / ( 2. * dphi );
 			residuum = dvdthe / rad.z[ im-1 ] + costhe / rmsinthe * v.x[ im-1 ][ j ][ k ] + dwdphi / rmsinthe;
-//			cout << j << "     "  << k << "     "  << dvdthe << "     " << dwdphi << "     "  << residuum << endl;
 			if ( fabs ( residuum ) >= min )
 			{
 				min = residuum;
 				j_res = j;
 				k_res = k;
 			}
-
+//			cout << j << "     "  << k << "   " << j_res << "     "  << k_res << "     "  << dvdthe << "     " << dwdphi << "     "  << residuum << "     "  << min << endl;
 		}
 	}
-
 	return 0;
 }
 
@@ -349,7 +363,7 @@ double Accuracy::residuumQuery_2D ( int &j_res, int &k_res, double &min, Array_1
 
 
 
-double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min_v, double &min_w, double &min_p, Array &h, Array &v, Array &vn, Array &w, Array &wn, Array &p, Array &pn )
+double Accuracy::steadyQuery_2D ( Array &h, Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &aux_p )
 {
 // state of a steady solution ( min )
 	max_v = min_v = 0.;
@@ -380,7 +394,7 @@ double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j
 					k_w = k;
 				}
 
-				max_p = fabs ( p.x[ im-1 ][ j ][ k ] - pn.x[ im-1 ][ j ][ k ] );
+				max_p = fabs ( p_dyn.x[ im-1 ][ j ][ k ] - aux_p.x[ im-1 ][ j ][ k ] );
 				if ( max_p >= min_p )
 				{
 					min_p = max_p;
@@ -390,14 +404,9 @@ double Accuracy::steadyQuery_2D ( int &j_v, int &k_v, int &j_w, int &k_w, int &j
 			}
 		}
 	}
-	return 0;
-}
 
 
 
-
-void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &pressure_iter_max_2D, int &j_res, int &k_res, int &j_v, int &k_v, int &j_w, int &k_w, int &j_p, int &k_p, double &min, double &min_v, double &min_w, double &min_p )
-{
 // statements on the convergence und iterational process
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
@@ -410,7 +419,7 @@ void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &p
 	cout << "      outer pressure loop:  max iteration number pressure_iter_max_2D = " << pressure_iter_max_2D << endl;
 	cout << "      inner velocity loop:  max iteration number velocity_iter_max_2D = " << velocity_iter_max_2D << endl << endl;
 
-	cout << "      n = " << n << "     " << "velocity_iter_2D = " << velocity_iter << "     " << "pressure_iter_2D = " << pressure_iter<< "     " << "Ma = " << Ma << endl;
+	cout << "      n = " << n << "     " << "velocity_iter_2D = " << velocity_iter_2D << "     " << "pressure_iter_2D = " << pressure_iter_2D << "     " << "Ma = " << Ma << endl;
 	cout << endl;
 
 
@@ -489,4 +498,31 @@ void Accuracy::iterationPrintout_2D ( int &nm, int &velocity_iter_max_2D, int &p
 	if ( choice <= 4 ) goto preparation;
 
 	cout << endl << endl;
+
+	return 0;
 }
+
+
+
+
+double Accuracy::out_min (  ) const
+{
+	return min;
+}
+
+int Accuracy::out_i_res (  ) const
+{
+	return i_res;
+}
+
+int Accuracy::out_j_res (  ) const
+{
+	return j_res;
+}
+
+int Accuracy::out_k_res (  ) const
+{
+	return k_res;
+}
+
+

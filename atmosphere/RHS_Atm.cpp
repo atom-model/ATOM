@@ -15,6 +15,19 @@
 using namespace std;
 
 
+RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, double re, double omega, double coriolis, double centrifugal )
+{
+	this-> jm = jm;
+	this-> km = km;
+	this-> dthe = dthe;
+	this-> dphi = dphi;
+	this-> re = re;
+	this-> omega = omega;
+	this-> coriolis = coriolis;
+	this-> centrifugal = centrifugal;
+}
+
+
 RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double ec, double sc_WaterVapour, double sc_CO2, double g, double pr, double omega, double coriolis, double centrifugal, double WaterVapour, double buoyancy, double CO2, double gam, double sigma, double lambda )
 {
 	this-> im = im;
@@ -43,7 +56,7 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 
 // array "im_tropopause" for configuring data due to latitude dependent tropopause
 
-	im_tropopause = new int[ jm ];
+	im_tropopause = new int*[ jm ];
 
 	for ( int l = 0; l < jm; l++ )
 	{
@@ -55,11 +68,20 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 }
 
 
-RHS_Atmosphere::~RHS_Atmosphere() {}
+RHS_Atmosphere::~RHS_Atmosphere() 
+{
+	for ( int i = 0; i < im; i++ )
+	{
+		delete [  ] im_tropopause[ i ];
+	}
+
+	delete [  ] im_tropopause;
+
+}
 
 
 
-void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_air, double r_water, double r_water_vapour, double r_co2_2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2_2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2_2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s )
+void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_air, double r_water, double r_water_vapour, double r_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s )
 {
 // collection of coefficients for phase transformation
 	coeff_lv = lv / ( cp_l * t_0 );					// coefficient for the specific latent vapourisation heat ( condensation heat ), coeff_lv = 9.1069 in [ / ]
@@ -343,7 +365,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 
 // latent heat of water vapour
-	RS_LatentHeat_Energy_Rain = + Latency.x[ i ][ j ][ k ] * coeff_lv / ( r_air * lv * u_0 / L_atm );
+//	RS_LatentHeat_Energy_Rain = + Latency.x[ i ][ j ][ k ] * coeff_lv / ( r_air * lv * u_0 / L_atm );
 	Q_Sensible.x[ i ][ j ][ k ] = - cp_l * r_air * u_0 * t_0 / L_atm * ( u.x[ i ][ j ][ k ] * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) + v.x[ i ][ j ][ k ] * ( t.x[ i ][ j+1 ][ k ] - t.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe ) / rm + w.x[ i ][ j ][ k ] * ( t.x[ i ][ j ][ k+1 ] - t.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi ) / rmsinthe );							// sensible heat in [W/m2] from energy transport equation
 
 // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
@@ -550,7 +572,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 			+ ( d2icedr2 + dicedr * 2. / rm + d2icedthe2 / rm2 + dicedthe * costhe / rm2sinthe + d2icedphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
 			+ S_i.x[ i ][ j ][ k ];
 
-	rhs_co2_2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcodr + v.x[ i ][ j ][ k ] * dcodthe / rm + w.x[ i ][ j ][ k ] * dcodphi / rmsinthe )
+	rhs_co2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcodr + v.x[ i ][ j ][ k ] * dcodthe / rm + w.x[ i ][ j ][ k ] * dcodphi / rmsinthe )
 			+ ( d2codr2 + dcodr * 2. / rm + d2codthe2 / rm2 + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
 			- h_c_i * co2.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
 
@@ -577,7 +599,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 
 
-void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
+void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, Array_1D &rad, Array_1D &the, Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
 {
 //  2D surface iterations
 

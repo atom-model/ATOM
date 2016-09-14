@@ -94,6 +94,8 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 	cout.setf ( ios::fixed );
 
 // array "jm_temp_asym" for configuring data due to latitude dependent tropopause
+	jm_temp_asym = 0L;
+
 	jm_temp_asym = new double[ jm ];
 
 	for ( int l = 0; l < jm; l++ )
@@ -104,6 +106,8 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 
 
 // array "alfa" for Thomas algorithm
+	alfa = 0L;
+
 	alfa = new double[ im ];
 
 	for ( int l = 0; l < im; l++ )
@@ -114,6 +118,8 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 
 
 // array "beta" for Thomas algorithm
+	beta = 0L;
+
 	beta = new double[ im ];
 
 	for ( int l = 0; l < im; l++ )
@@ -123,6 +129,8 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 	}
 
 // array "AA" for the multi-layer radiation computation
+	AA = 0L;
+
 	AA = new double[ im ];
 
 	for ( int l = 0; l < im; l++ )
@@ -133,6 +141,8 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 
 
 // array "cloud_max" for the multi-layer radiation computation
+	cloud_max = 0L;
+
 	cloud_max = new double[ im ];
 
 	for ( int l = 0; l < im; l++ )
@@ -145,6 +155,8 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 
 
 // Array "CC" for the multi-layer radiation computation
+	CC = 0L;
+
 	CC = new double*[ im ];
 
 	for ( int l = 0; l < im; l++ )
@@ -169,10 +181,10 @@ BC_Thermo::~BC_Thermo()
 {
 	for ( int i = 0; i < im; i++ )
 	{
-		delete CC[ i ];
+		delete [  ] CC[ i ];
 	}
 
-	delete [ ] CC;
+	delete [  ] CC;
 
 	delete [  ] jm_temp_asym;
 	delete [  ] alfa;
@@ -185,7 +197,7 @@ BC_Thermo::~BC_Thermo()
 
 
 
-void BC_Thermo::BC_Radiation_2D_layer ( Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, Array_2D &Q_Radiation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array_2D &temp_rad, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &Latency )
+void BC_Thermo::BC_Radiation_2D_layer ( Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, Array_2D &Q_Radiation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array_2D &temp_rad, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D )
 {
 // class element for the computation of the radiation balance
 // computation of the local temperature based on the radiation balance
@@ -428,7 +440,7 @@ void BC_Thermo::BC_Radiation_2D_layer ( Array_2D &albedo, Array_2D &epsilon, Arr
 
 
 
-void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, Array_2D &Q_Radiation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array_2D &temp_rad, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice, Array &Latency, Array &Q_Sensible )
+void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, Array_2D &Q_Radiation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array_2D &temp_rad, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice )
 {
 // class element for the computation of the radiation and the temperature distribution
 // computation of the local temperature based on short and long wave radiation
@@ -875,7 +887,6 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &p_stat, Array &c, Ar
 // parabolic water vapour distribution from pole to pole accepted
 
 // maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
-// polar water vapour contents on water surface at North and South Pole c_pol = 1.004 compares to 0.004 volume parts
 // minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
 // value 1.0 stands for the maximum value of 35 g/kg, g water vapour per kg dry air
 
@@ -2975,152 +2986,9 @@ void BC_Thermo::BC_Pressure ( Array &p_stat, Array &t, Array &h )
 
 
 
-void BC_Thermo::IC_WestEastCoast ( double t_land, Array &h, Array &t, Array &u, Array &v, Array &w )
-{
-// initial conditions for temperature at the sea surface close to eastern or western coasts
-// search for east and west coasts
-// smooth transition of temperature between coast flows and open sea flows
-// due to up/downwelling regions modest increasing or decreasing of surface temperatures
-
-	t_land_co2_rr = t_land * .1;															// temperature increase/decrease along coasts depending on est/west coast locations, up/downwelling
-
-// northern hemisphere: east coast
-	k_grad_init = 20;																		// maximum extension of the smoothed temperature distribution along coasts
-	k_grad = k_grad_init;																	// extension of the smoothing region
-	k_a = k_grad;																			// left distance
-	k_b = 0;																					// right distance
-
-	k_water = 0;																				// on water closest to coast
-	k_sequel = 1;																			// on solid ground
-
-	for ( int j = 0; j < 91; j++ )														// outer loop: latitude
-	{
-		for ( int k = 0; k < km - k_grad; k++ )									// inner loop: longitude
-		{
-			if ( h.x[ 0 ][ j ][ k ] == 1. ) k_sequel = 0;							// if solid ground: k_sequel = 0
-
-			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;	// if water and and k_sequel = 0 then is water closest to coast
-			else k_water = 1;																// somewhere on water
-
-			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) )				// if water is closest to coast, start of smoothing
-			{
-				if ( ( k + k_grad ) >= ( km - 1 ) ) k_grad = ( km - 1 ) - k;	// no crossing of the boundaries alowed
-				for ( int l = k; l <= k + k_grad; l++ )							// forward extention of smoothing
-				{
-					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land_co2_rr ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land_co2_rr );
-				}
-				k_sequel = 1;															// looking for another east coast
-			}
-		}																						// end of longitudinal loop
-		k_grad = k_grad_init;																	// extension of the smoothing region
-		k_water = 0;																	// starting at another latitude
-	}																							// end of latitudinal loop
 
 
-// southern hemisphere: east coast
-	k_water = 0;																				// on water closest to coast
-	k_sequel = 1;																			// on solid ground
-
-	for ( int j = 91; j < jm; j++ )														// outer loop: latitude
-	{
-		for ( int k = 0; k < km; k++ )												// inner loop: longitude
-		{
-			if ( h.x[ 0 ][ j ][ k ] == 1. ) k_sequel = 0;							// if solid ground: k_sequel = 0
-
-			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;	// if water and and k_sequel = 0 then is water closest to coast
-			else k_water = 1;																// somewhere on water
-
-			if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) )				// if water is closest to coast, start of smoothing
-			{
-				if ( ( k + k_grad ) >= ( km - 1 ) ) k_grad = ( km - 1 ) - k;	// no crossing of the boundaries alowed
-				for ( int l = k; l <= k + k_grad; l++ )							// forward extention of smoothing
-				{
-					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( t.x[ 0 ][ j ][ k + k_grad ] - ( t.x[ 0 ][ j ][ k + 1 ] + t_land_co2_rr ) ) / ( double )( k_grad ) * ( double )( l - k ) + ( t.x[ 0 ][ j ][ k + 1 ] + t_land_co2_rr );
-				}
-				k_sequel = 1;
-			}
-		}
-		k_grad = k_grad_init;																	// extension of the smoothing region
-		k_water = 0;
-	}
-
-
-
-
-// search for east coasts and associated velocity components to close the circulations
-// transition between coast flows and open sea flows included
-
-// northern hemisphere: west coast
-	k_grad_init = 20;																		// maximum extension of the smoothed temperature distribution along coasts
-	k_grad = k_grad_init;																	// extension of the smoothing region
-	k_a = 0;																					// left distance
-
-	k_water = 0;																				// somewhere on water
-	flip = 0;																					// somewhere on water
-
-	for ( int j = 0; j < 91; j++ )														// outer loop: latitude
-	{
-		for ( int k = km - 1; k > k_grad; k-- )										// inner loop: longitude
-		{
-			if ( h.x[ 0 ][ j ][ k ] == 0. )													// if somewhere on water
-			{
-				k_water = 0;																	// somewhere on water: k_water = 0
-				flip = 0;																		// somewhere on water: flip = 0
-			}
-			else k_water = 1;																// first time on land
-
-			if ( ( flip == 0 ) && ( k_water == 1 ) )								// on water closest to land, start of smoothing
-			{
-				if ( ( k - k_grad ) <= k_grad ) k_grad = k_grad - k;			// no crossing of the boundaries alowed
-				for ( int l = k; l >= ( k - k_grad ); l-- )							// backward extention of smoothing
-				{
-					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land_co2_rr ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land_co2_rr );
-				}
-				flip = 1;
-			}
-		}
-		k_grad = k_grad_init;																// extension of the smoothing region
-		flip = 0;
-	}
-
-
-// southern hemisphere: west coast
-	k_water = 0;																				// somewhere on water
-	flip = 0;																					// somewhere on water
-
-	for ( int j = 91; j < jm; j++ )														// outer loop: latitude
-	{
-		for ( int k = km - 1; k > k_grad; k-- )										// inner loop: longitude
-		{
-			if ( h.x[ 0 ][ j ][ k ] == 0. )													// if somewhere on water
-			{
-				k_water = 0;																	// somewhere on water: k_water = 0
-				flip = 0;																		// somewhere on water: flip = 0
-			}
-			else k_water = 1;																// first time on land
-
-			if ( ( flip == 0 ) && ( k_water == 1 ) )								// on water closest to land, start of smoothing
-			{
-				if ( ( k - k_grad ) <= k_grad ) k_grad = k_grad - k;			// no crossing of the boundaries alowed
-				for ( int l = k; l >= ( k - k_grad ); l-- )							// backward extention of smoothing
-				{
-					if ( h.x[ 0 ][ j ][ l ] == 0. ) 	t.x[ 0 ][ j ][ l ] = ( ( t.x[ 0 ][ j ][ k - 1 ] - t_land_co2_rr ) - t.x[ 0 ][ j ][ k - k_grad ] ) * ( double ) ( l - k ) / ( double ) ( k_grad ) + ( t.x[ 0 ][ j ][ k - 1 ] - t_land_co2_rr );
-				}
-				flip = 1;
-			}
-		}
-		flip = 0;
-		k_grad = k_grad_init;																// extension of the smoothing region
-	}
-
-}
-
-
-
-
-
-
-void BC_Thermo::Latent_Heat ( double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double p_0, double r_air, double r_water_vapour, double L_atm, double cp_l, double R_Air, double R_WaterVapour, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &tn, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &Latency, Array &Q_Sensible, Array &t_co2_nd_3D, Array &t_evap_3D, Array &radiation_3D )
+void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &tn, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &Latency, Array &Q_Sensible, Array &t_cond_3D, Array &t_evap_3D, Array &radiation_3D )
 {
 // collection of coefficients for phase transformation
 	coeff_lv = lv / ( cp_l * t_0 );					// coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
@@ -3131,81 +2999,74 @@ void BC_Thermo::Latent_Heat ( double lv, double ls, double ep, double hp, double
 	c12 = 1. / 2.;
 
 // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
-// collection of coefficients9
+// collection of coefficients
 	dr2 = dr * dr;
 	dthe2 = dthe * dthe;
 	dphi2 = dphi * dphi;
 	rm = rad.z[ 0 ];
 
-		for ( int j = 1; j < jm-1; j++ )
-		{
+
+	for ( int j = 1; j < jm-1; j++ )
+	{
 // collection of coefficients
-			sinthe = sin( the.z[ j ] );
-			rmsinthe = rm * sinthe;
+		sinthe = sin( the.z[ j ] );
+		rmsinthe = rm * sinthe;
 
-			for ( int k = 1; k < km-1; k++ )
-			{
-				t_Celsius_0 = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-				t_Celsius_1 = t.x[ 1 ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-				t_Celsius_2 = t.x[ 2 ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-				t_Celsius_nj = t.x[ 0 ][ j - 1 ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-				t_Celsius_pj = t.x[ 0 ][ j + 1 ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-				t_Celsius_nk = t.x[ 0 ][ j ][ k - 1 ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-				t_Celsius_pk= t.x[ 0 ][ j ][ k + 1 ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+		for ( int k = 1; k < km-1; k++ )
+		{
+			t_Celsius_0 = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+			t_Celsius_1 = t.x[ 1 ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+			t_Celsius_2 = t.x[ 2 ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+			t_Celsius_nj = t.x[ 0 ][ j - 1 ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+			t_Celsius_pj = t.x[ 0 ][ j + 1 ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+			t_Celsius_nk = t.x[ 0 ][ j ][ k - 1 ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+			t_Celsius_pk= t.x[ 0 ][ j ][ k + 1 ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
 
-				E_Rain = hp * exp ( 17.0809 * t_Celsius_0 / ( 234.175 + t_Celsius_0 ) );						// saturation water vapour pressure for the water phase at t > 0°C in hPa
-				E_Rain_super = hp * exp ( 17.8436 * t_Celsius_0 / ( 245.425 + t_Celsius_0 ) );			// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
-				E_Ice = hp * exp ( 22.4429 * t_Celsius_0 / ( 272.44 + t_Celsius_0 ) );							// saturation water vapour pressure for the ice phase in hPa
+			E_Rain = hp * exp ( 17.0809 * t_Celsius_0 / ( 234.175 + t_Celsius_0 ) );						// saturation water vapour pressure for the water phase at t > 0°C in hPa
+			E_Rain_super = hp * exp ( 17.8436 * t_Celsius_0 / ( 245.425 + t_Celsius_0 ) );			// saturation water vapour pressure for the water phase at t < 0°C, supercooled in hPa
+			E_Ice = hp * exp ( 22.4429 * t_Celsius_0 / ( 272.44 + t_Celsius_0 ) );							// saturation water vapour pressure for the ice phase in hPa
 
-				p_h = p_stat.x[ 0 ][ j ][ k ];
+			p_h = p_stat.x[ 0 ][ j ][ k ];
 
-				e_h = c.x[ 0 ][ j ][ k ] * p_h / ep; 																						// water vapour pressure in hPa
-				q_h = ep * e_h / p_h;																							// threshold value for water vapour at local hight h in kg/kg
+			e_h = c.x[ 0 ][ j ][ k ] * p_h / ep; 																						// water vapour pressure in hPa
+			q_h = ep * e_h / p_h;																							// threshold value for water vapour at local hight h in kg/kg
 
-				q_Rain  = ep * E_Rain / ( p_h - E_Rain );																					// water vapour amount at saturation with water formation in kg/kg
-				q_Rain_super  = ep * E_Rain_super / ( p_h - E_Rain_super );															// water vapour amount at saturation with water formation in kg/kg
-				q_Ice  = ep * E_Ice / ( p_h - E_Ice );																						// water vapour amount at saturation with ice formation in kg/kg
+			q_Rain  = ep * E_Rain / ( p_h - E_Rain );																					// water vapour amount at saturation with water formation in kg/kg
+			q_Rain_super  = ep * E_Rain_super / ( p_h - E_Rain_super );															// water vapour amount at saturation with water formation in kg/kg
+			q_Ice  = ep * E_Ice / ( p_h - E_Ice );																						// water vapour amount at saturation with ice formation in kg/kg
 
-				dp_hdr = ( - c32 * p_stat.x[ 0 ][ j ][ k ] + c42 * p_stat.x[ 1 ][ j ][ k ] - c12 * p_stat.x[ 2 ][ j ][ k ]) / dr;
-				dp_hdthe = ( p_stat.x[ 0 ][ j+1 ][ k ] - p_stat.x[ 0 ][ j-1 ][ k ] ) / ( 2. * rm * dthe );
-				dp_hdphi = ( p_stat.x[ 0 ][ j ][ k+1 ] - p_stat.x[ 0 ][ j ][ k-1 ] ) / ( 2. * rmsinthe * dphi );
+			dp_hdr = ( - c32 * p_stat.x[ 0 ][ j ][ k ] + c42 * p_stat.x[ 1 ][ j ][ k ] - c12 * p_stat.x[ 2 ][ j ][ k ]) / dr;
+			dp_hdthe = ( p_stat.x[ 0 ][ j+1 ][ k ] - p_stat.x[ 0 ][ j-1 ][ k ] ) / ( 2. * rm * dthe );
+			dp_hdphi = ( p_stat.x[ 0 ][ j ][ k+1 ] - p_stat.x[ 0 ][ j ][ k-1 ] ) / ( 2. * rmsinthe * dphi );
 
-				E_dEdr_Rain = ( - c32 * hp * exp ( 17.0809 * t_Celsius_0 / ( 234.175 + t_Celsius_0 ) ) + c42 * hp * exp ( 17.0809 * t_Celsius_1 / ( 234.175 + t_Celsius_1 ) ) - c12 * hp * exp ( 17.0809 * t_Celsius_2 / ( 234.175 + t_Celsius_2 ) ) ) / dr;
-				E_dEdr_Rain_super = ( - c32 * hp * exp ( 17.8436 * t_Celsius_0 / ( 245.425 + t_Celsius_0 ) ) + c42 * hp * exp ( 17.8436 * t_Celsius_1 / ( 245.425 + t_Celsius_1 ) ) - c12 * hp * exp ( 17.0809 * t_Celsius_2 / ( 234.175 + t_Celsius_2 ) ) ) / dr;
-				E_dEdr_Ice = ( - c32 * hp * exp ( 22.4429 * t_Celsius_0 / ( 272.44 + t_Celsius_0 ) ) + c42 * hp * exp ( 22.4429 * t_Celsius_1 / ( 272.44 + t_Celsius_1 ) ) - c12 * hp * exp ( 17.0809 * t_Celsius_2 / ( 234.175 + t_Celsius_2 ) ) ) / dr;
+			E_dEdr_Rain = ( - c32 * hp * exp ( 17.0809 * t_Celsius_0 / ( 234.175 + t_Celsius_0 ) ) + c42 * hp * exp ( 17.0809 * t_Celsius_1 / ( 234.175 + t_Celsius_1 ) ) - c12 * hp * exp ( 17.0809 * t_Celsius_2 / ( 234.175 + t_Celsius_2 ) ) ) / dr;
+			E_dEdr_Rain_super = ( - c32 * hp * exp ( 17.8436 * t_Celsius_0 / ( 245.425 + t_Celsius_0 ) ) + c42 * hp * exp ( 17.8436 * t_Celsius_1 / ( 245.425 + t_Celsius_1 ) ) - c12 * hp * exp ( 17.0809 * t_Celsius_2 / ( 234.175 + t_Celsius_2 ) ) ) / dr;
+			E_dEdr_Ice = ( - c32 * hp * exp ( 22.4429 * t_Celsius_0 / ( 272.44 + t_Celsius_0 ) ) + c42 * hp * exp ( 22.4429 * t_Celsius_1 / ( 272.44 + t_Celsius_1 ) ) - c12 * hp * exp ( 17.0809 * t_Celsius_2 / ( 234.175 + t_Celsius_2 ) ) ) / dr;
 
-				E_dEdthe_Rain = ( hp * exp ( 17.0809 * t_Celsius_pj / ( 234.175 + t_Celsius_pj ) ) - hp * exp ( 17.0809 * t_Celsius_nj / ( 234.175 + t_Celsius_nj ) ) ) / ( 2. * rm * dthe );
-				E_dEdthe_Rain_super = ( hp * exp ( 17.8436 * t_Celsius_pj / ( 245.425 + t_Celsius_pj ) ) - hp * exp ( 17.8436 * t_Celsius_nj / ( 245.425 + t_Celsius_nj ) ) ) / ( 2. * rm * dthe );
-				E_dEdthe_Ice = ( hp * exp ( 22.4429 * t_Celsius_pj / ( 272.44 + t_Celsius_pj ) ) - hp * exp ( 22.4429 * t_Celsius_nj / ( 272.44 + t_Celsius_nj ) ) ) / ( 2. * rm * dthe );
+			E_dEdthe_Rain = ( hp * exp ( 17.0809 * t_Celsius_pj / ( 234.175 + t_Celsius_pj ) ) - hp * exp ( 17.0809 * t_Celsius_nj / ( 234.175 + t_Celsius_nj ) ) ) / ( 2. * rm * dthe );
+			E_dEdthe_Rain_super = ( hp * exp ( 17.8436 * t_Celsius_pj / ( 245.425 + t_Celsius_pj ) ) - hp * exp ( 17.8436 * t_Celsius_nj / ( 245.425 + t_Celsius_nj ) ) ) / ( 2. * rm * dthe );
+			E_dEdthe_Ice = ( hp * exp ( 22.4429 * t_Celsius_pj / ( 272.44 + t_Celsius_pj ) ) - hp * exp ( 22.4429 * t_Celsius_nj / ( 272.44 + t_Celsius_nj ) ) ) / ( 2. * rm * dthe );
 
-				E_dEdphi_Rain = ( hp * exp ( 17.0809 * t_Celsius_pk / ( 234.175 + t_Celsius_pk ) ) - hp * exp ( 17.0809 * t_Celsius_nk / ( 234.175 + t_Celsius_nk ) ) ) / ( 2. * rmsinthe * dphi );
-				E_dEdphi_Rain_super = ( hp * exp ( 17.8436 * t_Celsius_pk / ( 245.425 + t_Celsius_pk ) ) - hp * exp ( 17.8436 * t_Celsius_nk / ( 245.425 + t_Celsius_nk ) ) ) / ( 2. * rmsinthe * dphi );
-				E_dEdphi_Ice = ( hp * exp ( 22.4429 * t_Celsius_pk / ( 272.44 + t_Celsius_pk ) ) - hp * exp ( 22.4429 * t_Celsius_nk / ( 272.44 + t_Celsius_nk ) ) ) / ( 2. * rmsinthe * dphi );
-
-
-				Latency.x[ 0 ][ j ][ k ] = ( r_air * lv * u_0 / L_atm ) * q_Rain * ( u.x[ 0 ][ j ][ k ] * ( E_dEdr_Rain / E_Rain - dp_hdr / p_h ) + v.x[ 0 ][ j ][ k ] * ( E_dEdthe_Rain / E_Rain - dp_hdthe / p_h ) + w.x[ 0 ][ j ][ k ] * ( E_dEdphi_Rain / E_Rain - dp_hdphi / p_h ) );
-
-				Latency.x[ 0 ][ j ][ k ] = Latency.x[ 0 ][ j ][ k ] + ( r_air * lv * u_0 / L_atm ) * q_Rain_super * ( u.x[ 0 ][ j ][ k ] * ( E_dEdr_Rain_super / E_Rain_super - dp_hdr / p_h ) + v.x[ 0 ][ j ][ k ] * ( E_dEdthe_Rain_super / E_Rain_super - dp_hdthe / p_h ) + w.x[ 0 ][ j ][ k ] * ( E_dEdphi_Rain_super / E_Rain_super - dp_hdphi / p_h ) );
-
-				Latency.x[ 0 ][ j ][ k ] = Latency.x[ 0 ][ j ][ k ] + ( r_air * ls * u_0 / L_atm ) * q_Ice * ( u.x[ 0 ][ j ][ k ] * ( E_dEdr_Ice / E_Ice - dp_hdr / p_h ) + v.x[ 0 ][ j ][ k ] * ( E_dEdthe_Ice / E_Ice - dp_hdthe / p_h ) + w.x[ 0 ][ j ][ k ] * ( E_dEdphi_Ice / E_Ice - dp_hdphi / p_h ) );
+			E_dEdphi_Rain = ( hp * exp ( 17.0809 * t_Celsius_pk / ( 234.175 + t_Celsius_pk ) ) - hp * exp ( 17.0809 * t_Celsius_nk / ( 234.175 + t_Celsius_nk ) ) ) / ( 2. * rmsinthe * dphi );
+			E_dEdphi_Rain_super = ( hp * exp ( 17.8436 * t_Celsius_pk / ( 245.425 + t_Celsius_pk ) ) - hp * exp ( 17.8436 * t_Celsius_nk / ( 245.425 + t_Celsius_nk ) ) ) / ( 2. * rmsinthe * dphi );
+			E_dEdphi_Ice = ( hp * exp ( 22.4429 * t_Celsius_pk / ( 272.44 + t_Celsius_pk ) ) - hp * exp ( 22.4429 * t_Celsius_nk / ( 272.44 + t_Celsius_nk ) ) ) / ( 2. * rmsinthe * dphi );
 
 
-				if ( Latency.x[ 0 ][ j ][ k ] <= 0. )		t_co2_nd_3D.x[ 0 ][ j ][ k ] = ( pow ( ( radiation_3D.x[ 0 ][ j ][ k ] - Latency.x[ 0 ][ j ][ k ] - Q_Sensible.x[ 0 ][ j ][ k ] ) / sigma, 1. / 4. ) - pow ( radiation_3D.x[ 0 ][ j ][ k ] / sigma, 1. / 4. ) );																							// temperature increase due to condensation
-				else 												t_co2_nd_3D.x[ 0 ][ j ][ k ] = 0.;
+			Latency.x[ 0 ][ j ][ k ] = ( r_air * lv * u_0 / L_atm ) * q_Rain * ( u.x[ 0 ][ j ][ k ] * ( E_dEdr_Rain / E_Rain - dp_hdr / p_h ) + v.x[ 0 ][ j ][ k ] * ( E_dEdthe_Rain / E_Rain - dp_hdthe / p_h ) + w.x[ 0 ][ j ][ k ] * ( E_dEdphi_Rain / E_Rain - dp_hdphi / p_h ) );
 
-				if ( Latency.x[ 0 ][ j ][ k ] > 0. )			t_evap_3D.x[ 0 ][ j ][ k ] = ( pow ( ( radiation_3D.x[ 0 ][ j ][ k ] - Latency.x[ 0 ][ j ][ k ] - Q_Sensible.x[ 0 ][ j ][ k ] ) / sigma, 1. / 4. ) - pow ( radiation_3D.x[ 0 ][ j ][ k ] / sigma, 1. / 4. ) );																								// temperature decrease due to evaporation
-				else 												t_evap_3D.x[ 0 ][ j ][ k ] = 0.;
+			Latency.x[ 0 ][ j ][ k ] = Latency.x[ 0 ][ j ][ k ] + ( r_air * lv * u_0 / L_atm ) * q_Rain_super * ( u.x[ 0 ][ j ][ k ] * ( E_dEdr_Rain_super / E_Rain_super - dp_hdr / p_h ) + v.x[ 0 ][ j ][ k ] * ( E_dEdthe_Rain_super / E_Rain_super - dp_hdthe / p_h ) + w.x[ 0 ][ j ][ k ] * ( E_dEdphi_Rain_super / E_Rain_super - dp_hdphi / p_h ) );
 
-				if ( h.x[ 0 ][ j ][ k ] == 1. )					t_co2_nd_3D.x[ 0 ][ j ][ k ] = t_evap_3D.x[ 0 ][ j ][ k ] = 0.;
+			Latency.x[ 0 ][ j ][ k ] = Latency.x[ 0 ][ j ][ k ] + ( r_air * ls * u_0 / L_atm ) * q_Ice * ( u.x[ 0 ][ j ][ k ] * ( E_dEdr_Ice / E_Ice - dp_hdr / p_h ) + v.x[ 0 ][ j ][ k ] * ( E_dEdthe_Ice / E_Ice - dp_hdthe / p_h ) + w.x[ 0 ][ j ][ k ] * ( E_dEdphi_Ice / E_Ice - dp_hdphi / p_h ) );
 
+			Q_Sensible.x[ 0 ][ j ][ k ] = - cp_l * r_air * u_0 * t_0 / L_atm * ( v.x[ 0 ][ j ][ k ] * ( t.x[ 0 ][ j+1 ][ k ] - t.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe ) / rm + w.x[ 0 ][ j ][ k ] * ( t.x[ 0 ][ j ][ k+1 ] - t.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi ) / rmsinthe );							// sensible heat in [W/m2] from energy transport equation
 /*
-				cout.precision ( 4 );
-				if ( ( j == 90 ) && ( k == 180 ) )	cout << 0 << "   " << j << "   " << k << "   " << Latency.x[ 0 ][ j ][ k ] << "   " << E_dEdr_Rain << "   " << E_dEdthe_Rain << "   " << E_dEdphi_Rain << "   " << dp_hdr << "   " << dp_hdthe << "   " << dp_hdphi << "   " << p_h << "   " << u.x[ 0 ][ j ][ k ] << "   " << v.x[ 0 ][ j ][ k ] << "   " << w.x[ 0 ][ j ][ k ] << "   " << ( E_dEdr_Rain / E_Rain - dp_hdr / p_h ) << "   " << ( E_dEdthe_Rain / E_Rain - dp_hdthe / p_h ) << "   " << ( E_dEdphi_Rain / E_Rain - dp_hdphi / p_h ) << "   " << coeff_lv * u.x[ 0 ][ j ][ k ] * q_Rain * ( E_dEdr_Rain / E_Rain - dp_hdr / p_h ) << "   " << coeff_lv * v.x[ 0 ][ j ][ k ] * q_Rain * ( E_dEdthe_Rain / E_Rain - dp_hdthe / p_h ) << "   " << coeff_lv * w.x[ 0 ][ j ][ k ] * q_Rain * ( E_dEdphi_Rain / E_Rain - dp_hdphi / p_h ) << "   " << t.x[ 0 ][ j ][ k ] << endl;
-				cout.precision ( 8 );
+			cout.precision ( 4 );
+			if ( ( j == 90 ) && ( k == 180 ) )	cout << 0 << "   " << j << "   " << k << "   " << Latency.x[ 0 ][ j ][ k ] << "   " << E_dEdr_Rain << "   " << E_dEdthe_Rain << "   " << E_dEdphi_Rain << "   " << dp_hdr << "   " << dp_hdthe << "   " << dp_hdphi << "   " << p_h << "   " << u.x[ 0 ][ j ][ k ] << "   " << v.x[ 0 ][ j ][ k ] << "   " << w.x[ 0 ][ j ][ k ] << "   " << ( E_dEdr_Rain / E_Rain - dp_hdr / p_h ) << "   " << ( E_dEdthe_Rain / E_Rain - dp_hdthe / p_h ) << "   " << ( E_dEdphi_Rain / E_Rain - dp_hdphi / p_h ) << "   " << coeff_lv * u.x[ 0 ][ j ][ k ] * q_Rain * ( E_dEdr_Rain / E_Rain - dp_hdr / p_h ) << "   " << coeff_lv * v.x[ 0 ][ j ][ k ] * q_Rain * ( E_dEdthe_Rain / E_Rain - dp_hdthe / p_h ) << "   " << coeff_lv * w.x[ 0 ][ j ][ k ] * q_Rain * ( E_dEdphi_Rain / E_Rain - dp_hdphi / p_h ) << "   " << t.x[ 0 ][ j ][ k ] << endl;
+			cout.precision ( 8 );
 */
 
-			}
 		}
+	}
 
 
 	for ( int i = 1; i < im-1; i++ )
@@ -3276,14 +3137,7 @@ void BC_Thermo::Latent_Heat ( double lv, double ls, double ep, double hp, double
 
 				Latency.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ] + ( r_air * ls * u_0 / L_atm ) * ( u.x[ i ][ j ][ k ] * q_Ice * ( E_dEdr_Ice / E_Ice - dp_hdr / p_h ) + v.x[ i ][ j ][ k ] * q_Ice * ( E_dEdthe_Ice / E_Ice - dp_hdthe / p_h ) + w.x[ i ][ j ][ k ] * q_Ice * ( E_dEdphi_Ice / E_Ice - dp_hdphi / p_h ) );
 
-
-				if ( Latency.x[ i ][ j ][ k ] <= 0. )		t_co2_nd_3D.x[ i ][ j ][ k ] = ( pow ( ( radiation_3D.x[ i ][ j ][ k ] - Latency.x[ i ][ j ][ k ] ) / sigma, 1. / 4. ) - pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, 1. / 4. ) );																								// temperature increase due to condensation
-				else 												t_co2_nd_3D.x[ i ][ j ][ k ] = 0.;
-
-				if ( Latency.x[ i ][ j ][ k ] > 0. )			t_evap_3D.x[ i ][ j ][ k ] = ( pow ( ( radiation_3D.x[ i ][ j ][ k ] - Latency.x[ i ][ j ][ k ] ) / sigma, 1. / 4. ) - pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, 1. / 4. ) );																								// temperature decrease due to evaporation
-				else 												t_evap_3D.x[ i ][ j ][ k ] = 0.;
-
-				if ( h.x[ i ][ j ][ k ] == 1. )					t_co2_nd_3D.x[ i ][ j ][ k ] = t_evap_3D.x[ i ][ j ][ k ] = 0.;
+				Q_Sensible.x[ i ][ j ][ k ] = - cp_l * r_air * u_0 * t_0 / L_atm * ( u.x[ i ][ j ][ k ] * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) + v.x[ i ][ j ][ k ] * ( t.x[ i ][ j+1 ][ k ] - t.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe ) / rm + w.x[ i ][ j ][ k ] * ( t.x[ i ][ j ][ k+1 ] - t.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi ) / rmsinthe );							// sensible heat in [W/m2] from energy transport equation
 
 
 /*
@@ -3313,6 +3167,146 @@ void BC_Thermo::Latent_Heat ( double lv, double ls, double ep, double hp, double
 			}
 		}
 	}
+
+
+
+// boundaries of various variables
+	for ( int k = 1; k < km-1; k++ )
+	{
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			Latency.x[ 0 ][ j ][ k ] = c43 * Latency.x[ 1 ][ j ][ k ] - c13 * Latency.x[ 2 ][ j ][ k ];
+			Latency.x[ im-1 ][ j ][ k ] = c43 * Latency.x[ im-2 ][ j ][ k ] - c13 * Latency.x[ im-3 ][ j ][ k ];
+
+			Q_Sensible.x[ 0 ][ j ][ k ] = c43 * Q_Sensible.x[ 1 ][ j ][ k ] - c13 * Q_Sensible.x[ 2 ][ j ][ k ];
+			Q_Sensible.x[ im-1 ][ j ][ k ] = c43 * Q_Sensible.x[ im-2 ][ j ][ k ] - c13 * Q_Sensible.x[ im-3 ][ j ][ k ];
+		}
+	}
+
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int i = 0; i < im; i++ )
+		{
+			t.x[ i ][ 0 ][ k ] = c43 * t.x[ i ][ 1 ][ k ] - c13 * t.x[ i ][ 2 ][ k ];
+			t.x[ i ][ jm-1 ][ k ] = c43 * t.x[ i ][ jm-2 ][ k ] - c13 * t.x[ i ][ jm-3 ][ k ];
+
+			radiation_3D.x[ i ][ 0 ][ k ] = c43 * radiation_3D.x[ i ][ 1 ][ k ] - c13 * radiation_3D.x[ i ][ 2 ][ k ];
+			radiation_3D.x[ i ][ jm-1 ][ k ] = c43 * radiation_3D.x[ i ][ jm-2 ][ k ] - c13 * radiation_3D.x[ i ][ jm-3 ][ k ];
+
+			Latency.x[ i ][ 0 ][ k ] = c43 * Latency.x[ i ][ 1 ][ k ] - c13 * Latency.x[ i ][ 2 ][ k ];
+			Latency.x[ i ][ jm-1 ][ k ] = c43 * Latency.x[ i ][ jm-2 ][ k ] - c13 * Latency.x[ i ][ jm-3 ][ k ];
+
+			Q_Sensible.x[ i ][ 0 ][ k ] = c43 * Q_Sensible.x[ i ][ 1 ][ k ] - c13 * Q_Sensible.x[ i ][ 2 ][ k ];
+			Q_Sensible.x[ i ][ jm-1 ][ k ] = c43 * Q_Sensible.x[ i ][ jm-2 ][ k ] - c13 * Q_Sensible.x[ i ][ jm-3 ][ k ];
+		}
+	}
+
+
+	for ( int i = 0; i < im; i++ )
+	{
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
+			t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];
+			t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ km-1 ] = ( t.x[ i ][ j ][ 0 ] + t.x[ i ][ j ][ km-1 ] ) / 2.;
+
+			radiation_3D.x[ i ][ j ][ 0 ] = c43 * radiation_3D.x[ i ][ j ][ 1 ] - c13 * radiation_3D.x[ i ][ j ][ 2 ];
+			radiation_3D.x[ i ][ j ][ km-1 ] = c43 * radiation_3D.x[ i ][ j ][ km-2 ] - c13 * radiation_3D.x[ i ][ j ][ km-3 ];
+			radiation_3D.x[ i ][ j ][ 0 ] = radiation_3D.x[ i ][ j ][ km-1 ] = ( radiation_3D.x[ i ][ j ][ 0 ] + radiation_3D.x[ i ][ j ][ km-1 ] ) / 2.;
+
+			Latency.x[ i ][ j ][ 0 ] = c43 * Latency.x[ i ][ j ][ 1 ] - c13 * Latency.x[ i ][ j ][ 2 ];
+			Latency.x[ i ][ j ][ km-1 ] = c43 * Latency.x[ i ][ j ][ km-2 ] - c13 * Latency.x[ i ][ j ][ km-3 ];
+			Latency.x[ i ][ j ][ 0 ] = Latency.x[ i ][ j ][ km-1 ] = ( Latency.x[ i ][ j ][ 0 ] + Latency.x[ i ][ j ][ km-1 ] ) / 2.;
+
+			Q_Sensible.x[ i ][ j ][ 0 ] = c43 * Q_Sensible.x[ i ][ j ][ 1 ] - c13 * Q_Sensible.x[ i ][ j ][ 2 ];
+			Q_Sensible.x[ i ][ j ][ km-1 ] = c43 * Q_Sensible.x[ i ][ j ][ km-2 ] - c13 * Q_Sensible.x[ i ][ j ][ km-3 ];
+			Q_Sensible.x[ i ][ j ][ 0 ] = Q_Sensible.x[ i ][ j ][ km-1 ] = ( Q_Sensible.x[ i ][ j ][ 0 ] + Q_Sensible.x[ i ][ j ][ km-1 ] ) / 2.;
+		}
+	}
+
+
+
+
+
+	for ( int j = 1; j < jm-1; j++ )
+	{
+		for ( int k = 1; k < km-1; k++ )
+		{
+			if ( Latency.x[ 0 ][ j ][ k ] <= 0. )		t_cond_3D.x[ 0 ][ j ][ k ] = pow ( ( radiation_3D.x[ 0 ][ j ][ k ] - Latency.x[ 0 ][ j ][ k ] - Q_Sensible.x[ 0 ][ j ][ k ] ) / sigma, .25 ) - pow ( radiation_3D.x[ 0 ][ j ][ k ] / sigma, .25 );																							// temperature increase due to condensation
+			else 													t_cond_3D.x[ 0 ][ j ][ k ] = 0.;
+
+			if ( Latency.x[ 0 ][ j ][ k ] > 0. )			t_evap_3D.x[ 0 ][ j ][ k ] = pow ( ( radiation_3D.x[ 0 ][ j ][ k ] - Latency.x[ 0 ][ j ][ k ] - Q_Sensible.x[ 0 ][ j ][ k ] ) / sigma, .25 ) - pow ( radiation_3D.x[ 0 ][ j ][ k ] / sigma, .25 );																								// temperature decrease due to evaporation
+			else 													t_evap_3D.x[ 0 ][ j ][ k ] = 0.;
+
+			if ( h.x[ 0 ][ j ][ k ] == 1. )					t_cond_3D.x[ 0 ][ j ][ k ] = t_evap_3D.x[ 0 ][ j ][ k ] = 0.;
+		}
+	}
+
+
+
+	for ( int i = 1; i < im-1; i++ )
+	{
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			for ( int k = 1; k < km-1; k++ )
+			{
+				if ( Latency.x[ i ][ j ][ k ] <= 0. )		t_cond_3D.x[ i ][ j ][ k ] = pow ( ( radiation_3D.x[ i ][ j ][ k ] - Latency.x[ i ][ j ][ k ] - Q_Sensible.x[ i ][ j ][ k ] ) / sigma, .25 ) - pow ( radiation_3D.x[ i ][ j ][ k ] / sigma , .25 );																								// temperature increase due to condensation
+				else 												t_cond_3D.x[ i ][ j ][ k ] = 0.;
+
+				if ( Latency.x[ i ][ j ][ k ] > 0. )			t_evap_3D.x[ i ][ j ][ k ] = pow ( ( radiation_3D.x[ i ][ j ][ k ] - Latency.x[ i ][ j ][ k ] - Q_Sensible.x[ i ][ j ][ k ] ) / sigma, .25 ) - pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, .25 );																								// temperature decrease due to evaporation
+				else 												t_evap_3D.x[ i ][ j ][ k ] = 0.;
+
+				if ( h.x[ i ][ j ][ k ] == 1. )					t_cond_3D.x[ i ][ j ][ k ] = t_evap_3D.x[ i ][ j ][ k ] = 0.;
+			}
+		}
+	}
+
+
+
+
+
+// boundaries of various variables
+	for ( int k = 1; k < km-1; k++ )
+	{
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			t_cond_3D.x[ 0 ][ j ][ k ] = c43 * t_cond_3D.x[ 1 ][ j ][ k ] - c13 * t_cond_3D.x[ 2 ][ j ][ k ];
+			t_cond_3D.x[ im-1 ][ j ][ k ] = c43 * t_cond_3D.x[ im-2 ][ j ][ k ] - c13 * t_cond_3D.x[ im-3 ][ j ][ k ];
+
+			t_evap_3D.x[ 0 ][ j ][ k ] = c43 * t_evap_3D.x[ 1 ][ j ][ k ] - c13 * t_evap_3D.x[ 2 ][ j ][ k ];
+			t_evap_3D.x[ im-1 ][ j ][ k ] = c43 * t_evap_3D.x[ im-2 ][ j ][ k ] - c13 * t_evap_3D.x[ im-3 ][ j ][ k ];
+		}
+	}
+
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int i = 0; i < im; i++ )
+		{
+			t_cond_3D.x[ i ][ 0 ][ k ] = c43 * t_cond_3D.x[ i ][ 1 ][ k ] - c13 * t_cond_3D.x[ i ][ 2 ][ k ];
+			t_cond_3D.x[ i ][ jm-1 ][ k ] = c43 * t_cond_3D.x[ i ][ jm-2 ][ k ] - c13 * t_cond_3D.x[ i ][ jm-3 ][ k ];
+
+			t_evap_3D.x[ i ][ 0 ][ k ] = c43 * t_evap_3D.x[ i ][ 1 ][ k ] - c13 * t_evap_3D.x[ i ][ 2 ][ k ];
+			t_evap_3D.x[ i ][ jm-1 ][ k ] = c43 * t_evap_3D.x[ i ][ jm-2 ][ k ] - c13 * t_evap_3D.x[ i ][ jm-3 ][ k ];
+		}
+	}
+
+
+	for ( int i = 0; i < im; i++ )
+	{
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			t_cond_3D.x[ i ][ j ][ 0 ] = c43 * t_cond_3D.x[ i ][ j ][ 1 ] - c13 * t_cond_3D.x[ i ][ j ][ 2 ];
+			t_cond_3D.x[ i ][ j ][ km-1 ] = c43 * t_cond_3D.x[ i ][ j ][ km-2 ] - c13 * t_cond_3D.x[ i ][ j ][ km-3 ];
+			t_cond_3D.x[ i ][ j ][ 0 ] = t_cond_3D.x[ i ][ j ][ km-1 ] = ( t_cond_3D.x[ i ][ j ][ 0 ] + t_cond_3D.x[ i ][ j ][ km-1 ] ) / 2.;
+
+			t_evap_3D.x[ i ][ j ][ 0 ] = c43 * t_evap_3D.x[ i ][ j ][ 1 ] - c13 * t_evap_3D.x[ i ][ j ][ 2 ];
+			t_evap_3D.x[ i ][ j ][ km-1 ] = c43 * t_evap_3D.x[ i ][ j ][ km-2 ] - c13 * t_evap_3D.x[ i ][ j ][ km-3 ];
+			t_evap_3D.x[ i ][ j ][ 0 ] = t_evap_3D.x[ i ][ j ][ km-1 ] = ( t_evap_3D.x[ i ][ j ][ 0 ] + t_evap_3D.x[ i ][ j ][ km-1 ] ) / 2.;
+		}
+	}
+
 }
 
 

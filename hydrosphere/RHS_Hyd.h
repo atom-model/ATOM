@@ -25,10 +25,10 @@ class RHS_Hydrosphere
 		int i, j, k, im, jm, km;
 		int h_check_i, h_check_j, h_check_k;
 
-		double dt, dr, dthe, dphi;
+		double dt, dr, dthe, dphi, r0;
 		double re, pr, ec, sc, g, omega, coriolis, centrifugal, c_salt;
 		double a2, dt2, dr2, dthe2, dphi2, rm2;
-		double kr1, kr2, kthe1, kthe2, rm;
+		double kr1, kr2, kthe1, kthe2, rm, rm_1, rm_2, r, y, y2, d_u, d_l, sig_k, beta_k;
 		double sinphi, tanthe, kpr, kpthe, kpphi, kphi;
 		double time, c_0, c_TS, t_0, t_Celsius, c_Boussinesq;
 		double sinthe, sinthe2, kro, c43, c13, k_Force;
@@ -47,7 +47,7 @@ class RHS_Hydrosphere
 
 
 	public:
-		RHS_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double ); 
+		RHS_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double ); 
 		~RHS_Hydrosphere ();
 
 		void Pressure_RHS_Hydrosphere ( double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );

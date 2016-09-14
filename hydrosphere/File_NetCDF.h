@@ -10,7 +10,6 @@
 
 
 #include <iostream>
-#include <netcdf.h>
 #include <fstream>
 #include <cstring>
 

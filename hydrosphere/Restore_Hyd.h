@@ -18,15 +18,15 @@ using namespace std;
 
 
 
-class Restore
+class Restore_Hyd
 {
 	private:
 		int im, jm, km;
 		double coeff;
 
 	public:
-		Restore ( int, int, int );
-		~Restore ();
+		Restore_Hyd ( int, int, int );
+		~Restore_Hyd ();
 
 		void restoreOldNew_3D ( double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 

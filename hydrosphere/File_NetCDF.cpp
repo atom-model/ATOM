@@ -72,7 +72,7 @@ double File_NetCDF::out_NetCDF ( const string &F_N, Array &v_w, Array &w_w, Arra
 
 	if ( ( retval = nc_create ( F_N.c_str(), NC_CLOBBER, &ncid ) ) ) ERR ( retval );
 
-	printf ( "***** successful writing of results through class NetCDF -> netCDF-file: %s\n\n", F_N.c_str() );
+	printf ( "***** successful creation of a netCDF-file through class NetCDF -> netCDF-file: %s\n\n", F_N.c_str() );
 
 	if ( ( retval = nc_def_dim ( ncid, LVL_NAME, NLVL, &lvl_dimid ) ) ) ERR ( retval );
 	if ( ( retval = nc_def_dim ( ncid, LAT_NAME, NLAT, &lat_dimid ) ) ) ERR ( retval );

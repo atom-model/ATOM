@@ -24,7 +24,7 @@ class Results_MSL_Atm
 		int im, jm, km, sun, h_point_max, h_land, h_ocean;
 		int i_loc, j_loc, k_loc, i_loc_level, j_loc_deg, k_loc_deg, max_ch, min_ch;
 		int iter_prec;
-		int *i_T, i_T_max, i_T_a, i_T_b, i_b, i_LFS, i_parc;
+		int i_T_max, i_T_a, i_T_b, i_b, i_LFS, i_parc;
 
 		double E, E_Rain_SL, E_Rain, E_Rain_super, E_Ice, q_Rain, q_Rain_n, q_Rain_super, q_Ice, q_Ice_n, E_Rain_super_SL, E_Ice_SL, q_Rain_SL, q_Rain_super_SL, q_Ice_SL;
 		double e, a, e_SL, a_SL, p_SL, q_SL, t_dew_SL, t_Celsius_SL, q_h_p, q_T;
@@ -46,8 +46,8 @@ class Results_MSL_Atm
 		double N_i_0, N_i, t_nuc, t_d, t_hn, m_i, m_i_0, m_i_max, m_s_0, c_i_dep, c_c_au, c_i_au, c_agg, c_i_cri, c_r_cri, c_s_dep, c_s_melt;
 		double MC_s, MC_q_v, MC_v, MC_w, s, cu, C_p, u_b, u_d1, w_d1, w_d, v_d1, v_d, q_v_d1, q_v_d, s_d1, s_d, u_u1, w_u1, w_u, v_u1, v_u, q_v_u1, q_v_u, q_v_b, q_i_b, q_c_u1, q_c_u, q_c_d, q_c_b, s_u1, s_u, M_d, E_d, D_d, M_u, E_u, D_u, r_dry_parc, r_humid_parc, a_w, b_w, a_i, b_i;
 		double a_u, a_d, b_u, alf_1, alf_2, p_ps, bet_p, eps_u, delta_i_c, K_p, del_u, cloud_u, dt_u, t_u, buoyancy_check, u_u1_check, u_d1_check, sat_check, u_max_check, t_b, s_b, c_b, cloud_b, v_b, w_b, gam_d, dcdr, dcdthe, dcdphi, eps_d, del_d, T, T_nue, T_tilda_h, t_Celsius_ni, t_Celsius_pi, E_dEdr_Rain, E_dEdr_Ice, T_p, T_n, p_h_p, p_h_n, p_v_sw_p, p_v_sw_n, q_v_sw_p, q_v_sw_n, dq_v_swdT, p_v_0, p_v_hyp, q_v_hyp, q_v_hyp_n, p_v_sw, q_v_sw, dq_v_sidT, p_v_si, q_v_si, Rd_Rv, Rd_Rv_1, T_t_in, T_b_w, T_t_in_T_b_w, dp_v_swdT, T_b_i, T_t_in_T_b_i, dp_v_sidT, dp_dT, p_denom, p_nom;
-		double *e_d, *e_l, *e_p, *g_p, *c_u, *r_humid_u, *r_humid_u_parc, *r_dry_u, *r_dry_u_parc;
 		double T_t_in0, T_t_in1, DEP, CND,d_q_v, d_q_c, d_q_i, d_t, p_t_in, t_Celsius_0, E_Rain_t_in, q_Rain_t_in, t_pole, t_cretaceous, t_north_pole_av, t_south_pole_av;
+		double *e_d, *e_l, *e_p, *g_p, *c_u, *r_humid_u, *r_humid_u_parc, *r_dry_u, *r_dry_u_parc;
 
 		string name_Value_1, name_Value_2, name_Value_3, name_Value_4, name_Value_5, name_Value_6, name_Value_7, name_Value_8, name_Value_9, name_Value_10, name_Value_11, name_Value_12, name_Value_13, name_Value_14, name_Value_15, name_Value_16, name_Value_17, name_Value_18, name_Value_19, name_Value_20, name_Value_21, name_Value_22, name_unit_wm2, name_unit_mm, name_unit_mmd, name_unit_mma, name_unit_ppm;
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading, heading_Dresden, heading_Sydney, heading_Equator;

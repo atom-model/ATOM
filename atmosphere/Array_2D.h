@@ -26,9 +26,10 @@ class Array_2D
 	public:
 		double **y;
 
-		Array_2D ( int, int, double );
-		~Array_2D();
+		Array_2D ( );
+		~Array_2D ( );
 
-		void printArray_2D();
+		void printArray_2D ( );
+		void initArray_2D ( int, int, double );
 };
 #endif

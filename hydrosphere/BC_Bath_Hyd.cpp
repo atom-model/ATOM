@@ -184,7 +184,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 
 
 
-void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &pn_dyn, Array &cn )
+void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &aux_p, Array &cn )
 {
 // boundary conditions for the total solid ground
 
@@ -196,7 +196,7 @@ void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa
 			{
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
-					p_dyn.x[ i ][ j ][ k ] =  pn_dyn.x[ i ][ j ][ k ] = pa;
+					p_dyn.x[ i ][ j ][ k ] =  aux_p.x[ i ][ j ][ k ] = pa;
 					t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ta;
 					c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ca;
 					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;

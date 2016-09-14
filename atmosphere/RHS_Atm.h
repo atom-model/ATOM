@@ -25,7 +25,7 @@ class RHS_Atmosphere
 		int i, j, k, im, jm, km;
 		int i_level, h_check_i, h_check_j, h_check_k;
 		int i_T, i_b;
-		int *im_tropopause;
+		int **im_tropopause;
 
 		double zeit, dt, dr, dthe, dphi;
 		double re, pr, ec, sc_WaterVapour, sc_CO2, g, omega, coriolis, centrifugal, WaterVapour, buoyancy, CO2, lambda;
@@ -37,7 +37,7 @@ class RHS_Atmosphere
 		double kr1, kr2, kthe1, kthe2, rm, c43, c13;
 		double tanthe, kpr, kpthe, kpphi, kphi;
 		double RS_Coriolis_Energy, RS_centrifugal_Energy;
-		double RS_WaterVapour_Balance_Rain, RS_WaterVapour_Balance_Ice, RS_co2_2_Balance_co2_;
+		double RS_WaterVapour_Balance_Rain, RS_WaterVapour_Balance_Ice, RS_co2_Balance_co2;
 		double RS_buoyancy_Energy, RS_buoyancy_Momentum, RS_buoyancy_Water_Vapour; 
 		double RS_LatentHeat_Energy_Rain, RS_LatentHeat_Energy_Rain_super, RS_LatentHeat_Energy_Ice, Rain_aux, Rain_super_aux, Ice_aux;
 		double RS_Coriolis_Momentum_rad, RS_Coriolis_Momentum_the, RS_Coriolis_Momentum_phi, RS_centrifugal_Momentum_rad, RS_centrifugal_Momentum_the;
@@ -71,11 +71,12 @@ class RHS_Atmosphere
 		double b_u, alf_1, alf_2, p_ps, bet_p, eps_u, delta_i_c, K_p, del_u, cloud_u, c_u, p_t_in, t_Celsius_0, E_Rain_t_in, q_Rain_t_in;
 
 	public:
+		RHS_Atmosphere ( int, int, double, double, double, double, double, double );
 		RHS_Atmosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~RHS_Atmosphere ();
 
 		void RK_RHS_3D_Atmosphere ( int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void RK_RHS_2D_Atmosphere ( int, int, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void RK_RHS_2D_Atmosphere ( int, int, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };
 #endif

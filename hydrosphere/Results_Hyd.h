@@ -12,13 +12,13 @@
 #include "Array.h"
 #include "Array_2D.h"
 
-#ifndef _Results_MSL_Hyd_
-#define _Results_MSL_Hyd_
+#ifndef _Results_Hyd_
+#define _Results_Hyd_
 
 using namespace std;
 
 
-class Results_MSL_Hyd
+class Results_Hyd
 {
 	private:
 		int im, jm, km, sun, h_land, h_ocean, h_ground, h_point_max;
@@ -34,15 +34,15 @@ class Results_MSL_Hyd
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading;
 
 	public:
-		Results_MSL_Hyd ( int, int, int ); 
+		Results_Hyd ( int, int, int ); 
 
-		~Results_MSL_Hyd (  );
+		~Results_Hyd (  );
 
-		void run_MSL_data ( double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+		void run_data ( double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 		void land_oceanFraction ( Array & );
 
-		void show_MSL_data ( double, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+//		void show_data ( double, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 };
 #endif

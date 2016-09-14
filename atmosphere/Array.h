@@ -26,10 +26,11 @@ class Array
 	public:
 		double ***x;
 
-		Array ( int, int, int, double );
-		~Array();
+		Array ( );
 
+		~Array ( );
 
-		void printArray();
+		void printArray ( );
+		void initArray ( int, int, int, double );
 };
 #endif

@@ -53,8 +53,10 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 
 	i_bottom = 8;
 	i_deep = i_bottom + 17;
-	i_half = i_beg;
-	i_middle = i_beg - 5;
+//	i_half = i_beg;
+	i_half = i_beg + 6;
+//	i_middle = i_beg - 5;
+	i_middle = i_beg - 7;
 	j_half = ( jm - 1 ) / 2;
 
 	d_i_half = ( double ) i_half;
@@ -77,10 +79,24 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 	Ekman_angle = 45.0 / pi180;
 	Ekman_angle_add = 4.5 / pi180;
 
+
+
+// array "dr_var" for Thomas algorithm
+	dr_var = new double[ im ];
+
+	for ( int l = 0; l < im; l++ )
+	{
+		dr_var[ l ] = 0.;
+//		cout << dr_var[ l ] << endl;
+	}
+
 }
 
 
-BC_Thermohalin::~BC_Thermohalin() {}
+BC_Thermohalin::~BC_Thermohalin()
+{
+	delete [  ] dr_var;
+}
 
 
 
@@ -179,7 +195,9 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 // northern hemisphere: east coast
 
-	k_grad = 10;																			// extension of velocity change
+
+//	k_grad = 10;																			// extension of velocity change
+	k_grad = 8;																			// extension of velocity change
 	k_a = k_grad;																		// left distance
 	k_b = 0;																				// right distance
 
@@ -206,8 +224,8 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 						m = i_half - i;
 						d_i = ( double ) i;
 						c.x[ i ][ j ][ k ] = ca_max;
-						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
-						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
+						u.x[ i ][ j ][ k + l ] = - 10. * d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
+						u.x[ m ][ j ][ k + l ] = - 10. * d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
 				}
 
@@ -256,8 +274,8 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 						m = i_half - i;
 						d_i = ( double ) i;
 						c.x[ i ][ j ][ k ] = ca_max;
-						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
-						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
+						u.x[ i ][ j ][ k + l ] = - 10. * d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
+						u.x[ m ][ j ][ k + l ] = - 10. * d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
 				}
 /*
@@ -280,12 +298,14 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 
 
-// search for east coasts and associated velocity components to close the circulations
+
+// search for west coasts and associated velocity components to close the circulations
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: west coast
 
-	k_grad = 10;																			// extension of velocity change
+//	k_grad = 10;																			// extension of velocity change
+	k_grad = 8;																			// extension of velocity change
 	k_a = 0;																				// left distance
 
 	k_water = 0;																		// somewhere on water
@@ -308,13 +328,13 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 				{
 					w.x[ i_max ][ j ][ l ] = - w.x[ i_max ][ j ][ l ];
 
-					for ( int i = i_middle; i <= i_half; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
+					for ( int i = i_middle; i <= i_half; i++ )					// loop in radial direction, extension for u -velocity component, upwelling here
 					{
 						m = i_half - i;
 						d_i = ( double ) i;
 						c.x[ i ][ j ][ k ] = ca_max;
-						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// increase with depth, decrease with distance from coast
-						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// decrease with depth, decrease with distance from coast
+						u.x[ i ][ j ][ l ] = + 10. * d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// increase with depth, decrease with distance from coast
+						u.x[ m ][ j ][ l ] = + 10. * d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// decrease with depth, decrease with distance from coast
 					}
 				}
 /*
@@ -366,8 +386,8 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 						m = i_half - i;
 						d_i = ( double ) i;
 						c.x[ i ][ j ][ k ] = ca_max;
-						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
-						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
+						u.x[ i ][ j ][ l ] = + 10. * d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
+						u.x[ m ][ j ][ l ] = + 10. * d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
 					}
 				}
 /*
@@ -386,6 +406,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 		}
 		flip = 0;
 	}
+
 
 }
 
@@ -746,9 +767,7 @@ void BC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w )
 
 
 
-void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Array &p )
-
-//void BC_Thermohalin::BC_Temperature_Salinity ( int Ma, int Ma_max, int Ma_max_half, double t_0, double p_0, double c_0, double t_cretaceous_max, double t_average, double t_equator, double t_pole, double ua, double va, double wa, double ta, double ca, double pa, Array_2D &t_j, Array_2D & c_j, Array_2D &p_j, Array &h, Array &t, Array &c, Array &p )
+void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Array &p_dyn )
 {
 // initial conditions for salt content and temperature and salinity decrease below the sea surface
 
@@ -812,8 +831,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
 	t_cretaceous = ( t_cretaceous + t_average + t_0 ) / t_0 - ( ( t_average + t_0 ) / t_0 );    // non-dimensional
 
-
-	if (  Ma > 0 )																				// when time slices are run, modern world excluded
+	if (  Ma >= 0 )																				// when time slices are run, modern world excluded
 	{
 		for ( int k = 0; k < km; k++ )
 		{
@@ -826,7 +844,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 					t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
 					if ( t_Celsius < 4. )
 					{
-						t.x[ i ][ j ][ k ] = ta + t_cretaceous;
+						t.x[ im -1 ][ j ][ k ] = ta + t_cretaceous;
 						t_Celsius = ( ta + t_cretaceous ) * t_0 - t_0;										// water temperature not below 4°C
 					}
 					c.x[ im-1 ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. + c_cretaceous ) / c_0;	// non-dimensional
@@ -842,8 +860,8 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
 
 //	cout << Ma << "   " << t_coeff << "   " << t_Celsius << "   " << t_pole << "   " << t_equator << endl;
-//	cout << " ***** printout of 3D-fields ***** " << endl;
-//	t.printArray();
+//	cout << " ***** printout of 3D-fields in BC_Temperature_Salinity ***** " << endl;
+//	t.printArray( im, jm, km );
 
 
 // distribution of t and c with increasing depth till i_beg valid for all time slices including the modern world
@@ -897,22 +915,20 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
 
 
-
-
 void BC_Thermohalin::BC_Pressure ( Array &p_stat, Array &t, Array &h )
 {
-// boundary condition of surface pressure given by surface temperature through gas equation
+// hydrostatic pressure distribution at surface
 
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			p_stat.x[ im-1 ][ j ][ k ] = p_0;		// given in bar
+			p_stat.x[ im-1 ][ j ][ k ] = p_0 / 1000.;		// given in bar
 		}
 	}
 
 
-// only switch on, when you know what you do
+// hydrostatic pressure distribution increasing with depth
 
 	for ( int k = 0; k < km; k++ )
 	{
@@ -921,7 +937,7 @@ void BC_Thermohalin::BC_Pressure ( Array &p_stat, Array &t, Array &h )
 			for ( int i = im-2; i >= 0; i-- )
 			{
 				d_i = ( double ) ( im - 1 - i );
-				p_stat.x[ i ][ j ][ k ] = r_0_water * g * d_i * .01 + p_0;				// current water pressure, step size in 500 m in bar
+				p_stat.x[ i ][ j ][ k ] = r_0_water * g * d_i * ( L_hyd / ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;				// current water pressure in bar
 			}
 		}
 	}
@@ -7642,7 +7658,7 @@ void BC_Thermohalin::BC_Surface_Pressure ( Array &h, Array &p_dyn, Array &t )
 //	cout << " ***** Ausdruck from 2D-Feldern ***** " << endl;
 //	p_j.printArray_2D();
 //	cout << " ***** printout of fields ***** " << endl;
-//	p.printArray();
+//	p_dyn.printArray();
 
 }
 

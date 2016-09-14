@@ -1,5 +1,5 @@
 /*
- * Ocean General Circulation Modell ( OGCM ) applied to laminar flow
+ * Atmosphere General Circulation Modell ( AGCM ) applied to laminar flow
  * Program for the computation of geo-atmospherical circulating flows in a spherical shell
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
@@ -26,10 +26,11 @@ class Array
 	public:
 		double ***x;
 
-		Array ( int, int, int, double );
-		~Array();
+		Array ( );
 
+		~Array ( );
 
-		void printArray();
+		void printArray ( int, int, int );
+		void initArray ( int, int, int, double );
 };
 #endif

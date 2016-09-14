@@ -16,11 +16,12 @@
 using namespace std;
 
 
-RHS_Hydrosphere::RHS_Hydrosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double ec, double sc, double g, double pr, double omega, double coriolis, double centrifugal, double buoyancy )
+RHS_Hydrosphere::RHS_Hydrosphere ( int im, int jm, int km, double r0, double dt, double dr, double dthe, double dphi, double re, double ec, double sc, double g, double pr, double omega, double coriolis, double centrifugal, double buoyancy )
 {
 	this-> im = im;
 	this-> jm = jm;
 	this-> km = km;
+	this-> r0 = r0;
 	this-> dt = dt;
 	this-> dr = dr;
 	this-> dthe = dthe;
@@ -34,13 +35,14 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int im, int jm, int km, double dt, double dr,
 	this-> coriolis = coriolis;
 	this-> centrifugal = centrifugal;
 	this-> buoyancy = buoyancy;
+
 }
 
 
 RHS_Hydrosphere::~RHS_Hydrosphere() {}
 
 
-void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd, double g, double cp_w, double u_0, double t_0, double c_0, double r_0_water, double ta, double pa, double ca, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
+void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd, double g, double cp_w, double u_0, double t_0, double c_0, double r_0_water, double ta, double pa, double ca, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D, Array &Salt_Balance )
 {
 
 // collection of coefficients for phase transformation
@@ -62,18 +64,16 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
 
 // collection of coefficients
-
 	dr2 = dr * dr;
 	dthe2 = dthe * dthe;
 	dphi2 = dphi * dphi;
 
 // collection of coefficients
-
-	rm = rad.z[ i ];
+//	rm = rad.z[ i ];
+	rm = rad.z[ i ] / r0;
 	rm2 = rm * rm;
 
 // collection of coefficients
-
 	sinthe = sin( the.z[ j ] );
 	sinthe2 = sinthe * sinthe;
 	costhe = cos( the.z[ j ] );
@@ -224,6 +224,14 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 	dpdr = h_d_i * ( p_dyn.x[ i+1 ][ j ][ k ] - p_dyn.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 	dcdr = h_d_i * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 
+/*
+	dudr = h_d_i * ( u.x[ i+1 ][ j ][ k ] - u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * rm_1;
+	dvdr = h_d_i * ( v.x[ i+1 ][ j ][ k ] - v.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * rm_1;
+	dwdr = h_d_i * ( w.x[ i+1 ][ j ][ k ] - w.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * rm_1;
+	dtdr = h_d_i * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * rm_1;
+	dpdr = h_d_i * ( p_dyn.x[ i+1 ][ j ][ k ] - p_dyn.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * rm_1;
+	dcdr = h_d_i * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * rm_1;
+*/
 	dudthe = h_d_j * ( u.x[ i ][ j+1 ][ k ] - u.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
 	dvdthe = h_d_j * ( v.x[ i ][ j+1 ][ k ] - v.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
 	dwdthe = h_d_j * ( w.x[ i ][ j+1 ][ k ] - w.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
@@ -246,6 +254,13 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 	d2tdr2 = h_d_i * ( t.x[ i+1 ][ j ][ k ] - 2. * t.x[ i ][ j ][ k ] + t.x[ i-1 ][ j ][ k ] ) / dr2;
 	d2cdr2 = h_d_i * ( c.x[ i+1 ][ j ][ k ] - 2. * c.x[ i ][ j ][ k ] + c.x[ i-1 ][ j ][ k ] ) / dr2;
 
+/*
+	d2udr2 = h_d_i * ( u.x[ i+1 ][ j ][ k ] - 2. * u.x[ i ][ j ][ k ] + u.x[ i-1 ][ j ][ k ] ) / dr2 * rm_2 - 2. / rm_1 * dudr;
+	d2vdr2 = h_d_i * ( v.x[ i+1 ][ j ][ k ] - 2. * v.x[ i ][ j ][ k ] + v.x[ i-1 ][ j ][ k ] ) / dr2 * rm_2 - 2. / rm_1 * dvdr;
+	d2wdr2 = h_d_i * ( w.x[ i+1 ][ j ][ k ] - 2. * w.x[ i ][ j ][ k ] + w.x[ i-1 ][ j ][ k ] ) / dr2 * rm_2 - 2. / rm_1 * dwdr;
+	d2tdr2 = h_d_i * ( t.x[ i+1 ][ j ][ k ] - 2. * t.x[ i ][ j ][ k ] + t.x[ i-1 ][ j ][ k ] ) / dr2 * rm_2 - 2. / rm_1 * dtdr;
+	d2cdr2 = h_d_i * ( c.x[ i+1 ][ j ][ k ] - 2. * c.x[ i ][ j ][ k ] + c.x[ i-1 ][ j ][ k ] ) / dr2 * rm_2 - 2. / rm_1 * dcdr;
+*/
 	d2udthe2 = h_d_j * ( u.x[ i ][ j+1 ][ k ] - 2. * u.x[ i ][ j ][ k ] + u.x[ i ][ j-1 ][ k ] ) / dthe2;
 	d2vdthe2 = h_d_j * ( v.x[ i ][ j+1 ][ k ] - 2. * v.x[ i ][ j ][ k ] + v.x[ i ][ j-1 ][ k ] ) / dthe2;
 	d2wdthe2 = h_d_j * ( w.x[ i ][ j+1 ][ k ] - 2. * w.x[ i ][ j ][ k ] + w.x[ i ][ j-1 ][ k ] ) / dthe2;
@@ -277,7 +292,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 	RS_Centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
 	RS_Centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
 
-
+/*
 	if ( t.x[ i ][ j ][ k ] < ta ) 
 	{
 		tn.x[ i ][ j ][ k ] = ta;
@@ -288,10 +303,20 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 	{
 		c_Boussinesq = ( ( ( tn.x[ i ][ j ][ k ] * t_0 - t_0 ) + 346. ) / 10. ) / c_0;
 	}
+*/
+//		c_Boussinesq = .9682;															// for c = 0.9682 compares to a salinity of 33.5 psu
+//		c_Boussinesq = .7225;															// for c = 0.7225 compares to a salinity of 25.0 psu taken from Burchard
+//		c_Boussinesq = 1.01156;														// for c = 1.01156 compares to a salinity of 35.0 psu, ca corresponds to ta = 1.01464  ( = 4°C )
+		c_Boussinesq = 1.0571;															// for c = 1.0571 compares to a salinity of 36.58 psu
 
-	RS_buoyancy_Momentum = - 100. * L_hyd / ( r_0_water * u_0 * u_0 ) * buoyancy * .5 * g * ( c.x[ i ][ j ][ k ] - c_Boussinesq ) / c_Boussinesq;		// bouyancy based on water vapour 
-	RS_buoyancy_Energy = - u_0 * ec * u.x[ i ][ j ][ k ] * RS_buoyancy_Momentum;		// bouyancy based on water vapour 
-	Buoyancy_Force.x[ i ][ j ][ k ] = RS_buoyancy_Momentum;
+//		c_Boussinesq = r_0_water;														// compares to 1025 kg/m³ of salt water, for c = 0.7225 compares to a salinity of 25.0 psu, taken from Burchard
+
+
+	RS_buoyancy_Momentum = - L_hyd / ( u_0 * u_0 ) * buoyancy * g * ( ( c.x[ i ][ j ][ k ] * c_0 + r_0_water ) - ( c_Boussinesq * c_0 + r_0_water ) ) / ( c_Boussinesq * c_0 + r_0_water );																								// bouyancy based on salt water density 
+//	RS_buoyancy_Momentum = - L_hyd / ( u_0 * u_0 ) * buoyancy * g * ( ( c.x[ i ][ j ][ k ] * c_0 + 1000. ) - c_Boussinesq ) / c_Boussinesq;																								// bouyancy based on salt water density 
+//	RS_buoyancy_Momentum = 0.;
+	RS_buoyancy_Energy = u_0 * ec * u.x[ i ][ j ][ k ] * RS_buoyancy_Momentum;		// bouyancy based on salt water density
+	BuoyancyForce_3D.x[ i ][ j ][ k ] = RS_buoyancy_Momentum;
  	Salt_Balance.x[ i ][ j ][ k ] = RS_Salt_Balance = ( c.x[ i ][ j ][ k ] - c_Boussinesq ) * c_0; 
 
 //	cout << i << "   " << j << "   " << k << "   " << RS_Salt_Balance << "   " << c.x[ i ][ j ][ k ] << "   " << c_Boussinesq << "   " << RS_buoyancy_Momentum << "   " << g << "   " << buoyancy << endl;
@@ -319,7 +344,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 	{
 		Salt_Balance.x[ i ][ j ][ k ] = 0.;
 		Salt_Finger.x[ i ][ j ][ k ] = 0.;
-		Buoyancy_Force.x[ i ][ j ][ k ] = 0.;
+		BuoyancyForce_3D.x[ i ][ j ][ k ] = 0.;
 
 		RS_Salt_Energy = 0.;
 
@@ -353,11 +378,12 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 			- .5 * ec * ( u.x[ i ][ j ][ k ] * dpdr + v.x[ i ][ j ][ k ] / rm * dpdthe + w.x[ i ][ j ][ k ] / rmsinthe * dpdphi )
 			+ ( d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2 + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2 ) / ( re * pr )
 			+ 2. * ec / re * ( ( dudr * dudr) + pow ( ( dvdthe / rm + h_d_i * u.x[ i ][ j ][ k ] / rm ), 2. )
-			+ pow ( ( dwdphi / rmsinthe + h_d_i * u.x[ i ][ j ][ k ] / rm + h_d_i * v.x[ i ][ j ][ k ] * cotthe / rm ), 2. ) )
-			+ ec / re * ( pow ( ( dvdr - h_d_i * v.x[ i ][ j ][ k ] / rm + dudthe / rm ), 2. ) + pow ( ( dudphi / rmsinthe + dwdr - h_d_i * w.x[ i ][ j ][ k ] / rm ), 2. )
-			+ pow ( ( dwdthe * sinthe / rm2 - h_d_i * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
+			+ pow ( ( dwdphi / rmsinthe + h_d_i * u.x[ i ][ j ][ k ] / rm + h_d_j * v.x[ i ][ j ][ k ] * cotthe / rm ), 2. ) )
+			+ ec / re * ( pow ( ( dvdr - h_d_j * v.x[ i ][ j ][ k ] / rm + dudthe / rm ), 2. ) + pow ( ( dudphi / rmsinthe + dwdr - h_d_k * w.x[ i ][ j ][ k ] / rm ), 2. )
+			+ pow ( ( dwdthe * sinthe / rm2 - h_d_k * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
 			+ RS_buoyancy_Energy
 			+ RS_Coriolis_Energy + RS_Centrifugal_Energy;
+//			- h_c_i * t.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 
 	rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
@@ -385,7 +411,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 	rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
 			+ ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc * re );
-//			- h_c_k * c.x[ i ][ j ][ k ] * k_Force / dphi2;					// immersed boundary condition as a negative force addition
+//			- h_c_i * c.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 
 	// for the Poisson equation to solve for the pressure, pressure gradient sbstracted from the RHS
@@ -415,7 +441,7 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, Array_1D &rad, Array
 	dthe2 = dthe * dthe;
 	dphi2 = dphi * dphi;
 
-	rm = rad.z[ im-1 ];
+	rm = rad.z[ im-1 ] / r0;
 	rm2 = rm * rm;
 
 // collection of coefficients

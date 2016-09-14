@@ -10,11 +10,12 @@
 
 #include <iostream>
 #include "Restore_Hyd.h"
+#include "Array.h"
 
 using namespace std;
 
 
-Restore::Restore ( int im, int jm, int km )
+Restore_Hyd::Restore_Hyd ( int im, int jm, int km )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -22,13 +23,12 @@ Restore::Restore ( int im, int jm, int km )
 }
 
 
-Restore::~Restore () {}
+Restore_Hyd::~Restore_Hyd () {}
 
 
-void Restore::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &un, Array &vn, Array &wn, Array &tn, Array &pn_dyn, Array &cn )
+void Restore_Hyd::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &un, Array &vn, Array &wn, Array &tn, Array &aux_p, Array &cn )
 {
 // Restore from old to new values
-
 	for ( int i = 0; i < im; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -40,14 +40,15 @@ void Restore::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Arr
 				un.x[ i ][ j ][ k ] = coeff * u.x[ i ][ j ][ k ];
 				vn.x[ i ][ j ][ k ] = coeff * v.x[ i ][ j ][ k ];
 				wn.x[ i ][ j ][ k ] = coeff * w.x[ i ][ j ][ k ];
-				pn_dyn.x[ i ][ j ][ k ] = coeff * p_dyn.x[ i ][ j ][ k ];
+				p_dyn.x[ i ][ j ][ k ] = coeff * aux_p.x[ i ][ j ][ k ];
 			}
 		}
 	}
+
 }
 
 
-void Restore::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &pn_dyn )
+void Restore_Hyd::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &aux_p )
 {
 // Restore of velocity components and temperature at sea surface for the next time step
 
@@ -55,7 +56,7 @@ void Restore::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn,
 			{
 				for ( int k = 0; k < km; k++ )
 				{
-					pn_dyn.x[ im-1 ][ j ][ k ] = coeff * p_dyn.x[ im-1 ][ j ][ k ];
+					p_dyn.x[ im-1 ][ j ][ k ] = coeff * aux_p.x[ im-1 ][ j ][ k ];
 					vn.x[ im-1 ][ j ][ k ] = coeff * v.x[ im-1 ][ j ][ k ];
 					wn.x[ im-1 ][ j ][ k ] = coeff * w.x[ im-1 ][ j ][ k ];
 				}

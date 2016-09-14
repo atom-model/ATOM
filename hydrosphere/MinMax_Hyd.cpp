@@ -28,7 +28,6 @@ MinMax::MinMax ( int jm, int km, double c_0 )
 
 	minValue = maxValue = 0.;
 	jmax = kmax = jmin = kmin = 0;
-	im = 41;
 }
 
 
@@ -48,9 +47,17 @@ MinMax::MinMax ( int im, int jm, int km, double c_0, double L_hyd )
 MinMax::~MinMax () {}
 
 
-void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &value_3D, Array &h )
+void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &val_D, Array &h )
 {
 // search for minimum and maximum values of the 3-dimensional data sets
+	level = "m";
+	deg_north = "°N";
+	deg_south = "°S";
+	deg_west = "°W";
+	deg_east = "°E";
+
+	heading_1 = " printout of maximum and minimum values of properties at their locations: latitude, longitude, level";
+	heading_2 = " results based on three dimensional considerations of the problem";
 
 	maxValue = 0.;
 	imax = 0;
@@ -60,19 +67,11 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 	jmin = 0;
 	kmin = 0;
 
-	level = "m";
-	deg_north = "°N";
-	deg_south = "°S";
-	deg_west = "°W";
-	deg_east = "°E";
+	Array &value_3D = val_D;
 
-	heading = " printout of maximum and minimum values of properties at their locations: latitude, longitude, level";
-
-	maxValue = 0.;
-
-	for ( int j = 1; j < jm-1; j++ )
+	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int k = 1; k < km-1; k++ )
+		for ( int k = 0; k < km; k++ )
 		{
 			for ( int i = 0; i < im; i++ )
 			{
@@ -89,9 +88,9 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 
 	minValue = maxValue;
 
-	for ( int j = 1; j < jm-1; j++ )
+	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int k = 1; k < km-1; k++ )
+		for ( int k = 0; k < km; k++ )
 		{
 			for ( int i = 0; i < im; i++ )
 			{
@@ -105,12 +104,10 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 			}
 		}
 	}
-	if ( minValue < 0. ) minValue =0.;
 
 
 	imax_level = imax * int ( L_hyd ) / ( im - 1 ) - int ( L_hyd );
 	imin_level = imin * int ( L_hyd ) / ( im - 1 ) - int ( L_hyd );
-
 
 //	maximum latitude and longitude units recalculated
 	if ( jmax <= 90 )
@@ -169,7 +166,8 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 
 	if ( name_maxValue == " max temperature " )
 	{
-		cout << endl << heading << endl << endl;
+		cout << endl << heading_1 << endl << heading_2 << endl << endl;
+
 		maxValue = maxValue * 273.15 - 273.15;
 		minValue = minValue * 273.15 - 273.15;
 	}
@@ -187,7 +185,7 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 
 
 
-void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &value, Array &h )
+void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &val, Array &h )
 {
 // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
 
@@ -197,7 +195,12 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 	deg_west = "°W";
 	deg_east = "°E";
 
+	heading_1 = " printout of maximum and minimum values of properties at their locations: latitude, longitude";
+	heading_2 = " results based on two dimensional considerations of the problem";
+
 	maxValue = 0.;
+
+	Array_2D &value = val;
 
 	for ( int j = 1; j < jm-1; j++ )
 	{
@@ -288,6 +291,11 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 
 
 	cout.precision ( 6 );
+
+	if ( name_maxValue == " max salt total " )
+	{
+		cout << endl << endl << heading_1 << endl << heading_2 << endl << endl;
+	}
 
 		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
 

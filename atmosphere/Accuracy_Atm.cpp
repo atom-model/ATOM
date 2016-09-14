@@ -21,8 +21,9 @@ using namespace std;
 
 
 
-Accuracy::Accuracy( int jm, int km, double dthe, double dphi )
+Accuracy::Accuracy( int im, int jm, int km, double dthe, double dphi )
 {
+	this-> im = im;
 	this-> jm = jm;
 	this-> km = km;
 	this-> dthe = dthe;
@@ -41,11 +42,12 @@ Accuracy::Accuracy( int im, int jm, int km, double dr, double dthe, double dphi 
 }
 
 
-Accuracy::Accuracy ( int n, int nm, int Ma, int jm, int km, double min, int j_res, int k_res, int velocity_iter_2D, int pressure_iter_2D, int velocity_iter_max_2D, int pressure_iter_max_2D )
+Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, int j_res, int k_res, int velocity_iter_2D, int pressure_iter_2D, int velocity_iter_max_2D, int pressure_iter_max_2D )
 {
 	this-> n = n;
 	this-> nm = nm;
 	this-> Ma = Ma;
+	this-> im = im;
 	this-> jm = jm;
 	this-> km = km;
 	this-> min = min;
@@ -81,8 +83,6 @@ Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, 
 
 
 Accuracy::~Accuracy () {}
-
-
 
 
 
@@ -300,7 +300,6 @@ double Accuracy::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Arra
 double Accuracy::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &co2, Array &co2n, Array &p_dyn, Array &aux_p )
 {
 // state of a steady solution ( min )
-
 	min_u = max_u = 0.;
 	min_v = max_v = 0.;
 	min_w = max_w = 0.;
@@ -309,7 +308,7 @@ double Accuracy::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Arra
 	min_p = max_p = 0.;
 	min_cloud = max_cloud = 0.;
 	min_ice = max_ice = 0.;
-	min_co2_ = max_co2_ = 0.;
+	min_co2 = max_co2 = 0.;
 
 	for ( int i = 0; i < im; i++ )
 	{
@@ -380,13 +379,13 @@ double Accuracy::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Arra
 					k_ice = k;
 				}
 
-				max_co2_ = fabs ( co2.x[ i ][ j ][ k ] - co2n.x[ i ][ j ][ k ] );
-				if ( max_co2_ >= min_co2_ )
+				max_co2 = fabs ( co2.x[ i ][ j ][ k ] - co2n.x[ i ][ j ][ k ] );
+				if ( max_co2 >= min_co2 )
 				{
-					min_co2_ = max_co2_;
-					i_co2_ = i;
-					j_co2_ = j;
-					k_co2_ = k;
+					min_co2= max_co2;
+					i_co2 = i;
+					j_co2 = j;
+					k_co2 = k;
 				}
 
 				max_p = fabs ( p_dyn.x[ i ][ j ][ k ] - aux_p.x[ i ][ j ][ k ] );
@@ -507,10 +506,10 @@ double Accuracy::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Arra
 						break;
 
 		case 10 :	name_Value = " dco: CO2 transport equation ";
-						Value = min_co2_;
-						i_loc = i_co2_;
-						j_loc = j_co2_;
-						k_loc = k_co2_;
+						Value = min_co2;
+						i_loc = i_co2;
+						j_loc = j_co2;
+						k_loc = k_co2;
 						break;
 
 		default : 	cout << choice << "error in iterationPrintout_3D member function in class Accuracy" << endl;
@@ -580,56 +579,6 @@ int Accuracy::out_k_res (  ) const
 	return k_res;
 }
 
-
-
-
-void Accuracy::set_value ( double val )
-{ 
-	Value = val;
-}
-
-void Accuracy::set_i_loc ( int i_l )
-{ 
-	i_loc = i_l;
-}
-
-void Accuracy::set_j_loc ( int j_l )
-{ 
-	j_loc = j_l;
-}
-
-void Accuracy::set_k_loc ( int k_l )
-{ 
-	k_loc = k_l;
-}
-
-void Accuracy::init ( double val, int i_l, int j_l, int k_l )
-{ 
-	set_value ( val );
-	set_i_loc ( i_l );
-	set_j_loc ( j_l );
-	set_k_loc ( k_l );
-}
-
-double Accuracy::get_value (  )
-{
-	return Value;
-}
-
-int Accuracy::get_i_loc (  )
-{
-	return i_loc;
-}
-
-int Accuracy::get_j_loc (  )
-{
-	return j_loc;
-}
-
-int Accuracy::get_k_loc (  )
-{
-	return k_loc;
-}
 
 
 

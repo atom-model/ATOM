@@ -25,7 +25,7 @@ Restore::Restore ( int im, int jm, int km )
 Restore::~Restore () {}
 
 
-void Restore::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2, Array &un, Array &vn, Array &wn, Array &tn, Array &cn, Array &cloudn, Array &icen, Array &co2n )
+void Restore::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2, Array &un, Array &vn, Array &wn, Array &tn, Array &aux_p, Array &cn, Array &cloudn, Array &icen, Array &co2n )
 {
 
 // Restore from old to new values
@@ -44,6 +44,7 @@ void Restore::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Arr
 				cloudn.x[ i ][ j ][ k ] = coeff * cloud.x[ i ][ j ][ k ];
 				icen.x[ i ][ j ][ k ] = coeff * ice.x[ i ][ j ][ k ];
 				co2n.x[ i ][ j ][ k ] = coeff * co2.x[ i ][ j ][ k ];
+				p_dyn.x[ i ][ j ][ k ] = coeff * aux_p.x[ i ][ j ][ k ];
 			}
 		}
 	}
@@ -52,7 +53,7 @@ void Restore::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Arr
 
 
 
-void Restore::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn )
+void Restore::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn, Array &aux_p, Array &vn, Array &wn )
 {
 // Restore of velocity components and temperature at sea surface for the next time step
 
@@ -62,6 +63,7 @@ void Restore::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn,
 				{
 					vn.x[ 0 ][ j ][ k ] = coeff * v.x[ 0 ][ j ][ k ];
 					wn.x[ 0 ][ j ][ k ] = coeff * w.x[ 0 ][ j ][ k ];
+					p_dyn.x[ 0 ][ j ][ k ] = coeff * aux_p.x[ 0 ][ j ][ k ];
 				}
 			}
 }

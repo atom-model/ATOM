@@ -45,7 +45,7 @@ MinMax::MinMax ( int im, int jm, int km )
 MinMax::~MinMax () {}
 
 
-void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &value_3D, Array &h )
+void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &val_D, Array &h )
 {
 // search for minimum and maximum values of the 3-dimensional data sets
 	level = "m";
@@ -65,15 +65,17 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 	jmin = 0;
 	kmin = 0;
 
+	Array &value_D = val_D;
+
 	for ( int j = 0; j < jm; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( value_3D.x[ i ][ j ][ k ] > maxValue ) 
+				if ( value_D.x[ i ][ j ][ k ] > maxValue ) 
 				{
-					maxValue = value_3D.x[ i ][ j ][ k ];
+					maxValue = value_D.x[ i ][ j ][ k ];
 					imax = i;
 					jmax = j;
 					kmax = k;
@@ -90,9 +92,9 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( value_3D.x[ i ][ j ][ k ] < minValue ) 
+				if ( value_D.x[ i ][ j ][ k ] < minValue ) 
 				{
-					minValue = value_3D.x[ i ][ j ][ k ];
+					minValue = value_D.x[ i ][ j ][ k ];
 					imin = i;
 					jmin = j;
 					kmin = k;
@@ -226,7 +228,7 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 
 
 
-void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &value, Array &h )
+void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &val, Array &h )
 {
 // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
 
@@ -241,6 +243,8 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 	kmax = 0;
 	jmin = 0;
 	kmin = 0;
+
+	Array_2D &value = val;
 
 	for ( int j = 1; j < jm-1; j++ )
 	{
@@ -329,13 +333,16 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 
 	cout.precision ( 6 );
 
-	cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
+	if ( name_maxValue != " max co2_total " )
+	{
+		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
+	}
 
 
 	if ( name_maxValue == " max co2_total " )
 	{
-		maxValue = 280. *  maxValue;
-		minValue = 280. *  minValue;
+		maxValue = 280. * maxValue;
+		minValue = 280. * minValue;
 
 		name_unitValue = "ppm";
 

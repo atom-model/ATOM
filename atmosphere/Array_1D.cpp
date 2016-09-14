@@ -16,54 +16,55 @@
 using namespace std;
 
 
-Array_1D::Array_1D ( int i, double cc, double z0, double dz )
+Array_1D::Array_1D ( )
 {
-	im = i;
-	this -> cc = cc;
-	this -> z0 = z0;
-	this -> dz = dz;
+	mm = 361;
 
-	z = new double[ im ];
+	z = new double[ mm ];
 
-
-// initialisation of the z-field
-
-	for ( int l = 0; l < im; l++ )
+// arbitrary initialisation of the z-field
+	for ( int l = 0; l < mm; l++ )
 	{
-		z[ l ] = cc;
-//		cout << z[ l ] << " (" << &z[ l ] << ")" << "  ";
-//		cout << z[ l ] << "  ";
+		z[ l ] = 111.;																		// arbitrary initial values
 	}
-//	cout << endl;
-//	cout << endl;
+
 }
 
 
 
-Array_1D::~Array_1D()
+Array_1D::~Array_1D ( )
 {
 	delete [  ] z;
 }
 
 
 
-void Array_1D::Coordinates (  )
+void Array_1D::initArray_1D( int mm, double cc )
+{
+// initialisation of the z-field
+	for ( int l = 0; l < mm; l++ )
+	{
+		z[ l ] = cc;
+	}
+}
+
+
+
+void Array_1D::Coordinates ( int mm, double z0, double dz )
 {
 	z[ 0 ] = z0;
 
-	for ( int i = 1; i < im; i++ )
+	for ( int l = 1; l < mm; l++ )
 	{
-		z[ i ] = z[ i - 1 ] + dz;
+		z[ l ] = z[ l - 1 ] + dz;
 	}
-
-//	cout << " ***** Printout of 1D-array in Array_1D ***** " << endl;
-//	printArray_1D();
 
 }
 
 
 
-void Array_1D::printArray_1D()
+
+void Array_1D::printArray_1D( int mm )
 {
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
@@ -72,13 +73,12 @@ void Array_1D::printArray_1D()
 	cout << " coordinate-direction " << endl;
 	cout << endl;
 
-	for ( int i = 0; i < im; i++ )
-//	for ( int i = 0; i < im; i++ )
+	for ( int i = 0; i < mm; i++ )
 	{
 		cout.width ( 6 );
 		cout.fill( ' ' );
 
-// 		cout << z[ i ] << " (" << &i[ i ] << ")" << " ";
+//		cout << z[ i ] << " (" << &z[ i ] << ")" << " ";
 		cout << z[ i ] << " ";
 	}
 cout << endl;

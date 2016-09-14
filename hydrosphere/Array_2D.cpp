@@ -17,11 +17,10 @@ using namespace std;
 
 
 
-Array_2D::Array_2D ( int jm, int km, double bb )
+Array_2D::Array_2D ( )
 {
-	this -> jm = jm;
-	this -> km = km;
-	this -> bb = bb;
+	jm = 181;
+	km = 361;
 
 	y = new double*[ jm ];
 
@@ -30,30 +29,27 @@ Array_2D::Array_2D ( int jm, int km, double bb )
 		y[ j ] = new double[ km ];
 	}
 
-
-
-// initialisation of the y-field
-
+// arbitrary initialisation of the z-field
 	for ( int j = 0; j < jm; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-			y[ j ][ k ] = bb;
-// 			cout << y[ j ][ k ] << " (" << &y[ j ][ k ] << ")" << "  ";
-// 			cout << y[ j ][ k ] << "  ";
+			y[ j ][ k ] = 222.;
 		}
-// 		cout << endl;
 	}
-// 	cout << endl;
+
+//	printArray_2D ( jm, km );
+
 }
 
 
 
-Array_2D::~Array_2D()
+
+Array_2D::~Array_2D ( )
 {
 	for ( int j = 0; j < jm; j++ )
 	{
-		delete y[ j ];
+		delete [  ] y[ j ];
 	}
 	delete [  ] y;
 }
@@ -62,13 +58,27 @@ Array_2D::~Array_2D()
 
 
 
+void Array_2D::initArray_2D ( int jm, int km, double bb )
+{
+// initialisation of the y-field
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int k = 0; k < km; k++ )
+		{
+			y[ j ][ k ] = bb;
+		}
+	}
+}
 
 
-void Array_2D::printArray_2D()
+
+
+void Array_2D::printArray_2D ( int jm, int km )
 {
 	cout.precision ( 3 );
 	cout.setf ( ios::fixed );
 
+	cout << endl;
 	cout << "  phi = k-direction ======>  theta = j-direction downwards :::::::::: r-level " << endl;
 	cout << endl;
 
