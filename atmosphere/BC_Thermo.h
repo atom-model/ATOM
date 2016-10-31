@@ -34,6 +34,7 @@ class BC_Thermo
 		int n_smooth;
 		int j_r, k_r, j_sun;
 		int RadiationModel, sun_position_lat, sun_position_lon, declination;
+		bool set_sun_position;
 		int iter_prec; 
 		int *im_tropopause;
 
@@ -84,7 +85,7 @@ class BC_Thermo
 
 
 	public:
-		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, bool);
 		~BC_Thermo();
 
 
