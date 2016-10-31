@@ -14,7 +14,7 @@
 #include <fstream>
 #include <netcdf.h>
 
-#include "File_NetCDF.h"
+#include "File_NetCDF_Hyd.h"
 
 using namespace std;
 
@@ -42,7 +42,7 @@ using namespace std;
 
 
 
-File_NetCDF::File_NetCDF ( int im, int jm, int km )
+File_NetCDF_Hyd::File_NetCDF_Hyd ( int im, int jm, int km )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -58,12 +58,12 @@ File_NetCDF::File_NetCDF ( int im, int jm, int km )
 }
 
 
-File_NetCDF::~File_NetCDF (){}
+File_NetCDF_Hyd::~File_NetCDF_Hyd (){}
 
 
 
 
-double File_NetCDF::out_NetCDF ( const string &F_N, Array &v_w, Array &w_w, Array &h_w, Array_2D &up, Array_2D &down, Array_2D &bot )
+double File_NetCDF_Hyd::out_NetCDF ( const string &F_N, Array &v_w, Array &w_w, Array &h_w, Array_2D &up, Array_2D &down, Array_2D &bot )
 {
 //	results written in netCDF format
 

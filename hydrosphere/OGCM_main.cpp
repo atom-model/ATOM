@@ -18,7 +18,7 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
-//#include <netcdf.h>
+#include <netcdf.h>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -35,7 +35,7 @@
 #include "Restore_Hyd.h"
 #include "MinMax_Hyd.h"
 #include "Results_Hyd.h"
-//#include "File_NetCDF.h"
+#include "File_NetCDF.h"
 
 
 using namespace std;

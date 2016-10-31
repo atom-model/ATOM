@@ -48,8 +48,6 @@ Array::Array ( )
 		}
 	}
 
-//	printArray ( im, jm, km );
-
 }
 
 

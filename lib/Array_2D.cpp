@@ -71,7 +71,7 @@ void Array_2D::initArray_2D ( int jm, int km, double bb )
 
 
 
-void Array_2D::printArray_2D ( )
+void Array_2D::printArray_2D ( int jm, int km )
 {
 	cout.precision ( 3 );
 	cout.setf ( ios::fixed );

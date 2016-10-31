@@ -5,4 +5,7 @@
 *.xyz
 atmosphere/AGCM
 atmosphere/atmosphere
-
+.ipynb_checkpoints/
+.DS_Store
+*.sublime-*
+*.so

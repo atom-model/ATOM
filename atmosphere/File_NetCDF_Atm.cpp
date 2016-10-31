@@ -14,7 +14,7 @@
 #include <cstring>
 #include <netcdf.h>
 
-#include "File_NetCDF.h"
+#include "File_NetCDF_Atm.h"
 
 using namespace std;
 

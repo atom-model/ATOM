@@ -13,6 +13,24 @@ ADD MORE DETAILS
 
 This bitbucket repository requires mercurial (http://mercurial.selenic.com/downloads). Macports:  sudo port install mercurial
 
+
+## Compilation
+
+Requirements:
+
+* TODO
+
+Additionally, to compile the Python interface, you need Cython
+
+* For OS X, we recommend one of
+
+    brew install Cython
+    brew install netcdf
+
+(ADVANCED: Cython can also be installed from pip, which is useful if you're running inside a virtualenv.)
+
+* For Ubuntu, we recommend ```apt-get install TODO```.
+
 * * *
 
 ### How do I download ATOM?

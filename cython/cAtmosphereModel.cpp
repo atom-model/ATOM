@@ -7,9 +7,9 @@
 #include <sstream>
 #include <iomanip>
 
-#include "Array.h"
-#include "Array_2D.h"
-#include "Array_1D.h"
+#include "../lib/Array.h"
+#include "../lib/Array_2D.h"
+#include "../lib/Array_1D.h"
 #include "BC_Atm.h"
 #include "BC_Bath_Atm.h"
 #include "BC_Thermo.h"
@@ -22,13 +22,32 @@
 #include "Restore_Atm.h"
 #include "Results_Atm.h"
 #include "MinMax_Atm.h"
-#include "File_NetCDF.h"
+#include "File_NetCDF_Atm.h"
 
-#include "AtmosphereConfig.h"
+#include "cAtmosphereModel.h"
 
 using namespace std;
 
-void AtmosphereModel(AtmosphereConfig &config) {
+cAtmosphereModel::cAtmosphereModel() {
+    cout << "TODO CONSTRUCTOR";
+
+    // set default configuration
+    coriolis = 1.;                               // computation with Coriolis force
+    centrifugal = 1.;                            // computation with centrifugal force
+    WaterVapour = 1.;                            // computation with water vapour
+    buoyancy = 1.;                               // computation with buoyancy
+    CO2 = 1.;                                    // computation with CO2
+}
+
+cAtmosphereModel::~cAtmosphereModel() {
+    cout << "TODO DESTRUCTOR" << endl;
+}
+
+void cAtmosphereModel::LoadConfig(const string& filename) {
+    cout << "TODO LoadConfig" << endl;
+}
+
+void cAtmosphereModel::Run() {
 // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
 // maximum number of overall iterations ( n )
 // maximum number of inner velocity loop iterations ( velocity_iter_max )
@@ -149,6 +168,8 @@ void AtmosphereModel(AtmosphereConfig &config) {
     double co2_land = 3.;                               // value compares to 0.2/600Gt per year on land
 
     int *im_tropopause = new int [ jm ];            // location of the tropopause
+
+    bool set_sun_position = false;                  // set to true to simulate effect of different sun positions
 
 // time slices to be run after actualizing 
     i_time_slice_max = 15;
@@ -416,7 +437,7 @@ void AtmosphereModel(AtmosphereConfig &config) {
 // naming a file to read the surface temperature of the modern world
     string Name_SurfaceTemperature_File; 
     stringstream ssNameSurfaceTemperature;
-    ssNameSurfaceTemperature << "SurfaceTemperature.xyz";
+    ssNameSurfaceTemperature << outputPath << "SurfaceTemperature.xyz";
     Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
 
 // naming a file to read the surface precipitation by NASA
@@ -582,8 +603,8 @@ void AtmosphereModel(AtmosphereConfig &config) {
     BC_Atmosphere       boundary ( im, jm, km, t_tropopause );
 
 //  class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-    RHS_Atmosphere      prepare ( im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, sc_CO2, g, pr, omega, config.coriolis, config.centrifugal, config.WaterVapour, config.buoyancy, config.CO2, gam, sigma, lambda );
-    RHS_Atmosphere      prepare_2D ( jm, km, dthe, dphi, re, omega, config.coriolis, config.centrifugal );
+    RHS_Atmosphere      prepare ( im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, sc_CO2, g, pr, omega, coriolis, centrifugal, WaterVapour, buoyancy, CO2, gam, sigma, lambda );
+    RHS_Atmosphere      prepare_2D ( jm, km, dthe, dphi, re, omega, coriolis, centrifugal );
 
 //  class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
     RungeKutta_Atmosphere       result ( im, jm, km, dt, dr, dphi, dthe );
@@ -605,7 +626,7 @@ void AtmosphereModel(AtmosphereConfig &config) {
 //  configuration of the initial and boundary conditions for the temperature, CO2 und water vapour on land and ocean surfaces
 
 //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo       circulation ( im, jm, km, i_beg, i_max, RadiationModel, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, Ma_max_half, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, albedo_extra, epsilon_extra, lv, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, ik, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_max, radiation_ocean, radiation_pole, radiation_equator, t_land, t_tropopause, t_equator, t_pole, gam );
+    BC_Thermo       circulation ( im, jm, km, i_beg, i_max, RadiationModel, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, Ma_max_half, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, albedo_extra, epsilon_extra, lv, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, ik, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_max, radiation_ocean, radiation_pole, radiation_equator, t_land, t_tropopause, t_equator, t_pole, gam, set_sun_position);
 
 
 //  class element for the tropopause location as a parabolic distribution from pole to pole 
