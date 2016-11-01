@@ -22,7 +22,7 @@ class Restore
 {
 	private:
 		int im, jm, km;
-		double coeff;
+		// double coeff;
 
 	public:
 		Restore ( int, int, int );

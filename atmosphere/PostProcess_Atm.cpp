@@ -277,11 +277,13 @@ void PostProcess_Atmosphere::Atmosphere_SequelFile_read ( string &Name_Bathymetr
 
 // in case of failing
 
+	/* FIXME
 	if ( Sequel_File == NULL )
 	{
 		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: does not exist! ::::::::: " << endl << endl << endl;
 		return;
 	}
+	*/
 
 	Sequel_File.close();
 

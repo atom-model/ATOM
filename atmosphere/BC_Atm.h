@@ -27,15 +27,15 @@ class BC_Atmosphere
 		int im, jm, km;
 
 		double c13, c43;
-		double dr, dr2, dthe, dthe2, dphi, dphi2, rm, rm2, sinthe, sinthe2, costhe, rmsinthe, rm2sinthe, rm2sinthe2, cotthe;
-		double LHS_u, RHS_u, LHS_v, RHS_v, LHS_w, RHS_w, mue, d_i, d_i_max;
-		double dudr, dudthe, dudphi, dvdr, dvdthe, dvdphi, dwdr, dwdthe, dwdphi, drdr, drdthe, drdphi;
-		double d2udr2, d2udthe2, d2udphi2, d2vdr2, d2vdthe2, d2vdphi2, d2wdr2, d2wdthe2, d2wdphi2, d2rdr2, d2rdthe2, d2rdphi2;
-		double d2udrdthe, d2udrdphi, d2vdrdthe, d2vdrdphi, d2wdrdthe, d2wdrdphi, d2rdrdthe, d2rdrdphi, d2udthedphi, d2vdthedphi, d2wdthedphi, d2rdthedphi;
-		double d2udrdt, d2vdrdt, d2wdrdt, d2rdrdt, d2udthedt, d2vdthedt, d2wdthedt, d2rdthedt, d2udphidt, d2vdphidt, d2wdphidt, d2rdphidt;
-		double dudt, dvdt, dwdt, drdt, dtdr, dpdr, dpdr_atm, dtdthe, dpdthe, dtdphi, dpdphi, d2tdr2, d2tdthe2, d2tdphi2;
-		double dcdr, dcdthe, dcdphi, d2cdr2, d2cdthe2, d2cdphi2;
-		double dcodr, dcodthe, dcodphi, d2codr2, d2codthe2, d2codphi2;
+		// double dr, dr2, dthe, dthe2, dphi, dphi2, rm, rm2, sinthe, sinthe2, costhe, rmsinthe, rm2sinthe, rm2sinthe2, cotthe;
+		// double LHS_u, RHS_u, LHS_v, RHS_v, LHS_w, RHS_w, mue, d_i, d_i_max;
+		// double dudr, dudthe, dudphi, dvdr, dvdthe, dvdphi, dwdr, dwdthe, dwdphi, drdr, drdthe, drdphi;
+		// double d2udr2, d2udthe2, d2udphi2, d2vdr2, d2vdthe2, d2vdphi2, d2wdr2, d2wdthe2, d2wdphi2, d2rdr2, d2rdthe2, d2rdphi2;
+		// double d2udrdthe, d2udrdphi, d2vdrdthe, d2vdrdphi, d2wdrdthe, d2wdrdphi, d2rdrdthe, d2rdrdphi, d2udthedphi, d2vdthedphi, d2wdthedphi, d2rdthedphi;
+		// double d2udrdt, d2vdrdt, d2wdrdt, d2rdrdt, d2udthedt, d2vdthedt, d2wdthedt, d2rdthedt, d2udphidt, d2vdphidt, d2wdphidt, d2rdphidt;
+		// double dudt, dvdt, dwdt, drdt, dtdr, dpdr, dpdr_atm, dtdthe, dpdthe, dtdphi, dpdphi, d2tdr2, d2tdthe2, d2tdphi2;
+		// double dcdr, dcdthe, dcdphi, d2cdr2, d2cdthe2, d2cdphi2;
+		// double dcodr, dcodthe, dcodphi, d2codr2, d2codthe2, d2codphi2;
 		double t_tropopause;
 
 	public:

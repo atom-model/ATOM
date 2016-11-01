@@ -116,10 +116,12 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 
 // in case of reading error
 
+	/* FIXME can't work; comparison between ifstream and NULL
 	if ( Name_Bathymetry_File_Read == NULL )
 	{
 		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: not yet exists! ::::::::: " << endl << endl << endl;
 	}
+	*/
 
 	Name_Bathymetry_File_Read.close();
 

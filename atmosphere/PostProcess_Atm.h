@@ -24,10 +24,12 @@ using namespace std;
 class PostProcess_Atmosphere
 {
 	private:
-		int im, jm, km, jr, kr, a, i_radial;
-		int i_max, j_max, k_max, l;
+		int im, jm, km;
+		// int jr, kr, a, i_radial;
+		int i_max, j_max, k_max;
+		// int l;
 
-		double rotu, rotv, rotw;
+		// double rotu, rotv, rotw;
 
 		double max_u, max_v, max_w, max_t, max_c, max_co2, max_cloud, max_ice, max_P_rain, max_P_snow, max_P_conv, max_M_u, max_M_d, max_p_dyn, max_p_stat, max_Rain, max_Rain_super, max_Ice, max_Latency, max_Q_Sensible, max_Precipitation, max_albedo, max_epsilon, max_t_Evaporation, max_t_Condensation, max_t_evap_3D, max_t_cond_3D, max_precipitable_water, max_IceAir, max_Q_bottom, max_Q_latent, max_Q_sensible, max_t_Evaporation_Penman, max_t_Evaporation_Haude, max_Radiation_Balance, max_Q_Radiation, max_Q_t_Evaporation, max_precipitation_NASA, max_Water, max_Water_super, max_Vegetation,  max_IceLayer, max_buoyancy_force, max_radiation_3D;
 

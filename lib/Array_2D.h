@@ -21,7 +21,7 @@ class Array_2D
 {
 	private:
 		int jm, km;
-		double bb;
+		// double bb;
 
 	public:
 		double **y;

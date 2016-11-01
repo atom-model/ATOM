@@ -2863,10 +2863,12 @@ void BC_Thermo::BC_Surface_Temperature ( const string &Name_SurfaceTemperature_F
 	cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: has the length of ::::: " << endpos_1 - anfangpos_1 << " Bytes!"<< endl;
 
 // Im Falle eines Lesefehlers
+	/* FIXME: can't work; comparison between ifstream and NULL
 	if ( Name_SurfaceTemperature_File_Read == NULL )
 	{
 		cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: not yet exists! ::::::::: " << endl << endl << endl;
 	}
+	*/
 
 	Name_SurfaceTemperature_File_Read.close();
 
@@ -2930,20 +2932,22 @@ void BC_Thermo::BC_Surface_Precipitation ( const string &Name_SurfacePrecipitati
 
 
 
-// Ende Lesen von Name_SurfacePrecipitation_File
+	// Ende Lesen von Name_SurfacePrecipitation_File
 
 	Name_SurfacePrecipitation_File_Read.seekg ( 0L, ios::end );
 	endpos_1 = Name_SurfacePrecipitation_File_Read.tellg ();
 
-// Abschlussanweisungen für den Dateiabschluss (Dateiverwaltung)
+	// Abschlussanweisungen für den Dateiabschluss (Dateiverwaltung)
 	cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: ends at ::::::::: " << endpos_1 << endl;
 	cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: has the length of ::::: " << endpos_1 - anfangpos_1 << " Bytes!"<< endl;
 
-// Im Falle eines Lesefehlers
+	// Im Falle eines Lesefehlers
+	/* FIXME: can't work (comparing ifstream to NULL)
 	if ( Name_SurfacePrecipitation_File_Read == NULL )
 	{
 		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: not yet exists! ::::::::: " << endl << endl << endl;
 	}
+	*/
 
 	Name_SurfacePrecipitation_File_Read.close();
 

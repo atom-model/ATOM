@@ -25,8 +25,9 @@ class Pressure
 		int im, jm, km;
 		double dr, dthe, dphi, dr2, dthe2, dphi2;
 		double rm, rm2, sinthe, sinthe2, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2, rm2dthe2;
-		double dudr, dvdthe, dwdphi, drhs_udr, drhs_vdthe, drhs_wdphi;
-		double d2rhs_udrdt, d2rhs_vdthedt, d2rhs_wdphidt;
+		// double dudr, dvdthe, dwdphi;
+		double drhs_udr, drhs_vdthe, drhs_wdphi;
+		// double d2rhs_udrdt, d2rhs_vdthedt, d2rhs_wdphidt;
 		double denom, num1, num2, num3;
 
 	public:

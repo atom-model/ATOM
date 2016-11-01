@@ -21,7 +21,7 @@ class Array
 {
 	private:
 		int im, jm, km;
-		double aa;
+		// double aa;
 
 	public:
 		double ***x;

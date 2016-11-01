@@ -21,7 +21,7 @@ class Array_1D
 {
 	private:
 		int mm;
-		double cc, z0, dz;
+		// double cc, z0, dz;
 
 	public:
 		double *z;
