@@ -23,10 +23,11 @@ ext_modules = [
                   '../atmosphere/Results_Atm.cpp',
                   '../atmosphere/Restore_Atm.cpp',
                   '../atmosphere/MinMax_Atm.cpp',
+                  '../tinyxml2/tinyxml2.cpp'
               ],
               language='c++',
               libraries=['netcdf'],
-              include_dirs=['../atmosphere', '../lib']
+              include_dirs=['../atmosphere', '../lib', '../tinyxml2']
               )]
 
 setup(
@@ -34,6 +35,3 @@ setup(
     cmdclass={'build_ext': build_ext},
     ext_modules=ext_modules
 )
-
-# TODO: for distribution, include pyatom.cpp
-# http://cython.readthedocs.io/en/latest/src/reference/compilation.html#distributing-cython-modules

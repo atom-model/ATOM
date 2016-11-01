@@ -1,7 +1,10 @@
 #ifndef CATMOSPHEREMODEL_H
 #define CATMOSPHEREMODEL_H
 
+#include "tinyxml2.h"
+
 using namespace std;
+using namespace tinyxml2;
 
 class cAtmosphereModel {
 public:
@@ -16,15 +19,23 @@ public:
     string inputPath;
     string outputPath;
 
-    // parameters
+    // SIMULATION PARAMETERS
+    int velocity_iter_max;
+    int pressure_iter_max;
+
+    // PHYSICAL PARAMETERS
     // To modify the defaults, see cAtmosphereModel.cpp
-    double coriolis;                           // computation with Coriolis force
-    double centrifugal;                        // computation with centrifugal force
-    double WaterVapour;                        // computation with water vapour
-    double buoyancy;                           // computation with buoyancy
-    double CO2;                                // computation with CO2
+    double coriolis;
+    double centrifugal;
+    double WaterVapour;
+    double buoyancy;
+    double CO2;
 
     // TODO: j_sun - priority summer vs winter parameter
+
+private:
+    void FillDoubleWithElement(const XMLElement *parent, const char *name, double &dest) const;
+    void FillIntWithElement(const XMLElement *parent, const char *name, int &dest) const;
 };
 
 #endif

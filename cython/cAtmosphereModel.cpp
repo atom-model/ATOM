@@ -7,9 +7,9 @@
 #include <sstream>
 #include <iomanip>
 
-#include "../lib/Array.h"
-#include "../lib/Array_2D.h"
-#include "../lib/Array_1D.h"
+#include "Array.h"
+#include "Array_2D.h"
+#include "Array_1D.h"
 #include "BC_Atm.h"
 #include "BC_Bath_Atm.h"
 #include "BC_Thermo.h"
@@ -24,14 +24,20 @@
 #include "MinMax_Atm.h"
 #include "File_NetCDF_Atm.h"
 
+#include "tinyxml2.h"
+
 #include "cAtmosphereModel.h"
 
 using namespace std;
+using namespace tinyxml2;
 
 cAtmosphereModel::cAtmosphereModel() {
-    cout << "TODO CONSTRUCTOR";
-
     // set default configuration
+    // simulation parameters
+    velocity_iter_max = 2;
+    pressure_iter_max = 2;
+
+    // physical parameters
     coriolis = 1.;                               // computation with Coriolis force
     centrifugal = 1.;                            // computation with centrifugal force
     WaterVapour = 1.;                            // computation with water vapour
@@ -39,12 +45,54 @@ cAtmosphereModel::cAtmosphereModel() {
     CO2 = 1.;                                    // computation with CO2
 }
 
-cAtmosphereModel::~cAtmosphereModel() {
-    cout << "TODO DESTRUCTOR" << endl;
+cAtmosphereModel::~cAtmosphereModel() { }
+
+void cAtmosphereModel::FillDoubleWithElement(const XMLElement *parent, const char *name, double &dest) const {
+    const XMLElement *elem = parent->FirstChildElement(name);
+    if (!elem) {
+        return;
+    }
+
+    const char *text = elem->GetText();
+    if (text) {
+        dest = stod(text);
+    }
+}
+
+void cAtmosphereModel::FillIntWithElement(const XMLElement *parent, const char *name, int &dest) const {
+    const XMLElement *elem = parent->FirstChildElement(name);
+    if (!elem) {
+        return;
+    }
+
+    const char *text = elem->GetText();
+    if (text) {
+        dest = stoi(text);
+    }
 }
 
 void cAtmosphereModel::LoadConfig(const string& filename) {
-    cout << "TODO LoadConfig" << endl;
+    XMLDocument doc;
+    doc.LoadFile(filename.c_str());
+
+    // TODO you should catch exceptions:
+    // libc++abi.dylib: terminating with uncaught exception of type std::invalid_argument: stod: no conversion
+
+    XMLElement *atom = doc.FirstChildElement("atom");
+
+    XMLElement *common = atom->FirstChildElement("common");
+    // TODO: parse out common parameters
+
+    XMLElement *atm = atom->FirstChildElement("atmosphere");
+
+    FillIntWithElement(atm, "velocity_iter_max", velocity_iter_max);
+    FillIntWithElement(atm, "pressure_iter_max", pressure_iter_max);
+
+    FillDoubleWithElement(atm, "coriolis", coriolis);
+    FillDoubleWithElement(atm, "centrifugal", centrifugal);
+    FillDoubleWithElement(atm, "WaterVapour", WaterVapour);
+    FillDoubleWithElement(atm, "buoyancy", buoyancy);
+    FillDoubleWithElement(atm, "CO2", CO2);
 }
 
 void cAtmosphereModel::Run() {
@@ -53,8 +101,7 @@ void cAtmosphereModel::Run() {
 // maximum number of inner velocity loop iterations ( velocity_iter_max )
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-    int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 2, pressure_iter_max = 2;
-    int velocity_iter_max_2D = 2, pressure_iter_max_2D = 2;
+    int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max_2D = 2, pressure_iter_max_2D = 2;
 
     int n = 0, i_radial =0, j_longal = 0, k_zonal = 0, i_max = 0, i_beg = 0;
     int velocity_iter = 0, pressure_iter = 0, pressure_iter_aux = 0, velocity_iter_2D = 0, pressure_iter_2D = 0;
