@@ -10,3 +10,4 @@ atmosphere/atmosphere
 *.sublime-*
 *.so
 env-atom
+pyatom.egg-info
