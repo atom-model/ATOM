@@ -2,9 +2,12 @@
 # distutils: sources = cAtmosphereModel.cpp
 # distutils: include_dirs = ../atmosphere ../lib
 
+import sys
+
 from atom cimport cAtmosphereModel
 
 from libcpp.string cimport string
+
 
 cdef class Atmosphere:
     """ 
@@ -88,7 +91,6 @@ cdef class Atmosphere:
     def run(Atmosphere self):
         self._check_alive()
         self._thisptr.Run()
-
         return None
 
     # The context manager protocol allows us to precisely
@@ -105,3 +107,7 @@ cdef class Atmosphere:
             del self._thisptr 
             self._thisptr = NULL # inform __dealloc__
         return False # propagate exceptions
+
+cdef public void PythonPrint(const char *s):
+    print s,
+    sys.stdout.flush()

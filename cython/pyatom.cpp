@@ -640,8 +640,8 @@ static const char *__pyx_f[] = {
 /*--- Type declarations ---*/
 struct __pyx_obj_6pyatom_Atmosphere;
 
-/* "pyatom.pyx":9
- * from libcpp.string cimport string
+/* "pyatom.pyx":14
+ * 
  * 
  * cdef class Atmosphere:             # <<<<<<<<<<<<<<
  *     """
@@ -796,8 +796,55 @@ static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject **argnames[],\
     PyObject *kwds2, PyObject *values[], Py_ssize_t num_pos_args,\
     const char* function_name);
 
+/* GetModuleGlobalName.proto */
+static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
+
+/* PyCFunctionFastCall.proto */
+#if CYTHON_FAST_PYCCALL
+static CYTHON_INLINE PyObject *__Pyx_PyCFunction_FastCall(PyObject *func, PyObject **args, Py_ssize_t nargs);
+#else
+#define __Pyx_PyCFunction_FastCall(func, args, nargs)  (assert(0), NULL)
+#endif
+
+/* PyFunctionFastCall.proto */
+#if CYTHON_FAST_PYCALL
+#define __Pyx_PyFunction_FastCall(func, args, nargs)\
+    __Pyx_PyFunction_FastCallDict((func), (args), (nargs), NULL)
+#if 1 || PY_VERSION_HEX < 0x030600B1
+static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, int nargs, PyObject *kwargs);
+#else
+#define __Pyx_PyFunction_FastCallDict(func, args, nargs, kwargs) _PyFunction_FastCallDict(func, args, nargs, kwargs)
+#endif
+#endif
+
+/* PyObjectCallMethO.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
+#endif
+
+/* PyObjectCallOneArg.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
+
+/* PyObjectCallNoArg.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func);
+#else
+#define __Pyx_PyObject_CallNoArg(func) __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL)
+#endif
+
+/* WriteUnraisableException.proto */
+static void __Pyx_WriteUnraisable(const char *name, int clineno,
+                                  int lineno, const char *filename,
+                                  int full_traceback, int nogil);
+
 /* SetVTable.proto */
 static int __Pyx_SetVtable(PyObject *dict, void *vtable);
+
+/* Import.proto */
+static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level);
+
+/* ImportFrom.proto */
+static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name);
 
 /* CodeObjectCache.proto */
 typedef struct {
@@ -895,22 +942,29 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
 
 /* Module declarations from 'pyatom' */
 static PyTypeObject *__pyx_ptype_6pyatom_Atmosphere = 0;
+__PYX_EXTERN_C DL_EXPORT(void) PythonPrint(char const *); /*proto*/
 static std::string __pyx_convert_string_from_py_std__in_string(PyObject *); /*proto*/
 #define __Pyx_MODULE_NAME "pyatom"
 int __pyx_module_is_main_pyatom = 0;
 
 /* Implementation of 'pyatom' */
 static PyObject *__pyx_builtin_RuntimeError;
+static const char __pyx_k_io[] = "io";
 static const char __pyx_k_end[] = "end";
+static const char __pyx_k_sys[] = "sys";
 static const char __pyx_k_file[] = "file";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_test[] = "__test__";
+static const char __pyx_k_flush[] = "flush";
 static const char __pyx_k_print[] = "print";
 static const char __pyx_k_exc_tb[] = "exc_tb";
 static const char __pyx_k_exc_tp[] = "exc_tp";
+static const char __pyx_k_import[] = "__import__";
+static const char __pyx_k_stdout[] = "stdout";
 static const char __pyx_k_exc_val[] = "exc_val";
 static const char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
+static const char __pyx_k_stdout_redirector[] = "stdout_redirector";
 static const char __pyx_k_Wrapped_C_object_is_deleted[] = "Wrapped C++ object is deleted";
 static PyObject *__pyx_n_s_RuntimeError;
 static PyObject *__pyx_kp_s_Wrapped_C_object_is_deleted;
@@ -919,9 +973,15 @@ static PyObject *__pyx_n_s_exc_tb;
 static PyObject *__pyx_n_s_exc_tp;
 static PyObject *__pyx_n_s_exc_val;
 static PyObject *__pyx_n_s_file;
+static PyObject *__pyx_n_s_flush;
+static PyObject *__pyx_n_s_import;
+static PyObject *__pyx_n_s_io;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_print;
 static PyObject *__pyx_n_s_pyx_vtable;
+static PyObject *__pyx_n_s_stdout;
+static PyObject *__pyx_n_s_stdout_redirector;
+static PyObject *__pyx_n_s_sys;
 static PyObject *__pyx_n_s_test;
 static int __pyx_pf_6pyatom_10Atmosphere___cinit__(struct __pyx_obj_6pyatom_Atmosphere *__pyx_v_self); /* proto */
 static int __pyx_pf_6pyatom_10Atmosphere_2__init__(struct __pyx_obj_6pyatom_Atmosphere *__pyx_v_self); /* proto */
@@ -933,7 +993,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
 static PyObject *__pyx_tp_new_6pyatom_Atmosphere(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tuple_;
 
-/* "pyatom.pyx":16
+/* "pyatom.pyx":21
  *         cAtmosphereModel *_thisptr
  * 
  *     def __cinit__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -962,7 +1022,7 @@ static int __pyx_pf_6pyatom_10Atmosphere___cinit__(struct __pyx_obj_6pyatom_Atmo
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "pyatom.pyx":20
+  /* "pyatom.pyx":25
  *         # knows if there is something to deallocate. Do not
  *         # call new TestClass() here.
  *         self._thisptr = NULL             # <<<<<<<<<<<<<<
@@ -971,7 +1031,7 @@ static int __pyx_pf_6pyatom_10Atmosphere___cinit__(struct __pyx_obj_6pyatom_Atmo
  */
   __pyx_v_self->_thisptr = NULL;
 
-  /* "pyatom.pyx":16
+  /* "pyatom.pyx":21
  *         cAtmosphereModel *_thisptr
  * 
  *     def __cinit__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -985,7 +1045,7 @@ static int __pyx_pf_6pyatom_10Atmosphere___cinit__(struct __pyx_obj_6pyatom_Atmo
   return __pyx_r;
 }
 
-/* "pyatom.pyx":22
+/* "pyatom.pyx":27
  *         self._thisptr = NULL
  * 
  *     def __init__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1015,7 +1075,7 @@ static int __pyx_pf_6pyatom_10Atmosphere_2__init__(struct __pyx_obj_6pyatom_Atmo
   cAtmosphereModel *__pyx_t_1;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "pyatom.pyx":27
+  /* "pyatom.pyx":32
  *         # by Cython. We therefore need to call "new TestClass()" in
  *         # __init__ instead of __cinit__.
  *         self._thisptr = new cAtmosphereModel()             # <<<<<<<<<<<<<<
@@ -1026,11 +1086,11 @@ static int __pyx_pf_6pyatom_10Atmosphere_2__init__(struct __pyx_obj_6pyatom_Atmo
     __pyx_t_1 = new cAtmosphereModel();
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 27, __pyx_L1_error)
+    __PYX_ERR(0, 32, __pyx_L1_error)
   }
   __pyx_v_self->_thisptr = __pyx_t_1;
 
-  /* "pyatom.pyx":22
+  /* "pyatom.pyx":27
  *         self._thisptr = NULL
  * 
  *     def __init__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1049,7 +1109,7 @@ static int __pyx_pf_6pyatom_10Atmosphere_2__init__(struct __pyx_obj_6pyatom_Atmo
   return __pyx_r;
 }
 
-/* "pyatom.pyx":29
+/* "pyatom.pyx":34
  *         self._thisptr = new cAtmosphereModel()
  * 
  *     def __dealloc__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1073,7 +1133,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__dealloc__", 0);
 
-  /* "pyatom.pyx":32
+  /* "pyatom.pyx":37
  *         # Only call del if the C++ object is alive,
  *         # or we will get a segfault.
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -1083,7 +1143,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
   __pyx_t_1 = ((__pyx_v_self->_thisptr != NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "pyatom.pyx":33
+    /* "pyatom.pyx":38
  *         # or we will get a segfault.
  *         if self._thisptr != NULL:
  *             del self._thisptr             # <<<<<<<<<<<<<<
@@ -1092,7 +1152,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
  */
     delete __pyx_v_self->_thisptr;
 
-    /* "pyatom.pyx":32
+    /* "pyatom.pyx":37
  *         # Only call del if the C++ object is alive,
  *         # or we will get a segfault.
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -1101,7 +1161,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
  */
   }
 
-  /* "pyatom.pyx":29
+  /* "pyatom.pyx":34
  *         self._thisptr = new cAtmosphereModel()
  * 
  *     def __dealloc__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1113,7 +1173,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
   __Pyx_RefNannyFinishContext();
 }
 
-/* "pyatom.pyx":35
+/* "pyatom.pyx":40
  *             del self._thisptr
  * 
  *     cdef int _check_alive(Atmosphere self) except -1:             # <<<<<<<<<<<<<<
@@ -1128,7 +1188,7 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("_check_alive", 0);
 
-  /* "pyatom.pyx":40
+  /* "pyatom.pyx":45
  *         # We therefore need a small utility to check for the
  *         # availability of self._thisptr
  *         if self._thisptr == NULL:             # <<<<<<<<<<<<<<
@@ -1138,20 +1198,20 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
   __pyx_t_1 = ((__pyx_v_self->_thisptr == NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "pyatom.pyx":41
+    /* "pyatom.pyx":46
  *         # availability of self._thisptr
  *         if self._thisptr == NULL:
  *             raise RuntimeError("Wrapped C++ object is deleted")             # <<<<<<<<<<<<<<
  *         else:
  *             return 0
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 46, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 41, __pyx_L1_error)
+    __PYX_ERR(0, 46, __pyx_L1_error)
 
-    /* "pyatom.pyx":40
+    /* "pyatom.pyx":45
  *         # We therefore need a small utility to check for the
  *         # availability of self._thisptr
  *         if self._thisptr == NULL:             # <<<<<<<<<<<<<<
@@ -1160,7 +1220,7 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
  */
   }
 
-  /* "pyatom.pyx":43
+  /* "pyatom.pyx":48
  *             raise RuntimeError("Wrapped C++ object is deleted")
  *         else:
  *             return 0             # <<<<<<<<<<<<<<
@@ -1172,7 +1232,7 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
     goto __pyx_L0;
   }
 
-  /* "pyatom.pyx":35
+  /* "pyatom.pyx":40
  *             del self._thisptr
  * 
  *     cdef int _check_alive(Atmosphere self) except -1:             # <<<<<<<<<<<<<<
@@ -1190,7 +1250,7 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
   return __pyx_r;
 }
 
-/* "pyatom.pyx":78
+/* "pyatom.pyx":83
  * 
  *     '''
  *     def load_config(Atmosphere self, str filename):             # <<<<<<<<<<<<<<
@@ -1204,7 +1264,7 @@ static PyObject *__pyx_pw_6pyatom_10Atmosphere_7load_config(PyObject *__pyx_v_se
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("load_config (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_filename), (&PyString_Type), 1, "filename", 1))) __PYX_ERR(0, 78, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_filename), (&PyString_Type), 1, "filename", 1))) __PYX_ERR(0, 83, __pyx_L1_error)
   __pyx_r = __pyx_pf_6pyatom_10Atmosphere_6load_config(((struct __pyx_obj_6pyatom_Atmosphere *)__pyx_v_self), ((PyObject*)__pyx_v_filename));
 
   /* function exit code */
@@ -1223,35 +1283,35 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_6load_config(struct __pyx_obj_6py
   std::string __pyx_t_2;
   __Pyx_RefNannySetupContext("load_config", 0);
 
-  /* "pyatom.pyx":79
+  /* "pyatom.pyx":84
  *     '''
  *     def load_config(Atmosphere self, str filename):
  *         self._check_alive()             # <<<<<<<<<<<<<<
  *         # cdef string cfilename = filename
  * 
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 79, __pyx_L1_error)
+  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 84, __pyx_L1_error)
 
-  /* "pyatom.pyx":82
+  /* "pyatom.pyx":87
  *         # cdef string cfilename = filename
  * 
  *         print(filename)             # <<<<<<<<<<<<<<
  * 
  *         self._thisptr.LoadConfig(filename)
  */
-  if (__Pyx_PrintOne(0, __pyx_v_filename) < 0) __PYX_ERR(0, 82, __pyx_L1_error)
+  if (__Pyx_PrintOne(0, __pyx_v_filename) < 0) __PYX_ERR(0, 87, __pyx_L1_error)
 
-  /* "pyatom.pyx":84
+  /* "pyatom.pyx":89
  *         print(filename)
  * 
  *         self._thisptr.LoadConfig(filename)             # <<<<<<<<<<<<<<
  * 
  *         return None
  */
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_v_filename); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 84, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_v_filename); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 89, __pyx_L1_error)
   __pyx_v_self->_thisptr->LoadConfig(__pyx_t_2);
 
-  /* "pyatom.pyx":86
+  /* "pyatom.pyx":91
  *         self._thisptr.LoadConfig(filename)
  * 
  *         return None             # <<<<<<<<<<<<<<
@@ -1263,7 +1323,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_6load_config(struct __pyx_obj_6py
   __pyx_r = Py_None;
   goto __pyx_L0;
 
-  /* "pyatom.pyx":78
+  /* "pyatom.pyx":83
  * 
  *     '''
  *     def load_config(Atmosphere self, str filename):             # <<<<<<<<<<<<<<
@@ -1281,12 +1341,12 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_6load_config(struct __pyx_obj_6py
   return __pyx_r;
 }
 
-/* "pyatom.pyx":88
+/* "pyatom.pyx":93
  *         return None
  * 
  *     def run(Atmosphere self):             # <<<<<<<<<<<<<<
- *         self._check_alive()
- *         self._thisptr.Run()
+ *         # We need to do extra work to redirect ATOM's stdout to our stdout for notebook
+ *         # See http://eli.thegreenplace.net/2015/redirecting-all-kinds-of-stdout-in-python/#id1
  */
 
 /* Python wrapper */
@@ -1308,25 +1368,25 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_8run(struct __pyx_obj_6pyatom_Atm
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("run", 0);
 
-  /* "pyatom.pyx":89
+  /* "pyatom.pyx":97
+ *         # See http://eli.thegreenplace.net/2015/redirecting-all-kinds-of-stdout-in-python/#id1
  * 
- *     def run(Atmosphere self):
  *         self._check_alive()             # <<<<<<<<<<<<<<
- *         self._thisptr.Run()
  * 
+ *         # f = io.BytesIO()
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 97, __pyx_L1_error)
 
-  /* "pyatom.pyx":90
- *     def run(Atmosphere self):
- *         self._check_alive()
+  /* "pyatom.pyx":102
+ *         # with stdout_redirector(f):
+ *         #     self._thisptr.Run()
  *         self._thisptr.Run()             # <<<<<<<<<<<<<<
  * 
  *         return None
  */
   __pyx_v_self->_thisptr->Run();
 
-  /* "pyatom.pyx":92
+  /* "pyatom.pyx":104
  *         self._thisptr.Run()
  * 
  *         return None             # <<<<<<<<<<<<<<
@@ -1338,12 +1398,12 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_8run(struct __pyx_obj_6pyatom_Atm
   __pyx_r = Py_None;
   goto __pyx_L0;
 
-  /* "pyatom.pyx":88
+  /* "pyatom.pyx":93
  *         return None
  * 
  *     def run(Atmosphere self):             # <<<<<<<<<<<<<<
- *         self._check_alive()
- *         self._thisptr.Run()
+ *         # We need to do extra work to redirect ATOM's stdout to our stdout for notebook
+ *         # See http://eli.thegreenplace.net/2015/redirecting-all-kinds-of-stdout-in-python/#id1
  */
 
   /* function exit code */
@@ -1356,7 +1416,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_8run(struct __pyx_obj_6pyatom_Atm
   return __pyx_r;
 }
 
-/* "pyatom.pyx":99
+/* "pyatom.pyx":111
  *     # the Python garbage collection.
  * 
  *     def __enter__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1383,16 +1443,16 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_10__enter__(struct __pyx_obj_6pya
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__enter__", 0);
 
-  /* "pyatom.pyx":100
+  /* "pyatom.pyx":112
  * 
  *     def __enter__(Atmosphere self):
  *         self._check_alive()             # <<<<<<<<<<<<<<
  *         return self
  * 
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 112, __pyx_L1_error)
 
-  /* "pyatom.pyx":101
+  /* "pyatom.pyx":113
  *     def __enter__(Atmosphere self):
  *         self._check_alive()
  *         return self             # <<<<<<<<<<<<<<
@@ -1404,7 +1464,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_10__enter__(struct __pyx_obj_6pya
   __pyx_r = ((PyObject *)__pyx_v_self);
   goto __pyx_L0;
 
-  /* "pyatom.pyx":99
+  /* "pyatom.pyx":111
  *     # the Python garbage collection.
  * 
  *     def __enter__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1422,7 +1482,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_10__enter__(struct __pyx_obj_6pya
   return __pyx_r;
 }
 
-/* "pyatom.pyx":103
+/* "pyatom.pyx":115
  *         return self
  * 
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):             # <<<<<<<<<<<<<<
@@ -1460,16 +1520,16 @@ static PyObject *__pyx_pw_6pyatom_10Atmosphere_13__exit__(PyObject *__pyx_v_self
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_exc_val)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 1); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 1); __PYX_ERR(0, 115, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_exc_tb)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 2); __PYX_ERR(0, 103, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 2); __PYX_ERR(0, 115, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__exit__") < 0)) __PYX_ERR(0, 103, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__exit__") < 0)) __PYX_ERR(0, 115, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -1484,7 +1544,7 @@ static PyObject *__pyx_pw_6pyatom_10Atmosphere_13__exit__(PyObject *__pyx_v_self
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 103, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 115, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("pyatom.Atmosphere.__exit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -1503,7 +1563,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__exit__", 0);
 
-  /* "pyatom.pyx":104
+  /* "pyatom.pyx":116
  * 
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -1513,7 +1573,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
   __pyx_t_1 = ((__pyx_v_self->_thisptr != NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "pyatom.pyx":105
+    /* "pyatom.pyx":117
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):
  *         if self._thisptr != NULL:
  *             del self._thisptr             # <<<<<<<<<<<<<<
@@ -1522,15 +1582,16 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
  */
     delete __pyx_v_self->_thisptr;
 
-    /* "pyatom.pyx":106
+    /* "pyatom.pyx":118
  *         if self._thisptr != NULL:
  *             del self._thisptr
  *             self._thisptr = NULL # inform __dealloc__             # <<<<<<<<<<<<<<
  *         return False # propagate exceptions
+ * 
  */
     __pyx_v_self->_thisptr = NULL;
 
-    /* "pyatom.pyx":104
+    /* "pyatom.pyx":116
  * 
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -1539,17 +1600,19 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
  */
   }
 
-  /* "pyatom.pyx":107
+  /* "pyatom.pyx":119
  *             del self._thisptr
  *             self._thisptr = NULL # inform __dealloc__
  *         return False # propagate exceptions             # <<<<<<<<<<<<<<
+ * 
+ * cdef public void PythonPrint(const char *s):
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(Py_False);
   __pyx_r = Py_False;
   goto __pyx_L0;
 
-  /* "pyatom.pyx":103
+  /* "pyatom.pyx":115
  *         return self
  * 
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):             # <<<<<<<<<<<<<<
@@ -1562,6 +1625,89 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
+}
+
+/* "pyatom.pyx":121
+ *         return False # propagate exceptions
+ * 
+ * cdef public void PythonPrint(const char *s):             # <<<<<<<<<<<<<<
+ *     print s,
+ *     sys.stdout.flush()
+ */
+
+void PythonPrint(char const *__pyx_v_s) {
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  __Pyx_RefNannySetupContext("PythonPrint", 0);
+
+  /* "pyatom.pyx":122
+ * 
+ * cdef public void PythonPrint(const char *s):
+ *     print s,             # <<<<<<<<<<<<<<
+ *     sys.stdout.flush()
+ */
+  __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 122, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 122, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
+  __pyx_t_1 = 0;
+  if (__Pyx_Print(0, __pyx_t_2, 0) < 0) __PYX_ERR(0, 122, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "pyatom.pyx":123
+ * cdef public void PythonPrint(const char *s):
+ *     print s,
+ *     sys.stdout.flush()             # <<<<<<<<<<<<<<
+ */
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_sys); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_stdout); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_flush); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = NULL;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_1))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_1, function);
+    }
+  }
+  if (__pyx_t_3) {
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  } else {
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
+  }
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "pyatom.pyx":121
+ *         return False # propagate exceptions
+ * 
+ * cdef public void PythonPrint(const char *s):             # <<<<<<<<<<<<<<
+ *     print s,
+ *     sys.stdout.flush()
+ */
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_WriteUnraisable("pyatom.PythonPrint", __pyx_clineno, __pyx_lineno, __pyx_filename, 0, 0);
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
 }
 
 /* "string.from_py":13
@@ -1748,14 +1894,20 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_exc_tp, __pyx_k_exc_tp, sizeof(__pyx_k_exc_tp), 0, 0, 1, 1},
   {&__pyx_n_s_exc_val, __pyx_k_exc_val, sizeof(__pyx_k_exc_val), 0, 0, 1, 1},
   {&__pyx_n_s_file, __pyx_k_file, sizeof(__pyx_k_file), 0, 0, 1, 1},
+  {&__pyx_n_s_flush, __pyx_k_flush, sizeof(__pyx_k_flush), 0, 0, 1, 1},
+  {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
+  {&__pyx_n_s_io, __pyx_k_io, sizeof(__pyx_k_io), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_vtable, __pyx_k_pyx_vtable, sizeof(__pyx_k_pyx_vtable), 0, 0, 1, 1},
+  {&__pyx_n_s_stdout, __pyx_k_stdout, sizeof(__pyx_k_stdout), 0, 0, 1, 1},
+  {&__pyx_n_s_stdout_redirector, __pyx_k_stdout_redirector, sizeof(__pyx_k_stdout_redirector), 0, 0, 1, 1},
+  {&__pyx_n_s_sys, __pyx_k_sys, sizeof(__pyx_k_sys), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 46, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -1765,14 +1917,14 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "pyatom.pyx":41
+  /* "pyatom.pyx":46
  *         # availability of self._thisptr
  *         if self._thisptr == NULL:
  *             raise RuntimeError("Wrapped C++ object is deleted")             # <<<<<<<<<<<<<<
  *         else:
  *             return 0
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_Wrapped_C_object_is_deleted); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_Wrapped_C_object_is_deleted); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 46, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
   __Pyx_RefNannyFinishContext();
@@ -1798,6 +1950,7 @@ PyMODINIT_FUNC PyInit_pyatom(void)
 #endif
 {
   PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannyDeclarations
   #if CYTHON_REFNANNY
   __Pyx_RefNanny = __Pyx_RefNannyImportAPI("refnanny");
@@ -1875,10 +2028,10 @@ PyMODINIT_FUNC PyInit_pyatom(void)
   /*--- Type init code ---*/
   __pyx_vtabptr_6pyatom_Atmosphere = &__pyx_vtable_6pyatom_Atmosphere;
   __pyx_vtable_6pyatom_Atmosphere._check_alive = (int (*)(struct __pyx_obj_6pyatom_Atmosphere *))__pyx_f_6pyatom_10Atmosphere__check_alive;
-  if (PyType_Ready(&__pyx_type_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 9, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
   __pyx_type_6pyatom_Atmosphere.tp_print = 0;
-  if (__Pyx_SetVtable(__pyx_type_6pyatom_Atmosphere.tp_dict, __pyx_vtabptr_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 9, __pyx_L1_error)
-  if (PyObject_SetAttrString(__pyx_m, "Atmosphere", (PyObject *)&__pyx_type_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 9, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_type_6pyatom_Atmosphere.tp_dict, __pyx_vtabptr_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "Atmosphere", (PyObject *)&__pyx_type_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
   __pyx_ptype_6pyatom_Atmosphere = &__pyx_type_6pyatom_Atmosphere;
   /*--- Type import code ---*/
   /*--- Variable import code ---*/
@@ -1888,15 +2041,60 @@ PyMODINIT_FUNC PyInit_pyatom(void)
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
+  /* "pyatom.pyx":5
+ * # distutils: include_dirs = ../atmosphere ../lib
+ * 
+ * import io             # <<<<<<<<<<<<<<
+ * import sys
+ * 
+ */
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_io, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 5, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_io, __pyx_t_1) < 0) __PYX_ERR(0, 5, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "pyatom.pyx":6
+ * 
+ * import io
+ * import sys             # <<<<<<<<<<<<<<
+ * 
+ * from atom cimport cAtmosphereModel
+ */
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_sys, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 6, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_sys, __pyx_t_1) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "pyatom.pyx":10
+ * from atom cimport cAtmosphereModel
+ * 
+ * from stdout_redirector import stdout_redirector             # <<<<<<<<<<<<<<
+ * from libcpp.string cimport string
+ * 
+ */
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(__pyx_n_s_stdout_redirector);
+  __Pyx_GIVEREF(__pyx_n_s_stdout_redirector);
+  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_stdout_redirector);
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_stdout_redirector, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_stdout_redirector); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_stdout_redirector, __pyx_t_1) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
   /* "pyatom.pyx":1
  * # distutils: language = c++             # <<<<<<<<<<<<<<
  * # distutils: sources = cAtmosphereModel.cpp
  * # distutils: include_dirs = ../atmosphere ../lib
  */
-  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_2) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "string.from_py":13
  * 
@@ -1911,6 +2109,7 @@ PyMODINIT_FUNC PyInit_pyatom(void)
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
   if (__pyx_m) {
     if (__pyx_d) {
       __Pyx_AddTraceback("init pyatom", __pyx_clineno, __pyx_lineno, __pyx_filename);
@@ -2376,8 +2575,293 @@ bad:
     return -1;
 }
 
+/* GetModuleGlobalName */
+  static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
+    PyObject *result;
+#if !CYTHON_AVOID_BORROWED_REFS
+    result = PyDict_GetItem(__pyx_d, name);
+    if (likely(result)) {
+        Py_INCREF(result);
+    } else {
+#else
+    result = PyObject_GetItem(__pyx_d, name);
+    if (!result) {
+        PyErr_Clear();
+#endif
+        result = __Pyx_GetBuiltinName(name);
+    }
+    return result;
+}
+
+/* PyCFunctionFastCall */
+    #if CYTHON_FAST_PYCCALL
+static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, PyObject **args, Py_ssize_t nargs) {
+    PyCFunctionObject *func = (PyCFunctionObject*)func_obj;
+    PyCFunction meth = PyCFunction_GET_FUNCTION(func);
+    PyObject *self = PyCFunction_GET_SELF(func);
+    PyObject *result;
+    int flags;
+    assert(PyCFunction_Check(func));
+    assert(METH_FASTCALL == PyCFunction_GET_FLAGS(func) & ~(METH_CLASS | METH_STATIC | METH_COEXIST));
+    assert(nargs >= 0);
+    assert(nargs == 0 || args != NULL);
+    /* _PyCFunction_FastCallDict() must not be called with an exception set,
+       because it may clear it (directly or indirectly) and so the
+       caller loses its exception */
+    assert(!PyErr_Occurred());
+    return (*((__Pyx_PyCFunctionFast)meth)) (self, args, nargs, NULL);
+}
+#endif  // CYTHON_FAST_PYCCALL
+
+/* PyFunctionFastCall */
+    #if CYTHON_FAST_PYCALL
+#include "frameobject.h"
+static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args, Py_ssize_t na,
+                                               PyObject *globals) {
+    PyFrameObject *f;
+    PyThreadState *tstate = PyThreadState_GET();
+    PyObject **fastlocals;
+    Py_ssize_t i;
+    PyObject *result;
+    assert(globals != NULL);
+    /* XXX Perhaps we should create a specialized
+       PyFrame_New() that doesn't take locals, but does
+       take builtins without sanity checking them.
+       */
+    assert(tstate != NULL);
+    f = PyFrame_New(tstate, co, globals, NULL);
+    if (f == NULL) {
+        return NULL;
+    }
+    fastlocals = f->f_localsplus;
+    for (i = 0; i < na; i++) {
+        Py_INCREF(*args);
+        fastlocals[i] = *args++;
+    }
+    result = PyEval_EvalFrameEx(f,0);
+    ++tstate->recursion_depth;
+    Py_DECREF(f);
+    --tstate->recursion_depth;
+    return result;
+}
+#if 1 || PY_VERSION_HEX < 0x030600B1
+static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, int nargs, PyObject *kwargs) {
+    PyCodeObject *co = (PyCodeObject *)PyFunction_GET_CODE(func);
+    PyObject *globals = PyFunction_GET_GLOBALS(func);
+    PyObject *argdefs = PyFunction_GET_DEFAULTS(func);
+    PyObject *closure;
+#if PY_MAJOR_VERSION >= 3
+    PyObject *kwdefs;
+#endif
+    PyObject *kwtuple, **k;
+    PyObject **d;
+    Py_ssize_t nd;
+    Py_ssize_t nk;
+    PyObject *result;
+    assert(kwargs == NULL || PyDict_Check(kwargs));
+    nk = kwargs ? PyDict_Size(kwargs) : 0;
+    if (Py_EnterRecursiveCall((char*)" while calling a Python object")) {
+        return NULL;
+    }
+    if (
+#if PY_MAJOR_VERSION >= 3
+            co->co_kwonlyargcount == 0 &&
+#endif
+            likely(kwargs == NULL || nk == 0) &&
+            co->co_flags == (CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE)) {
+        if (argdefs == NULL && co->co_argcount == nargs) {
+            result = __Pyx_PyFunction_FastCallNoKw(co, args, nargs, globals);
+            goto done;
+        }
+        else if (nargs == 0 && argdefs != NULL
+                 && co->co_argcount == Py_SIZE(argdefs)) {
+            /* function called with no arguments, but all parameters have
+               a default value: use default values as arguments .*/
+            args = &PyTuple_GET_ITEM(argdefs, 0);
+            result =__Pyx_PyFunction_FastCallNoKw(co, args, Py_SIZE(argdefs), globals);
+            goto done;
+        }
+    }
+    if (kwargs != NULL) {
+        Py_ssize_t pos, i;
+        kwtuple = PyTuple_New(2 * nk);
+        if (kwtuple == NULL) {
+            result = NULL;
+            goto done;
+        }
+        k = &PyTuple_GET_ITEM(kwtuple, 0);
+        pos = i = 0;
+        while (PyDict_Next(kwargs, &pos, &k[i], &k[i+1])) {
+            Py_INCREF(k[i]);
+            Py_INCREF(k[i+1]);
+            i += 2;
+        }
+        nk = i / 2;
+    }
+    else {
+        kwtuple = NULL;
+        k = NULL;
+    }
+    closure = PyFunction_GET_CLOSURE(func);
+#if PY_MAJOR_VERSION >= 3
+    kwdefs = PyFunction_GET_KW_DEFAULTS(func);
+#endif
+    if (argdefs != NULL) {
+        d = &PyTuple_GET_ITEM(argdefs, 0);
+        nd = Py_SIZE(argdefs);
+    }
+    else {
+        d = NULL;
+        nd = 0;
+    }
+#if PY_MAJOR_VERSION >= 3
+    result = PyEval_EvalCodeEx((PyObject*)co, globals, (PyObject *)NULL,
+                               args, nargs,
+                               k, (int)nk,
+                               d, (int)nd, kwdefs, closure);
+#else
+    result = PyEval_EvalCodeEx(co, globals, (PyObject *)NULL,
+                               args, nargs,
+                               k, (int)nk,
+                               d, (int)nd, closure);
+#endif
+    Py_XDECREF(kwtuple);
+done:
+    Py_LeaveRecursiveCall();
+    return result;
+}
+#endif  // CPython < 3.6
+#endif  // CYTHON_FAST_PYCALL
+
+/* PyObjectCallMethO */
+    #if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
+    PyObject *self, *result;
+    PyCFunction cfunc;
+    cfunc = PyCFunction_GET_FUNCTION(func);
+    self = PyCFunction_GET_SELF(func);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = cfunc(self, arg);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
+/* PyObjectCallOneArg */
+    #if CYTHON_COMPILING_IN_CPYTHON
+static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_New(1);
+    if (unlikely(!args)) return NULL;
+    Py_INCREF(arg);
+    PyTuple_SET_ITEM(args, 0, arg);
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
+    return result;
+}
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+#if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(func)) {
+        return __Pyx_PyFunction_FastCall(func, &arg, 1);
+    }
+#endif
+#ifdef __Pyx_CyFunction_USED
+    if (likely(PyCFunction_Check(func) || PyObject_TypeCheck(func, __pyx_CyFunctionType))) {
+#else
+    if (likely(PyCFunction_Check(func))) {
+#endif
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_O)) {
+            return __Pyx_PyObject_CallMethO(func, arg);
+#if CYTHON_FAST_PYCCALL
+        } else if (PyCFunction_GET_FLAGS(func) & METH_FASTCALL) {
+            return __Pyx_PyCFunction_FastCall(func, &arg, 1);
+#endif
+        }
+    }
+    return __Pyx__PyObject_CallOneArg(func, arg);
+}
+#else
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_Pack(1, arg);
+    if (unlikely(!args)) return NULL;
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
+    return result;
+}
+#endif
+
+/* PyObjectCallNoArg */
+      #if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func) {
+#if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(func)) {
+        return __Pyx_PyFunction_FastCall(func, NULL, 0);
+    }
+#endif
+#ifdef __Pyx_CyFunction_USED
+    if (likely(PyCFunction_Check(func) || PyObject_TypeCheck(func, __pyx_CyFunctionType))) {
+#else
+    if (likely(PyCFunction_Check(func))) {
+#endif
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_NOARGS)) {
+            return __Pyx_PyObject_CallMethO(func, NULL);
+        }
+    }
+    return __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL);
+}
+#endif
+
+/* WriteUnraisableException */
+        static void __Pyx_WriteUnraisable(const char *name, CYTHON_UNUSED int clineno,
+                                  CYTHON_UNUSED int lineno, CYTHON_UNUSED const char *filename,
+                                  int full_traceback, CYTHON_UNUSED int nogil) {
+    PyObject *old_exc, *old_val, *old_tb;
+    PyObject *ctx;
+    __Pyx_PyThreadState_declare
+#ifdef WITH_THREAD
+    PyGILState_STATE state;
+    if (nogil)
+        state = PyGILState_Ensure();
+#ifdef _MSC_VER
+    else state = (PyGILState_STATE)-1;
+#endif
+#endif
+    __Pyx_PyThreadState_assign
+    __Pyx_ErrFetch(&old_exc, &old_val, &old_tb);
+    if (full_traceback) {
+        Py_XINCREF(old_exc);
+        Py_XINCREF(old_val);
+        Py_XINCREF(old_tb);
+        __Pyx_ErrRestore(old_exc, old_val, old_tb);
+        PyErr_PrintEx(1);
+    }
+    #if PY_MAJOR_VERSION < 3
+    ctx = PyString_FromString(name);
+    #else
+    ctx = PyUnicode_FromString(name);
+    #endif
+    __Pyx_ErrRestore(old_exc, old_val, old_tb);
+    if (!ctx) {
+        PyErr_WriteUnraisable(Py_None);
+    } else {
+        PyErr_WriteUnraisable(ctx);
+        Py_DECREF(ctx);
+    }
+#ifdef WITH_THREAD
+    if (nogil)
+        PyGILState_Release(state);
+#endif
+}
+
 /* SetVTable */
-  static int __Pyx_SetVtable(PyObject *dict, void *vtable) {
+        static int __Pyx_SetVtable(PyObject *dict, void *vtable) {
 #if PY_VERSION_HEX >= 0x02070000
     PyObject *ob = PyCapsule_New(vtable, 0, 0);
 #else
@@ -2394,8 +2878,96 @@ bad:
     return -1;
 }
 
+/* Import */
+        static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
+    PyObject *empty_list = 0;
+    PyObject *module = 0;
+    PyObject *global_dict = 0;
+    PyObject *empty_dict = 0;
+    PyObject *list;
+    #if PY_VERSION_HEX < 0x03030000
+    PyObject *py_import;
+    py_import = __Pyx_PyObject_GetAttrStr(__pyx_b, __pyx_n_s_import);
+    if (!py_import)
+        goto bad;
+    #endif
+    if (from_list)
+        list = from_list;
+    else {
+        empty_list = PyList_New(0);
+        if (!empty_list)
+            goto bad;
+        list = empty_list;
+    }
+    global_dict = PyModule_GetDict(__pyx_m);
+    if (!global_dict)
+        goto bad;
+    empty_dict = PyDict_New();
+    if (!empty_dict)
+        goto bad;
+    {
+        #if PY_MAJOR_VERSION >= 3
+        if (level == -1) {
+            if (strchr(__Pyx_MODULE_NAME, '.')) {
+                #if PY_VERSION_HEX < 0x03030000
+                PyObject *py_level = PyInt_FromLong(1);
+                if (!py_level)
+                    goto bad;
+                module = PyObject_CallFunctionObjArgs(py_import,
+                    name, global_dict, empty_dict, list, py_level, NULL);
+                Py_DECREF(py_level);
+                #else
+                module = PyImport_ImportModuleLevelObject(
+                    name, global_dict, empty_dict, list, 1);
+                #endif
+                if (!module) {
+                    if (!PyErr_ExceptionMatches(PyExc_ImportError))
+                        goto bad;
+                    PyErr_Clear();
+                }
+            }
+            level = 0;
+        }
+        #endif
+        if (!module) {
+            #if PY_VERSION_HEX < 0x03030000
+            PyObject *py_level = PyInt_FromLong(level);
+            if (!py_level)
+                goto bad;
+            module = PyObject_CallFunctionObjArgs(py_import,
+                name, global_dict, empty_dict, list, py_level, NULL);
+            Py_DECREF(py_level);
+            #else
+            module = PyImport_ImportModuleLevelObject(
+                name, global_dict, empty_dict, list, level);
+            #endif
+        }
+    }
+bad:
+    #if PY_VERSION_HEX < 0x03030000
+    Py_XDECREF(py_import);
+    #endif
+    Py_XDECREF(empty_list);
+    Py_XDECREF(empty_dict);
+    return module;
+}
+
+/* ImportFrom */
+        static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name) {
+    PyObject* value = __Pyx_PyObject_GetAttrStr(module, name);
+    if (unlikely(!value) && PyErr_ExceptionMatches(PyExc_AttributeError)) {
+        PyErr_Format(PyExc_ImportError,
+        #if PY_MAJOR_VERSION < 3
+            "cannot import name %.230s", PyString_AS_STRING(name));
+        #else
+            "cannot import name %S", name);
+        #endif
+    }
+    return value;
+}
+
 /* CodeObjectCache */
-  static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
+        static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
     int start = 0, mid = 0, end = count - 1;
     if (end >= 0 && code_line > entries[end].code_line) {
         return count;
@@ -2475,7 +3047,7 @@ static void __pyx_insert_code_object(int code_line, PyCodeObject* code_object) {
 }
 
 /* AddTraceback */
-  #include "compile.h"
+        #include "compile.h"
 #include "frameobject.h"
 #include "traceback.h"
 static PyCodeObject* __Pyx_CreateCodeObjectForTraceback(
@@ -2556,7 +3128,7 @@ bad:
 }
 
 /* Print */
-  #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION < 3
+        #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION < 3
 static PyObject *__Pyx_GetStdout(void) {
     PyObject *f = PySys_GetObject((char *)"stdout");
     if (!f) {
@@ -2662,7 +3234,7 @@ bad:
 #endif
 
 /* PrintOne */
-  #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION < 3
+        #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION < 3
 static int __Pyx_PrintOne(PyObject* f, PyObject *o) {
     if (!f) {
         if (!(f = __Pyx_GetStdout()))
@@ -2699,7 +3271,7 @@ static int __Pyx_PrintOne(PyObject* stream, PyObject *o) {
 #endif
 
 /* CIntToPy */
-  static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
+        static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
     const long neg_one = (long) -1, const_zero = (long) 0;
     const int is_unsigned = neg_one > const_zero;
     if (is_unsigned) {
@@ -2730,7 +3302,7 @@ static int __Pyx_PrintOne(PyObject* stream, PyObject *o) {
 }
 
 /* CIntFromPyVerify */
-  #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
+        #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 0)
 #define __PYX_VERIFY_RETURN_INT_EXC(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 1)
@@ -2752,7 +3324,7 @@ static int __Pyx_PrintOne(PyObject* stream, PyObject *o) {
     }
 
 /* CIntFromPy */
-  static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
+        static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
     const long neg_one = (long) -1, const_zero = (long) 0;
     const int is_unsigned = neg_one > const_zero;
 #if PY_MAJOR_VERSION < 3
@@ -2941,7 +3513,7 @@ raise_neg_overflow:
 }
 
 /* CIntFromPy */
-  static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
+        static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
     const int neg_one = (int) -1, const_zero = (int) 0;
     const int is_unsigned = neg_one > const_zero;
 #if PY_MAJOR_VERSION < 3
@@ -3130,7 +3702,7 @@ raise_neg_overflow:
 }
 
 /* CheckBinaryVersion */
-  static int __Pyx_check_binary_version(void) {
+        static int __Pyx_check_binary_version(void) {
     char ctversion[4], rtversion[4];
     PyOS_snprintf(ctversion, 4, "%d.%d", PY_MAJOR_VERSION, PY_MINOR_VERSION);
     PyOS_snprintf(rtversion, 4, "%s", Py_GetVersion());
@@ -3146,7 +3718,7 @@ raise_neg_overflow:
 }
 
 /* InitStrings */
-  static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
+        static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
     while (t->p) {
         #if PY_MAJOR_VERSION < 3
         if (t->is_unicode) {

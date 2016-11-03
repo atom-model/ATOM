@@ -9,3 +9,4 @@ atmosphere/atmosphere
 .DS_Store
 *.sublime-*
 *.so
+env-atom

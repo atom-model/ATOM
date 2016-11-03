@@ -27,11 +27,16 @@
 #include "tinyxml2.h"
 
 #include "cAtmosphereModel.h"
+#include "PythonStream.h"
 
 using namespace std;
 using namespace tinyxml2;
 
 cAtmosphereModel::cAtmosphereModel() {
+    // Python and Notebooks can't capture stdout from this module. We override
+    // cout's streambuf with a class that redirects stdout out to Python.
+    PythonStream::OverrideCout();
+
     // set default configuration
     // simulation parameters
     velocity_iter_max = 2;

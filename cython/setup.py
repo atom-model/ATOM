@@ -7,6 +7,7 @@ ext_modules = [
               [
                   'pyatom.pyx',
                   'cAtmosphereModel.cpp',
+                  'PythonStream.cpp',
                   '../lib/Array.cpp',
                   '../lib/Array_2D.cpp',
                   '../lib/Array_1D.cpp',
@@ -26,7 +27,7 @@ ext_modules = [
                   '../tinyxml2/tinyxml2.cpp'
               ],
               language='c++',
-              libraries=['netcdf'],
+              libraries=['c', 'netcdf'],
               include_dirs=['../atmosphere', '../lib', '../tinyxml2']
               )]
 
