@@ -48,11 +48,11 @@ cAtmosphereModel::cAtmosphereModel() {
     pressure_iter_max = 2;
 
     // physical parameters
-    coriolis = 1.;                               // computation with Coriolis force
-    centrifugal = 1.;                            // computation with centrifugal force
-    WaterVapour = 1.;                            // computation with water vapour
-    buoyancy = 1.;                               // computation with buoyancy
-    CO2 = 1.;                                    // computation with CO2
+    coriolis = 1.;
+    centrifugal = 1.;
+    WaterVapour = 1.;
+    buoyancy = 1.;
+    CO2 = 1.;
 }
 
 cAtmosphereModel::~cAtmosphereModel() { }

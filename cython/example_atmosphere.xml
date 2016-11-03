@@ -20,11 +20,11 @@
         <pressure_iter_max>2</pressure_iter_max>  <!-- TODO (default 2) -->
 
         <!-- PHYSICAL PARAMETERS -->
-        <coriolis>1.0</coriolis>  <!-- coriolis force (default 1.0) -->
+        <coriolis>1.0</coriolis>        <!-- coriolis force (default 1.0) -->
         <centrifugal>1.0</centrifugal>  <!-- centrifugal force (default 1.0) -->
         <WaterVapour>1.0</WaterVapour>  <!-- water vapour (default 1.0) -->
-        <buoyancy>1.0</buoyancy>  <!-- buoyancy (default 1.0) -->
-        <CO2>1.0</CO2>  <!-- CO2 (default 1.0) -->
+        <buoyancy>1.0</buoyancy>        <!-- buoyancy (default 1.0) -->
+        <CO2>1.0</CO2>                  <!-- CO2 (default 1.0) -->
     </atmosphere>
 
     <hydrosphere>
