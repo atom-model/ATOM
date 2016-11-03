@@ -640,7 +640,7 @@ static const char *__pyx_f[] = {
 /*--- Type declarations ---*/
 struct __pyx_obj_6pyatom_Atmosphere;
 
-/* "pyatom.pyx":14
+/* "pyatom.pyx":12
  * 
  * 
  * cdef class Atmosphere:             # <<<<<<<<<<<<<<
@@ -843,9 +843,6 @@ static int __Pyx_SetVtable(PyObject *dict, void *vtable);
 /* Import.proto */
 static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level);
 
-/* ImportFrom.proto */
-static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name);
-
 /* CodeObjectCache.proto */
 typedef struct {
     PyCodeObject* code_object;
@@ -949,7 +946,6 @@ int __pyx_module_is_main_pyatom = 0;
 
 /* Implementation of 'pyatom' */
 static PyObject *__pyx_builtin_RuntimeError;
-static const char __pyx_k_io[] = "io";
 static const char __pyx_k_end[] = "end";
 static const char __pyx_k_sys[] = "sys";
 static const char __pyx_k_file[] = "file";
@@ -964,7 +960,6 @@ static const char __pyx_k_stdout[] = "stdout";
 static const char __pyx_k_exc_val[] = "exc_val";
 static const char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
-static const char __pyx_k_stdout_redirector[] = "stdout_redirector";
 static const char __pyx_k_Wrapped_C_object_is_deleted[] = "Wrapped C++ object is deleted";
 static PyObject *__pyx_n_s_RuntimeError;
 static PyObject *__pyx_kp_s_Wrapped_C_object_is_deleted;
@@ -975,12 +970,10 @@ static PyObject *__pyx_n_s_exc_val;
 static PyObject *__pyx_n_s_file;
 static PyObject *__pyx_n_s_flush;
 static PyObject *__pyx_n_s_import;
-static PyObject *__pyx_n_s_io;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_print;
 static PyObject *__pyx_n_s_pyx_vtable;
 static PyObject *__pyx_n_s_stdout;
-static PyObject *__pyx_n_s_stdout_redirector;
 static PyObject *__pyx_n_s_sys;
 static PyObject *__pyx_n_s_test;
 static int __pyx_pf_6pyatom_10Atmosphere___cinit__(struct __pyx_obj_6pyatom_Atmosphere *__pyx_v_self); /* proto */
@@ -993,7 +986,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
 static PyObject *__pyx_tp_new_6pyatom_Atmosphere(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tuple_;
 
-/* "pyatom.pyx":21
+/* "pyatom.pyx":19
  *         cAtmosphereModel *_thisptr
  * 
  *     def __cinit__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1022,7 +1015,7 @@ static int __pyx_pf_6pyatom_10Atmosphere___cinit__(struct __pyx_obj_6pyatom_Atmo
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "pyatom.pyx":25
+  /* "pyatom.pyx":23
  *         # knows if there is something to deallocate. Do not
  *         # call new TestClass() here.
  *         self._thisptr = NULL             # <<<<<<<<<<<<<<
@@ -1031,7 +1024,7 @@ static int __pyx_pf_6pyatom_10Atmosphere___cinit__(struct __pyx_obj_6pyatom_Atmo
  */
   __pyx_v_self->_thisptr = NULL;
 
-  /* "pyatom.pyx":21
+  /* "pyatom.pyx":19
  *         cAtmosphereModel *_thisptr
  * 
  *     def __cinit__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1045,7 +1038,7 @@ static int __pyx_pf_6pyatom_10Atmosphere___cinit__(struct __pyx_obj_6pyatom_Atmo
   return __pyx_r;
 }
 
-/* "pyatom.pyx":27
+/* "pyatom.pyx":25
  *         self._thisptr = NULL
  * 
  *     def __init__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1075,7 +1068,7 @@ static int __pyx_pf_6pyatom_10Atmosphere_2__init__(struct __pyx_obj_6pyatom_Atmo
   cAtmosphereModel *__pyx_t_1;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "pyatom.pyx":32
+  /* "pyatom.pyx":30
  *         # by Cython. We therefore need to call "new TestClass()" in
  *         # __init__ instead of __cinit__.
  *         self._thisptr = new cAtmosphereModel()             # <<<<<<<<<<<<<<
@@ -1086,11 +1079,11 @@ static int __pyx_pf_6pyatom_10Atmosphere_2__init__(struct __pyx_obj_6pyatom_Atmo
     __pyx_t_1 = new cAtmosphereModel();
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 32, __pyx_L1_error)
+    __PYX_ERR(0, 30, __pyx_L1_error)
   }
   __pyx_v_self->_thisptr = __pyx_t_1;
 
-  /* "pyatom.pyx":27
+  /* "pyatom.pyx":25
  *         self._thisptr = NULL
  * 
  *     def __init__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1109,7 +1102,7 @@ static int __pyx_pf_6pyatom_10Atmosphere_2__init__(struct __pyx_obj_6pyatom_Atmo
   return __pyx_r;
 }
 
-/* "pyatom.pyx":34
+/* "pyatom.pyx":32
  *         self._thisptr = new cAtmosphereModel()
  * 
  *     def __dealloc__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1133,7 +1126,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__dealloc__", 0);
 
-  /* "pyatom.pyx":37
+  /* "pyatom.pyx":35
  *         # Only call del if the C++ object is alive,
  *         # or we will get a segfault.
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -1143,7 +1136,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
   __pyx_t_1 = ((__pyx_v_self->_thisptr != NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "pyatom.pyx":38
+    /* "pyatom.pyx":36
  *         # or we will get a segfault.
  *         if self._thisptr != NULL:
  *             del self._thisptr             # <<<<<<<<<<<<<<
@@ -1152,7 +1145,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
  */
     delete __pyx_v_self->_thisptr;
 
-    /* "pyatom.pyx":37
+    /* "pyatom.pyx":35
  *         # Only call del if the C++ object is alive,
  *         # or we will get a segfault.
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -1161,7 +1154,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
  */
   }
 
-  /* "pyatom.pyx":34
+  /* "pyatom.pyx":32
  *         self._thisptr = new cAtmosphereModel()
  * 
  *     def __dealloc__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1173,7 +1166,7 @@ static void __pyx_pf_6pyatom_10Atmosphere_4__dealloc__(struct __pyx_obj_6pyatom_
   __Pyx_RefNannyFinishContext();
 }
 
-/* "pyatom.pyx":40
+/* "pyatom.pyx":38
  *             del self._thisptr
  * 
  *     cdef int _check_alive(Atmosphere self) except -1:             # <<<<<<<<<<<<<<
@@ -1188,7 +1181,7 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("_check_alive", 0);
 
-  /* "pyatom.pyx":45
+  /* "pyatom.pyx":43
  *         # We therefore need a small utility to check for the
  *         # availability of self._thisptr
  *         if self._thisptr == NULL:             # <<<<<<<<<<<<<<
@@ -1198,20 +1191,20 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
   __pyx_t_1 = ((__pyx_v_self->_thisptr == NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "pyatom.pyx":46
+    /* "pyatom.pyx":44
  *         # availability of self._thisptr
  *         if self._thisptr == NULL:
  *             raise RuntimeError("Wrapped C++ object is deleted")             # <<<<<<<<<<<<<<
  *         else:
  *             return 0
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 46, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 44, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_Raise(__pyx_t_2, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __PYX_ERR(0, 46, __pyx_L1_error)
+    __PYX_ERR(0, 44, __pyx_L1_error)
 
-    /* "pyatom.pyx":45
+    /* "pyatom.pyx":43
  *         # We therefore need a small utility to check for the
  *         # availability of self._thisptr
  *         if self._thisptr == NULL:             # <<<<<<<<<<<<<<
@@ -1220,7 +1213,7 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
  */
   }
 
-  /* "pyatom.pyx":48
+  /* "pyatom.pyx":46
  *             raise RuntimeError("Wrapped C++ object is deleted")
  *         else:
  *             return 0             # <<<<<<<<<<<<<<
@@ -1232,7 +1225,7 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
     goto __pyx_L0;
   }
 
-  /* "pyatom.pyx":40
+  /* "pyatom.pyx":38
  *             del self._thisptr
  * 
  *     cdef int _check_alive(Atmosphere self) except -1:             # <<<<<<<<<<<<<<
@@ -1250,7 +1243,7 @@ static int __pyx_f_6pyatom_10Atmosphere__check_alive(struct __pyx_obj_6pyatom_At
   return __pyx_r;
 }
 
-/* "pyatom.pyx":83
+/* "pyatom.pyx":81
  * 
  *     '''
  *     def load_config(Atmosphere self, str filename):             # <<<<<<<<<<<<<<
@@ -1264,7 +1257,7 @@ static PyObject *__pyx_pw_6pyatom_10Atmosphere_7load_config(PyObject *__pyx_v_se
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("load_config (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_filename), (&PyString_Type), 1, "filename", 1))) __PYX_ERR(0, 83, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_filename), (&PyString_Type), 1, "filename", 1))) __PYX_ERR(0, 81, __pyx_L1_error)
   __pyx_r = __pyx_pf_6pyatom_10Atmosphere_6load_config(((struct __pyx_obj_6pyatom_Atmosphere *)__pyx_v_self), ((PyObject*)__pyx_v_filename));
 
   /* function exit code */
@@ -1283,35 +1276,35 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_6load_config(struct __pyx_obj_6py
   std::string __pyx_t_2;
   __Pyx_RefNannySetupContext("load_config", 0);
 
-  /* "pyatom.pyx":84
+  /* "pyatom.pyx":82
  *     '''
  *     def load_config(Atmosphere self, str filename):
  *         self._check_alive()             # <<<<<<<<<<<<<<
  *         # cdef string cfilename = filename
  * 
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 84, __pyx_L1_error)
+  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 82, __pyx_L1_error)
 
-  /* "pyatom.pyx":87
+  /* "pyatom.pyx":85
  *         # cdef string cfilename = filename
  * 
  *         print(filename)             # <<<<<<<<<<<<<<
  * 
  *         self._thisptr.LoadConfig(filename)
  */
-  if (__Pyx_PrintOne(0, __pyx_v_filename) < 0) __PYX_ERR(0, 87, __pyx_L1_error)
+  if (__Pyx_PrintOne(0, __pyx_v_filename) < 0) __PYX_ERR(0, 85, __pyx_L1_error)
 
-  /* "pyatom.pyx":89
+  /* "pyatom.pyx":87
  *         print(filename)
  * 
  *         self._thisptr.LoadConfig(filename)             # <<<<<<<<<<<<<<
  * 
  *         return None
  */
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_v_filename); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 89, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_v_filename); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 87, __pyx_L1_error)
   __pyx_v_self->_thisptr->LoadConfig(__pyx_t_2);
 
-  /* "pyatom.pyx":91
+  /* "pyatom.pyx":89
  *         self._thisptr.LoadConfig(filename)
  * 
  *         return None             # <<<<<<<<<<<<<<
@@ -1323,7 +1316,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_6load_config(struct __pyx_obj_6py
   __pyx_r = Py_None;
   goto __pyx_L0;
 
-  /* "pyatom.pyx":83
+  /* "pyatom.pyx":81
  * 
  *     '''
  *     def load_config(Atmosphere self, str filename):             # <<<<<<<<<<<<<<
@@ -1341,12 +1334,12 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_6load_config(struct __pyx_obj_6py
   return __pyx_r;
 }
 
-/* "pyatom.pyx":93
+/* "pyatom.pyx":91
  *         return None
  * 
  *     def run(Atmosphere self):             # <<<<<<<<<<<<<<
- *         # We need to do extra work to redirect ATOM's stdout to our stdout for notebook
- *         # See http://eli.thegreenplace.net/2015/redirecting-all-kinds-of-stdout-in-python/#id1
+ *         self._check_alive()
+ *         self._thisptr.Run()
  */
 
 /* Python wrapper */
@@ -1368,27 +1361,27 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_8run(struct __pyx_obj_6pyatom_Atm
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("run", 0);
 
-  /* "pyatom.pyx":97
- *         # See http://eli.thegreenplace.net/2015/redirecting-all-kinds-of-stdout-in-python/#id1
+  /* "pyatom.pyx":92
  * 
+ *     def run(Atmosphere self):
  *         self._check_alive()             # <<<<<<<<<<<<<<
- * 
- *         # f = io.BytesIO()
- */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 97, __pyx_L1_error)
-
-  /* "pyatom.pyx":102
- *         # with stdout_redirector(f):
- *         #     self._thisptr.Run()
- *         self._thisptr.Run()             # <<<<<<<<<<<<<<
- * 
+ *         self._thisptr.Run()
  *         return None
+ */
+  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 92, __pyx_L1_error)
+
+  /* "pyatom.pyx":93
+ *     def run(Atmosphere self):
+ *         self._check_alive()
+ *         self._thisptr.Run()             # <<<<<<<<<<<<<<
+ *         return None
+ * 
  */
   __pyx_v_self->_thisptr->Run();
 
-  /* "pyatom.pyx":104
+  /* "pyatom.pyx":94
+ *         self._check_alive()
  *         self._thisptr.Run()
- * 
  *         return None             # <<<<<<<<<<<<<<
  * 
  *     # The context manager protocol allows us to precisely
@@ -1398,12 +1391,12 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_8run(struct __pyx_obj_6pyatom_Atm
   __pyx_r = Py_None;
   goto __pyx_L0;
 
-  /* "pyatom.pyx":93
+  /* "pyatom.pyx":91
  *         return None
  * 
  *     def run(Atmosphere self):             # <<<<<<<<<<<<<<
- *         # We need to do extra work to redirect ATOM's stdout to our stdout for notebook
- *         # See http://eli.thegreenplace.net/2015/redirecting-all-kinds-of-stdout-in-python/#id1
+ *         self._check_alive()
+ *         self._thisptr.Run()
  */
 
   /* function exit code */
@@ -1416,7 +1409,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_8run(struct __pyx_obj_6pyatom_Atm
   return __pyx_r;
 }
 
-/* "pyatom.pyx":111
+/* "pyatom.pyx":101
  *     # the Python garbage collection.
  * 
  *     def __enter__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1443,16 +1436,16 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_10__enter__(struct __pyx_obj_6pya
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__enter__", 0);
 
-  /* "pyatom.pyx":112
+  /* "pyatom.pyx":102
  * 
  *     def __enter__(Atmosphere self):
  *         self._check_alive()             # <<<<<<<<<<<<<<
  *         return self
  * 
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 112, __pyx_L1_error)
+  __pyx_t_1 = ((struct __pyx_vtabstruct_6pyatom_Atmosphere *)__pyx_v_self->__pyx_vtab)->_check_alive(__pyx_v_self); if (unlikely(__pyx_t_1 == -1)) __PYX_ERR(0, 102, __pyx_L1_error)
 
-  /* "pyatom.pyx":113
+  /* "pyatom.pyx":103
  *     def __enter__(Atmosphere self):
  *         self._check_alive()
  *         return self             # <<<<<<<<<<<<<<
@@ -1464,7 +1457,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_10__enter__(struct __pyx_obj_6pya
   __pyx_r = ((PyObject *)__pyx_v_self);
   goto __pyx_L0;
 
-  /* "pyatom.pyx":111
+  /* "pyatom.pyx":101
  *     # the Python garbage collection.
  * 
  *     def __enter__(Atmosphere self):             # <<<<<<<<<<<<<<
@@ -1482,7 +1475,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_10__enter__(struct __pyx_obj_6pya
   return __pyx_r;
 }
 
-/* "pyatom.pyx":115
+/* "pyatom.pyx":105
  *         return self
  * 
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):             # <<<<<<<<<<<<<<
@@ -1520,16 +1513,16 @@ static PyObject *__pyx_pw_6pyatom_10Atmosphere_13__exit__(PyObject *__pyx_v_self
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_exc_val)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 1); __PYX_ERR(0, 115, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 1); __PYX_ERR(0, 105, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_exc_tb)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 2); __PYX_ERR(0, 115, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, 2); __PYX_ERR(0, 105, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__exit__") < 0)) __PYX_ERR(0, 115, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__exit__") < 0)) __PYX_ERR(0, 105, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -1544,7 +1537,7 @@ static PyObject *__pyx_pw_6pyatom_10Atmosphere_13__exit__(PyObject *__pyx_v_self
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 115, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__exit__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 105, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("pyatom.Atmosphere.__exit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -1563,7 +1556,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__exit__", 0);
 
-  /* "pyatom.pyx":116
+  /* "pyatom.pyx":106
  * 
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -1573,7 +1566,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
   __pyx_t_1 = ((__pyx_v_self->_thisptr != NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "pyatom.pyx":117
+    /* "pyatom.pyx":107
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):
  *         if self._thisptr != NULL:
  *             del self._thisptr             # <<<<<<<<<<<<<<
@@ -1582,7 +1575,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
  */
     delete __pyx_v_self->_thisptr;
 
-    /* "pyatom.pyx":118
+    /* "pyatom.pyx":108
  *         if self._thisptr != NULL:
  *             del self._thisptr
  *             self._thisptr = NULL # inform __dealloc__             # <<<<<<<<<<<<<<
@@ -1591,7 +1584,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
  */
     __pyx_v_self->_thisptr = NULL;
 
-    /* "pyatom.pyx":116
+    /* "pyatom.pyx":106
  * 
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -1600,7 +1593,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
  */
   }
 
-  /* "pyatom.pyx":119
+  /* "pyatom.pyx":109
  *             del self._thisptr
  *             self._thisptr = NULL # inform __dealloc__
  *         return False # propagate exceptions             # <<<<<<<<<<<<<<
@@ -1612,7 +1605,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
   __pyx_r = Py_False;
   goto __pyx_L0;
 
-  /* "pyatom.pyx":115
+  /* "pyatom.pyx":105
  *         return self
  * 
  *     def __exit__(Atmosphere self, exc_tp, exc_val, exc_tb):             # <<<<<<<<<<<<<<
@@ -1627,7 +1620,7 @@ static PyObject *__pyx_pf_6pyatom_10Atmosphere_12__exit__(struct __pyx_obj_6pyat
   return __pyx_r;
 }
 
-/* "pyatom.pyx":121
+/* "pyatom.pyx":111
  *         return False # propagate exceptions
  * 
  * cdef public void PythonPrint(const char *s):             # <<<<<<<<<<<<<<
@@ -1642,33 +1635,33 @@ void PythonPrint(char const *__pyx_v_s) {
   PyObject *__pyx_t_3 = NULL;
   __Pyx_RefNannySetupContext("PythonPrint", 0);
 
-  /* "pyatom.pyx":122
+  /* "pyatom.pyx":112
  * 
  * cdef public void PythonPrint(const char *s):
  *     print s,             # <<<<<<<<<<<<<<
  *     sys.stdout.flush()
  */
-  __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 122, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBytes_FromString(__pyx_v_s); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 122, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 112, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
   __pyx_t_1 = 0;
-  if (__Pyx_Print(0, __pyx_t_2, 0) < 0) __PYX_ERR(0, 122, __pyx_L1_error)
+  if (__Pyx_Print(0, __pyx_t_2, 0) < 0) __PYX_ERR(0, 112, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "pyatom.pyx":123
+  /* "pyatom.pyx":113
  * cdef public void PythonPrint(const char *s):
  *     print s,
  *     sys.stdout.flush()             # <<<<<<<<<<<<<<
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_sys); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_sys); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_stdout); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_stdout); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 113, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_flush); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_flush); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_t_3 = NULL;
@@ -1682,16 +1675,16 @@ void PythonPrint(char const *__pyx_v_s) {
     }
   }
   if (__pyx_t_3) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else {
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
   }
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "pyatom.pyx":121
+  /* "pyatom.pyx":111
  *         return False # propagate exceptions
  * 
  * cdef public void PythonPrint(const char *s):             # <<<<<<<<<<<<<<
@@ -1896,18 +1889,16 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_file, __pyx_k_file, sizeof(__pyx_k_file), 0, 0, 1, 1},
   {&__pyx_n_s_flush, __pyx_k_flush, sizeof(__pyx_k_flush), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
-  {&__pyx_n_s_io, __pyx_k_io, sizeof(__pyx_k_io), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_vtable, __pyx_k_pyx_vtable, sizeof(__pyx_k_pyx_vtable), 0, 0, 1, 1},
   {&__pyx_n_s_stdout, __pyx_k_stdout, sizeof(__pyx_k_stdout), 0, 0, 1, 1},
-  {&__pyx_n_s_stdout_redirector, __pyx_k_stdout_redirector, sizeof(__pyx_k_stdout_redirector), 0, 0, 1, 1},
   {&__pyx_n_s_sys, __pyx_k_sys, sizeof(__pyx_k_sys), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 44, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -1917,14 +1908,14 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "pyatom.pyx":46
+  /* "pyatom.pyx":44
  *         # availability of self._thisptr
  *         if self._thisptr == NULL:
  *             raise RuntimeError("Wrapped C++ object is deleted")             # <<<<<<<<<<<<<<
  *         else:
  *             return 0
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_Wrapped_C_object_is_deleted); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_Wrapped_C_object_is_deleted); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
   __Pyx_RefNannyFinishContext();
@@ -1950,7 +1941,6 @@ PyMODINIT_FUNC PyInit_pyatom(void)
 #endif
 {
   PyObject *__pyx_t_1 = NULL;
-  PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannyDeclarations
   #if CYTHON_REFNANNY
   __Pyx_RefNanny = __Pyx_RefNannyImportAPI("refnanny");
@@ -2028,10 +2018,10 @@ PyMODINIT_FUNC PyInit_pyatom(void)
   /*--- Type init code ---*/
   __pyx_vtabptr_6pyatom_Atmosphere = &__pyx_vtable_6pyatom_Atmosphere;
   __pyx_vtable_6pyatom_Atmosphere._check_alive = (int (*)(struct __pyx_obj_6pyatom_Atmosphere *))__pyx_f_6pyatom_10Atmosphere__check_alive;
-  if (PyType_Ready(&__pyx_type_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 12, __pyx_L1_error)
   __pyx_type_6pyatom_Atmosphere.tp_print = 0;
-  if (__Pyx_SetVtable(__pyx_type_6pyatom_Atmosphere.tp_dict, __pyx_vtabptr_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
-  if (PyObject_SetAttrString(__pyx_m, "Atmosphere", (PyObject *)&__pyx_type_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_type_6pyatom_Atmosphere.tp_dict, __pyx_vtabptr_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 12, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "Atmosphere", (PyObject *)&__pyx_type_6pyatom_Atmosphere) < 0) __PYX_ERR(0, 12, __pyx_L1_error)
   __pyx_ptype_6pyatom_Atmosphere = &__pyx_type_6pyatom_Atmosphere;
   /*--- Type import code ---*/
   /*--- Variable import code ---*/
@@ -2044,57 +2034,24 @@ PyMODINIT_FUNC PyInit_pyatom(void)
   /* "pyatom.pyx":5
  * # distutils: include_dirs = ../atmosphere ../lib
  * 
- * import io             # <<<<<<<<<<<<<<
- * import sys
- * 
- */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_io, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 5, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_io, __pyx_t_1) < 0) __PYX_ERR(0, 5, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "pyatom.pyx":6
- * 
- * import io
  * import sys             # <<<<<<<<<<<<<<
  * 
  * from atom cimport cAtmosphereModel
  */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_sys, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 6, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_sys, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 5, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_sys, __pyx_t_1) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_sys, __pyx_t_1) < 0) __PYX_ERR(0, 5, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "pyatom.pyx":10
- * from atom cimport cAtmosphereModel
- * 
- * from stdout_redirector import stdout_redirector             # <<<<<<<<<<<<<<
- * from libcpp.string cimport string
- * 
- */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(__pyx_n_s_stdout_redirector);
-  __Pyx_GIVEREF(__pyx_n_s_stdout_redirector);
-  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_stdout_redirector);
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_stdout_redirector, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 10, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_stdout_redirector); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_stdout_redirector, __pyx_t_1) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "pyatom.pyx":1
  * # distutils: language = c++             # <<<<<<<<<<<<<<
  * # distutils: sources = cAtmosphereModel.cpp
  * # distutils: include_dirs = ../atmosphere ../lib
  */
-  __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_2) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "string.from_py":13
  * 
@@ -2109,7 +2066,6 @@ PyMODINIT_FUNC PyInit_pyatom(void)
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_2);
   if (__pyx_m) {
     if (__pyx_d) {
       __Pyx_AddTraceback("init pyatom", __pyx_clineno, __pyx_lineno, __pyx_filename);
@@ -2950,20 +2906,6 @@ bad:
     Py_XDECREF(empty_list);
     Py_XDECREF(empty_dict);
     return module;
-}
-
-/* ImportFrom */
-        static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name) {
-    PyObject* value = __Pyx_PyObject_GetAttrStr(module, name);
-    if (unlikely(!value) && PyErr_ExceptionMatches(PyExc_AttributeError)) {
-        PyErr_Format(PyExc_ImportError,
-        #if PY_MAJOR_VERSION < 3
-            "cannot import name %.230s", PyString_AS_STRING(name));
-        #else
-            "cannot import name %S", name);
-        #endif
-    }
-    return value;
 }
 
 /* CodeObjectCache */

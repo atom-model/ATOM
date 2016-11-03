@@ -2,6 +2,7 @@
 
 <atom>
     <common>
+        <verbose>false</verbose>  <!-- produce a lot of debug output (default false) -->
         <inputPath>../input/</inputPath>  <!-- input data path -->
         <outputPath></outputPath>  <!-- output data path; leave blank to generate automatically -->
         <!-- time period -->

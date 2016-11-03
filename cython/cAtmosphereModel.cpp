@@ -37,6 +37,8 @@ cAtmosphereModel::cAtmosphereModel() {
     // cout's streambuf with a class that redirects stdout out to Python.
     PythonStream::OverrideCout();
 
+    verbose = false;
+
     // set default configuration
     // simulation parameters
     velocity_iter_max = 2;
@@ -76,6 +78,22 @@ void cAtmosphereModel::FillIntWithElement(const XMLElement *parent, const char *
     }
 }
 
+void cAtmosphereModel::FillBoolWithElement(const XMLElement *parent, const char *name, bool &dest) const {
+    const XMLElement *elem = parent->FirstChildElement(name);
+    if (!elem) {
+        return;
+    }
+
+    const char *text = elem->GetText();
+    if (0 == strcmp(text, "false")) {
+        dest = false;
+    } else if (0 == strcmp(text, "true")) {
+        dest = true;
+    } else {
+        cout << "ERROR: unknown value '" << text << "' for config item '" << name << "'; I expect 'true' or 'false'" << endl;
+    }
+}
+
 void cAtmosphereModel::LoadConfig(const string& filename) {
     XMLDocument doc;
     doc.LoadFile(filename.c_str());
@@ -85,9 +103,12 @@ void cAtmosphereModel::LoadConfig(const string& filename) {
 
     XMLElement *atom = doc.FirstChildElement("atom");
 
+    // SIMULATION PARAMETERS
     XMLElement *common = atom->FirstChildElement("common");
-    // TODO: parse out common parameters
 
+    FillBoolWithElement(common, "verbose", verbose);
+
+    // ATMOSPHERE PHYSICAL PARAMETERS
     XMLElement *atm = atom->FirstChildElement("atmosphere");
 
     FillIntWithElement(atm, "velocity_iter_max", velocity_iter_max);
@@ -507,24 +528,26 @@ void cAtmosphereModel::Run() {
     stringstream ssNameNetCDF;
 
 
-    cout << endl << endl << endl;
-    cout << "***** Atmosphere General Circulation Model ( AGCM ) applied to laminar flow" << endl;
-    cout << "***** program for the computation of geo-atmospherical circulating flows in a spherical shell" << endl;
-    cout << "***** finite difference scheme for the solution of the 3D Navier-Stokes equations" << endl;
-    cout << "***** with 4 additional transport equations to describe the water vapour, cloud water, cloud ice and co2 concentration" << endl;
-    cout << "***** 4th order Runge-Kutta scheme to solve 2nd order differential equations inside an inner iterational loop" << endl;
-    cout << "***** Poisson equation for the pressure solution in an outer iterational loop" << endl;
-    cout << "***** multi-layer and two-layer radiation model for the computation of the surface temperature" << endl;
-    cout << "***** temperature distribution given as a parabolic distribution from pole to pole, zonaly constant" << endl;
-    cout << "***** water vapour distribution given by Clausius-Claperon equation for the partial pressure" << endl;
-    cout << "***** water vapour is part of the Boussinesq approximation and the absorptivity in the radiation model" << endl;
-    cout << "***** two category ice scheme for cold clouds applying parameterization schemes provided by the COSMO code ( German Weather Forecast )" << endl;
-    cout << "***** rain and snow precipitation solved by column equilibrium applying the diagnostic equations" << endl;
-    cout << "***** co2 concentration appears in the absorptivity of the radiation models" << endl;
-    cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )" << endl << endl;
+    if (verbose) {
+        cout << endl << endl << endl;
+        cout << "***** Atmosphere General Circulation Model ( AGCM ) applied to laminar flow" << endl;
+        cout << "***** program for the computation of geo-atmospherical circulating flows in a spherical shell" << endl;
+        cout << "***** finite difference scheme for the solution of the 3D Navier-Stokes equations" << endl;
+        cout << "***** with 4 additional transport equations to describe the water vapour, cloud water, cloud ice and co2 concentration" << endl;
+        cout << "***** 4th order Runge-Kutta scheme to solve 2nd order differential equations inside an inner iterational loop" << endl;
+        cout << "***** Poisson equation for the pressure solution in an outer iterational loop" << endl;
+        cout << "***** multi-layer and two-layer radiation model for the computation of the surface temperature" << endl;
+        cout << "***** temperature distribution given as a parabolic distribution from pole to pole, zonaly constant" << endl;
+        cout << "***** water vapour distribution given by Clausius-Claperon equation for the partial pressure" << endl;
+        cout << "***** water vapour is part of the Boussinesq approximation and the absorptivity in the radiation model" << endl;
+        cout << "***** two category ice scheme for cold clouds applying parameterization schemes provided by the COSMO code ( German Weather Forecast )" << endl;
+        cout << "***** rain and snow precipitation solved by column equilibrium applying the diagnostic equations" << endl;
+        cout << "***** co2 concentration appears in the absorptivity of the radiation models" << endl;
+        cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )" << endl << endl;
 
-    cout << "***** original program name:  " << __FILE__ << endl;
-    cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
+        cout << "***** original program name:  " << __FILE__ << endl;
+        cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
+    }
 
 
 //  reading of the surface temperature file if available
@@ -534,7 +557,9 @@ void cAtmosphereModel::Run() {
 //  if not available, prepare initial conditions, otherwise skip
     if ( SurfaceTemperature != NULL )
     {
-        cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: exists!" << endl;
+        if (verbose) {
+            cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: exists!" << endl;
+        }
     }
     else
     {
@@ -550,7 +575,9 @@ void cAtmosphereModel::Run() {
 //  if not available, prepare initial conditions, otherwise skip
     if ( SurfacePrecipitation != NULL )
     {
-        cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: exists!" << endl;
+        if (verbose) {
+            cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: exists!" << endl;
+        }
     }
     else
     {
@@ -621,7 +648,9 @@ void cAtmosphereModel::Run() {
 
     if ( Atmosphere_Bathymetry != NULL )
     {
-        cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: exists!" << endl << endl;
+        if (verbose) {
+            cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: exists!" << endl << endl;
+        }
     }
     else
     {

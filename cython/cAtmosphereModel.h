@@ -18,6 +18,7 @@ public:
     // CONFIGURATION
     string inputPath;
     string outputPath;
+    bool verbose;
 
     // SIMULATION PARAMETERS
     int velocity_iter_max;
@@ -34,6 +35,7 @@ public:
     // TODO: j_sun - priority summer vs winter parameter
 
 private:
+    void FillBoolWithElement(const XMLElement *parent, const char *name, bool &dest) const;
     void FillDoubleWithElement(const XMLElement *parent, const char *name, double &dest) const;
     void FillIntWithElement(const XMLElement *parent, const char *name, int &dest) const;
 };
