@@ -37,6 +37,9 @@ cAtmosphereModel::cAtmosphereModel() {
     // cout's streambuf with a class that redirects stdout out to Python.
     PythonStream::OverrideCout();
 
+    // If Ctrl-C is pressed, quit
+    signal(SIGINT, exit);
+
     verbose = false;
 
     // set default configuration
