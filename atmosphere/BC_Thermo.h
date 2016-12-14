@@ -114,9 +114,11 @@ class BC_Thermo
 		string temperature_co2_mment, temperature_gain, temperature_modern, temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
 		string co_co2_mment, co_gain, co_modern, co_av, co_unit, co_cretaceous_str, co_average_cret, co_average_str;
 
+		bool verbose;
+
 
 	public:
-		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, bool);
+		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, bool, bool);
 		~BC_Thermo();
 
 

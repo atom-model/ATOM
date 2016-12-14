@@ -511,6 +511,7 @@ void cAtmosphereModel::Run() {
     stringstream My;
 
 // naming a file to read the surface temperature of the modern world
+    /*
     string Name_SurfaceTemperature_File; 
     stringstream ssNameSurfaceTemperature;
     ssNameSurfaceTemperature << outputPath << "SurfaceTemperature.xyz";
@@ -529,6 +530,7 @@ void cAtmosphereModel::Run() {
 // naming the output netCDF-file
     string Name_netCDF_File;
     stringstream ssNameNetCDF;
+    */
 
 
     if (verbose) {
@@ -554,21 +556,25 @@ void cAtmosphereModel::Run() {
 
 
 //  reading of the surface temperature file if available
+    /*
     FILE *SurfaceTemperature;
     SurfaceTemperature = fopen ( Name_SurfaceTemperature_File.c_str(), "r" );
 
-//  if not available, prepare initial conditions, otherwise skip
+    // check for PRESENCE ONLY of input files
+    // these will be loaded repeatedly later and we will not report success/failure at that time
+
+    //  if not available, prepare initial conditions, otherwise skip
     if ( SurfaceTemperature != NULL )
     {
-        if (verbose) {
-            cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: exists!" << endl;
-        }
+        cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: exists!" << endl;
     }
     else
     {
-        cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: could not be read!" << endl << endl;
+        cout << "WARNING: ***** file ::::: " << Name_SurfaceTemperature_File << " ::::: could not be read!" << endl << endl;
+        Name_SurfaceTemperature_File = NULL;
         cout << endl << endl;
     }
+    */
 
 
 //  reading of the surface precipitation file if available
@@ -584,7 +590,7 @@ void cAtmosphereModel::Run() {
     }
     else
     {
-        cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: could not be read!" << endl << endl;
+        cout << "WARNING: ***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: could not be read!" << endl << endl;
         cout << endl << endl;
         n++;
     }
@@ -710,7 +716,7 @@ void cAtmosphereModel::Run() {
 //  configuration of the initial and boundary conditions for the temperature, CO2 und water vapour on land and ocean surfaces
 
 //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo       circulation ( im, jm, km, i_beg, i_max, RadiationModel, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, Ma_max_half, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, albedo_extra, epsilon_extra, lv, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, ik, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_max, radiation_ocean, radiation_pole, radiation_equator, t_land, t_tropopause, t_equator, t_pole, gam, set_sun_position);
+    BC_Thermo       circulation ( im, jm, km, i_beg, i_max, RadiationModel, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, Ma_max_half, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, albedo_extra, epsilon_extra, lv, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, ik, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_max, radiation_ocean, radiation_pole, radiation_equator, t_land, t_tropopause, t_equator, t_pole, gam, set_sun_position, verbose);
 
 
 //  class element for the tropopause location as a parabolic distribution from pole to pole 

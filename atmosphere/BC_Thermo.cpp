@@ -23,7 +23,7 @@
 using namespace std;
 
 
-BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationModel, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double epsilon_extra, double lv, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, bool set_sun_position)
+BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationModel, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double epsilon_extra, double lv, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, bool set_sun_position, bool verbose)
 {
 	this -> im = im;
 	this -> jm = jm;
@@ -89,6 +89,7 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 	this-> sun_position_lat = sun_position_lat;
 	this-> sun_position_lon = sun_position_lon;
 
+	this->verbose = verbose;
 
 //	streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
 
@@ -2796,15 +2797,6 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &u, Array &v, Array
 ///////////////////////////////////////////////// end of smoothing transitions from cell to cell //////////////////////////
 }
 
-
-
-
-
-
-
-
-
-
 void BC_Thermo::BC_Surface_Temperature ( const string &Name_SurfaceTemperature_File, Array &t )
 {
 // initial conditions for the Name_SurfaceTemperature_File at the sea surface
@@ -2871,24 +2863,7 @@ void BC_Thermo::BC_Surface_Temperature ( const string &Name_SurfaceTemperature_F
 	*/
 
 	Name_SurfaceTemperature_File_Read.close();
-
-	if ( Name_SurfaceTemperature_File_Read.good() )
-	{
-		cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: could be closed." << endl;
-		cout << endl;
-	}
-
-	if ( Name_SurfaceTemperature_File_Read.fail() )
-		cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: could not be closed!" << endl;
-
-// Ende Lesen von Name_SurfaceTemperature_File_Read
 }
-
-
-
-
-
-
 
 void BC_Thermo::BC_Surface_Precipitation ( const string &Name_SurfacePrecipitation_File, Array_2D &precipitation_NASA )
 {
@@ -2905,7 +2880,7 @@ void BC_Thermo::BC_Surface_Precipitation ( const string &Name_SurfacePrecipitati
 	anfangpos_1 = Name_SurfacePrecipitation_File_Read.tellg ();
 
 
-	if ( Name_SurfacePrecipitation_File_Read.good() )
+	if (verbose && Name_SurfacePrecipitation_File_Read.good())
 	{
 		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: could be opened" << endl;
 		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: begins at ::::::: " << anfangpos_1 << endl;
@@ -2938,8 +2913,10 @@ void BC_Thermo::BC_Surface_Precipitation ( const string &Name_SurfacePrecipitati
 	endpos_1 = Name_SurfacePrecipitation_File_Read.tellg ();
 
 	// Abschlussanweisungen für den Dateiabschluss (Dateiverwaltung)
-	cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: ends at ::::::::: " << endpos_1 << endl;
-	cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: has the length of ::::: " << endpos_1 - anfangpos_1 << " Bytes!"<< endl;
+	if (verbose) {
+		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: ends at ::::::::: " << endpos_1 << endl;
+		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: has the length of ::::: " << endpos_1 - anfangpos_1 << " Bytes!"<< endl;
+	}
 
 	// Im Falle eines Lesefehlers
 	/* FIXME: can't work (comparing ifstream to NULL)
@@ -2951,14 +2928,15 @@ void BC_Thermo::BC_Surface_Precipitation ( const string &Name_SurfacePrecipitati
 
 	Name_SurfacePrecipitation_File_Read.close();
 
-	if ( Name_SurfacePrecipitation_File_Read.good() )
+	if (verbose && Name_SurfacePrecipitation_File_Read.good())
 	{
 		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: could be closed." << endl;
 		cout << endl;
 	}
 
-	if ( Name_SurfacePrecipitation_File_Read.fail() )
+	if (verbose && Name_SurfacePrecipitation_File_Read.fail()) {
 		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: could not be closed!" << endl;
+	}
 
 // Ende Lesen von Name_SurfacePrecipitation_File_Read
 }
