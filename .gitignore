@@ -11,3 +11,4 @@ atmosphere/atmosphere
 *.so
 env-atom
 pyatom.egg-info
+basemap-1.0.7

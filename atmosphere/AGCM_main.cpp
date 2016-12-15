@@ -1310,14 +1310,17 @@ Print_commands:
 	velocity_iter = 0;
 	n--;
 
-	if ( pressure_iter > pressure_iter_max ) goto time_slice_change;
-	else goto Pressure_loop;
+	if ( pressure_iter <= pressure_iter_max )
+	{
+		goto Pressure_loop;
+	}
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
 
 
 
-	time_slice_change:
+	// time_slice_change:
+
 
 // reset of results to the initial value
 		for ( int k = 0; k < km; k++ )
