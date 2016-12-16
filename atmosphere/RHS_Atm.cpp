@@ -70,10 +70,13 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 
 RHS_Atmosphere::~RHS_Atmosphere() 
 {
+	/*
+	// im_tropopause can take two different types depending on where we are in the model. Rather than crash, I'm just going to let this leak memory until I can sort it out...
 	for ( int i = 0; i < im; i++ )
 	{
 		delete [  ] im_tropopause[ i ];
 	}
+	*/
 
 	delete [  ] im_tropopause;
 
