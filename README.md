@@ -1,18 +1,58 @@
 # ATOM
-* * *
 
-###  What is this?
 ATOM (Atmospheric and Ocean Model) is a fast climate model.
-ADD MORE DETAILS
 
-##### Requirements:
-- Global bathymetry/topography grid in 1° x 1° spacing -- paleotopography/bathymetry grids (Smith et al. 1994; Golonka et al. 1997) between 140 - 0 Ma are included here, created using agegrid rev.210 (or Earthbyte 2013.2.rot)
-- Present day surface temperature: included based on NASA
-- Present day precipitation: included from NASA
-- Present day salinity: included from NASA
+## Getting started
 
-This bitbucket repository requires mercurial (http://mercurial.selenic.com/downloads). Macports:  sudo port install mercurial
+The easiest way to get started is with the Docker container. 
 
+If you're not familiar with Docker, start by downloading and installing the [Docker Toolbox](https://www.docker.com/products/docker-toolbox). Run Kitematic.
+
+From within Kitematic, search for and run the `atom-model/demo` container.
+
+## Repo contents
+
+* `Makefile`: top-level Makefile which builds everything
+* `README.md`: you're reading it!
+* `atmosphere`: C++ source code for the Atmosphere model
+* `cli`: command line interface source code
+* `data`: sample data files with initial conditions
+* `docker`: Dockerfile and support file to build the demonstration Docker container
+* `examples`: demo files for each of the interfaces
+* `hydrosphere`: C++ source code for the Hydrosphere model
+* `lib`: common files used by both Atmosphere and Hydrosphere
+* `python`: source code for the Python interface
+* `tinyxml2`: the [TinyXML-2](http://www.grinninglizard.com/tinyxml2/) XML parser
+
+## Usage
+
+You can interact with the model either through the command line or through Python. Look at `examples/sample.py` and `examples/sample.sh`.
+
+Usage through Jupyter Notebooks is supported and encouraged. The interfaces are the same as through Python. See `examples/Demo.ipynb` for an example.
+
+## Configuration
+
+Most configuration is done by modifying an XML file. You can also modify parameters with the Python interface.
+
+### XML
+
+Look at `examples/config.xml`. This file describes all of the parameters. You should make a copy and modify it to suit your purposes.
+
+If you don't include a parameter in your XML file, ATOM will use the default value. The defaults are documented in `examples/config.xml`. You might want to include only the modified parameters in your XML file for clarity.
+
+### Python
+
+Look at `examples/sample.py`. It shows how to modify a parameter through Python.
+
+* Command line
+ *
+
+## Requirements:
+
+* Global bathymetry/topography grid in 1° x 1° spacing -- paleotopography/bathymetry grids (Smith et al. 1994; Golonka et al. 1997) between 140 - 0 Ma are included here, created using agegrid rev.210 (or Earthbyte 2013.2.rot)
+* Present day surface temperature: included based on NASA
+* Present day precipitation: included from NASA
+* Present day salinity: included from NASA
 
 ## Compilation
 
@@ -31,39 +71,9 @@ Additionally, to compile the Python interface, you need Cython
 
 * For Ubuntu, we recommend ```apt-get install TODO```.
 
-* * *
+## Authors
 
-### How do I download ATOM?
-In terminal: `hg clone https://**YOUR USERNAME**@bitbucket.org/nickywright/atom`
-The appropriate link can also be found at the top of this page.
+Roger etc
 
-### How do I add or change stuff?
+Papers
 
-1. In terminal, navigate to the atom directory
-2.
-    - To modify a pre-exisiting file: `hg commit -m 'YOUR COMMENT HERE'`. You must add a comment to commit
-    - To add a new file:
-          - `hg st` to list new files - files that haven't been added to the repo will have a preceding `?`
-          - `hg add FILENAME` (to add an individual file) or `hg add` (to add *all* files including invisible files)
-          - (Optional): hg st - files that you want to commit will now have a preceding `A`
-          - `hg commit -m 'YOUR COMMENT HERE' `. You must add a comment to commit
-3. Push edits to bitbucket by typing in `hg push` - this will ask for your bitbucket password
-
-For more information, please look here: [http://mercurial.selenic.com/guide](http://mercurial.selenic.com/guide)
-
-### How do I update my local version ###
-1. In terminal: `hg pull` (This doesn't modify your files though!)
-2. `hg update`  (or maybe hg update --check)- this updates your files, based on the changes it downloaded in `hg pull` (I think)
-
-### How do I download a previous commit?
-In your browser window (Safari, Firefox, Chrome), type:
-
-           https://**YOUR USERNAME**@bitbucket.org/nickywright/atom/get/**COMMITNUMBER**.tar.gz
-
-COMMITNUMBER can be found under the Commit heading on https://bitbucket.org/nickywright/atom/commits/all
-
-* * *
-### Summary of changes
-07 Jan 2015: Version 1.0
-
-29 June 2015: Made 20150421 update the main working files for the repository.

@@ -578,6 +578,9 @@ void cAtmosphereModel::Run() {
 
 
 //  reading of the surface precipitation file if available
+    /*
+review
+inputs should be read once at startup, parsed, then stored in memory
     FILE *SurfacePrecipitation;
     SurfacePrecipitation = fopen ( Name_SurfacePrecipitation_File.c_str(), "r" );
 
@@ -594,6 +597,16 @@ void cAtmosphereModel::Run() {
         cout << endl << endl;
         n++;
     }
+    */
+
+
+    // create the output directory
+    /*
+    we use the format output-yymmdd-hhmmss
+    then 
+    outputDir = the new name
+    it then needs to propagate to every file that writes
+    */
 
 
 
@@ -606,6 +619,7 @@ void cAtmosphereModel::Run() {
 // choice of the time slice by Ma and by author ( etopo for modern times, Galonka for time slices )
     if ( Ma == 0 )
     {
+// review magic filenames throughout
         Name_Bathymetry_File = "0Ma_etopo.xyz";
         Name_Sequel_File = "[0Ma_etopo.xyz]_Sequel_Atm.seq";
         Name_netCDF_File = "[0Ma_etopo.xyz]_atmosphere.nc";
@@ -614,6 +628,8 @@ void cAtmosphereModel::Run() {
     {
         n = 0;
         My << time_slice [ i_time_slice ] << "Ma_Golonka.xyz";
+        // TODO for all of this function (and the prev line) make the filenames parameters and make sure they're in place; the model should barf if the data files are not present (instead of printing a message that gets lost with all of the other messages)
+        // audit all of the ifstream and FILE * references throughout and make sure the i/o to the right places
         Name_Bathymetry_File = My.str();
         My.str("");
         My.ignore(My.rdbuf()->in_avail());

@@ -9,6 +9,10 @@ atmosphere/atmosphere
 .DS_Store
 *.sublime-*
 *.so
-env-atom
+env-atom/
 pyatom.egg-info
-basemap-1.0.7
+basemap-1.0.7/
+geos/
+*-todo.txt
+.vscode/
+deprecated/
