@@ -44,9 +44,6 @@ If you don't include a parameter in your XML file, ATOM will use the default val
 
 Look at `examples/sample.py`. It shows how to modify a parameter through Python.
 
-* Command line
- *
-
 ## Requirements:
 
 * Global bathymetry/topography grid in 1° x 1° spacing -- paleotopography/bathymetry grids (Smith et al. 1994; Golonka et al. 1997) between 140 - 0 Ma are included here, created using agegrid rev.210 (or Earthbyte 2013.2.rot)
@@ -56,11 +53,15 @@ Look at `examples/sample.py`. It shows how to modify a parameter through Python.
 
 ## Compilation
 
-Requirements:
+### Ubuntu Linux 16.04 LTS
 
-* TODO
+TODO
 
-Additionally, to compile the Python interface, you need Cython
+* For Ubuntu, we recommend ```apt-get install TODO```.
+
+### macOS Sierra (Homebrew)
+
+TODO
 
 * For OS X, we recommend one of
 
@@ -69,11 +70,8 @@ Additionally, to compile the Python interface, you need Cython
 
 (ADVANCED: Cython can also be installed from pip, which is useful if you're running inside a virtualenv.)
 
-* For Ubuntu, we recommend ```apt-get install TODO```.
-
 ## Authors
 
-Roger etc
+Roger Grundmann
 
 Papers
-
