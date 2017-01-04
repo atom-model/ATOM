@@ -24,11 +24,41 @@ From within Kitematic, search for and run the `atom-model/demo` container.
 * `python`: source code for the Python interface
 * `tinyxml2`: the [TinyXML-2](http://www.grinninglizard.com/tinyxml2/) XML parser
 
-## Usage
+## Compilation
 
-You can interact with the model either through the command line or through Python. Look at `examples/sample.py` and `examples/sample.sh`.
+TODO
 
-Usage through Jupyter Notebooks is supported and encouraged. The interfaces are the same as through Python. See `examples/Demo.ipynb` for an example.
+## CLI usage
+
+The simplest way to run a model is to configure it through the XML file and then run it, batch style. The model will run to completion and you will have output files to examine once it completes.
+
+To get started with this, look at `examples/config.xml` for the default configuration. You can run it with:
+
+    atm examples/config.xml
+
+Model output will be visible in the `output/` directory.
+
+## Jupyter Notebook usage
+
+The Python module can be installed with:
+
+    pip install -e python
+
+Then, start a Jupyter Notebook server:
+
+    jupyter notebook
+
+From within the Jupyter web interface, you can open `examples/Demo.ipynb`. This includes some basic visualisation of the model output.
+
+## Python script usage
+
+You can write Python scripts to manipulate and run the model. See `examples/sample.py` for an example.
+
+Run:
+
+    python examples/sample.py
+
+You will then have output in the `output/` directory to analyse.
 
 ## Configuration
 
