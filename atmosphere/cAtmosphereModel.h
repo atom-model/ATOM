@@ -1,7 +1,7 @@
 #ifndef CATMOSPHEREMODEL_H
 #define CATMOSPHEREMODEL_H
 
-#include "tinyxml2.h"
+#include "../tinyxml2/tinyxml2.h"
 
 using namespace std;
 using namespace tinyxml2;
@@ -10,9 +10,9 @@ class cAtmosphereModel {
 public:
     cAtmosphereModel();
     ~cAtmosphereModel();
-    
+
     // FUNCTIONS
-    void LoadConfig(const string& filename);
+    void LoadConfig(const char *filename);
     void Run();
 
     // CONFIGURATION

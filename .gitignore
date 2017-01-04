@@ -16,3 +16,4 @@ geos/
 *-todo.txt
 .vscode/
 deprecated/
+python/pyatom.cpp

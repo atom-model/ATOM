@@ -4,7 +4,7 @@ ATOM (Atmospheric and Ocean Model) is a fast climate model.
 
 ## Getting started
 
-The easiest way to get started is with the Docker container. 
+The easiest way to get started is with the Docker container.
 
 If you're not familiar with Docker, start by downloading and installing the [Docker Toolbox](https://www.docker.com/products/docker-toolbox). Run Kitematic.
 

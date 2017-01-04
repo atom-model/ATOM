@@ -97,9 +97,9 @@ void cAtmosphereModel::FillBoolWithElement(const XMLElement *parent, const char 
     }
 }
 
-void cAtmosphereModel::LoadConfig(const string& filename) {
+void cAtmosphereModel::LoadConfig(const char *filename) {
     XMLDocument doc;
-    doc.LoadFile(filename.c_str());
+    doc.LoadFile(filename);
 
     // TODO you should catch exceptions:
     // libc++abi.dylib: terminating with uncaught exception of type std::invalid_argument: stod: no conversion
@@ -247,7 +247,7 @@ void cAtmosphereModel::Run() {
 
     bool set_sun_position = false;                  // set to true to simulate effect of different sun positions
 
-// time slices to be run after actualizing 
+// time slices to be run after actualizing
     i_time_slice_max = 15;
     int *time_slice = new int [ i_time_slice_max ];     // time slices in Ma
 
@@ -512,13 +512,13 @@ void cAtmosphereModel::Run() {
 
 // naming a file to read the surface temperature of the modern world
     /*
-    string Name_SurfaceTemperature_File; 
+    string Name_SurfaceTemperature_File;
     stringstream ssNameSurfaceTemperature;
     ssNameSurfaceTemperature << outputPath << "SurfaceTemperature.xyz";
     Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
 
 // naming a file to read the surface precipitation by NASA
-    string Name_SurfacePrecipitation_File; 
+    string Name_SurfacePrecipitation_File;
     stringstream ssNameSurfacePrecipitation;
     ssNameSurfacePrecipitation << "SurfacePrecipitation_NASA.xyz";
     Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
@@ -603,7 +603,7 @@ inputs should be read once at startup, parsed, then stored in memory
     // create the output directory
     /*
     we use the format output-yymmdd-hhmmss
-    then 
+    then
     outputDir = the new name
     it then needs to propagate to every file that writes
     */
@@ -623,8 +623,8 @@ inputs should be read once at startup, parsed, then stored in memory
         Name_Bathymetry_File = "0Ma_etopo.xyz";
         Name_Sequel_File = "[0Ma_etopo.xyz]_Sequel_Atm.seq";
         Name_netCDF_File = "[0Ma_etopo.xyz]_atmosphere.nc";
-    } 
-    else 
+    }
+    else
     {
         n = 0;
         My << time_slice [ i_time_slice ] << "Ma_Golonka.xyz";
@@ -735,7 +735,7 @@ inputs should be read once at startup, parsed, then stored in memory
     BC_Thermo       circulation ( im, jm, km, i_beg, i_max, RadiationModel, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, Ma_max_half, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, albedo_extra, epsilon_extra, lv, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, ik, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_max, radiation_ocean, radiation_pole, radiation_equator, t_land, t_tropopause, t_equator, t_pole, gam, set_sun_position, verbose);
 
 
-//  class element for the tropopause location as a parabolic distribution from pole to pole 
+//  class element for the tropopause location as a parabolic distribution from pole to pole
     circulation.TropopauseLocation ( im_tropopause );
 
 //  class element for the surface temperature from World Ocean Atlas 2009 given as boundary condition
@@ -835,7 +835,7 @@ Pressure_loop:
         n++;
         if ( n > nm )
         {
-            cout << endl; 
+            cout << endl;
             cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
             cout << endl;
             break;
@@ -920,7 +920,7 @@ Pressure_iteration_2D:
     pressure_iter_2D++;
     velocity_iter_2D = 0;
 
-    if ( pressure_iter_2D >= pressure_iter_max_2D + 1 ) 
+    if ( pressure_iter_2D >= pressure_iter_max_2D + 1 )
     {
         switch_2D = 1;
         goto process_3D;
@@ -1264,11 +1264,11 @@ Pressure_iteration_2D:
     pressure_iter++;
     velocity_iter = 0;
 
-    if ( pressure_iter >= pressure_iter_max + 1 ) 
+    if ( pressure_iter >= pressure_iter_max + 1 )
     {
         goto Print_commands;
     }
-    else 
+    else
     {
         velocity_iter_2D = velocity_iter_max_2D;
         pressure_iter_2D = pressure_iter_max_2D;

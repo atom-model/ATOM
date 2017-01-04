@@ -6,7 +6,7 @@ ext_modules = [
     Extension("pyatom",
               [
                   'pyatom.pyx',
-                  'cAtmosphereModel.cpp',
+                  '../atmosphere/cAtmosphereModel.cpp',
                   'PythonStream.cpp',
                   '../lib/Array.cpp',
                   '../lib/Array_2D.cpp',
