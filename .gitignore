@@ -17,3 +17,5 @@ geos/
 .vscode/
 deprecated/
 python/pyatom.cpp
+atm
+libatom.a

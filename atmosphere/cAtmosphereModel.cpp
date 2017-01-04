@@ -511,7 +511,6 @@ void cAtmosphereModel::Run() {
     stringstream My;
 
 // naming a file to read the surface temperature of the modern world
-    /*
     string Name_SurfaceTemperature_File;
     stringstream ssNameSurfaceTemperature;
     ssNameSurfaceTemperature << outputPath << "SurfaceTemperature.xyz";
@@ -530,7 +529,6 @@ void cAtmosphereModel::Run() {
 // naming the output netCDF-file
     string Name_netCDF_File;
     stringstream ssNameNetCDF;
-    */
 
 
     if (verbose) {

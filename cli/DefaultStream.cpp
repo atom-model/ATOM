@@ -1,7 +1,9 @@
 // cli version: does nothing (cout goes to cout)
 
-using namespace std;
+#include "PythonStream.h"
 
 void PythonStream::OverrideCout() { }
 
-int PythonStream::sync() { }
+int PythonStream::sync() {
+    return 0;
+}

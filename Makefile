@@ -13,7 +13,7 @@ ATM_OBJ = atmosphere/cAtmosphereModel.o atmosphere/Pressure_Atm.o atmosphere/Pos
 XML_OBJ = tinyxml2/tinyxml2.o
 
 # Command line objects
-CLI_OBJ = cli/atm.o
+CLI_OBJ = cli/atm.o cli/DefaultStream.o
 # TODO: add Hydrosphere
 # HYD_OBJ = hydrosphere/Accuracy_Hyd.o hydrosphere/BC_Hyd.o File_NetCDF_Hyd.o MinMax_Hyd.o PostProcess_Hyd.o Print_Hyd.o Restore_Hyd.o RungeKutta_Hyd.o BC_Bath_Hyd.o BC_Thermohalin.o IC_Thermohalin.o OGCM_main.o Pressure_Hyd.o RHS_Hyd.o Results_Hyd.o
 
