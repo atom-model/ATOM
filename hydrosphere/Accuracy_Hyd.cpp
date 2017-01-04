@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to surveil the accuracy of the iterations
 */
 
@@ -20,7 +20,7 @@
 using namespace std;
 
 
-Accuracy::Accuracy( int im, int jm, int km, double dthe, double dphi )
+Accuracy_Hyd::Accuracy_Hyd( int im, int jm, int km, double dthe, double dphi )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -30,7 +30,7 @@ Accuracy::Accuracy( int im, int jm, int km, double dthe, double dphi )
 }
 
 
-Accuracy::Accuracy( int im, int jm, int km, double dr, double dthe, double dphi )
+Accuracy_Hyd::Accuracy_Hyd( int im, int jm, int km, double dr, double dthe, double dphi )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -41,7 +41,7 @@ Accuracy::Accuracy( int im, int jm, int km, double dr, double dthe, double dphi 
 }
 
 
-Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, int j_res, int k_res, int velocity_iter_2D, int pressure_iter_2D, int velocity_iter_max_2D, int pressure_iter_max_2D )
+Accuracy_Hyd::Accuracy_Hyd ( int n, int nm, int Ma, int im, int jm, int km, double min, int j_res, int k_res, int velocity_iter_2D, int pressure_iter_2D, int velocity_iter_max_2D, int pressure_iter_max_2D )
 {
 	this-> n = n;
 	this-> nm = nm;
@@ -60,7 +60,7 @@ Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, 
 }
 
 
-Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, int i_res, int j_res, int k_res, int velocity_iter, int pressure_iter, int velocity_iter_max, int pressure_iter_max, double L_hyd )
+Accuracy_Hyd::Accuracy_Hyd ( int n, int nm, int Ma, int im, int jm, int km, double min, int i_res, int j_res, int k_res, int velocity_iter, int pressure_iter, int velocity_iter_max, int pressure_iter_max, double L_hyd )
 {
 	this-> n = n;
 	this-> nm = nm;
@@ -81,11 +81,11 @@ Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, 
 }
 
 
-Accuracy::~Accuracy () {}
+Accuracy_Hyd::~Accuracy_Hyd () {}
 
 
 
-double Accuracy::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
+double Accuracy_Hyd::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
 {
 // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 	min = residuum = 0.;
@@ -106,7 +106,7 @@ double Accuracy::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Arra
 
 				residuum = dudr + 2. * u.x[ i ][ j ][ k ] / rad.z[ i ] + dvdthe / rad.z[ i ]
 							+ costhe / rmsinthe * v.x[ i ][ j ][ k ] + dwdphi / rmsinthe;
-				if ( fabs ( residuum ) >= min ) 
+				if ( fabs ( residuum ) >= min )
 				{
 					min = residuum;
 					i_res = i;
@@ -122,7 +122,7 @@ double Accuracy::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Arra
 
 
 
-double Accuracy::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &p_dyn, Array &aux_p )
+double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &p_dyn, Array &aux_p )
 {
 // state of a steady solution ( min_u )
 	min_u = max_u = 0.;
@@ -330,7 +330,7 @@ double Accuracy::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Arra
 
 
 
-double Accuracy::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Array &w )
+double Accuracy_Hyd::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Array &w )
 {
 // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 	min = residuum = 0.;
@@ -363,7 +363,7 @@ double Accuracy::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Arra
 
 
 
-double Accuracy::steadyQuery_2D ( Array &h, Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &aux_p )
+double Accuracy_Hyd::steadyQuery_2D ( Array &h, Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &aux_p )
 {
 // state of a steady solution ( min )
 	max_v = min_v = 0.;
@@ -505,24 +505,22 @@ double Accuracy::steadyQuery_2D ( Array &h, Array &v, Array &vn, Array &w, Array
 
 
 
-double Accuracy::out_min (  ) const
+double Accuracy_Hyd::out_min (  ) const
 {
 	return min;
 }
 
-int Accuracy::out_i_res (  ) const
+int Accuracy_Hyd::out_i_res (  ) const
 {
 	return i_res;
 }
 
-int Accuracy::out_j_res (  ) const
+int Accuracy_Hyd::out_j_res (  ) const
 {
 	return j_res;
 }
 
-int Accuracy::out_k_res (  ) const
+int Accuracy_Hyd::out_k_res (  ) const
 {
 	return k_res;
 }
-
-

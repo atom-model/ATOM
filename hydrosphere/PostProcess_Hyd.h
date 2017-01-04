@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to write sequel, transfer and paraview files
 */
 
@@ -24,11 +24,10 @@ using namespace std;
 class PostProcess_Hydrosphere
 {
 	private:
-		int im, jm, km, jr, kr, a;
-		int i_max, j_max, k_max, l;
+		int im, jm, km;
+		int i_max, j_max, k_max;
 
-		double rotu, rotv, rotw;
-		double max_p_dyn, max_p_stat;
+		double max_p_dyn;
 
 
 	public:

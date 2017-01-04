@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to search min/max values of variables
 */
 
@@ -22,7 +22,7 @@ using namespace std;
 
 
 
-class MinMax
+class MinMax_Atm
 {
 	private:
 		int im, jm, km, imax, jmax, kmax, imin, jmin, kmin;
@@ -38,9 +38,9 @@ class MinMax
 
 
 	public:
-		MinMax ( int, int, double );
-		MinMax ( int, int, int );
-		~MinMax ();
+		MinMax_Atm ( int, int, double );
+		MinMax_Atm ( int, int, int );
+		~MinMax_Atm ();
 
 		void searchMinMax_2D ( string &, string &, string &, Array_2D &, Array & );
 
@@ -52,4 +52,3 @@ class MinMax
 
 };
 #endif
-

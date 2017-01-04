@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the salt concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to read and prepare the bathymetric and topografic data
 */
 
@@ -86,7 +86,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 			i = ( im -1 ) - im * ( dummy_3 / L_hyd );
 			i_boden = i;
 
-			for ( i = 0; i <= i_boden; i++ ) 
+			for ( i = 0; i <= i_boden; i++ )
 			{
 				h.x[ i ][ j ][ k ] = 1.;
 //				cout << "\n***** Name_Bathymetry_File_Read:   Länge = " << dummy_1 << "  Breite = " << dummy_2 << "  Tiefe = " << dummy_3 << endl;
@@ -111,10 +111,12 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 
 // in case of reading error
 
+/* FIXME can't work
 	if ( Name_Bathymetry_File_Read == NULL )
 	{
 		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: not yet exists ::::::::: " << endl << endl << endl;
 	}
+	*/
 
 	Name_Bathymetry_File_Read.close();
 

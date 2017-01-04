@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to prepare the boundary and initial conditions for diverse variables
 */
 
@@ -25,22 +25,19 @@ using namespace std;
 class IC_Thermohalin
 {
 	private:
-		int i, j, k, im, jm, km, k_half, m, i_beg, j_max, i_max, i_down, j_half, i_bottom, i_deep, i_middle, i_EIC_o, i_EIC_u, i_SCC_o, i_SCC_u, i_ECC_o, i_ECC_u;
-		int i_end, i_run, i_step, i_half, j_beg, j_end, j_run, j_step, k_beg, k_end, k_run, k_step, k_finish, k_exp, j_z, j_n, k_z, k_n, k_w, k_o;
+		int i, j, k, im, jm, km, k_half, m, i_beg, j_max, i_max, j_half, i_bottom, i_deep, i_middle, i_EIC_o, i_EIC_u, i_SCC_o, i_SCC_u, i_ECC_o, i_ECC_u;
+		int i_half, j_beg, j_end, j_run, j_step, k_beg, k_end, k_run, k_step, k_exp, j_z, j_n, k_z, k_n, k_w;
 		int k_a, k_b, flip, k_grad;
-		int k_aa, k_bb, k_aaa, k_bbb, k_aaaa, k_bbbb;
 		int k_water, k_sequel;
-		int Ma_max, Ma_max_half;
 		int n_smooth;
 		int j1, j2, j3, jn, jd, k1, k2, k3, kn, kd;
 
-		double dummy_1, dummy_2, dummy_3, IC_water, water_wind, c_0, gr, c_salt, Ekman_angle, vel_magnitude, alfa, beta, angle, Ekman_angle_add, Ekman, pi180;
-		double t_equator, t_pole, d_i, d_i_half, d_i_max, d_j, d_j_half, d_j_max, t_coeff, c_equator, c_pole, c_coeff, ep, hp, p_0, t_0;
-		double v_grad, p_beg, t_Celsius, t_max, ca_max;
-		double max_v, max_w, residuum_v, residuum_w;
-		double t_Cretaceous, t_Cretaceous_max, t_Cretaceous_coeff;
+		double dummy_1, dummy_2, dummy_3, IC_water, water_wind, Ekman_angle, vel_magnitude, alfa, beta, angle, Ekman_angle_add, Ekman, pi180;
+		double d_i, d_i_half, d_i_max, d_j, d_j_half, d_j_max, t_coeff;
+		double v_grad, t_Celsius, ca_max;
+		double t_Cretaceous, t_Cretaceous_coeff;
 		double c_Average, c_Cretaceous, c_diff;
-		double rR, rg, jmkm, u_sum, v_sum, w_sum, t_sum, c_sum;
+		double rg, jmkm, v_sum, w_sum, t_sum, c_sum;
 
 		string time_slice_comment, time_slice_number, time_slice_unit;
 		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit;

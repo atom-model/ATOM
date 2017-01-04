@@ -19,7 +19,7 @@ using namespace std;
 
 
 
-Pressure::Pressure ( int im, int jm, int km, double dr, double dthe, double dphi )
+Pressure_Atm::Pressure_Atm ( int im, int jm, int km, double dr, double dthe, double dphi )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -30,10 +30,10 @@ Pressure::Pressure ( int im, int jm, int km, double dr, double dthe, double dphi
 }
 
 
-Pressure::~Pressure () {}
+Pressure_Atm::~Pressure_Atm () {}
 
 
-void Pressure::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &h, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &aux_u, Array &aux_v, Array &aux_w, Array &aux_p )
+void Pressure_Atm::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &h, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &aux_u, Array &aux_v, Array &aux_w, Array &aux_p )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 
@@ -103,7 +103,7 @@ void Pressure::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the, Arr
 
 
 
-void Pressure::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w, Array &aux_p )
+void Pressure_Atm::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w, Array &aux_p )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 	dr2 = dr * dr;

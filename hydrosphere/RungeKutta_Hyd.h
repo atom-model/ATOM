@@ -21,7 +21,7 @@ using namespace std;
 class RungeKutta_Hydrosphere
 {
 	private:
-		int n, im, jm, km, l_anf, l_end;
+		int n, im, jm, km;
 
 		double dt, kt1, ku1, kv1, kw1, kc1, kt2, ku2, kv2, kw2, kc2, kt3, ku3, kv3, kw3, kc3, kt4, ku4, kv4, kw4, kc4;
 

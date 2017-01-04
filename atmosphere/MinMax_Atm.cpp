@@ -20,7 +20,7 @@ using namespace std;
 
 
 
-MinMax::MinMax ( int jm, int km, double coeff_mmWS )
+MinMax_Atm::MinMax_Atm ( int jm, int km, double coeff_mmWS )
 {
 	this-> jm = jm;
 	this-> km = km;
@@ -31,7 +31,7 @@ MinMax::MinMax ( int jm, int km, double coeff_mmWS )
 }
 
 
-MinMax::MinMax ( int im, int jm, int km )
+MinMax_Atm::MinMax_Atm ( int im, int jm, int km )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -42,10 +42,10 @@ MinMax::MinMax ( int im, int jm, int km )
 }
 
 
-MinMax::~MinMax () {}
+MinMax_Atm::~MinMax_Atm () {}
 
 
-void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &val_D, Array &h )
+void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &val_D, Array &h )
 {
 // search for minimum and maximum values of the 3-dimensional data sets
 	level = "m";
@@ -228,7 +228,7 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 
 
 
-void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &val, Array &h )
+void MinMax_Atm::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &val, Array &h )
 {
 // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
 
@@ -378,12 +378,12 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 
 
 
-double MinMax::out_maxValue (  ) const
+double MinMax_Atm::out_maxValue (  ) const
 {
 	return maxValue;
 }
 
-double MinMax::out_minValue (  ) const
+double MinMax_Atm::out_minValue (  ) const
 {
 	return minValue;
 }

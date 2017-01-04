@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to surveil the accuracy of the iterations
 */
 
@@ -21,7 +21,7 @@ using namespace std;
 
 
 
-Accuracy::Accuracy( int im, int jm, int km, double dthe, double dphi )
+Accuracy_Atm::Accuracy_Atm( int im, int jm, int km, double dthe, double dphi )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -31,7 +31,7 @@ Accuracy::Accuracy( int im, int jm, int km, double dthe, double dphi )
 }
 
 
-Accuracy::Accuracy( int im, int jm, int km, double dr, double dthe, double dphi )
+Accuracy_Atm::Accuracy_Atm( int im, int jm, int km, double dr, double dthe, double dphi )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -42,7 +42,7 @@ Accuracy::Accuracy( int im, int jm, int km, double dr, double dthe, double dphi 
 }
 
 
-Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, int j_res, int k_res, int velocity_iter_2D, int pressure_iter_2D, int velocity_iter_max_2D, int pressure_iter_max_2D )
+Accuracy_Atm::Accuracy_Atm ( int n, int nm, int Ma, int im, int jm, int km, double min, int j_res, int k_res, int velocity_iter_2D, int pressure_iter_2D, int velocity_iter_max_2D, int pressure_iter_max_2D )
 {
 	this-> n = n;
 	this-> nm = nm;
@@ -61,7 +61,7 @@ Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, 
 }
 
 
-Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, int i_res, int j_res, int k_res, int velocity_iter, int pressure_iter, int velocity_iter_max, int pressure_iter_max, double L_atm )
+Accuracy_Atm::Accuracy_Atm ( int n, int nm, int Ma, int im, int jm, int km, double min, int i_res, int j_res, int k_res, int velocity_iter, int pressure_iter, int velocity_iter_max, int pressure_iter_max, double L_atm )
 {
 	this-> n = n;
 	this-> nm = nm;
@@ -82,12 +82,12 @@ Accuracy::Accuracy ( int n, int nm, int Ma, int im, int jm, int km, double min, 
 }
 
 
-Accuracy::~Accuracy () {}
+Accuracy_Atm::~Accuracy_Atm () {}
 
 
 
 
-double Accuracy::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Array &w )
+double Accuracy_Atm::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Array &w )
 {
 // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 	min = residuum = 0.;
@@ -103,7 +103,7 @@ double Accuracy::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Arra
 				dvdthe = ( v.x[ 0 ][ j+1 ][ k ] - v.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
 				dwdphi = ( w.x[ 0 ][ j ][ k+1 ] - w.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi );
 				residuum = dvdthe / rad.z[ 0 ] + costhe / rmsinthe * v.x[ 0 ][ j ][ k ] + dwdphi / rmsinthe;
-			if ( fabs ( residuum ) >= min ) 
+			if ( fabs ( residuum ) >= min )
 			{
 				min = residuum;
 				j_res = j;
@@ -119,7 +119,7 @@ double Accuracy::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Arra
 
 
 
-double Accuracy::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
+double Accuracy_Atm::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
 {
 // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 	min = residuum = 0.;
@@ -140,7 +140,7 @@ double Accuracy::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Arra
 
 				residuum = dudr + 2. * u.x[ i ][ j ][ k ] / rad.z[ i ] + dvdthe / rad.z[ i ]
 							+ costhe / rmsinthe * v.x[ i ][ j ][ k ] + dwdphi / rmsinthe;
-				if ( fabs ( residuum ) >= min ) 
+				if ( fabs ( residuum ) >= min )
 				{
 					min = residuum;
 					i_res = i;
@@ -157,7 +157,7 @@ double Accuracy::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Arra
 
 
 
-double Accuracy::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &aux_p )
+double Accuracy_Atm::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &aux_p )
 {
 // state of a steady solution ( min )
 	min_v = max_v = 0.;
@@ -279,7 +279,7 @@ double Accuracy::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Arra
 							k_loc_deg = 360 - k_loc;
 							deg_lon = deg_west;
 						}
-	
+
 
 	cout << setiosflags ( ios::left ) << setw ( 36 ) << setfill ( '.' ) << name_Value << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << Value << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon << endl;
 
@@ -297,7 +297,7 @@ double Accuracy::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Arra
 
 
 
-double Accuracy::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &co2, Array &co2n, Array &p_dyn, Array &aux_p )
+double Accuracy_Atm::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &co2, Array &co2n, Array &p_dyn, Array &aux_p )
 {
 // state of a steady solution ( min )
 	min_u = max_u = 0.;
@@ -559,26 +559,22 @@ double Accuracy::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Arra
 
 
 
-double Accuracy::out_min (  ) const
+double Accuracy_Atm::out_min (  ) const
 {
 	return min;
 }
 
-int Accuracy::out_i_res (  ) const
+int Accuracy_Atm::out_i_res (  ) const
 {
 	return i_res;
 }
 
-int Accuracy::out_j_res (  ) const
+int Accuracy_Atm::out_j_res (  ) const
 {
 	return j_res;
 }
 
-int Accuracy::out_k_res (  ) const
+int Accuracy_Atm::out_k_res (  ) const
 {
 	return k_res;
 }
-
-
-
-

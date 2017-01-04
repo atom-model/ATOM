@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to write sequel, transfer and paraview files
 */
 
@@ -117,7 +117,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
 		{
 			sinphi = sin( phi.z[ k ] );
 			cosphi = cos( phi.z[ k ] );
-			
+
 			for ( int j = 0; j < jm; j++ )
 			{
 				sinthe = sin( the.z[ j ] );
@@ -525,7 +525,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 			{
 				for ( int i = 1; i < im-1; i++ )
 				{
-					if ( fabs ( p_dyn.x[ i ][ j ][ k ] ) > max_p_dyn ) 
+					if ( fabs ( p_dyn.x[ i ][ j ][ k ] ) > max_p_dyn )
 					{
 						max_p_dyn = fabs ( p_dyn.x[ i ][ j ][ k ] );
 						if ( max_p_dyn == 0. ) max_p_dyn = 1.e-6;
@@ -560,7 +560,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 			{
 				for ( int i = 1; i < im-1; i++ )
 				{
-					if ( fabs ( p_stat.x[ i ][ j ][ k ] ) > max_p_stat ) 
+					if ( fabs ( p_stat.x[ i ][ j ][ k ] ) > max_p_stat )
 					{
 						max_p_stat = fabs ( p_stat.x[ i ][ j ][ k ] );
 						if ( max_p_stat == 0. ) max_p_stat = 1.e-6;
@@ -902,7 +902,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 		{
 			for ( int k = 1; k < km-1; k++ )
 			{
-				if ( fabs ( p_dyn.x[ i ][ j_longal ][ k ] ) > max_p_dyn ) 
+				if ( fabs ( p_dyn.x[ i ][ j_longal ][ k ] ) > max_p_dyn )
 				{
 					max_p_dyn = fabs ( p_dyn.x[ i ][ j_longal ][ k ] );
 					if ( max_p_dyn == 0. ) max_p_dyn = 1.e-6;
@@ -928,7 +928,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 		{
 			for ( int k = 1; k < km-1; k++ )
 			{
-				if ( fabs ( p_stat.x[ i ][ j_longal ][ k ] ) > max_p_stat ) 
+				if ( fabs ( p_stat.x[ i ][ j_longal ][ k ] ) > max_p_stat )
 				{
 					max_p_stat = fabs ( p_stat.x[ i ][ j_longal ][ k ] );
 					if ( max_p_stat == 0. ) max_p_stat = 1.e-6;
@@ -1231,7 +1231,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		{
 			for ( int k = 1; k < km-1; k++ )
 			{
-				if ( fabs ( p_dyn.x[ i_radial ][ j ][ k ] ) > max_p_dyn ) 
+				if ( fabs ( p_dyn.x[ i_radial ][ j ][ k ] ) > max_p_dyn )
 				{
 					max_p_dyn = fabs ( p_dyn.x[ i_radial ][ j ][ k ] );
 					if ( max_p_dyn == 0. ) max_p_dyn = 1.e-6;
@@ -1257,7 +1257,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 		{
 			for ( int k = 1; k < km-1; k++ )
 			{
-				if ( fabs ( p_stat.x[ i_radial ][ j ][ k ] ) > max_p_stat ) 
+				if ( fabs ( p_stat.x[ i_radial ][ j ][ k ] ) > max_p_stat )
 				{
 					max_p_stat = fabs ( p_stat.x[ i_radial ][ j ][ k ] );
 					if ( max_p_stat == 0. ) max_p_stat = 1.e-6;
@@ -1607,7 +1607,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		{
 			for ( int j = 1; j < jm-1; j++ )
 			{
-				if ( fabs ( p_dyn.x[ i ][ j ][ k_zonal ] ) > max_p_dyn ) 
+				if ( fabs ( p_dyn.x[ i ][ j ][ k_zonal ] ) > max_p_dyn )
 				{
 					max_p_dyn = fabs ( p_dyn.x[ i ][ j ][ k_zonal ] );
 					if ( max_p_dyn == 0. ) max_p_dyn = 1.e-6;
@@ -1633,7 +1633,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 		{
 			for ( int j = 1; j < jm-1; j++ )
 			{
-				if ( fabs ( p_stat.x[ i ][ j ][ k_zonal ] ) > max_p_stat ) 
+				if ( fabs ( p_stat.x[ i ][ j ][ k_zonal ] ) > max_p_stat )
 				{
 					max_p_stat = fabs ( p_stat.x[ i ][ j ][ k_zonal ] );
 					if ( max_p_stat == 0. ) max_p_stat = 1.e-6;
@@ -1952,11 +1952,13 @@ void PostProcess_Hydrosphere::Hydrosphere_SequelFile_read ( const string &Name_B
 
 // in case of failing
 
+/* FIXME can't work
 	if ( Sequel_File == NULL )
 	{
 		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: does not exist! ::::::::: " << endl << endl << endl;
 		return;
 	}
+*/
 
 	Sequel_File.close();
 
@@ -2020,11 +2022,13 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 
 // in case of failing
 
+/* FIXME can't work
 	if ( v_w_Transfer_File == NULL )
 	{
 		cout << "***** file ::::: " << Name_v_w_Transfer_File.str() << " ::::: does not exist ::::::::: " << endl << endl << endl;
 		return;
 	}
+*/
 
 	v_w_Transfer_File.close();
 
@@ -2118,4 +2122,3 @@ void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymet
 
 return;
 }
-

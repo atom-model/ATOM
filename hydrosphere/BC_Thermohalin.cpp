@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to prepare the boundary and initial conditions for diverse variables
 */
 
@@ -63,7 +63,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 	d_i_max = ( double ) ( im - 1 );
 
 
-// reduction or amplification of flow velocities along coasts 
+// reduction or amplification of flow velocities along coasts
 // for the artificial initial and boundary conditions
 //	IC_water = .01;				// no dimension, ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,0045 m/s )
 	IC_water = .03;				// no dimension, ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,0135 m/s )
@@ -232,7 +232,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 /*
 				for ( int l = ( k + k_grad - k_a ); l < ( k + k_grad + k_b + 1 ); l++ ) // starting at local longitude + max extension - begin of smoothing k_a  until ending at  + k_b
 				{
-					v.x[ i_max ][ j ][ l ] = ( v.x[ i_max ][ j ][ k + k_grad + k_b ] - v.x[ i_max ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) -  ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) + v.x[ i_max ][ j ][ k + k_grad - k_a ]; // extension of v-velocity, smoothing algorithm by a linear equation 
+					v.x[ i_max ][ j ][ l ] = ( v.x[ i_max ][ j ][ k + k_grad + k_b ] - v.x[ i_max ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) -  ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) + v.x[ i_max ][ j ][ k + k_grad - k_a ]; // extension of v-velocity, smoothing algorithm by a linear equation
 				}
 
 				for ( int l = k; l < ( k + k_grad + k_b + 1 ); l++ )		// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
@@ -877,7 +877,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 					t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
 					c.x[ i ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. + c_cretaceous ) / c_0;
 
-					if ( t_Celsius < 4. ) 
+					if ( t_Celsius < 4. )
 					{
 						t.x[ i ][ j ][ k ] = ta + t_cretaceous;
 						c.x[ i ][ j ][ k ] = ca + c_cretaceous / c_0;
@@ -1267,7 +1267,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		k_a = k_b;
 		flip = 0;
 
-		for ( int k = k_b + 8; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 8; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -1488,7 +1488,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		k_a = k_b;
 		flip = 0;
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -1826,7 +1826,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		flip = 0;
 
 
-		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ ) 
+		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -1906,7 +1906,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		flip = 0;
 
 
-		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ ) 
+		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -2050,7 +2050,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		k_a = k_b;
 		flip = 0;
 
-		for ( int k = k_b + k_w; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + k_w; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -2284,7 +2284,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		if ( flip == 1 ) break;
 		}
 
-		for ( int k = k_b; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -2296,7 +2296,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 			}
 		}
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -2377,7 +2377,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		flip = 0;
 
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -2491,7 +2491,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		flip = 0;
 
 
-		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ ) 
+		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -2570,7 +2570,7 @@ void BC_Thermohalin::IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array
 		flip = 0;
 
 
-		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ ) 
+		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -2889,7 +2889,7 @@ void BC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		flip = 0;
 
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -2969,7 +2969,7 @@ void BC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		flip = 0;
 
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -3163,7 +3163,7 @@ void BC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		k_a = k_b;
 		flip = 0;
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -3280,7 +3280,7 @@ void BC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		k_a = k_b;
 		flip = 0;
 
-		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ ) 
+		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -3362,7 +3362,7 @@ void BC_Thermohalin::IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w
 		flip = 0;
 
 
-		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ ) 
+		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -4006,7 +4006,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		flip = 0;
 
 
-		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ ) 
+		for ( int k = k_b - k_step - k_exp; k < ( k_b - k_w ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -4104,7 +4104,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		if ( flip == 1 ) break;
 		}
 
-		for ( int k = k_b; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -4116,7 +4116,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			}
 		}
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -4182,7 +4182,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		if ( flip == 1 ) break;
 		}
 
-		for ( int k = k_b; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -4194,7 +4194,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 			}
 		}
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -4275,7 +4275,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		flip = 0;
 
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -4492,7 +4492,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Pazifik
 
 // Philippinen (Indonesien) 		Ostküsten
- 
+
 // Strom im Osten der Philippinen ( from j=60 until j=71 compares to 10°N until 22°N,
 //                                  from k=111 until k=116 compares to 125°O until 130°O )
 /*
@@ -4557,7 +4557,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Pazifik
 
 // Philippinen (Indonesien) Neuguinea		Ostküsten
- 
+
 // Durchfluss Zwischen Indonesien und Neuguinea ( from j=80 until j=97 compares to 10°N until 7°S
 // Fortsetzung Richtung Pazifik                                   from k=125 until k=135 compares to 125°O until 135°O )
 
@@ -4584,7 +4584,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Pazifik
 
 // Philippinen (Indonesien) Neuguinea		Ostküsten
- 
+
 // Durchfluss Zwischen Indonesien und Neuguinea ( from j=80 until j=97 compares to 10°N until 7°S
 // westlicher Übergang parallel zum Äquator             from k=125 until k=135 compares to 125°O until 135°O )
 
@@ -4617,7 +4617,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Pazifik
 
 // Philippinen (Indonesien) Neuguinea		Ostküsten
- 
+
 // Durchfluss Zwischen Indonesien und Neuguinea ( from j=80 until j=97 compares to 10°N until 7°S
 // östlicher Übergang parallel zum Äquator                from k=125 until k=135 compares to 125°O until 135°O )
 
@@ -4651,7 +4651,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Pazifik
 
 // Philippinen (Indonesien) Neuguinea		Ostküsten
- 
+
 // Durchfluss Zwischen Indonesien und Neuguinea ( from j=80 until j=97 compares to 10°N until 7°S
 // nördlicher Übergang parallel zum Äquator              from k=120 until k=135 compares to 125°O until 135°O )
 
@@ -4682,7 +4682,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Pazifik
 
 // Philippinen (Indonesien) Neuguinea		Ostküsten
- 
+
 // Durchfluss Zwischen Indonesien und Neuguinea ( from j=80 until j=97 compares to 10°N until 7°S
 // südlicher Übergang parallel zum Äquator               from k=125 until k=135 compares to 125°O until 135°O )
 
@@ -4716,7 +4716,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Pazifik
 
 // Papua-Neuguinea (Indonesien)		Nordküsten from Neuguinea
- 
+
 // Strom im Nord-Osten from Neuguinea ( from j=90 until j=100 compares to 0°S until 10°S,
 //                                                                from k=135 until k=150 compares to 135°O until 150°O )
 
@@ -4775,7 +4775,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		flip = 0;
 
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -4793,7 +4793,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Pazifik
 
 // Australien		Ostküsten im Korallen- und Tasmanensee
- 
+
 // Strom im Osten Australien ( from j=101 until j=140 compares to 11°S until 50°S,
 //                                               from k=142 until k=158 compares to 142°O until 158°O )
 
@@ -4852,7 +4852,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 		flip = 0;
 
 
-		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ ) 
+		for ( int k = k_b + 4; k < ( k_b + k_step ); k++ )
 		{
 			for ( int i = i_beg; i < im; i++ )
 			{
@@ -4870,7 +4870,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Verbindung im Norden from Australien und Neuseeland
 
 // Australien		Ostküsten im Korallen- und Tasmanensee
- 
+
 // Strom im Osten from Australien ( from j=110 until j=128 compares to 20°S until 38°S,
 //                                                     from k=142 until k=158 compares to 142°O until 158°O )
 
@@ -4905,7 +4905,7 @@ void BC_Thermohalin::IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array 
 // Pazifik
 
 // Australien		Südküsten im Südaustralischen Becken
- 
+
 // Strom im Süden from Australien ( from j=123 until j=132 compares to 33°S until 42°S,
 //                                                      from k=116 until k=148 compares to 116°O until 148°O )
 
@@ -5968,13 +5968,13 @@ void BC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 
 // equatorial current at the surface
 
-// equatorial southern counter-current 
+// equatorial southern counter-current
 
 // Pacific ocean
 
 // equatorial northern and southern counter-currents at the surface
 
-// equatorial currents between NECC and SECC 
+// equatorial currents between NECC and SECC
 
 // equatorial northern counter-current ( from j=87 until j=93 compares to 3°N until 3°S,
 // equatorial northern counter-current   from k=135 until k=270 compares to 135°O until 90°W )
@@ -6003,7 +6003,7 @@ void BC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 
 // equatorial northern and southern counter-currents at the surface
 
-// equatorial currents between NECC and SECC 
+// equatorial currents between NECC and SECC
 
 // equatorial southern counter-current ( SECC, i=im-1 until i=im compares to 0 until -200m depth )
 // equatorial southern counter-current ( from j=93 until j=96 compares to 3°S until 6°S,
@@ -6327,7 +6327,7 @@ void BC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 
 // Nördliche und südliche äquatoriale Gegenströmung an der Oberfläche
 
-// Äquatoriale Strömung zwischen NECC und SECC 
+// Äquatoriale Strömung zwischen NECC und SECC
 
 // Äquatoriale Gegenströmungen ( from j=89 until j=91 compares to 1°N until 1°S,
 //                                                     from k=55 until k=90 compares to 55°O until 90°O )
@@ -6691,7 +6691,7 @@ void BC_Thermohalin::IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array
 
 // northern and southern equatorial currents at the surface
 
-// Äquatoriale Strömung zwischen NECC und SECC 
+// Äquatoriale Strömung zwischen NECC und SECC
 
 // equatorial northern counter-current ( from j=87 until j=93 compares to 3°N until 3°S,
 //                                                                 from k=330 until k=355 compares to 30°W until 5°W )
@@ -7506,10 +7506,12 @@ void BC_Thermohalin::BC_Surface_Temperature ( const string &Name_SurfaceTemperat
 
 // Im Falle eines Lesefehlers
 
+/* FIXME can't work
 	if ( Name_SurfaceTemperature_File_Read == NULL )
 	{
 		cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: does not exist ::::::::: " << endl << endl << endl;
 	}
+	*/
 
 	Name_SurfaceTemperature_File_Read.close();
 
@@ -7593,10 +7595,12 @@ void BC_Thermohalin::BC_Surface_Salinity ( const string &Name_SurfaceSalinity_Fi
 
 // Im Falle eines Lesefehlers
 
+/* FIXME can't work
 	if ( Name_SurfaceSalinity_File_Read == NULL )
 	{
 		cout << "***** file ::::: " << Name_SurfaceSalinity_File << " ::::: does not exist ::::::::: " << endl << endl << endl;
 	}
+	*/
 
 	Name_SurfaceSalinity_File_Read.close();
 
@@ -7631,7 +7635,7 @@ void BC_Thermohalin::BC_Surface_Pressure ( Array &h, Array &p_dyn, Array &t )
 			p_j.y[ j ][ k ]  =  1.;		// pressure distribution on the surface in hPa / hPa
 			p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-1 ][ j ][ k ];
 
-			if ( h.x[ im-1 ][ j ][ k ] == 1. )   
+			if ( h.x[ im-1 ][ j ][ k ] == 1. )
 			{
 				p_dyn.x[ im-1 ][ j ][ k ]  =  0.;																				//  pressure distribution in solid surroundings
 				p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-1 ][ j ][ k ];
@@ -7661,4 +7665,3 @@ void BC_Thermohalin::BC_Surface_Pressure ( Array &h, Array &p_dyn, Array &t )
 //	p_dyn.printArray();
 
 }
-

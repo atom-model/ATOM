@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to write computational results in netCDF-file format
 */
 
@@ -28,7 +28,7 @@ using namespace std;
 
 
 
-class File_NetCDF
+class File_NetCDF_Hyd
 {
 	private:
 		int ncid, lon_dimid, lat_dimid, lvl_dimid, rec_dimid, v_varid, w_varid, h_varid, upwelling_varid, downwelling_varid, bottomwater_varid;
@@ -53,12 +53,11 @@ class File_NetCDF
 
 
 	public:
-		File_NetCDF (  int, int, int );
+		File_NetCDF_Hyd (  int, int, int );
 
-		~File_NetCDF ();
+		~File_NetCDF_Hyd ();
 
 		double out_NetCDF ( const string &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
 
 };
 #endif
-

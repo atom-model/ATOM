@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to surveil the accuracy of the iterations
 */
 
@@ -22,7 +22,7 @@ using namespace std;
 
 
 
-class Accuracy
+class Accuracy_Atm
 {
 	private:
 		int n, nm, im, jm, km;
@@ -44,12 +44,12 @@ class Accuracy
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading;
 
 	public:
-		Accuracy ( int, int, int, double, double ); 
-		Accuracy ( int, int, int, double, double, double ); 
-		Accuracy ( int, int, int, int, int, int, double, int, int, int, int, int, int );
-		Accuracy ( int, int, int, int, int, int, double, int, int, int, int, int, int, int, double );
+		Accuracy_Atm ( int, int, int, double, double );
+		Accuracy_Atm ( int, int, int, double, double, double );
+		Accuracy_Atm ( int, int, int, int, int, int, double, int, int, int, int, int, int );
+		Accuracy_Atm ( int, int, int, int, int, int, double, int, int, int, int, int, int, int, double );
 
-		~Accuracy ();
+		~Accuracy_Atm ();
 
 
 		double residuumQuery_2D ( Array_1D &, Array_1D &, Array &, Array & );
@@ -65,4 +65,3 @@ class Accuracy
 
 };
 #endif
-

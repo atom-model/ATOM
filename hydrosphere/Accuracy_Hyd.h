@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to surveil the accuracy of the iterations
 */
 
@@ -21,12 +21,12 @@ using namespace std;
 
 
 
-class Accuracy
+class Accuracy_Hyd
 {
 	private:
-		int n, nm, im, jm, km, l_anf, l_end, velocity_iter_2D, pressure_iter_2D, velocity_iter, pressure_iter, velocity_iter_max, pressure_iter_max, velocity_iter_max_2D, pressure_iter_max_2D, Ma;
+		int n, nm, im, jm, km, velocity_iter_2D, pressure_iter_2D, velocity_iter, pressure_iter, velocity_iter_max, pressure_iter_max, velocity_iter_max_2D, pressure_iter_max_2D, Ma;
 		int i_u, j_u, k_u, i_v, j_v, k_v, i_w, j_w, k_w, i_t, j_t, k_t, i_c, j_c, k_c, i_p, j_p, k_p;
-		int i_loc, j_loc, k_loc, i_loc_level, j_loc_deg, k_loc_deg, choice;
+		int i_loc, j_loc, k_loc, i_loc_level, j_loc_deg, k_loc_deg;
 		int i_res, j_res, k_res;
 
 		double dr, dthe, dphi;
@@ -40,12 +40,12 @@ class Accuracy
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading;
 
 	public:
-		Accuracy ( int, int, int, double, double ); 
-		Accuracy ( int, int, int, double, double, double ); 
-		Accuracy ( int, int, int, int, int, int, double, int, int, int, int, int, int );
-		Accuracy ( int, int, int, int, int, int, double, int, int, int, int, int, int, int, double );
+		Accuracy_Hyd ( int, int, int, double, double );
+		Accuracy_Hyd ( int, int, int, double, double, double );
+		Accuracy_Hyd ( int, int, int, int, int, int, double, int, int, int, int, int, int );
+		Accuracy_Hyd ( int, int, int, int, int, int, double, int, int, int, int, int, int, int, double );
 
-		~Accuracy ();
+		~Accuracy_Hyd ();
 
 
 		double residuumQuery_2D ( Array_1D &, Array_1D &, Array &, Array & );
@@ -61,4 +61,3 @@ class Accuracy
 
 };
 #endif
-

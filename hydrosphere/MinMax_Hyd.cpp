@@ -20,7 +20,7 @@ using namespace std;
 
 
 
-MinMax::MinMax ( int jm, int km, double c_0 )
+MinMax_Hyd::MinMax_Hyd ( int jm, int km, double c_0 )
 {
 	this-> jm = jm;
 	this-> km = km;
@@ -31,7 +31,7 @@ MinMax::MinMax ( int jm, int km, double c_0 )
 }
 
 
-MinMax::MinMax ( int im, int jm, int km, double c_0, double L_hyd )
+MinMax_Hyd::MinMax_Hyd ( int im, int jm, int km, double c_0, double L_hyd )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -44,10 +44,10 @@ MinMax::MinMax ( int im, int jm, int km, double c_0, double L_hyd )
 }
 
 
-MinMax::~MinMax () {}
+MinMax_Hyd::~MinMax_Hyd () {}
 
 
-void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &val_D, Array &h )
+void MinMax_Hyd::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &val_D, Array &h )
 {
 // search for minimum and maximum values of the 3-dimensional data sets
 	level = "m";
@@ -185,7 +185,7 @@ void MinMax::searchMinMax_3D ( string &name_maxValue, string &name_minValue, str
 
 
 
-void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &val, Array &h )
+void MinMax_Hyd::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &val, Array &h )
 {
 // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
 
@@ -302,8 +302,8 @@ void MinMax::searchMinMax_2D ( string &name_maxValue, string &name_minValue, str
 }
 
 
-double MinMax::out_maxValue (  ) const { return maxValue; }
+double MinMax_Hyd::out_maxValue (  ) const { return maxValue; }
 
-double MinMax::out_minValue (  ) const { return minValue; }
+double MinMax_Hyd::out_minValue (  ) const { return minValue; }
 
 

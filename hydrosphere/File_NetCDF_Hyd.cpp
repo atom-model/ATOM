@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to write computational results in netCDF-file format
 */
 
@@ -19,25 +19,25 @@
 using namespace std;
 
 
-		const char File_NetCDF::LAT_NAME [ ] = "latitude";
-		const char File_NetCDF::LON_NAME [ ] = "longitude";
-		const char File_NetCDF::LVL_NAME [ ] = "level";
-		const char File_NetCDF::REC_NAME [ ] = "time";
-		const char File_NetCDF::UNITS [ ] = "units";
-		const char File_NetCDF::DEGREES_EAST [ ] = "degrees_east";
-		const char File_NetCDF::DEGREES_NORTH [ ] = "degrees_north";
-		const char File_NetCDF::V_NAME [ ] = "v_velocity_component";
-		const char File_NetCDF::W_NAME [ ] = "w_velocity_component";
-		const char File_NetCDF::H_NAME [ ] = "level_over_NN";
-		const char File_NetCDF::UPWELLING_NAME [ ] = "upwelling";
-		const char File_NetCDF::DOWNWELLING_NAME [ ] = "downwelling";
-		const char File_NetCDF::BOTTOMWATER_NAME [ ] = "bottomwater";
-		const char File_NetCDF::v_units [ ] = "m/s";
-		const char File_NetCDF::w_units [ ] = "m/s";
-		const char File_NetCDF::h_units [ ] = "m";
-		const char File_NetCDF::upwelling_units [ ] = "m/s";
-		const char File_NetCDF::downwelling_units [ ] = "m/s";
-		const char File_NetCDF::bottomwater_units [ ] = "m/s";
+const char File_NetCDF_Hyd::LAT_NAME [ ] = "latitude";
+const char File_NetCDF_Hyd::LON_NAME [ ] = "longitude";
+const char File_NetCDF_Hyd::LVL_NAME [ ] = "level";
+const char File_NetCDF_Hyd::REC_NAME [ ] = "time";
+const char File_NetCDF_Hyd::UNITS [ ] = "units";
+const char File_NetCDF_Hyd::DEGREES_EAST [ ] = "degrees_east";
+const char File_NetCDF_Hyd::DEGREES_NORTH [ ] = "degrees_north";
+const char File_NetCDF_Hyd::V_NAME [ ] = "v_velocity_component";
+const char File_NetCDF_Hyd::W_NAME [ ] = "w_velocity_component";
+const char File_NetCDF_Hyd::H_NAME [ ] = "level_over_NN";
+const char File_NetCDF_Hyd::UPWELLING_NAME [ ] = "upwelling";
+const char File_NetCDF_Hyd::DOWNWELLING_NAME [ ] = "downwelling";
+const char File_NetCDF_Hyd::BOTTOMWATER_NAME [ ] = "bottomwater";
+const char File_NetCDF_Hyd::v_units [ ] = "m/s";
+const char File_NetCDF_Hyd::w_units [ ] = "m/s";
+const char File_NetCDF_Hyd::h_units [ ] = "m";
+const char File_NetCDF_Hyd::upwelling_units [ ] = "m/s";
+const char File_NetCDF_Hyd::downwelling_units [ ] = "m/s";
+const char File_NetCDF_Hyd::bottomwater_units [ ] = "m/s";
 
 
 
@@ -49,12 +49,12 @@ File_NetCDF_Hyd::File_NetCDF_Hyd ( int im, int jm, int km )
 	this-> km = km;
 
 	NDIMS = 4;
-	NLAT = jm +1; 
+	NLAT = jm +1;
 	NLON = km + 1;
 	START_LAT = 90;
 	START_LON = -180;
 	NREC = 1;
-	NLVL = 3; 
+	NLVL = 3;
 }
 
 

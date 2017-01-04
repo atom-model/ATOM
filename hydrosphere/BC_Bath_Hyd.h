@@ -4,7 +4,7 @@
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the salt concentration
  * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
+ *
  * class to read and prepare the bathymetric and topografic data
 */
 
@@ -25,9 +25,8 @@ class BC_Bathymetry_Hydrosphere
 {
 	private:
 		int i, j, k, im, jm, km, i_boden, l;
-		int k_water, k_sequel, flip;
 
-		double dummy_1, dummy_2, dummy_3, L_hyd;
+		double dummy_1, dummy_2, dummy_3;
 
 	public:
 
