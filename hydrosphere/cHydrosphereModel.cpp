@@ -35,10 +35,15 @@
 #include "Restore_Hyd.h"
 #include "MinMax_Hyd.h"
 #include "Results_Hyd.h"
-#include "File_NetCDF.h"
+#include "File_NetCDF_Hyd.h"
 
+#include "tinyxml2.h"
+
+#include "cHydrosphereModel.h"
+#include "PythonStream.h"
 
 using namespace std;
+using namespace tinyxml2;
 
 // "SequelFile"				Default for a sequel file to be written
 // "SequelFile 1"			a sequel file will be written
@@ -85,8 +90,25 @@ using namespace std;
 
 
 
-int main ( int argc, char *argv[ ] )
-{
+cHydrosphereModel::cHydrosphereModel() {
+    // Python and Notebooks can't capture stdout from this module. We override
+    // cout's streambuf with a class that redirects stdout out to Python.
+    PythonStream::OverrideCout();
+
+    // If Ctrl-C is pressed, quit
+    signal(SIGINT, exit);
+
+   	// TODO: set default configuration
+}
+
+cHydrosphereModel::~cHydrosphereModel() { }
+
+void cHydrosphereModel::LoadConfig(const char *filename) {
+	// FIXME: not implemented
+	cout << "FIXME: not implemented\n";
+}
+
+void cHydrosphereModel::Run() {
 // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km ), 
 // maximum number of overall iterations ( n ),
 // maximum number of inner velocity loop iterations ( velocity_iter_max ),
@@ -514,7 +536,7 @@ int main ( int argc, char *argv[ ] )
 	RungeKutta_Hydrosphere		result ( n, im, jm, km, dt );
 
 // class Pressure for the subsequent computation of the pressure by a separat Euler equation
-	Pressure		startPressure ( im, jm, km, dr, dthe, dphi );
+	Pressure_Hyd		startPressure ( im, jm, km, dr, dthe, dphi );
 
 // class Restore_Hyd to restore between iterational results
 	Restore_Hyd		oldnew( im, jm, km );
@@ -654,7 +676,7 @@ Pressure_loop_2D:
 			boundary.RB_phi ( t, u, v, w, p_dyn, c );
 
 // 		old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-			Accuracy		min_Residuum_old_2D ( im, jm, km, dthe, dphi );
+			Accuracy_Hyd		min_Residuum_old_2D ( im, jm, km, dthe, dphi );
 			min_Residuum_old_2D.residuumQuery_2D ( rad, the, v, w );
 			min = min_Residuum_old_2D.out_min (  );
 
@@ -664,7 +686,7 @@ Pressure_loop_2D:
 			result.solveRungeKutta_2D_Hydrosphere ( prepare, rad, the, phi, rhs_v, rhs_w, h, v, w, p_dyn, vn, wn, aux_v, aux_w );
 
 // 		new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-			Accuracy		min_Residuum_2D ( im, jm, km, dthe, dphi );
+			Accuracy_Hyd		min_Residuum_2D ( im, jm, km, dthe, dphi );
 			min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
 			min = min_Residuum_2D.out_min (  );
 			j_res = min_Residuum_2D.out_j_res (  );
@@ -675,7 +697,7 @@ Pressure_loop_2D:
 
 
 //		state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
-			Accuracy		min_Stationary_2D ( n, nm, Ma, im, jm, km, min, j_res, k_res, velocity_iter_2D, pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
+			Accuracy_Hyd		min_Stationary_2D ( n, nm, Ma, im, jm, km, min, j_res, k_res, velocity_iter_2D, pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
 			min_Stationary_2D.steadyQuery_2D ( h, v, vn, w, wn, p_dyn, aux_p );
 
 			oldnew.restoreOldNew_2D ( 1., v, w, p_dyn, vn, wn, aux_p );
@@ -716,7 +738,7 @@ Pressure_iteration_2D:
 
 
 // 		old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-		Accuracy		min_Residuum_old ( im, jm, km, dr, dthe, dphi );
+		Accuracy_Hyd		min_Residuum_old ( im, jm, km, dr, dthe, dphi );
 		min_Residuum_old.residuumQuery_3D ( rad, the, u, v, w );
 		min = min_Residuum_old.out_min (  );
 
@@ -737,7 +759,7 @@ Pressure_iteration_2D:
 		depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, aux_p, cn );
 
 // 		new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-		Accuracy		min_Residuum ( im, jm, km, dr, dthe, dphi );
+		Accuracy_Hyd		min_Residuum ( im, jm, km, dr, dthe, dphi );
 		min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
 		min = min_Residuum.out_min (  );
 		i_res = min_Residuum.out_i_res (  );
@@ -748,7 +770,7 @@ Pressure_iteration_2D:
 		min = fabs ( ( residuum - residuum_old ) / residuum_old );
 
 //		statements on the convergence und iterational process
-		Accuracy		min_Stationary ( n, nm, Ma, im, jm, km, min, i_res, j_res, k_res, velocity_iter, pressure_iter, velocity_iter_max, pressure_iter_max, L_hyd );
+		Accuracy_Hyd		min_Stationary ( n, nm, Ma, im, jm, km, min, i_res, j_res, k_res, velocity_iter, pressure_iter, velocity_iter_max, pressure_iter_max, L_hyd );
 		min_Stationary.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, p_dyn, aux_p );
 
 
@@ -757,44 +779,44 @@ Pressure_iteration_2D:
 
 //		searching of maximum and minimum values of temperature
 		string str_max_temperature = " max temperature ", str_min_temperature = " min temperature ", str_unit_temperature = "C";
-		MinMax		minmaxTemperature ( im, jm, km, c_0, L_hyd );
+		MinMax_Hyd		minmaxTemperature ( im, jm, km, c_0, L_hyd );
 		minmaxTemperature.searchMinMax_3D ( str_max_temperature, str_min_temperature, str_unit_temperature, t, h );
 
 //		searching of maximum and minimum values of pressure
 		string str_max_pressure = " max pressure dynamic ", str_min_pressure = " min pressure dynamic ", str_unit_pressure = "hPa";
-		MinMax		minmaxPressure ( im, jm, km, c_0, L_hyd );
+		MinMax_Hyd		minmaxPressure ( im, jm, km, c_0, L_hyd );
 		minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, p_dyn, h );
 
 //		searching of maximum and minimum values of static pressure
 		string str_max_pressure_stat = " max pressure static ", str_min_pressure_stat = " min pressure static ", str_unit_pressure_stat = "bar";
-		MinMax		minmaxPressure_stat ( im, jm, km, c_0, L_hyd );
+		MinMax_Hyd		minmaxPressure_stat ( im, jm, km, c_0, L_hyd );
 		minmaxPressure_stat.searchMinMax_3D ( str_max_pressure_stat, str_min_pressure_stat, str_unit_pressure_stat, p_stat, h );
 
 		cout << endl << " salinity based results in the three dimensional space: " << endl << endl;
 
 //	searching of maximum and minimum values of salt concentration
 		string str_max_salt_concentration = " max salt concentration ", str_min_salt_concentration = " min salt concentration ", str_unit_salt_concentration = "psu";
-		MinMax		minmaxSalt ( im, jm, km, c_0, L_hyd );
+		MinMax_Hyd		minmaxSalt ( im, jm, km, c_0, L_hyd );
 		minmaxSalt.searchMinMax_3D ( str_max_salt_concentration, str_min_salt_concentration, str_unit_salt_concentration, c, h );
 
 //	searching of maximum and minimum values of salt balance
 		string str_max_salt_balance = " max salt balance ", str_min_salt_balance = " min salt balance ", str_unit_salt_balance = "psu";
-		MinMax		minmaxSaltBalance ( im, jm, km, c_0, L_hyd );
+		MinMax_Hyd		minmaxSaltBalance ( im, jm, km, c_0, L_hyd );
 		minmaxSaltBalance.searchMinMax_3D ( str_max_salt_balance, str_min_salt_balance, str_unit_salt_balance, Salt_Balance, h );
 
 //	searching of maximum and minimum values of salt finger
 		string str_max_salt_finger = " max salt finger ", str_min_salt_finger = " min salt finger ", str_unit_salt_finger = "psu";
-		MinMax		minmaxSaltFinger ( im, jm, km, c_0, L_hyd );
+		MinMax_Hyd		minmaxSaltFinger ( im, jm, km, c_0, L_hyd );
 		minmaxSaltFinger.searchMinMax_3D ( str_max_salt_finger, str_min_salt_finger, str_unit_salt_finger, Salt_Finger, h );
 
 //	searching of maximum and minimum values of salt diffusion
 		string str_max_salt_diffusion = " max salt diffusion ", str_min_salt_diffusion = " min salt diffusion ", str_unit_salt_diffusion = "psu";
-		MinMax		minmaxSaltDiffusion ( im, jm, km, c_0, L_hyd );
+		MinMax_Hyd		minmaxSaltDiffusion ( im, jm, km, c_0, L_hyd );
 		minmaxSaltDiffusion.searchMinMax_3D ( str_max_salt_diffusion, str_min_salt_diffusion, str_unit_salt_diffusion, Salt_Diffusion, h );
 
 //	searching of maximum and minimum values of buoyancy force
 		string str_max_BuoyancyForce_3D = " max buoyancy force ", str_min_BuoyancyForce_3D = " min buoyancy force ", str_unit_BuoyancyForce_3D = "N";
-		MinMax		minmaxBuoyancyForce_3D ( im, jm, km, c_0, L_hyd );
+		MinMax_Hyd		minmaxBuoyancyForce_3D ( im, jm, km, c_0, L_hyd );
 		minmaxBuoyancyForce_3D.searchMinMax_3D ( str_max_BuoyancyForce_3D, str_min_BuoyancyForce_3D, str_unit_BuoyancyForce_3D, BuoyancyForce_3D, h );
 
 
@@ -804,39 +826,39 @@ Pressure_iteration_2D:
 
 //	searching of maximum and minimum values of total salt volume in a column
 		string str_max_salt_total = " max salt total ", str_min_salt_total = " min salt total ", str_unit_salt_total = "psu";
-		MinMax		minmaxSalt_total ( jm, km, c_0 );
+		MinMax_Hyd		minmaxSalt_total ( jm, km, c_0 );
 		minmaxSalt_total.searchMinMax_2D ( str_max_salt_total, str_min_salt_total, str_unit_salt_total, Salt_total, h );
 
 //	searching of maximum and minimum values of salt finger volume in a column
 		string str_max_Salt_Finger = " max Salt_Finger ", str_min_Salt_Finger = " min Salt_Finger ", str_unit_Salt_Finger = "psu";
-		MinMax		minmaxSalt_finger ( jm, km, c_0 );
+		MinMax_Hyd		minmaxSalt_finger ( jm, km, c_0 );
 		minmaxSalt_finger.searchMinMax_2D ( str_max_Salt_Finger, str_min_Salt_Finger, str_unit_Salt_Finger, SaltFinger, h );
 
 //	searching of maximum and minimum values of salt diffusion volume in a column
 		string str_max_Salt_Diffusion = " max Salt_Diffusion ", str_min_Salt_Diffusion = " min Salt_Diffusion ", str_unit_Salt_Diffusion = "psu";
-		MinMax		minmaxSalt_diffusion ( jm, km, c_0 );
+		MinMax_Hyd		minmaxSalt_diffusion ( jm, km, c_0 );
 		minmaxSalt_diffusion.searchMinMax_2D ( str_max_Salt_Diffusion, str_min_Salt_Diffusion, str_unit_Salt_Diffusion, SaltDiffusion, h );
 
 //	searching of maximum and minimum values of salt diffusion volume in a column
 		string str_max_BuoyancyForce_2D = " max BuoyancyForce_2D ", str_min_BuoyancyForce_2D = " min BuoyancyForce_2D ", str_unit_BuoyancyForce_2D = "N";
-		MinMax		minmaxBuoyancyForce_2D ( jm, km, c_0 );
+		MinMax_Hyd		minmaxBuoyancyForce_2D ( jm, km, c_0 );
 		minmaxBuoyancyForce_2D.searchMinMax_2D ( str_max_BuoyancyForce_2D, str_min_BuoyancyForce_2D, str_unit_BuoyancyForce_2D, BuoyancyForce_2D, h );
 
 		cout << endl << " deep currents averaged for a two dimensional plane: " << endl << endl;
 
 //	searching of maximum and minimum values of upwelling volume in a column
 		string str_max_upwelling = " max upwelling ", str_min_upwelling = " min upwelling ", str_unit_upwelling = "m/s";
-		MinMax		minmaxUpwelling ( jm, km, c_0 );
+		MinMax_Hyd		minmaxUpwelling ( jm, km, c_0 );
 		minmaxUpwelling.searchMinMax_2D ( str_max_upwelling, str_min_upwelling, str_unit_upwelling, Upwelling, h );
 
 //	searching of maximum and minimum values of downwelling volume in a column
 		string str_max_downwelling = " max downwelling ", str_min_downwelling = " min downwelling ", str_unit_downwelling = "m/s";
-		MinMax		minmaxDownwelling ( jm, km, c_0 );
+		MinMax_Hyd		minmaxDownwelling ( jm, km, c_0 );
 		minmaxDownwelling.searchMinMax_2D ( str_max_downwelling, str_min_downwelling, str_unit_downwelling, Downwelling, h );
 
 //	searching of maximum and minimum values of bottom water volume in a column
 		string str_max_bottom_water = " max bottom water ", str_min_bottom_water = " min bottom water ", str_unit_bottom_water = "m/s";
-		MinMax		minmaxBottom_water ( jm, km, c_0 );
+		MinMax_Hyd		minmaxBottom_water ( jm, km, c_0 );
 		minmaxBottom_water.searchMinMax_2D ( str_max_bottom_water, str_min_bottom_water, str_unit_bottom_water, BottomWater, h );
 
 
@@ -1021,6 +1043,4 @@ Print_commands:
 	cout << endl;
 	cout << "***** end of object oriented C++ program for the computation of 3D-oceanic circulation *****";
 	cout << "\n\n\n\n";
-
-	return 0;
 }

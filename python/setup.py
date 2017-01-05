@@ -6,11 +6,11 @@ ext_modules = [
     Extension("pyatom",
               [
                   'pyatom.pyx',
-                  '../atmosphere/cAtmosphereModel.cpp',
                   'PythonStream.cpp',
                   '../lib/Array.cpp',
                   '../lib/Array_2D.cpp',
                   '../lib/Array_1D.cpp',
+                  '../atmosphere/cAtmosphereModel.cpp',
                   '../atmosphere/Accuracy_Atm.cpp',
                   '../atmosphere/File_NetCDF_Atm.cpp',
                   '../atmosphere/Pressure_Atm.cpp',
@@ -24,6 +24,7 @@ ext_modules = [
                   '../atmosphere/Results_Atm.cpp',
                   '../atmosphere/Restore_Atm.cpp',
                   '../atmosphere/MinMax_Atm.cpp',
+                  '../hydrosphere/cHydrosphereModel.cpp',
                   '../hydrosphere/Accuracy_Hyd.cpp',
                   '../hydrosphere/BC_Hyd.cpp',
                   '../hydrosphere/File_NetCDF_Hyd.cpp',
@@ -42,7 +43,7 @@ ext_modules = [
               ],
               language='c++',
               libraries=['c', 'netcdf'],
-              include_dirs=['../atmosphere', '../lib', '../tinyxml2']
+              include_dirs=['../atmosphere', '../hydrosphere', '../lib', '../tinyxml2']
               )]
 
 setup(
