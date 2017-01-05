@@ -5,3 +5,5 @@ cdef extern from "cAtmosphereModel.h":
         cAtmosphereModel() except +  # NB! std::bad_alloc will be converted to MemoryError
         void LoadConfig(const char *filename)
         void Run()
+
+        double coriolis

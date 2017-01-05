@@ -43,49 +43,20 @@ cdef class Atmosphere:
         if self._thisptr == NULL:
             raise RuntimeError("Wrapped C++ object is deleted")
         else:
-            return 0    
+            return 0
 
-    '''
-    property x:
-    
-        # Here we use a property to expose the public member
-        # x of TestClass to Python
-        
+    property coriolis:
         def __get__(Atmosphere self):
             self._check_alive()
-            return self._thisptr.x
-        
-        def __set__(PyAtmosphere self, value):
-            self._check_alive()
-            self._thisptr.x = <int> value
+            return self._thisptr.coriolis
 
-    property y:
-    
-        # Here we use a property to expose the public member
-        # y of TestClass to Python
-    
-        def __get__(PyAtmosphere self):
+        def __set__(Atmosphere self, value):
             self._check_alive()
-            return self._thisptr.y
-    
-        def __set__(PyAtmosphere self, value):
-            self._check_alive()
-            self._thisptr.y = <int> value
+            self._thisptr.coriolis = <double> value
 
-            
-    def Multiply(Atmosphere self, int a, int b):
-        self._check_alive()
-        return self._thisptr.Multiply(a,b)
-            
-    '''
     def load_config(Atmosphere self, str filename):
         self._check_alive()
-        # cdef string cfilename = filename
-
-        print(filename)
-
         self._thisptr.LoadConfig(filename)
-
         return None
     
     def run(Atmosphere self):

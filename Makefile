@@ -29,7 +29,7 @@ hyd: libatom.a $(HYD_CLI_OBJ)
 
 python: libatom.a python/pyatom.so
 
-python/pyatom.so:
+python/pyatom.so: python/pyatom.pyx python/atom.pxd
 	cd python && python setup.py build_ext --inplace
 
 lib/%.o: lib/%.cpp
