@@ -20,3 +20,4 @@ python/pyatom.cpp
 atm
 libatom.a
 hyd
+output-*/

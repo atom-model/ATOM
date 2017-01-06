@@ -1,6 +1,8 @@
 #ifndef CATMOSPHEREMODEL_H
 #define CATMOSPHEREMODEL_H
 
+#include <string>
+
 #include "../tinyxml2/tinyxml2.h"
 
 using namespace std;
@@ -13,11 +15,11 @@ public:
 
     // FUNCTIONS
     void LoadConfig(const char *filename);
+    void WriteConfig(const char *filename) const;
     void Run();
 
     // CONFIGURATION
-    string inputPath;
-    string outputPath;
+    string input_path;
     bool verbose;
 
     // SIMULATION PARAMETERS
@@ -38,6 +40,8 @@ private:
     void FillBoolWithElement(const XMLElement *parent, const char *name, bool &dest) const;
     void FillDoubleWithElement(const XMLElement *parent, const char *name, double &dest) const;
     void FillIntWithElement(const XMLElement *parent, const char *name, int &dest) const;
+
+    string output_path;
 };
 
 #endif

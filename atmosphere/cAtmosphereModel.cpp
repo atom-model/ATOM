@@ -1,11 +1,14 @@
-#include <iostream>
 #include <fstream>
-#include <cmath>
-#include <stdio.h>
-#include <stdlib.h>
-#include <cstring>
-#include <sstream>
+#include <iostream>
 #include <iomanip>
+#include <sstream>
+
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+#include <sys/stat.h>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -125,10 +128,27 @@ void cAtmosphereModel::LoadConfig(const char *filename) {
 }
 
 void cAtmosphereModel::Run() {
-// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
-// maximum number of overall iterations ( n )
-// maximum number of inner velocity loop iterations ( velocity_iter_max )
-// maximum number of outer pressure loop iterations ( pressure_iter_max )
+    // generate an output path
+    std::stringstream os;
+    std::time_t now = std::time(nullptr);
+    os << "output-" << std::put_time(std::localtime(&now), "%y%m%d-%H%M%S");
+    output_path = os.str();
+
+    // create the output dir
+    mkdir(output_path.c_str(), 0777);
+
+
+    cout << "Output is being written to " << output_path << "\n";
+
+    // write out the config for reproducibility
+    std::stringstream output_config_path;
+    output_config_path << output_path << "/config.xml";
+    WriteConfig(output_config_path.str().c_str());
+
+    // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
+    // maximum number of overall iterations ( n )
+    // maximum number of inner velocity loop iterations ( velocity_iter_max )
+    // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
     int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max_2D = 2, pressure_iter_max_2D = 2;
 
@@ -513,7 +533,7 @@ void cAtmosphereModel::Run() {
 // naming a file to read the surface temperature of the modern world
     string Name_SurfaceTemperature_File;
     stringstream ssNameSurfaceTemperature;
-    ssNameSurfaceTemperature << outputPath << "SurfaceTemperature.xyz";
+    ssNameSurfaceTemperature << output_path << "SurfaceTemperature.xyz";
     Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
 
 // naming a file to read the surface precipitation by NASA
