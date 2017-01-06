@@ -288,20 +288,14 @@ void cAtmosphereModel::Run() {
     time_slice [ 13 ] = 130;
     time_slice [ 14 ] = 140;
 
+    //  class Array for 1-D, 2-D and 3-D field declarations
 
-//  class Array for 1-D, 2-D and 3-D field declarations
+    // 1D arrays
+    Array_1D rad(im, 1.); // radial coordinate direction
+    Array_1D the(jm, 2.); // lateral coordinate direction
+    Array_1D phi(km, 3.); // longitudinal coordinate direction
 
-// 1D arrays
-    Array_1D    rad;                                                                            // radial coordinate direction
-    rad.initArray_1D ( im, 1. );
-    Array_1D    the;                                                                            // lateral coordinate direction
-    the.initArray_1D ( jm, 2. );
-
-    Array_1D    phi;                                                                            // longitudinal coordinate direction
-    phi.initArray_1D ( km, 3. );
-
-
-// 2D arrays
+    // 2D arrays
     Array_2D    Vegetation;                                                             // vegetation via precipitation
     Vegetation.initArray_2D ( jm, km, 0. );
 

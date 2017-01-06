@@ -8,28 +8,30 @@
  * class to build 1D arrays
 */
 
-
+#include <cassert>
 #include <iostream>
 
 #include "Array_1D.h"
 
 using namespace std;
 
+#define MAXSIZE 361
 
-Array_1D::Array_1D ( )
-{
-	mm = 361;
-
-	z = new double[ mm ];
-
-// arbitrary initialisation of the z-field
-	for ( int l = 0; l < mm; l++ )
+// create an Array_1D with specified size and initial value
+Array_1D::Array_1D(int n, double val) {
+	mm = n;
+	z = new double[MAXSIZE];
+	
+	// arbitrary initialisation of the z-field
+	for ( int l = 0; l < MAXSIZE; l++ )
 	{
 		z[ l ] = 111.;																		// arbitrary initial values
 	}
 
+	for (int l = 0; l < n; l++) {
+		z[l] = val;
+	}
 }
-
 
 
 Array_1D::~Array_1D ( )
@@ -39,9 +41,11 @@ Array_1D::~Array_1D ( )
 
 
 
+// TODO can you remove this altogether?
 void Array_1D::initArray_1D( int mm, double cc )
 {
 // initialisation of the z-field
+	assert(mm == this->mm); // FIXME: just until we remove mm throughout
 	for ( int l = 0; l < mm; l++ )
 	{
 		z[ l ] = cc;
@@ -52,6 +56,8 @@ void Array_1D::initArray_1D( int mm, double cc )
 
 void Array_1D::Coordinates ( int mm, double z0, double dz )
 {
+	assert(mm == this->mm); // FIXME: just until we remove mm throughout
+
 	z[ 0 ] = z0;
 
 	for ( int l = 1; l < mm; l++ )
@@ -61,11 +67,10 @@ void Array_1D::Coordinates ( int mm, double z0, double dz )
 
 }
 
-
-
-
 void Array_1D::printArray_1D( int mm )
 {
+	assert(mm == this->mm); // FIXME: just until we remove mm throughout
+
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
 
@@ -81,8 +86,5 @@ void Array_1D::printArray_1D( int mm )
 //		cout << z[ i ] << " (" << &z[ i ] << ")" << " ";
 		cout << z[ i ] << " ";
 	}
-cout << endl;
+	cout << endl;
 }
-
-
-

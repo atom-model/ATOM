@@ -8,29 +8,26 @@
  * class to build 1D arrays
 */
 
-
-#include <iostream>
-
 #ifndef _ARRAY_1D_
 #define _ARRAY_1D_
 
+#include <iostream>
+
 using namespace std;
 
+class Array_1D {
+private:
+    int mm;
 
-class Array_1D
-{
-	private:
-		int mm;
-		// double cc, z0, dz;
+public:
+    double *z;
 
-	public:
-		double *z;
+    Array_1D (int n, double val);
+    ~Array_1D ( );
 
-		Array_1D ( );
-		~Array_1D ( );
-
-		void initArray_1D ( int, double );
-		void printArray_1D ( int );
-		void Coordinates ( int, double, double );
+    void initArray_1D ( int, double );
+    void printArray_1D ( int );
+    void Coordinates ( int, double, double );
 };
-#endif
+
+#endif /* _ARRAY_1D_ */
