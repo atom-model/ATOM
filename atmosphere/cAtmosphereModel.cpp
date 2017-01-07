@@ -296,210 +296,128 @@ void cAtmosphereModel::Run() {
     Array_1D phi(km, 3.); // longitudinal coordinate direction
 
     // 2D arrays
-    Array_2D    Vegetation;                                                             // vegetation via precipitation
-    Vegetation.initArray_2D ( jm, km, 0. );
+    Array_2D Vegetation(jm, km, 0.); // vegetation via precipitation
 
-    Array_2D    LatentHeat;                                                             // areas of higher latent heat
-    LatentHeat.initArray_2D ( jm, km, 0. );
-    Array_2D    Condensation;                                                           // areas of higher condensation
-    Condensation.initArray_2D ( jm, km, 0. );
-    Array_2D    Evaporation;                                                            // areas of higher evaporation
-    Evaporation.initArray_2D ( jm, km, 0. );
+    Array_2D LatentHeat(jm, km, 0.); // areas of higher latent heat
+    Array_2D Condensation(jm, km, 0.); // areas of higher condensation
+    Array_2D Evaporation(jm, km, 0.); // areas of higher evaporation
 
-    Array_2D    Precipitation;                                                          // areas of higher precipitation
-    Precipitation.initArray_2D ( jm, km, 0. );
-    Array_2D    precipitable_water;                                                 // areas of precipitable water in the air
-    precipitable_water.initArray_2D ( jm, km, 0. );
-    Array_2D    precipitation_NASA;                                             // surface precipitation from NASA
-    precipitation_NASA.initArray_2D ( jm, km, 0. );
+    Array_2D Precipitation(jm, km, 0.); // areas of higher precipitation
+    Array_2D precipitable_water(jm, km, 0.); // areas of precipitable water in the air
+    Array_2D precipitation_NASA(jm, km, 0.); // surface precipitation from NASA
 
-    Array_2D    Ice_Balance;                                                            // rate of the ice shield
-    Ice_Balance.initArray_2D ( jm, km, 0. );
-    Array_2D    Ice_Balance_add;                                                    // addition of all ice layers
-    Ice_Balance_add.initArray_2D ( jm, km, 0. );
+    Array_2D Ice_Balance(jm, km, 0.); // rate of the ice shield
+    Array_2D Ice_Balance_add(jm, km, 0.); // addition of all ice layers
 
-    Array_2D    Ik;                                                                         // direct sun radiation, short wave
-    Ik.initArray_2D ( jm, km, 0. );
-    Array_2D    Radiation_Balance;                                                  // radiation balance at the surface
-    Radiation_Balance.initArray_2D ( jm, km, 0. );
-    Array_2D    Radiation_Balance_par;                                          // radiation balance at the surface parabolic distribution
-    Radiation_Balance_par.initArray_2D ( jm, km, 0. );
-    Array_2D    Radiation_Balance_atm;                                      // radiation balance of the atmosphere
-    Radiation_Balance_atm.initArray_2D ( jm, km, 0. );
-    Array_2D    Radiation_Balance_bot;                                          // radiation balance of the ground
-    Radiation_Balance_bot.initArray_2D ( jm, km, 0. );
+    Array_2D Ik(jm, km, 0.); // direct sun radiation, short wave
+    Array_2D Radiation_Balance(jm, km, 0.); // radiation balance at the surface
+    Array_2D Radiation_Balance_par(jm, km, 0.); // radiation balance at the surface parabolic distribution
+    Array_2D Radiation_Balance_atm(jm, km, 0.); // radiation balance of the atmosphere
+    Array_2D Radiation_Balance_bot(jm, km, 0.); // radiation balance of the ground
 
-    Array_2D    t_j;                                                                            // 2D temperature at the surface
-    t_j.initArray_2D ( jm, km, 0. );
-    Array_2D    temp_eff_atm;                                                       // effektive temperature in the atmosphere
-    temp_eff_atm.initArray_2D ( jm, km, 0. );
-    Array_2D    temp_eff_bot;                                                           // effektive temperature on the ground
-    temp_eff_bot.initArray_2D ( jm, km, 0. );
-    Array_2D    temp_rad;                                                               // effektive temperature based on radiation
-    temp_rad.initArray_2D ( jm, km, 0. );
+    Array_2D t_j(jm, km, 0.); // 2D temperature at the surface
+    Array_2D temp_eff_atm(jm, km, 0.); // effektive temperature in the atmosphere
+    Array_2D temp_eff_bot(jm, km, 0.); // effektive temperature on the ground
+    Array_2D temp_rad(jm, km, 0.); // effektive temperature based on radiation
 
-    Array_2D    albedo;                                                                 // albedo = reflectivity
-    albedo.initArray_2D ( jm, km, 0. );
-    Array_2D    epsilon;                                                                    // epsilon = absorptivity
-    epsilon.initArray_2D ( jm, km, 0. );
+    Array_2D albedo(jm, km, 0.); // albedo = reflectivity
+    Array_2D epsilon(jm, km, 0.); // epsilon = absorptivity
 
-    Array_2D    Q_Radiation;                                                            // heat from the radiation balance in [W/m2]
-    Q_Radiation.initArray_2D ( jm, km, 0. );
-    Array_2D    Q_Evaporation;                                                      // evaporation heat of water by Kuttler
-    Q_Evaporation.initArray_2D ( jm, km, 0. );
-    Array_2D    Q_latent;                                                                   // latent heat from bottom values by the energy transport equation
-    Q_latent.initArray_2D ( jm, km, 0. );
-    Array_2D    Q_sensible;                                                             // sensible heat from bottom values by the energy transport equation
-    Q_sensible.initArray_2D ( jm, km, 0. );
-    Array_2D    Q_bottom;                                                               // difference by Q_Radiation - Q_latent - Q_sensible
-    Q_bottom.initArray_2D ( jm, km, 0. );
+    Array_2D Q_Radiation(jm, km, 0.); // heat from the radiation balance in [W/m2]
+    Array_2D Q_Evaporation(jm, km, 0.); // evaporation heat of water by Kuttler
+    Array_2D Q_latent(jm, km, 0.); // latent heat from bottom values by the energy transport equation
+    Array_2D Q_sensible(jm, km, 0.); // sensible heat from bottom values by the energy transport equation
+    Array_2D Q_bottom(jm, km, 0.); // difference by Q_Radiation - Q_latent - Q_sensible
 
-    Array_2D    Evaporation_Haude;                                              // evaporation by Haude in [mm/d]
-    Evaporation_Haude.initArray_2D ( jm, km, 0. );
-    Array_2D    Evaporation_Penman;                                         // evaporation by Penman in [mm/d]
-    Evaporation_Penman.initArray_2D ( jm, km, 0. );
+    Array_2D Evaporation_Haude(jm, km, 0.); // evaporation by Haude in [mm/d]
+    Array_2D Evaporation_Penman(jm, km, 0.); // evaporation by Penman in [mm/d]
 
-    Array_2D    MaxCloud;                                                               // maximum cloud water mass in a vertical column
-    MaxCloud.initArray_2D ( jm, km, 0. );
-    Array_2D    MaxIce;                                                                 // maximum cloud ice mass in a vertical column
-    MaxIce.initArray_2D ( jm, km, 0. );
+    Array_2D MaxCloud(jm, km, 0.); // maximum cloud water mass in a vertical column
+    Array_2D MaxIce(jm, km, 0.); // maximum cloud ice mass in a vertical column
 
-    Array_2D    co2_total;                                                              // areas of higher co2 concentration
-    co2_total.initArray_2D ( jm, km, 0. );
+    Array_2D co2_total(jm, km, 0.); // areas of higher co2 concentration
 
-    Array_2D    aux_2D_v;                                                               // auxilliar field v
-    aux_2D_v.initArray_2D ( jm, km, 0. );
-    Array_2D    aux_2D_w;                                                               // auxilliar field w
-    aux_2D_w.initArray_2D ( jm, km, 0. );
+    Array_2D aux_2D_v(jm, km, 0.); // auxilliar field v
+    Array_2D aux_2D_w(jm, km, 0.); // auxilliar field w
 
+    // 3D arrays
+    Array h(im, jm, km, 0.); // bathymetry, depth from sea level
 
-// 3D arrays
-    Array   h;                                                                                  // bathymetry, depth from sea level
-    h.initArray ( im, jm, km, 0. );
+    Array t(im, jm, km, ta); // temperature
+    Array u(im, jm, km, ua); // u-component velocity component in r-direction
+    Array v(im, jm, km, va); // v-component velocity component in theta-direction
+    Array w(im, jm, km, wa); // w-component velocity component in phi-direction
+    Array c(im, jm, km, ca); // water vapour
+    Array cloud(im, jm, km, 0.); // cloud water
+    Array ice(im, jm, km, 0.); // cloud ice
+    Array co2(im, jm, km, coa); // CO2
 
-    Array   t;                                                                                  // temperature
-    t.initArray ( im, jm, km, ta );
-    Array   u;                                                                                  // u-component velocity component in r-direction
-    u.initArray ( im, jm, km, ua );
-    Array   v;                                                                                  // v-component velocity component in theta-direction
-    v.initArray ( im, jm, km, va );
-    Array   w;                                                                              // w-component velocity component in phi-direction
-    w.initArray ( im, jm, km, wa );
-    Array   c;                                                                                  // water vapour
-    c.initArray ( im, jm, km, ca );
-    Array   cloud;                                                                          // cloud water
-    cloud.initArray ( im, jm, km, 0. );
-    Array   ice;                                                                                // cloud ice
-    ice.initArray ( im, jm, km, 0. );
-    Array   co2;                                                                                // CO2
-    co2.initArray ( im, jm, km, coa );
+    Array tn(im, jm, km, ta); // temperature new
+    Array un(im, jm, km, ua); // u-velocity component in r-direction new
+    Array vn(im, jm, km, va); // v-velocity component in theta-direction new
+    Array wn(im, jm, km, wa); // w-velocity component in phi-direction new
+    Array cn(im, jm, km, ca); // water vapour new
+    Array cloudn(im, jm, km, 0.); // cloud water new
+    Array icen(im, jm, km, 0.); // cloud ice new
+    Array co2n(im, jm, km, coa); // CO2 new
 
-    Array   tn;                                                                                 // temperature new
-    tn.initArray ( im, jm, km, ta );
-    Array   un;                                                                                 // u-velocity component in r-direction new
-    un.initArray ( im, jm, km, ua );
-    Array   vn;                                                                                 // v-velocity component in theta-direction new
-    vn.initArray ( im, jm, km, va );
-    Array   wn;                                                                             // w-velocity component in phi-direction new
-    wn.initArray ( im, jm, km, wa );
-    Array   cn;                                                                                 // water vapour new
-    cn.initArray ( im, jm, km, ca );
-    Array   cloudn;                                                                         // cloud water new
-    cloudn.initArray ( im, jm, km, 0. );
-    Array   icen;                                                                               // cloud ice new
-    icen.initArray ( im, jm, km, 0. );
-    Array   co2n;                                                                               // CO2 new
-    co2n.initArray ( im, jm, km, coa );
+    Array p_dyn(im, jm, km, pa); // dynamic pressure
+    Array p_stat(im, jm, km, pa); // static pressure
 
-    Array   p_dyn;                                                                          // dynamic pressure
-    p_dyn.initArray ( im, jm, km, pa );
-    Array   p_stat;                                                                         // static pressure
-    p_stat.initArray ( im, jm, km, pa );
+    Array rhs_t(im, jm, km, 0.); // auxilliar field RHS temperature
+    Array rhs_u(im, jm, km, 0.); // auxilliar field RHS u-velocity component
+    Array rhs_v(im, jm, km, 0.); // auxilliar field RHS v-velocity component
+    Array rhs_w(im, jm, km, 0.); // auxilliar field RHS w-velocity component
+    Array rhs_c(im, jm, km, 0.); // auxilliar field RHS water vapour
+    Array rhs_cloud(im, jm, km, 0.); // auxilliar field RHS cloud water
+    Array rhs_ice(im, jm, km, 0.); // auxilliar field RHS cloud ice
+    Array rhs_co2(im, jm, km, 0.); // auxilliar field RHS CO2
 
-    Array   rhs_t;                                                                          // auxilliar field RHS temperature
-    rhs_t.initArray ( im, jm, km, 0. );
-    Array   rhs_u;                                                                          // auxilliar field RHS u-velocity component
-    rhs_u.initArray ( im, jm, km, 0. );
-    Array   rhs_v;                                                                          // auxilliar field RHS v-velocity component
-    rhs_v.initArray ( im, jm, km, 0. );
-    Array   rhs_w;                                                                          // auxilliar field RHS w-velocity component
-    rhs_w.initArray ( im, jm, km, 0. );
-    Array   rhs_c;                                                                          // auxilliar field RHS water vapour
-    rhs_c.initArray ( im, jm, km, 0. );
-    Array   rhs_cloud;                                                                  // auxilliar field RHS cloud water
-    rhs_cloud.initArray ( im, jm, km, 0. );
-    Array   rhs_ice;                                                                        // auxilliar field RHS cloud ice
-    rhs_ice.initArray ( im, jm, km, 0. );
-    Array   rhs_co2;                                                                        // auxilliar field RHS CO2
-    rhs_co2.initArray ( im, jm, km, 0. );
+    Array aux_u(im, jm, km, 0.); // auxilliar field u-velocity component
+    Array aux_v(im, jm, km, 0.); // auxilliar field v-velocity component
+    Array aux_w(im, jm, km, 0.); // auxilliar field w-velocity component
+    Array aux_p(im, jm, km, pa); // auxilliar field p
 
-    Array   aux_u;                                                                          // auxilliar field u-velocity component
-    aux_u.initArray ( im, jm, km, 0. );
-    Array   aux_v;                                                                          // auxilliar field v-velocity component
-    aux_v.initArray ( im, jm, km, 0. );
-    Array   aux_w;                                                                      // auxilliar field w-velocity component
-    aux_w.initArray ( im, jm, km, 0. );
-    Array   aux_p;                                                                          // auxilliar field p
-    aux_p.initArray ( im, jm, km, pa );
+    Array Latency(im, jm, km, 0.); // latent heat
+    Array Q_Sensible(im, jm, km, 0.); // sensible heat
+    Array IceLayer(im, jm, km, 0.); // ice shield
+    Array t_cond_3D(im, jm, km, 0.); // condensation temperature
+    Array t_evap_3D(im, jm, km, 0.); // evaporation temperature
+    Array BuoyancyForce(im, jm, km, 0.); // buoyancy force, Boussinesque approximation
+    Array epsilon_3D(im, jm, km, 0.); // emissivity/ absorptivity
+    Array radiation_3D(im, jm, km, 0.); // radiation
 
-    Array   Latency;                                                                        // latent heat
-    Latency.initArray ( im, jm, km, 0. );
-    Array   Q_Sensible;                                                                 // sensible heat
-    Q_Sensible.initArray ( im, jm, km, 0. );
-    Array   IceLayer;                                                                       // ice shield
-    IceLayer.initArray ( im, jm, km, 0. );
-    Array   t_cond_3D;                                                                  // condensation temperature
-    t_cond_3D.initArray ( im, jm, km, 0. );
-    Array   t_evap_3D;                                                                  // evaporation temperature
-    t_evap_3D.initArray ( im, jm, km, 0. );
-    Array   BuoyancyForce;                                                          // buoyancy force, Boussinesque approximation
-    BuoyancyForce.initArray ( im, jm, km, 0. );
-    Array   epsilon_3D;                                                                 // emissivity/ absorptivity
-    epsilon_3D.initArray ( im, jm, km, 0. );
-    Array   radiation_3D;                                                               // radiation
-    radiation_3D.initArray ( im, jm, km, 0. );
+    Array P_rain(im, jm, km, 0.); // rain precipitation mass rate
+    Array P_snow(im, jm, km, 0.); // snow precipitation mass rate
+    Array S_v(im, jm, km, 0.); // water vapour mass rate due to category two ice scheme
+    Array S_c(im, jm, km, 0.); // cloud water mass rate due to category two ice scheme
+    Array S_i(im, jm, km, 0.); // cloud ice mass rate due to category two ice scheme
+    Array S_r(im, jm, km, 0.); // rain mass rate due to category two ice scheme
+    Array S_s(im, jm, km, 0.); // snow mass rate due to category two ice scheme
 
-    Array   P_rain;                                                                         // rain precipitation mass rate
-    P_rain.initArray ( im, jm, km, 0. );
-    Array   P_snow;                                                                     // snow precipitation mass rate
-    P_snow.initArray ( im, jm, km, 0. );
-    Array   S_v;                                                                                // water vapour mass rate due to category two ice scheme
-    S_v.initArray ( im, jm, km, 0. );
-    Array   S_c;                                                                                // cloud water mass rate due to category two ice scheme
-    S_c.initArray ( im, jm, km, 0. );
-    Array   S_i;                                                                                // cloud ice mass rate due to category two ice scheme
-    S_i.initArray ( im, jm, km, 0. );
-    Array   S_r;                                                                                // rain mass rate due to category two ice scheme
-    S_r.initArray ( im, jm, km, 0. );
-    Array   S_s;                                                                                // snow mass rate due to category two ice scheme
-    S_s.initArray ( im, jm, km, 0. );
+    //  cout << endl << " ***** printout of 3D-field temperature ***** " << endl << endl;
+    //  t.printArray();
 
+    //  cout << endl << " ***** printout of 2D-field vegetation ***** " << endl << endl;
+    //  Vegetation.printArray_2D();
 
-
-//  cout << endl << " ***** printout of 3D-field temperature ***** " << endl << endl;
-//  t.printArray();
-
-//  cout << endl << " ***** printout of 2D-field vegetation ***** " << endl << endl;
-//  Vegetation.printArray_2D();
-
-//  cout << endl << " ***** printout of 1D-field radius ***** " << endl << endl;
-//  rad.printArray_1D();
+    //  cout << endl << " ***** printout of 1D-field radius ***** " << endl << endl;
+    //  rad.printArray_1D();
 
     cout.precision ( 6 );
     cout.setf ( ios::fixed );
 
-
-//  Coordinate system in form of a spherical shell
-//  rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
+    //  Coordinate system in form of a spherical shell
+    //  rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
     rad.Coordinates ( im, r0, dr );
     the.Coordinates ( jm, the0, dthe );
     phi.Coordinates ( km, phi0, dphi );
 
-//  VALGRIND_CHECK_VALUE_IS_DEFINED ( rad );
+    //  VALGRIND_CHECK_VALUE_IS_DEFINED ( rad );
 
-//  coeff_mmWS = r_air / r_water_vapour;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
+    //  coeff_mmWS = r_air / r_water_vapour;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 
-//  initial values for the number of computed steps and the time
+    //  initial values for the number of computed steps and the time
     n = 0;
     time = dt;
     velocity_iter = 1;
@@ -509,41 +427,39 @@ void cAtmosphereModel::Run() {
     switch_2D = 0;
     residuum = residuum_old = 0.;
 
-// radial expansion of the computational field for the computation of initial values
+    // radial expansion of the computational field for the computation of initial values
     i_max = 32;         // corresponds to about 16 km above sea level, maximum hight of the tropopause at equator
     i_beg = 16;         // corresponds to about 8 km above sea level, maximum hight of the tropopause at poles
 
-// time slice to start with the modern world
+    // time slice to start with the modern world
     Ma = 0;
     i_time_slice = 0;
-//  Ma = 50;
-//  i_time_slice = 5;
+    //  Ma = 50;
+    //  i_time_slice = 5;
 
-
-// choice of the time slice by Ma and by author
+    // choice of the time slice by Ma and by author
     string Name_Bathymetry_File;
     stringstream My;
 
-// naming a file to read the surface temperature of the modern world
+    // naming a file to read the surface temperature of the modern world
     string Name_SurfaceTemperature_File;
     stringstream ssNameSurfaceTemperature;
     ssNameSurfaceTemperature << output_path << "SurfaceTemperature.xyz";
     Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
 
-// naming a file to read the surface precipitation by NASA
+    // naming a file to read the surface precipitation by NASA
     string Name_SurfacePrecipitation_File;
     stringstream ssNameSurfacePrecipitation;
     ssNameSurfacePrecipitation << "SurfacePrecipitation_NASA.xyz";
     Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
 
-// naming a possibly available sequel file
+    // naming a possibly available sequel file
     string Name_Sequel_File;
     stringstream ssNameSequel;
 
-// naming the output netCDF-file
+    // naming the output netCDF-file
     string Name_netCDF_File;
     stringstream ssNameNetCDF;
-
 
     if (verbose) {
         cout << endl << endl << endl;
@@ -565,7 +481,6 @@ void cAtmosphereModel::Run() {
         cout << "***** original program name:  " << __FILE__ << endl;
         cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
     }
-
 
 //  reading of the surface temperature file if available
     /*

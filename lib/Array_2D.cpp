@@ -8,40 +8,45 @@
  * class to build 2D arrays
 */
 
-
+#include <cassert>
 #include <iostream>
 
 #include "Array_2D.h"
 
 using namespace std;
 
+#define MAXJ 181
+#define MAXK 361
 
 
-Array_2D::Array_2D ( )
-{
-	jm = 181;
-	km = 361;
+Array_2D::Array_2D(int jdim, int kdim, double val) {
+	jm = jdim;
+	km = kdim;
 
-	y = new double*[ jm ];
+	y = new double*[MAXJ];
 
-	for ( int j = 0; j < jm; j++ )
+	for ( int j = 0; j < MAXJ; j++ )
 	{
-		y[ j ] = new double[ km ];
+		y[ j ] = new double[MAXK];
 	}
 
-// arbitrary initialisation of the z-field
-	for ( int j = 0; j < jm; j++ )
+	// arbitrary initialisation of the z-field
+	for ( int j = 0; j < MAXJ; j++ )
 	{
-		for ( int k = 0; k < km; k++ )
+		for ( int k = 0; k < MAXK; k++ )
 		{
 			y[ j ][ k ] = 222.;
 		}
 	}
 
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int k = 0; k < km; k++ )
+		{
+			y[ j ][ k ] = val;
+		}
+	}
 }
-
-
-
 
 Array_2D::~Array_2D ( )
 {
@@ -52,13 +57,12 @@ Array_2D::~Array_2D ( )
 	delete [  ] y;
 }
 
-
-
-
-
 void Array_2D::initArray_2D ( int jm, int km, double bb )
 {
-// initialisation of the y-field
+	assert(jm <= MAXJ);
+	assert(km <= MAXK);
+
+	// initialisation of the y-field
 	for ( int j = 0; j < jm; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
@@ -68,11 +72,11 @@ void Array_2D::initArray_2D ( int jm, int km, double bb )
 	}
 }
 
-
-
-
 void Array_2D::printArray_2D ( int jm, int km )
 {
+	assert(jm == this->jm);
+	assert(km == this->km);
+
 	cout.precision ( 3 );
 	cout.setf ( ios::fixed );
 
@@ -96,6 +100,3 @@ void Array_2D::printArray_2D ( int jm, int km )
 	}
 	cout << endl;
 }
-
-
-

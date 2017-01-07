@@ -8,28 +8,26 @@
  * class to build 2D arrays
 */
 
-
-#include <iostream>
-
 #ifndef _ARRAY_2D_
 #define _ARRAY_2D_
 
-using namespace std;
+#include <iostream>
 
+using namespace std;
 
 class Array_2D
 {
-	private:
-		int jm, km;
-		// double bb;
+private:
+    int jm, km;
 
-	public:
-		double **y;
+public:
+    double **y;
 
-		Array_2D ( );
-		~Array_2D ( );
+    // Array_2D ( );
+    Array_2D(int jdim, int kdim, double val);
+    ~Array_2D ( );
 
-		void printArray_2D ( int, int );
-		void initArray_2D ( int, int, double );
+    void printArray_2D ( int, int );
+    void initArray_2D ( int, int, double );
 };
 #endif

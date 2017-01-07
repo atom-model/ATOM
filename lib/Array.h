@@ -9,28 +9,25 @@
 */
 
 
-#include <iostream>
-
 #ifndef _ARRAY_
 #define _ARRAY_
 
-using namespace std;
+#include <iostream>
 
+using namespace std;
 
 class Array
 {
-	private:
-		int im, jm, km;
-		// double aa;
+private:
+    int im, jm, km;
 
-	public:
-		double ***x;
+public:
+    double ***x;
 
-		Array ( );
+    Array(int idim, int jdim, int kdim, double val);
+    ~Array ( );
 
-		~Array ( );
-
-		void printArray ( int, int, int );
-		void initArray ( int, int, int, double );
+    void printArray ( int, int, int );
+    void initArray ( int, int, int, double );
 };
 #endif

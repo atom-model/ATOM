@@ -204,84 +204,50 @@ void cHydrosphereModel::Run() {
 	Array_1D phi(km, 3.); // longitudinal coordinate direction
 
 	// 2D arrays
-	Array_2D		Upwelling;															// upwelling
-	Upwelling.initArray_2D ( jm, km, 0. );
-	Array_2D		Downwelling;														// downwelling
-	Downwelling.initArray_2D ( jm, km, 0. );
-	Array_2D		BottomWater;														// 2D bottom water summed up in a vertical column
-	BottomWater.initArray_2D ( jm, km, 0. );
+	Array_2D Upwelling(jm, km, 0.); // upwelling
+	Array_2D Downwelling(jm, km, 0.); // downwelling
+	Array_2D BottomWater(jm, km, 0.); // 2D bottom water summed up in a vertical column
 
-	Array_2D		SaltFinger;															// salt bulge of higher density
-	SaltFinger.initArray_2D ( jm, km, 0. );
-	Array_2D		SaltDiffusion;														// salt bulge of lower density
-	SaltDiffusion.initArray_2D ( jm, km, 0. );
-	Array_2D		Salt_total;															// rate of salt summed up in a vertical column
-	Salt_total.initArray_2D ( jm, km, 0. );
+	Array_2D SaltFinger(jm, km, 0.);															// salt bulge of higher density
+	Array_2D SaltDiffusion(jm, km, 0.);														// salt bulge of lower density
+	Array_2D Salt_total(jm, km, 0.);															// rate of salt summed up in a vertical column
 
-	Array_2D		BuoyancyForce_2D;											// radiation balance at the surface
-	BuoyancyForce_2D.initArray_2D ( jm, km, 0. );
+	Array_2D BuoyancyForce_2D(jm, km, 0.); // radiation balance at the surface
 
+	// 3D arrays
+	Array h(im, jm, km, 0.); // bathymetry, depth from sea level
 
-// 3D arrays
-	Array	h;																					// bathymetry, depth from sea level
-	h.initArray ( im, jm, km, 0. );
+	Array t(im, jm, km, ta); // temperature
+	Array u(im, jm, km, ua); // u-component velocity component in r-direction
+	Array v(im, jm, km, va); // v-component velocity component in theta-direction
+	Array w(im, jm, km, wa); // w-component velocity component in phi-direction
+	Array c(im, jm, km, ca); // water vapour
 
-	Array	t;																					// temperature
-	t.initArray ( im, jm, km, ta );
-	Array	u;																					// u-component velocity component in r-direction
-	u.initArray ( im, jm, km, ua );
-	Array	v;																					// v-component velocity component in theta-direction
-	v.initArray ( im, jm, km, va );
-	Array	w;																				// w-component velocity component in phi-direction
-	w.initArray ( im, jm, km, wa );
-	Array	c;																					// water vapour
-	c.initArray ( im, jm, km, ca );
+	Array tn(im, jm, km, ta); // temperature new
+	Array un(im, jm, km, ua); // u-velocity component in r-direction new
+	Array vn(im, jm, km, va); // v-velocity component in theta-direction new
+	Array wn(im, jm, km, wa); // w-velocity component in phi-direction new
+	Array cn(im, jm, km, ca); // water vapour new
 
-	Array	tn;																				// temperature new
-	tn.initArray ( im, jm, km, ta );
-	Array	un;																				// u-velocity component in r-direction new
-	un.initArray ( im, jm, km, ua );
-	Array	vn;																				// v-velocity component in theta-direction new
-	vn.initArray ( im, jm, km, va );
-	Array	wn;																				// w-velocity component in phi-direction new
-	wn.initArray ( im, jm, km, wa );
-	Array	cn;																				// water vapour new
-	cn.initArray ( im, jm, km, ca );
+	Array p_dyn(im, jm, km, pa); // dynamic pressure
+	Array p_stat(im, jm, km, pa); // static pressure
 
-	Array	p_dyn;																			// dynamic pressure
-	p_dyn.initArray ( im, jm, km, pa );
-	Array	p_stat;																			// static pressure
-	p_stat.initArray ( im, jm, km, pa );
+	Array rhs_t(im, jm, km, 0.); // auxilliar field RHS temperature
+	Array rhs_u(im, jm, km, 0.); // auxilliar field RHS u-velocity component
+	Array rhs_v(im, jm, km, 0.); // auxilliar field RHS v-velocity component
+	Array rhs_w(im, jm, km, 0.); // auxilliar field RHS w-velocity component
+	Array rhs_c(im, jm, km, 0.); // auxilliar field RHS water vapour
 
-	Array	rhs_t;																			// auxilliar field RHS temperature
-	rhs_t.initArray ( im, jm, km, 0. );
-	Array	rhs_u;																			// auxilliar field RHS u-velocity component
-	rhs_u.initArray ( im, jm, km, 0. );
-	Array	rhs_v;																			// auxilliar field RHS v-velocity component
-	rhs_v.initArray ( im, jm, km, 0. );
-	Array	rhs_w;																			// auxilliar field RHS w-velocity component
-	rhs_w.initArray ( im, jm, km, 0. );
-	Array	rhs_c;																			// auxilliar field RHS water vapour
-	rhs_c.initArray ( im, jm, km, 0. );
+	Array aux_u(im, jm, km, 0.); // auxilliar field u-velocity component
+	Array aux_v(im, jm, km, 0.); // auxilliar field v-velocity component
+	Array aux_w(im, jm, km, 0.); // auxilliar field w-velocity component
+	Array aux_p(im, jm, km, pa); // auxilliar field p
 
-	Array	aux_u;																			// auxilliar field u-velocity component
-	aux_u.initArray ( im, jm, km, 0. );
-	Array	aux_v;																			// auxilliar field v-velocity component
-	aux_v.initArray ( im, jm, km, 0. );
-	Array	aux_w;																		// auxilliar field w-velocity component
-	aux_w.initArray ( im, jm, km, 0. );
-	Array	aux_p;																			// auxilliar field p
-	aux_p.initArray ( im, jm, km, pa );
+	Array Salt_Finger(im, jm, km, 0.); // salt bulge of higher density
+	Array Salt_Diffusion(im, jm, km, 0.); // salt bulge of lowerer density
+	Array Salt_Balance(im, jm, km, 0.); // +/- salt balance
 
-	Array	Salt_Finger;																	// salt bulge of higher density
-	Salt_Finger.initArray ( im, jm, km, 0. );
-	Array	Salt_Diffusion;															// salt bulge of lowerer density
-	Salt_Diffusion.initArray ( im, jm, km, 0. );
-	Array	Salt_Balance;																// +/- salt balance
-	Salt_Balance.initArray ( im, jm, km, 0. );
-
-	Array	BuoyancyForce_3D;													// 3D buoyancy force
-	BuoyancyForce_3D.initArray ( im, jm, km, 0. );
+	Array BuoyancyForce_3D(im, jm, km, 0.); // 3D buoyancy force
 
 
 //	cout << " ***** printout of 3D-fields ***** " << endl;
