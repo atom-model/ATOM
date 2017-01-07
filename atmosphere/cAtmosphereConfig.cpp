@@ -23,7 +23,8 @@ void cAtmosphereModel::WriteConfig(const char *filename) const {
 
     XMLError err = doc.SaveFile(filename);
     if (err) {
-        cout << "error " << err << "\n";
+        // TODO: proper error handling
+        cout << "error " << err << " while writing config\n";
         abort();
     }
 }

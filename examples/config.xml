@@ -5,13 +5,13 @@
         <verbose>false</verbose>  <!-- produce a lot of debug output (default false) -->
         <inputPath>../input/</inputPath>  <!-- input data path -->
 
-        <SequelFile>...</SequelFile>
-        <BathymetryFile>..</BathymetryFile>
+        <!-- <SequelFile>...</SequelFile> -->
+<!--         <BathymetryFile>..</BathymetryFile>
         <SurfaceTemperatureFile>..</SurfaceTemperatureFile>
         <SurfacePrecipitationFile>..</SurfacePrecipitationFile>
         <BathymetryFile>..</BathymetryFile>
         <TransferFile>..</TransferFile>
-
+ -->
 
         <!-- time period -->
 
