@@ -46,33 +46,26 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 	cout.setf ( ios::fixed );
 
 
-// default adjustment, h must be 0 everywhere
-		for ( k = 0; k < km; k++ )
+	// default adjustment, h must be 0 everywhere
+	for ( k = 0; k < km; k++ )
+	{
+		for ( j = 0; j < jm; j++ )
 		{
-			for ( j = 0; j < jm; j++ )
+			for ( i = 0; i < im; i++ )
 			{
-				for ( i = 0; i < im; i++ )
-				{
-					h.x[ i ][ j ][ k ] = 0.;					// default
-				}
+				h.x[ i ][ j ][ k ] = 0.;					// default
 			}
 		}
-
-
-
-// reading data from file Name_Bathymetry_File_Read
-	ifstream Name_Bathymetry_File_Read;
-	Name_Bathymetry_File_Read.open ( Name_Bathymetry_File.c_str(), ios_base::in );
-	Name_Bathymetry_File_Read.seekg ( 0L, ios::beg );
-	anfangpos_1 = Name_Bathymetry_File_Read.tellg ();
-
-
-	if ( Name_Bathymetry_File_Read.good() )
-	{
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: could be opened" << endl;
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: begins at ::::::: " << anfangpos_1 << endl;
 	}
 
+	// reading data from file Name_Bathymetry_File_Read
+	ifstream Name_Bathymetry_File_Read;
+	Name_Bathymetry_File_Read.open(Name_Bathymetry_File);
+
+	if (!Name_Bathymetry_File_Read.is_open()) {
+		cerr << "ERROR: could not open bathymetry file at " << Name_Bathymetry_File << "\n";
+		abort();
+	}
 
 	j = 0;
 	k = 0;
@@ -95,94 +88,62 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 				i = ( im - 1 ) * ( dummy_3 / L_atm );
 				i_SL = i;
 
-				for ( i = 0; i <= i_SL; i++ )			h.x[ i ][ j ][ k ] = 1.;
+				for ( i = 0; i <= i_SL; i++ ) {
+					h.x[ i ][ j ][ k ] = 1.;
+				}
+				k++;
 			}
-			k++;
 		}
-	k = 0;
-	j++;
+		k = 0;
+		j++;
 	}
-
-
-// end reading Name_Bathymetry_File
-
-	Name_Bathymetry_File_Read.seekg ( 0L, ios::end );
-	endpos_1 = Name_Bathymetry_File_Read.tellg ();
-
-// final file administration
-
-	cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: ends at ::::::::: " << endpos_1 << endl;
-	cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: has the length of ::::: " << endpos_1 - anfangpos_1 << " bytes!"<< endl;
-
-// in case of reading error
-
-	/* FIXME can't work; comparison between ifstream and NULL
-	if ( Name_Bathymetry_File_Read == NULL )
-	{
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: not yet exists! ::::::::: " << endl << endl << endl;
-	}
-	*/
 
 	Name_Bathymetry_File_Read.close();
 
-	if ( Name_Bathymetry_File_Read.good() )
-	{
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: could be closed." << endl;
-		cout << endl;
-	}
-
-	if ( Name_Bathymetry_File_Read.fail() )
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: could not be closed!" << endl;
-
-// end reading Name_Bathymetry_File_Read
-
-
-
-
 // rewriting bathymetrical data from -180° _ 0° _ +180° coordinate system to 0°- 360°
 
-		l = 0;
+	l = 0;
 
-		for ( int k = 180; k < km; k++ )
+	for ( int k = 180; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
 		{
-			for ( int j = 0; j < jm; j++ )
+			for ( int i = 0; i < im; i++ )
 			{
-				for ( int i = 0; i < im; i++ )
-				{
-					aux_w.x[ i ][ j ][ l ] = h.x[ i ][ j ][ k ];
-				}
-			}
-			l++;
-		}
-
-
-
-		for ( int k = 0; k < 180; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-					aux_w.x[ i ][ j ][ l ] = h.x[ i ][ j ][ k ];
-				}
-			}
-			l++;
-		}
-
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-					h.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k ];
-				}
+				aux_w.x[ i ][ j ][ l ] = h.x[ i ][ j ][ k ];
 			}
 		}
+		l++;
+	}
 
-// end rewriting bathymetry
+
+
+	for ( int k = 0; k < 180; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				aux_w.x[ i ][ j ][ l ] = h.x[ i ][ j ][ k ];
+			}
+		}
+		l++;
+	}
+
+
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				h.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k ];
+			}
+		}
+	}
+
+	// end rewriting bathymetry
 }
 
 

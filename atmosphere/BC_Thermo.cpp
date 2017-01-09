@@ -2867,33 +2867,26 @@ void BC_Thermo::BC_Surface_Temperature ( const string &Name_SurfaceTemperature_F
 
 void BC_Thermo::BC_Surface_Precipitation ( const string &Name_SurfacePrecipitation_File, Array_2D &precipitation_NASA )
 {
-// initial conditions for the Name_SurfacePrecipitation_File at the sea surface
-	streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
+	// initial conditions for the Name_SurfacePrecipitation_File at the sea surface
+	streampos endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
 
 	cout.precision ( 3 );
 	cout.setf ( ios::fixed );
 
-// reading data from file Name_SurfacePrecipitation_File_Read
+	// reading data from file Name_SurfacePrecipitation_File_Read
 	ifstream Name_SurfacePrecipitation_File_Read;
-	Name_SurfacePrecipitation_File_Read.open ( Name_SurfacePrecipitation_File.c_str(), ios_base::in );
-	Name_SurfacePrecipitation_File_Read.seekg ( 0L, ios::beg );
-	anfangpos_1 = Name_SurfacePrecipitation_File_Read.tellg ();
+	Name_SurfacePrecipitation_File_Read.open(Name_SurfacePrecipitation_File);
 
-
-	if (verbose && Name_SurfacePrecipitation_File_Read.good())
-	{
-		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: could be opened" << endl;
-		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: begins at ::::::: " << anfangpos_1 << endl;
+	if (!Name_SurfacePrecipitation_File_Read.is_open()) {
+		cerr << "ERROR: could not open surface precipitation file at " << __FILE__ << " line " << __LINE__ << "\n";
+		abort();
 	}
 
 	j = 0;
 	k = 0;
 
-
-	while ( ( k < km ) && !Name_SurfacePrecipitation_File_Read.eof() )
-	{
-		while ( j < jm )
-		{
+	while ( ( k < km ) && !Name_SurfacePrecipitation_File_Read.eof() ) {
+		while ( j < jm ) {
 			Name_SurfacePrecipitation_File_Read >> dummy_1;
 			Name_SurfacePrecipitation_File_Read >> dummy_2;
 			Name_SurfacePrecipitation_File_Read >> dummy_3;
@@ -2901,44 +2894,12 @@ void BC_Thermo::BC_Surface_Precipitation ( const string &Name_SurfacePrecipitati
 			precipitation_NASA.y[ j ][ k ] = dummy_3;
 			j++;
 		}
-	j = 0;
-	k++;
+		j = 0;
+		k++;
 	}
-
-
-
-	// Ende Lesen von Name_SurfacePrecipitation_File
-
-	Name_SurfacePrecipitation_File_Read.seekg ( 0L, ios::end );
-	endpos_1 = Name_SurfacePrecipitation_File_Read.tellg ();
-
-	// Abschlussanweisungen für den Dateiabschluss (Dateiverwaltung)
-	if (verbose) {
-		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: ends at ::::::::: " << endpos_1 << endl;
-		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: has the length of ::::: " << endpos_1 - anfangpos_1 << " Bytes!"<< endl;
-	}
-
-	// Im Falle eines Lesefehlers
-	/* FIXME: can't work (comparing ifstream to NULL)
-	if ( Name_SurfacePrecipitation_File_Read == NULL )
-	{
-		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: not yet exists! ::::::::: " << endl << endl << endl;
-	}
-	*/
 
 	Name_SurfacePrecipitation_File_Read.close();
-
-	if (verbose && Name_SurfacePrecipitation_File_Read.good())
-	{
-		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: could be closed." << endl;
-		cout << endl;
-	}
-
-	if (verbose && Name_SurfacePrecipitation_File_Read.fail()) {
-		cout << "***** file ::::: " << Name_SurfacePrecipitation_File << " ::::: could not be closed!" << endl;
-	}
-
-// Ende Lesen von Name_SurfacePrecipitation_File_Read
+	// Ende Lesen von Name_SurfacePrecipitation_File_Read
 }
 
 

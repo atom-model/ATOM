@@ -2,8 +2,8 @@
 # Builds everything: atmosphere, hydrosphere, Python interface and CLI interface
 
 # TODO: don't always enable debugging
-CFLAGS = -g -Wall -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2
-LDFLAGS = -lm -L/usr/local/lib -lnetcdf
+CFLAGS = -ggdb -Wall -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2
+LDFLAGS = -ggdb -lm -L/usr/local/lib -lnetcdf
 
 # Common files for the shared lib (libatom.a)
 LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o
@@ -36,7 +36,7 @@ lib/%.o: lib/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 cli/%.o: cli/%.cpp
-		$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 atmosphere/%.o: atmosphere/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@

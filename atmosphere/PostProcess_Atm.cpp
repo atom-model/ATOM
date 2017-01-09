@@ -20,284 +20,200 @@ using namespace std;
 
 
 
-PostProcess_Atmosphere::PostProcess_Atmosphere ( int im, int jm, int km )
-{
-	this -> im = im;
-	this -> jm = jm;
-	this -> km = km;
+PostProcess_Atmosphere::PostProcess_Atmosphere(int im, int jm, int km) {
+	this->im = im;
+	this->jm = jm;
+	this->km = km;
 }
-
 
 PostProcess_Atmosphere::~PostProcess_Atmosphere() {}
 
-
-
-
-void PostProcess_Atmosphere::Atmosphere_SequelFile_write ( string &Name_Bathymetry_File, int &n, double &time, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n )
-{
+void PostProcess_Atmosphere::Atmosphere_SequelFile_write(string &output_path, string &Name_Bathymetry_File, int &n, double &time, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n) {
 	stringstream Name_Sequel_File;
 
 	streampos anfangpos, endpos;
 
-// file administration
-	Name_Sequel_File << "[" << Name_Bathymetry_File << "]_Sequel_Atm.seq";
+	// file administration
+	// FIXME: where are we supposed to read/write these sequel files?
+	Name_Sequel_File << output_path << "/[" << Name_Bathymetry_File << "]_Sequel_Atm.seq";
 	ofstream Sequel_File;
-	Sequel_File.precision ( 4 );
-	Sequel_File.setf ( ios::fixed );
-	Sequel_File.open ( Name_Sequel_File.str().c_str(), ios_base::out );
+	Sequel_File.precision(4);
+	Sequel_File.setf(ios::fixed);
+	Sequel_File.open(Name_Sequel_File.str());
 
-	if ( Sequel_File.good() )
+	if (!Sequel_File.is_open()) {
+		cerr << "ERROR: could not open sequel file " << Name_Sequel_File.str() << " for writing at " << __FILE__ << " line " << __LINE__ << "\n";
+		abort();
+	}
+
+	// begin writing
+	cout << "***** Atmosphere_SequelFile_write:   n = " << n << "  time = " << time << endl;
+	Sequel_File << n << " " << time << endl;
+
+	for ( int i = 0; i < im; i++ )
 	{
-	  cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: could be opened" << endl;
-	  cout << endl;
-	  anfangpos = Sequel_File.tellp();
-	  cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: starts at ::::::: " << anfangpos << endl;
+		Sequel_File << rad.z[ i ] << endl;
+	}
 
 
-// begin writing
-
-		cout << "\n\n”***** Atmosphere_SequelFile_write:   n = " << n << "  time = " << time << endl << endl << endl;
-		Sequel_File << n << " " << time << endl;
-
-		for ( int i = 0; i < im; i++ )
-		{
-			Sequel_File << rad.z[ i ] << endl;
-		}
+	for ( int j = 0; j < jm; j++ )
+	{
+		Sequel_File << the.z[ j ] << endl;
+	}
 
 
+	for ( int k = 0; k < km; k++ )
+	{
+		Sequel_File << phi.z[ k ] << endl;
+	}
+
+
+	for ( int i = 0; i < im; i++ )
+	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			Sequel_File << the.z[ j ] << endl;
-		}
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			Sequel_File << phi.z[ k ] << endl;
-		}
-
-
-		for ( int i = 0; i < im; i++ )
-		{
-			for ( int j = 0; j < jm; j++ )
+			for ( int k = 0; k < km; k++ )
 			{
-				for ( int k = 0; k < km; k++ )
-				{
-					Sequel_File << u.x[ i ][ j ][ k ] << " " << v.x[ i ][ j ][ k ] << " " << w.x[ i ][ j ][ k ]  << endl;
-				}
+				Sequel_File << u.x[ i ][ j ][ k ] << " " << v.x[ i ][ j ][ k ] << " " << w.x[ i ][ j ][ k ]  << endl;
 			}
 		}
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-					Sequel_File << un.x[ i ][ j ][ k ] << " " << vn.x[ i ][ j ][ k ] << " " << wn.x[ i ][ j ][ k ]  << endl;
-				}
-			}
-		}
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-					Sequel_File << t.x[ i ][ j ][ k ] << " " << tn.x[ i ][ j ][ k ]  << endl;
-				}
-			}
-		}
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-					Sequel_File << c.x[ i ][ j ][ k ] << " " << cn.x[ i ][ j ][ k ]  << endl;
-				}
-			}
-		}
-
-
-
-// end writing
-
-
-// final file administration
-
-		endpos = Sequel_File.tellp();
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: ends at ::::::::: " << endpos << endl;
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: has the length of ::::: " << endpos - anfangpos << " bytes!"<< endl;
-		cout << endl;
 	}
 
 
-// in case of failing
-
-	if ( Sequel_File.fail() )
+	for ( int k = 0; k < km; k++ )
 	{
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: is lost!" << endl;
-		return;
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				Sequel_File << un.x[ i ][ j ][ k ] << " " << vn.x[ i ][ j ][ k ] << " " << wn.x[ i ][ j ][ k ]  << endl;
+			}
+		}
 	}
 
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				Sequel_File << t.x[ i ][ j ][ k ] << " " << tn.x[ i ][ j ][ k ]  << endl;
+			}
+		}
+	}
+
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				Sequel_File << c.x[ i ][ j ][ k ] << " " << cn.x[ i ][ j ][ k ]  << endl;
+			}
+		}
+	}
+
+	// end writing
 	Sequel_File.close();
-
-	if ( Sequel_File.good() )
-	{
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: could be closed after writing" << endl;
-		cout << endl;
-	}
-
-	if ( Sequel_File.fail() )
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: could not be closed properly!" << endl << endl << endl;
-return;
 }
 
-
-
-
-
-void PostProcess_Atmosphere::Atmosphere_SequelFile_read ( string &Name_Bathymetry_File, int &n, double &time, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n )
-{
+void PostProcess_Atmosphere::Atmosphere_SequelFile_read(string &output_path, string &Name_Bathymetry_File, int &n, double &time, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &co2n) {
 	stringstream Name_Sequel_File;
 
 	streampos anfangpos, endpos;
 
-// file administration
-	Name_Sequel_File << "[" << Name_Bathymetry_File << "]_Sequel_Atm.seq";
+	// file administration
+	// FIXME: where are we supposed to read/write these sequel files?
+	Name_Sequel_File << output_path << "/[" << Name_Bathymetry_File << "]_Sequel_Atm.seq";
 	ifstream Sequel_File;
-	Sequel_File.open ( Name_Sequel_File.str().c_str(), ios_base::in );
-	Sequel_File.seekg ( 0L, ios::beg );
-	anfangpos = Sequel_File.tellg ();
+	Sequel_File.open(Name_Sequel_File.str());
 
+	if (!Sequel_File.is_open()) {
+		cerr << "WARNING: could not open sequel file " << Name_Sequel_File.str() << " for reading at " << __FILE__ << " line " << __LINE__ << "\n";
+		return; // we tolerate it for now as we don't know what the sequel files are
+	}
 
-	if ( Sequel_File.good() )
+	// begin reading
+	Sequel_File >> n;
+	Sequel_File >> time;
+
+	cout << "***** Atmosphere_SequelFile_read:   n = " << n << "  time = " << time << endl;
+
+	for ( int i = 0; i < im; i++ )
 	{
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: could be opened." << endl;
-		cout << endl;
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: starts at ::::::: " << anfangpos << endl;
+		Sequel_File >> rad.z[ i ];
+	}
 
 
-// begin reading
-
-		Sequel_File >> n;
-		Sequel_File >> time;
-
-		cout << "\n\n”***** Atmosphere_SequelFile_read:   n = " << n << "  time = " << time << endl << endl << endl;
-
-		for ( int i = 0; i < im; i++ )
-		{
-			Sequel_File >> rad.z[ i ];
-		}
+	for ( int j = 0; j < jm; j++ )
+	{
+		Sequel_File >> the.z[ j ];
+	}
 
 
+	for ( int k = 0; k < km; k++ )
+	{
+		Sequel_File >> phi.z[ k ];
+	}
+
+
+	for ( int i = 0; i < im; i++ )
+	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			Sequel_File >> the.z[ j ];
-		}
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			Sequel_File >> phi.z[ k ];
-		}
-
-
-		for ( int i = 0; i < im; i++ )
-		{
-			for ( int j = 0; j < jm; j++ )
+			for ( int   k = 0; k < km; k++ )
 			{
-				for ( int   k = 0; k < km; k++ )
-				{
-					Sequel_File >> u.x[ i ][ j ][ k ];
-					Sequel_File >> v.x[ i ][ j ][ k ];
-					Sequel_File >> w.x[ i ][ j ][ k ];
-				}
+				Sequel_File >> u.x[ i ][ j ][ k ];
+				Sequel_File >> v.x[ i ][ j ][ k ];
+				Sequel_File >> w.x[ i ][ j ][ k ];
 			}
 		}
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-					Sequel_File >> un.x[ i ][ j ][ k ];
-					Sequel_File >> vn.x[ i ][ j ][ k ];
-					Sequel_File >> wn.x[ i ][ j ][ k ];
-				}
-			}
-		}
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-					Sequel_File >> t.x[ i ][ j ][ k ];
-					Sequel_File >> tn.x[ i ][ j ][ k ];
-				}
-			}
-		}
-
-
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-					Sequel_File >> c.x[ i ][ j ][ k ];
-					Sequel_File >> cn.x[ i ][ j ][ k ];
-				}
-			}
-		}
-
-// end reading
-
-	Sequel_File.seekg ( 0L, ios::end );
-	endpos = Sequel_File.tellg ();
-
-// final file administration
-
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: ends at ::::::::: " << endpos << endl;
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: has the length of ::::: " << endpos - anfangpos << " bytes!"<< endl;
-		cout << endl;
 	}
 
 
-// in case of failing
-
-	/* FIXME
-	if ( Sequel_File == NULL )
+	for ( int k = 0; k < km; k++ )
 	{
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: does not exist! ::::::::: " << endl << endl << endl;
-		return;
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				Sequel_File >> un.x[ i ][ j ][ k ];
+				Sequel_File >> vn.x[ i ][ j ][ k ];
+				Sequel_File >> wn.x[ i ][ j ][ k ];
+			}
+		}
 	}
-	*/
 
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				Sequel_File >> t.x[ i ][ j ][ k ];
+				Sequel_File >> tn.x[ i ][ j ][ k ];
+			}
+		}
+	}
+
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				Sequel_File >> c.x[ i ][ j ][ k ];
+				Sequel_File >> cn.x[ i ][ j ][ k ];
+			}
+		}
+	}
+
+	// end reading
 	Sequel_File.close();
-
-	if ( Sequel_File.good() )
-	{
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: could be closed." << endl;
-		cout << endl;
-	}
-
-	if ( Sequel_File.fail() )
-		cout << "***** file ::::: " << Name_Sequel_File.str() << " ::::: could not be closed!" << endl;
-
-
-return;
 }
 
 
@@ -324,7 +240,7 @@ void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_F
 		cout << "***** file ::::: " << Name_v_w_Transfer_File.str() << " ::::: starts at ::::::: " << anfangpos << endl;
 
 
-// begin writing
+	// begin writing
 
 		cout << "\n\n”***** Atmosphere_v_w_Transfer_File_write:   begin of writing!" << endl << endl;
 
