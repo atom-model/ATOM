@@ -43,89 +43,11 @@ cAtmosphereModel::cAtmosphereModel() {
     // If Ctrl-C is pressed, quit
     signal(SIGINT, exit);
 
-    verbose = false;
-
     // set default configuration
-    // simulation parameters
-    velocity_iter_max = 2;
-    pressure_iter_max = 2;
-
-    // physical parameters
-    coriolis = 1.;
-    centrifugal = 1.;
-    WaterVapour = 1.;
-    buoyancy = 1.;
-    CO2 = 1.;
+    SetDefaultConfig();
 }
 
 cAtmosphereModel::~cAtmosphereModel() { }
-
-void cAtmosphereModel::FillDoubleWithElement(const XMLElement *parent, const char *name, double &dest) const {
-    const XMLElement *elem = parent->FirstChildElement(name);
-    if (!elem) {
-        return;
-    }
-
-    const char *text = elem->GetText();
-    if (text) {
-        dest = stod(text);
-    }
-}
-
-void cAtmosphereModel::FillIntWithElement(const XMLElement *parent, const char *name, int &dest) const {
-    const XMLElement *elem = parent->FirstChildElement(name);
-    if (!elem) {
-        return;
-    }
-
-    const char *text = elem->GetText();
-    if (text) {
-        dest = stoi(text);
-    }
-}
-
-void cAtmosphereModel::FillBoolWithElement(const XMLElement *parent, const char *name, bool &dest) const {
-    const XMLElement *elem = parent->FirstChildElement(name);
-    if (!elem) {
-        return;
-    }
-
-    const char *text = elem->GetText();
-    if (0 == strcmp(text, "false")) {
-        dest = false;
-    } else if (0 == strcmp(text, "true")) {
-        dest = true;
-    } else {
-        cout << "ERROR: unknown value '" << text << "' for config item '" << name << "'; I expect 'true' or 'false'" << endl;
-    }
-}
-
-void cAtmosphereModel::LoadConfig(const char *filename) {
-    XMLDocument doc;
-    doc.LoadFile(filename);
-
-    // TODO you should catch exceptions:
-    // libc++abi.dylib: terminating with uncaught exception of type std::invalid_argument: stod: no conversion
-
-    XMLElement *atom = doc.FirstChildElement("atom");
-
-    // SIMULATION PARAMETERS
-    XMLElement *common = atom->FirstChildElement("common");
-
-    FillBoolWithElement(common, "verbose", verbose);
-
-    // ATMOSPHERE PHYSICAL PARAMETERS
-    XMLElement *atm = atom->FirstChildElement("atmosphere");
-
-    FillIntWithElement(atm, "velocity_iter_max", velocity_iter_max);
-    FillIntWithElement(atm, "pressure_iter_max", pressure_iter_max);
-
-    FillDoubleWithElement(atm, "coriolis", coriolis);
-    FillDoubleWithElement(atm, "centrifugal", centrifugal);
-    FillDoubleWithElement(atm, "WaterVapour", WaterVapour);
-    FillDoubleWithElement(atm, "buoyancy", buoyancy);
-    FillDoubleWithElement(atm, "CO2", CO2);
-}
 
 void cAtmosphereModel::Run() {
     // generate an output path
@@ -136,7 +58,6 @@ void cAtmosphereModel::Run() {
 
     // create the output dir
     mkdir(output_path.c_str(), 0777);
-
 
     cout << "Output is being written to " << output_path << "\n";
 
@@ -270,7 +191,6 @@ void cAtmosphereModel::Run() {
 // time slices to be run after actualizing
     i_time_slice_max = 15;
     int *time_slice = new int [ i_time_slice_max ];     // time slices in Ma
-
 
     time_slice [ 0 ] = 0;                                   // Golonka Bathymetry and Topography
     time_slice [ 1 ] = 10;
@@ -439,7 +359,6 @@ void cAtmosphereModel::Run() {
 
     // choice of the time slice by Ma and by author
     string Name_Bathymetry_File;
-    stringstream My;
 
     // naming a file to read the surface temperature of the modern world
     string Name_SurfaceTemperature_File;
@@ -454,8 +373,6 @@ void cAtmosphereModel::Run() {
     Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
 
     // naming a possibly available sequel file
-    string Name_Sequel_File;
-    stringstream ssNameSequel;
 
     // naming the output netCDF-file
     string Name_netCDF_File;

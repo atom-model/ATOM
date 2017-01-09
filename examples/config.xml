@@ -3,10 +3,16 @@
 <atom>
     <common>
         <verbose>false</verbose>  <!-- produce a lot of debug output (default false) -->
-        <inputPath>../input/</inputPath>  <!-- input data path -->
 
-        <!-- <SequelFile>...</SequelFile> -->
-<!--         <BathymetryFile>..</BathymetryFile>
+        <BathymetryPath>data/Paleotopography_bathymetry/Golonka_rev210</BathymetryPath>
+        <BathymetrySuffix>Ma_Golonka.xyz</BathymetrySuffix>
+
+        <!-- <BathymetryPath>data/Paleotopography_bathymetry/Smith_rev210</BathymetryPath> -->
+        <!-- <BathymetrySuffix>Ma_Smith.xyz</BathymetrySuffix> -->
+
+        <ModernBathymetryFile>data/0Ma_Etopo.xyz</ModernBathymetryFile>
+
+<!--
         <SurfaceTemperatureFile>..</SurfaceTemperatureFile>
         <SurfacePrecipitationFile>..</SurfacePrecipitationFile>
         <BathymetryFile>..</BathymetryFile>
