@@ -10,8 +10,6 @@
         <!-- <BathymetryPath>data/Paleotopography_bathymetry/Smith_rev210</BathymetryPath> -->
         <!-- <BathymetrySuffix>Ma_Smith.xyz</BathymetrySuffix> -->
 
-        <ModernBathymetryFile>data/0Ma_Etopo.xyz</ModernBathymetryFile>
-
 <!--
         <SurfaceTemperatureFile>..</SurfaceTemperatureFile>
         <SurfacePrecipitationFile>..</SurfacePrecipitationFile>

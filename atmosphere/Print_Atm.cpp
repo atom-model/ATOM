@@ -8,7 +8,6 @@
  * class to print results on screen
 */
 
-
 #include <iostream>
 #include <cmath>
 
@@ -16,11 +15,7 @@
 
 using namespace std;
 
-
-
-
-Print_Atmosphere::Print_Atmosphere ( int im, int jm, int km, int nm, int n, double time )
-{
+Print_Atmosphere::Print_Atmosphere (int im, int jm, int km, int nm, int n, double time) {
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;
@@ -29,9 +24,7 @@ Print_Atmosphere::Print_Atmosphere ( int im, int jm, int km, int nm, int n, doub
 	this -> time = time;
 }
 
-
 Print_Atmosphere::~Print_Atmosphere() {}
-
 
 void Print_Atmosphere::printData ( Array &t, Array &u, Array &v, Array &w, Array &c, Array &p_dyn )
 {

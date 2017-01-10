@@ -357,9 +357,6 @@ void cAtmosphereModel::Run() {
     //  Ma = 50;
     //  i_time_slice = 5;
 
-    // choice of the time slice by Ma and by author
-    string Name_Bathymetry_File;
-
     // naming a file to read the surface temperature of the modern world
     string Name_SurfaceTemperature_File;
     stringstream ssNameSurfaceTemperature;
@@ -371,12 +368,6 @@ void cAtmosphereModel::Run() {
     stringstream ssNameSurfacePrecipitation;
     ssNameSurfacePrecipitation << "SurfacePrecipitation_NASA.xyz";
     Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
-
-    // naming a possibly available sequel file
-
-    // naming the output netCDF-file
-    string Name_netCDF_File;
-    stringstream ssNameNetCDF;
 
     if (verbose) {
         cout << endl << endl << endl;
@@ -461,25 +452,16 @@ inputs should be read once at startup, parsed, then stored in memory
 // TODO: this should be a loop, not a goto+label
 time_slice_sequel:
     stringstream My;
+    string Name_netCDF_File;
 
-    // choice of the time slice by Ma and by author ( etopo for modern times, Galonka for time slices )
-    if (Ma == 0)
-    {
-        Name_Bathymetry_File = modern_bathymetry_file;
-        Name_netCDF_File = "[0Ma_etopo.xyz]_atmosphere.nc";
-    }
-    else
-    {
-        n = 0;
-        My << bathymetry_path << "/" << time_slice[i_time_slice] << bathymetry_suffix;
-        Name_Bathymetry_File = My.str();
-    }
+    // choice of the time slice by Ma and by author
+    n = 0;
+    string bathymetry_name = std::to_string(time_slice[i_time_slice]) + bathymetry_suffix;
+    string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
+    Name_netCDF_File = std::to_string(time_slice[i_time_slice]) + "Ma_atmosphere.nc";
 
-    ssNameNetCDF << Name_Bathymetry_File << "_atmosphere.nc";
-    Name_netCDF_File = ssNameNetCDF.str();
-
-    PostProcess_Atmosphere read_File(im, jm, km);
-    read_File.Atmosphere_SequelFile_read(output_path, Name_Bathymetry_File, n, time, rad, the, phi, h, t, u, v, w, c, co2, tn, un, vn, wn, cn, co2n);
+    PostProcess_Atmosphere read_File(im, jm, km, output_path);
+    read_File.Atmosphere_SequelFile_read(bathymetry_name, n, time, rad, the, phi, h, t, u, v, w, c, co2, tn, un, vn, wn, cn, co2n);
     n++;
 
     cout << "Ma = " << Ma << " million years\n";
@@ -490,7 +472,7 @@ time_slice_sequel:
     BC_Bathymetry_Atmosphere LandArea(im, jm, km, co2_vegetation, co2_land, co2_ocean);
 
     // topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-    LandArea.BC_MountainSurface(Name_Bathymetry_File, L_atm, h, aux_w);
+    LandArea.BC_MountainSurface(bathymetry_filepath, L_atm, h, aux_w);
 
     // computation of ice shield following the theorie by Milankowitsch
     if (IceShield == 1) {
@@ -1076,62 +1058,49 @@ Print_commands:
 
 
 //  results written in netCDF format
-    printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Precipitation, precipitable_water );
+    printoutNetCDF.out_NetCDF(output_path, Name_netCDF_File, v, w, h, Precipitation, precipitable_water);
 
 
 //  class PostProcess_Atmosphaere for the printing of results
-    PostProcess_Atmosphere      write_File ( im, jm, km );
+    PostProcess_Atmosphere      write_File ( im, jm, km, output_path);
 
 
-//  writing of data in ParaView files
-
-//  radial data along constant hight above ground
+    //  writing of data in ParaView files
+    //  radial data along constant hight above ground
     i_radial = 0;
-    write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D , BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow, Evaporation, Condensation, precipitable_water, Q_bottom, Radiation_Balance, Q_Radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation );
+    write_File.paraview_vtk_radial ( bathymetry_name, i_radial, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D , BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow, Evaporation, Condensation, precipitable_water, Q_bottom, Radiation_Balance, Q_Radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation );
 
-//  londitudinal data along constant latitudes
+    //  londitudinal data along constant latitudes
     j_longal = 75;
-    write_File.paraview_vtk_longal ( Name_Bathymetry_File, j_longal, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow );
+    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow );
 
     k_zonal = 145;
-    write_File.paraview_vtk_zonal ( Name_Bathymetry_File, k_zonal, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s );
+    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s );
 
-//  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-//  write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain );
+    //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
+    //  write_File.paraview_panorama_vts ( bathymetry_name, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain );
 
-//  3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
-//  write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p_dyn, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
+    //  3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
+    //  write_File.paraview_vts ( bathymetry_name, n, rad, the, phi, h, t, p_dyn, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
 
-
-//  writing of sequential data for the sequel file
-    if ( SequelFile == 1 )
-    {
-        write_File.Atmosphere_SequelFile_write (output_path, Name_Bathymetry_File, n, time, rad, the, phi, h, t, u, v, w, c, co2, tn, un, vn, wn, cn, co2n );
+    //  writing of sequential data for the sequel file
+    if ( SequelFile == 1 ) {
+        write_File.Atmosphere_SequelFile_write(bathymetry_name, n, time, rad, the, phi, h, t, u, v, w, c, co2, tn, un, vn, wn, cn, co2n);
     }
 
-//  writing of v-w-data in the v_w_transfer file
-        PostProcess_Atmosphere      write_v_w_Transfer_File ( im, jm, km );
-        write_v_w_Transfer_File.Atmosphere_v_w_Transfer ( Name_Bathymetry_File, v, w, p_dyn );
+    //  writing of v-w-data in the v_w_transfer file
+    PostProcess_Atmosphere ppa(im, jm, km, output_path);
+    ppa.Atmosphere_v_w_Transfer(bathymetry_name, v, w, p_dyn);
+    ppa.Atmosphere_PlotData(bathymetry_name, u_0, t_0, v, w, t, c, Precipitation, precipitable_water);
 
-
-//  writing of plot data in the PlotData file
-        PostProcess_Atmosphere      write_PlotData_File ( im, jm, km );
-        write_PlotData_File.Atmosphere_PlotData ( Name_Bathymetry_File, u_0, t_0, v, w, t, c, Precipitation, precipitable_water );
-
-
-
-//  statements on the convergence und iterational process
+    //  statements on the convergence und iterational process
     velocity_iter = 0;
     n--;
 
-    if ( pressure_iter > pressure_iter_max ) goto time_slice_change;
-    else goto Pressure_loop;
+    if ( pressure_iter <= pressure_iter_max ) goto Pressure_loop;
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
 
-
-
-    time_slice_change:
 
 // reset of results to the initial value
         for ( int k = 0; k < km; k++ )

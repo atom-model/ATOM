@@ -24,7 +24,7 @@
 
 // Definitions to build netCDF-files
 
-#define ERR(e) { printf ( "Error : %s\n" , nc_strerror ( e ) ); return 2; }
+#define ERR(e) { printf ( "Error in %s line %d: %s\n" , __FILE__, __LINE__, nc_strerror ( e ) ); return 2; }
 
 using namespace std;
 
@@ -59,7 +59,7 @@ class File_NetCDF
 
 		~File_NetCDF ();
 
-		double out_NetCDF ( const string &, Array &, Array &, Array &, Array_2D &, Array_2D & );
+		double out_NetCDF (const string &, const string &, Array &, Array &, Array &, Array_2D &, Array_2D &);
 };
 #endif
 

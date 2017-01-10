@@ -9,7 +9,6 @@ void cAtmosphereModel::SetDefaultConfig() {
 
     bathymetry_path = "data/Paleotopography_bathymetry/Golonka_rev210";
     bathymetry_suffix = "Ma_Golonka.xyz";
-    modern_bathymetry_file = "data/0Ma_Etopo.xyz";
 
     // simulation parameters
     velocity_iter_max = 2;

@@ -18,7 +18,6 @@
 
 using namespace std;
 
-
 class RHS_Atmosphere
 {
 	private:

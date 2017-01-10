@@ -39,7 +39,7 @@ File_NetCDF::~File_NetCDF () {}
 
 
 
-double File_NetCDF::out_NetCDF (const string &Name_netCDF_File, Array &v, Array &w, Array &h, Array_2D &Precipitation, Array_2D &precipitable_water )
+double File_NetCDF::out_NetCDF (const string &output_path, const string &Name_netCDF_File, Array &v, Array &w, Array &h, Array_2D &Precipitation, Array_2D &precipitable_water )
 {
 	const char LAT_NAME [ ] = "latitude";
 	const char LON_NAME [ ] = "longitude";
@@ -59,15 +59,14 @@ double File_NetCDF::out_NetCDF (const string &Name_netCDF_File, Array &v, Array 
 	const char prec_units [ ] = "mm/d";
 	const char precwat_units [ ] = "mm/d";
 
+	const string output_filename = output_path + "/" + Name_netCDF_File;
 
-//	results written in netCDF format
+	//	results written in netCDF format
 
 	for ( int lat = 0; lat < NLAT; lat++ )		lats[ lat ] = START_LAT - ( double ) lat;
 	for ( int lon = 0; lon < NLON; lon++ )	lons[ lon ] = START_LON + ( double ) lon;
 
-	if ( ( retval = nc_create ( Name_netCDF_File.c_str(), NC_CLOBBER, &ncid ) ) ) ERR ( retval );
-
-	printf ( "***** successful creation of a netCDF-file through class NetCDF -> netCDF-file: %s\n\n", Name_netCDF_File.c_str() );
+	if ( ( retval = nc_create (output_filename.c_str(), NC_CLOBBER, &ncid ) ) ) ERR ( retval );
 
 	if ( ( retval = nc_def_dim ( ncid, LVL_NAME, NLVL, &lvl_dimid ) ) ) ERR ( retval );
 	if ( ( retval = nc_def_dim ( ncid, LAT_NAME, NLAT, &lat_dimid ) ) ) ERR ( retval );
@@ -137,7 +136,7 @@ double File_NetCDF::out_NetCDF (const string &Name_netCDF_File, Array &v, Array 
 
 	if ( ( retval = nc_close ( ncid ) ) ) ERR ( retval );
 
-	printf ( "***** successful writing of results through class NetCDF -> netCDF-file: %s\n\n", Name_netCDF_File.c_str() );
+	cout << "wrote netcdf to " << output_filename << "\n";
 
 	return 0;
 }
