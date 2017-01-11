@@ -28,7 +28,7 @@ hyd: libatom.a $(HYD_CLI_OBJ)
 	$(CXX) $(CFLAGS) $(HYD_CLI_OBJ) -L. -latom $(LDFLAGS) -o hyd
 
 analyze:
-	clang --analyze $(CFLAGS) atmosphere/cAtmosphereModel.cpp
+	analyze-build make
 
 python: libatom.a python/pyatom.so
 
