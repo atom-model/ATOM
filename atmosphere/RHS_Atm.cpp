@@ -8,12 +8,13 @@
  * class to combine the right hand sides of the differential equations for the Runge-Kutta scheme
 */
 
-#include <iostream>
-#include <cmath>
 #include "RHS_Atm.h"
 
-using namespace std;
+#include <cmath>
 
+#include <iostream>
+
+using namespace std;
 
 RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, double re, double omega, double coriolis, double centrifugal )
 {
@@ -52,40 +53,11 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 	this-> buoyancy = buoyancy;
 	this-> CO2 = CO2;
 	this-> sigma = sigma;
-
-
-// array "im_tropopause" for configuring data due to latitude dependent tropopause
-
-	im_tropopause = new int*[ jm ];
-
-	for ( int l = 0; l < jm; l++ )
-	{
-		im_tropopause[ l ] = 0;
-//		cout << im_tropopause[ l ] << endl;
-	}
-
-
 }
 
+RHS_Atmosphere::~RHS_Atmosphere() { }
 
-RHS_Atmosphere::~RHS_Atmosphere() 
-{
-	/*
-	// im_tropopause can take two different types depending on where we are in the model. Rather than crash, I'm just going to let this leak memory until I can sort it out...
-	for ( int i = 0; i < im; i++ )
-	{
-		delete [  ] im_tropopause[ i ];
-	}
-	*/
-
-	delete [  ] im_tropopause;
-
-}
-
-
-
-void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_air, double r_water, double r_water_vapour, double r_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s )
-{
+void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_air, double r_water, double r_water_vapour, double r_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s ) {
 // collection of coefficients for phase transformation
 	coeff_lv = lv / ( cp_l * t_0 );					// coefficient for the specific latent vapourisation heat ( condensation heat ), coeff_lv = 9.1069 in [ / ]
 	coeff_ls = ls / ( cp_l * t_0 );					// coefficient for the specific latent sublimation heat ( sublimation heat ) coeff_ls = 10.9031 in [ / ]
