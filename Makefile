@@ -27,6 +27,9 @@ atm: libatom.a $(ATM_CLI_OBJ)
 hyd: libatom.a $(HYD_CLI_OBJ)
 	$(CXX) $(CFLAGS) $(HYD_CLI_OBJ) -L. -latom $(LDFLAGS) -o hyd
 
+analyze:
+	clang --analyze $(CFLAGS) atmosphere/cAtmosphereModel.cpp
+
 python: libatom.a python/pyatom.so
 
 python/pyatom.so: python/pyatom.pyx python/atom.pxd

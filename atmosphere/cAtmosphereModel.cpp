@@ -1,7 +1,4 @@
-#include <fstream>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
+#include "cAtmosphereModel.h"
 
 #include <cmath>
 #include <csignal>
@@ -10,6 +7,11 @@
 #include <cstring>
 
 #include <sys/stat.h>
+
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -30,7 +32,6 @@
 
 #include "tinyxml2.h"
 
-#include "cAtmosphereModel.h"
 #include "PythonStream.h"
 
 using namespace std;
@@ -78,7 +79,7 @@ void cAtmosphereModel::Run() {
     int velocity_iter = 0, pressure_iter = 0, pressure_iter_aux = 0, velocity_iter_2D = 0, pressure_iter_2D = 0;
 //  int velocity_iter, pressure_iter, pressure_iter_aux;
     int i_res = 0, j_res = 0, k_res = 0;
-    int Ma = 0, i_time_slice = 0, i_time_slice_max = 0;
+    int i_time_slice_max = 0;
     int switch_2D = 0;
 
     double time = 0;
@@ -352,12 +353,6 @@ void cAtmosphereModel::Run() {
     i_max = 32;         // corresponds to about 16 km above sea level, maximum hight of the tropopause at equator
     i_beg = 16;         // corresponds to about 8 km above sea level, maximum hight of the tropopause at poles
 
-    // time slice to start with the modern world
-    Ma = 0;
-    i_time_slice = 0;
-    //  Ma = 50;
-    //  i_time_slice = 5;
-
     // naming a file to read the surface temperature of the modern world
     string Name_SurfaceTemperature_File;
     stringstream ssNameSurfaceTemperature;
@@ -447,21 +442,24 @@ inputs should be read once at startup, parsed, then stored in memory
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     //  choice of the time slice to be computed
-    while (i_time_slice < i_time_slice_max) {
+    for (int i_time_slice = 0; i_time_slice < i_time_slice_max; i_time_slice++) {
+        int Ma = time_slice[i_time_slice];
+
+        cout << "Ma = " << Ma << "\n";
+
         stringstream My;
         string Name_netCDF_File;
 
         // choice of the time slice by Ma and by author
         n = 0;
-        string bathymetry_name = std::to_string(time_slice[i_time_slice]) + bathymetry_suffix;
+        string bathymetry_name = std::to_string(Ma) + bathymetry_suffix;
         string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
-        Name_netCDF_File = std::to_string(time_slice[i_time_slice]) + "Ma_atmosphere.nc";
+        Name_netCDF_File = std::to_string(Ma) + "Ma_atmosphere.nc";
 
         PostProcess_Atmosphere read_File(im, jm, km, output_path);
         read_File.Atmosphere_SequelFile_read(bathymetry_name, n, time, rad, the, phi, h, t, u, v, w, c, co2, tn, un, vn, wn, cn, co2n);
         n++;
 
-        cout << "Ma = " << Ma << " million years\n";
 
         // initialization of the bathymetry/topography
 
@@ -682,15 +680,12 @@ Pressure_iteration_2D:
             if ( pressure_iter_2D < pressure_iter_max_2D + 1 ) goto Pressure_loop_2D;
 
             switch_2D = 1;
-
-        // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D )   :::::::::::::::::::::::::::::::::::::::::::
+            // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D )   :::::::::::::::::::::::::::::::::::::::::::
         }
 
-            if ( min >= epsres )
-            {
+            if ( min >= epsres ) {
                 time = time + dt;
             }
-
 
     //      old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm        min_Residuum_old ( im, jm, km, dr, dthe, dphi );
@@ -1143,9 +1138,6 @@ Print_commands:
         velocity_iter_2D = 1;
         pressure_iter_2D = 1;
         switch_2D = 0;
-
-        i_time_slice++;
-        Ma = time_slice [ i_time_slice ];
 
     }
 //   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
