@@ -77,7 +77,6 @@ void cAtmosphereModel::Run() {
 
     int n = 0, i_radial =0, j_longal = 0, k_zonal = 0, i_max = 0, i_beg = 0;
     int velocity_iter = 0, pressure_iter = 0, pressure_iter_aux = 0, velocity_iter_2D = 0, pressure_iter_2D = 0;
-//  int velocity_iter, pressure_iter, pressure_iter_aux;
     int i_res = 0, j_res = 0, k_res = 0;
     int i_time_slice_max = 0;
     int switch_2D = 0;
@@ -342,12 +341,10 @@ void cAtmosphereModel::Run() {
     //  initial values for the number of computed steps and the time
     n = 0;
     time = dt;
-    velocity_iter = 1;
     pressure_iter = 1;
-    velocity_iter_2D = 1;
     pressure_iter_2D = 1;
     switch_2D = 0;
-    residuum = residuum_old = 0.;
+    residuum_old = 0.;
 
     // radial expansion of the computational field for the computation of initial values
     i_max = 32;         // corresponds to about 16 km above sea level, maximum hight of the tropopause at equator
