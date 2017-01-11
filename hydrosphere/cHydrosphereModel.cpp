@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <csignal>
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>

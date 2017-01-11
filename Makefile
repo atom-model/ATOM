@@ -2,8 +2,8 @@
 # Builds everything: atmosphere, hydrosphere, Python interface and CLI interface
 
 # TODO: don't always enable debugging
-CFLAGS = -ggdb -Wall -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2
-LDFLAGS = -ggdb -lm -L/usr/local/lib -lnetcdf
+CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2
+LDFLAGS = -lm -L/usr/local/lib -L/usr/lib -lnetcdf
 
 # Common files for the shared lib (libatom.a)
 LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o
@@ -21,11 +21,11 @@ libatom.a: $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
 	ar rcs libatom.a $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
 
 atm: libatom.a $(ATM_CLI_OBJ)
-	$(CXX) $(CFLAGS) $(LDFLAGS) -latom -L. -o atm $(ATM_CLI_OBJ)
+	$(CXX) $(CFLAGS) $(ATM_CLI_OBJ) -L. -latom $(LDFLAGS) -o atm
 
 # FIXME: this is a bit redundant; there should probably be one binary that does both jobs
 hyd: libatom.a $(HYD_CLI_OBJ)
-	$(CXX) $(CFLAGS) $(LDFLAGS) -latom -L. -o hyd $(HYD_CLI_OBJ)
+	$(CXX) $(CFLAGS) $(HYD_CLI_OBJ) -L. -latom $(LDFLAGS) -o hyd
 
 python: libatom.a python/pyatom.so
 
@@ -52,6 +52,6 @@ tinyxml2/%.o: tinyxml2/%.cpp
 
 .PHONY: clean
 clean:
-	\rm -vf $(LIB_OBJ) $(ATM_OBJ) $(CLI_OBJ) atm hyd libatom.a
+	\rm -vf $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ) $(ATM_CLI_OBJ) $(HYD_CLI_OBJ) atm hyd libatom.a
 	\rm -vf python/*.so python/*.o python/pyatom.cpp
 	\rm -rf python/build/

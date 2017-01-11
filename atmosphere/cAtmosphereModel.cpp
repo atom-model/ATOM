@@ -4,6 +4,7 @@
 #include <sstream>
 
 #include <cmath>
+#include <csignal>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
