@@ -45,18 +45,8 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 	cout.precision ( 8 );
 	cout.setf ( ios::fixed );
 
-
 	// default adjustment, h must be 0 everywhere
-	for ( k = 0; k < km; k++ )
-	{
-		for ( j = 0; j < jm; j++ )
-		{
-			for ( i = 0; i < im; i++ )
-			{
-				h.x[ i ][ j ][ k ] = 0.;					// default
-			}
-		}
-	}
+	h.initArray(im, jm, km, 0.);
 
 	// reading data from file Name_Bathymetry_File_Read
 	ifstream Name_Bathymetry_File_Read;
@@ -67,35 +57,23 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 		abort();
 	}
 
-	j = 0;
-	k = 0;
-
-	while ( ( j < jm ) && ( !Name_Bathymetry_File_Read.eof() ) )
-	{
-		while ( k < km )
-		{
+	for (int j = 0; j < jm && !Name_Bathymetry_File_Read.eof(); j++) {
+		for (int k = 0; k < km; k++) {
 			Name_Bathymetry_File_Read >> dummy_1;
 			Name_Bathymetry_File_Read >> dummy_2;
 			Name_Bathymetry_File_Read >> dummy_3;
 
-			if ( dummy_3 < 0. )
-			{
+			if ( dummy_3 < 0. ) {
 				h.x[ 0 ][ j ][ k ] = 0.;
-			}
-
-			if ( dummy_3 >= 0. )
-			{
-				i = ( im - 1 ) * ( dummy_3 / L_atm );
+			} else {
+				int i = ( im - 1 ) * ( dummy_3 / L_atm );
 				i_SL = i;
 
 				for ( i = 0; i <= i_SL; i++ ) {
 					h.x[ i ][ j ][ k ] = 1.;
 				}
-				k++;
 			}
 		}
-		k = 0;
-		j++;
 	}
 
 	Name_Bathymetry_File_Read.close();
