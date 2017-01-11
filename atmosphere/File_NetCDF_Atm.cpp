@@ -18,9 +18,7 @@
 
 using namespace std;
 
-
-File_NetCDF::File_NetCDF ( int im, int jm, int km )
-{
+File_NetCDF::File_NetCDF ( int im, int jm, int km ) {
 	this-> im = im;
 	this-> jm = jm;
 	this-> km = km;
@@ -34,13 +32,9 @@ File_NetCDF::File_NetCDF ( int im, int jm, int km )
 	NLVL = 3; 
 }
 
-
 File_NetCDF::~File_NetCDF () {}
 
-
-
-double File_NetCDF::out_NetCDF (const string &output_path, const string &Name_netCDF_File, Array &v, Array &w, Array &h, Array_2D &Precipitation, Array_2D &precipitable_water )
-{
+int File_NetCDF::out_NetCDF (const string &output_path, const string &Name_netCDF_File, Array &v, Array &w, Array &h, Array_2D &Precipitation, Array_2D &precipitable_water ) {
 	const char LAT_NAME [ ] = "latitude";
 	const char LON_NAME [ ] = "longitude";
 	const char LVL_NAME [ ] = "level";

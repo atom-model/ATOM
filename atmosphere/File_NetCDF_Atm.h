@@ -28,10 +28,7 @@
 
 using namespace std;
 
-
-
-class File_NetCDF
-{
+class File_NetCDF {
 	private:
 		int ncid, lon_dimid, lat_dimid, lvl_dimid, rec_dimid, v_varid, w_varid, h_varid, prec_varid, precwat_varid;
 		int lat_varid, lon_varid;
@@ -56,10 +53,8 @@ class File_NetCDF
 
 	public:
 		File_NetCDF ( int, int, int );
-
 		~File_NetCDF ();
-
-		double out_NetCDF (const string &, const string &, Array &, Array &, Array &, Array_2D &, Array_2D &);
+		int out_NetCDF (const string &, const string &, Array &, Array &, Array &, Array_2D &, Array_2D &);
 };
 #endif
 
