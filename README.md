@@ -107,12 +107,14 @@ TODO
 
 TODO
 
-* For OS X, we recommend one of
+For OS X, we recommend one of
 
     brew install Cython
     brew install netcdf
 
-(ADVANCED: Cython can also be installed from pip, which is useful if you're running inside a virtualenv.)
+    git clone https://github.com/TODO
+    cd ATOM
+    make
 
 ## Authors
 
