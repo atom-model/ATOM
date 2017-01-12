@@ -812,13 +812,6 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
 {
     double x, y, z, dx, dz;
 
-    // max_u = max_v = max_w = max_t = max_c = max_co2 = max_cloud = max_ice = max_P_rain = max_P_snow = max_P_conv = max_M_u = max_M_d = max_p_dyn = max_p_stat = 0.;
-    // max_Rain = max_Rain_super = max_Ice = max_Latency = max_Q_Sensible = max_Precipitation = 0.;
-    // max_t_Evaporation = max_t_Condensation = max_t_evap_3D = max_t_cond_3D = 0.;
-    // max_precipitable_water = max_IceAir = max_Q_bottom = max_Q_latent = max_Q_sensible = 0.;
-    // max_t_Evaporation_Penman = max_t_Evaporation_Haude = max_Q_Radiation = max_buoyancy_force = 0.;
-    // max_Q_t_Evaporation = max_precipitation_NASA = max_Water = max_Water_super = max_Vegetation = max_IceLayer = 0.;
-
     string Atmosphere_longal_File_Name = output_path + "/[" + Name_Bathymetry_File + "]_Atm_longal_" + std::to_string(j_longal) + "_" + std::to_string(pressure_iter) + ".vtk";
     ofstream Atmosphere_vtk_longal_File;
     Atmosphere_vtk_longal_File.precision(4);
