@@ -126,11 +126,11 @@ int File_NetCDF::out_NetCDF (const string &output_path, const string &Name_netCD
 	}
 
 	// Array_2D does not store its data in a contiguous array, so flatten it for NetCDF
-	double *Precipitation_arr = malloc(im * jm * sizeof(double));
-	double *precipitable_water_arr = malloc(im * jm * sizeof(double));
+	double *Precipitation_arr = (double *)malloc(im * jm * sizeof(double));
+	double *precipitable_water_arr = (double *)malloc(im * jm * sizeof(double));
 	for (int j = 0; j < jm; j++) {
 		memcpy(&Precipitation_arr[im * sizeof(double)], Precipitation.y[j], jm * sizeof(double));
-		memcpy(&precipitable_water_arr[im * sizeof(double)], precipitable_water_arr.y[j], jm * sizeof(double));
+		memcpy(&precipitable_water_arr[im * sizeof(double)], precipitable_water.y[j], jm * sizeof(double));
 	}
 
 	if ( ( retval = nc_put_var_double ( ncid, prec_varid, Precipitation_arr ) ) ) ERR ( retval );
