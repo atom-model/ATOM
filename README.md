@@ -8,7 +8,7 @@ The easiest way to get started is with the Docker container.
 
 If you're not familiar with Docker, start by downloading and installing the [Docker Toolbox](https://www.docker.com/products/docker-toolbox). Run Kitematic.
 
-From within Kitematic, search for and run the `atom-model/demo` container.
+From within Kitematic, search for and run the `atommodel/demo` container.
 
 ## Repo contents
 
@@ -83,7 +83,7 @@ Look at `examples/sample.py`. It shows how to modify a parameter through Python.
 
 ## Compilation
 
-### Ubuntu Linux 14.04 LTS
+### Ubuntu Linux 16.04 LTS
 
 As root:
 
@@ -96,12 +96,6 @@ As a regular user:
     git clone https://github.com/TODO
     cd ATOM
     make
-
-### Ubuntu Linux 16.04 LTS
-
-TODO
-
-* For Ubuntu, we recommend ```apt-get install TODO```.
 
 ### macOS Sierra (Homebrew)
 
