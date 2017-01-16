@@ -17,8 +17,8 @@ RUN pip install netcdf4
 RUN pip install colorlover
 
 WORKDIR /build
-RUN git clone git://git@github.com:nickywright/ATOM.git
-WORKDIR /build/atom
+RUN git clone https://github.com/atom-model/ATOM.git
+WORKDIR /build/ATOM
 RUN make
 RUN pip install -e /build/atom/python
 
