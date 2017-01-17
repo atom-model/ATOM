@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdexcept>
 
 #include "cAtmosphereModel.h"
 #include "tinyxml2.h"
@@ -102,7 +103,12 @@ void cAtmosphereModel::FillBoolWithElement(const XMLElement *parent, const char 
 
 void cAtmosphereModel::LoadConfig(const char *filename) {
     XMLDocument doc;
-    doc.LoadFile(filename);
+    XMLError err = doc.LoadFile(filename);
+    cout << "err " << err << "\n";
+    if (err) {
+        doc.PrintError();
+        throw std::invalid_argument("couldn't load config file");
+    }
 
     // TODO you should catch exceptions:
     // libc++abi.dylib: terminating with uncaught exception of type std::invalid_argument: stod: no conversion
