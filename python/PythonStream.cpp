@@ -18,6 +18,7 @@ void PythonStream::OverrideCout() {
 int PythonStream::sync() {
     // call the python print function with this->str()
     PythonPrint(str().c_str());
+    str("");
 
     return 0;
 }
