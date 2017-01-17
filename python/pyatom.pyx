@@ -8,6 +8,32 @@ from atom cimport cAtmosphereModel
 
 from libcpp.string cimport string
 
+class Model:
+    """
+    ATOM Model Object
+    """
+    def __init__(self):
+        self.atmosphere = Atmosphere()
+        # self.hydrosphere = Hydrosphere()
+
+    def run(self, t, output_path):
+        print 'RUN ATM'
+
+        self.atmosphere.output_path = output_path
+        self.atmosphere.run_time_slice(t)
+
+        print 'RUN HYD'
+        # self.hydrosphere.input_dir = output_dir
+        # self.hydrosphere.output_path = output_path
+        # self.hydrosphere.run_time_slice(t)
+        print 'TODO'
+
+        print 'RUN EXIT'
+
+    def load_config(self, file_name):
+        self.atmosphere.load_config(file_name)
+        # self.hydrosphere.load_config(file_name)
+        print "TODO LOAD HYDROSPHERE CONFIG"
 
 cdef class Atmosphere:
     """ 
@@ -54,6 +80,15 @@ cdef class Atmosphere:
             self._check_alive()
             self._thisptr.coriolis = <double> value
 
+    property output_path:
+        def __get__(Atmosphere self):
+            self._check_alive()
+            return self._thisptr.output_path
+
+        def __set__(Atmosphere self, value):
+            self._check_alive()
+            self._thisptr.output_path = <string> value
+
     def load_config(Atmosphere self, str filename):
         self._check_alive()
         self._thisptr.LoadConfig(filename)
@@ -62,6 +97,11 @@ cdef class Atmosphere:
     def run(Atmosphere self):
         self._check_alive()
         self._thisptr.Run()
+        return None
+
+    def run_time_slice(Atmosphere self, int t):
+        self._check_alive()
+        self._thisptr.RunTimeSlice(t)
         return None
 
     # The context manager protocol allows us to precisely

@@ -17,6 +17,7 @@ public:
     void LoadConfig(const char *filename);
     void WriteConfig(const char *filename) const;
     void Run();
+    void RunTimeSlice(int time_slice);
 
     // CONFIGURATION
     bool verbose;
@@ -38,6 +39,7 @@ public:
     double CO2;
 
     // TODO: j_sun - priority summer vs winter parameter
+    string output_path;
 
 private:
     void SetDefaultConfig();
@@ -47,7 +49,6 @@ private:
     void FillIntWithElement(const XMLElement *parent, const char *name, int &dest) const;
     void FillStringWithElement(const XMLElement *parent, const char *name, string &dest) const;
 
-    string output_path;
 };
 
 #endif
