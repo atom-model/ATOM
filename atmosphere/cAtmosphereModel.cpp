@@ -57,6 +57,8 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
     // maximum number of inner velocity loop iterations ( velocity_iter_max )
     // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
+    mkdir(output_path.c_str(), 0777);
+
     int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max_2D = 2, pressure_iter_max_2D = 2;
 
     int n = 0, i_radial =0, j_longal = 0, k_zonal = 0, i_max = 0, i_beg = 0;
