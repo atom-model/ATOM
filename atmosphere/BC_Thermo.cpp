@@ -2807,15 +2807,11 @@ void BC_Thermo::BC_Surface_Temperature ( const string &Name_SurfaceTemperature_F
 
 // reading data from file Name_SurfaceTemperature_File_Read
 	ifstream Name_SurfaceTemperature_File_Read;
-	Name_SurfaceTemperature_File_Read.open ( Name_SurfaceTemperature_File.c_str(), ios_base::in );
-	Name_SurfaceTemperature_File_Read.seekg ( 0L, ios::beg );
-	anfangpos_1 = Name_SurfaceTemperature_File_Read.tellg ();
+	Name_SurfaceTemperature_File_Read.open(Name_SurfaceTemperature_File.c_str());
 
-
-	if ( Name_SurfaceTemperature_File_Read.good() )
-	{
-		cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: could be opened" << endl;
-		cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: begins at ::::::: " << anfangpos_1 << endl;
+	if (!Name_SurfaceTemperature_File_Read.is_open()) {
+		cout << "could not read " << Name_SurfaceTemperature_File << " at " << __FILE__ << " line " << __LINE__ << endl;
+		abort();
 	}
 
 	k_half = ( km -1 ) / 2;																// position at 180°E ( Greenwich )
@@ -2823,11 +2819,8 @@ void BC_Thermo::BC_Surface_Temperature ( const string &Name_SurfaceTemperature_F
 	j = 0;
 	k = 0;
 
-
-	while ( ( k < km ) && !Name_SurfaceTemperature_File_Read.eof() )
-	{
-		while ( j < jm )
-		{
+	while ( ( k < km ) && !Name_SurfaceTemperature_File_Read.eof() ) {
+		while ( j < jm ) {
 			Name_SurfaceTemperature_File_Read >> dummy_1;
 			Name_SurfaceTemperature_File_Read >> dummy_2;
 			Name_SurfaceTemperature_File_Read >> dummy_3;
@@ -2835,32 +2828,15 @@ void BC_Thermo::BC_Surface_Temperature ( const string &Name_SurfaceTemperature_F
 			t.x[ 0 ][ j ][ k ] = ( dummy_3 + 273.15 ) / 273.15;
 			j++;
 		}
-	j = 0;
-	k++;
+		j = 0;
+		k++;
 	}
 
-// correction of surface temperature around 180°E
+	// correction of surface temperature around 180°E
 	for ( int j = 0; j < jm; j++ )
 	{
 		t.x[ 0 ][ j ][ k_half ] = ( t.x[ 0 ][ j ][ k_half + 1 ] + t.x[ 0 ][ j ][ k_half - 1 ] ) / 2.;
 	}
-
-
-// Ende Lesen von Name_SurfaceTemperature_File
-	Name_SurfaceTemperature_File_Read.seekg ( 0L, ios::end );
-	endpos_1 = Name_SurfaceTemperature_File_Read.tellg ();
-
-// Abschlussanweisungen für den Dateiabschluss (Dateiverwaltung)
-	cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: ends at ::::::::: " << endpos_1 << endl;
-	cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: has the length of ::::: " << endpos_1 - anfangpos_1 << " Bytes!"<< endl;
-
-// Im Falle eines Lesefehlers
-	/* FIXME: can't work; comparison between ifstream and NULL
-	if ( Name_SurfaceTemperature_File_Read == NULL )
-	{
-		cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: not yet exists! ::::::::: " << endl << endl << endl;
-	}
-	*/
 
 	Name_SurfaceTemperature_File_Read.close();
 }

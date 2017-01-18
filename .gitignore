@@ -3,6 +3,7 @@
 *.vtk
 *.vw
 *.xyz
+*.vts
 atmosphere/AGCM
 atmosphere/atmosphere
 .ipynb_checkpoints/

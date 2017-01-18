@@ -18,6 +18,7 @@ public:
 
     // CONFIGURATION
     string output_path;
+    string input_path;
     //TODO
 
     // SIMULATION PARAMETERS

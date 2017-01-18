@@ -20,5 +20,6 @@ cdef extern from "cHydrosphereModel.h":
         void RunTimeSlice(int time_slice)
 
         string output_path
+        string input_path
 
         double coriolis

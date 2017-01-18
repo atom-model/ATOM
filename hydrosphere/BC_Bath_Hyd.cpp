@@ -40,33 +40,17 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 	cout.precision ( 8 );
 	cout.setf ( ios::fixed );
 
+	// default adjustment, h must be 0 everywhere
+	h.initArray(im, jm, km, 0.);
 
-// default adjustment, h must be 0 everywhere
-		for ( k = 0; k < km; k++ )
-		{
-			for ( j = 0; j < jm; j++ )
-			{
-				for ( i = 0; i < im; i++ )
-				{
-					h.x[ i ][ j ][ k ] = 0.;					// default
-				}
-			}
-		}
-
-
-// reading data from file Name_Bathymetry_File_Read
+	// reading data from file Name_Bathymetry_File_Read
 	ifstream Name_Bathymetry_File_Read;
-	Name_Bathymetry_File_Read.open ( Name_Bathymetry_File.c_str(), ios_base::in );
-	Name_Bathymetry_File_Read.seekg ( 0L, ios::beg );
-	anfangpos_1 = Name_Bathymetry_File_Read.tellg ();
+	Name_Bathymetry_File_Read.open( Name_Bathymetry_File.c_str());
 
-
-	if ( Name_Bathymetry_File_Read.good() )
-	{
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: could be opened" << endl;
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: begins at ::::::: " << anfangpos_1 << endl;
+	if (!Name_Bathymetry_File_Read.is_open()) {
+		cout << "could not read " << Name_Bathymetry_File << " at " << __FILE__ << " line " << __LINE__ << endl;
+		abort();
 	}
-
 
 	j = 0;
 	k = 0;
@@ -98,36 +82,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 	j++;
 	}
 
-
-// end reading Name_Bathymetry_File
-
-	Name_Bathymetry_File_Read.seekg ( 0L, ios::end );
-	endpos_1 = Name_Bathymetry_File_Read.tellg ();
-
-// final file administration
-
-	cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: ends at ::::::::: " << endpos_1 << endl;
-	cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: has the length of ::::: " << endpos_1 - anfangpos_1 << " bytes"<< endl;
-
-// in case of reading error
-
-/* FIXME can't work
-	if ( Name_Bathymetry_File_Read == NULL )
-	{
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: not yet exists ::::::::: " << endl << endl << endl;
-	}
-	*/
-
 	Name_Bathymetry_File_Read.close();
-
-	if ( Name_Bathymetry_File_Read.good() )
-	{
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: could be closed" << endl;
-		cout << endl;
-	}
-
-	if ( Name_Bathymetry_File_Read.fail() )
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: could not be closed" << endl;
 
 // end reading Name_Bathymetry_File_Read
 

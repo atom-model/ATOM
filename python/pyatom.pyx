@@ -23,7 +23,7 @@ class Model:
         self.atmosphere.run_time_slice(t)
 
         print 'RUN HYD'
-        # self.hydrosphere.input_dir = output_dir
+        self.hydrosphere.input_path = output_path
         self.hydrosphere.output_path = output_path
         self.hydrosphere.run_time_slice(t)
         print 'TODO'
@@ -164,6 +164,15 @@ cdef class Hydrosphere:
             self._check_alive()
             self._thisptr.output_path = <string> value
 
+    property input_path:
+        def __get__(Hydrosphere self):
+            self._check_alive()
+            return self._thisptr.input_path
+
+        def __set__(Hydrosphere self, value):
+            self._check_alive()
+            self._thisptr.input_path = <string> value
+            
     def load_config(Hydrosphere self, str filename):
         self._check_alive()
         self._thisptr.LoadConfig(filename)
