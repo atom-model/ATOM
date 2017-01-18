@@ -32,7 +32,7 @@ analyze:
 
 python: libatom.a python/pyatom.so
 
-python/pyatom.so: python/pyatom.pyx python/atom.pxd
+python/pyatom.so: python/pyatom.pyx python/atom.pxd libatom.a
 	cd python && python setup.py build_ext --inplace
 
 lib/%.o: lib/%.cpp
