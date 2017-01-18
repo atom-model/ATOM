@@ -14,8 +14,10 @@ public:
     // FUNCTIONS
     void LoadConfig(const char *filename);
     void Run();
+    void RunTimeSlice(int Ma);
 
     // CONFIGURATION
+    string output_path;
     //TODO
 
     // SIMULATION PARAMETERS
