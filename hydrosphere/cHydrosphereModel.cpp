@@ -290,20 +290,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	ssNameNetCDF.ignore(ssNameNetCDF.rdbuf()->in_avail());
 
 
-	// 	reading a transfer file for the v-w-velocity components at sea level if available 
-	FILE *Transfer_read;
-	Transfer_read = fopen ( Name_v_w_Transfer_File.c_str(), "r" );
-
-	// 	if not available, skip
-	if ( Transfer_read == NULL ) {
-		cout << "***** file ::::: " << Name_v_w_Transfer_File << " ::::: not yet exists" << endl << endl;
-	} else {
-	//	class PostProcess for data transport, read and write
-		PostProcess_Hydrosphere		read_Transfer ( im, jm, km );
-		read_Transfer.Atmosphere_TransferFile_read ( Name_Bathymetry_File, v, w, p_dyn );
-
-		cout << "***** file ::::: " << Name_v_w_Transfer_File << " ::::: could be read" << endl << endl;
-	}
+	PostProcess_Hydrosphere		read_Transfer ( im, jm, km );
+	read_Transfer.Atmosphere_TransferFile_read ( Name_Bathymetry_File, v, w, p_dyn );
 
 	//	class PostProcess for data transport, read and write
 	PostProcess_Hydrosphere		read_File ( im, jm, km );
@@ -312,19 +300,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	cout << "***** time slice for the Oceanic Global Circulation Modell ( OGCM ) is:    Ma = " << Ma << " million years" << endl << endl;
 	cout << "***** bathymetry/topography given by the x-y-z data set:    " << Name_Bathymetry_File.c_str() << endl << endl;
 
-
-	// 	reading of the bathymetry file if available
-	FILE *Hydrosphere_Bathymetry;
-	Hydrosphere_Bathymetry = fopen ( Name_Bathymetry_File.c_str(), "r" );
-
-	// 	if not available, prepare initial conditions, otherwise skip
-	if ( Hydrosphere_Bathymetry != NULL ) {
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: exists" << endl << endl;
-	} else {
-		cout << "***** file ::::: " << Name_Bathymetry_File << " ::::: could not be read" << endl << endl;
-		cout << endl << endl;
-		n++;
-	}
+	n++;
 
 	cout << endl << endl << endl;
 	cout << "***** Hydrosphere General Circulation Model ( OGCM ) applied to laminar flow" << endl;
@@ -340,33 +316,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 
 	cout << "***** original program name:  " << __FILE__ << endl;
 	cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
-
-	// 	reading of the surface temperature file if available
-	FILE *SurfaceTemperature;
-	SurfaceTemperature = fopen ( Name_SurfaceTemperature_File.c_str(), "r" );
-
-	// 	if not available, prepare initial conditions, otherwise skip
-	if ( SurfaceTemperature != NULL ) {
-		cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: exists" << endl;
-	} else {
-		cout << "***** file ::::: " << Name_SurfaceTemperature_File << " ::::: could not be read" << endl << endl;
-		cout << endl << endl;
-	}
-
-	// 	reading of the surface salinity file if available
-	FILE *SurfaceSalinity;
-	SurfaceSalinity = fopen ( Name_SurfaceSalinity_File.c_str(), "r" );
-
-	// 	if not available, prepare initial conditions, otherwise skip
-	if ( SurfaceSalinity != NULL ) {
-		cout << "***** file ::::: " << Name_SurfaceSalinity_File << " ::::: exists" << endl << endl;
-	} else {
-		cout << "***** file ::::: " << Name_SurfaceSalinity_File << " ::::: could not be read" << endl << endl;
-		cout << endl << endl;
-		n++;
-	}
-
-	//	initial conditions for u-v-w-velocity components and salinity
 
 	// class BC_Bathymetry_Hydrosphere for the geometrical boundary condition of the computational area
 	BC_Bathymetry_Hydrosphere		depth ( im, jm, km );
