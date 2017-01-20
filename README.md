@@ -99,16 +99,14 @@ As a regular user:
 
 ### macOS Sierra (Homebrew)
 
-TODO
-
-For OS X, we recommend one of
-
-    brew install Cython
+    brew install pkg-config
     brew install netcdf
+    pip install cython
 
-    git clone https://github.com/TODO
+    git clone https://github.com/atom-model/ATOM
     cd ATOM
     make
+    pip install -e python/
 
 ## Authors
 
