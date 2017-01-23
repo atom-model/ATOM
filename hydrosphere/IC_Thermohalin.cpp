@@ -22,11 +22,11 @@ using namespace std;
 
 
 
-IC_Thermohalin::IC_Thermohalin ( int im, int jm, int km )
-{
-	this -> im = im;
-	this -> jm = jm;
-	this -> km = km;
+IC_Thermohalin::IC_Thermohalin(int im, int jm, int km, const string &input_path) {
+	this->im = im;
+	this->jm = jm;
+	this->km = km;
+	this->input_path = input_path;
 
 // assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m
 
@@ -7501,10 +7501,11 @@ void IC_Thermohalin::BC_Surface_Temperature ( const string &Name_SurfaceTemperat
 
 	// reading data from file Name_SurfaceTemperature_File_Read
 	ifstream Name_SurfaceTemperature_File_Read;
-	Name_SurfaceTemperature_File_Read.open(Name_SurfaceTemperature_File.c_str());
+	string path = input_path + Name_SurfaceTemperature_File;
+	Name_SurfaceTemperature_File_Read.open(path);
 
 	if (!Name_SurfaceTemperature_File_Read.is_open()) {
-		cout << "could not read " << Name_SurfaceTemperature_File << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 
@@ -7538,10 +7539,11 @@ void IC_Thermohalin::BC_Surface_Salinity ( const string &Name_SurfaceSalinity_Fi
 
 	// reading data from file Name_SurfaceSalinity_File_Read
 	ifstream Name_SurfaceSalinity_File_Read;
-	Name_SurfaceSalinity_File_Read.open(Name_SurfaceSalinity_File.c_str());
+	string path = input_path + Name_SurfaceSalinity_File;
+	Name_SurfaceSalinity_File_Read.open(path);
 
 	if (!Name_SurfaceSalinity_File_Read.is_open()) {
-		cout << "could not read " << Name_SurfaceSalinity_File << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 

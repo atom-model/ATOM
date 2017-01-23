@@ -43,9 +43,11 @@ class IC_Thermohalin
 		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit;
 		string salinity_comment, salinity_gain, salinity_modern, salinity_average, salinity_unit;
 
+		string input_path;
+
 	public:
 
-		IC_Thermohalin ( int, int, int );
+		IC_Thermohalin(int, int, int, const string &input_path);
 		~IC_Thermohalin();
 
 

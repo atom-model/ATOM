@@ -44,9 +44,11 @@ class BC_Thermohalin
 		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
 		string salinity_comment, salinity_gain, salinity_modern, salinity_average, salinity_unit, salinity_cretaceous, salinity_average_cret;
 
+		string input_path;
+
 	public:
 
-		BC_Thermohalin ( int, int, int, int , int , int, int, int, double, double, double, double, double, double, double, double, double, double,  double, double, double, double, double, double, double, double, double, double );
+		BC_Thermohalin (int, int, int, int , int , int, int, int, double, double, double, double, double, double, double, double, double, double,  double, double, double, double, double, double, double, double, double, double, const string &);
 		~BC_Thermohalin();
 
 

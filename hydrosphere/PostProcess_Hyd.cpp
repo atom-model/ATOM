@@ -20,18 +20,16 @@ using namespace std;
 
 
 
-PostProcess_Hydrosphere::PostProcess_Hydrosphere ( int im, int jm, int km )
-{
-	this -> im = im;
-	this -> jm = jm;
-	this -> km = km;
+PostProcess_Hydrosphere::PostProcess_Hydrosphere(int im, int jm, int km, const string &input_path, const string &output_path) {
+	this->im = im;
+	this->jm = jm;
+	this->km = km;
+
+	this->input_path = input_path;
+	this->output_path = output_path;
 }
 
-
 PostProcess_Hydrosphere::~PostProcess_Hydrosphere() {}
-
-
-
 
 void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File, int &n, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &p, Array &u, Array &v, Array &w, Array &c, Array &fup, Array &fvp, Array &fwp, Array &fcp, Array &fpp, Array &ftp, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Buoyancy_Force, Array &Salt_Balance )
 {
@@ -46,10 +44,11 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
 	ofstream Hydrosphere_vts_File;
 	Hydrosphere_vts_File.precision ( 4 );
 	Hydrosphere_vts_File.setf ( ios::fixed );
-	Hydrosphere_vts_File.open ( Hydrosphere_vts_File_Name.str().c_str());
+	string path = output_path + Name_Bathymetry_File;
+	Hydrosphere_vts_File.open (path);
 
 	if (!Hydrosphere_vts_File.is_open()) {
-		cout << "could not write " << Hydrosphere_vts_File_Name.str() << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not write " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 
@@ -323,10 +322,11 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 	ofstream Hydrosphere_panorama_vts_File;
 	Hydrosphere_panorama_vts_File.precision ( 4 );
 	Hydrosphere_panorama_vts_File.setf ( ios::fixed );
-	Hydrosphere_panorama_vts_File.open(Hydrosphere_panorama_vts_File_Name.str().c_str());
+	string path = output_path + Hydrosphere_panorama_vts_File_Name.str();
+	Hydrosphere_panorama_vts_File.open(path);
 
 	if (!Hydrosphere_panorama_vts_File.is_open()) {
-		cout << "could not write " << Hydrosphere_panorama_vts_File_Name.str() << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not write " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 
@@ -671,10 +671,12 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 	ofstream Hydrosphere_vtk_longal_File;
 	Hydrosphere_vtk_longal_File.precision ( 4 );
 	Hydrosphere_vtk_longal_File.setf ( ios::fixed );
-	Hydrosphere_vtk_longal_File.open(Hydrosphere_longal_File_Name.str().c_str());
+	string path = output_path + Hydrosphere_longal_File_Name.str();
+	Hydrosphere_vtk_longal_File.open(path);
+
 
 	if (!Hydrosphere_vtk_longal_File.is_open()) {
-		cout << "could not write " << Hydrosphere_longal_File_Name.str() << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not write " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 
@@ -915,10 +917,11 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 	ofstream Hydrosphere_vtk_radial_File;
 	Hydrosphere_vtk_radial_File.precision ( 4 );
 	Hydrosphere_vtk_radial_File.setf ( ios::fixed );
-	Hydrosphere_vtk_radial_File.open(Hydrosphere_radial_File_Name.str().c_str());
+	string path = output_path + Hydrosphere_radial_File_Name.str();
+	Hydrosphere_vtk_radial_File.open(path);
 
 	if (!Hydrosphere_vtk_radial_File.is_open()) {
-		cout << "could not write " << Hydrosphere_radial_File_Name.str() << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not write " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 
@@ -1218,10 +1221,11 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 	ofstream Hydrosphere_vtk_zonal_File;
 	Hydrosphere_vtk_zonal_File.precision ( 4 );
 	Hydrosphere_vtk_zonal_File.setf ( ios::fixed );
-	Hydrosphere_vtk_zonal_File.open(Hydrosphere_zonal_File_Name.str().c_str());
+	string path = output_path + Hydrosphere_zonal_File_Name.str();
+	Hydrosphere_vtk_zonal_File.open(path);
 
 	if (!Hydrosphere_vtk_zonal_File.is_open()) {
-		cout << "could not read " << Hydrosphere_zonal_File_Name.str() << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 
@@ -1463,12 +1467,12 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 	streampos anfangpos, endpos;
 
 	// file administration
-	Name_v_w_Transfer_File << "[" << Name_Bathymetry_File << "]_Transfer_Atm.vw";
 	ifstream v_w_Transfer_File;
-	v_w_Transfer_File.open(Name_v_w_Transfer_File.str().c_str());
+	string path = input_path + "[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
+	v_w_Transfer_File.open(path);
 
 	if (!v_w_Transfer_File.is_open()) {
-		cout << "could not read " << Name_v_w_Transfer_File.str() << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 
@@ -1493,14 +1497,14 @@ void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymet
 	streampos anfangpos, endpos;
 
 // file administration
-	Name_PlotData_File << "[" << Name_Bathymetry_File << "]_PlotData_Hyd.xyz";
 	ofstream PlotData_File;
 	PlotData_File.precision ( 4 );
 	PlotData_File.setf ( ios::fixed );
-	PlotData_File.open ( Name_PlotData_File.str().c_str());
+	string path = output_path + "[" + Name_Bathymetry_File + "]_PlotData_Hyd.xyz";
+	PlotData_File.open (path);
 
 	if (!PlotData_File.is_open()) {
-		cout << "could not read " << Name_PlotData_File.str() << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 

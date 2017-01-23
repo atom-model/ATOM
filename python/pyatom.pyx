@@ -25,6 +25,7 @@ class Model:
         print 'RUN HYD'
         self.hydrosphere.input_path = output_path
         self.hydrosphere.output_path = output_path
+        self.hydrosphere.bathymetry_path = '../data/Paleotopography_bathymetry/Golonka_rev210/'  #  FIXME URGENT read this from XML config
         self.hydrosphere.run_time_slice(t)
         print 'TODO'
 
@@ -172,6 +173,15 @@ cdef class Hydrosphere:
         def __set__(Hydrosphere self, value):
             self._check_alive()
             self._thisptr.input_path = <string> value
+            
+    property bathymetry_path:
+        def __get__(Hydrosphere self):
+            self._check_alive()
+            return self._thisptr.bathymetry_path
+
+        def __set__(Hydrosphere self, value):
+            self._check_alive()
+            self._thisptr.bathymetry_path = <string> value
             
     def load_config(Hydrosphere self, str filename):
         self._check_alive()

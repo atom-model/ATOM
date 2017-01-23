@@ -19,6 +19,7 @@ public:
     // CONFIGURATION
     string output_path;
     string input_path;
+    string bathymetry_path;
     //TODO
 
     // SIMULATION PARAMETERS

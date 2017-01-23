@@ -264,37 +264,22 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	// choice of the transfer file for the surface velocity components
 	string Name_Bathymetry_File;
 	stringstream My;
-	if ( Ma == 0 )
-	{
-		Name_Bathymetry_File = "0Ma_etopo.xyz";
-		Name_v_w_Transfer_File = "[0Ma_etopo.xyz]_Transfer_Atm.vw";
-		Name_netCDF_File = "[0Ma_etopo.xyz]_atmosphere.nc";
-	}
-	else 
-	{
-		n = 1;
-		My << Ma << "Ma_Golonka.xyz";
-		Name_Bathymetry_File = My.str();
-		My.str("");
-		My.ignore(My.rdbuf()->in_avail());
-	}
+
+	n = 1;
+	My << Ma << "Ma_Golonka.xyz";
+	Name_Bathymetry_File = My.str();
 
 	ssName_v_w_Transfer_File << "[" << Name_Bathymetry_File << "]_Transfer_Atm.vw";
 	Name_v_w_Transfer_File = ssName_v_w_Transfer_File.str();
-	ssName_v_w_Transfer_File.str("");
-	ssName_v_w_Transfer_File.ignore(ssName_v_w_Transfer_File.rdbuf()->in_avail());
 
 	ssNameNetCDF << Name_Bathymetry_File << "_atmosphere.nc";
 	Name_netCDF_File = ssNameNetCDF.str();
-	ssNameNetCDF.str("");
-	ssNameNetCDF.ignore(ssNameNetCDF.rdbuf()->in_avail());
 
-
-	PostProcess_Hydrosphere		read_Transfer ( im, jm, km );
+	PostProcess_Hydrosphere		read_Transfer ( im, jm, km, input_path, output_path );
 	read_Transfer.Atmosphere_TransferFile_read ( Name_Bathymetry_File, v, w, p_dyn );
 
 	//	class PostProcess for data transport, read and write
-	PostProcess_Hydrosphere		read_File ( im, jm, km );
+	PostProcess_Hydrosphere		read_File ( im, jm, km, input_path, output_path );
 	n++;
 
 	cout << "***** time slice for the Oceanic Global Circulation Modell ( OGCM ) is:    Ma = " << Ma << " million years" << endl << endl;
@@ -321,7 +306,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	BC_Bathymetry_Hydrosphere		depth ( im, jm, km );
 
 	// 	class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-	depth.BC_SeaGround ( Name_Bathymetry_File, L_hyd, h, aux_w );
+	depth.BC_SeaGround(bathymetry_path, Name_Bathymetry_File, L_hyd, h, aux_w);
 
 	// class BC_Hydrosphere for the boundary conditions for the variables at the spherical shell surfaces and the meridional interface
 	BC_Hydrosphere		boundary ( im, jm, km );
@@ -345,7 +330,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	File_NetCDF_Hyd		printoutNetCDF ( im, jm, km );
 
 	// class BC_Thermohalin for the initial and boundary conditions of the flow properties
-	BC_Thermohalin		oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, ca, ca_max, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, t_pole );
+	BC_Thermohalin		oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, ca, ca_max, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, t_pole, input_path );
 
 	//	surface temperature from World Ocean Atlas 2009 given as boundary condition
 	//	if ( Ma == 0 ) oceanflow.BC_Surface_Temperature ( Name_SurfaceTemperature_File, t );
@@ -606,7 +591,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Upwelling, Downwelling, BottomWater );
 
 	//	class PostProcess_Hydrosphaere for the printing of results
-	PostProcess_Hydrosphere		write_File ( im, jm, km );
+	PostProcess_Hydrosphere		write_File ( im, jm, km, input_path, output_path );
 
 	int j_longal = 75;
 	write_File.paraview_vtk_longal ( Name_Bathymetry_File, j_longal, pressure_iter_max, h, p_dyn, p_stat, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
@@ -626,7 +611,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	// write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p_dyn, p_stat, u, v, w, c, rhs_u, rhs_v, rhs_w, rhs_c, rhs_p, rhs_t, aux_u, aux_v, aux_w, Salt_Finger, BuoyancyForce_3D, Salt_Balance );
 
 	//	writing of plot data in the PlotData file
-	PostProcess_Hydrosphere		write_PlotData_File ( im, jm, km );
+	PostProcess_Hydrosphere		write_PlotData_File ( im, jm, km, input_path, output_path );
 	write_PlotData_File.Hydrosphere_PlotData ( Name_Bathymetry_File, v, w, t, c, BottomWater, Upwelling, Downwelling );
 
 	if ( velocity_iter == velocity_iter_max )	cout << "***** number of time steps      n = " << n << ", end of program reached because of limit of maximum time steps ***** \n\n" << endl;

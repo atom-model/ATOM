@@ -29,9 +29,11 @@ class PostProcess_Hydrosphere
 
 		double max_p_dyn;
 
+		string input_path, output_path;
+
 
 	public:
-		PostProcess_Hydrosphere ( int, int, int );
+		PostProcess_Hydrosphere (int, int, int, const string &input_path, const string &output_path);
 		~PostProcess_Hydrosphere();
 
 

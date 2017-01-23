@@ -21,5 +21,6 @@ cdef extern from "cHydrosphereModel.h":
 
         string output_path
         string input_path
+        string bathymetry_path
 
         double coriolis

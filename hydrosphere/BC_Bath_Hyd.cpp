@@ -33,7 +33,7 @@ BC_Bathymetry_Hydrosphere::~BC_Bathymetry_Hydrosphere() {}
 
 
 
-void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_File, double L_hyd, Array &h, Array &aux_w )
+void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, const string &Name_Bathymetry_File, double L_hyd, Array &h, Array &aux_w)
 {
 	streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
 
@@ -45,10 +45,11 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround ( const string &Name_Bathymetry_Fil
 
 	// reading data from file Name_Bathymetry_File_Read
 	ifstream Name_Bathymetry_File_Read;
-	Name_Bathymetry_File_Read.open( Name_Bathymetry_File.c_str());
+	string path = bathymetry_path + Name_Bathymetry_File;
+	Name_Bathymetry_File_Read.open(path);
 
 	if (!Name_Bathymetry_File_Read.is_open()) {
-		cout << "could not read " << Name_Bathymetry_File << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 

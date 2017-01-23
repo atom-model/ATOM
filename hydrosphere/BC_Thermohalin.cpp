@@ -19,7 +19,7 @@
 
 using namespace std;
 
-BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, int Ma, int Ma_max, int Ma_max_half, double dr, double g, double r_0_water, double ua, double va, double wa, double ta, double ca, double ca_max, double pa, double u_0, double p_0, double t_0, double c_0, double cp_w, double L_hyd, double t_average, double t_cretaceous_max, double t_equator, double t_pole )
+BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, int Ma, int Ma_max, int Ma_max_half, double dr, double g, double r_0_water, double ua, double va, double wa, double ta, double ca, double ca_max, double pa, double u_0, double p_0, double t_0, double c_0, double cp_w, double L_hyd, double t_average, double t_cretaceous_max, double t_equator, double t_pole, const string &input_path )
 {
 	this -> im = im;
 	this -> jm = jm;
@@ -49,6 +49,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 	this -> t_cretaceous_max = t_cretaceous_max;
 	this -> t_equator = t_equator;
 	this -> t_pole = t_pole;
+	this->input_path = input_path;
 
 
 	i_bottom = 8;
@@ -7455,10 +7456,11 @@ void BC_Thermohalin::BC_Surface_Temperature ( const string &Name_SurfaceTemperat
 
 	// reading data from file Name_SurfaceTemperature_File_Read
 	ifstream Name_SurfaceTemperature_File_Read;
-	Name_SurfaceTemperature_File_Read.open(Name_SurfaceTemperature_File.c_str());
+	string path = input_path + Name_SurfaceTemperature_File;
+	Name_SurfaceTemperature_File_Read.open(path);
 
 	if (!Name_SurfaceTemperature_File_Read.is_open()) {
-		cout << "could not read " << Name_SurfaceTemperature_File << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 
@@ -7492,10 +7494,11 @@ void BC_Thermohalin::BC_Surface_Salinity ( const string &Name_SurfaceSalinity_Fi
 
 	// reading data from file Name_SurfaceSalinity_File_Read
 	ifstream Name_SurfaceSalinity_File_Read;
-	Name_SurfaceSalinity_File_Read.open(Name_SurfaceSalinity_File.c_str());
+	string path = input_path + Name_SurfaceSalinity_File;
+	Name_SurfaceSalinity_File_Read.open(path);
 
 	if (!Name_SurfaceSalinity_File_Read.is_open()) {
-		cout << "could not read " << Name_SurfaceSalinity_File << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
 
