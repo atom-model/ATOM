@@ -17,19 +17,13 @@ class Model:
         self.hydrosphere = Hydrosphere()
 
     def run(self, t, output_path):
-        print 'RUN ATM'
-
         self.atmosphere.output_path = output_path
         self.atmosphere.run_time_slice(t)
 
-        print 'RUN HYD'
         self.hydrosphere.input_path = output_path
         self.hydrosphere.output_path = output_path
         self.hydrosphere.bathymetry_path = '../data/Paleotopography_bathymetry/Golonka_rev210/'  #  FIXME URGENT read this from XML config
         self.hydrosphere.run_time_slice(t)
-        print 'TODO'
-
-        print 'RUN EXIT'
 
     def load_config(self, file_name):
         self.atmosphere.load_config(file_name)

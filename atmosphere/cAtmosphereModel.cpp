@@ -28,7 +28,7 @@
 #include "Restore_Atm.h"
 #include "Results_Atm.h"
 #include "MinMax_Atm.h"
-#include "File_NetCDF_Atm.h"
+// #include "File_NetCDF_Atm.h"
 
 #include "tinyxml2.h"
 
@@ -334,7 +334,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
     // stringstream My;
     string bathymetry_name = std::to_string(Ma) + bathymetry_suffix;
     string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
-    string Name_netCDF_File = std::to_string(Ma) + "Ma_atmosphere.nc";
+    // string Name_netCDF_File = std::to_string(Ma) + "Ma_atmosphere.nc";
 
     PostProcess_Atmosphere read_File(im, jm, km, output_path);
     read_File.Atmosphere_SequelFile_read(bathymetry_name, n, time, rad, the, phi, h, t, u, v, w, c, co2, tn, un, vn, wn, cn, co2n);
@@ -831,8 +831,8 @@ Pressure_iteration_2D:
 
     //  results written in netCDF format
     // class File_NetCDF to write results in the format of a netCDF-file
-    File_NetCDF printoutNetCDF(im, jm, km);
-    printoutNetCDF.out_NetCDF(output_path, Name_netCDF_File, v, w, h, Precipitation, precipitable_water);
+    // File_NetCDF printoutNetCDF(im, jm, km);
+    // printoutNetCDF.out_NetCDF(output_path, Name_netCDF_File, v, w, h, Precipitation, precipitable_water);
 
     //  class PostProcess_Atmosphaere for the printing of results
     PostProcess_Atmosphere write_File(im, jm, km, output_path);

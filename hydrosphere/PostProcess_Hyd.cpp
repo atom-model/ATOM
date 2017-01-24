@@ -1496,7 +1496,7 @@ void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymet
 
 	streampos anfangpos, endpos;
 
-// file administration
+	// file administration
 	ofstream PlotData_File;
 	PlotData_File.precision ( 4 );
 	PlotData_File.setf ( ios::fixed );
@@ -1507,8 +1507,6 @@ void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymet
 		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
 		abort();
 	}
-
-	cout << "\n\n”***** Atmosphere_PlotData_File_write:   begin of writing!" << endl << endl;
 
 	PlotData_File << " latitude ( ° )" << "  ,  " << "longitude ( ° )" << "  ,    " << "v-velocity ( 0.724 * x * m/s )" << "  ,    " << "w-velocity ( 0.724 * x * m/s )" << "   ,   " << "temperature ( 273.15 * x - 273.15 )" << "  ,   " << "salinity ( 35 * x * psu )" << "   ,   " << "bottom_water" << "   ,   " <<  "upwelling" << "   ,   " <<  "downwelling" << endl;
 

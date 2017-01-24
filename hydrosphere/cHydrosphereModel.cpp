@@ -19,7 +19,7 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
-#include <netcdf.h>
+// #include <netcdf.h>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -36,7 +36,7 @@
 #include "Restore_Hyd.h"
 #include "MinMax_Hyd.h"
 #include "Results_Hyd.h"
-#include "File_NetCDF_Hyd.h"
+// #include "File_NetCDF_Hyd.h"
 
 #include "tinyxml2.h"
 
@@ -245,8 +245,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	stringstream ssName_v_w_Transfer_File;
 
 	// naming the output netCDF-file
-	string Name_netCDF_File;
-	stringstream ssNameNetCDF;
+	// string Name_netCDF_File;
+	// stringstream ssNameNetCDF;
 
 	// naming a file to read the surface temperature of the modern world
 	string Name_SurfaceTemperature_File; 
@@ -272,8 +272,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	ssName_v_w_Transfer_File << "[" << Name_Bathymetry_File << "]_Transfer_Atm.vw";
 	Name_v_w_Transfer_File = ssName_v_w_Transfer_File.str();
 
-	ssNameNetCDF << Name_Bathymetry_File << "_atmosphere.nc";
-	Name_netCDF_File = ssNameNetCDF.str();
+	// ssNameNetCDF << Name_Bathymetry_File << "_atmosphere.nc";
+	// Name_netCDF_File = ssNameNetCDF.str();
 
 	PostProcess_Hydrosphere		read_Transfer ( im, jm, km, input_path, output_path );
 	read_Transfer.Atmosphere_TransferFile_read ( Name_Bathymetry_File, v, w, p_dyn );
@@ -327,7 +327,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	Results_Hyd		calculate_MSL ( im, jm, km );
 
 	// class File_NetCDF to write results in the format of a netCDF-file
-	File_NetCDF_Hyd		printoutNetCDF ( im, jm, km );
+	// File_NetCDF_Hyd		printoutNetCDF ( im, jm, km );
 
 	// class BC_Thermohalin for the initial and boundary conditions of the flow properties
 	BC_Thermohalin		oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, ca, ca_max, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, t_pole, input_path );
@@ -588,7 +588,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	//	printout in ParaView files, netCDF files
 
 	//	results written in netCDF format
-	printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Upwelling, Downwelling, BottomWater );
+	// printoutNetCDF.out_NetCDF( Name_netCDF_File, v, w, h, Upwelling, Downwelling, BottomWater );
 
 	//	class PostProcess_Hydrosphaere for the printing of results
 	PostProcess_Hydrosphere		write_File ( im, jm, km, input_path, output_path );
