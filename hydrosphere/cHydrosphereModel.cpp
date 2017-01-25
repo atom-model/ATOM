@@ -19,7 +19,6 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
-// #include <netcdf.h>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -36,11 +35,11 @@
 #include "Restore_Hyd.h"
 #include "MinMax_Hyd.h"
 #include "Results_Hyd.h"
-// #include "File_NetCDF_Hyd.h"
 
 #include "tinyxml2.h"
 
 #include "cHydrosphereModel.h"
+#include "Config.h"
 #include "PythonStream.h"
 
 using namespace std;
@@ -86,6 +85,7 @@ using namespace tinyxml2;
 
 
 
+#include "cHydrosphereDefaults.cpp.inc"
 
 cHydrosphereModel::cHydrosphereModel() {
     // Python and Notebooks can't capture stdout from this module. We override
@@ -95,14 +95,26 @@ cHydrosphereModel::cHydrosphereModel() {
     // If Ctrl-C is pressed, quit
     signal(SIGINT, exit);
 
-   	// TODO: set default configuration
+   	// set default configuration
+    SetDefaultConfig();
 }
 
 cHydrosphereModel::~cHydrosphereModel() { }
 
 void cHydrosphereModel::LoadConfig(const char *filename) {
-	// FIXME: not implemented
-	cout << "FIXME: not implemented\n";
+    XMLDocument doc;
+    XMLError err = doc.LoadFile(filename);
+    if (err) {
+        doc.PrintError();
+        throw std::invalid_argument("couldn't load config file");
+    }
+
+    XMLElement *atom = doc.FirstChildElement("atom");
+    if (!atom) {
+        return;
+    }
+
+    #include "HydrosphereLoadConfig.cpp.inc"
 }
 
 void cHydrosphereModel::RunTimeSlice(int Ma) {

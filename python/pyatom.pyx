@@ -27,8 +27,7 @@ class Model:
 
     def load_config(self, file_name):
         self.atmosphere.load_config(file_name)
-        # self.hydrosphere.load_config(file_name)
-        print "TODO LOAD HYDROSPHERE CONFIG"
+        self.hydrosphere.load_config(file_name)
 
 cdef class Atmosphere:
     """ 

@@ -28,7 +28,6 @@
 #include "Restore_Atm.h"
 #include "Results_Atm.h"
 #include "MinMax_Atm.h"
-// #include "File_NetCDF_Atm.h"
 
 #include "tinyxml2.h"
 
@@ -50,6 +49,8 @@ cAtmosphereModel::cAtmosphereModel() {
 }
 
 cAtmosphereModel::~cAtmosphereModel() { }
+
+#include "cAtmosphereDefaults.cpp.inc"
 
 void cAtmosphereModel::RunTimeSlice(int Ma) {
     // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
@@ -332,7 +333,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
     cout << "Ma = " << Ma << "\n";
 
     // stringstream My;
-    string bathymetry_name = std::to_string(Ma) + bathymetry_suffix;
+    string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
     string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
     // string Name_netCDF_File = std::to_string(Ma) + "Ma_atmosphere.nc";
 
@@ -896,9 +897,10 @@ void cAtmosphereModel::Run() {
     cout << "Output is being written to " << output_path << "\n";
 
     // write out the config for reproducibility
-    std::stringstream output_config_path;
-    output_config_path << output_path << "/config.xml";
-    WriteConfig(output_config_path.str().c_str());
+    // disabled for now
+    // std::stringstream output_config_path;
+    // output_config_path << output_path << "/config.xml";
+    // WriteConfig(output_config_path.str().c_str());
 
 
     if (verbose) {

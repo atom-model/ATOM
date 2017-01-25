@@ -22,3 +22,4 @@ atm
 libatom.a
 hyd
 output-*/
+*.inc

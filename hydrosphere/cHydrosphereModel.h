@@ -19,15 +19,10 @@ public:
     // CONFIGURATION
     string output_path;
     string input_path;
-    string bathymetry_path;
-    //TODO
 
-    // SIMULATION PARAMETERS
-    // TODO
-
-    // PHYSICAL PARAMETERS
-    // To modify the defaults, see cHydrosphereModel.cpp
-    // TODO
+    #include "HydrosphereParams.h.inc"
+private:
+    void SetDefaultConfig();
 };
 
 #endif
