@@ -64,110 +64,24 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
 
     int j_res = 0, k_res = 0;
 
-    double time = 0;
 
     // TODO: lots of scoping issues here and alias issue with min(); too much to safely sort out right now
     double residuum = 0, residuum_old = 0, min = 0;
 
-    const double epsres = 0.00001;                            // accuracy of relative and absolute errors
+    constexpr double pi180 = 180./M_PI;                       // pi180 = 57.3
+    constexpr double the_degree = 1.;                         // compares to 1° step size laterally
+    constexpr double phi_degree = 1.;                         // compares to 1° step size longitudinally
 
-    int RadiationModel = 3;                             // surface temperature computation by a radiation model
-    int  IceShield = 0;                                     // while no ice shields wanted
-
-    int declination = 0;                                    // position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form
-    int sun_position_lat = 60;                          // position of sun j = 120 means 30°S, j = 60 means 30°N
-    int sun_position_lon = 180;                     // position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
-
-    int Ma_max = 300;                                   // parabolic temperature distribution 300 Ma (From Ruddiman)
-    int Ma_max_half = 150;                              // half of time scale
-
-    double pi180 = 180./M_PI;                       // pi180 = 57.3
-
-    double L_atm = 20000.;                          // extension of the atmosphere shell in m, 20000 m / 40 steps = 500 m
-    double dt = 0.0001;                                 // time step coincides with the CFL condition
-
-    double dr = 0.0005;                                 // compares to 500 m hight, 0.0005 * 40 = .02 * 1000 km = 20 km
-    double the_degree = 1.;                         // compares to 1° step size laterally
-    double phi_degree = 1.;                         // compares to 1° step size longitudinally
     double dthe = the_degree / pi180;           //dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
     double dphi = phi_degree / pi180;               //dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
 
-    double the0 = 0.;                                       // North Pole
-    double phi0 = 0.;                                       // zero meridian in Greenwich
-    double r0 = 6.731;                                  // earth's radius is r_earth = 6731 km compares to 6.731 [ / ] * 1000 km, circumference of the earth 40074 km
+    const double the0 = 0.;                                       // North Pole
+    const double phi0 = 0.;                                       // zero meridian in Greenwich
+    const double r0 = 6.731;                                  // earth's radius is r_earth = 6731 km compares to 6.731 [ / ] * 1000 km, circumference of the earth 40074 km
 
-    double ik = 1366.;                                  // solar constant in W/m2
-    double sigma = 5.670280e-8;                 // Stefan-Boltzmann constant W/( m²*K4 )
-    double albedo_extra = .15;                      // capability of reflection of short wave radiation, global albedo_extra extraterrestric
-    double epsilon_extra = .71;                     // capability of emissions in the atmosphere
-
-    double re = 1000.;                                  // Reynolds number: ratio viscous to inertia forces, Re = u * L / nue
-    double ec = .00044;                                 // Eckert number: ratio kinetic energy to enthalpy, Ec = u² / cp T
-    double sc_WaterVapour = .6;                 // Schmidt number of water vapour, Sc = nue / D
-    double sc_CO2 = .96;                                // Schmidt number of CO2
-    double pr = .7179;                                  // Prandtl number of air for laminar flows
-    double g = 9.8066;                                  // gravitational acceleration of the earth
-    double omega = 7.29e-5;                         // rotation number of the earth
-    double ep = .623;                                   // ratio of the gas constants of dry air to water vapour [ / ]
-    double hp = 6.1078;                                 // water vapour pressure at T = 0°C: E = 6.1 hPa
-    double R_Air = 287.1;                               // specific gas constant of air in J/( kg*K ))
-    double R_WaterVapour = 461.6;               // specific gas constant of water vapour in J/( kg*K ))
-    double R_co2 = 188.91;                          // specific gas constant of CO2 in J/( kg*4.5K ))
-    double lv = 2.52e6;                                 // specific latent Evaporation heat ( Condensation heat ) in J/kg
-    double ls = 2.83e6;                                 // specific latent vaporisation heat ( sublimation heat ) in J/kg
-    double cp_l = 1005.;                                // specific heat capacity of dry air at constant pressure and 20°C in J/( kg K )
-    double lambda = .0262;                          // heat transfer coefficient of air in W/m² K )
-    double r_air = 1.2041;                          // density of dry air in kg/m³ at 20°C
-    double r_water = 1000.;                     // density of water in kg/m³ at 20°C
-    double r_water_vapour = 0.0094;         // density of saturated water vapour in kg/m³ at 10°C
-    double r_co2 = 0.0019767;                   // density of CO2 in kg/m³ at 25°C
-    double gam = .65;                                   // constant slope of temperature    gam = 0.65 K/100 m
-
-    double u_0 = 15.;                                       // maximum value of velocity in 15 m/s compares to 54 km/h
-    double p_0 = 1013.25;                               // pressure at sea level in hPa
-    double t_0 = 273.15;                                // temperature in K compare to 0°C
-    double c_0 = .035;                                  // maximum value of water vapour in kg / kg
-    double co2_0 = 280.;                                // maximum value of CO2 in ppm at preindustrial times
-
-    double ua = 0.;                                     // initial velocity component in r-direction
-    double va = 0.;                                     // initial velocity component in theta-direction
-    double wa = 0.;                                     // initial velocity component in phi-direction
-    double pa = 0.;                                     // initial value for the pressure field
-    double ca = 0.;                                     // value 1.0 stands for the maximum value of 35 g/kg water vapour
-    double ta = 1.;                                     // initial value for the temperature field, 1.0 compares to 0° C compares to 273.15 K
-    double coa = 1.;                                    // initial value of co2 = 1.0 compares to 280 ppm in preindustrial times
-
-    double t_cretaceous_max = 10.;              // maximum add of mean temperature in °C during cretaceous times
-    double t_cretaceous = 0.;                           // value at modern times
-    double coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
-
-    double radiation_ocean = 40.;                   // increase of radiation at equator in W/m²
-    double radiation_pole = - 40.;                  // negative amount of radiation at poles in W/m²
-    double radiation_equator = 100.;                // positive amount of radiation at equator in W/m²
-
-    double t_average = 15.;                         // mean temperature of the modern earth
-    double t_equator = 1.1103;                      // temperature t_0 = 1.1103 compares to 30.13° C compares to 303.28 K
-    double t_pole = .8;                                 // temperature at the poles t_pole = 0.8 compares to -54.63°C compares to 218.52 K
-    double t_tropopause = .78;                      // temperature in the tropopause, t = 0.78 compares to -60.093°C compares to 213,057 K
-//  double t_land = .003661;                            // temperature increase on land by 1°C ( 1°C compares to t_land = 0.003661 )
-    double t_land = .018305;                            // temperature increase on land by 5°C ( 5°C compares to t_land = 0.018305 )
-
-    double c_tropopause = 0.;                       // minimum water vapour at tropopause c_tropopause = 0.01429 compares to 0.05 g/kg
-    double c_land = .4;                                 // water vapour reduction on land ( 90% of the saturation value )
-    double c_ocean = .5;                                // water vapour reduction on sea surface ( 100% of the saturation value )
-
-    double co2_average = 372.;                      // rate of CO2 at preindustrial times
-    double co2_equator = 330.;                      // maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm
-    double co2_tropopause = 0.;                 // minimum rate CO2 at tropopause 0 ppm
-    double co2_pole = 305.;                         // maximum rate of CO2 of the sea surface at poles
-    double co2_cretaceous = 0.;                     // value at modern times
-    double co2_vegetation = 3.;                     // value compares to 100/600Gt per year on the global surface by vegetation
-    double co2_ocean = 0.;                          // value compares to 0.6/600Gt per year on the sea surface
-    double co2_land = 3.;                               // value compares to 0.2/600Gt per year on land
+    const double coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 
     int *im_tropopause = new int [ jm ];            // location of the tropopause
-
-    bool set_sun_position = false;                  // set to true to simulate effect of different sun positions
 
     //  class Array for 1-D, 2-D and 3-D field declarations
 
@@ -294,13 +208,9 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
     the.Coordinates ( jm, the0, dthe );
     phi.Coordinates ( km, phi0, dphi );
 
-    //  VALGRIND_CHECK_VALUE_IS_DEFINED ( rad );
-
-    //  coeff_mmWS = r_air / r_water_vapour;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
-
     //  initial values for the number of computed steps and the time
     int n = 0;
-    time = dt;
+    double time = dt;
     int pressure_iter = 1;
     int pressure_iter_2D = 1;
     int switch_2D = 0;
@@ -343,8 +253,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
     // topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
     LandArea.BC_MountainSurface(bathymetry_filepath, L_atm, h, aux_w);
 
-    // computation of ice shield following the theorie by Milankowitsch
-    if (IceShield == 1) {
+    if (IceShield) {
         LandArea.BC_IceShield(Ma, t_0, h, t, c, IceLayer, Ice_Balance, Ice_Balance_add);
     }
 
@@ -354,7 +263,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
     BC_Atmosphere boundary(im, jm, km, t_tropopause);
 
     // class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-    RHS_Atmosphere prepare(im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, sc_CO2, g, pr, omega, coriolis, centrifugal, WaterVapour, buoyancy, CO2, gam, sigma, lambda);
+    RHS_Atmosphere prepare(im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, sc_CO2, g, pr, omega, coriolis, centrifugal, WaterVapour, buoyancy, CO2, gam, sigma, Lambda);
     RHS_Atmosphere prepare_2D (jm, km, dthe, dphi, re, omega, coriolis, centrifugal);
 
     // class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
