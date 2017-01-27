@@ -9,7 +9,7 @@ ext_modules = [
                   'PythonStream.cpp'
               ],
               language='c++',
-              libraries=['c', 'atom', 'netcdf'],
+              libraries=['c', 'atom'],
               include_dirs=['../atmosphere', '../hydrosphere', '../lib', '../tinyxml2'],
               library_dirs=['..']
               )]

@@ -885,12 +885,6 @@ Pressure_iteration_2D:
 }
 
 void cAtmosphereModel::Run() {
-    // generate an output path
-    std::stringstream os;
-    std::time_t now = std::time(nullptr);
-    os << "output-" << std::put_time(std::localtime(&now), "%y%m%d-%H%M%S");
-    output_path = os.str();
-
     // create the output dir
     mkdir(output_path.c_str(), 0777);
 

@@ -65,24 +65,6 @@ cdef class Atmosphere:
         else:
             return 0
 
-    property coriolis:
-        def __get__(Atmosphere self):
-            self._check_alive()
-            return self._thisptr.coriolis
-
-        def __set__(Atmosphere self, value):
-            self._check_alive()
-            self._thisptr.coriolis = <double> value
-
-    property output_path:
-        def __get__(Atmosphere self):
-            self._check_alive()
-            return self._thisptr.output_path
-
-        def __set__(Atmosphere self, value):
-            self._check_alive()
-            self._thisptr.output_path = <string> value
-
     def load_config(Atmosphere self, str filename):
         self._check_alive()
         self._thisptr.LoadConfig(filename)
@@ -97,6 +79,8 @@ cdef class Atmosphere:
         self._check_alive()
         self._thisptr.RunTimeSlice(t)
         return None
+
+    # include "atmosphere_params.pxi"
 
     # The context manager protocol allows us to precisely
     # control the liftetime of the wrapped C++ object. del
@@ -149,33 +133,6 @@ cdef class Hydrosphere:
         else:
             return 0
 
-    property output_path:
-        def __get__(Hydrosphere self):
-            self._check_alive()
-            return self._thisptr.output_path
-
-        def __set__(Hydrosphere self, value):
-            self._check_alive()
-            self._thisptr.output_path = <string> value
-
-    property input_path:
-        def __get__(Hydrosphere self):
-            self._check_alive()
-            return self._thisptr.input_path
-
-        def __set__(Hydrosphere self, value):
-            self._check_alive()
-            self._thisptr.input_path = <string> value
-            
-    property bathymetry_path:
-        def __get__(Hydrosphere self):
-            self._check_alive()
-            return self._thisptr.bathymetry_path
-
-        def __set__(Hydrosphere self, value):
-            self._check_alive()
-            self._thisptr.bathymetry_path = <string> value
-            
     def load_config(Hydrosphere self, str filename):
         self._check_alive()
         self._thisptr.LoadConfig(filename)
@@ -190,6 +147,8 @@ cdef class Hydrosphere:
         self._check_alive()
         self._thisptr.RunTimeSlice(t)
         return None
+
+    # include "hydrosphere_params.pxi"
 
     # The context manager protocol allows us to precisely
     # control the liftetime of the wrapped C++ object. del

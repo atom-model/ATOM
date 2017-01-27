@@ -1,6 +1,7 @@
 #include "Config.h"
 
 #include <iostream>
+#include <stdexcept>
 
 void Config::FillDoubleWithElement(const tinyxml2::XMLElement *parent, const char *name, double &dest) {
     const tinyxml2::XMLElement *elem = parent->FirstChildElement(name);

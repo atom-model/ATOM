@@ -83,13 +83,11 @@ Look at `examples/sample.py`. It shows how to modify a parameter through Python.
 
 ## Compilation
 
-### Ubuntu Linux 16.04 LTS
+### Ubuntu Linux 14.04 LTS or 16.04 LTS
 
 As root:
 
-    apt-get install libnetcdf-dev cython clang
-
-    # TODO: you need to remove gcc-4.8 first; we depend on g++-5.0 or clang for now
+    apt-get install cython
 
 As a regular user:
 
@@ -100,7 +98,6 @@ As a regular user:
 ### macOS Sierra (Homebrew)
 
     brew install pkg-config
-    brew install netcdf
     pip install cython
 
     git clone https://github.com/atom-model/ATOM

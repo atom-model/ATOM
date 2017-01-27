@@ -16,11 +16,8 @@ public:
     void Run();
     void RunTimeSlice(int Ma);
 
-    // CONFIGURATION
-    string output_path;
-    string input_path;
-
     #include "HydrosphereParams.h.inc"
+
 private:
     void SetDefaultConfig();
 };

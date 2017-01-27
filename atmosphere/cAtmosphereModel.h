@@ -20,9 +20,6 @@ public:
 
     #include "AtmosphereParams.h.inc"
 
-    // TODO: j_sun - priority summer vs winter parameter
-    string output_path;
-
 private:
     void SetDefaultConfig();
 };

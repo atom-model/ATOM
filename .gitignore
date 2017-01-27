@@ -23,3 +23,6 @@ libatom.a
 hyd
 output-*/
 *.inc
+examples/config.xml
+*.pxi
+python/pyatom.h
