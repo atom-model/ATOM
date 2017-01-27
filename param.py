@@ -124,7 +124,7 @@ cdef extern from "c%sModel.h":
         void LoadConfig(const char *filename)
         void Run()
         void RunTimeSlice(int time_slice)
-        """ % (model, model, model))
+""" % (model, model, model))
 
             for section in sections:
                 f.write('        # %s section\n' % section)
@@ -134,7 +134,9 @@ cdef extern from "c%sModel.h":
 
     def write_config_xml(filename):
         with open(filename, 'w') as f:
-            f.write('<atom>\n')
+            f.write("""<!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. -->
+<atom>
+""")
 
             for section in sections:
                 f.write('    <%s>\n' % section)
