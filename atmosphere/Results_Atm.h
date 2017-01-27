@@ -21,7 +21,7 @@ using namespace std;
 class Results_MSL_Atm
 {
 	private:
-		int im, jm, km, sun;
+		int im, jm, km;
 		// int h_point_max;
 		// int h_land, h_ocean;
 		// int i_loc;
@@ -105,7 +105,7 @@ class Results_MSL_Atm
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading, heading_Dresden, heading_Sydney, heading_Equator;
 
 	public:
-		Results_MSL_Atm ( int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double ); 
+		Results_MSL_Atm ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double ); 
 
 
 		~Results_MSL_Atm (  );

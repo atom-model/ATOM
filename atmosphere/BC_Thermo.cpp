@@ -23,7 +23,7 @@
 using namespace std;
 
 
-BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationModel, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double epsilon_extra, double lv, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, bool set_sun_position, bool verbose)
+BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationModel, bool sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double albedo_extra, double epsilon_extra, double lv, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, bool set_sun_position, bool verbose)
 {
 	this -> im = im;
 	this -> jm = jm;
@@ -742,7 +742,7 @@ void BC_Thermo::BC_Temperature ( Array &h, Array &t, Array &p_dyn, Array &p_stat
 	// sun_position_lon = 180, position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
 	// asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
 
-		if ( ( Ma > 0 ) && ( sun == 1 ) )
+		if ( ( Ma > 0 ) && sun )
 		{
 			j_par = sun_position_lat;																	// position of maximum temperature, sun position
 			j_par = j_par + declination;																// angle of sun axis, declination = 23,4°
@@ -821,7 +821,7 @@ void BC_Thermo::BC_Temperature ( Array &h, Array &t, Array &p_dyn, Array &p_stat
 //		if ( Ma > 0 )
 		if ( Ma >= 0 )
 		{
-			if ( sun == 0 )
+			if (!sun)
 			{
 				for ( int k = 0; k < km; k++ )
 				{

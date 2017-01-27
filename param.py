@@ -22,6 +22,7 @@ def main():
             ('WaterVapour', 'water vapour', 'double', 1.0),
             ('buoyancy', 'buoyancy', 'double', 1.0),
             ('CO2', 'CO2', 'double', 1.0),
+            ('sun', 'while no variable sun position wanted', 'bool', False)
 
         ],
         'hydrosphere': [

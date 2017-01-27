@@ -30,7 +30,8 @@ class BC_Thermo
 		int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
 		int j_had_n_end, j_had_s_end, k_w, k_w_end, k_e;
 		int j_n, j_s;
-		int sun, Ma, Ma_max, Ma_max_half;
+		int Ma, Ma_max, Ma_max_half;
+		bool sun;
 		int j_par, j_pol, k_par, k_pol;
 		// int k_a, k_b, flip, k_grad, k_grad_init, i_middle;
 		// int k_water, k_sequel;
@@ -118,7 +119,7 @@ class BC_Thermo
 
 
 	public:
-		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, bool, bool);
+		BC_Thermo ( int, int, int, int, int, int, bool, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, bool, bool);
 		~BC_Thermo();
 
 

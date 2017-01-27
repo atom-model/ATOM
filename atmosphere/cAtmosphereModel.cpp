@@ -60,23 +60,17 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
 
     mkdir(output_path.c_str(), 0777);
 
-    int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max_2D = 2, pressure_iter_max_2D = 2;
+    int im = 41, jm = 181, km = 361, nm = 200;
 
-    int n = 0, i_radial =0, j_longal = 0, k_zonal = 0, i_max = 0, i_beg = 0;
-    int velocity_iter = 0, pressure_iter = 0, pressure_iter_aux = 0, velocity_iter_2D = 0, pressure_iter_2D = 0;
-    int i_res = 0, j_res = 0, k_res = 0;
-    int switch_2D = 0;
+    int j_res = 0, k_res = 0;
 
     double time = 0;
+
+    // TODO: lots of scoping issues here and alias issue with min(); too much to safely sort out right now
     double residuum = 0, residuum_old = 0, min = 0;
-//  double max_Precipitation, max_precipitable_water, max_CO2_total;
-    double max_Precipitation = 0;
 
-    int SequelFile = 0;                                     // sequel file will not be written
+    const double epsres = 0.00001;                            // accuracy of relative and absolute errors
 
-    double epsres = 0.00001;                            // accuracy of relative and absolute errors
-
-    int  sun = 0;                                               // while no variable sun position wanted
     int RadiationModel = 3;                             // surface temperature computation by a radiation model
     int  IceShield = 0;                                     // while no ice shields wanted
 
@@ -305,16 +299,16 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
     //  coeff_mmWS = r_air / r_water_vapour;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 
     //  initial values for the number of computed steps and the time
-    n = 0;
+    int n = 0;
     time = dt;
-    pressure_iter = 1;
-    pressure_iter_2D = 1;
-    switch_2D = 0;
+    int pressure_iter = 1;
+    int pressure_iter_2D = 1;
+    int switch_2D = 0;
     residuum_old = 0.;
 
     // radial expansion of the computational field for the computation of initial values
-    i_max = 32;         // corresponds to about 16 km above sea level, maximum hight of the tropopause at equator
-    i_beg = 16;         // corresponds to about 8 km above sea level, maximum hight of the tropopause at poles
+    int i_max = 32;         // corresponds to about 16 km above sea level, maximum hight of the tropopause at equator
+    int i_beg = 16;         // corresponds to about 8 km above sea level, maximum hight of the tropopause at poles
 
     // naming a file to read the surface temperature of the modern world
     string Name_SurfaceTemperature_File;
@@ -373,7 +367,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
     Restore oldnew(im, jm, km);
 
     // class Results_MSL_Atm to compute and show results on the mean sea level, MSL
-    Results_MSL_Atm calculate_MSL(im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, ls, cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water, r_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous);
+    Results_MSL_Atm calculate_MSL(im, jm, km, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, ls, cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water, r_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous);
 
     // configuration of the initial and boundary conditions for the temperature, CO2 und water vapour on land and ocean surfaces
 
@@ -443,8 +437,8 @@ Pressure_loop:
 
     // min = min_u = min_v = min_w = min_t = min_c = min_p = epsres * 3.;
     min = epsres * 3.;
-    velocity_iter = 0;
-    velocity_iter_2D = 0;
+    int velocity_iter = 0;
+    int velocity_iter_2D = 0;
 
     // query to realize zero divergence of the continuity equation ( div c = 0 )
     while (min >= epsres) {
@@ -573,7 +567,7 @@ Pressure_iteration_2D:
         Accuracy_Atm        min_Residuum ( im, jm, km, dr, dthe, dphi );
         min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
         min = min_Residuum.out_min (  );
-        i_res = min_Residuum.out_i_res (  );
+        int i_res = min_Residuum.out_i_res (  );
         j_res = min_Residuum.out_j_res (  );
         k_res = min_Residuum.out_k_res (  );
 
@@ -690,7 +684,7 @@ Pressure_iteration_2D:
         string str_max_precipitation = " max precipitation ", str_min_precipitation = " min precipitation ", str_unit_precipitation = "mm";
         MinMax_Atm      minmaxPrecipitation ( jm, km, coeff_mmWS );
         minmaxPrecipitation.searchMinMax_2D ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, Precipitation, h );
-        max_Precipitation = minmaxPrecipitation.out_maxValue (  );
+        double max_Precipitation = minmaxPrecipitation.out_maxValue (  );
 
 /*
 //      searching of maximum and minimum values of NASA precipitation
@@ -828,7 +822,7 @@ Pressure_iteration_2D:
     }
 
     //  printout in ParaView files, netCDF files and sequel files
-    pressure_iter_aux = pressure_iter - 1;
+    int pressure_iter_aux = pressure_iter - 1;
 
     //  results written in netCDF format
     // class File_NetCDF to write results in the format of a netCDF-file
@@ -840,14 +834,14 @@ Pressure_iteration_2D:
 
     //  writing of data in ParaView files
     //  radial data along constant hight above ground
-    i_radial = 0;
+    int i_radial = 0;
     write_File.paraview_vtk_radial ( bathymetry_name, i_radial, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D , BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow, Evaporation, Condensation, precipitable_water, Q_bottom, Radiation_Balance, Q_Radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation );
 
     //  londitudinal data along constant latitudes
-    j_longal = 75;
+    int j_longal = 75;
     write_File.paraview_vtk_longal ( bathymetry_name, j_longal, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow );
 
-    k_zonal = 145;
+    int k_zonal = 145;
     write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, pressure_iter_aux, u_0, t_0, p_0, r_air, c_0, co2_0, radiation_equator, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s );
 
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
@@ -855,11 +849,6 @@ Pressure_iteration_2D:
 
     //  3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
     //  write_File.paraview_vts ( bathymetry_name, n, rad, the, phi, h, t, p_dyn, u, v, w, c, co2, aux_u, aux_v, aux_w, Latency, Rain, Ice, Rain_super, IceLayer );
-
-    //  writing of sequential data for the sequel file
-    if ( SequelFile == 1 ) {
-        write_File.Atmosphere_SequelFile_write(bathymetry_name, n, time, rad, the, phi, h, t, u, v, w, c, co2, tn, un, vn, wn, cn, co2n);
-    }
 
     //  writing of v-w-data in the v_w_transfer file
     PostProcess_Atmosphere ppa(im, jm, km, output_path);

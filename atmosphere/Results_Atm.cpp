@@ -18,7 +18,7 @@
 using namespace std;
 
 
-Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double co2_0, double sigma, double albedo_extra, double lv, double ls, double cp_l, double L_atm, double dt, double dr, double dthe, double dphi, double r_air, double R_Air, double r_water, double r_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam, double t_pole, double t_cretaceous )
+Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double co2_0, double sigma, double albedo_extra, double lv, double ls, double cp_l, double L_atm, double dt, double dr, double dthe, double dphi, double r_air, double R_Air, double r_water, double r_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam, double t_pole, double t_cretaceous )
 :	coeff_Diffusion_latent ( .005 ),													// diffusion coefficient for latent heat in [m²/s]    0.015
 	coeff_Diffusion_sensibel ( .2 ),													// diffusion coefficient for sensible heat in [m²/s]     0.03
 	f_Haude ( .3 )																			// Haude factor for evapotranspiration 0.3 for low, dense vegetation as raw average value by Kuttler
@@ -38,7 +38,6 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, do
 	this-> dr = dr;
 	this-> dthe = dthe;
 	this-> dphi = dphi;
-	this-> sun = sun;
 	this-> g = g;
 	this-> ep = ep;
 	this-> hp = hp;
