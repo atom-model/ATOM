@@ -123,18 +123,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	// maximum number of inner velocity loop iterations ( velocity_iter_max ),
 	// maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-	int im = 41, jm = 181, km = 361, nm = 200, velocity_iter_max = 5, pressure_iter_max = 5;
-	int velocity_iter_max_2D = 5, pressure_iter_max_2D = 5;
-	int n = 0;
-	int velocity_iter = 0, velocity_iter_2D = 0;
-	int i_res = 0, j_res = 0, k_res = 0;
-	int i_max = 0, i_beg = 0;
-	int switch_2D = 0;
+	const int im = 41, jm = 181, km = 361, nm = 200;
+	int j_res = 0.0, k_res = 0.0;
 
-	double time = 0., residuum_old = 0., residuum = 0.;
-
-	double coriolis = 1.;									// computation with Coriolis force
-	double centrifugal = 1.;							// computation with centrifugal force
 	double buoyancy = 1.;								// computation with buoyancy
 
 	int Ma_max = 300;									// parabolic temperature distribution 300 Ma back
@@ -240,17 +231,18 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	phi.Coordinates ( km, phi0, dphi );
 
 	// 	initial values for the number of computed steps and the time
-	n = 0;
-	time = dt;
-	velocity_iter = 1;
-	velocity_iter_2D = 1;
-	switch_2D = 0;
-	residuum = residuum_old = 0.;
+	int n = 0;
+	double time = dt;
+	int velocity_iter = 1;
+	int velocity_iter_2D = 1;
+	int switch_2D = 0;
+	double residuum;
+	double residuum_old = 0.;
 
 	// radial expansion of the computational field for the computation of initial values
-	i_max = im - 1;																		// corresponds to sea level
+	int i_max = im - 1;																		// corresponds to sea level
 	//	i_beg = 27;																				// compares to an ocean depth of 1950 m, location of the thermocline
-	i_beg = 33;									
+	int i_beg = 33;									
 
 	// naming a transfer file for the v- and w-vlocity component of the atmosphere at sea level
 	string Name_v_w_Transfer_File;
@@ -481,7 +473,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 			Accuracy_Hyd		min_Residuum ( im, jm, km, dr, dthe, dphi );
 			min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
 			emin = min_Residuum.out_min (  );
-			i_res = min_Residuum.out_i_res (  );
+			int i_res = min_Residuum.out_i_res (  );
 			j_res = min_Residuum.out_j_res (  );
 			k_res = min_Residuum.out_k_res (  );
 

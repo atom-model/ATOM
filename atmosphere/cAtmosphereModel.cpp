@@ -60,7 +60,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma) {
 
     mkdir(output_path.c_str(), 0777);
 
-    int im = 41, jm = 181, km = 361, nm = 200;
+    const int im = 41, jm = 181, km = 361, nm = 200;
 
     int j_res = 0, k_res = 0;
 

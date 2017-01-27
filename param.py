@@ -101,6 +101,9 @@ def main():
             ('pressure_iter_max', '', 'int', 5),
             ('velocity_iter_max_2D', '', 'int', 5),
             ('pressure_iter_max_2D', '', 'int', 5),
+            ('coriolis', 'computation with Coriolis force', 'double', 1.0),
+            ('centrifugal', 'computation with centrifugal force', 'double', 1.0),
+
         ]
     }
 
