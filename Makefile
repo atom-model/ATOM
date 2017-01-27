@@ -2,10 +2,7 @@
 # Builds everything: atmosphere, hydrosphere, Python interface and CLI interface
 
 # TODO: don't always enable debugging
-# CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2 $(shell pkg-config --cflags netcdf)
-# LDFLAGS = $(shell pkg-config --libs netcdf)
 CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2
-# LDFLAGS = $(shell pkg-config --libs netcdf)
 
 # Common files for the shared lib (libatom.a)
 LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o lib/Config.o
