@@ -126,49 +126,13 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	const int im = 41, jm = 181, km = 361, nm = 200;
 	int j_res = 0.0, k_res = 0.0;
 
-	double buoyancy = 1.;								// computation with buoyancy
-
 	int Ma_max = 300;									// parabolic temperature distribution 300 Ma back
 	int Ma_max_half = 150;								// half of time scale
 
-	double L_hyd = 6000.;							// extension of the hydrosphere shell in m, assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m
-
-	double dt = 0.0001;									// time step coincides with the CFL condition
-	double dr = 0.0005;									// compares to 150m depth
 	double the_Grad = 1.;								// compares to 1° step size laterally
 	double phi_Grad = 1.;								// compares to 1° step size longitudinally
 	double pi180 = 180./M_PI;						// pi180 = 57.3
 	double dthe = the_Grad / pi180, dphi = phi_Grad / pi180;//dthe = the_Grad / pi180 = 1.125 / 57.3 = 0.01963
-
-	double re = 1000.;									// Reynolds numberc_0
-	double ec = .0001;									// Eckert number
-	double sc = 10.;										// Schmidt number for salt water
-	double pr = 6.957;									// Prandtl number for water
-	double g = 9.8066;									// gravitational acceleration of the earth
-	double cp_w = 4182.;								// specific heat capacity of water at constant pressure and 20°C in J/( kg K )
-	double omega = 7.29e-5;							// rotation number of the earth
-	double p_0 = 1013.25;								// pressure at sea level in hPa
-	double t_0 = 273.15;								// temperature in K compares to 0°C
-	double c_0 = 34.6;									// rate of salt in psu at temperature t_0
-	double u_0 = 0.45;									// maximum value of velocity in m/s
-	double r_0_water = 1026.0;						// reference density of salt water in kg/m3
-	double epsres = 0.0005;							// accuracy for relative and absolute errors0,988571429
-
-	double ua = 0.;										// initial velocity component in r-direction
-	double va = 0.;										// initial velocity component in theta-direction
-	double wa = 0.;										// initial velocity component in phi-direction
-	double pa = 0.;										// initial value for the pressure field
-	double ta = 1.01464;								// compares to 4°C
-	double ca = 1.01156;								// c = 1.01156 compares to a salinity of 35.0 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )
-	double ca_max = 1.0983;							// c = 1.0983 compares to a salinity of 38.00 psu  used for deep flow initialization
-	double t_cretaceous_max = 10.;				// maximum add of mean temperature during cretaceous
-	//	double r0 = 6.731; 									// Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
-	double r0 = 1.; 										// Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
-	double the0 = 0.;										// North Pole
-	double phi0 = 0.;										// zero meridian in Greenwich
-	double t_average = 15.;							// mean temperature of the modern earth
-	double t_equator = 1.1355;						// temperature t_0 = 1.1355 compares to 37° C compares to 310 K
-	double t_pole = 1.0146;							// compares to 4°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect
 
 	// 1D arrays
 	Array_1D rad(im, 1.); // radial coordinate direction
