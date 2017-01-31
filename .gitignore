@@ -26,3 +26,4 @@ output-*/
 examples/config.xml
 *.pxi
 python/pyatom.h
+python/pyatom.pyx
