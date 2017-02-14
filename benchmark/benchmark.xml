@@ -1,0 +1,14 @@
+<atom>
+    <common>
+        <verbose>false</verbose>  <!-- produce a lot of debug output (default false) -->
+
+        <bathymetry_path>../data/Paleotopography_bathymetry/Golonka_rev210</bathymetry_path>
+        <BathymetrySuffix>Ma_Golonka.xyz</BathymetrySuffix>
+    </common>
+
+    <atmosphere>
+    </atmosphere>
+
+    <hydrosphere>
+    </hydrosphere>
+</atom>
