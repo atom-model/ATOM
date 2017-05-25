@@ -23,7 +23,6 @@ private:
 public:
     double **y;
 
-    // Array_2D ( );
     Array_2D(int jdim, int kdim, double val);
     ~Array_2D ( );
 

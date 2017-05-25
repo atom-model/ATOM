@@ -39,17 +39,6 @@ Array::Array(int idim, int jdim, int kdim, double val) {
         }
     }
 
-	// arbitrary initialisation of the x-field
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int k = 0; k < km; k++ )
-            {
-                x[ i ][ j ][ k ] = 333.;
-            }
-        }
-    }
 
 	// initialisation of the x-field
     for ( int i = 0; i < im; i++ )
@@ -110,10 +99,8 @@ void Array::printArray ( int im, int jm, int km )
     cout.precision ( 3 );
     cout.setf ( ios::fixed );
 
-//    for ( int i = 5; i <= 5; i++ )
-    for ( int i = im-1; i <= im-1; i++ )
-//        for ( int j = 0; j <= 0; j++ )
-//    for ( int i = 0; i < im; i++ )
+//      for ( int i = 0; i < im; i++ )
+      for ( int i = 0; i <= 0; i++ )
     {
 //        cout << "i = " << i << "   " << "im = " << im << "   " << "( transfer test of x in 'print_Array()' )" << endl;
 //        cout << endl;
