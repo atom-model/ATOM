@@ -7484,6 +7484,10 @@ void BC_Thermohalin::BC_Surface_Temperature ( const string &Name_SurfaceTemperat
 	Name_SurfaceTemperature_File_Read.close();
 }
 
+
+
+
+
 void BC_Thermohalin::BC_Surface_Salinity ( const string &Name_SurfaceSalinity_File, Array &c )
 {
 	// initial conditions for the salinity at the sea surface
@@ -7522,6 +7526,10 @@ void BC_Thermohalin::BC_Surface_Salinity ( const string &Name_SurfaceSalinity_Fi
 
 	Name_SurfaceSalinity_File_Read.close();
 }
+
+
+
+
 
 void BC_Thermohalin::BC_Surface_Pressure ( Array &h, Array &p_dyn, Array &t )
 {

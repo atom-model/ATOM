@@ -36,6 +36,9 @@
 #include "MinMax_Hyd.h"
 #include "Results_Hyd.h"
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include "tinyxml2.h"
 
 #include "cHydrosphereModel.h"
@@ -122,6 +125,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	// maximum number of overall iterations ( n ),
 	// maximum number of inner velocity loop iterations ( velocity_iter_max ),
 	// maximum number of outer pressure loop iterations ( pressure_iter_max )
+
+    mkdir(output_path.c_str(), 0777);
 
 	const int im = 41, jm = 181, km = 361, nm = 200;
 	int j_res = 0.0, k_res = 0.0;
@@ -228,30 +233,33 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	ssNameSurfaceSalinity << "SurfaceSalinity.xyz";
 	Name_SurfaceSalinity_File = ssNameSurfaceSalinity.str();
 
-	// choice of the time slice by Ma and by author
-	// choice of the transfer file for the surface velocity components
-	string Name_Bathymetry_File;
-	stringstream My;
+
+
+    // TODO we're assuming that our output dir has been set
+    cout << "Output is being written to " << output_path << "\n";
+    cout << "Ma = " << Ma << "\n";
+
+
+    string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
+    string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
 
 	n = 1;
-	My << Ma << "Ma_Golonka.xyz";
-	Name_Bathymetry_File = My.str();
 
-	ssName_v_w_Transfer_File << "[" << Name_Bathymetry_File << "]_Transfer_Atm.vw";
+	ssName_v_w_Transfer_File << "[" << bathymetry_name << "]_Transfer_Atm.vw";
 	Name_v_w_Transfer_File = ssName_v_w_Transfer_File.str();
 
-	// ssNameNetCDF << Name_Bathymetry_File << "_atmosphere.nc";
+	// ssNameNetCDF << bathymetry_name << "_atmosphere.nc";
 	// Name_netCDF_File = ssNameNetCDF.str();
 
 	PostProcess_Hydrosphere		read_Transfer ( im, jm, km, input_path, output_path );
-	read_Transfer.Atmosphere_TransferFile_read ( Name_Bathymetry_File, v, w, p_dyn );
+	read_Transfer.Atmosphere_TransferFile_read ( bathymetry_name, v, w, p_dyn );
 
 	//	class PostProcess for data transport, read and write
 	PostProcess_Hydrosphere		read_File ( im, jm, km, input_path, output_path );
 	n++;
 
 	cout << "***** time slice for the Oceanic Global Circulation Modell ( OGCM ) is:    Ma = " << Ma << " million years" << endl << endl;
-	cout << "***** bathymetry/topography given by the x-y-z data set:    " << Name_Bathymetry_File.c_str() << endl << endl;
+	cout << "***** bathymetry/topography given by the x-y-z data set:    " << bathymetry_name.c_str() << endl << endl;
 
 	n++;
 
@@ -274,7 +282,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	BC_Bathymetry_Hydrosphere		depth ( im, jm, km );
 
 	// 	class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-	depth.BC_SeaGround(bathymetry_path, Name_Bathymetry_File, L_hyd, h, aux_w);
+	depth.BC_SeaGround(bathymetry_path, bathymetry_name, L_hyd, h, aux_w);
 
 	// class BC_Hydrosphere for the boundary conditions for the variables at the spherical shell surfaces and the meridional interface
 	BC_Hydrosphere		boundary ( im, jm, km );
@@ -369,7 +377,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 				// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of pressure loop_2D : if ( pressure_iter_2D > pressure_iter_max_2D )   :::::::::::::::::::::::::::::::::::::::::::
 				for (int pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++) {
 					// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of velocity loop_2D: while ( emin >= epsres )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-					for (int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++) {
+//					for (int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++) {
+					for (velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++) {
 						//		class BC_Atmosphaere for the geometry of a shell of a sphere
 						boundary.RB_theta ( ca, ta, pa, t, u, v, w, p_dyn, c );
 						boundary.RB_phi ( t, u, v, w, p_dyn, c );
@@ -562,25 +571,25 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 	PostProcess_Hydrosphere		write_File ( im, jm, km, input_path, output_path );
 
 	int j_longal = 75;
-	write_File.paraview_vtk_longal ( Name_Bathymetry_File, j_longal, pressure_iter_max, h, p_dyn, p_stat, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
+	write_File.paraview_vtk_longal ( bathymetry_name, j_longal, pressure_iter_max, u_0, r_0_water, h, p_dyn, p_stat, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
 	//	zonal data along constant longitudes
 	int k_zonal = 185;
-	write_File.paraview_vtk_zonal ( Name_Bathymetry_File, k_zonal, pressure_iter_max, h, p_dyn, p_stat, t, u, v, w, c, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
+	write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, pressure_iter_max, u_0, r_0_water, h, p_dyn, p_stat, t, u, v, w, c, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
 	//	radial data along constant hight above ground
 	int i_radial = 40;
-	write_File.paraview_vtk_radial ( Name_Bathymetry_File, i_radial, pressure_iter_max, h, p_dyn, p_stat, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater );
+	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, pressure_iter_max, u_0, r_0_water, h, p_dyn, p_stat, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater );
 
 	//	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-	write_File.paraview_panorama_vts ( Name_Bathymetry_File, pressure_iter_max, h, t, p_dyn, p_stat, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
+//	write_File.paraview_panorama_vts ( bathymetry_name, pressure_iter_max, u_0, r_0_water, h, t, p_dyn, p_stat, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
 	//	3-dimensional data in spherical coordinate system for a streamline pattern in a shell of a sphere
-	// write_File.paraview_vts ( Name_Bathymetry_File, n, rad, the, phi, h, t, p_dyn, p_stat, u, v, w, c, rhs_u, rhs_v, rhs_w, rhs_c, rhs_p, rhs_t, aux_u, aux_v, aux_w, Salt_Finger, BuoyancyForce_3D, Salt_Balance );
+	// write_File.paraview_vts ( bathymetry_name, n, rad, the, phi, h, t, p_dyn, p_stat, u, v, w, c, rhs_u, rhs_v, rhs_w, rhs_c, rhs_p, rhs_t, aux_u, aux_v, aux_w, Salt_Finger, BuoyancyForce_3D, Salt_Balance );
 
 	//	writing of plot data in the PlotData file
 	PostProcess_Hydrosphere		write_PlotData_File ( im, jm, km, input_path, output_path );
-	write_PlotData_File.Hydrosphere_PlotData ( Name_Bathymetry_File, v, w, t, c, BottomWater, Upwelling, Downwelling );
+	write_PlotData_File.Hydrosphere_PlotData ( bathymetry_name, v, w, t, c, BottomWater, Upwelling, Downwelling );
 
 	if ( velocity_iter == velocity_iter_max )	cout << "***** number of time steps      n = " << n << ", end of program reached because of limit of maximum time steps ***** \n\n" << endl;
 
@@ -588,6 +597,23 @@ void cHydrosphereModel::RunTimeSlice(int Ma) {
 }
 
 void cHydrosphereModel::Run() {
+    // create the output dir
+
+    mkdir(output_path.c_str(), 0777);
+
+    cout << "Output is being written to " << output_path << "\n";
+
+    // write out the config for reproducibility
+    // disabled for now
+    // std::stringstream output_config_path;
+    // output_config_path << output_path << "/config.xml";
+    // WriteConfig(output_config_path.str().c_str());
+
+
+
+
+
+
 	// time slices to be run after actualizing 
 	int i_time_slice_max = 15;
 	int *time_slice = new int [ i_time_slice_max ]; 	// time slices in Ma

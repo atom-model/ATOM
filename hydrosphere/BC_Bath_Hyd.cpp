@@ -44,12 +44,16 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, cons
 	h.initArray(im, jm, km, 0.);
 
 	// reading data from file Name_Bathymetry_File_Read
+//	ifstream Name_Bathymetry_File_Read;
+//	string path = bathymetry_path + Name_Bathymetry_File;
+//	Name_Bathymetry_File_Read.open(path);
+
 	ifstream Name_Bathymetry_File_Read;
-	string path = bathymetry_path + Name_Bathymetry_File;
+	string path = bathymetry_path + "/" + Name_Bathymetry_File;
 	Name_Bathymetry_File_Read.open(path);
 
 	if (!Name_Bathymetry_File_Read.is_open()) {
-		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cerr << "ERROR: could not open bathymetry file at " << path << "\n";
 		abort();
 	}
 
