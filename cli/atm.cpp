@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+
     std::cout << "Loading configuration from " << argv[1] << "\n";
 
     model.LoadConfig(argv[1]);
