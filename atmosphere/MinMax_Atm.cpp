@@ -13,6 +13,8 @@
 #include <iomanip>
 #include <cstring>
 
+#include "Array.h"
+#include "Array_2D.h"
 #include "MinMax_Atm.h"
 
 using namespace std;

@@ -33,7 +33,6 @@ class File_NetCDF {
 		int ncid, lon_dimid, lat_dimid, lvl_dimid, rec_dimid, v_varid, w_varid, h_varid, prec_varid, precwat_varid;
 		int lat_varid, lon_varid;
 		int dimids[ 4 ];
-		// int lvl, lat, lon;
 		int rec;
 		int retval;
 		int im, jm, km;
@@ -45,11 +44,6 @@ class File_NetCDF {
 		double v_air[ 3 ][ 182 ][ 362 ];			// auxilliar arrays for v-componente for the netCDF-file
 		double w_air[ 3 ][ 182 ][ 362 ];			// auxilliar arrays for w-componente for the netCDF-file
 		double h_air[ 3 ][ 182 ][ 362 ];			// auxilliar arrays for depth h for the netCDF-file
-
-		// char LAT_NAME[ 15 ], LON_NAME[ 15 ], LVL_NAME[ 15 ], REC_NAME[ 15 ], UNITS[ 15 ], DEGREES_EAST[ 15 ], DEGREES_NORTH[ 15 ];
-		// char V_NAME[ 15 ], W_NAME[ 15 ], H_NAME[ 15 ], PREC_NAME[ 15 ], PRECWAT_NAME[ 15 ];
-		// char v_units[ 15 ], w_units[ 15 ], h_units[ 15 ], prec_units[ 15 ], precwat_units[ 15 ];
-
 
 	public:
 		File_NetCDF ( int, int, int );

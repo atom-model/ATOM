@@ -28,6 +28,7 @@ class BC_Bathymetry_Atmosphere
 		int i_SL;
 		int j_half, j_max;
 		int i_Ice_lauf;
+		int NASATemperature;
 
 		double dummy_1, dummy_2, dummy_3;
 		double d_i, d_i_max, d_j, d_j_half, d_j_max;
@@ -43,7 +44,7 @@ class BC_Bathymetry_Atmosphere
 		string Daten_NW;
 
 	public:
-		BC_Bathymetry_Atmosphere ( int, int, int, double, double, double );
+		BC_Bathymetry_Atmosphere ( int, int, int, int, double, double, double );
 		~BC_Bathymetry_Atmosphere();
 
 		void BC_MountainSurface ( string &, double, Array &, Array & );

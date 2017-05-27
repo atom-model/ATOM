@@ -50,7 +50,6 @@ void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p
 			v.x[ im-1 ][ j ][ k ] = 0.;																					// stratosphere
 			w.x[ im-1 ][ j ][ k ] = 0.;
 
-			t.x[ im-1 ][ j ][ k ] = t_tropopause;
 			c.x[ im-1 ][ j ][ k ] = 0.;
 			cloud.x[ im-1 ][ j ][ k ] = 0.;
 			ice.x[ im-1 ][ j ][ k ] = 0.;

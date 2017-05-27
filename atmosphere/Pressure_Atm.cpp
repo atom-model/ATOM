@@ -8,15 +8,14 @@
  * class to compute the pressure independent of the other variables
 */
 
-
 #include <iostream>
 #include <cmath>
 
 #include "Pressure_Atm.h"
+#include "Array.h"
+#include "Array_2D.h"
 
 using namespace std;
-
-
 
 
 Pressure_Atm::Pressure_Atm ( int im, int jm, int km, double dr, double dthe, double dphi )
@@ -36,7 +35,6 @@ Pressure_Atm::~Pressure_Atm () {}
 void Pressure_Atm::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &h, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &aux_u, Array &aux_v, Array &aux_w, Array &aux_p )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
-
 	for ( int i = 1; i < im-1; i++ )
 	{
 		dr2 = dr * dr;
@@ -95,7 +93,6 @@ void Pressure_Atm::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the,
 			}
 		}
 	}
-
 }
 
 
@@ -151,5 +148,4 @@ void Pressure_Atm::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the,
 			p_dyn.x[ 0 ][ j ][ k ] = aux_p.x[ 0 ][ j ][ k ] = 0.;			// 2D pressure computation causes a pressure jump in radial direction along coast lines, 3D treatment needed later, 2D velocities are though corrected
 		}
 	}
-
 }

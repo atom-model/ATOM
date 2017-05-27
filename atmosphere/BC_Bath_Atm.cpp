@@ -22,8 +22,9 @@ using namespace std;
 
 
 
-BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int im, int jm, int km, double co2_vegetation, double co2_land, double co2_ocean )
+BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int NASATemperature, int im, int jm, int km, double co2_vegetation, double co2_land, double co2_ocean )
 {
+	this-> NASATemperature = NASATemperature;
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;
@@ -40,7 +41,7 @@ BC_Bathymetry_Atmosphere::~BC_Bathymetry_Atmosphere(){}
 
 void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File, double L_atm, Array &h, Array &aux_w )
 {
-	streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
+//	streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
 
 	cout.precision ( 8 );
 	cout.setf ( ios::fixed );
@@ -287,7 +288,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, d
 			if ( h.x[ 0 ][ j ][ k ] == 1. ) 
 			{
 				d_j = ( double ) j;
-				t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;
+//				t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;
 
 //				c.x[ 0 ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );
 //				c.x[ 0 ][ j ][ k ] = c_land * c.x[ 0 ][ j ][ k ];					// relativ water vapour contents on land reduced by factor
@@ -316,15 +317,22 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, d
 					v.x[ i ][ j ][ k ] = 0.;
 					w.x[ i ][ j ][ k ] = 0.;
 
+					c.x[ i ][ j ][ k ] = 0.;
+					cloud.x[ i ][ j ][ k ] = 0.;
+					ice.x[ i ][ j ][ k ] = 0.;
+
+					co2.x[ i ][ j ][ k ] = 0.;
+
 					p_dyn.x[ i ][ j ][ k ] = 0.;
 
 					d_i = ( double ) i;
 
-					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];										// linear temperature decay up to tropopause
+					if ( NASATemperature == 0 ) 			t.x[ i ][ j ][ k ] = ( t_tropopause - t_cretaceous  - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];	// linear temperature decay until mountain summits
+					else 													t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];										// surface temperure by NASA as initial condition
 
 //					c.x[ i ][ j ][ k ] = c.x[ 0 ][ j ][ k ] - ( c_tropopause - c.x[ 0 ][ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola ( Weischet )
 
-					co2.x[ i ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - ( ( co2_tropopause - co2.x[ 0 ][ j ][ k ] * co2_0 ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ) ) / co2_0;
+//					co2.x[ i ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - ( ( co2_tropopause - co2.x[ 0 ][ j ][ k ] * co2_0 ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ) ) / co2_0;
 																																// radial distribution approximated by a parabola
 
 				}
