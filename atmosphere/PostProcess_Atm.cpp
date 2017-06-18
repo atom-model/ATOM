@@ -12,6 +12,7 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
 #include "PostProcess_Atm.h"
 
@@ -113,6 +114,7 @@ void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_F
     v_w_Transfer_File.open(Name_v_w_Transfer_File);
 
     if (!v_w_Transfer_File.is_open()) {
+        cout << "ERROR: transfer file name in atmosphere: " << Name_v_w_Transfer_File << "\n";
         cerr << "ERROR: could not open transfer file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }

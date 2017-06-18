@@ -5,16 +5,16 @@
 void cAtmosphereModel::SetDefaultConfig() {
 
   // common section
-  bathymetry_path = "data/Paleotopography_bathymetry/Golonka_rev210";
+  bathymetry_path = "../data/Paleotopography_bathymetry/Golonka_rev210";
   BathymetrySuffix = "Ma_Golonka.xyz";
-  verbose = false;
+  verbose = true;
   output_path = "output";
 
   // atmosphere section
-  velocity_iter_max = 2;
-  pressure_iter_max = 2;
-  velocity_iter_max_2D = 2;
-  pressure_iter_max_2D = 2;
+  velocity_iter_max = 4;
+  pressure_iter_max = 4;
+  velocity_iter_max_2D = 4;
+  pressure_iter_max_2D = 4;
   coriolis = 1.0;
   centrifugal = 1.0;
   WaterVapour = 1.0;

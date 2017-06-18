@@ -14,6 +14,7 @@
 #include <fstream>
 #include <cstring>
 #include <iomanip>
+#include <sstream>
 
 #include "BC_Bath_Atm.h"
 
@@ -41,8 +42,6 @@ BC_Bathymetry_Atmosphere::~BC_Bathymetry_Atmosphere(){}
 
 void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File, double L_atm, Array &h, Array &aux_w )
 {
-//	streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
-
 	cout.precision ( 8 );
 	cout.setf ( ios::fixed );
 
@@ -51,9 +50,10 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 
 	// reading data from file Name_Bathymetry_File_Read
 	ifstream Name_Bathymetry_File_Read;
+//	Name_Bathymetry_File_Read.open ( Name_Bathymetry_File.c_str(), ios_base::in );
 	Name_Bathymetry_File_Read.open(Name_Bathymetry_File);
 
-	if (!Name_Bathymetry_File_Read.is_open()) {
+	if ( !Name_Bathymetry_File_Read.is_open() ) {
 		cerr << "ERROR: could not open bathymetry file at " << Name_Bathymetry_File << "\n";
 		abort();
 	}
@@ -64,13 +64,18 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 			Name_Bathymetry_File_Read >> dummy_2;
 			Name_Bathymetry_File_Read >> dummy_3;
 
-			if ( dummy_3 < 0. ) {
+
+			if ( dummy_3 < 0. )
+			{
 				h.x[ 0 ][ j ][ k ] = 0.;
-			} else {
+			}
+			 else
+			{
 				int i = ( im - 1 ) * ( dummy_3 / L_atm );
 				i_SL = i;
 
-				for ( i = 0; i <= i_SL; i++ ) {
+				for ( i = 0; i <= i_SL; i++ )
+				{
 					h.x[ i ][ j ][ k ] = 1.;
 				}
 			}

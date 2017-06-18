@@ -5,8 +5,6 @@
 
   // common section
 
-  const tinyxml2::XMLElement *elem_common = atom->FirstChildElement("common");
-
   if (elem_common) {
     Config::FillStringWithElement(elem_common, "bathymetry_path", bathymetry_path);
     Config::FillStringWithElement(elem_common, "BathymetrySuffix", BathymetrySuffix);
@@ -15,8 +13,6 @@
   }
 
   // atmosphere section
-
-  const tinyxml2::XMLElement *elem_atmosphere = atom->FirstChildElement("atmosphere");
 
   if (elem_atmosphere) {
     Config::FillIntWithElement(elem_atmosphere, "velocity_iter_max", velocity_iter_max);

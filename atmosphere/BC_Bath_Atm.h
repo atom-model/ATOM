@@ -41,8 +41,6 @@ class BC_Bathymetry_Atmosphere
 		double co2_vegetation, co2_ocean, co2_land;
 		double h_point_max, h_land, h_ocean, ozean_land;
 
-		string Daten_NW;
-
 	public:
 		BC_Bathymetry_Atmosphere ( int, int, int, int, double, double, double );
 		~BC_Bathymetry_Atmosphere();
