@@ -8,9 +8,10 @@ def main():
     # name, description, datatype, default
     PARAMS = {
         'common': [
-            ('bathymetry_path', '', 'string', 'data/Paleotopography_bathymetry/Golonka_rev210'),
+            ('bathymetry_path', '', 'string', '../data/Paleotopography_bathymetry/Golonka_rev210'),
             ('BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz'),
-            ('verbose', '', 'bool', False),
+#            ('verbose', '', 'bool', False),
+            ('verbose', '', 'bool', True),
             ('output_path', 'directory where model outputs should be placed (must end in /)', 'string', 'output'),
         ],
 
@@ -224,7 +225,6 @@ def main():
             for section in sections:
                 f.write('\n  // %s section\n' % section)
                 element_var_name = 'elem_%s' % section
-                f.write('\n  const tinyxml2::XMLElement *%s = atom->FirstChildElement("%s");\n' % (element_var_name, section))
                 f.write('\n  if (%s) {\n' % (element_var_name))
 
                 for slug, desc, ctype, default in PARAMS[section]:
@@ -306,7 +306,9 @@ cdef extern from "c%sModel.h":
 
     def write_config_xml(filename, sections):
         with open(filename, 'w') as f:
-            f.write("""<!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. --> <atom>""")
+            f.write("""<!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. -->""")
+
+            f.write('<atom>')
 
             for section in sections:
                 f.write('    <%s>\n' % section)
@@ -365,13 +367,18 @@ cdef extern from "c%sModel.h":
 
 
     for  filename, sections in [
+        ('python/config_atm.xml', atmosphere_sections),
+        ('python/config_hyd.xml', hydrosphere_sections)
+    ]:
+        write_config_xml(filename, sections)
+
+
+    for  filename, sections in [
         ('examples/config_atm.xml', atmosphere_sections),
         ('examples/config_hyd.xml', hydrosphere_sections)
     ]:
         write_config_xml(filename, sections)
 
-
-#    write_config_xml('examples/config.xml', atmosphere_sections)
 
 
 
