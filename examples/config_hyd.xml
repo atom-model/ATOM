@@ -1,15 +1,15 @@
-<!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. --> <atom>    <common>
-        <bathymetry_path>data/Paleotopography_bathymetry/Golonka_rev210</bathymetry_path>  <!--  (string) -->
+<!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. --><atom>    <common>
+        <bathymetry_path>../data/Paleotopography_bathymetry/Golonka_rev210</bathymetry_path>  <!--  (string) -->
         <BathymetrySuffix>Ma_Golonka.xyz</BathymetrySuffix>  <!--  (string) -->
-        <verbose>false</verbose>  <!--  (bool) -->
+        <verbose>true</verbose>  <!--  (bool) -->
         <output_path>output</output_path>  <!-- directory where model outputs should be placed (must end in /) (string) -->
     </common>
     <hydrosphere>
         <input_path>output</input_path>  <!-- directory where Atmosphere output can be read (must end in /) (string) -->
-        <velocity_iter_max>2</velocity_iter_max>  <!--  (int) -->
-        <pressure_iter_max>2</pressure_iter_max>  <!--  (int) -->
-        <velocity_iter_max_2D>2</velocity_iter_max_2D>  <!--  (int) -->
-        <pressure_iter_max_2D>2</pressure_iter_max_2D>  <!--  (int) -->
+        <velocity_iter_max>4</velocity_iter_max>  <!--  (int) -->
+        <pressure_iter_max>4</pressure_iter_max>  <!--  (int) -->
+        <velocity_iter_max_2D>4</velocity_iter_max_2D>  <!--  (int) -->
+        <pressure_iter_max_2D>4</pressure_iter_max_2D>  <!--  (int) -->
         <coriolis>1.0</coriolis>  <!-- computation with Coriolis force (double) -->
         <centrifugal>1.0</centrifugal>  <!-- computation with centrifugal force (double) -->
         <buoyancy>1.0</buoyancy>  <!-- computation with buoyancy (double) -->
