@@ -5,10 +5,10 @@
         <output_path>output</output_path>  <!-- directory where model outputs should be placed (must end in /) (string) -->
     </common>
     <atmosphere>
-        <velocity_iter_max>4</velocity_iter_max>  <!--  (int) -->
-        <pressure_iter_max>4</pressure_iter_max>  <!--  (int) -->
-        <velocity_iter_max_2D>4</velocity_iter_max_2D>  <!--  (int) -->
-        <pressure_iter_max_2D>4</pressure_iter_max_2D>  <!--  (int) -->
+        <velocity_iter_max>2</velocity_iter_max>  <!--  (int) -->
+        <pressure_iter_max>2</pressure_iter_max>  <!--  (int) -->
+        <velocity_iter_max_2D>2</velocity_iter_max_2D>  <!--  (int) -->
+        <pressure_iter_max_2D>2</pressure_iter_max_2D>  <!--  (int) -->
         <coriolis>1.0</coriolis>  <!-- coriolis force (double) -->
         <centrifugal>1.0</centrifugal>  <!-- centrifugal force (double) -->
         <WaterVapour>1.0</WaterVapour>  <!-- water vapour (double) -->

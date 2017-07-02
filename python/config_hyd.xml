@@ -6,10 +6,10 @@
     </common>
     <hydrosphere>
         <input_path>output</input_path>  <!-- directory where Atmosphere output can be read (must end in /) (string) -->
-        <velocity_iter_max>4</velocity_iter_max>  <!--  (int) -->
-        <pressure_iter_max>4</pressure_iter_max>  <!--  (int) -->
-        <velocity_iter_max_2D>4</velocity_iter_max_2D>  <!--  (int) -->
-        <pressure_iter_max_2D>4</pressure_iter_max_2D>  <!--  (int) -->
+        <velocity_iter_max>2</velocity_iter_max>  <!--  (int) -->
+        <pressure_iter_max>2</pressure_iter_max>  <!--  (int) -->
+        <velocity_iter_max_2D>2</velocity_iter_max_2D>  <!--  (int) -->
+        <pressure_iter_max_2D>2</pressure_iter_max_2D>  <!--  (int) -->
         <coriolis>1.0</coriolis>  <!-- computation with Coriolis force (double) -->
         <centrifugal>1.0</centrifugal>  <!-- computation with centrifugal force (double) -->
         <buoyancy>1.0</buoyancy>  <!-- computation with buoyancy (double) -->
