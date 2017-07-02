@@ -107,6 +107,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 // maximum number of inner velocity loop iterations ( velocity_iter_max )
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
+	output_path = output_path + "-" + std::to_string ( Ma );
 	mkdir(output_path.c_str(), 0777);
 
 	const int im = 41, jm = 181, km = 361, nm = 200;
@@ -275,14 +276,14 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 	string SurfaceTemperature_Path;
 	string Name_SurfaceTemperature_File;
 	stringstream ssNameSurfaceTemperature;
-	ssNameSurfaceTemperature << "data/" << "SurfaceTemperature_NASA.xyz";
+	ssNameSurfaceTemperature << "../data/" << "SurfaceTemperature_NASA.xyz";
 	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
 
 // naming a file to read the surface precipitation by NASA
 	string SurfacePrecipitation_Path;
 	string Name_SurfacePrecipitation_File;
 	stringstream ssNameSurfacePrecipitation;
-	ssNameSurfacePrecipitation << "data/" << "SurfacePrecipitation_NASA.xyz";
+	ssNameSurfacePrecipitation << "../data/" << "SurfacePrecipitation_NASA.xyz";
 	Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
 
 	string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
@@ -357,7 +358,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 
 
 
-
 //	class element calls for the preparation of initial conditions for the flow properties
 
 //	class element for the tropopause location as a parabolic distribution from pole to pole 
@@ -403,8 +403,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 
 // 	class element for the initial conditions for u-v-w-velocity components
 	circulation.IC_CellStructure ( im_tropopause, u, v, w );
-
-
 
 
 //	class Restore to restore the iterational values from new to old
@@ -764,10 +762,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 			calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, rad, the, phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Latency, Q_Sensible, radiation_3D, t_cond_3D, t_evap_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, precipitation_NASA, Evaporation, Condensation, LatentHeat, precipitable_water, Q_Radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, Vegetation, Radiation_Balance, Radiation_Balance_par, Radiation_Balance_bot, albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
 
-
-// printout of results at certain positions
-//			calculate_MSL.show_MSL_data ( h, c, t, p_dyn, u, Latency, Q_Sensible, t_cond_3D, t_evap_3D, precipitation_NASA, Evaporation, Condensation, precipitable_water, Q_Radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude );
-
 //  restoring the velocity component and the temperature for the new time step
 			oldnew.restoreOldNew_3D ( 1., u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, aux_p, cn, cloudn, icen, co2n );
 		}
@@ -820,7 +814,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 //	writing of v-w-data in the v_w_transfer file
 	PostProcess_Atmosphere ppa(im, jm, km, output_path);
 	ppa.Atmosphere_v_w_Transfer(bathymetry_name, v, w, p_dyn);
-	ppa.Atmosphere_PlotData(bathymetry_name, u_0, t_0, v, w, t, c, Precipitation, precipitable_water);
+	ppa.Atmosphere_PlotData(bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water);
 
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
@@ -955,7 +949,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 
 void cAtmosphereModel::Run() {
 // create the output dir
-
+//	output_path = output_path + "-" + std::to_string ( Ma );
 	mkdir(output_path.c_str(), 0777);
 
 	cout << "Output is being written to " << output_path << "\n";
