@@ -11,6 +11,40 @@ from libcpp.string cimport string
 
 
 
+class Model:
+    """
+    ATOM Model Object
+    """
+    def __init__( self ):
+        self.atmosphere = Atmosphere()
+        self.hydrosphere = Hydrosphere()
+        self.output_path = ""
+        self.time_slice = 0
+        self.config_xml = ""
+
+    def run_atm ( self, t_s, output_path, cfg_xml ):
+        self.time_slice = t_s
+        self.output_path = output_path
+        self.config_xml = cfg_xml
+        print self.time_slice 
+        print self.output_path 
+        print self.config_xml 
+        self.atmosphere.load_config ( self.config_xml )
+        self.atmosphere.run_time_slice ( self.time_slice )
+
+    def run_hyd ( self, t_s, output_path, cfg_xml ):
+        self.input_path = output_path
+        self.output_path = output_path
+        self.config_xml = cfg_xml
+        print self.time_slice 
+        print self.output_path 
+        print self.config_xml 
+        self.hydrosphere.load_config ( self.config_xml )
+        self.hydrosphere.run_time_slice ( self.time_slice )
+
+
+
+
 cdef class Atmosphere:
     """ 
     Cython wrapper class for C++ class Atmosphere
