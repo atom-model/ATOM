@@ -380,6 +380,13 @@ cdef extern from "c%sModel.h":
         write_config_xml(filename, sections)
 
 
+    for  filename, sections in [
+        ('benchmark/config_atm.xml', atmosphere_sections),
+        ('benchmark/config_hyd.xml', hydrosphere_sections)
+    ]:
+        write_config_xml(filename, sections)
+
+
 
 
 if __name__ == '__main__':
