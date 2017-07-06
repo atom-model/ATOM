@@ -31,7 +31,7 @@ def main():
 
             ('sun', 'while no variable sun position wanted', 'int', 0),
             ('RadiationModel', 'surface temperature computation by a radiation model', 'int', 3),
-            ('NASATemperature', 'surface temperature given by NASA', 'int', 0),
+            ('NASATemperature', 'surface temperature given by NASA', 'int', 1),
             ('IceShield', 'compute ice shields? computation of ice shield following the theorie by Milankowitsch', 'int', 0),
 
             ('declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0),
