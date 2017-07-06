@@ -101,8 +101,9 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 	}
 
 
+	l = l - 1;
 
-	for ( int k = 0; k < 180; k++ )
+	for ( int k = 0; k < 181; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
