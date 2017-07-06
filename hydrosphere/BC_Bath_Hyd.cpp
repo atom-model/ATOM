@@ -112,9 +112,9 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, cons
 			l++;
 		}
 
+		l = l - 1;
 
-
-		for ( int k = 0; k < 180; k++ )
+		for ( int k = 0; k < 181; k++ )
 		{
 			for ( int j = 0; j < jm; j++ )
 			{
