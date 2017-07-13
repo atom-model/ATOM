@@ -117,6 +117,8 @@ class BC_Thermo
 
 		void BC_CO2 ( Array_2D &, Array &, Array &, Array &, Array & );
 
+		void BC_NASAbasedSurfaceTemperature ( const string &, Array &, Array &, Array &, Array & );
+
 		void BC_Surface_Temperature_NASA ( const string &, Array_2D &, Array & );
 
 		void BC_Surface_Precipitation_NASA ( const string &, Array_2D & );

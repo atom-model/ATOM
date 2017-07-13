@@ -544,6 +544,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albed
 			for ( int i = 0; i < im; i++ )
 			{
 				e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep; // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
+//				e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
 
 				d_i = ( double ) i;
 
@@ -817,6 +818,7 @@ void BC_Thermo::BC_Temperature ( Array_2D &temperature_NASA, Array &h, Array &t,
 
 //      cout << endl << "   NASATemperature = " << NASATemperature << "   t_pole = " << t_pole << "   t_cretaceous = " << t_cretaceous << "   t_land = " << t_land << "   t_co2_eff = " << t_co2_eff << "   d_j_half = " << d_j_half << "   sun = " << sun << endl;
 
+
 	if ( RadiationModel == 3 )
 	{		if ( sun == 0 )
 		{
@@ -841,7 +843,7 @@ void BC_Thermo::BC_Temperature ( Array_2D &temperature_NASA, Array &h, Array &t,
 	}
 
 
-// temperature decreasing approaching the tropopause, above constant temperature following Standard Atmosphere
+// temperature approaching the tropopause, above constant temperature following Standard Atmosphere
 //	t_tropopause= t_tropopause - t_cretaceous;
 
 	d_i_max = ( double ) ( im - 1 );
@@ -858,33 +860,6 @@ void BC_Thermo::BC_Temperature ( Array_2D &temperature_NASA, Array &h, Array &t,
 		}
 	}
 
-}
-
-
-
-
-
-
-
-
-
-void BC_Thermo::TropopauseLocation ( int *im_tropopause )
-{
-// parabolic tropopause location distribution from pole to pole assumed
-
-	j_half = ( jm -1 ) / 2;
-
-	d_j_half = ( double ) j_half;
-
-	trop_co2_eff = ( double ) ( i_beg - i_max );
-
-// computation of the tropopause from pole to pole
-
-	for ( int j = 0; j < jm; j++ )
-	{
-		d_j = ( double ) j;
-		im_tropopause[ j ] = ( trop_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) ) + i_beg;
-	}
 }
 
 
@@ -915,7 +890,6 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c )
 			d_j = ( double ) j;
 			if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
 			{
-
 				c.x[ 0 ][ j ][ k ]  = hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );	// saturation of relative water vapour in kg/kg
 				c.x[ 0 ][ j ][ k ] = c_ocean * c.x[ 0 ][ j ][ k ];														// relativ water vapour contents on ocean surface reduced by factor
 			}
@@ -1024,6 +998,29 @@ void BC_Thermo::BC_CO2 ( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn,
 		}
 	}
 
+}
+
+
+
+
+
+void BC_Thermo::TropopauseLocation ( int *im_tropopause )
+{
+// parabolic tropopause location distribution from pole to pole assumed
+
+	j_half = ( jm -1 ) / 2;
+
+	d_j_half = ( double ) j_half;
+
+	trop_co2_eff = ( double ) ( i_beg - i_max );
+
+// computation of the tropopause from pole to pole
+
+	for ( int j = 0; j < jm; j++ )
+	{
+		d_j = ( double ) j;
+		im_tropopause[ j ] = ( trop_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) ) + i_beg;
+	}
 }
 
 
@@ -2845,6 +2842,45 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
 
 
 
+void BC_Thermo::BC_NASAbasedSurfaceTemperature ( const string &Name_NASAbasedSurfaceTemperature_File, Array &t, Array &c, Array &cloud, Array &ice )
+{
+// initial conditions for the Name_NASAbasedSurfaceTemperature_File at the sea surface
+
+	cout.precision ( 4 );
+	cout.setf ( ios::fixed );
+
+	ifstream Name_NASAbasedSurfaceTemperature_File_Read;
+	Name_NASAbasedSurfaceTemperature_File_Read.open(Name_NASAbasedSurfaceTemperature_File);
+
+	if (!Name_NASAbasedSurfaceTemperature_File_Read.is_open()) {
+		cerr << "ERROR: could not open Name_NASAbasedSurfaceTemperature_File file at " << Name_NASAbasedSurfaceTemperature_File << "\n";
+		abort();
+	}
+
+	for ( int k = 0; k < km; k++ ) {
+		for ( int j = 0; j < jm; j++ ) {
+			for ( int i = 0; i < im; i++ ) {
+				Name_NASAbasedSurfaceTemperature_File_Read >> t.x[ i ][ j ][ k ];
+				Name_NASAbasedSurfaceTemperature_File_Read >> c.x[ i ][ j ][ k ];
+				Name_NASAbasedSurfaceTemperature_File_Read >> cloud.x[ i ][ j ][ k ];
+				Name_NASAbasedSurfaceTemperature_File_Read >> ice.x[ i ][ j ][ k ];
+			}
+		}
+	}
+	Name_NASAbasedSurfaceTemperature_File_Read.close();
+
+	cout << endl << "§§§§§§§§§§§§§§§§§§ inside BC_Thermo reading NASAbasedSurfaceTemperature §§§§§§§§§§§§§§§§§§§§§§§§" << endl;
+	cout << endl << " ***** printout of 3D-field temperature ***** " << endl << endl;
+	t.printArray( im, jm, km );
+	cout << endl << " ***** printout of 3D-field water vapour ***** " << endl << endl;
+	c.printArray( im, jm, km );
+
+}
+
+
+
+
+
 void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecipitation_File, Array_2D &precipitation_NASA )
 {
 // initial conditions for the Name_SurfacePrecipitation_File at the sea surface
@@ -3736,6 +3772,9 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 	p_ps = .05;
 	bet_p = 2.e-3;																			// in s
 
+//	coeff_P = ( L_atm / ( double ) ( im-1 ) ) * dr;
+//	coeff_P = ( L_atm / ( double ) ( im-1 ) );
+	coeff_P = 1.;
 
 /*
 	cout << endl << " ***** Results before Snow ***** " << endl << endl;
@@ -3816,15 +3855,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 // the choosen scheme is a Two Category Ice Scheme
 // besides the transport equation for the water vapour exists two equations for the cloud water and the cloud ice transport
 // since the diagnostic version of the code is applied the rain and snow mass transport is computed by column equilibrium integral equation
-
-//	coeff_P = 1.;
-//	coeff_P = 0.;
-	coeff_P = r_humid * ( L_atm / ( double ) ( im-1 ) ) * dr;
-//	coeff_P = r_humid * ( L_atm / ( double ) ( im-1 ) );
-//	coeff_P = r_humid * L_atm * dr;
-
-
-
 
 
 	for ( int k = 1; k < km-1; k++ )
@@ -3918,8 +3948,11 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 				S_r.x[ i ][ j ][ k ] = S_c_au;
 				S_s.x[ i ][ j ][ k ] = S_i_au + S_d_au;
 
-				P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + S_r.x[ i ][ j ][ k ] * coeff_P;
-				P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + S_s.x[ i ][ j ][ k ] * coeff_P;
+//				P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + S_r.x[ i ][ j ][ k ] * r_humid * coeff_P;
+//				P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + S_s.x[ i ][ j ][ k ] * r_humid * coeff_P;
+
+				P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * coeff_P;
+				P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * coeff_P;
 
 			}
 		}
@@ -4159,9 +4192,11 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 
 
 // rain and snow integration
-					P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + S_r.x[ i ][ j ][ k ] * coeff_P;
+//					P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + S_r.x[ i ][ j ][ k ] * r_humid * coeff_P;
+//					P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + S_s.x[ i ][ j ][ k ] * r_humid * coeff_P;
 
-					P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + S_s.x[ i ][ j ][ k ] * coeff_P;
+					P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * coeff_P;
+					P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * coeff_P;
 
 //				if ( ( j == 90 ) && ( k == 180 ) )	cout << " iter_prec = " << iter_prec << "  i = " << i << "  P_rain = " << P_rain.x[ i ][ j ][ k ] << "  P_snow = " << P_snow.x[ i ][ j ][ k ] << "  P_rain_n = " << P_rain_n << "  P_snow_n = " << P_snow_n << endl << endl;
 

@@ -449,7 +449,7 @@ void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Q_Sensible, Array &IceLayer, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Radiation_Balance, Array_2D &Q_Radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation) {
+void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int &i_radial, int &pressure_iter, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, double &radiation_equator, Array &h, Array &p_dyn, Array &p_stat, Array &t_cond_3D, Array &t_evap_3D, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &Q_Sensible, Array &IceLayer, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Radiation_Balance, Array_2D &Q_Radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation) {
     double x, y, z, dx, dy;
 
     string Atmosphere_radial_File_Name = output_path + "/[" + Name_Bathymetry_File + "]_Atm_radial_" + std::to_string(i_radial) + "_" + std::to_string(pressure_iter) + ".vtk";
@@ -496,12 +496,21 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
     dump_radial("v-Component", v, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("w-Component", w, 1., i_radial, Atmosphere_vtk_radial_File);
 
-    // writing temperature
+// writing temperature
     Atmosphere_vtk_radial_File <<  "SCALARS Temperature float " << 1 << endl;
     Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
     for ( int j = 0; j < jm; j++ ) {
         for ( int k = 0; k < km; k++ ) {
             Atmosphere_vtk_radial_File << t.x[ i_radial ][ j ][ k ] * t_0 - t_0 << endl;
+        }
+    }
+
+// writing temperature_NASA
+    Atmosphere_vtk_radial_File <<  "SCALARS Temperature_NASA float " << 1 << endl;
+    Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
+    for ( int j = 0; j < jm; j++ ) {
+        for ( int k = 0; k < km; k++ ) {
+            Atmosphere_vtk_radial_File << temperature_NASA.y[ j ][ k ] * t_0 - t_0 << endl;
         }
     }
 
@@ -520,6 +529,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
     dump_radial("Q_Sensible", Q_Sensible, 1., i_radial, Atmosphere_vtk_radial_File);
     // dump_radial("Evaporation", Evaporation, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Condensation", Condensation, 1., Atmosphere_vtk_radial_File);
+//    dump_radial_2d("Temperature_NASA", temperature_NASA, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Precipitation_NASA", precipitation_NASA, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("albedo", albedo, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("epsilon", epsilon, 1., Atmosphere_vtk_radial_File);
@@ -756,7 +766,7 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
         abort();
     }
 
-    PlotData_File << "lons (deg)" << ", " << "lats (deg)" << ", " << "topography" << ", " << "v-velocity (m/s)" << ", " << "w-velocity (m/s)" << ", " << "velocity-mag (m/s)" << ", " << "temperature (Celsius)" << ", " << "water_vapour (g/kg)" << ", " << "precipitation (mm)" << ", " <<  "precipitable water (mm)" << endl;
+    PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " << "w-velocity(m/s)" << ", " << "velocity-mag(m/s)" << ", " << "temperature(Celsius)" << ", " << "water_vapour(g/kg)" << ", " << "precipitation(mm)" << ", " <<  "precipitable water(mm)" << endl;
 
 	double vel_mag;
 
@@ -768,4 +778,38 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
     }
 
     PlotData_File.close();
+}
+
+
+
+
+void PostProcess_Atmosphere::NASAbasedSurfaceTemperature ( string &Name_NASAbasedSurfaceTemperature_File, Array &t, Array &c, Array &cloud, Array &ice ) {
+
+    string Name_NASAbased_File = Name_NASAbasedSurfaceTemperature_File;
+    ofstream NASAbased_File;
+    NASAbased_File.precision(4);
+    NASAbased_File.setf(ios::fixed);
+    NASAbased_File.open(Name_NASAbased_File);
+
+    if (!NASAbased_File.is_open()) {
+        cerr << "ERROR: could not open NASAbased file " << __FILE__ << " at line " << __LINE__ << "\n";
+        abort();
+    }
+
+
+	for ( int k = 0; k < km; k++ ) {
+		for ( int j = 0; j < jm; j++ ) {
+			for ( int i = 0; i < im; i++ ) {
+				NASAbased_File << t.x[ i ][ j ][ k ] << " " << c.x[ i ][ j ][ k ] << " " << cloud.x[ i ][ j ][ k ] << " " << ice.x[ i ][ j ][ k ] <<  endl;
+			}
+        }
+    }
+
+    NASAbased_File.close();
+
+	cout << endl << "§§§§§§§§§§§§§§§§§§ inside PostProcess_Atm writing NASAbasedSurfaceTemperature §§§§§§§§§§§§§§§§§§§§§§§§" << endl;
+	cout << endl << " ***** printout of 3D-field temperature ***** " << endl << endl;
+	t.printArray( im, jm, km );
+	cout << endl << " ***** printout of 3D-field water vapour ***** " << endl << endl;
+	c.printArray( im, jm, km );
 }
