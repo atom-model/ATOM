@@ -27,7 +27,6 @@ TARGET_DIR = benchmark
 
 target = $(addprefix $(TARGET_DIR)/,$(COPY_FILE))
 
-#all: atm hyd python
 all: atm hyd python $(target)
 
 libatom.a: $(PARAM_OUTPUTS) $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ) $(ATM_PYTHON_OBJ) $(HYD_PYTHON_OBJ)
@@ -36,7 +35,6 @@ libatom.a: $(PARAM_OUTPUTS) $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ) $(ATM_PY
 atm: libatom.a $(ATM_CLI_OBJ)
 	$(CXX) $(CFLAGS) $(ATM_CLI_OBJ) -L. -latom $(LDFLAGS) -o atm
 
-# FIXME: this is a bit redundant; there should probably be one binary that does both jobs
 hyd: libatom.a $(HYD_CLI_OBJ)
 	$(CXX) $(CFLAGS) $(HYD_CLI_OBJ) -L. -latom $(LDFLAGS) -o hyd
 
