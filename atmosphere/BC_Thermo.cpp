@@ -3772,9 +3772,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 	p_ps = .05;
 	bet_p = 2.e-3;																			// in s
 
-//	coeff_P = ( L_atm / ( double ) ( im-1 ) ) * dr;
-//	coeff_P = ( L_atm / ( double ) ( im-1 ) );
-	coeff_P = 1.;
 
 /*
 	cout << endl << " ***** Results before Snow ***** " << endl << endl;
@@ -3863,6 +3860,8 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 		{
 			P_rain.x[ im-1 ][ j ][ k ] = 0.;
 			P_snow.x[ im-1 ][ j ][ k ] = 0.;
+			S_r.x[ im-1 ][ j ][ k ] = 0.;
+			S_s.x[ im-1 ][ j ][ k ] = 0.;
 
 			for ( int i = im-2; i >= 0; i-- )
 			{
@@ -3910,18 +3909,18 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 
 
 
-						if ( ( t_Celsius < 0. ) && ( t_Celsius >= t_Celsius_2 ) )
-						{
-							if ( c.x[ i ][ j ][ k ] > q_Ice )								// supersaturation
-							{
-								S_i_dep = c_i_dep * N_i * pow ( m_i, ( 1. / 3. ) ) * ( c.x[ i ][ j ][ k ] - q_Ice );								// supersaturation
-							}
-							if ( ( c.x[ i ][ j ][ k ] < q_Ice ) && ( - ice.x[ i ][ j ][ k ] / dt_snow_dim > ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim ) ) 	S_i_dep = - ice.x[ i ][ j ][ k ] / dt_snow_dim;	// subsaturation
-							else 																																												S_i_dep = ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim;	// subsaturation
-						}
-						else 			S_i_dep = 0.;
+				if ( ( t_Celsius < 0. ) && ( t_Celsius >= t_Celsius_2 ) )
+				{
+					if ( c.x[ i ][ j ][ k ] > q_Ice )								// supersaturation
+					{
+						S_i_dep = c_i_dep * N_i * pow ( m_i, ( 1. / 3. ) ) * ( c.x[ i ][ j ][ k ] - q_Ice );								// supersaturation
+					}
+					if ( ( c.x[ i ][ j ][ k ] < q_Ice ) && ( - ice.x[ i ][ j ][ k ] / dt_snow_dim > ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim ) ) 	S_i_dep = - ice.x[ i ][ j ][ k ] / dt_snow_dim;	// subsaturation
+					else 																																												S_i_dep = ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim;	// subsaturation
+				}
+				else 			S_i_dep = 0.;
 
-//						S_i_dep = 0.;														// 9
+//				S_i_dep = 0.;														// 9
 
 
 
@@ -3951,8 +3950,8 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 //				P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + S_r.x[ i ][ j ][ k ] * r_humid * coeff_P;
 //				P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + S_s.x[ i ][ j ][ k ] * r_humid * coeff_P;
 
-				P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * coeff_P;
-				P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * coeff_P;
+				P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
+				P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
 
 			}
 		}
@@ -4195,8 +4194,8 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 //					P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + S_r.x[ i ][ j ][ k ] * r_humid * coeff_P;
 //					P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + S_s.x[ i ][ j ][ k ] * r_humid * coeff_P;
 
-					P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * coeff_P;
-					P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * coeff_P;
+					P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
+					P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
 
 //				if ( ( j == 90 ) && ( k == 180 ) )	cout << " iter_prec = " << iter_prec << "  i = " << i << "  P_rain = " << P_rain.x[ i ][ j ][ k ] << "  P_snow = " << P_snow.x[ i ][ j ][ k ] << "  P_rain_n = " << P_rain_n << "  P_snow_n = " << P_snow_n << endl << endl;
 

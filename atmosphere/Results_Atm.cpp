@@ -462,7 +462,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 				e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
 				a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
-				precipitable_water.y[ j ][ k ] += a * L_atm / ( double ) ( im - 1 );						//  kg/m³ * m
+				precipitable_water.y[ j ][ k ] += a * L_atm / ( double ) ( im - 1 );					// kg/m³ * m
 
 				if ( h.x[ i ][ j ][ k ] == 1. )		cloud.x[ i ][ j ][ k ] = BuoyancyForce.x[ i ][ j ][ k ] = t_cond_3D.x[ i ][ j ][ k ] = t_evap_3D.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ] = 0.;
 
@@ -471,15 +471,19 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	}
 
 
+	double coeff_prec = 86400. * 1000. / u_0;
 
 // surface values of precipitation and precipitable water
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			Precipitation.y[ j ][ k ] = 86400. * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );						// 60 s * 60 min * 24 h = 86400 s == 1 d
-																																									// P_rain and P_snow in kg/ ( m² * s )
-																																									// Precipitation in kg/ ( m² * d ) == mm / d
+			Precipitation.y[ j ][ k ] = coeff_prec * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );						// 60 s * 60 min * 24 h = 86400 s == 1 d
+																																											// P_rain and P_snow in kg/ ( m² * s )
+																																											// Precipitation in kg/ ( m² * d ) == mm / d
+																																											// u_0 from earlier non-dimensionalisation process
+																																											// 1000. from kg to g
+			if ( Precipitation.y[ j ][ k ] <= 0 )			Precipitation.y[ j ][ k ] = 0.;
 
 			precipitable_water.y[ j ][ k ] = precipitable_water.y[ j ][ k ] / 1000.;		// divided by water density ( 1000 kg/m³ ) results in m compares as well to mm ( absolute values identical )
 		}
@@ -540,6 +544,8 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 		Precipitation.y[ j ][ 0 ] = c43 * Precipitation.y[ j ][ 1 ] - c13 * Precipitation.y[ j ][ 2 ];
 		Precipitation.y[ j ][ km-1 ] = c43 * Precipitation.y[ j ][ km-2 ] - c13 * Precipitation.y[ j ][ km-3 ];
 		Precipitation.y[ j ][ 0 ] = Precipitation.y[ j ][ km-1 ] = ( Precipitation.y[ j ][ 0 ] + Precipitation.y[ j ][ km-1 ] ) / 2.;
+		if ( Precipitation.y[ j ][ 0 ] <= 0 )			Precipitation.y[ j ][ 0 ] = 0.;
+		if ( Precipitation.y[ j ][ km-1 ] <= 0 )			Precipitation.y[ j ][ km-1 ] = 0.;
 /*
 		Evaporation_Haude.y[ j ][ 0 ] = c43 * Evaporation_Haude.y[ j ][ 1 ] - c13 * Evaporation_Haude.y[ j ][ 2 ];
 		Evaporation_Haude.y[ j ][ km-1 ] = c43 * Evaporation_Haude.y[ j ][ km-2 ] - c13 * Evaporation_Haude.y[ j ][ km-3 ];
