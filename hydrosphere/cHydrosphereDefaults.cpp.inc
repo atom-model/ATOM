@@ -5,9 +5,9 @@
 void cHydrosphereModel::SetDefaultConfig() {
 
   // common section
-  bathymetry_path = "data/Paleotopography_bathymetry/Golonka_rev210";
+  bathymetry_path = "../data/Paleotopography_bathymetry/Golonka_rev210";
   BathymetrySuffix = "Ma_Golonka.xyz";
-  verbose = false;
+  verbose = true;
   output_path = "output";
 
   // hydrosphere section

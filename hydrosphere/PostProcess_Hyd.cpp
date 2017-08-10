@@ -1709,7 +1709,7 @@ void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymet
 		abort();
 	}
 
-	PlotData_File << "lons (deg)" << ", " << "lats (deg)" << ", " << "topography" << ", " << "v-velocity (m/s)" << ", " << "w-velocity (m/s)" << ", " << "velocity-mag (m/s)" << ", " << "temperature (Celsius)" << ", " << "salinity (psu)" << ", " << "bottom_water (m/s)" << ", " <<  "upwelling (m/s)" << ", " <<  "downwelling (m/s)" << endl;
+	PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " << "w-velocity(m/s)" << ", " << "velocity-mag(m/s)" << ", " << "temperature(Celsius)" << ", " << "salinity(psu)" << ", " << "bottom_water(m/s)" << ", " <<  "upwelling(m/s)" << ", " <<  "downwelling(m/s)" << endl;
 
 	double vel_mag;
 

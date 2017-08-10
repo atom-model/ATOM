@@ -59,7 +59,7 @@ class PostProcess_Hydrosphere
 
 		void paraview_vtk_zonal ( const string &, int &, int &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void Hydrosphere_PlotData ( const string &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
+		void Hydrosphere_PlotData ( const string &, double &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
 
 };
 #endif
