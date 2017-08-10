@@ -36,6 +36,7 @@ class BC_Thermo
 		int RadiationModel, sun_position_lat, sun_position_lon, declination, NASATemperature;
 		int iter_prec; 
 		int *im_tropopause;
+		int r_m, r_a, r_b;
 
 		double d_k_half, d_k_max, t_eff_earth, r, rad_bal_minus; 
 		double dummy_1, dummy_2, dummy_3;
@@ -55,7 +56,7 @@ class BC_Thermo
 		double D, H, G, R_short, Q_short, AG, A, R_long, Q_long, Q_total, Q_lat, Q_sen, Q_bot, Q_rad, t_rad;
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, ozean_land, L_atm, c13, c43;
 		double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
-		double ik, eps, epsilon_extra, c_ocean, c_land, t_average, co2_average, co2_pole, gam, t_Ik, Ik_loss, Ik_tot;
+		double ik, eps, epsilon_extra, c_ocean, c_land, c_coeff, t_average, co2_average, co2_pole, gam, t_Ik, Ik_loss, Ik_tot;
 		double radiation_pole, radiation_equator, t_land;
 		double albedo_co2_eff, albedo_equator, albedo_pole;
 		double ik_co2_eff, ik_equator, ik_pole;
@@ -68,10 +69,10 @@ class BC_Thermo
 		double dt, dt_dim, dt_rain_dim, dt_snow_dim, dr, dthe, dphi, dt2, dr2, dthe2, dphi2, rm2;
 		double rm, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2;
 		double E, E_Rain_SL, E_Rain, E_Rain_super, E_Ice, q_Rain, q_Rain_super, q_Ice;
-		double c12, c32, c42, t_Celsius_0, t_Celsius_1, t_Celsius_2;
+		double c12, c32, c42, t_Celsius_it, t_Celsius_0, t_Celsius_1, t_Celsius_2;
 		double TK, rad_lon_terrestic, rad_lon_back;
 		double r_dry, r_humid, p_SL, t_SL;
-		double t_u, t_Celsius_SL, t_dew, t_dew_SL, T, T_nue, T_tilda_h, T_t_in, T_t_in0, T_t_in1, q_T, q_Rain_n, e_SL, a_SL, h_level, i_level, h_h, sat_deficit, RF_e;
+		double t_u, t_Celsius_SL, t_dew, t_dew_SL, T, T_nue, T_it, q_T, q_Rain_n, e_SL, a_SL, h_level, i_level, h_h, sat_deficit, RF_e;
 		double q_v_b, q_c_b, q_i_b, q_v_hyp, q_v_hyp_n, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
 		double t_equator, t_tropopause, t_co2_eff, t_pole, c_equator, c_tropopause, coeff_mmWS;
 		double co2_equator, co2_tropopause, co_co2_eff, co_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous;
@@ -81,9 +82,11 @@ class BC_Thermo
 		double S_c_c, S_au, S_nuc, S_ac, S_rim, S_shed, S_ev, S_dep, S_i_dep, S_melt, S_if_frz, S_cf_frz, S_r_frz, S_c_frz, S_c_au, S_i_au, S_d_au, S_agg, S_i_cri, S_r_cri, S_s_dep, S_i_melt, S_s_melt;
 		double S_v, S_c, S_i, S_r, S_s, P_rain_n, P_snow_n, P_rain_n_o, P_snow_n_o;
 		double a_if, c_ac, c_rim, bet_ev, alf_melt, bet_melt, bet_dep, bet_s_dep, alf_if, alf_cf, a_s_melt, b_s_melt, E_cf, N_cf, N_cf_0, N_cf_0_surf, N_cf_0_6km;
-		double tau_r, tau_s, t_1, t_2, t_m1, t_m2, t_r_frz, c_r_frz, alf_ev, alf_dep, a_d, b_u, alf_1, alf_2, p_ps, bet_p, p_t_in, E_Rain_t_in, q_Rain_t_in;
+		double tau_r, tau_s, t_1, t_00, t_m1, t_m2, t_r_frz, c_r_frz, alf_ev, alf_dep, a_d, b_u, alf_1, alf_2, p_ps, bet_p, p_t_in, E_Rain_t_in, q_Rain_t_in;
 		double a_mc, a_mv, a_m, coeff_P, a_i_m, a_s_m, N_r_0, N_s_0;
 		double N_i_0, N_i, t_nuc, t_d, t_hn, m_i, m_i_0, m_i_max, m_s_0, c_i_dep, c_c_au, c_i_au, c_agg, c_i_cri, c_r_cri, c_s_dep, c_s_melt;
+		double u_av, v_av, w_av, coeff_L, coeff_Q;
+		double t_Cel, co_1, co_2, q_m, r_m_i;
 
  
  
@@ -111,7 +114,9 @@ class BC_Thermo
 
 		void BC_WaterVapour ( Array &, Array &, Array & );
 
-		void Ice_Water_Saturation_Adjustment ( int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_CloudWaterIce ( Array &, Array &, Array &, Array & );
+
+		void Ice_Water_Saturation_Adjustment ( int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void Two_Category_Ice_Scheme ( int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
@@ -128,6 +133,10 @@ class BC_Thermo
 		void Latent_Heat ( Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void IC_Temperature_WestEastCoast ( Array &, Array & );
+
+		double exp_func ( double &, const double &, const double & );
+
+		double cloud_ice ( const double &, int, const int & );
 
 		double out_temperature (  ) const;
 

@@ -39,8 +39,7 @@ class Results_MSL_Atm
 		double r_water, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average, co2_vegetation_average;
 		double coeff_mmWS, coeff_lv, coeff_ls, coeff_Diffusion_latent, coeff_Diffusion_sensibel, f_Haude, co2_vegetation, co2_ocean, co2_land;
 		double r_humid, r_dry;
-		double Value_1, Value_2, Value_3, Value_4, Value_5, Value_6, Value_7, Value_8, Value_9;
-		double Value_12;
+		double Value_1, Value_2, Value_3, Value_4, Value_5, Value_6, Value_7, Value_8, Value_9, Value_10, Value_12, Value_13;
 		double Value_14, Value_15, Value_16, Value_17, Value_18, Value_19, Value_23, Value_24;
 		double dthe, dphi;
 		double alf_ev;

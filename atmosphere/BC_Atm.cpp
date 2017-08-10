@@ -50,10 +50,10 @@ void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p
 			v.x[ im-1 ][ j ][ k ] = 0.;																					// stratosphere
 			w.x[ im-1 ][ j ][ k ] = 0.;
 
-			c.x[ im-1 ][ j ][ k ] = 0.;
-			cloud.x[ im-1 ][ j ][ k ] = 0.;
-			ice.x[ im-1 ][ j ][ k ] = 0.;
-			co2.x[ im-1 ][ j ][ k ] = 0.;
+			c.x[ im-1 ][ j ][ k ] = c.x[ im-4 ][ j ][ k ] - 3. * c.x[ im-3 ][ j ][ k ] + 3. * c.x[ im-2 ][ j ][ k ];
+			cloud.x[ im-1 ][ j ][ k ] = cloud.x[ im-4 ][ j ][ k ] - 3. * cloud.x[ im-3 ][ j ][ k ] + 3. * cloud.x[ im-2 ][ j ][ k ];
+			ice.x[ im-1 ][ j ][ k ] = ice.x[ im-4 ][ j ][ k ] - 3. * ice.x[ im-3 ][ j ][ k ] + 3. * ice.x[ im-2 ][ j ][ k ];
+			co2.x[ im-1 ][ j ][ k ] = co2.x[ im-4 ][ j ][ k ] - 3. * co2.x[ im-3 ][ j ][ k ] + 3. * co2.x[ im-2 ][ j ][ k ];
 			p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 3. * p_dyn.x[ im-2 ][ j ][ k ];
 
 		}
@@ -82,9 +82,6 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_
 			u.x[ i ][ 0 ][ k ] = c43 * u.x[ i ][ 1 ][ k ] - c13 * u.x[ i ][ 2 ][ k ];
 			u.x[ i ][ jm-1 ][ k ] = c43 * u.x[ i ][ jm-2 ][ k ] - c13 * u.x[ i ][ jm-3 ][ k ];
 
-//			u.x[ i ][ 0 ][ k ] = 0.;
-//			u.x[ i ][ jm-1 ][ k ] = 0.;
-
 			v.x[ i ][ 0 ][ k ] = 0.;
 			v.x[ i ][ jm-1 ][ k ] = 0.;
 
@@ -94,16 +91,14 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_
 			p_dyn.x[ i ][ 0 ][ k ] = c43 * p_dyn.x[ i ][ 1 ][ k ] - c13 * p_dyn.x[ i ][ 2 ][ k ];
 			p_dyn.x[ i ][ jm-1 ][ k ] = c43 * p_dyn.x[ i ][ jm-2 ][ k ] - c13 * p_dyn.x[ i ][ jm-3 ][ k ];
 
-//			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
-//			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
+			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
+			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
 
-//			cloud.x[ i ][ 0 ][ k ] = c43 * cloud.x[ i ][ 1 ][ k ] - c13 * cloud.x[ i ][ 2 ][ k ];
-//			cloud.x[ i ][ jm-1 ][ k ] = c43 * cloud.x[ i ][ jm-2 ][ k ] - c13 * cloud.x[ i ][ jm-3 ][ k ];
-//			if ( ( cloud.x[ i ][ 0 ][ k ] < 0. ) || ( cloud.x[ i ][ jm-1 ][ k ] < 0. ) ) cloud.x[ i ][ 0 ][ k ] = cloud.x[ i ][ jm-1 ][ k ] = 0.;
+			cloud.x[ i ][ 0 ][ k ] = c43 * cloud.x[ i ][ 1 ][ k ] - c13 * cloud.x[ i ][ 2 ][ k ];
+			cloud.x[ i ][ jm-1 ][ k ] = c43 * cloud.x[ i ][ jm-2 ][ k ] - c13 * cloud.x[ i ][ jm-3 ][ k ];
 
-//			ice.x[ i ][ 0 ][ k ] = c43 * ice.x[ i ][ 1 ][ k ] - c13 * ice.x[ i ][ 2 ][ k ];
-//			ice.x[ i ][ jm-1 ][ k ] = c43 * ice.x[ i ][ jm-2 ][ k ] - c13 * ice.x[ i ][ jm-3 ][ k ];
-//			if ( ( ice.x[ i ][ 0 ][ k ] < 0. ) || ( ice.x[ i ][ jm-1 ][ k ] < 0. ) ) ice.x[ i ][ 0 ][ k ] = ice.x[ i ][ jm-1 ][ k ] = 0.;
+			ice.x[ i ][ 0 ][ k ] = c43 * ice.x[ i ][ 1 ][ k ] - c13 * ice.x[ i ][ 2 ][ k ];
+			ice.x[ i ][ jm-1 ][ k ] = c43 * ice.x[ i ][ jm-2 ][ k ] - c13 * ice.x[ i ][ jm-3 ][ k ];
 
 			co2.x[ i ][ 0 ][ k ] = c43 * co2.x[ i ][ 1 ][ k ] - c13 * co2.x[ i ][ 2 ][ k ];
 			co2.x[ i ][ jm-1 ][ k ] = c43 * co2.x[ i ][ jm-2 ][ k ] - c13 * co2.x[ i ][ jm-3 ][ k ];
@@ -154,12 +149,10 @@ void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p_dy
 
 			cloud.x[ i ][ j ][ 0 ] = c43 * cloud.x[ i ][ j ][ 1 ] - c13 * cloud.x[ i ][ j ][ 2 ];
 			cloud.x[ i ][ j ][ km-1 ] = c43 * cloud.x[ i ][ j ][ km-2 ] - c13 * cloud.x[ i ][ j ][ km-3 ];
-			if ( ( cloud.x[ i ][ j ][ 0 ] < 0. ) || ( cloud.x[ i ][ j ][ km-1 ] < 0. ) ) cloud.x[ i ][ j ][ 0 ] = cloud.x[ i ][ j ][ km-1 ] = 0.;
 			cloud.x[ i ][ j ][ 0 ] = cloud.x[ i ][ j ][ km-1 ] = ( cloud.x[ i ][ j ][ 0 ] + cloud.x[ i ][ j ][ km-1 ] ) / 2.;
 
 			ice.x[ i ][ j ][ 0 ] = c43 * ice.x[ i ][ j ][ 1 ] - c13 * ice.x[ i ][ j ][ 2 ];
 			ice.x[ i ][ j ][ km-1 ] = c43 * ice.x[ i ][ j ][ km-2 ] - c13 * ice.x[ i ][ j ][ km-3 ];
-			if ( ( ice.x[ i ][ j ][ 0 ] < 0. ) || ( ice.x[ i ][ j ][ km-1 ] < 0. ) ) ice.x[ i ][ j ][ 0 ] = ice.x[ i ][ j ][ km-1 ] = 0.;
 			ice.x[ i ][ j ][ 0 ] = ice.x[ i ][ j ][ km-1 ] = ( ice.x[ i ][ j ][ 0 ] + ice.x[ i ][ j ][ km-1 ] ) / 2.;
 
 			co2.x[ i ][ j ][ 0 ] = c43 * co2.x[ i ][ j ][ 1 ] - c13 * co2.x[ i ][ j ][ 2 ];

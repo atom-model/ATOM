@@ -193,11 +193,11 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 			if ( RadiationModel >= 2 ) Q_Radiation.y[ j ][ k ] = radiation_3D.x[ 0 ][ j ][ k ];		 // two- and multi-layer radiation balance assumed
 
 			Evaporation.y[ j ][ k ] = 0.;												// Evaporation
-			Condensation.y[ j ][ k ] = 0.;												// Condensation
-			LatentHeat.y[ j ][ k ] = 0.;													// Condensation
-			precipitable_water.y[ j ][ k ] = 0.;										// precipitable water
-			Evaporation_Penman.y[ j ][ k ] = 0.;									// Evaporation by Penman
-			Evaporation_Haude.y[ j ][ k ] = 0.;										// Evaporation by Haude
+			Condensation.y[ j ][ k ] = 0.;											// Condensation
+			LatentHeat.y[ j ][ k ] = 0.;												// Condensation
+			precipitable_water.y[ j ][ k ] = 0.;									// precipitable water
+			Evaporation_Penman.y[ j ][ k ] = 0.;								// Evaporation by Penman
+			Evaporation_Haude.y[ j ][ k ] = 0.;									// Evaporation by Haude
 
 		}
 	}
@@ -236,7 +236,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					c_grad = ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i + 1 ][ j ][ k ] - c.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );	// water vapour pressure gradient in g/(Kg m)
 					t_grad = ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i + 1 ][ j ][ k ] - t.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );	// temperature gradient in K/m
 
-//					E_a = .35 * ( 1. + .15 * sqrt ( v.x[ i + 1 ][ j ][ k ] * v.x[ i + 1 ][ j ][ k ] + w.x[ i + 1 ][ j ][ k ] * w.x[ i + 1 ][ j ][ k ] ) ) * sat_deficit;	// ventilation-humidity Penmans formula
 					E_a = .35 * ( 1. + .15 * sqrt ( v.x[ i + 1 ][ j ][ k ] * v.x[ i + 1 ][ j ][ k ] + w.x[ i + 1 ][ j ][ k ] * w.x[ i + 1 ][ j ][ k ] ) * u_0 ) * sat_deficit;	// ventilation-humidity Penmans formula
 
 					Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ i ][ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;	// heat of Evaporation of water in [MJ/kg] (Kuttler) = variable lv
@@ -278,7 +277,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					c_grad = ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / ( 2. * dr );	// water vapour pressure gradient in g/(Kg m)
 					t_grad = ( - 3. * t.x[ 0 ][ j ][ k ] + 4. * t.x[ 1 ][ j ][ k ] - t.x[ 2 ][ j ][ k ] ) / ( 2. * dr );	// temperature gradient in K/m
 
-					E_a = .35 * ( 1. + .15 * sqrt ( v.x[ 1 ][ j ][ k ] * v.x[ 1 ][ j ][ k ] + w.x[ 1 ][ j ][ k ] * w.x[ 1 ][ j ][ k ] ) ) * sat_deficit;	// ventilation-humidity for Penmans formula
+					E_a = .35 * ( 1. + .15 * sqrt ( v.x[ 1 ][ j ][ k ] * v.x[ 1 ][ j ][ k ] + w.x[ 1 ][ j ][ k ] * w.x[ 1 ][ j ][ k ] ) ) * sat_deficit;	// ventilation-humidity for Penman's formula
 
 					Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;	// heat of Evaporation of water in [MJ/kg] (Kuttler) = lv
 					Q_latent.y[ j ][ k ] = - a * lv * coeff_Diffusion_latent * c_grad / L_atm;		// latente heat in [W/m2] from energy transport equation
@@ -287,7 +286,8 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
 					Evaporation_Haude.y[ j ][ k ] = f_Haude * sat_deficit;											// simplified formula for Evaporation over day length of 12h by Haude, Häckel
 					if ( Evaporation_Haude.y[ j ][ k ] <= 0. ) 		Evaporation_Haude.y[ j ][ k ] = 0.;
-					Evaporation_Penman.y[ j ][ k ] = .0346 * ( ( Q_Radiation.y[ j ][ k ] - Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );
+//					Evaporation_Penman.y[ j ][ k ] = .0346 * ( ( Q_Radiation.y[ j ][ k ] - Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );
+					Evaporation_Penman.y[ j ][ k ] = .0346 * ( ( Q_Radiation.y[ j ][ k ] - Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma ) * 50.;
 					if ( Evaporation_Penman.y[ j ][ k ] <= 0. ) 		Evaporation_Penman.y[ j ][ k ] = 0.;	// .0346 coefficient W/m2 corresponds to mm/d (Kraus)
 				}
 			}
@@ -317,7 +317,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
 			BuoyancyForce.x[ 0 ][ j ][ k ] = c43 * BuoyancyForce.x[ 1 ][ j ][ k ] - c13 * BuoyancyForce.x[ 2 ][ j ][ k ];
 			BuoyancyForce.x[ im-1 ][ j ][ k ] = c43 * BuoyancyForce.x[ im-2 ][ j ][ k ] - c13 * BuoyancyForce.x[ im-3 ][ j ][ k ];
-
 		}
 	}
 
@@ -348,26 +347,20 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 			BuoyancyForce.x[ i ][ jm-1 ][ k ] = c43 * BuoyancyForce.x[ i ][ jm-2 ][ k ] - c13 * BuoyancyForce.x[ i ][ jm-3 ][ k ];
 
 
-//			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
-//			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
-			if ( ( c.x[ i ][ 0 ][ k ] < 0. ) || ( c.x[ i ][ jm-1 ][ k ] < 0. ) ) c.x[ i ][ 0 ][ k ] = c.x[ i ][ jm-1 ][ k ] = 0.;
+			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
+			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
 
-//			cloud.x[ i ][ 0 ][ k ] = c43 * cloud.x[ i ][ 1 ][ k ] - c13 * cloud.x[ i ][ 2 ][ k ];
-//			cloud.x[ i ][ jm-1 ][ k ] = c43 * cloud.x[ i ][ jm-2 ][ k ] - c13 * cloud.x[ i ][ jm-3 ][ k ];
-			if ( ( cloud.x[ i ][ 0 ][ k ] < 0. ) || ( cloud.x[ i ][ jm-1 ][ k ] < 0. ) ) cloud.x[ i ][ 0 ][ k ] = cloud.x[ i ][ jm-1 ][ k ] = 0.;
+			cloud.x[ i ][ 0 ][ k ] = c43 * cloud.x[ i ][ 1 ][ k ] - c13 * cloud.x[ i ][ 2 ][ k ];
+			cloud.x[ i ][ jm-1 ][ k ] = c43 * cloud.x[ i ][ jm-2 ][ k ] - c13 * cloud.x[ i ][ jm-3 ][ k ];
 
-//			ice.x[ i ][ 0 ][ k ] = c43 * ice.x[ i ][ 1 ][ k ] - c13 * ice.x[ i ][ 2 ][ k ];
-//			ice.x[ i ][ jm-1 ][ k ] = c43 * ice.x[ i ][ jm-2 ][ k ] - c13 * ice.x[ i ][ jm-3 ][ k ];
-			if ( ( ice.x[ i ][ 0 ][ k ] < 0. ) || ( ice.x[ i ][ jm-1 ][ k ] < 0. ) ) ice.x[ i ][ 0 ][ k ] = ice.x[ i ][ jm-1 ][ k ] = 0.;
+			ice.x[ i ][ 0 ][ k ] = c43 * ice.x[ i ][ 1 ][ k ] - c13 * ice.x[ i ][ 2 ][ k ];
+			ice.x[ i ][ jm-1 ][ k ] = c43 * ice.x[ i ][ jm-2 ][ k ] - c13 * ice.x[ i ][ jm-3 ][ k ];
 
-//			P_rain.x[ i ][ 0 ][ k ] = c43 * P_rain.x[ i ][ 1 ][ k ] - c13 * P_rain.x[ i ][ 2 ][ k ];
-//			P_rain.x[ i ][ jm-1 ][ k ] = c43 * P_rain.x[ i ][ jm-2 ][ k ] - c13 * P_rain.x[ i ][ jm-3 ][ k ];
-			if ( ( P_rain.x[ i ][ 0 ][ k ] < 0. ) || ( P_rain.x[ i ][ jm-1 ][ k ] < 0. ) ) P_rain.x[ i ][ 0 ][ k ] = P_rain.x[ i ][ jm-1 ][ k ] = 0.;
+			P_rain.x[ i ][ 0 ][ k ] = c43 * P_rain.x[ i ][ 1 ][ k ] - c13 * P_rain.x[ i ][ 2 ][ k ];
+			P_rain.x[ i ][ jm-1 ][ k ] = c43 * P_rain.x[ i ][ jm-2 ][ k ] - c13 * P_rain.x[ i ][ jm-3 ][ k ];
 
-//			P_snow.x[ i ][ 0 ][ k ] = c43 * P_snow.x[ i ][ 1 ][ k ] - c13 * P_snow.x[ i ][ 2 ][ k ];
-//			P_snow.x[ i ][ jm-1 ][ k ] = c43 * P_snow.x[ i ][ jm-2 ][ k ] - c13 * P_snow.x[ i ][ jm-3 ][ k ];
-			if ( ( P_snow.x[ i ][ 0 ][ k ] < 0. ) || ( P_snow.x[ i ][ jm-1 ][ k ] < 0. ) ) P_snow.x[ i ][ 0 ][ k ] = P_snow.x[ i ][ jm-1 ][ k ] = 0.;
-
+			P_snow.x[ i ][ 0 ][ k ] = c43 * P_snow.x[ i ][ 1 ][ k ] - c13 * P_snow.x[ i ][ 2 ][ k ];
+			P_snow.x[ i ][ jm-1 ][ k ] = c43 * P_snow.x[ i ][ jm-2 ][ k ] - c13 * P_snow.x[ i ][ jm-3 ][ k ];
 		}
 	}
 
@@ -404,26 +397,21 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 			BuoyancyForce.x[ i ][ j ][ km-1 ] = c43 * BuoyancyForce.x[ i ][ j ][ km-2 ] - c13 * BuoyancyForce.x[ i ][ j ][ km-3 ];
 			BuoyancyForce.x[ i ][ j ][ 0 ] = BuoyancyForce.x[ i ][ j ][ km-1 ] = ( BuoyancyForce.x[ i ][ j ][ 0 ] + BuoyancyForce.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			cloud.x[ i ][ j ][ 0 ] = c43 * cloud.x[ i ][ j ][ 1 ] - c13 * cloud.x[ i ][ j ][ 2 ];
-//			cloud.x[ i ][ j ][ km-1 ] = c43 * cloud.x[ i ][ j ][ km-2 ] - c13 * cloud.x[ i ][ j ][ km-3 ];
-//			if ( ( cloud.x[ i ][ j ][ 0 ] < 0. ) || ( cloud.x[ i ][ j ][ km-1 ] < 0. ) ) cloud.x[ i ][ j ][ 0 ] = cloud.x[ i ][ j ][ km-1 ] = 0.;
-//			cloud.x[ i ][ j ][ 0 ] = cloud.x[ i ][ j ][ km-1 ] = ( cloud.x[ i ][ j ][ 0 ] + cloud.x[ i ][ j ][ km-1 ] ) / 2.;
+			cloud.x[ i ][ j ][ 0 ] = c43 * cloud.x[ i ][ j ][ 1 ] - c13 * cloud.x[ i ][ j ][ 2 ];
+			cloud.x[ i ][ j ][ km-1 ] = c43 * cloud.x[ i ][ j ][ km-2 ] - c13 * cloud.x[ i ][ j ][ km-3 ];
+			cloud.x[ i ][ j ][ 0 ] = cloud.x[ i ][ j ][ km-1 ] = ( cloud.x[ i ][ j ][ 0 ] + cloud.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			ice.x[ i ][ j ][ 0 ] = c43 * ice.x[ i ][ j ][ 1 ] - c13 * ice.x[ i ][ j ][ 2 ];
-//			ice.x[ i ][ j ][ km-1 ] = c43 * ice.x[ i ][ j ][ km-2 ] - c13 * ice.x[ i ][ j ][ km-3 ];
-//			if ( ( ice.x[ i ][ j ][ 0 ] < 0. ) || ( ice.x[ i ][ j ][ km-1 ] < 0. ) ) ice.x[ i ][ j ][ 0 ] = ice.x[ i ][ j ][ km-1 ] = 0.;
-//			ice.x[ i ][ j ][ 0 ] = ice.x[ i ][ j ][ km-1 ] = ( ice.x[ i ][ j ][ 0 ] + ice.x[ i ][ j ][ km-1 ] ) / 2.;
+			ice.x[ i ][ j ][ 0 ] = c43 * ice.x[ i ][ j ][ 1 ] - c13 * ice.x[ i ][ j ][ 2 ];
+			ice.x[ i ][ j ][ km-1 ] = c43 * ice.x[ i ][ j ][ km-2 ] - c13 * ice.x[ i ][ j ][ km-3 ];
+			ice.x[ i ][ j ][ 0 ] = ice.x[ i ][ j ][ km-1 ] = ( ice.x[ i ][ j ][ 0 ] + ice.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			P_rain.x[ i ][ j ][ 0 ] = c43 * P_rain.x[ i ][ j ][ 1 ] - c13 * P_rain.x[ i ][ j ][ 2 ];
-//			P_rain.x[ i ][ j ][ km-1 ] = c43 * P_rain.x[ i ][ j ][ km-2 ] - c13 * P_rain.x[ i ][ j ][ km-3 ];
-			if ( ( P_rain.x[ i ][ j ][ 0 ] < 0. ) || ( P_rain.x[ i ][ j ][ km-1 ] < 0. ) ) P_rain.x[ i ][ j ][ 0 ] = P_rain.x[ i ][ j ][ km-1 ] = 0.;
-//			P_rain.x[ i ][ j ][ 0 ] = P_rain.x[ i ][ j ][ km-1 ] = ( P_rain.x[ i ][ j ][ 0 ] + P_rain.x[ i ][ j ][ km-1 ] ) / 2.;
+			P_rain.x[ i ][ j ][ 0 ] = c43 * P_rain.x[ i ][ j ][ 1 ] - c13 * P_rain.x[ i ][ j ][ 2 ];
+			P_rain.x[ i ][ j ][ km-1 ] = c43 * P_rain.x[ i ][ j ][ km-2 ] - c13 * P_rain.x[ i ][ j ][ km-3 ];
+			P_rain.x[ i ][ j ][ 0 ] = P_rain.x[ i ][ j ][ km-1 ] = ( P_rain.x[ i ][ j ][ 0 ] + P_rain.x[ i ][ j ][ km-1 ] ) / 2.;
 
-//			P_snow.x[ i ][ j ][ 0 ] = c43 * P_snow.x[ i ][ j ][ 1 ] - c13 * P_snow.x[ i ][ j ][ 2 ];
-//			P_snow.x[ i ][ j ][ km-1 ] = c43 * P_snow.x[ i ][ j ][ km-2 ] - c13 * P_snow.x[ i ][ j ][ km-3 ];
-			if ( ( P_snow.x[ i ][ j ][ 0 ] < 0. ) || ( P_snow.x[ i ][ j ][ km-1 ] < 0. ) ) P_snow.x[ i ][ j ][ 0 ] = P_snow.x[ i ][ j ][ km-1 ] = 0.;
-//			P_snow.x[ i ][ j ][ 0 ] = P_snow.x[ i ][ j ][ km-1 ] = ( P_snow.x[ i ][ j ][ 0 ] + P_snow.x[ i ][ j ][ km-1 ] ) / 2.;
-
+			P_snow.x[ i ][ j ][ 0 ] = c43 * P_snow.x[ i ][ j ][ 1 ] - c13 * P_snow.x[ i ][ j ][ 2 ];
+			P_snow.x[ i ][ j ][ km-1 ] = c43 * P_snow.x[ i ][ j ][ km-2 ] - c13 * P_snow.x[ i ][ j ][ km-3 ];
+			P_snow.x[ i ][ j ][ 0 ] = P_snow.x[ i ][ j ][ km-1 ] = ( P_snow.x[ i ][ j ][ 0 ] + P_snow.x[ i ][ j ][ km-1 ] ) / 2.;
 		}
 	}
 
@@ -463,9 +451,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 				a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
 				precipitable_water.y[ j ][ k ] += a * L_atm / ( double ) ( im - 1 );					// kg/m³ * m
-
-				if ( h.x[ i ][ j ][ k ] == 1. )		cloud.x[ i ][ j ][ k ] = BuoyancyForce.x[ i ][ j ][ k ] = t_cond_3D.x[ i ][ j ][ k ] = t_evap_3D.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ] = 0.;
-
 			}
 		}
 	}
@@ -478,14 +463,14 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			Precipitation.y[ j ][ k ] = coeff_prec * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );						// 60 s * 60 min * 24 h = 86400 s == 1 d
+			Precipitation.y[ j ][ k ] = coeff_prec * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );							// 60 s * 60 min * 24 h = 86400 s == 1 d
 																																											// P_rain and P_snow in kg/ ( m² * s )
 																																											// Precipitation in kg/ ( m² * d ) == mm / d
-																																											// u_0 from earlier non-dimensionalisation process
+																																											// u_0 from a non-dimensionalisation process
 																																											// 1000. from kg to g
 			if ( Precipitation.y[ j ][ k ] <= 0 )			Precipitation.y[ j ][ k ] = 0.;
 
-			precipitable_water.y[ j ][ k ] = precipitable_water.y[ j ][ k ] / 1000.;		// divided by water density ( 1000 kg/m³ ) results in m compares as well to mm ( absolute values identical )
+			precipitable_water.y[ j ][ k ] = precipitable_water.y[ j ][ k ] / 1000.;														// divided by water density ( 1000 kg/m³ ) results in m compares as well to mm ( absolute values identical )
 		}
 	}
 
@@ -544,9 +529,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 		Precipitation.y[ j ][ 0 ] = c43 * Precipitation.y[ j ][ 1 ] - c13 * Precipitation.y[ j ][ 2 ];
 		Precipitation.y[ j ][ km-1 ] = c43 * Precipitation.y[ j ][ km-2 ] - c13 * Precipitation.y[ j ][ km-3 ];
 		Precipitation.y[ j ][ 0 ] = Precipitation.y[ j ][ km-1 ] = ( Precipitation.y[ j ][ 0 ] + Precipitation.y[ j ][ km-1 ] ) / 2.;
-		if ( Precipitation.y[ j ][ 0 ] <= 0 )			Precipitation.y[ j ][ 0 ] = 0.;
-		if ( Precipitation.y[ j ][ km-1 ] <= 0 )			Precipitation.y[ j ][ km-1 ] = 0.;
-/*
+
 		Evaporation_Haude.y[ j ][ 0 ] = c43 * Evaporation_Haude.y[ j ][ 1 ] - c13 * Evaporation_Haude.y[ j ][ 2 ];
 		Evaporation_Haude.y[ j ][ km-1 ] = c43 * Evaporation_Haude.y[ j ][ km-2 ] - c13 * Evaporation_Haude.y[ j ][ km-3 ];
 		Evaporation_Haude.y[ j ][ 0 ] = Evaporation_Haude.y[ j ][ km-1 ] = ( Evaporation_Haude.y[ j ][ 0 ] + Evaporation_Haude.y[ j ][ km-1 ] ) / 2.;
@@ -554,7 +537,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 		Evaporation_Haude.y[ j ][ 0 ] = c43 * Evaporation_Haude.y[ j ][ 1 ] - c13 * Evaporation_Haude.y[ j ][ 2 ];
 		Evaporation_Haude.y[ j ][ km-1 ] = c43 * Evaporation_Haude.y[ j ][ km-2 ] - c13 * Evaporation_Haude.y[ j ][ km-3 ];
 		Evaporation_Haude.y[ j ][ 0 ] = Evaporation_Haude.y[ j ][ km-1 ] = ( Evaporation_Haude.y[ j ][ 0 ] + Evaporation_Haude.y[ j ][ km-1 ] ) / 2.;
-*/
+
 	}
 
 
@@ -578,29 +561,13 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
 		Precipitation.y[ 0 ][ k ] = c43 * Precipitation.y[ 1 ][ k ] - c13 * Precipitation.y[ 2 ][ k ];
 		Precipitation.y[ jm-1 ][ k ] = c43 * Precipitation.y[ jm-2 ][ k ] - c13 * Precipitation.y[ jm-3 ][ k ];
-/*
-		Evaporation_Haude.y[ 0 ][ k ] = c43 * Evaporation_Haude.y[ 1 ][ k ] - c13 * Evaporation_Haude.y[ 2 ][ k ];
-		Evaporation_Haude.y[ jm-1 ][ k ] = c43 * Evaporation_Haude.y[ jm-2 ][ k ] - c13 * Evaporation_Haude.y[ jm-3 ][ k ];
 
 		Evaporation_Haude.y[ 0 ][ k ] = c43 * Evaporation_Haude.y[ 1 ][ k ] - c13 * Evaporation_Haude.y[ 2 ][ k ];
 		Evaporation_Haude.y[ jm-1 ][ k ] = c43 * Evaporation_Haude.y[ jm-2 ][ k ] - c13 * Evaporation_Haude.y[ jm-3 ][ k ];
-*/
-	}
 
+		Evaporation_Haude.y[ 0 ][ k ] = c43 * Evaporation_Haude.y[ 1 ][ k ] - c13 * Evaporation_Haude.y[ 2 ][ k ];
+		Evaporation_Haude.y[ jm-1 ][ k ] = c43 * Evaporation_Haude.y[ jm-2 ][ k ] - c13 * Evaporation_Haude.y[ jm-3 ][ k ];
 
-
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int i = 0; i < im; i++ )
-			{
-				if ( cloud.x[ i ][ j ][ k ] < 0. ) 		cloud.x[ i ][ j ][ k ] = 0.;
-				if ( ice.x[ i ][ j ][ k ] < 0. ) 		ice.x[ i ][ j ][ k ] = 0.;
-				if ( P_rain.x[ i ][ j ][ k ] < 0. ) 		P_rain.x[ i ][ j ][ k ] = 0.;
-				if ( P_snow.x[ i ][ j ][ k ] < 0. ) 		P_snow.x[ i ][ j ][ k ] = 0.;
-			}
-		}
 	}
 
 
@@ -751,22 +718,22 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
 	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_8 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_8 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_9 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_8 / 365. << setw ( 6 ) << name_unit_mmd << endl;
 
-/*
+
 	Value_10 = precipitation_NASA_average;
 
 	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_10 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_10 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_11 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_10 / 365. << setw ( 6 ) << name_unit_mmd << endl;
-*/
+
+
+	Value_13 = Evaporation_Haude_average;
+
+	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_14 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_13 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_15 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_13 / 365. << setw ( 6 ) << name_unit_mmd << endl;
+
 
 	Value_9 = co2_vegetation_average * co2_0;
 	Value_12 = Evaporation_Penman_average;
 
-	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_22 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_9 << setw ( 6 ) << name_unit_ppm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_12 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_13 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 / 365. << setw ( 6 ) << name_unit_mmd << endl;
+	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_22 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_9 << setw ( 6 ) << name_unit_ppm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_12 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_13 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 / 365. << setw ( 6 ) << name_unit_mmd << endl << endl << endl;
 
-/*
-	Value_13 = Evaporation_Haude_average;
-
-	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_14 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_13 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_15 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_13 / 365. << setw ( 6 ) << name_unit_mmd << endl << endl << endl;
-*/
 
 
 }

@@ -264,7 +264,7 @@ void BC_Bathymetry_Atmosphere::BC_IceShield ( int Ma, double t_0, Array &h, Arra
 
 
 
-void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, double g, double hp, double ep, double r_air, double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_land, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double pa, double gam, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2, Array_2D &Vegetation )
+void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int i_max, double g, double hp, double ep, double r_air, double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_land, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double pa, double gam, double sigma, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2, Array &radiation_3D, Array_2D &Vegetation )
 {
 
 // boundary conditions for the total solid ground
@@ -294,11 +294,6 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, d
 			if ( h.x[ 0 ][ j ][ k ] == 1. ) 
 			{
 				d_j = ( double ) j;
-//				t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;
-
-//				c.x[ 0 ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );
-//				c.x[ 0 ][ j ][ k ] = c_land * c.x[ 0 ][ j ][ k ];					// relativ water vapour contents on land reduced by factor
-
 				co2.x[ 0 ][ j ][ k ] = ( co_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;	// parabolic distribution from pole to pole
 
 				u.x[ 0 ][ j ][ k ] = 0.;
@@ -309,16 +304,19 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, d
 	}
 
 
+	int i_mount = 0;
 
 // boundary conditions for solid ground areas
-	for ( int i = 1; i < im-1; i++ )													// i = 0 a must: to keep velocities at surfaces to zero
+	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int j = 0; j < jm; j++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int k = 0; k < km; k++ )
+			for ( int i = im-20; i >= 0; i-- )													// i = 0 a must: to keep velocities at surfaces to zero
 			{
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
+					if ( i_mount == 0 ) 		i_mount = i;
+
 					u.x[ i ][ j ][ k ] = 0.;
 					v.x[ i ][ j ][ k ] = 0.;
 					w.x[ i ][ j ][ k ] = 0.;
@@ -328,24 +326,35 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int i_max, d
 					ice.x[ i ][ j ][ k ] = 0.;
 
 					co2.x[ i ][ j ][ k ] = 0.;
-
 					p_dyn.x[ i ][ j ][ k ] = 0.;
 
-					d_i = ( double ) i;
+					d_i = ( double ) i_mount;
 
-					if ( NASATemperature == 0 ) 			t.x[ i ][ j ][ k ] = ( t_tropopause - t_cretaceous  - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];	// linear temperature decay until mountain summits
-					else 													t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];										// surface temperure by NASA as initial condition
+					if ( NASATemperature == 0 )
+					{
+						t.x[ i ][ j ][ k ] = t.x[ i_mount + 1 ][ j ][ k ];
+						c.x[ i ][ j ][ k ] = c.x[ i_mount + 1 ][ j ][ k ];				// water vapour amount above mount surface repeated
+						co2.x[ i ][ j ][ k ] = co2.x[ i_mount + 1 ][ j ][ k ];		// co2 amount above mount surface repeated
+//						t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
+//						c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];				// water vapour amount above mount surface repeated
+//						co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ];		// co2 amount above mount surface repeated
+					}
 
-//					c.x[ i ][ j ][ k ] = c.x[ 0 ][ j ][ k ] - ( c_tropopause - c.x[ 0 ][ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );	// radial distribution approximated by a parabola ( Weischet )
-
-//					co2.x[ i ][ j ][ k ] = co2.x[ 0 ][ j ][ k ] - ( ( co2_tropopause - co2.x[ 0 ][ j ][ k ] * co2_0 ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ) ) / co2_0;
-																																// radial distribution approximated by a parabola
-
+					if ( NASATemperature == 1 )
+					{
+						if ( Ma == 0 ) 			t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
+						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount + 1 ][ j ][ k ];
+//						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
+						c.x[ i ][ j ][ k ] = c.x[ i_mount + 1 ][ j ][ k ];				// water vapour amount above mount surface repeated
+						co2.x[ i ][ j ][ k ] = co2.x[ i_mount + 1 ][ j ][ k ];		// co2 amount above mount surface repeated
+//						c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];				// water vapour amount above mount surface repeated
+//						co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ];		// co2 amount above mount surface repeated
+					}
 				}
 			}
+			i_mount = 0;
 		}
 	}
-
 }
 
 

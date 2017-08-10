@@ -529,7 +529,6 @@ double Accuracy_Atm::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, 
 							deg_lat = deg_south;
 						}
 
-
 						if ( k_loc <= 180 )
 						{
 							k_loc_deg = k_loc;
@@ -539,7 +538,7 @@ double Accuracy_Atm::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, 
 						if ( k_loc > 180 )
 						{
 							k_loc_deg = 360 - k_loc;
-							deg_lon = deg_east;
+							deg_lon = deg_west;
 						}
 
 

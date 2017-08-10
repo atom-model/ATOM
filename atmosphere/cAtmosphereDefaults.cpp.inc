@@ -11,10 +11,10 @@ void cAtmosphereModel::SetDefaultConfig() {
   output_path = "output";
 
   // atmosphere section
-  velocity_iter_max = 4;
-  pressure_iter_max = 4;
-  velocity_iter_max_2D = 4;
-  pressure_iter_max_2D = 4;
+  velocity_iter_max = 2;
+  pressure_iter_max = 2;
+  velocity_iter_max_2D = 2;
+  pressure_iter_max_2D = 2;
   coriolis = 1.0;
   centrifugal = 1.0;
   WaterVapour = 1.0;
@@ -22,8 +22,8 @@ void cAtmosphereModel::SetDefaultConfig() {
   CO2 = 1.0;
   epsres = 1e-05;
   sun = 0;
+  NASATemperature = 1;
   RadiationModel = 3;
-  NASATemperature = 0;
   IceShield = 0;
   declination = 0;
   sun_position_lat = 60;
@@ -41,7 +41,7 @@ void cAtmosphereModel::SetDefaultConfig() {
   albedo_equator = 0.15;
   epsilon_equator = 0.594;
   epsilon_tropopause = 0.001;
-  epsilon_pole = 0.3;
+  epsilon_pole = 0.5;
   epsilon_extra = 0.71;
   radiation_ocean = 40.0;
   radiation_pole = -40.0;
@@ -82,11 +82,11 @@ void cAtmosphereModel::SetDefaultConfig() {
   t_cretaceous_max = 10.0;
   t_cretaceous = 0.0;
   t_average = 15.0;
-  t_equator = 1.1103;
-  t_pole = 0.8;
-  t_tropopause = 0.733;
-  t_land = 0.003661;
-  c_tropopause = 0.0;
+  t_equator = 1.11;
+  t_pole = 0.927;
+  t_tropopause = 0.798;
+  t_land = 0.0;
+  c_tropopause = 0.001;
   c_land = 0.5;
   c_ocean = 0.5;
   co2_average = 372.0;
