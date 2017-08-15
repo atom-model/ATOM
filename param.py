@@ -16,10 +16,10 @@ def main():
         ],
 
         'atmosphere': [
-            ( 'velocity_iter_max', '', 'int', 4 ),
-            ( 'pressure_iter_max', '', 'int', 4 ),
-            ( 'velocity_iter_max_2D', '', 'int', 4 ),
-            ( 'pressure_iter_max_2D', '', 'int', 4 ),
+            ( 'velocity_iter_max', '', 'int', 2 ),
+            ( 'pressure_iter_max', '', 'int', 2 ),
+            ( 'velocity_iter_max_2D', '', 'int', 2 ),
+            ( 'pressure_iter_max_2D', '', 'int', 2 ),
 
             ( 'coriolis', 'coriolis force', 'double', 1.0 ),
             ( 'centrifugal', 'centrifugal force', 'double', 1.0 ),
@@ -30,15 +30,15 @@ def main():
             ( 'epsres', 'accuracy of relative and absolute errors', 'double', 0.00001 ),
 
             ( 'sun', 'while no variable sun position wanted', 'int', 0 ),
+            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 1 ),
             ( 'RadiationModel', 'surface temperature computation by a radiation model', 'int', 3 ),
-            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 0 ),
             ( 'IceShield', 'compute ice shields? computation of ice shield following the theorie by Milankowitsch', 'int', 0 ),
 
             ( 'declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0 ),
             ( 'sun_position_lat', 'position of sun j = 120 means 30°S, j = 60 means 30°N', 'int', 60 ),
             ( 'sun_position_lon', 'position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian  )', 'int', 180 ),
 
-            ( 'Ma_max', 'parabolic temperature distribution 300 Ma ( From Ruddiman )', 'int', 300 ),
+            ( 'Ma_max', 'parabolic temperature distribution 300 Ma ( from Ruddiman )', 'int', 300 ),
             ( 'Ma_max_half', 'half of time scale', 'int', 150 ),
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 20000 m / 40 steps = 500 m', 'double', 20000. ),
@@ -58,7 +58,6 @@ def main():
 
             ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.594 ),
             ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),
-#            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.3 ),
             ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.5 ),
             ( 'epsilon_extra', 'capability of emissions in the atmosphere, 2D approach', 'double', 0.71 ),
 
@@ -98,27 +97,26 @@ def main():
             ( 'va', 'initial velocity component in theta-direction', 'double', 0.0 ),
             ( 'wa', 'initial velocity component in phi-direction', 'double', 0.0 ),
             ( 'pa', 'initial value for the pressure field', 'double', 0.0 ),
-            ( 'ca', 'value 1.0 stands for the maximum value of 35 g/kg water vapour', 'double', 0.0 ),
+            ( 'ca', 'value 0.04 stands for the maximum value of 40 g/kg water vapour', 'double', 0.0 ),
             ( 'ta', 'initial value for the temperature field, 1.0 compares to 0° C compares to 273.15 K', 'double', 1.0 ),
-            ( 'coa', 'initial value of co2 = 1.0 compares to 280 ppm in preindustrial times', 'double', 1.0 ),
+            ( 'coa', 'initial value of co2 = 1.0 compares to 280 ppm in pre-industrial times', 'double', 1.0 ),
 
             ( 't_cretaceous_max', 'maximum add of mean temperature in °C during cretaceous times', 'double', 10.0 ),
             ( 't_cretaceous', 'value at modern times', 'double', 0.0 ),
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
             ( 't_equator', 'temperature t_0 = 1.11 compares to 30.0° C compares to 303.15 K', 'double', 1.11 ),
-#            ( 't_pole', 'temperature at the poles t_pole = 0.91 compares to -25.0°C compares to 248.15 K', 'double', 0.91 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.927 compares to -20.0°C compares to 253.15 K', 'double', 0.927 ),
-#            ( 't_tropopause', 'temperature in the tropopause, t = 0.78 compares to -60.093°C compares to 213,057 K', 'double', 0.78 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
-            ( 't_land', 'temperature increase on land by 1°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.003661 ),
-#            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.007322 ),
+#            ( 't_land', 'temperature increase on land by 1°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.003661 ),
+            ( 't_land', 'temperature increase on land by 1°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.0 ),
 
-            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 g/kg', 'double', 0.0 ),
-#            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.5 ),
-#            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
-            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.45 ),
-            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.45 ),
+#            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.0 ),
+            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
+            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.5 ),
+           ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
+#           ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.45 ),
+#            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.45 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 372.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),
