@@ -68,9 +68,9 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 
 RHS_Atmosphere::~RHS_Atmosphere() 
 {
-	for ( int i = 0; i < im; i++ )
+	for ( int j = 0; j < jm; j++ )
 	{
-		delete [  ] im_tropopause[ i ];
+		delete [  ] im_tropopause[ j ];
 	}
 
 	delete [  ] im_tropopause;
