@@ -34,10 +34,10 @@ libatom.a: $(PARAM_OUTPUTS) $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
 	ar rcs libatom.a $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
 
 atm: libatom.a $(ATM_CLI_OBJ)
-	$(CXX) $(CFLAGS) $(ATM_CLI_OBJ) -L. -latom $(LDFLAGS) -o atm
+	$(CXX) $(CFLAGS) $(ATM_CLI_OBJ) -L. -latom $(LDFLAGS) -o cli/atm
 
 hyd: libatom.a $(HYD_CLI_OBJ)
-	$(CXX) $(CFLAGS) $(HYD_CLI_OBJ) -L. -latom $(LDFLAGS) -o hyd
+	$(CXX) $(CFLAGS) $(HYD_CLI_OBJ) -L. -latom $(LDFLAGS) -o cli/hyd
 
 $(PARAM_OUTPUTS): param.py
 # explicitly clean dependent files
