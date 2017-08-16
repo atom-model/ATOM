@@ -25,6 +25,15 @@ RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, doubl
 	this-> omega = omega;
 	this-> coriolis = coriolis;
 	this-> centrifugal = centrifugal;
+
+// array "im_tropopause" for configuring data due to latitude dependent tropopause
+	im_tropopause = new int*[ jm ];
+
+	for ( int l = 0; l < jm; l++ )
+	{
+		im_tropopause[ l ] = 0;
+//		cout << im_tropopause[ l ] << endl;
+	}
 }
 
 
@@ -55,7 +64,6 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 
 
 // array "im_tropopause" for configuring data due to latitude dependent tropopause
-
 	im_tropopause = new int*[ jm ];
 
 	for ( int l = 0; l < jm; l++ )
@@ -63,6 +71,7 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 		im_tropopause[ l ] = 0;
 //		cout << im_tropopause[ l ] << endl;
 	}
+
 }
 
 
