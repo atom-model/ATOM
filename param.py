@@ -378,8 +378,8 @@ cdef extern from "c%sModel.h":
 
 
     for  filename, sections in [
-        ( 'examples/config_atm.xml', atmosphere_sections ),
-        ( 'examples/config_hyd.xml', hydrosphere_sections )
+        ( 'cli/config_atm.xml', atmosphere_sections ),
+        ( 'cli/config_hyd.xml', hydrosphere_sections )
     ]:
         write_config_xml ( filename, sections )
 
