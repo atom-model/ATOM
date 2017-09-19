@@ -273,22 +273,12 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 	int i_beg = 16;		 // corresponds to about 8 km above sea level, maximum hight of the tropopause at poles
 
 //	naming a file to read the surface temperature by NASA of the modern world
-	string Name_NASAbasedSurfaceTemperature_File;
-	stringstream ssNameNASAbasedSurfaceTemperature;
-	ssNameNASAbasedSurfaceTemperature << "../data/" << "NASA_based_SurfaceTemperature.xyz";
-	Name_NASAbasedSurfaceTemperature_File = ssNameNASAbasedSurfaceTemperature.str();
-
-//	naming a file to read the surface temperature by NASA of the modern world
-	string Name_SurfaceTemperature_File;
-	stringstream ssNameSurfaceTemperature;
-	ssNameSurfaceTemperature << "../data/" << "SurfaceTemperature_NASA.xyz";
-	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
+	string Name_SurfaceTemperature_File = temperature_path + "/" +
+        std::to_string(Ma) + temperature_suffix;
 
 // naming a file to read the surface precipitation by NASA
-	string Name_SurfacePrecipitation_File;
-	stringstream ssNameSurfacePrecipitation;
-	ssNameSurfacePrecipitation << "../data/" << "SurfacePrecipitation_NASA.xyz";
-	Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
+	string Name_SurfacePrecipitation_File = precipitation_path + "/" + 
+        std::to_string(Ma) + precipitation_suffix;
 
 	string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
 	string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
@@ -296,7 +286,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 
 	cout << "\n   Output is being written to " << output_path << "\n";
 	cout << "   Ma = " << Ma << "\n";
-	cout << "   bathymetry_path = " << bathymetry_path << "\n";
+	cout << "   Name_SurfaceTemperature_File = " << Name_SurfaceTemperature_File << std::endl;
+    cout << "   Name_SurfacePrecipitation_File = " << Name_SurfacePrecipitation_File << std::endl;
+    cout << "   bathymetry_path = " << bathymetry_path << "\n";
 	cout << "   bathymetry_filepath = " << bathymetry_filepath << "\n\n";
 
 	if (verbose) {
@@ -835,7 +827,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 	PostProcess_Atmosphere ppa ( im, jm, km, output_path );
 	ppa.Atmosphere_v_w_Transfer ( bathymetry_name, v, w, p_dyn );
 	ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
-	if ( NASATemperature == 1 ) ppa.NASAbasedSurfaceTemperature ( Name_NASAbasedSurfaceTemperature_File, t, c, cloud, ice );
+	//if ( NASATemperature == 1 ) ppa.NASAbasedSurfaceTemperature ( Name_NASAbasedSurfaceTemperature_File, t, c, cloud, ice );
 
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
