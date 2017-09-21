@@ -273,12 +273,17 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 	int i_beg = 16;		 // corresponds to about 8 km above sea level, maximum hight of the tropopause at poles
 
 //	naming a file to read the surface temperature by NASA of the modern world
-	string Name_SurfaceTemperature_File = temperature_path + "/" +
-        std::to_string(Ma) + temperature_suffix;
+	string Name_SurfaceTemperature_File = temperature_file;
+    if(Ma != 0){
+        Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature_NASA.xyz";
+    }
 
 // naming a file to read the surface precipitation by NASA
-	string Name_SurfacePrecipitation_File = precipitation_path + "/" + 
-        std::to_string(Ma) + precipitation_suffix;
+	string Name_SurfacePrecipitation_File = precipitation_file;
+    if(Ma != 0){
+        Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfacePrecipitation_NASA.xyz";
+    }
+
 
 	string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
 	string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;

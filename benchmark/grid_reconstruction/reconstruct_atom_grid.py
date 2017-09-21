@@ -100,8 +100,9 @@ def reconstruct_grid(
             if x<=180:
                 new_data.append(data[361*(y+90)+x+180])
             else:
-                new_data.append(data[361*(y+90)+x-180])
-            
+                l=list(data[361*(y+90)+x-180])
+                l[0]+=360
+                new_data.append(l) 
     write_xyz_file(new_ascii_grid_file, new_data)
     print "Reconstruction done!"
     

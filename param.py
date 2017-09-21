@@ -10,10 +10,8 @@ def main():
         'common': [
             ( 'bathymetry_path', '', 'string', '../data/Paleotopography_bathymetry/Golonka_rev210' ),
             ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
-            ( 'temperature_path', '', 'string', '../data/Temperature'),
-            ( 'temperature_suffix', '', 'string', 'Ma_SurfaceTemperature_NASA.xyz'),
-            ( 'precipitation_path', '', 'string', '../data/Precipitation'),
-            ( 'precipitation_suffix', '', 'string', 'Ma_SurfacePrecipitation_NASA.xyz'),
+            ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
+            ( 'precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
 #            ( 'verbose', '', 'bool', False ),
             ( 'verbose', '', 'bool', True ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
