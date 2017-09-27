@@ -4,6 +4,7 @@
 *.vw
 *.xyz
 *.vts
+*.pyc
 atmosphere/AGCM
 atmosphere/atmosphere
 .ipynb_checkpoints/
