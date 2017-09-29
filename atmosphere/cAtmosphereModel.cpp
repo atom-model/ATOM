@@ -274,14 +274,14 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 
 //	naming a file to read the surface temperature by NASA of the modern world
 	string Name_SurfaceTemperature_File = temperature_file;
-    if(Ma != 0){
-        Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature_NASA.xyz";
+    if(Ma != 0 && use_earthbyte_reconstruction){
+        Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
     }
 
 // naming a file to read the surface precipitation by NASA
 	string Name_SurfacePrecipitation_File = precipitation_file;
-    if(Ma != 0){
-        Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfacePrecipitation_NASA.xyz";
+    if(Ma != 0 && use_earthbyte_reconstruction){
+        Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfacePrecipitation.xyz";
     }
 
 
@@ -379,8 +379,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ) {
 	t_cretaceous = circulation.out_temperature (  );
 
 //  class element for the correction of the temperature initial distribution around coasts
-	if ( ( NASATemperature == 1 ) && ( Ma > 0 ) ) circulation.IC_Temperature_WestEastCoast ( h, t );
-
+	if (!use_earthbyte_reconstruction){
+        if ( ( NASATemperature == 1 ) && ( Ma > 0 ) ) circulation.IC_Temperature_WestEastCoast ( h, t );
+    }
 //  class element for the surface pressure computed by surface temperature with gas equation
 //	if ( Ma == 0 ) circulation.BC_Pressure ( p_stat, t, h );
 	circulation.BC_Pressure ( p_stat, t, h );

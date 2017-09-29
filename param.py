@@ -15,6 +15,7 @@ def main():
 #            ( 'verbose', '', 'bool', False ),
             ( 'verbose', '', 'bool', True ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
+            ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False ),
         ],
 
         'atmosphere': [
