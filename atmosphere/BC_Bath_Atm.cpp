@@ -276,7 +276,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 
-	t_co2_eff = t_pole - t_equator;
+//	t_co2_eff = t_pole - t_equator;
 	co_co2_eff = co2_pole - co2_equator;
 
 

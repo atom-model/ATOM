@@ -48,7 +48,7 @@ class BC_Thermo
 		double d_i, d_i_max, d_i_half, d_j, d_j_half, d_j_max, d_k, pi180, d_j_w;
 		double d_j_5n, d_j_15n, d_j_45n, d_j_75n, d_j_30n, d_j_5s, d_j_15s, d_j_45s, d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
 		double max_u, max_v, max_w;
-		double t_cretaceous, t_cretaceous_co2_eff, t_cretaceous_max, t_360;
+		double t_cretaceous, t_cretaceous_co2_eff, t_cretaceous_max, t_cret_cor, t_360;
 		double j_par_f, j_pol_f, cc, e, j_d, t_dd, k_par_f, k_pol_f;
 		double water_wind, t_pol;
 		double rR, rg, jmkm, u_sum, v_sum, w_sum, t_sum, c_sum;
@@ -90,13 +90,13 @@ class BC_Thermo
 
  
  
-		string time_slice_comment, time_slice_number, time_slice_unit;
+		string time_slice_comment, time_slice_number, time_slice_unit, output_path;
 		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
 		string co_comment, co_gain, co_modern, co_av, co_unit, co_cretaceous_str, co_average_cret, co_average_str;
 
 
 	public:
-		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
 
@@ -122,7 +122,9 @@ class BC_Thermo
 
 		void BC_CO2 ( Array_2D &, Array &, Array &, Array &, Array & );
 
-		void BC_NASAbasedSurfaceTemperature ( const string &, Array &, Array &, Array &, Array & );
+		void BC_NASAbasedSurfTempRead ( const string &, double &, double &, Array &, Array &, Array &, Array & );
+
+		void BC_NASAbasedSurfTempWrite ( const string &, double &, double &, Array &, Array &, Array &, Array & );
 
 		void BC_Surface_Temperature_NASA ( const string &, Array_2D &, Array & );
 
@@ -138,7 +140,9 @@ class BC_Thermo
 
 		double cloud_ice ( const double &, int, const int & );
 
-		double out_temperature (  ) const;
+		double out_t_cretaceous (  ) const;
+
+		double out_t_cret_cor (  ) const;
 
 		double out_co2 (  ) const;
 

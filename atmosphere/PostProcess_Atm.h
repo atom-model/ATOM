@@ -48,7 +48,6 @@ public:
     void paraview_vtk_radial ( string &, int &, int &, double &, double &, double &,double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &,Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
     void Atmosphere_v_w_Transfer ( string &, Array &, Array &, Array & );
     void Atmosphere_PlotData ( string &, double, double, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
-    void NASAbasedSurfaceTemperature ( string &, Array &, Array &, Array &, Array & );
 
 	double exp_func ( double &, const double &, const double & );
 };
