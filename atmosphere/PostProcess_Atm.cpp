@@ -820,6 +820,37 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
 
 
 
+
+void PostProcess_Atmosphere::NASAbasedSurfaceTemperature ( string &Name_NASAbasedSurfaceTemperature_File, Array &t, Array &c, Array &cloud, Array &ice ) {
+
+    string Name_NASAbased_File = Name_NASAbasedSurfaceTemperature_File;
+    ofstream NASAbased_File;
+    NASAbased_File.precision(4);
+    NASAbased_File.setf(ios::fixed);
+    NASAbased_File.open(Name_NASAbased_File);
+
+    if (!NASAbased_File.is_open()) {
+        cerr << "ERROR: could not open NASAbased file " << __FILE__ << " at line " << __LINE__ << "\n";
+        abort();
+    }
+
+
+	for ( int k = 0; k < km; k++ ) 
+	{
+		for ( int j = 0; j < jm; j++ ) 
+		{
+//			for ( int i = 0; i < im; i++ ) 
+			{
+//				NASAbased_File << t.x[ i ][ j ][ k ] << " " << c.x[ i ][ j ][ k ] << " " << cloud.x[ i ][ j ][ k ] << " " << ice.x[ i ][ j ][ k ] <<  endl;
+				NASAbased_File << t.x[ 0 ][ j ][ k ] << " " << c.x[ 0 ][ j ][ k ] << " " << cloud.x[ 0 ][ j ][ k ] << " " << ice.x[ 0 ][ j ][ k ] <<  endl;
+			}
+        }
+    }
+    NASAbased_File.close();
+}
+
+
+
 double PostProcess_Atmosphere::exp_func ( double &T_K, const double &co_1, const double &co_2 )
 {
 	return exp ( co_1 * ( T_K - 273.15 ) / ( T_K - co_2 ) );						// temperature in °K
