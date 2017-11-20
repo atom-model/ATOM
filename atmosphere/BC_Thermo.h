@@ -48,8 +48,8 @@ class BC_Thermo
 		double d_i, d_i_max, d_i_half, d_j, d_j_half, d_j_max, d_k, pi180, d_j_w;
 		double d_j_5n, d_j_15n, d_j_45n, d_j_75n, d_j_30n, d_j_5s, d_j_15s, d_j_45s, d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
 		double max_u, max_v, max_w;
-		double t_cretaceous, t_cretaceous_co2_eff, t_cretaceous_max, t_360;
-		double j_par_f, j_pol_f, cc, e, j_d, t_dd, k_par_f, k_pol_f;
+		double t_cretaceous, t_cretaceous_co2_eff, t_cretaceous_max, t_cret_cor, t_360;
+		double j_par_f, j_pol_f, e, j_d, t_dd, k_par_f, k_pol_f;
 		double water_wind, t_pol;
 		double rR, rg, jmkm, u_sum, v_sum, w_sum, t_sum, c_sum;
 		double radiation_ocean_co2_eff, radiation_land_co2_eff, radiation_ocean;
@@ -60,7 +60,7 @@ class BC_Thermo
 		double radiation_pole, radiation_equator, t_land;
 		double albedo_co2_eff, albedo_equator, albedo_pole;
 		double ik_co2_eff, ik_equator, ik_pole;
-		double aa, bb, dd, f;
+		double aa, bb, cc, dd, f;
 		double epsilon_co2_eff_2D, epsilon_co2_eff, epsilon_pole, epsilon_equator, epsilon_tropopause, epsilon_co2_eff_max;
 
 		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, t_Celsius_ni, t_Celsius_pi, t_Celsius_nj, t_Celsius_pj, t_Celsius_nk, t_Celsius_pk, dp_hdr, dp_hdthe, dp_hdphi;
@@ -71,7 +71,7 @@ class BC_Thermo
 		double E, E_Rain_SL, E_Rain, E_Rain_super, E_Ice, q_Rain, q_Rain_super, q_Ice;
 		double c12, c32, c42, t_Celsius_it, t_Celsius_0, t_Celsius_1, t_Celsius_2;
 		double TK, rad_lon_terrestic, rad_lon_back;
-		double r_dry, r_humid, p_SL, t_SL;
+		double r_dry, r_humid, p_SL, t_SL, exp_pressure, hight;
 		double t_u, t_Celsius_SL, t_dew, t_dew_SL, T, T_nue, T_it, q_T, q_Rain_n, e_SL, a_SL, h_level, i_level, h_h, sat_deficit, RF_e;
 		double q_v_b, q_c_b, q_i_b, q_v_hyp, q_v_hyp_n, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
 		double t_equator, t_tropopause, t_co2_eff, t_pole, c_equator, c_tropopause, coeff_mmWS;
@@ -90,25 +90,25 @@ class BC_Thermo
 
  
  
-		string time_slice_comment, time_slice_number, time_slice_unit;
+		string time_slice_comment, time_slice_number, time_slice_unit, output_path;
 		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
 		string co_comment, co_gain, co_modern, co_av, co_unit, co_cretaceous_str, co_average_cret, co_average_str;
 
 
 	public:
-		BC_Thermo ( int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
 
-		void IC_CellStructure ( int *, Array &, Array &, Array & );
+		void IC_CellStructure ( int *, Array &, Array &, Array &, Array & );
 
-		void BC_Temperature ( Array_2D &, Array &, Array &, Array &, Array & );
+		void BC_Temperature ( int *, Array_2D &, Array &, Array &, Array &, Array & );
 
 		void TropopauseLocation ( int * );
 
 		void BC_Radiation_2D_layer ( Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_Radiation_multi_layer ( int, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_Radiation_multi_layer ( int*, int, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void BC_Radiation_parabolic ( Array_2D &, Array & );
 
@@ -116,19 +116,21 @@ class BC_Thermo
 
 		void BC_CloudWaterIce ( Array &, Array &, Array &, Array & );
 
-		void Ice_Water_Saturation_Adjustment ( int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void Ice_Water_Saturation_Adjustment ( int *, int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void Two_Category_Ice_Scheme ( int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void BC_CO2 ( Array_2D &, Array &, Array &, Array &, Array & );
 
-		void BC_NASAbasedSurfaceTemperature ( const string &, Array &, Array &, Array &, Array & );
+		void BC_NASAbasedSurfTempRead ( const string &, double &, double &, Array &, Array &, Array &, Array & );
+
+		void BC_NASAbasedSurfTempWrite ( const string &, double &, double &, Array &, Array &, Array &, Array & );
 
 		void BC_Surface_Temperature_NASA ( const string &, Array_2D &, Array & );
 
 		void BC_Surface_Precipitation_NASA ( const string &, Array_2D & );
 
-		void BC_Pressure ( Array &, Array &, Array & );
+		void BC_Pressure ( Array &, Array &, Array &, Array & );
 
 		void Latent_Heat ( Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
@@ -138,7 +140,9 @@ class BC_Thermo
 
 		double cloud_ice ( const double &, int, const int & );
 
-		double out_temperature (  ) const;
+		double out_t_cretaceous (  ) const;
+
+		double out_t_cret_cor (  ) const;
 
 		double out_co2 (  ) const;
 

@@ -40,7 +40,7 @@ BC_Bathymetry_Atmosphere::~BC_Bathymetry_Atmosphere(){}
 
 
 
-void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File, double L_atm, Array &h, Array &aux_w )
+void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File, double L_atm, Array_2D &Topography, Array_2D &value_top, Array &h, Array &aux_w )
 {
 	cout.precision ( 8 );
 	cout.setf ( ios::fixed );
@@ -50,7 +50,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 
 	// reading data from file Name_Bathymetry_File_Read
 	ifstream Name_Bathymetry_File_Read;
-//	Name_Bathymetry_File_Read.open ( Name_Bathymetry_File.c_str(), ios_base::in );
 	Name_Bathymetry_File_Read.open(Name_Bathymetry_File);
 
 	if ( !Name_Bathymetry_File_Read.is_open() ) {
@@ -64,6 +63,14 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 			Name_Bathymetry_File_Read >> dummy_2;
 			Name_Bathymetry_File_Read >> dummy_3;
 
+			if ( dummy_3 < 0. )
+			{
+				Topography.y[ j ][ k ] = 0.;
+			}
+			 else
+			{
+				Topography.y[ j ][ k ] = dummy_3;
+			}
 
 			if ( dummy_3 < 0. )
 			{
@@ -71,10 +78,11 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 			}
 			 else
 			{
-				int i = ( im - 1 ) * ( dummy_3 / L_atm );
-				i_SL = i;
+				hight = ( int ) ( dummy_3 / ( L_atm / ( im - 1 ) ) );
 
-				for ( i = 0; i <= i_SL; i++ )
+//	cout << " j = " << j << " k = " << k << " hight = " << hight << " hight_400 = " << hight * 400. << " dummy_3 = " << dummy_3 << " Topography = " << Topography.y[ j ][ k ] << endl;
+
+				for ( int i = 0; i <= hight; i++ )
 				{
 					h.x[ i ][ j ][ k ] = 1.;
 				}
@@ -124,6 +132,8 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 			for ( int i = 0; i < im; i++ )
 			{
 				h.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k ];
+//				h.x[ i ][ j ][ k ] = 0.;
+				aux_w.x[ i ][ j ][ k ] = 0.;
 			}
 		}
 	}
@@ -276,7 +286,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 
-	t_co2_eff = t_pole - t_equator;
+//	t_co2_eff = t_pole - t_equator;
 	co_co2_eff = co2_pole - co2_equator;
 
 
@@ -311,7 +321,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-			for ( int i = im-20; i >= 0; i-- )													// i = 0 a must: to keep velocities at surfaces to zero
+			for ( int i = im-2; i >= 0; i-- )													// i = 0 a must: to keep velocities at surfaces to zero
 			{
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
@@ -342,7 +352,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 
 					if ( NASATemperature == 1 )
 					{
-						if ( Ma == 0 ) 			t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
+						if ( Ma == 0 ) 				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
 						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount + 1 ][ j ][ k ];
 //						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
 						c.x[ i ][ j ][ k ] = c.x[ i_mount + 1 ][ j ][ k ];				// water vapour amount above mount surface repeated

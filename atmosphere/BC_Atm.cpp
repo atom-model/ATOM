@@ -44,17 +44,23 @@ void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p
 		for ( int k = 1; k < km-1; k++ )
 		{
 			u.x[ 0 ][ j ][ k ] = 0.;
-			p_dyn.x[ 0 ][ j ][ k ] = p_dyn.x[ 3 ][ j ][ k ] - 3. * p_dyn.x[ 2 ][ j ][ k ] + 3. * p_dyn.x[ 1 ][ j ][ k ];	// leads to round harmonic profiles
+			v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
+			w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
+
+//			p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 3. * p_dyn.x[ im-2 ][ j ][ k ]; //							extrapolation
+//			p_dyn.x[ 0 ][ j ][ k ] = 0.;
+			p_dyn.x[ im-1 ][ j ][ k ] = 0.;
+			p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];
+
 
 			u.x[ im-1 ][ j ][ k ] = 0.;
-			v.x[ im-1 ][ j ][ k ] = 0.;																					// stratosphere
+			v.x[ im-1 ][ j ][ k ] = 0.;
 			w.x[ im-1 ][ j ][ k ] = 0.;
 
 			c.x[ im-1 ][ j ][ k ] = c.x[ im-4 ][ j ][ k ] - 3. * c.x[ im-3 ][ j ][ k ] + 3. * c.x[ im-2 ][ j ][ k ];
 			cloud.x[ im-1 ][ j ][ k ] = cloud.x[ im-4 ][ j ][ k ] - 3. * cloud.x[ im-3 ][ j ][ k ] + 3. * cloud.x[ im-2 ][ j ][ k ];
 			ice.x[ im-1 ][ j ][ k ] = ice.x[ im-4 ][ j ][ k ] - 3. * ice.x[ im-3 ][ j ][ k ] + 3. * ice.x[ im-2 ][ j ][ k ];
 			co2.x[ im-1 ][ j ][ k ] = co2.x[ im-4 ][ j ][ k ] - 3. * co2.x[ im-3 ][ j ][ k ] + 3. * co2.x[ im-2 ][ j ][ k ];
-			p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 3. * p_dyn.x[ im-2 ][ j ][ k ];
 
 		}
 	}
@@ -88,8 +94,10 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_
 			w.x[ i ][ 0 ][ k ] = 0.;
 			w.x[ i ][ jm-1 ][ k ] = 0.;
 
-			p_dyn.x[ i ][ 0 ][ k ] = c43 * p_dyn.x[ i ][ 1 ][ k ] - c13 * p_dyn.x[ i ][ 2 ][ k ];
-			p_dyn.x[ i ][ jm-1 ][ k ] = c43 * p_dyn.x[ i ][ jm-2 ][ k ] - c13 * p_dyn.x[ i ][ jm-3 ][ k ];
+			p_dyn.x[ i ][ 0 ][ k ] = 0.;
+			p_dyn.x[ i ][ jm-1 ][ k ] = 0.;
+//			p_dyn.x[ i ][ 0 ][ k ] = c43 * p_dyn.x[ i ][ 1 ][ k ] - c13 * p_dyn.x[ i ][ 2 ][ k ];
+//			p_dyn.x[ i ][ jm-1 ][ k ] = c43 * p_dyn.x[ i ][ jm-2 ][ k ] - c13 * p_dyn.x[ i ][ jm-3 ][ k ];
 
 			c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
 			c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
@@ -122,7 +130,6 @@ void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p_dy
 		for ( int j = 1; j < jm-1; j++ )
 		{
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
-
 			t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
 			t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];
 			t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ km-1 ] = ( t.x[ i ][ j ][ 0 ] + t.x[ i ][ j ][ km-1 ] ) / 2.;

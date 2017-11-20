@@ -24,8 +24,9 @@ using namespace std;
 
 
 
-BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int RadiationModel, int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dt, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double epsilon_extra, double lv, double ls, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double ik_equator, double ik_pole )
+BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int i_beg, int i_max, int RadiationModel, int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dt, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double epsilon_extra, double lv, double ls, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cret_cor, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double ik_equator, double ik_pole )
 {
+    this ->output_path = output_path;
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;
@@ -80,6 +81,7 @@ BC_Thermo::BC_Thermo ( int im, int jm, int km, int i_beg, int i_max, int Radiati
 	this-> Ma_max = Ma_max;
 	this-> t_cretaceous_max = t_cretaceous_max;
 	this-> t_cretaceous = t_cretaceous;
+	this-> t_cret_cor = t_cret_cor;
 	this-> radiation_ocean = radiation_ocean;
 	this-> radiation_pole = radiation_pole;
 	this-> radiation_equator = radiation_equator;
@@ -457,7 +459,7 @@ void BC_Thermo::BC_Radiation_2D_layer ( Array_2D &albedo, Array_2D &epsilon, Arr
 
 
 
-void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, Array_2D &Q_Radiation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array_2D &temp_rad, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice )
+void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &t_j, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, Array_2D &Q_Radiation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_atm, Array_2D &Radiation_Balance_bot, Array_2D &temp_eff_atm, Array_2D &temp_eff_bot, Array_2D &temp_rad, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice )
 {
 // class element for the computation of the radiation and the temperature distribution
 // computation of the local temperature based on short and long wave radiation
@@ -528,7 +530,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albed
 
 
 // absorption/emissivity computation
-//	epsilon_co2_eff_max = .595;															// constant  given by Häckel
+//	epsilon_co2_eff_max = .594;															// constant  given by Häckel ( F. Baur and H. Philips, 1934 )
 
 	epsilon_co2_eff_2D = epsilon_pole - epsilon_equator;
 
@@ -541,20 +543,57 @@ void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albed
 
 		for ( int k = 0; k < km; k++ )
 		{
+
+
+// above assumed tropopause constant temperature t_tropopause
+/*
+// temperature values for the tropopause
+			for ( int i = im_tropopause[ j ] + 1; i < im; i++ )
+			{
+				t.x[ i ][ j ][ k ] = t_tropopause;
+				epsilon_3D.x[ i ][ j ][ k ] = epsilon_tropopause;										// dependency given by Häckel ( F. Baur and H. Philips, 1934 )
+			}
+
+
+// temperature decreasing approaching the tropopause, above constant temperature following Standard Atmosphere
+			for ( int i = 0; i <= im_tropopause[ j ]; i++ )
+			{
+
+				if ( c.x[ i ][ j ][ k ] <= 0. )	c.x[ i ][ j ][ k ] = 0.;
+				if ( cloud.x[ i ][ j ][ k ] <= 0. )	cloud.x[ i ][ j ][ k ] = 0.;
+				if ( ice.x[ i ][ j ][ k ] <= 0. )	ice.x[ i ][ j ][ k ] = 0.;
+
+				d_i_max = ( double ) ( im_tropopause[ j ] );
+				d_i = ( double ) i;
+				e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep; // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
+
+				epsilon_co2_eff = epsilon_co2_eff_max - ( epsilon_tropopause - epsilon_co2_eff_max ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ); // radial distribution
+				epsilon_3D.x[ i ][ j ][ k ] = epsilon_co2_eff + .0416 * sqrt ( e );										// dependency given by Häckel ( F. Baur and H. Philips, 1934 )
+			}
+*/
+
+
+
 			for ( int i = 0; i < im; i++ )
 			{
+				if ( c.x[ i ][ j ][ k ] <= 0. )											c.x[ i ][ j ][ k ] = 0.;
+				if ( cloud.x[ i ][ j ][ k ] <= 0. )									cloud.x[ i ][ j ][ k ] = 0.;
+				if ( ice.x[ i ][ j ][ k ] <= 0. )										ice.x[ i ][ j ][ k ] = 0.;
+
 				e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep; // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
-//				e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
 
 				d_i = ( double ) i;
 
 				epsilon_co2_eff = epsilon_co2_eff_max - ( epsilon_tropopause - epsilon_co2_eff_max ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ); // radial distribution
-				epsilon_3D.x[ i ][ j ][ k ] = epsilon_co2_eff + .0416 * sqrt ( e );										// dependency given by Häckel
+				epsilon_3D.x[ i ][ j ][ k ] = epsilon_co2_eff + .0416 * sqrt ( e );										// dependency given by Häckel ( F. Baur and H. Philips, 1934 )
+
 
 //				if ( ( j == 90 ) && ( k == 180 ) )	cout << " epsilon   i = "<< i << "  t = " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "  c = " << c.x[ i ][ j ][ k ] << "  cl = " << cloud.x[ i ][ j ][ k ] << "  ci = " << ice.x[ i ][ j ][ k ] << "  e = " << e << "  epsilon_co2_eff_max = " << epsilon_co2_eff_max << "  epsilon_co2_eff = " << epsilon_co2_eff << "  epsilon_co2_eff_2D = " << epsilon_co2_eff_2D << "  epsilon_sqrt = " << .0416 * sqrt ( e ) << "  epsilon_3D = " << epsilon_3D.x[ i ][ j ][ k ] << endl;
-
-
 			}
+
+
+
+
 		}
 	}
 
@@ -574,14 +613,11 @@ void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albed
 // radiation boundary conditions for the top ot the troposphere
 				radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4. ); // long wave radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
-//				radiation_3D.x[ im - 1 ][ j ][ k ] = sigma * pow ( ( t_tropopause - t_cretaceous ) * t_0, 4. ); // long wave radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
-
 				rad_lon_terrestic = sigma * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );									// long wave surface radiation based on local temperature, Stephan-Bolzmann law
 				rad_lon_back = epsilon_3D.x[ 1 ][ j ][ k ] * sigma * pow ( t.x[ 1 ][ j ][ k ] * t_0, 4. );	// long wave back radiation absorbed from the first water vapour layer out of 40
  
 				Ik_loss = .07 * Ik.y[ j ][ k ] / TK;																				// short wave radiation loss on the surface
 				Ik_tot = rad_lon_back + Ik.y[ j ][ k ] - Ik_loss;															// total short and long wave radiation leaving the surface
-//				Ik_tot = rad_lon_back + Ik.y[ j ][ k ] * TK - Ik_loss;															// total short and long wave radiation leaving the surface
 
 				AA[ 0 ] = Ik_tot / radiation_3D.x[ im - 1 ][ j ][ k ];													// non-dimensional surface radiation
 				CC[ 0 ][ 0 ] = 0.;																									// no absorption of radiation on the surface by water vapour
@@ -671,6 +707,9 @@ void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albed
 						alfa[ i ] = cc / bb;
 						beta[ i ] = dd / bb;
 					}
+
+//					if ( ( j == 90 ) && ( k == 180 ) )	cout << " rad berechnung  i = "<< i << "  t = " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "  radiation_3D = " << radiation_3D.x[ i ][ j ][ k ] << "  p_stat = " << p_stat.x[ i ][ j ][ k ] << endl;
+
 				}
  
 
@@ -678,14 +717,24 @@ void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albed
 
 
 
-//				radiation_3D.x[ im - 1 ][ j ][ k ] = sigma * pow ( ( t_tropopause - t_cretaceous ) * t_0, 4. ); // long wave radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 // recurrence formula for the radiation and temperature
 
 				for ( int i = im - 2; i >= 0; i-- )
 				{
+
+// above assumed tropopause constant temperature t_tropopause
+/*
+					if ( i >= im_tropopause[ j ] )
+					{
+						radiation_3D.x[ i + 1 ][ j ][ k ] = radiation_3D.x[ im - 1 ][ j ][ k ];
+					}
+*/
 					radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];							// Thomas algorithm, recurrence formula
 					t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, ( 1. / 4. ) ) / t_0 );	// averaging of temperature values to smooth the iterations
+
+//					if ( ( j == 90 ) && ( k == 180 ) )	cout << " multi  i = "<< i << "  t = " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "  radiation_3D = " << radiation_3D.x[ i ][ j ][ k ] << "  p_stat = " << p_stat.x[ i ][ j ][ k ] << endl;
+
 				}
 			}
 		}
@@ -698,8 +747,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( int n, Array_2D &t_j, Array_2D &albed
 
 
 
-
-void BC_Thermo::BC_Temperature ( Array_2D &temperature_NASA, Array &h, Array &t, Array &p_dyn, Array &p_stat )
+void BC_Thermo::BC_Temperature ( int *im_tropopause, Array_2D &temperature_NASA, Array &h, Array &t, Array &p_dyn, Array &p_stat )
 {
 // boundary condition of  temperature on land 
 // parabolic distribution from pole to pole accepted
@@ -718,7 +766,7 @@ void BC_Thermo::BC_Temperature ( Array_2D &temperature_NASA, Array &h, Array &t,
 	t_co2_eff = t_pole - t_equator;
 	t_cretaceous_co2_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
 	t_cretaceous = t_cretaceous_co2_eff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
-	if ( Ma == 0 ) 	t_cretaceous = 0.;
+	if ( Ma == 0 ) 	t_cretaceous = t_cret_cor = 0.;
 
 	cout.precision ( 3 );
 
@@ -739,7 +787,6 @@ void BC_Thermo::BC_Temperature ( Array_2D &temperature_NASA, Array &h, Array &t,
 	cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_cretaceous << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << temperature_unit << endl;
 
 	t_cretaceous = ( t_cretaceous + t_average + t_0 ) / t_0 - ( ( t_average + t_0 ) / t_0 );    // non-dimensional
-
 
 	// temperatur distribution at aa prescribed sun position
 	// sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
@@ -830,20 +877,17 @@ void BC_Thermo::BC_Temperature ( Array_2D &temperature_NASA, Array &h, Array &t,
 					if ( NASATemperature == 0 )									// if ( NASATemperature == 0 ) parabolic surface temperature is used
 					{
 						t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous;
-						if ( h.x[ 0 ][ j ][ k ] == 1. ) 										t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;
+						if ( h.x[ 0 ][ j ][ k ] == 1. ) 									t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;	// end parabolic temperature distribution
 					}
-					else 																		// if ( NASATemperature == 1 ) NASA surface temperature is used
+
+					if ( NASATemperature == 1 )									// if ( NASATemperature == 1 ) surface temperature is NASA based
 					{
-						if ( Ma == 0 ) 			t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ];	// in the last timeslice iterated temperature distribution based on the NASA temperature + t_cretaceous
-						else
-						{
-							t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous;
-							if ( h.x[ 0 ][ j ][ k ] == 1. ) 									t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;
-						}
+						t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + ( t_cretaceous - t_cret_cor );
+						if ( h.x[ 0 ][ j ][ k ] == 1. ) 									t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;	// end parabolic temperature distribution
 					}
 				}
 			}
-		}																							// end parabolic temperature distribution
+		}
 	}
 
 
@@ -857,11 +901,49 @@ void BC_Thermo::BC_Temperature ( Array_2D &temperature_NASA, Array &h, Array &t,
 		{
 			for ( int i = 1; i <= im - 1; i++ )
 			{
+				hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
 				d_i = ( double ) i;
-				t.x[ i ][ j ][ k ] = ( t_tropopause - t_cretaceous - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+				t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+//				t.x[ i ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) / t_0;		// linear temperature decay up to tropopause, Standard Atmosphere with slope 0.0065°C/m, produces too low temperatures
 			}
 		}
 	}
+
+
+
+
+// above assumed tropopause constant temperature t_tropopause
+/*
+// temperature decreasing approaching the tropopause, above constant temperature following Standard Atmosphere
+	for ( int j = 0; j < jm; j++ )
+	{
+		d_i_max = ( double ) im_tropopause[ j ];
+
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int i = 1; i <= im_tropopause[ j ]; i++ )
+			{
+				hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+				d_i = ( double ) i;
+//				t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+				t.x[ i ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) / t_0;																// linear temperature decay up to tropopause, Standard Atmosphere with slope 0.0065°C/m
+			}
+		}
+	}
+
+
+// temperature values for the tropopause
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int i = im_tropopause[ j ] + 1; i < im; i++ )
+			{
+				t.x[ i ][ j ][ k ] = t_tropopause;
+			}
+		}
+	}
+*/
 
 }
 
@@ -1159,7 +1241,7 @@ void BC_Thermo::BC_Radiation_parabolic ( Array_2D &Radiation_Balance_par, Array 
 
 
 
-void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &u, Array &v, Array &w )
+void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array &v, Array &w )
 {
 // boundary condition for the velocity components in the circulation cells
 
@@ -1215,9 +1297,53 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &u, Array &v, Array
 	va_Polar_SL_75 = 0.75;
 	va_Polar_Tropopause_75 = - 0.75;
 
+/*
+// lower velocity assumtions for test case
+	ua_00 = 0.1;																				// in m/s compares to 1.08 km/h, non-dimensionalized by u_0 below
+
+	va_equator_SL =  0.000;
+	va_equator_Tropopause = 0.000;
+
+	wa_equator_SL = - .1;
+	wa_equator_Tropopause = - .15;
+
+
+	ua_30 = - 0.1;
+
+	va_Hadley_SL = .1;
+	va_Hadley_Tropopause = - .1;
+
+	va_Hadley_SL_15 = .1;
+	va_Hadley_Tropopause_15 = - .1;
+
+	wa_Hadley_SL = 1.;																	// at surface
+	wa_Hadley_Tropopause = .2;													// subtropic jet in m/s compares to 108 km/h
+
+
+	ua_60 = 0.1;
+
+	va_Ferrel_SL = - 0.075;
+	va_Ferrel_Tropopause = .1;
+
+	va_Ferrel_SL_45 = - .1;
+	va_Ferrel_Tropopause_45 = .1;
+
+	wa_Ferrel_SL = .15;																	// subpolar jet
+	wa_Ferrel_Tropopause = 1.;														// subpolar jet in m/s compares to 36 km/h
+
+
+
+	ua_90 = - 0.1;
+
+	va_Polar_SL_75 = 0.075;
+	va_Polar_Tropopause_75 = - 0.075;
+
+	va_Polar_SL_75 = 0.075;
+	va_Polar_Tropopause_75 = - 0.075;
+
 	wa_Polar_SL = 0.;
 	wa_Polar_Tropopause = 0.;
-
+*/
 
 
 // preparations for diagonal velocity value connections
@@ -2870,6 +2996,7 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &u, Array &v, Array
 				u.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] / u_0;
 				v.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] / u_0;
 				w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] / u_0;
+//				if ( h.x[ i ][ j ][ k ] == 1. )		u.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] = 0.;
 			}
 		}
 	}
@@ -2934,20 +3061,21 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
 
 
 
-void BC_Thermo::BC_NASAbasedSurfaceTemperature ( const string &Name_NASAbasedSurfaceTemperature_File, Array &t, Array &c, Array &cloud, Array &ice )
+void BC_Thermo::BC_NASAbasedSurfTempRead ( const string &Name_NASAbasedSurfaceTemperature_File, double &t_cretaceous, double &t_cret_cor, Array &t, Array &c, Array &cloud, Array &ice )
 {
-// initial conditions for the Name_NASAbasedSurfaceTemperature_File at the sea surface
+    string NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
+    ifstream Name_NASAbasedSurfaceTemperature_File_Read;
+    Name_NASAbasedSurfaceTemperature_File_Read.precision(4);
+    Name_NASAbasedSurfaceTemperature_File_Read.setf(ios::fixed);
+    Name_NASAbasedSurfaceTemperature_File_Read.open(NASAbasedSurfaceTemperature_File);
 
-	cout.precision ( 4 );
-	cout.setf ( ios::fixed );
+    if (!Name_NASAbasedSurfaceTemperature_File_Read.is_open()) {
+        cerr << "ERROR: could not open NASAbased file " << __FILE__ << " at line " << __LINE__ << "\n";
+        abort();
+    }
 
-	ifstream Name_NASAbasedSurfaceTemperature_File_Read;
-	Name_NASAbasedSurfaceTemperature_File_Read.open(Name_NASAbasedSurfaceTemperature_File);
 
-	if (!Name_NASAbasedSurfaceTemperature_File_Read.is_open()) {
-		cerr << "ERROR: could not open Name_NASAbasedSurfaceTemperature_File file at " << Name_NASAbasedSurfaceTemperature_File << "\n";
-		abort();
-	}
+	Name_NASAbasedSurfaceTemperature_File_Read >> t_cretaceous >> t_cret_cor;
 
 	for ( int k = 0; k < km; k++ ) 
 	{
@@ -2962,9 +3090,47 @@ void BC_Thermo::BC_NASAbasedSurfaceTemperature ( const string &Name_NASAbasedSur
 				Name_NASAbasedSurfaceTemperature_File_Read >> ice.x[ i ][ j ][ k ];
 */
 				Name_NASAbasedSurfaceTemperature_File_Read >> t.x[ 0 ][ j ][ k ];
-				Name_NASAbasedSurfaceTemperature_File_Read >> c.x[ 0 ][ j ][ k ];
-				Name_NASAbasedSurfaceTemperature_File_Read >> cloud.x[ 0 ][ j ][ k ];
-				Name_NASAbasedSurfaceTemperature_File_Read >> ice.x[ 0 ][ j ][ k ];
+//				Name_NASAbasedSurfaceTemperature_File_Read >> c.x[ 0 ][ j ][ k ];
+//				Name_NASAbasedSurfaceTemperature_File_Read >> cloud.x[ 0 ][ j ][ k ];
+//				Name_NASAbasedSurfaceTemperature_File_Read >> ice.x[ 0 ][ j ][ k ];
+			}
+        }
+    }
+    Name_NASAbasedSurfaceTemperature_File_Read.close();
+}
+
+
+
+
+void BC_Thermo::BC_NASAbasedSurfTempWrite ( const string &Name_NASAbasedSurfaceTemperature_File, double &t_cretaceous, double &t_cret_cor, Array &t, Array &c, Array &cloud, Array &ice )
+{
+// initial conditions for the Name_NASAbasedSurfaceTemperature_File at the sea surface
+
+	cout.precision ( 4 );
+	cout.setf ( ios::fixed );
+
+    string NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
+
+	ofstream Name_NASAbasedSurfaceTemperature_File_Write;
+	Name_NASAbasedSurfaceTemperature_File_Write.open(NASAbasedSurfaceTemperature_File);
+
+	if (!Name_NASAbasedSurfaceTemperature_File_Write.is_open()) {
+		cerr << "ERROR: could not open Name_NASAbasedSurfaceTemperature_File file at " << Name_NASAbasedSurfaceTemperature_File << "\n";
+		abort();
+	}
+
+	Name_NASAbasedSurfaceTemperature_File_Write << t_cretaceous << " " << t_cret_cor << endl;
+
+	for ( int k = 0; k < km; k++ ) 
+	{
+		for ( int j = 0; j < jm; j++ ) 
+		{
+//			for ( int i = 0; i < im; i++ ) 
+			{
+				Name_NASAbasedSurfaceTemperature_File_Write << t.x[ i ][ j ][ k ] << " " << c.x[ i ][ j ][ k ] << " " << cloud.x[ i ][ j ][ k ] << " " << ice.x[ i ][ j ][ k ] << endl;
+
+//				Name_NASAbasedSurfaceTemperature_File_Write << t.x[ 0 ][ j ][ k ] << " " << c.x[ 0 ][ j ][ k ] << " " << cloud.x[ 0 ][ j ][ k ] << " " << ice.x[ 0 ][ j ][ k ] << endl;
+				Name_NASAbasedSurfaceTemperature_File_Write << t.x[ 0 ][ j ][ k ] << endl;
 
 //				c.x[ i ][ j ][ k ] = 0.;
 //				cloud.x[ i ][ j ][ k ] = 0.;
@@ -2972,7 +3138,7 @@ void BC_Thermo::BC_NASAbasedSurfaceTemperature ( const string &Name_NASAbasedSur
 			}
 		}
 	}
-	Name_NASAbasedSurfaceTemperature_File_Read.close();
+	Name_NASAbasedSurfaceTemperature_File_Write.close();
 }
 
 
@@ -3020,8 +3186,10 @@ void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecip
 
 
 
-void BC_Thermo::BC_Pressure ( Array &p_stat, Array &t, Array &h )
+void BC_Thermo::BC_Pressure ( Array &p_stat, Array &p_dyn, Array &t, Array &h )
 {
+	exp_pressure = g / ( 1.e-2 * gam * R_Air );
+
 // boundary condition of surface pressure given by surface temperature through gas equation
 	for ( int k = 0; k < km; k++ )
 	{
@@ -3038,11 +3206,30 @@ void BC_Thermo::BC_Pressure ( Array &p_stat, Array &t, Array &h )
 		{
 			for ( int i = 1; i < im; i++ )
 			{
-				p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_stat.x[ 0 ][ j ][ k ];
+//				p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_stat.x[ 0 ][ j ][ k ];	// isothermal atmosphere T = const
+
+				hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+
+				p_stat.x[ i ][ j ][ k ] = pow ( ( ( t.x[ 0 ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) / ( t.x[ 0 ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_stat.x[ 0 ][ j ][ k ];	// linear temperature distribution T = T0 - gam * hight
 																									// current air pressure, step size in 500 m, from politropic formula in hPa
+//					if ( ( j == 90 ) && ( k == 180 ) )	cout << " pressure  i = "<< i << " exp_pressure = "<< exp_pressure << " hight = "<< hight << "  t = " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "  p_stat = " << p_stat.x[ i ][ j ][ k ] << endl;
 			}
 		}
 	}
+
+
+/*
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				p_dyn.x[ i ][ j ][ k ] = p_stat.x[ i ][ j ][ k ] / p_stat.x[ 0 ][ j ][ k ] / 10.;
+			}
+		}
+	}
+*/
 }
 
 
@@ -3216,7 +3403,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 				else 												t_evap_3D.x[ i ][ j ][ k ] = 0.;
 
 
-
+/*
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
 					if ( i_mount == 0 ) 		i_mount = i;
@@ -3226,11 +3413,21 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 					t_cond_3D.x[ i ][ j ][ k ] = t_cond_3D.x[ i_mount + 1 ][ j ][ k ];				// water vapour amount above mount surface repeated
 					t_evap_3D.x[ i ][ j ][ k ] = t_evap_3D.x[ i_mount + 1 ][ j ][ k ];				// water vapour amount above mount surface repeated
 				}
+*/
+
+				if ( h.x[ i ][ j ][ k ] == 1. )
+				{
+					Latency.x[ i ][ j ][ k ] = 0.;
+					Q_Sensible.x[ i ][ j ][ k ] = 0.;
+					t_cond_3D.x[ i ][ j ][ k ] = 0.;
+					t_evap_3D.x[ i ][ j ][ k ] = 0.;
+				}
+
 			}
 			i_mount = 0;
-			}
 		}
 	}
+}
 
 
 
@@ -3238,7 +3435,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 
 
-void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int velocity_iter_max, int RadiationModel, Array &h, Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c )
+void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int velocity_iter_max, int RadiationModel, Array &h, Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c )
 {
 	cout.precision ( 6 );
 // Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
@@ -3282,7 +3479,10 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int velocity_iter_max, 
 	
 				p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );		// given in hPa
 
-				if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+				hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+
+//				if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+				if ( i != 0 ) 			p_h = pow ( ( ( t.x[ 0 ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) / ( t.x[ 0 ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_SL;
 				else 						p_h = p_SL;
 
 				r_dry = 100. * p_h / ( R_Air * t_u );
@@ -3314,7 +3514,9 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int velocity_iter_max, 
 
 					p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );							// given in hPa
 
-					if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+					hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+
+					if ( i != 0 ) 			p_h = pow ( ( ( t.x[ 0 ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) / ( t.x[ 0 ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_SL;
 					else 					p_h = p_SL;
 
 					E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 );										// saturation water vapour pressure for the water phase at t > 0°C in hPa
@@ -3404,8 +3606,11 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int velocity_iter_max, 
 						iter_prec = iter_prec + 1;
 
 						p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );						// given in hPa
-						if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * T ) ) * p_SL;						// given in hPa
-						else 						p_h = p_SL;
+
+						hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+//						if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * T ) ) * p_SL;						// given in hPa
+						if ( i != 0 ) 			p_h = pow ( ( ( T - gam * hight * 1.e-2 ) / ( T ) ), exp_pressure ) * p_SL;						// given in hPa
+						else 					p_h = p_SL;
 
 						CND = ( T - t_00 ) / ( t_0 - t_00 );
 						DEP = ( t_0 - T ) / ( t_0 - t_00 );
@@ -3449,6 +3654,18 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int velocity_iter_max, 
 
 					}																												// iter_prec end
 
+// above assumed tropopause constant temperature t_tropopause
+/*
+					if ( i >= im_tropopause[ j ] )
+					{
+						q_v_b = q_c_b = q_i_b = 0.;
+					}
+*/
+
+					if ( q_v_b <= 0. )	q_v_b = 0.;
+					if ( q_c_b <= 0. )	q_c_b = 0.;
+					if ( q_i_b <= 0. )		q_i_b = 0.;
+
 					cn.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k ] = q_v_b;
 					cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = q_c_b;
 					icen.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k ] = q_i_b;
@@ -3457,6 +3674,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int velocity_iter_max, 
 					if ( t_Celsius > 0. ) 													icen.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k ] = 0.;
 
 					t.x[ i ][ j ][ k ] = T / t_0;
+
 
 				}																												// end ( ( t_Celsius < 0. ) && ( t_Celsius >= t_Celsius_2 ) )
 
@@ -3478,8 +3696,10 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int velocity_iter_max, 
 					t_Celsius = t_u - t_0;
 
 					p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );							// given in hPa
+					hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
 
-					if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+//					if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+					if ( i != 0 ) 			p_h = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
 					else 					p_h = p_SL;
 
 					E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 );											// saturation water vapour pressure for the ice phase in hPa
@@ -3707,7 +3927,10 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 
 				p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );	// given in hPa
 
-				if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+				hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+
+//				if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+				if ( i != 0 ) 			p_h = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
 				else 					p_h = p_SL;
 
 				r_dry = 100. * p_h / ( R_Air * t_u );																// density of dry air in kg/m³
@@ -3792,7 +4015,10 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 
 						p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );	// given in hPa
 
-						if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+						hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+
+//						if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+						if ( i != 0 ) 			p_h = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
 						else 						p_h = p_SL;
 
 						r_dry = 100. * p_h / ( R_Air * t_u );																// density of dry air in kg/m³
@@ -3929,7 +4155,11 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 						if ( t_u > t_0 )
 						{
 							p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );		// given in hPa
-							p_t_in = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;	// given in hPa
+
+							hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+
+//							p_t_in = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;	// given in hPa
+							p_t_in = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;	// given in hPa
 
 							E_Rain_t_in = hp * exp_func ( t_0, 17.2694, 35.86 );								// saturation water vapour pressure for the water phase at t = 0°C in hPa
 							q_Rain_t_in = ep * E_Rain_t_in / ( p_t_in - E_Rain_t_in );							// water vapour amount at saturation with water formation in kg/kg
@@ -4141,9 +4371,14 @@ double BC_Thermo::exp_func ( double &T_K, const double &co_1, const double &co_2
 
 
  
-double BC_Thermo::out_temperature (  ) const
+double BC_Thermo::out_t_cretaceous (  ) const
 {
 	return t_cretaceous;
+}
+
+double BC_Thermo::out_t_cret_cor (  ) const
+{
+	return t_cret_cor;
 }
 
 double BC_Thermo::out_co2 (  ) const

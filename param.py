@@ -10,16 +10,17 @@ def main():
         'common': [
             ( 'bathymetry_path', '', 'string', '../data/Paleotopography_bathymetry/Golonka_rev210' ),
             ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
-#            ( 'verbose', '', 'bool', False ),
-            ( 'verbose', '', 'bool', True ),
+            ( 'verbose', '', 'bool', False ),
+#            ( 'verbose', '', 'bool', True ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
         ],
 
+
         'atmosphere': [
-            ( 'velocity_iter_max', '', 'int', 2 ),
-            ( 'pressure_iter_max', '', 'int', 2 ),
-            ( 'velocity_iter_max_2D', '', 'int', 2 ),
-            ( 'pressure_iter_max_2D', '', 'int', 2 ),
+            ( 'velocity_iter_max', '', 'int', 10 ),
+            ( 'pressure_iter_max', '', 'int', 1 ),
+            ( 'velocity_iter_max_2D', '', 'int', 5 ),
+            ( 'pressure_iter_max_2D', '', 'int', 1 ),
 
             ( 'coriolis', 'coriolis force', 'double', 1.0 ),
             ( 'centrifugal', 'centrifugal force', 'double', 1.0 ),
@@ -41,11 +42,7 @@ def main():
             ( 'Ma_max', 'parabolic temperature distribution 300 Ma ( from Ruddiman )', 'int', 300 ),
             ( 'Ma_max_half', 'half of time scale', 'int', 150 ),
 
-            ( 'L_atm', 'extension of the atmosphere shell in m, 20000 m / 40 steps = 500 m', 'double', 20000. ),
-
-            ( 'dt', 'time step coincides with the CFL condition', 'double', 0.0001 ),
-
-            ( 'dr', 'compares to 500 m hight, 0.0005 * 40 = .02 * 1000 km = 20 km', 'double', 0.025 ),
+            ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
 
             ( 'ik', 'solar constant in W/m2', 'double', 1366. ),
             ( 'ik_equator', 'solar short wave radiation on the surface of the earth, Ik / 4', 'double', 341.5 ),
@@ -70,7 +67,7 @@ def main():
             ( 'sc_WaterVapour', 'Schmidt number of water vapour, Sc = nue / D', 'double', 0.6 ),
             ( 'sc_CO2', 'Schmidt number of CO2', 'double', 0.96 ),
             ( 'pr', 'Prandtl number of air for laminar flows', 'double', 0.7179 ),
-            ( 'g', 'gravitational acceleration of the earth', 'double', 9.8066 ),
+            ( 'g', 'gravitational acceleration of the earth in m/s²', 'double', 9.8066 ),
             ( 'omega', 'rotation number of the earth', 'double', 7.29e-5 ),
             ( 'ep', 'ratio of the gas constants of dry air to water vapour [ / ]', 'double', 0.623 ),
             ( 'hp', 'water vapour pressure at T = 0°C: E = 6.1 hPa', 'double', 6.1078 ),
@@ -103,20 +100,17 @@ def main():
 
             ( 't_cretaceous_max', 'maximum add of mean temperature in °C during cretaceous times', 'double', 10.0 ),
             ( 't_cretaceous', 'value at modern times', 'double', 0.0 ),
+            ( 't_cret_cor', 'value at modern times', 'double', 0.0 ),
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
             ( 't_equator', 'temperature t_0 = 1.11 compares to 30.0° C compares to 303.15 K', 'double', 1.11 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.927 compares to -20.0°C compares to 253.15 K', 'double', 0.927 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
-#            ( 't_land', 'temperature increase on land by 1°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.003661 ),
             ( 't_land', 'temperature increase on land by 1°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.0 ),
 
-#            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.0 ),
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
             ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.5 ),
            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
-#           ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.45 ),
-#            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.45 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 372.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),

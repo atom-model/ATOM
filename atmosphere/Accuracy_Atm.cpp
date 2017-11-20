@@ -157,7 +157,7 @@ double Accuracy_Atm::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, 
 
 
 
-double Accuracy_Atm::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &aux_p )
+double Accuracy_Atm::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &p_dynn )
 {
 // state of a steady solution ( min )
 	min_v = max_v = 0.;
@@ -184,7 +184,7 @@ double Accuracy_Atm::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, 
 				k_w = k;
 			}
 
-			max_p = fabs ( p_dyn.x[ 0 ][ j ][ k ] - aux_p.x[ 0 ][ j ][ k ] );
+			max_p = fabs ( p_dyn.x[ 0 ][ j ][ k ] - p_dynn.x[ 0 ][ j ][ k ] );
 			if ( max_p >= min_p )
 			{
 				min_p = max_p;
@@ -297,7 +297,7 @@ double Accuracy_Atm::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, 
 
 
 
-double Accuracy_Atm::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &co2, Array &co2n, Array &p_dyn, Array &aux_p )
+double Accuracy_Atm::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &co2, Array &co2n, Array &p_dyn, Array &p_dynn )
 {
 // state of a steady solution ( min )
 	min_u = max_u = 0.;
@@ -388,7 +388,7 @@ double Accuracy_Atm::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, 
 					k_co2 = k;
 				}
 
-				max_p = fabs ( p_dyn.x[ i ][ j ][ k ] - aux_p.x[ i ][ j ][ k ] );
+				max_p = fabs ( p_dyn.x[ i ][ j ][ k ] - p_dynn.x[ i ][ j ][ k ] );
 				if ( max_p >= min_p )
 				{
 					min_p = max_p;

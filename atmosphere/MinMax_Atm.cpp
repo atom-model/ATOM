@@ -204,11 +204,11 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 	}
 
 
-// coefficient for units in hPa for the dynamic pressure 		coeff = 0.5 * r_Air * u_0 * u_0 = 0.5 * 1.2 * 15 * 15 = 135 * 500. * 0.01 = 675
+// coefficient for units in hPa for the dynamic pressure 		coeff = r_air * u_0 * u_0 = 1.2 * 15 * 15 * 0.01 = 2.70 hPa
 	if ( name_maxValue == " max 3D pressure dynamic " )
 	{
-		maxValue = maxValue * 675.;
-		minValue = minValue * 675.;
+		maxValue = maxValue * 2.70;
+		minValue = minValue * 2.70;
 	}
 
 
