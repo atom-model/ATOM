@@ -280,29 +280,26 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	int i_beg = 16;		 // corresponds to about 6.4 km above sea level, maximum hight of the tropopause at poles
 
 //	naming a file to read the surface temperature by NASA of the modern world
-	string Name_NASAbasedSurfaceTemperature_File;
-	stringstream ssNameNASAbasedSurfaceTemperature;
-	ssNameNASAbasedSurfaceTemperature << "../data/" << "NASA_based_SurfaceTemperature.xyz";
-	Name_NASAbasedSurfaceTemperature_File = ssNameNASAbasedSurfaceTemperature.str();
-
-//	naming a file to read the surface temperature by NASA of the modern world
-	string Name_SurfaceTemperature_File;
-	stringstream ssNameSurfaceTemperature;
-	ssNameSurfaceTemperature << "../data/" << "SurfaceTemperature_NASA.xyz";
-	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
+	string Name_SurfaceTemperature_File = temperature_file;
+    if(Ma != 0 && use_earthbyte_reconstruction){
+        Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
+    }
 
 // naming a file to read the surface precipitation by NASA
-	string Name_SurfacePrecipitation_File;
-	stringstream ssNameSurfacePrecipitation;
-	ssNameSurfacePrecipitation << "../data/" << "SurfacePrecipitation_NASA.xyz";
-	Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
+	string Name_SurfacePrecipitation_File = precipitation_file;
+    if(Ma != 0 && use_earthbyte_reconstruction){
+        Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfacePrecipitation.xyz";
+    }
+
 
 	string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
 	string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
 
 	cout << "\n   Output is being written to " << output_path << "\n";
 	cout << "   Ma = " << Ma << "\n";
-	cout << "   bathymetry_path = " << bathymetry_path << "\n";
+	cout << "   Name_SurfaceTemperature_File = " << Name_SurfaceTemperature_File << std::endl;
+    cout << "   Name_SurfacePrecipitation_File = " << Name_SurfacePrecipitation_File << std::endl;
+    cout << "   bathymetry_path = " << bathymetry_path << "\n";
 	cout << "   bathymetry_filepath = " << bathymetry_filepath << "\n\n";
 
 	if (verbose) {
@@ -391,8 +388,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //  class element for the correction of the temperature initial distribution around coasts
-	if ( ( NASATemperature == 1 ) && ( Ma > 0 ) ) circulation.IC_Temperature_WestEastCoast ( h, t );
-
+	if (!use_earthbyte_reconstruction){
+        if ( ( NASATemperature == 1 ) && ( Ma > 0 ) ) circulation.IC_Temperature_WestEastCoast ( h, t );
+    }
 //  class element for the surface pressure computed by surface temperature with gas equation
 	circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
