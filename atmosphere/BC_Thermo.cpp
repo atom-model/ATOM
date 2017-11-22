@@ -3070,6 +3070,7 @@ void BC_Thermo::BC_NASAbasedSurfTempRead ( const string &Name_NASAbasedSurfaceTe
     Name_NASAbasedSurfaceTemperature_File_Read.open(Name_NASAbasedSurfaceTemperature_File);
 
     if (!Name_NASAbasedSurfaceTemperature_File_Read.is_open()) {
+        cerr << Name_NASAbasedSurfaceTemperature_File << endl;
         cerr << "ERROR: could not open NASAbased file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }

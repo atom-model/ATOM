@@ -282,7 +282,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //   naming a file to read the surface temperature by NASA of the modern world
     string Name_NASAbasedSurfaceTemperature_File;
     stringstream ssNameNASAbasedSurfaceTemperature;
-    ssNameNASAbasedSurfaceTemperature << "../data/" << "NASA_based_SurfaceTemperature.xyz";
+    if(Ma == 0){
+        ssNameNASAbasedSurfaceTemperature << "../data/NASA_based_SurfaceTemperature.xyz";
+    }else{
+        ssNameNASAbasedSurfaceTemperature << output_path << "/NASAbasedSurfaceTemperature.xyz";
+    }
     Name_NASAbasedSurfaceTemperature_File = ssNameNASAbasedSurfaceTemperature.str();
 
 //	naming a file to read the surface temperature by NASA of the modern world
