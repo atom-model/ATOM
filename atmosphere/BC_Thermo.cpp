@@ -3063,11 +3063,11 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
 
 void BC_Thermo::BC_NASAbasedSurfTempRead ( const string &Name_NASAbasedSurfaceTemperature_File, double &t_cretaceous, double &t_cret_cor, Array &t, Array &c, Array &cloud, Array &ice )
 {
-    string NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
+    //string NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
     ifstream Name_NASAbasedSurfaceTemperature_File_Read;
     Name_NASAbasedSurfaceTemperature_File_Read.precision(4);
     Name_NASAbasedSurfaceTemperature_File_Read.setf(ios::fixed);
-    Name_NASAbasedSurfaceTemperature_File_Read.open(NASAbasedSurfaceTemperature_File);
+    Name_NASAbasedSurfaceTemperature_File_Read.open(Name_NASAbasedSurfaceTemperature_File);
 
     if (!Name_NASAbasedSurfaceTemperature_File_Read.is_open()) {
         cerr << "ERROR: could not open NASAbased file " << __FILE__ << " at line " << __LINE__ << "\n";

@@ -279,6 +279,12 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	int i_max = 32;		 // corresponds to about 12.8 km above sea level, maximum hight of the tropopause at equator
 	int i_beg = 16;		 // corresponds to about 6.4 km above sea level, maximum hight of the tropopause at poles
 
+//   naming a file to read the surface temperature by NASA of the modern world
+    string Name_NASAbasedSurfaceTemperature_File;
+    stringstream ssNameNASAbasedSurfaceTemperature;
+    ssNameNASAbasedSurfaceTemperature << "../data/" << "NASA_based_SurfaceTemperature.xyz";
+    Name_NASAbasedSurfaceTemperature_File = ssNameNASAbasedSurfaceTemperature.str();
+
 //	naming a file to read the surface temperature by NASA of the modern world
 	string Name_SurfaceTemperature_File = temperature_file;
     if(Ma != 0 && use_earthbyte_reconstruction){
@@ -375,8 +381,13 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 
 //  class element for the surface temperature based on NASA temperature for progressing timeslices
-	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
-
+	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ){
+        if(use_earthbyte_reconstruction){
+            circulation.BC_NASAbasedSurfTempRead ( Name_SurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
+        }else{
+            circulation.BC_NASAbasedSurfTempRead ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
+        }
+    }
 //  class element for the surface precipitation from NASA for comparison
 	if ( Ma == 0 ) circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
@@ -864,8 +875,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 	t_cret_cor = t_cretaceous;
 
-	if ( NASATemperature == 1 ) circulation.BC_NASAbasedSurfTempWrite ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
-
+	if ( NASATemperature == 1 && !use_earthbyte_reconstruction){
+        circulation.BC_NASAbasedSurfTempWrite ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
+    }
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
 
 // reset of results to the initial value
