@@ -3416,7 +3416,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 				}
 */
 
-				if ( h.x[ i ][ j ][ k ] == 1. )
+				if ( abs(h.x[ i ][ j ][ k ] - 1.) < std::numeric_limits<double>::epsilon() )
 				{
 					Latency.x[ i ][ j ][ k ] = 0.;
 					Q_Sensible.x[ i ][ j ][ k ] = 0.;
