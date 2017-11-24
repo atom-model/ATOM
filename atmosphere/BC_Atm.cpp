@@ -44,13 +44,13 @@ void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p
 		for ( int k = 1; k < km-1; k++ )
 		{
 			u.x[ 0 ][ j ][ k ] = 0.;
-			v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
-			w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
+//			v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
+//			w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
 
 //			p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 3. * p_dyn.x[ im-2 ][ j ][ k ]; //							extrapolation
 //			p_dyn.x[ 0 ][ j ][ k ] = 0.;
 			p_dyn.x[ im-1 ][ j ][ k ] = 0.;
-			p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];
+//			p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];
 
 
 			u.x[ im-1 ][ j ][ k ] = 0.;
