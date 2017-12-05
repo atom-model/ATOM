@@ -44,7 +44,6 @@ def main():
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
 
-            ( 'ik', 'solar constant in W/m2', 'double', 1366. ),
             ( 'ik_equator', 'solar short wave radiation on the surface of the earth, Ik / 4', 'double', 341.5 ),
             ( 'ik_pole', 'solar short wave radiation at the poles, an approximation for the singularity at the poles', 'double', 60. ),
 
@@ -56,11 +55,6 @@ def main():
             ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.594 ),
             ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),
             ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.5 ),
-            ( 'epsilon_extra', 'capability of emissions in the atmosphere, 2D approach', 'double', 0.71 ),
-
-            ( 'radiation_ocean', 'increase of radiation at equator in W/m²', 'double', 40.0 ),
-            ( 'radiation_pole', 'negative amount of radiation at poles in W/m²', 'double', -40.0 ),
-            ( 'radiation_equator', 'positive amount of radiation at equator in W/m²', 'double', 100.0 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
             ( 'ec', 'Eckert number: ratio kinetic energy to enthalpy, Ec = u² / cp T', 'double', 0.00044 ),

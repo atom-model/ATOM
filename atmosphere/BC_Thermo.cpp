@@ -24,7 +24,7 @@ using namespace std;
 
 
 
-BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int i_beg, int i_max, int RadiationModel, int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dt, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double epsilon_extra, double lv, double ls, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double ik, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cret_cor, double t_cretaceous_max, double radiation_ocean, double radiation_pole, double radiation_equator, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double ik_equator, double ik_pole )
+BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int i_beg, int i_max, int RadiationModel, int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_max, int Ma_max_half, double dt, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double lv, double ls, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cret_cor, double t_cretaceous_max, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double ik_equator, double ik_pole )
 {
     this ->output_path = output_path;
 	this -> im = im;
@@ -63,10 +63,8 @@ BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int i_beg, i
 	this-> co2_vegetation = co2_vegetation;
 	this-> co2_ocean = co2_ocean;
 	this-> co2_land = co2_land;
-	this-> ik = ik;
 	this-> ik_equator = ik_equator;
 	this-> ik_pole = ik_pole;
-	this-> epsilon_extra = epsilon_extra;
 	this-> epsilon_pole = epsilon_pole;
 	this-> epsilon_tropopause = epsilon_tropopause;
 	this-> epsilon_equator = epsilon_equator;
@@ -82,9 +80,6 @@ BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int i_beg, i
 	this-> t_cretaceous_max = t_cretaceous_max;
 	this-> t_cretaceous = t_cretaceous;
 	this-> t_cret_cor = t_cret_cor;
-	this-> radiation_ocean = radiation_ocean;
-	this-> radiation_pole = radiation_pole;
-	this-> radiation_equator = radiation_equator;
 	this-> t_land = t_land;
 	this-> t_tropopause = t_tropopause;
 	this-> t_equator = t_equator;
@@ -167,20 +162,6 @@ BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int i_beg, i
 		AA[ l ] = 0.;
 	}
 
-
-// array "cloud_max" for the multi-layer radiation computation
-	cloud_max = 0L;
-
-	cloud_max = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		cloud_max[ l ] = 0.;
-	}
-
-
-
-
 // Array "CC" for the multi-layer radiation computation
 	CC = 0L;
 
@@ -217,7 +198,6 @@ BC_Thermo::~BC_Thermo()
 	delete [  ] alfa;
 	delete [  ] beta;
 	delete [  ] AA;
-	delete [  ] cloud_max;
 }
 
 
