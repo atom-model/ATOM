@@ -40,13 +40,8 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, cons
 	cout.precision ( 8 );
 	cout.setf ( ios::fixed );
 
-	// default adjustment, h must be 0 everywhere
+// default adjustment, h must be 0 everywhere
 	h.initArray(im, jm, km, 0.);
-
-	// reading data from file Name_Bathymetry_File_Read
-//	ifstream Name_Bathymetry_File_Read;
-//	string path = bathymetry_path + Name_Bathymetry_File;
-//	Name_Bathymetry_File_Read.open(path);
 
 	ifstream Name_Bathymetry_File_Read;
 	string path = bathymetry_path + "/" + Name_Bathymetry_File;
@@ -78,26 +73,17 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, cons
 			for ( i = 0; i <= i_boden; i++ )
 			{
 				h.x[ i ][ j ][ k ] = 1.;
-//				cout << "\n***** Name_Bathymetry_File_Read:   Länge = " << dummy_1 << "  Breite = " << dummy_2 << "  Tiefe = " << dummy_3 << endl;
-//				cout << "***** Name_Bathymetry_File_Read:   i = " << i << "  i_boden = " << i_boden << "  j = " << j << "  k = " << k << endl;
 			}
 			k++;
 		}
 	k = 0;
 	j++;
 	}
-
 	Name_Bathymetry_File_Read.close();
 
-// end reading Name_Bathymetry_File_Read
 
 
-
-
-
-
-// Umschreiben der bathymetrischen Daten von -180° - 0° - +180° Koordinatnesystem auf 0°- 360°
-
+// rewrite bathymetric daten from -180° - 0° - +180° to 0°- 360°
 		l = 0;
 
 		for ( int k = 180; k < km; k++ )
@@ -138,18 +124,15 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, cons
 				}
 			}
 		}
-
-// Ende Umschreiben Bathymetrie
 }
 
 
 
 
 
-void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &aux_p, Array &cn )
+void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn )
 {
 // boundary conditions for the total solid ground
-
 	for ( int i = 0; i < im-1; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -158,7 +141,7 @@ void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa
 			{
 				if ( h.x[ i ][ j ][ k ] == 1. )
 				{
-					p_dyn.x[ i ][ j ][ k ] =  aux_p.x[ i ][ j ][ k ] = pa;
+					p_dyn.x[ i ][ j ][ k ] =  p_dynn.x[ i ][ j ][ k ] = pa;
 					t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ta;
 					c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ca;
 					u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
@@ -168,5 +151,4 @@ void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa
 			}
 		}
 	}
-
 }

@@ -29,7 +29,7 @@ class RHS_Hydrosphere
 		double re, pr, ec, sc, g, omega, coriolis, centrifugal;
 		double dr2, dthe2, dphi2, rm2;
 		double rm;
-		double c_0, t_0, c_Boussinesq;
+		double c_0, t_0, c_Boussinesq, r_fluid, r_salt_water, coeff_density, coeff_buoy;
 		double sinthe, sinthe2, c43, c13, k_Force;
 		double costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2;
 		double dudr, dudthe, dudphi, dvdr, dvdthe, dvdphi, dwdr, dwdthe, dwdphi;
@@ -43,15 +43,14 @@ class RHS_Hydrosphere
 
 
 	public:
+		RHS_Hydrosphere ( int, int, double, double, double, double, double, double );
+
 		RHS_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~RHS_Hydrosphere ();
 
-		void Pressure_RHS_Hydrosphere ( double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void RK_RHS_3D_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-
-		void RK_RHS_3D_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
-		void RK_RHS_2D_Hydrosphere ( int, int, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void RK_RHS_2D_Hydrosphere ( int, int, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 };
 #endif

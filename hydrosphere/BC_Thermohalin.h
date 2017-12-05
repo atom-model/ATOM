@@ -34,7 +34,7 @@ class BC_Thermohalin
 
 		double dummy_1, dummy_2, dummy_3, IC_water, water_wind, c_0, Ekman_angle, vel_magnitude, alfa, beta, angle, Ekman_angle_add, Ekman, pi180;
 		double t_equator, t_pole, d_i, d_i_half, d_i_max, d_j, d_j_half, d_j_max, t_coeff, c_average, c_cretaceous, p_0, t_0;
-		double v_grad, t_Celsius, ca_max;
+		double v_grad, t_Celsius;
 		double t_cretaceous, t_cretaceous_max, t_cretaceous_coeff;
 		double rg;
 		double dr, g, r_0_water, ua, va, wa, ca, pa, ta, u_0, cp_w, L_hyd, t_average;
@@ -48,37 +48,19 @@ class BC_Thermohalin
 
 	public:
 
-		BC_Thermohalin (int, int, int, int , int , int, int, int, double, double, double, double, double, double, double, double, double, double,  double, double, double, double, double, double, double, double, double, double, const string &);
+		BC_Thermohalin (int, int, int, int , int , int, int, int, double, double, double, double, double, double, double, double, double,  double, double, double, double, double, double, double, double, double, double, const string &);
 		~BC_Thermohalin();
 
-
-		void IC_South_Polar_Sea ( Array &, Array &, Array &, Array &, Array & );
-
-		void IC_DeepWater ( Array &, Array &, Array &, Array &, Array & );
 
 		void IC_v_w_Atmosphere ( Array &, Array &, Array &, Array & );
 
 		void IC_v_w_WestEastCoast ( Array &, Array &, Array &, Array &, Array & );
 
-		void IC_v_w_Ekman ( Array &, Array &, Array & );
-
 		void BC_Temperature_Salinity ( Array &, Array &, Array &, Array & );
 
-		void IC_Atlantischer_Ozean ( Array &h, Array &u, Array &v, Array &w, Array &c );
+		void BC_Surface_Temperature_NASA ( const string &, Array & );
 
-		void IC_Indischer_Ozean ( Array &h, Array &u, Array &v, Array &w );
-
-		void IC_Pazifischer_Ozean ( Array &h, Array &u, Array &v, Array &w );
-
-		void IC_Nord_Polar_Meer ( Array &h, Array &u, Array &v, Array &w );
-
-		void IC_EquatorialCurrents ( Array &h, Array &u, Array &v, Array &w );
-
-		void BC_Surface_Temperature ( const string &, Array & );
-
-		void BC_Surface_Salinity ( const string &, Array & );
-
-		void BC_Surface_Pressure ( Array &, Array &, Array & );
+		void BC_Surface_Salinity_NASA ( const string &, Array & );
 
 		void BC_Pressure ( Array &, Array &, Array & );
 

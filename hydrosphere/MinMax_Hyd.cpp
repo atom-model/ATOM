@@ -173,6 +173,14 @@ void MinMax_Hyd::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 	}
 
 
+// coefficient for units in hPa for the dynamic pressure 		coeff = r_0_water * u_0 * u_0 = 1026 * 15 * 15 * 0.01 = 207.77 hPa
+	if ( name_maxValue == " max 3D pressure dynamic " )
+	{
+		maxValue = maxValue * 207.77;
+		minValue = minValue * 207.77;
+	}
+
+
 	if ( name_maxValue == " max salt concentration " )
 	{
 		maxValue = maxValue * c_0;

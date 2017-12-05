@@ -77,7 +77,6 @@ Accuracy_Hyd::Accuracy_Hyd ( int n, int nm, int Ma, int im, int jm, int km, doub
 	this-> velocity_iter_max = velocity_iter_max;
 	this-> pressure_iter_max = pressure_iter_max;
 	this-> L_hyd = L_hyd;
-
 }
 
 
@@ -122,7 +121,7 @@ double Accuracy_Hyd::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, 
 
 
 
-double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &p_dyn, Array &aux_p )
+double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn, Array &p_dyn, Array &p_dynn )
 {
 // state of a steady solution ( min_u )
 	min_u = max_u = 0.;
@@ -184,7 +183,7 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, 
 				}
 
 
-				max_p = fabs ( p_dyn.x[ i ][ j ][ k ] - aux_p.x[ i ][ j ][ k ] );
+				max_p = fabs ( p_dyn.x[ i ][ j ][ k ] - p_dynn.x[ i ][ j ][ k ] );
 				if ( max_p >= min_p )
 				{
 					min_p = max_p;
@@ -319,12 +318,8 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, 
 
 	cout << endl << endl;
 
-
-
-
 	return 0;
 }
-
 
 
 
@@ -352,7 +347,6 @@ double Accuracy_Hyd::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, 
 				j_res = j;
 				k_res = k;
 			}
-//			cout << j << "     "  << k << "   " << j_res << "     "  << k_res << "     "  << dvdthe << "     " << dwdphi << "     "  << residuum << "     "  << min << endl;
 		}
 	}
 	return 0;
@@ -363,7 +357,7 @@ double Accuracy_Hyd::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, 
 
 
 
-double Accuracy_Hyd::steadyQuery_2D ( Array &h, Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &aux_p )
+double Accuracy_Hyd::steadyQuery_2D ( Array &h, Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &p_dynn )
 {
 // state of a steady solution ( min )
 	max_v = min_v = 0.;
@@ -394,7 +388,7 @@ double Accuracy_Hyd::steadyQuery_2D ( Array &h, Array &v, Array &vn, Array &w, A
 					k_w = k;
 				}
 
-				max_p = fabs ( p_dyn.x[ im-1 ][ j ][ k ] - aux_p.x[ im-1 ][ j ][ k ] );
+				max_p = fabs ( p_dyn.x[ im-1 ][ j ][ k ] - p_dynn.x[ im-1 ][ j ][ k ] );
 				if ( max_p >= min_p )
 				{
 					min_p = max_p;
