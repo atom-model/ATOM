@@ -1,21 +1,19 @@
 <!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. --><atom>    <common>
         <bathymetry_path>../data/Paleotopography_bathymetry/Golonka_rev210</bathymetry_path>  <!--  (string ) -->
         <BathymetrySuffix>Ma_Golonka.xyz</BathymetrySuffix>  <!--  (string ) -->
-        <verbose>true</verbose>  <!--  (bool ) -->
+        <verbose>false</verbose>  <!--  (bool ) -->
         <output_path>output</output_path>  <!-- directory where model outputs should be placed ( must end in / ) (string ) -->
     </common>
     <hydrosphere>
         <input_path>output</input_path>  <!-- directory where Atmosphere output can be read (must end in /) (string ) -->
-        <velocity_iter_max>2</velocity_iter_max>  <!--  (int ) -->
-        <pressure_iter_max>2</pressure_iter_max>  <!--  (int ) -->
-        <velocity_iter_max_2D>2</velocity_iter_max_2D>  <!--  (int ) -->
+        <velocity_iter_max_2D>10</velocity_iter_max_2D>  <!--  (int ) -->
         <pressure_iter_max_2D>2</pressure_iter_max_2D>  <!--  (int ) -->
+        <velocity_iter_max>5</velocity_iter_max>  <!--  (int ) -->
+        <pressure_iter_max>2</pressure_iter_max>  <!--  (int ) -->
         <coriolis>1.0</coriolis>  <!-- computation with Coriolis force (double ) -->
         <centrifugal>1.0</centrifugal>  <!-- computation with centrifugal force (double ) -->
         <buoyancy>1.0</buoyancy>  <!-- computation with buoyancy (double ) -->
         <L_hyd>6000.0</L_hyd>  <!-- extension of the hydrosphere shell in m, assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m (double ) -->
-        <dt>0.0001</dt>  <!-- time step coincides with the CFL condition (double ) -->
-        <dr>0.0005</dr>  <!-- compares to 150m depth (double ) -->
         <re>1000.0</re>  <!-- Reynolds numberc_0 (double ) -->
         <ec>0.0001</ec>  <!-- Eckert number (double ) -->
         <sc>10.0</sc>  <!-- Schmidt number for salt water (double ) -->
