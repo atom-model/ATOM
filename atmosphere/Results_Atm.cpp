@@ -62,119 +62,14 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, do
 
 	c43 = 4./3.;
 	c13 = 1./3.;
-
-
-
-// array "e_d" for the cumulus convection
-	e_d = 0L;
-
-	e_d = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		e_d[ l ] = 0.;
-	}
-
-// array "e_l" for the cumulus convection
-	e_l = 0L;
-
-	e_l = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		e_l[ l ] = 0.;
-	}
-
-// array "e_p" for the cumulus convection
-	e_p = 0L;
-
-	e_p = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		e_p[ l ] = 0.;
-	}
-
-// array "g_p" for the cumulus convection
-	g_p = 0L;
-
-	g_p = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		g_p[ l ] = 0.;
-	}
-
-// array "c_u" for the cumulus convection
-	c_u = 0L;
-
-	c_u = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		c_u[ l ] = 0.;
-	}
-
-// array "r_humid_u" for the cumulus convection
-	r_humid_u = 0L;
-
-	r_humid_u = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		r_humid_u[ l ] = 0.;
-	}
-
-// array "r_humid_u_parc" for the cumulus convection
-	r_humid_u_parc = 0L;
-
-	r_humid_u_parc = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		r_humid_u_parc[ l ] = 0.;
-	}
-
-// array "r_dry_u" for the cumulus convection
-	r_dry_u = 0L;
-
-
-	r_dry_u = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		r_dry_u[ l ] = 0.;
-	}
-
-// array "r_dry_u_parc" for the cumulus convection
-	r_dry_u_parc = 0L;
-
-	r_dry_u_parc = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		r_dry_u_parc[ l ] = 0.;
-	}
-
 }
 
 
-Results_MSL_Atm::~Results_MSL_Atm ()
-{
-	delete [  ] e_d;
-	delete [  ] e_l;
-	delete [  ] e_p;
-	delete [  ] g_p;
-	delete [  ] c_u;
-	delete [  ] r_humid_u;
-	delete [  ] r_humid_u_parc;
-	delete [  ] r_dry_u;
-	delete [  ] r_dry_u_parc;
-}
+Results_MSL_Atm::~Results_MSL_Atm (){}
 
 
 
-void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int RadiationModel, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &c, Array &cn, Array &co2, Array &co2n, Array &t, Array &tn, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Latency, Array &Q_Sensible, Array &radiation_3D, Array &t_cond_3D, Array &t_evap_3D, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &P_rain, Array &P_snow, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &precipitation_NASA, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &LatentHeat, Array_2D &precipitable_water, Array_2D &Q_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Vegetation, Array_2D &Radiation_Balance, Array_2D &Radiation_Balance_par, Array_2D &Radiation_Balance_bot, Array_2D &albedo, Array_2D &co2_total, Array_2D &Precipitation, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
+void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int RadiationModel, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &c, Array &cn, Array &co2, Array &co2n, Array &t, Array &tn, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Latency, Array &Q_Sensible, Array &radiation_3D, Array &t_cond_3D, Array &t_evap_3D, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &P_rain, Array &P_snow, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &precipitation_NASA, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &LatentHeat, Array_2D &precipitable_water, Array_2D &Q_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Vegetation, Array_2D &Radiation_Balance, Array_2D &albedo, Array_2D &co2_total, Array_2D &Precipitation, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
 {
 // determination of temperature and pressure by the law of Clausius-Clapeyron for water vapour concentration
 // reaching saturation of water vapour pressure leads to formation of rain or ice
@@ -187,7 +82,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			if ( RadiationModel == 0 ) Q_Radiation.y[ j ][ k ] = Radiation_Balance_par.y[ j ][ k ]; // parabolic radiation balance assumed
 			if ( RadiationModel >= 2 ) Q_Radiation.y[ j ][ k ] = radiation_3D.x[ 0 ][ j ][ k ];		 // two- and multi-layer radiation balance assumed
 
 			Evaporation.y[ j ][ k ] = 0.;												// Evaporation
@@ -195,7 +89,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 			LatentHeat.y[ j ][ k ] = 0.;												// Condensation
 			precipitable_water.y[ j ][ k ] = 0.;									// precipitable water
 			Evaporation_Penman.y[ j ][ k ] = 0.;								// Evaporation by Penman
-			Evaporation_Haude.y[ j ][ k ] = 0.;									// Evaporation by Haude
+			Evaporation_Haude.y[ j ][ k ] = 0.;								// Evaporation by Haude
 
 		}
 	}
@@ -221,7 +115,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );				// density of humid air, COSMO version withot cloud and ice water, masses negligible
 
 					e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
-//					e = ( r_humid * R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 ) * .01;								// delivers the same results
 					a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
 					t_denom = t_Celsius + 234.175;
@@ -262,7 +155,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );				// density of humid air, COSMO version withot cloud and ice water, masses negligible
 
 					e = c.x[ 0 ][ j ][ k ] * p_stat.x[ 0 ][ j ][ k ] / ep; 													// water vapour pressure in hPa
-//					e = ( r_humid * R_WaterVapour * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;								// delivers the same results
 					a = 216.6 * e / ( t.x[ 0 ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
 					t_denom = t_Celsius + 234.175;
@@ -282,7 +174,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					Q_sensible.y[ j ][ k ] = - r_air * cp_l * coeff_Diffusion_sensibel * t_grad * t_0 / L_atm;		// sensible heat in [W/m2] from energy transport equation
 					Q_bottom.y[ j ][ k ] = Q_Radiation.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ];	// difference understood as heat of the ground
 
-//					Evaporation_Haude.y[ j ][ k ] = f_Haude * sat_deficit;											// simplified formula for Evaporation over day length of 12h by Haude, Häckel
 					Evaporation_Haude.y[ j ][ k ] = 0.;
 					if ( Evaporation_Haude.y[ j ][ k ] <= 0. ) 		Evaporation_Haude.y[ j ][ k ] = 0.;
 //					Evaporation_Penman.y[ j ][ k ] = .0346 * ( ( Q_Radiation.y[ j ][ k ] - Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );
@@ -751,9 +642,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	Value_12 = Evaporation_Penman_average;
 
 	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_22 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_9 << setw ( 6 ) << name_unit_ppm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_12 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_13 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 / 365. << setw ( 6 ) << name_unit_mmd << endl << endl << endl;
-
-
-
 }
 
 

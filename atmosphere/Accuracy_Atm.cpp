@@ -78,7 +78,6 @@ Accuracy_Atm::Accuracy_Atm ( int n, int nm, int Ma, int im, int jm, int km, doub
 	this-> velocity_iter_max = velocity_iter_max;
 	this-> pressure_iter_max = pressure_iter_max;
 	this-> L_atm = L_atm;
-
 }
 
 
@@ -111,7 +110,6 @@ double Accuracy_Atm::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, 
 			}
 		}
 	}
-
 	return 0;
 }
 
@@ -198,17 +196,6 @@ double Accuracy_Atm::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, 
 // statements on the convergence und iterational process
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
-
-	cout << endl << endl;
-	cout << "      >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-	cout << "      2D AGCM iterational process" << endl;
-	cout << "      max total iteration number nm = " << nm << endl;
-	cout << "      outer pressure loop:  max iteration number pressure_iter_max_2D = " << pressure_iter_max_2D << endl;
-	cout << "      inner velocity loop:  max iteration number velocity_iter_max_2D = " << velocity_iter_max_2D << endl << endl;
-
-	cout << "      n = " << n << "     " << "velocity_iter_2D = " << velocity_iter_2D << "     " << "pressure_iter_2D = " << pressure_iter_2D << "     " << "Ma = " << Ma << endl;
-	cout << endl;
-
 
 // printout of maximum and minimum absolute and relative errors of the computed values at their locations while iterating
 	heading = " 2D iterational process for the surface boundary conditions\n printout of maximum and minimum absolute and relative errors of the computed values at their locations: level, latitude, longitude";
@@ -407,17 +394,6 @@ double Accuracy_Atm::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, 
 // statements on the convergence und iterational process
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
-
-	cout << endl << endl;
-	cout << "      >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-	cout << "      3D AGCM iterational process" << endl;
-	cout << "      max total iteration number nm = " << nm << endl;
-	cout << "      outer pressure loop:  max iteration number pressure_iter_max = " << pressure_iter_max << endl;
-	cout << "      inner velocity loop:  max iteration number velocity_iter_max = " << velocity_iter_max << endl << endl;
-
-	cout << "      n = " << n << "     " << "velocity_iter = " << velocity_iter << "     " << "pressure_iter = " << pressure_iter << "     " << "Ma = " << Ma << endl;
-	cout << endl;
-
 
 // printout of maximum and minimum absolute and relative errors of the computed values at their locations while iterating
 	heading = " 3D iterational process for the surface boundary conditions\n printout of maximum and minimum absolute and relative errors of the computed values at their locations: level, latitude, longitude";

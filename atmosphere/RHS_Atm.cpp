@@ -92,7 +92,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	coeff_ls = ls / ( cp_l * t_0 );					// coefficient for the specific latent sublimation heat ( sublimation heat ) coeff_ls = 10.9031 in [ / ]
 	coeff_lf = ( lv + ls ) / ( cp_l * t_0 );			// coefficient for the specific latent fusion heat ( sublimation heat ) coeff_ls = 20.01 in [ / ]
 	coeff_L_atm_u_0 = L_atm / u_0;					// coefficient for the source terms in the ice-water transport equations
-	coeff_vel = L_atm / ( r_air * u_0 * u_0 );					 														// = 59.0575
 	coeff_temp = L_atm / ( r_air * cp_l * u_0 * t_0 );					 											// = 0.003227
 	coeff_buoy = L_atm / ( r_air * u_0 * u_0 );																			// = 59.259
 
@@ -128,7 +127,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 //  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>> 
 // only in positive r-direction above ground 
-
 	hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
 
 	if ( fabs ( hight - Topography.y[ j ][ k ] ) < ( L_atm / ( double ) ( im-1 ) ) && ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ))
@@ -140,23 +138,14 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 		{
 //			h_c_i = cc * ( 1. - fabs ( h_0_0 - h_0_i ) / 1. ); 
 			h_c_i = 0.; 
-//			h_c_i = cc * ( .5 * ( acos ( fabs ( ( double ) ( i + 1 ) * dr - h_0_i ) * 3.14 / dr ) + 1. ) ); 
-//			h_c_i = cc * ( .5 * ( acos ( fabs ( h_0_0 - h_0_i ) / 1. * 3.14 ) + 1. ) ); 
 			h_d_i = 1. - h_c_i;
 			h_check_i = 1;
 		}
-
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << "  i = "<< i << "  Topography = "<< Topography.y[ j ][ k ] << "  h = "<< h.x[ i ][ j ][ k ] << "  hight = "<< hight << "  h_0_0 = " << h_0_0 << "  h_0_i = " << h_0_i << "  diff = " << ( h_0_0 - h_0_i ) << "  dr = " << dr << "  h_c_i = " << h_c_i << "  h_d_i = " << h_d_i << endl;
 	}
-
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << "  i = "<< i << "  h = "<< h.x[ i ][ j ][ k ] << "  Topo = "<< Topography.y[ j ][ k ] << "  hight = "<< hight << "  h_0_0 = " << h_0_0 << "  h_0_i = " << h_0_i << "  diff = " << ( h_0_0 - h_0_i ) << "  dr = " << dr << "  h_c_i = " << h_c_i << "  h_d_i = " << h_d_i << endl;
 
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive the-direction along northerly boundaries 
-
-
-
 	if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 1. ) )
 	{
 		dist = .75;
@@ -167,13 +156,11 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 		{
 //			h_c_j = cc * ( 1. - fabs ( h_0_0 - h_0_j ) / 1. ); 
 			h_c_j = 0.; 
-//			h_c_j = cc * ( .5 * ( acos ( fabs ( ( double ) ( j + 1 ) * dthe - h_0_j ) * 3.14 / dthe ) + 1. ) ); 
 			h_d_j = 1. - h_c_j;
 			h_check_j = 1;
 		}
 	}
 
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << "  i = "<< i << "  h_0_0 = " << h_0_0 << "  h_0_j = " << h_0_j << "  diff = " << ( h_0_0 - h_0_j ) << "  dthe = " << dthe << "  h_c_j = " << h_c_j << "  h_d_j = " << h_d_j << endl;
 
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -188,13 +175,10 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 		{
 //			h_c_j = cc * ( 1. - fabs ( h_0_0 - h_0_j ) / 1. ); 
 			h_c_j = 0.; 
-//			h_c_j = cc * ( .5 * ( acos ( fabs ( ( double ) ( j - 1 ) * dthe - h_0_j ) * 3.14 / dthe ) + 1. ) ); 
 			h_d_j = 1. - h_c_j;
 			h_check_j = 1;
 		}
 	}
-
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << "  i = "<< i << "  h_0_0 = " << h_0_0 << "  h_0_j = " << h_0_j << "  diff = " << ( h_0_0 - h_0_j ) << "  dthe = " << dthe << "  h_c_j = " << h_c_j << "  h_d_j = " << h_d_j << endl;
 
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -209,13 +193,10 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 		{
 //			h_c_k = cc * ( 1. - fabs ( h_0_0 - h_0_k ) / 1. ); 
 			h_c_k = 0.; 
-//			h_c_k = cc * ( .5 * ( acos ( fabs ( ( double ) ( k + 1 ) * dphi - h_0_k ) * 3.14 / dphi ) + 1. ) ); 
 			h_d_k = 1. - h_c_k;
 			h_check_k = 1;
 		}
 	}
-
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << "  i = "<< i << "  h_0_0 = " << h_0_0 << "  h_0_k = " << h_0_k << "  diff = " << ( h_0_0 - h_0_k ) << "  dphi = " << dphi << "  h_c_k = " << h_c_k << "  h_d_k = " << h_d_k << endl;
 
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -230,55 +211,50 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 		{
 //			h_c_k = cc * ( 1. - fabs ( h_0_0 - h_0_k ) / 1. ); 
 			h_c_k = 0.; 
-//			h_c_k = cc * ( .5 * ( acos ( fabs ( ( double ) ( k - 1 ) * dphi - h_0_k ) * 3.14 / dphi ) + 1. ) ); 
 			h_d_k = 1. - h_c_k;
 			h_check_k = 1;
 		}
 	}
 
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << "  i = "<< i << "  h_0_0 = " << h_0_0 << "  h_0_k = " << h_0_k << "  diff = " << ( h_0_0 - h_0_k ) << "  dphi = " << dphi << "  h_c_k = " << h_c_k << "  h_d_k = " << h_d_k << endl;
 
 
+	if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_i != 1 ) )
+	{
+		h_c_i = 0.; 
+		h_d_i = 1. - h_c_i;
+	}
+
+	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_i != 1 ) )
+	{
+		h_c_i = 1.; 
+		h_d_i = 1. - h_c_i;
+	}
 
 
-		if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_i != 1 ) )
-		{
-			h_c_i = 0.; 
-			h_d_i = 1. - h_c_i;
-		}
+	if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_j != 1 ) )
+	{
+		h_c_j = 0.; 
+		h_d_j = 1. - h_c_j;
+	}
 
-		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_i != 1 ) )
-		{
-			h_c_i = 1.; 
-			h_d_i = 1. - h_c_i;
-		}
-
-
-		if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_j != 1 ) )
-		{
-			h_c_j = 0.; 
-			h_d_j = 1. - h_c_j;
-		}
-
-		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_j != 1 ) )
-		{
-			h_c_j = 1.; 
-			h_d_j = 1. - h_c_j;
-		}
+	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_j != 1 ) )
+	{
+		h_c_j = 1.; 
+		h_d_j = 1. - h_c_j;
+	}
 
 
-		if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_k != 1 ) )
-		{
-			h_c_k = 0.; 
-			h_d_k = 1. - h_c_k;
-		}
+	if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_k != 1 ) )
+	{
+		h_c_k = 0.; 
+		h_d_k = 1. - h_c_k;
+	}
 
-		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_k != 1 ) )
-		{
-			h_c_k = 1.; 
-			h_d_k = 1. - h_c_k;
-		}
-
+	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_k != 1 ) )
+	{
+		h_c_k = 1.; 
+		h_d_k = 1. - h_c_k;
+	}
 
 
 // 1st order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
@@ -341,7 +317,181 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	d2icedphi2 = h_d_k * ( ice.x[ i ][ j ][ k+1 ] - 2. * ice.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k-1 ] ) / dphi2;
 	d2codphi2 = h_d_k * ( co2.x[ i ][ j ][ k+1 ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i ][ j ][ k-1 ] ) / dphi2;
 
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << " RHS " << " i = "<< i << " dudr = " << dudr << " dudthe = " << dudthe << " dudphi = " << dudphi << " d2udr2 = " << d2udr2 << " d2udthe2 = " << d2udthe2 << "  d2udphi2 = " << d2udphi2 << " rhs_u = " << rhs_u.x[ i ][ j ][ k ] << " u-1 = " << u.x[ i - 1 ][ j ][ k ] << " u = " << u.x[ i ][ j ][ k ] << " u+1 = " << u.x[ i + 1 ][ j ][ k ] << endl;
+
+	if ( ( j >= 2 ) && ( j < jm - 2 ) )
+	{
+		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j + 2 ][ k ] == 0. ) ) )
+		{
+			dudthe = h_d_j * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j + 1 ][ k ] - u.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dvdthe = h_d_j * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j + 1 ][ k ] - v.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dwdthe = h_d_j * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i ][ j + 1 ][ k ] - w.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dtdthe = h_d_j * ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i ][ j + 1 ][ k ] - t.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dpdthe = h_d_j * ( - 3. * p_dyn.x[ i ][ j ][ k ] + 4. * p_dyn.x[ i ][ j + 1 ][ k ] - p_dyn.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dcdthe = h_d_j * ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j + 1 ][ k ] - c.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dclouddthe = h_d_j * ( - 3. * cloud.x[ i ][ j ][ k ] + 4. * cloud.x[ i ][ j + 1 ][ k ] - cloud.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dicedthe = h_d_j * ( - 3. * ice.x[ i ][ j ][ k ] + 4. * ice.x[ i ][ j + 1 ][ k ] - ice.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dcodthe = h_d_j * ( - 3. * co2.x[ i ][ j ][ k ] + 4. * co2.x[ i ][ j + 1 ][ k ] - co2.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+		}
+		else
+		{
+			dudthe = h_d_j * ( u.x[ i ][ j + 1 ][ k ] - u.x[ i ][ j ][ k ] ) / dthe;
+			dvdthe = h_d_j * ( v.x[ i ][ j + 1 ][ k ] - v.x[ i ][ j ][ k ] ) / dthe;
+			dwdthe = h_d_j * ( w.x[ i ][ j + 1 ][ k ] - w.x[ i ][ j ][ k ] ) / dthe;
+			dtdthe = h_d_j * ( t.x[ i ][ j + 1 ][ k ] - t.x[ i ][ j ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ i ][ j + 1 ][ k ] - p_dyn.x[ i ][ j ][ k ] ) / dthe;
+			dcdthe = h_d_j * ( c.x[ i ][ j + 1 ][ k ] - c.x[ i ][ j ][ k ] ) / dthe;
+			dclouddthe = h_d_j * ( cloud.x[ i ][ j + 1 ][ k ] - cloud.x[ i ][ j ][ k ] ) / dthe;
+			dicedthe = h_d_j * ( ice.x[ i ][ j + 1 ][ k ] - ice.x[ i ][ j ][ k ] ) / dthe;
+			dcodthe = h_d_j * ( co2.x[ i ][ j + 1 ][ k ] - co2.x[ i ][ j ][ k ] ) / dthe;
+		}
+
+
+		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) && ( h.x[ i ][ j - 2 ][ k ] == 0. ) )
+		{
+			dudthe = h_d_j * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j - 1 ][ k ] - u.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dvdthe = h_d_j * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j - 1 ][ k ] - v.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dwdthe = h_d_j * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i ][ j - 1 ][ k ] - w.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dtdthe = h_d_j * ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i ][ j - 1 ][ k ] - t.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dpdthe = h_d_j * ( - 3. * p_dyn.x[ i ][ j ][ k ] + 4. * p_dyn.x[ i ][ j - 1 ][ k ] - p_dyn.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dcdthe = h_d_j * ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j - 1 ][ k ] - c.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dclouddthe = h_d_j * ( - 3. * cloud.x[ i ][ j ][ k ] + 4. * cloud.x[ i ][ j - 1 ][ k ] - cloud.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dicedthe = h_d_j * ( - 3. * ice.x[ i ][ j ][ k ] + 4. * ice.x[ i ][ j - 1 ][ k ] - ice.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dcodthe = h_d_j * ( - 3. * co2.x[ i ][ j ][ k ] + 4. * co2.x[ i ][ j - 1 ][ k ] - co2.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+		}
+		else
+		{
+			dudthe = h_d_j * ( u.x[ i ][ j ][ k ] - u.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dvdthe = h_d_j * ( v.x[ i ][ j ][ k ] - v.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dwdthe = h_d_j * ( w.x[ i ][ j ][ k ] - w.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dtdthe = h_d_j * ( t.x[ i ][ j ][ k ] - t.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ i ][ j ][ k ] - p_dyn.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dcdthe = h_d_j * ( c.x[ i ][ j ][ k ] - c.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dclouddthe = h_d_j * ( cloud.x[ i ][ j ][ k ] - cloud.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dicedthe = h_d_j * ( ice.x[ i ][ j ][ k ] - ice.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dcodthe = h_d_j * ( co2.x[ i ][ j ][ k ] - co2.x[ i ][ j - 1 ][ k ] ) / dthe;
+		}
+
+		d2udthe2 = d2vdthe2 = d2wdthe2 = d2tdthe2 = d2cdthe2 = d2clouddthe2 = d2icedthe2 = d2codthe2 = 0.;
+	}
+	else
+	{
+		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) )
+		{
+			dudthe = h_d_j * ( u.x[ i ][ j + 1 ][ k ] - u.x[ i ][ j ][ k ] ) / dthe;
+			dvdthe = h_d_j * ( v.x[ i ][ j + 1 ][ k ] - v.x[ i ][ j ][ k ] ) / dthe;
+			dwdthe = h_d_j * ( w.x[ i ][ j + 1 ][ k ] - w.x[ i ][ j ][ k ] ) / dthe;
+			dtdthe = h_d_j * ( t.x[ i ][ j + 1 ][ k ] - t.x[ i ][ j ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ i ][ j + 1 ][ k ] - p_dyn.x[ i ][ j ][ k ] ) / dthe;
+			dcdthe = h_d_j * ( c.x[ i ][ j + 1 ][ k ] - c.x[ i ][ j ][ k ] ) / dthe;
+			dclouddthe = h_d_j * ( cloud.x[ i ][ j + 1 ][ k ] - cloud.x[ i ][ j ][ k ] ) / dthe;
+			dicedthe = h_d_j * ( ice.x[ i ][ j + 1 ][ k ] - ice.x[ i ][ j ][ k ] ) / dthe;
+			dcodthe = h_d_j * ( co2.x[ i ][ j + 1 ][ k ] - co2.x[ i ][ j ][ k ] ) / dthe;
+		}
+
+		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )
+		{
+			dudthe = h_d_j * ( u.x[ i ][ j ][ k ] - u.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dvdthe = h_d_j * ( v.x[ i ][ j ][ k ] - v.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dwdthe = h_d_j * ( w.x[ i ][ j ][ k ] - w.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dtdthe = h_d_j * ( t.x[ i ][ j ][ k ] - t.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ i ][ j ][ k ] - p_dyn.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dcdthe = h_d_j * ( c.x[ i ][ j ][ k ] - c.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dclouddthe = h_d_j * ( cloud.x[ i ][ j ][ k ] - cloud.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dicedthe = h_d_j * ( ice.x[ i ][ j ][ k ] - ice.x[ i ][ j - 1 ][ k ] ) / dthe;
+			dcodthe = h_d_j * ( co2.x[ i ][ j ][ k ] - co2.x[ i ][ j - 1 ][ k ] ) / dthe;
+		}
+
+		d2udthe2 = d2vdthe2 = d2wdthe2 = d2tdthe2 = d2cdthe2 = d2clouddthe2 = d2icedthe2 = d2codthe2 = 0.;
+	}
+
+
+	if ( ( k >= 2 ) && ( k < km - 2 ) )
+	{
+		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) )
+		{
+			dudphi = h_d_k * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j ][ k + 1 ] - u.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dvdphi = h_d_k * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j ][ k + 1 ] - v.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dwdphi = h_d_k * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i ][ j ][ k + 1 ] - w.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dtdphi = h_d_k * ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i ][ j ][ k + 1 ] - t.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dpdphi = h_d_k * ( - 3. * p_dyn.x[ i ][ j ][ k ] + 4. * p_dyn.x[ i ][ j ][ k + 1 ] - p_dyn.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dcdphi = h_d_k * ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j ][ k + 1 ] - c.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dclouddphi = h_d_k * ( - 3. * cloud.x[ i ][ j ][ k ] + 4. * cloud.x[ i ][ j ][ k + 1 ] - cloud.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dicedphi = h_d_k * ( - 3. * ice.x[ i ][ j ][ k ] + 4. * ice.x[ i ][ j ][ k + 1 ] - ice.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dcodphi = h_d_k * ( - 3. * co2.x[ i ][ j ][ k ] + 4. * co2.x[ i ][ j ][ k + 1 ] - co2.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+		}
+		else
+		{
+			dudphi = h_d_k * ( u.x[ i ][ j ][ k + 1 ] - u.x[ i ][ j ][ k ] ) / dphi;
+			dvdphi = h_d_k * ( v.x[ i ][ j ][ k + 1 ] - v.x[ i ][ j ][ k ] ) / dphi;
+			dwdphi = h_d_k * ( w.x[ i ][ j ][ k + 1 ] - w.x[ i ][ j ][ k ] ) / dphi;
+			dtdphi = h_d_k * ( t.x[ i ][ j ][ k + 1 ] - t.x[ i ][ j ][ k ] ) / dphi;
+			dpdphi = h_d_k * ( p_dyn.x[ i ][ j ][ k + 1 ] - p_dyn.x[ i ][ j ][ k ] ) / dphi;
+			dcdphi = h_d_k * ( c.x[ i ][ j ][ k + 1 ] - c.x[ i ][ j ][ k ] ) / dphi;
+			dclouddphi = h_d_k * ( cloud.x[ i ][ j ][ k + 1 ] - cloud.x[ i ][ j ][ k ] ) / dphi;
+			dicedphi = h_d_k * ( ice.x[ i ][ j ][ k + 1 ] - ice.x[ i ][ j ][ k ] ) / dphi;
+			dcodphi = h_d_k * ( co2.x[ i ][ j ][ k + 1 ] - co2.x[ i ][ j ][ k ] ) / dphi;
+		}
+
+
+		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) )
+		{
+			dudphi = h_d_k * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j ][ k - 1 ] - u.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dvdphi = h_d_k * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j ][ k - 1 ] - v.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dwdphi = h_d_k * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i ][ j ][ k - 1 ] - w.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dtdphi = h_d_k * ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i ][ j ][ k - 1 ] - t.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dpdphi = h_d_k * ( - 3. * p_dyn.x[ i ][ j ][ k ] + 4. * p_dyn.x[ i ][ j ][ k - 1 ] - p_dyn.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dcdphi = h_d_k * ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j ][ k - 1 ] - c.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dclouddphi = h_d_k * ( - 3. * cloud.x[ i ][ j ][ k ] + 4. * cloud.x[ i ][ j ][ k - 1 ] - cloud.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dicedphi = h_d_k * ( - 3. * ice.x[ i ][ j ][ k ] + 4. * ice.x[ i ][ j ][ k - 1 ] - ice.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dcodphi = h_d_k * ( - 3. * co2.x[ i ][ j ][ k ] + 4. * co2.x[ i ][ j ][ k - 1 ] - co2.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+		}
+		else
+		{
+			dudphi = h_d_k * ( u.x[ i ][ j ][ k ] - u.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dvdphi = h_d_k * ( v.x[ i ][ j ][ k ] - v.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dwdphi = h_d_k * ( w.x[ i ][ j ][ k ] - w.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dtdphi = h_d_k * ( t.x[ i ][ j ][ k ] - t.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dpdphi = h_d_k * ( p_dyn.x[ i ][ j ][ k ] - p_dyn.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dcdphi = h_d_k * ( c.x[ i ][ j ][ k ] - c.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dclouddphi = h_d_k * ( cloud.x[ i ][ j ][ k ] - cloud.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dicedphi = h_d_k * ( ice.x[ i ][ j ][ k ] - ice.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dcodphi = h_d_k * ( co2.x[ i ][ j ][ k ] - co2.x[ i ][ j ][ k - 1 ] ) / dphi;
+		}
+
+		d2udphi2 = d2vdphi2 = d2wdphi2 = d2tdphi2 = d2cdphi2 = d2clouddphi2 = d2icedphi2 = d2codphi2 = 0.;
+	}
+	else
+	{
+		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) )
+		{
+			dudphi = h_d_k * ( u.x[ i ][ j ][ k + 1 ] - u.x[ i ][ j ][ k ] ) / dphi;
+			dvdphi = h_d_k * ( v.x[ i ][ j ][ k + 1 ] - v.x[ i ][ j ][ k ] ) / dphi;
+			dwdphi = h_d_k * ( w.x[ i ][ j ][ k + 1 ] - w.x[ i ][ j ][ k ] ) / dphi;
+			dtdphi = h_d_k * ( t.x[ i ][ j ][ k + 1 ] - t.x[ i ][ j ][ k ] ) / dphi;
+			dpdphi = h_d_k * ( p_dyn.x[ i ][ j ][ k + 1 ] - p_dyn.x[ i ][ j ][ k ] ) / dphi;
+			dcdphi = h_d_k * ( c.x[ i ][ j ][ k + 1 ] - c.x[ i ][ j ][ k ] ) / dphi;
+			dclouddphi = h_d_k * ( cloud.x[ i ][ j ][ k + 1 ] - cloud.x[ i ][ j ][ k ] ) / dphi;
+			dicedphi = h_d_k * ( ice.x[ i ][ j ][ k + 1 ] - ice.x[ i ][ j ][ k ] ) / dphi;
+			dcodphi = h_d_k * ( co2.x[ i ][ j ][ k + 1 ] - co2.x[ i ][ j ][ k ] ) / dphi;
+		}
+
+		if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) )
+		{
+			dudphi = h_d_k * ( u.x[ i ][ j ][ k ] - u.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dvdphi = h_d_k * ( v.x[ i ][ j ][ k ] - v.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dwdphi = h_d_k * ( w.x[ i ][ j ][ k ] - w.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dtdphi = h_d_k * ( t.x[ i ][ j ][ k ] - t.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dpdphi = h_d_k * ( p_dyn.x[ i ][ j ][ k ] - p_dyn.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dcdphi = h_d_k * ( c.x[ i ][ j ][ k ] - c.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dclouddphi = h_d_k * ( cloud.x[ i ][ j ][ k ] - cloud.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dicedphi = h_d_k * ( ice.x[ i ][ j ][ k ] - ice.x[ i ][ j ][ k - 1 ] ) / dphi;
+			dcodphi = h_d_k * ( co2.x[ i ][ j ][ k ] - co2.x[ i ][ j ][ k - 1 ] ) / dphi;
+		}
+
+		d2udphi2 = d2vdphi2 = d2wdphi2 = d2tdphi2 = d2cdphi2 = d2clouddphi2 = d2icedphi2 = d2codphi2 = 0.;
+	}
+
+
 
 
 // Coriolis and centrifugal terms in the energy and momentum equations
@@ -356,32 +506,23 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	RS_Coriolis_Momentum_the = + h_d_j * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ];
 	RS_Coriolis_Momentum_phi = - h_d_k * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] );
 
-	RS_centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
-	RS_centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
+	RS_Centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
+	RS_Centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
 
 
 // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
-	r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );														// density of dry air 
+	r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );													// density of dry air 
 	r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );											// density of humid air, COSMO version without cloud and ice water, masses negligible
 
-	RS_buoyancy_Momentum = buoyancy * g * ( r_humid - r_dry ) * coeff_buoy; 					// any humid air is less dense than dry air
+	RS_buoyancy_Momentum = buoyancy * g * ( r_humid - r_dry ) * coeff_buoy; 								// any humid air is less dense than dry air
 
-	BuoyancyForce.x[ i ][ j ][ k ] = - RS_buoyancy_Momentum / coeff_buoy;							// in Pa/m
+	BuoyancyForce.x[ i ][ j ][ k ] = - RS_buoyancy_Momentum / coeff_buoy;											// dimension as pressure in N/m2
 	if ( h.x[ i ][ j ][ k ] == 1. ) 	BuoyancyForce.x[ i ][ j ][ k ] = 0.;
 
 	RS_buoyancy_Water_Vapour = buoyancy * ( cloud.x[ i ][ j ][ k ] - cloudn.x[ i ][ j ][ k ] );
 
 
-	cout.precision ( 8 );
-	cout.setf ( ios::fixed );
-
-//				if ( ( j == 90 ) && ( k == 180 ) )	cout << " RHS   "<< i << "  t = " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "  c = " << c.x[ i ][ j ][ k ] * 1000. << "  cl = " << cloud.x[ i ][ j ][ k ] * 1000. << "  ci = " << ice.x[ i ][ j ][ k ] * 1000. << "  q_Rain = " << q_Rain * 1000. << "  q_Ice = " << q_Ice * 1000. << "  S_i_dep = " << S_i_dep * 1000. << "  N_i = " << N_i << "  m_i = " << m_i * 1000000. << "  S_nuc = " << S_nuc * 1000. << "  S_c_frz = " << S_c_frz * 1000. << "  S_c_au = " << S_c_au * 1000. << "  S_i_au = " << S_i_au * 1000. << "  S_d_au = " << S_d_au * 1000. << "  S_ac = " << S_ac * 1000. << "  S_rim = " << S_rim * 1000. << "  S_shed = " << S_shed * 1000. << "  S_agg = " << S_agg * 1000. << "  S_i_cri = " << S_i_cri * 1000. << "  S_r_cri = " << S_r_cri * 1000. << "  S_ev = " << S_ev * 1000. << "  S_s_dep = " << S_s_dep * 1000. << "  S_i_melt = " << S_i_melt * 1000. << "  S_s_melt = " << S_s_melt * 1000. << "  S_r_frz = " << S_r_frz * 1000. << "  S_v = " << S_v.x[ i ][ j ][ k ] * 1000. << "  S_c = " << S_c.x[ i ][ j ][ k ] * 1000. << "  S_i = " << S_i.x[ i ][ j ][ k ] * 1000. << "  S_r = " << S_r.x[ i ][ j ][ k ] * 1000. << "  S_s = " << S_s.x[ i ][ j ][ k ] * 1000. << "  P_rain = " << P_rain.x[ i ][ j ][ k ] << "  P_snow = " << P_snow.x[ i ][ j ][ k ] << endl;
-
-
-
 	S_c.x[ i ][ j ][ k ] = S_i.x[ i ][ j ][ k ] = S_r.x[ i ][ j ][ k ] = S_s.x[ i ][ j ][ k ] = 0.;
-
-
 
 
 // Right Hand Side of the time derivative ot temperature, pressure, water vapour concentration and velocity components
@@ -401,14 +542,14 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
 			- dpdr + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
 			- RS_buoyancy_Momentum
-			+ RS_Coriolis_Momentum_rad + RS_centrifugal_Momentum_rad
+			+ RS_Coriolis_Momentum_rad + RS_Centrifugal_Momentum_rad
 			- h_c_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;																					// immersed boundary condition as a negative force addition
 
 	rhs_v.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dvdr + v.x[ i ][ j ][ k ] * dvdthe / rm + w.x[ i ][ j ][ k ] * dvdphi / rmsinthe ) +
 			- dpdthe / rm + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
 			- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_j * v.x[ i ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2
 			+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-			+ RS_Coriolis_Momentum_the + RS_centrifugal_Momentum_the
+			+ RS_Coriolis_Momentum_the + RS_Centrifugal_Momentum_the
 			- h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;																					// immersed boundary condition as a negative force addition
 
 	rhs_w.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dwdr + v.x[ i ][ j ][ k ] * dwdthe / rm + w.x[ i ][ j ][ k ] * dwdphi / rmsinthe ) +
@@ -440,10 +581,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 			+ ( d2codr2 + dcodr * 2. / rm + d2codthe2 / rm2 + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
 			- h_c_i * co2.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
 
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << " RHS " << " i = "<< i << " dudr = " << dudr << " dudthe = " << dudthe / rm << " dudphi = " << dudphi / rmsinthe << " d2udr2 = " << d2udr2 << " d2udthe2 = " << d2udthe2 / rm2 << "  d2udphi2 = " << d2udphi2 / rm2sinthe2 << " rhs_u = " << rhs_u.x[ i ][ j ][ k ] << " u-1 = " << u.x[ i - 1 ][ j ][ k ] << " u = " << u.x[ i ][ j ][ k ] << " u+1 = " << u.x[ i + 1 ][ j ][ k ] << " dpdr = " << dpdr << endl;
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << " RHS " << " i = "<< i << " dvdr = " << dvdr << " dvdthe = " << dvdthe << " dvdphi = " << dvdphi << " d2vdr2 = " << d2vdr2 << " d2vdthe2 = " << d2vdthe2 << "  d2vdphi2 = " << d2vdphi2 << " rhs_v = " << rhs_v.x[ i ][ j ][ k ] << " v-1 = " << v.x[ i - 1 ][ j ][ k ] << " v = " << v.x[ i ][ j ][ k ] << " v+1 = " << v.x[ i + 1 ][ j ][ k ] << endl;
-//	if ( ( j == 62 ) && ( k == 87 ) )	cout << " RHS " << " i = "<< i << " dwdr = " << dwdr << " dwdthe = " << dwdthe / rm << " dwdphi = " << dwdphi / rmsinthe << " d2wdr2 = " << d2wdr2 << " d2wdthe2 = " << d2wdthe2 / rm2 << "  d2wdphi2 = " << d2wdphi2 / rm2sinthe2 << " rhs_w = " << rhs_w.x[ i ][ j ][ k ] << " w-1 = " << w.x[ i - 1 ][ j ][ k ] << " w = " << w.x[ i ][ j ][ k ] << " w+1 = " << w.x[ i + 1 ][ j ][ k ] << " dpdphi = " << dpdphi << endl;
-
 
 // for the Poisson equation to solve for the pressure, pressure gradient substracted from the above RHS
 	aux_u.x[ i ][ j ][ k ] = rhs_u.x[ i ][ j ][ k ] + dpdr;
@@ -451,6 +588,16 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	aux_w.x[ i ][ j ][ k ] = rhs_w.x[ i ][ j ][ k ] + dpdphi / rmsinthe;
 
 	if ( h.x[ i ][ j ][ k ] == 1. )		aux_u.x[ i ][ j ][ k ] = aux_v.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k ] = 0.;
+
+
+	if ( u.x[ i ][ j ][ k ] >= .00667 )			u.x[ i ][ j ][ k ] = .00667;
+	if ( u.x[ i ][ j ][ k ] <= - .00667 )			u.x[ i ][ j ][ k] = - .00667;
+
+	if ( v.x[ i ][ j ][ k ] >= .08 )					v.x[ i ][ j ][ k ] = .08;
+	if ( v.x[ i ][ j ][ k ] <= - .08 )				v.x[ i ][ j ][ k ] = - .08;
+
+	if ( w.x[ i ][ j ][ k ] >= 1.8 )				w.x[ i ][ j ][ k ] = 1.8;
+	if ( w.x[ i ][ j ][ k ] <= - 1.8 )				w.x[ i ][ j ][ k ] = - 1.8;
 
 }
 
@@ -462,10 +609,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u_0, double p_0, double L_atm, Array_1D &rad, Array_1D &the, Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &aux_v, Array &aux_w )
 {
 //  2D surface iterations
-	coeff_vel = L_atm / ( r_air * u_0 * u_0 );
-
-
-//	k_Force = 1.;																			// factor for accelleration of convergence processes inside the immersed boundary conditions
 	k_Force = 10.;																			// factor for accelleration of convergence processes inside the immersed boundary conditions
 
 	cc = + 1.;
@@ -492,14 +635,12 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive the-direction along northerly boundaries 
-
 	if ( ( h.x[ 0 ][ j - 1 ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
 	{
 		h_0_j = ( double ) ( j ) * dthe + dthe / 4.;
 
 		if ( fabs ( ( ( double ) ( j + 1 ) * dthe - h_0_j ) ) < dthe )
 		{
-//			h_c_j = cc * ( 1. - fabs ( ( ( double ) ( j + 1 ) * dthe - h_0_j ) ) / dthe ); 
 			h_c_j = 0.; 
 			h_d_j = 1. - h_c_j;
 			h_check_j = 1;
@@ -510,14 +651,12 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in negative the-direction along southerly boundaries 
-
 	if ( ( h.x[ 0 ][ j + 1 ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
 	{
 		h_0_j = ( double ) ( j ) * dthe - dthe / 4.;
 
 		if ( fabs ( ( ( double ) ( j - 1 ) * dthe - h_0_j ) ) < dthe )
 		{
-//			h_c_j = cc * ( 1. - fabs ( ( ( double ) ( j - 1 ) * dthe - h_0_j ) ) / dthe ); 
 			h_c_j = 0.; 
 			h_d_j = 1. - h_c_j;
 			h_check_j = 1;
@@ -527,14 +666,12 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive phi-direction on westerly boundaries 
-
 	if ( ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
 	{
 		h_0_k = ( double ) ( k ) * dphi + dphi / 4.;
 
 		if ( fabs ( ( ( double ) ( k + 1 ) * dphi - h_0_k ) ) < dphi )
 		{
-//			h_c_k = cc * ( 1. - fabs ( ( ( double ) ( k + 1 ) * dphi - h_0_k ) ) / dphi ); 
 			h_c_k = 0.; 
 			h_d_k = 1. - h_c_k;
 			h_check_k = 1;
@@ -545,14 +682,12 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in negative phi-direction along easterly boundaries 
-
 	if ( ( h.x[ 0 ][ j ][ k + 1 ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
 	{
 		h_0_k = ( double ) ( k ) * dphi - dphi / 4.;
 
 		if ( fabs ( ( ( double ) ( k - 1 ) * dphi - h_0_k ) ) < dphi )
 		{
-//			h_c_k = cc * ( 1. - fabs ( ( ( double ) ( k - 1 ) * dphi - h_0_k ) ) / dphi ); 
 			h_c_k = 0.; 
 			h_d_k = 1. - h_c_k;
 			h_check_k = 1;
@@ -585,6 +720,14 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 		h_d_k = 1. - h_c_k;
 	}
 
+
+	if ( v.x[ 0 ][ j ][ k ] >= .0667 )			v.x[ 0 ][ j ][ k ] = .0667;
+	if ( v.x[ 0 ][ j ][ k ] <= - .0667 )			v.x[ 0 ][ j ][ k ] = - .0667;
+
+	if ( w.x[ 0 ][ j ][ k ] >= .333 )				w.x[ 0 ][ j ][ k ] = .333;
+	if ( w.x[ 0 ][ j ][ k ] <= - .333 )			w.x[ 0 ][ j ][ k ] = .333;
+
+
 	dvdthe = h_d_j * ( v.x[ 0 ][ j+1 ][ k ] - v.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
 	dwdthe = h_d_j * ( w.x[ 0 ][ j+1 ][ k ] - w.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
 	dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j+1 ][ k ] - p_dyn.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
@@ -600,14 +743,117 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 	d2wdphi2 = h_d_k * ( w.x[ 0 ][ j ][ k+1 ] - 2. * w.x[ 0 ][ j ][ k ] + w.x[ 0 ][ j ][ k-1 ] ) / dphi2;
 
 
+	if ( ( j >= 2 ) && ( j < jm - 2 ) )
+	{
+		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) && ( h.x[ 0 ][ j + 2 ][ k ] == 0. ) ) )
+		{
+			dvdthe = h_d_j * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j + 1 ][ k ] - v.x[ 0 ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dwdthe = h_d_j * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j + 1 ][ k ] - w.x[ 0 ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dpdthe = h_d_j * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] + 4. * p_dyn.x[ 0 ][ j + 1 ][ k ] - p_dyn.x[ 0 ][ j + 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+		}
+		else
+		{
+			dvdthe = h_d_j * ( v.x[ 0 ][ j + 1 ][ k ] - v.x[ 0 ][ j ][ k ] ) / dthe;
+			dwdthe = h_d_j * ( w.x[ 0 ][ j + 1 ][ k ] - w.x[ 0 ][ j ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j + 1 ][ k ] - p_dyn.x[ 0 ][ j ][ k ] ) / dthe;
+		}
+
+		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) && ( h.x[ 0 ][ j - 2 ][ k ] == 0. ) )
+		{
+			dvdthe = h_d_j * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j - 1 ][ k ] - v.x[ 0 ][ j - 2 ][ k ] ) / ( 2. * dthe );					// 2. order accurate
+			dwdthe = h_d_j * ( w.x[ 0 ][ j + 1 ][ k ] - w.x[ 0 ][ j ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j + 1 ][ k ] - p_dyn.x[ 0 ][ j ][ k ] ) / dthe;
+		}
+		else
+		{
+			dvdthe = h_d_j * ( v.x[ 0 ][ j ][ k ] - v.x[ 0 ][ j - 1 ][ k ] ) / dthe;
+			dwdthe = h_d_j * ( w.x[ 0 ][ j ][ k ] - w.x[ 0 ][ j - 1 ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j ][ k ] - p_dyn.x[ 0 ][ j - 1 ][ k ] ) / dthe;
+		}
+
+		d2vdthe2 = d2wdthe2 = 0.;
+	}
+	else
+	{
+		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) )
+		{
+			dvdthe = h_d_j * ( v.x[ 0 ][ j + 1 ][ k ] - v.x[ 0 ][ j ][ k ] ) / dthe;
+			dwdthe = h_d_j * ( w.x[ 0 ][ j + 1 ][ k ] - w.x[ 0 ][ j ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j + 1 ][ k ] - p_dyn.x[ 0 ][ j ][ k ] ) / dthe;
+		}
+
+		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) )
+		{
+			dvdthe = h_d_j * ( v.x[ 0 ][ j ][ k ] - v.x[ 0 ][ j - 1 ][ k ] ) / dthe;
+			dwdthe = h_d_j * ( w.x[ 0 ][ j ][ k ] - w.x[ 0 ][ j - 1 ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j ][ k ] - p_dyn.x[ 0 ][ j - 1 ][ k ] ) / dthe;
+		}
+
+		d2vdthe2 = d2wdthe2 = 0.;
+	}
+
+
+	if ( ( k >= 2 ) && ( k < km - 2 ) )
+	{
+		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) && ( h.x[ 0 ][ j ][ k + 2 ] == 0. ) )
+		{
+			dwdphi = h_d_k * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j ][ k + 1 ] - w.x[ 0 ][ j ][ k + 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dwdthe = h_d_j * ( w.x[ 0 ][ j + 1 ][ k ] - w.x[ 0 ][ j ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j + 1 ][ k ] - p_dyn.x[ 0 ][ j ][ k ] ) / dthe;
+		}
+		else
+		{
+			dvdphi = h_d_k * ( v.x[ 0 ][ j ][ k + 1 ] - v.x[ 0 ][ j ][ k ] ) / dphi;
+			dwdphi = h_d_k * ( w.x[ 0 ][ j ][ k + 1 ] - w.x[ 0 ][ j ][ k ] ) / dphi;
+			dpdphi = h_d_k * ( p_dyn.x[ 0 ][ j ][ k + 1 ] - p_dyn.x[ 0 ][ j ][ k ] ) / dphi;
+		}
+
+		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 0. ) && ( h.x[ 0 ][ j ][ k - 2 ] == 0. ) )
+		{
+			dwdphi = h_d_k * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j ][ k - 1 ] - w.x[ 0 ][ j ][ k - 2 ] ) / ( 2. * dphi );					// 2. order accurate
+			dwdthe = h_d_j * ( w.x[ 0 ][ j ][ k ] - w.x[ 0 ][ j - 1 ][ k ] ) / dthe;
+			dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j ][ k ] - p_dyn.x[ 0 ][ j - 1 ][ k ] ) / dthe;
+		}
+
+		else
+		{
+			dvdphi = h_d_k * ( v.x[ 0 ][ j ][ k ] - v.x[ 0 ][ j ][ k - 1 ] ) / dphi;
+			dwdphi = h_d_k * ( w.x[ 0 ][ j ][ k ] - w.x[ 0 ][ j ][ k - 1 ] ) / dphi;
+			dpdphi = h_d_k * ( p_dyn.x[ 0 ][ j ][ k ] - p_dyn.x[ 0 ][ j ][ k - 1 ] ) / dphi;
+		}
+		d2vdphi2 = d2wdphi2 = 0.;
+	}
+	else
+	{
+		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) )
+		{
+			dvdphi = h_d_k * ( v.x[ 0 ][ j ][ k + 1 ] - v.x[ 0 ][ j ][ k ] ) / dphi;
+			dwdphi = h_d_k * ( w.x[ 0 ][ j ][ k + 1 ] - w.x[ 0 ][ j ][ k ] ) / dphi;
+			dpdphi = h_d_k * ( p_dyn.x[ 0 ][ j ][ k + 1 ] - p_dyn.x[ 0 ][ j ][ k ] ) / dphi;
+		}
+
+		if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) )
+		{
+			dvdphi = h_d_k * ( v.x[ 0 ][ j ][ k ] - v.x[ 0 ][ j ][ k - 1 ] ) / dphi;
+			dwdphi = h_d_k * ( w.x[ 0 ][ j ][ k ] - w.x[ 0 ][ j ][ k - 1 ] ) / dphi;
+			dpdphi = h_d_k * ( p_dyn.x[ 0 ][ j ][ k ] - p_dyn.x[ 0 ][ j ][ k - 1 ] ) / dphi;
+		}
+
+		d2vdphi2 = d2wdphi2 = 0.;
+	}
+
+
+
+
+
 	RS_Coriolis_Momentum_the = + coriolis * 2. * omega * costhe * w.x[ 0 ][ j ][ k ] * h_d_j;
-	RS_centrifugal_Momentum_the = + centrifugal * rad.z[ 0 ] * sinthe * costhe * pow ( ( omega ), 2 );
+	RS_Centrifugal_Momentum_the = + centrifugal * rad.z[ 0 ] * sinthe * costhe * pow ( ( omega ), 2 );
 	RS_Coriolis_Momentum_phi = - coriolis * omega * costhe * v.x[ 0 ][ j ][ k ] * h_d_k;
 
 	rhs_v.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dvdthe / rm + w.x[ 0 ][ j ][ k ] * dvdphi / rmsinthe ) +
-				- dpdthe / rm + ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
+				- dpdthe / rm - ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
 				- ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[ 0 ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-				+ RS_Coriolis_Momentum_the + RS_centrifugal_Momentum_the
+				+ RS_Coriolis_Momentum_the + RS_Centrifugal_Momentum_the
 				- h_c_j * v.x[ 0 ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 	rhs_w.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dwdthe / rm +  w.x[ 0 ][ j ][ k ] * dwdphi / rmsinthe ) +
@@ -618,8 +864,6 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 	rhs_p.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * ( rhs_v.x[ 0 ][ j ][ k ] + dpdthe / rm ) + w.x[ 0 ][ j ][ k ] * ( rhs_w.x[ 0 ][ j ][ k ] + dpdphi / rmsinthe ) )
 				- h_c_k * p_dyn.x[ 0 ][ j ][ k ] * k_Force / dphi2;					// immersed boundary condition as a negative force addition
-
-//	if ( ( j == 120 ) && ( k == 155 ) )	cout << "  RHS:  " << "  p_dyn = " << p_dyn.x[ 0 ][ j ][ k ] << "  p_dynn = " << p_dynn.x[ 0 ][ j ][ k ] << "  rhs_v = " << rhs_v.x[ 0 ][ j ][ k ] << "  rhs_w = " << rhs_w.x[ 0 ][ j ][ k ] << "  rhs_p = " << rhs_p.x[ 0 ][ j ][ k ] << "  dpdthe = " << dpdthe << "  dpdphi = " << dpdphi << "  v = " << v.x[ 0 ][ j ][ k ] << "  w = " <<  w.x[ 0 ][ j ][ k ] << endl;
 
 	aux_v.x[ 0 ][ j ][ k ] = rhs_v.x[ 0 ][ j ][ k ] + dpdthe / rm;
 	aux_w.x[ 0 ][ j ][ k ] = rhs_w.x[ 0 ][ j ][ k ] + dpdphi / rmsinthe;

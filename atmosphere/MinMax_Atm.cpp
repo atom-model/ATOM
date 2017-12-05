@@ -173,6 +173,12 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 	}
 
 
+	if ( name_maxValue == " max 3D u_component " )
+	{
+		maxValue = maxValue * 270.;
+		minValue = minValue * 270.;
+	}
+
 	if ( name_maxValue == " max 3D water vapour " )
 	{
 		maxValue = maxValue * 1000.;
