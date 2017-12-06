@@ -423,16 +423,6 @@ void Pressure_Atm::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the,
 			num2 = 1. / ( rm2 * dthe2 );
 			num3 = 1. / ( rm2sinthe2 * dphi2 );
 
-/*
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
-			{
-				if ( p_dyn.x[ 0 ][ j ][ k ] >= .01 )				p_dyn.x[ 0 ][ j ][ k ] = .01;
-				if ( p_dyn.x[ 0 ][ j ][ k ] <= - .01 )				p_dyn.x[ 0 ][ j ][ k ] = - .01;
-			}
-		}
-*/
 
 			for ( int k = 1; k < km-1; k++ )
 			{
