@@ -106,8 +106,8 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 	}
 
 
-	imax_level = imax * 500;
-	imin_level = imin * 500;
+	imax_level = imax * 400;
+	imin_level = imin * 400;
 
 //	maximum latitude and longitude units recalculated
 	if ( jmax <= 90 )
@@ -175,8 +175,20 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 
 	if ( name_maxValue == " max 3D u_component " )
 	{
-		maxValue = maxValue * 270.;
-		minValue = minValue * 270.;
+		maxValue = maxValue * 15.;
+		minValue = minValue * 15.;
+	}
+
+	if ( name_maxValue == " max 3D v_component " )
+	{
+		maxValue = maxValue * 15.;
+		minValue = minValue * 15.;
+	}
+
+	if ( name_maxValue == " max 3D w_component " )
+	{
+		maxValue = maxValue * 15.;
+		minValue = minValue * 15.;
 	}
 
 	if ( name_maxValue == " max 3D water vapour " )

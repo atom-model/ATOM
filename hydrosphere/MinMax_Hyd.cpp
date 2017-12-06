@@ -172,6 +172,24 @@ void MinMax_Hyd::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 		minValue = minValue * 273.15 - 273.15;
 	}
 
+	if ( name_maxValue == " max 3D u_component " )
+	{
+		maxValue = maxValue * .45;
+		minValue = minValue * .45;
+	}
+
+	if ( name_maxValue == " max 3D v_component " )
+	{
+		maxValue = maxValue * .45;
+		minValue = minValue * .45;
+	}
+
+	if ( name_maxValue == " max 3D w_component " )
+	{
+		maxValue = maxValue * .45;
+		minValue = minValue * .45;
+	}
+
 
 // coefficient for units in hPa for the dynamic pressure 		coeff = r_0_water * u_0 * u_0 = 1026 * 15 * 15 * 0.01 = 207.77 hPa
 	if ( name_maxValue == " max 3D pressure dynamic " )
