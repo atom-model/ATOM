@@ -344,18 +344,7 @@ void Pressure_Hyd::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the,
 				}
 			}
 		}
-		switch_pres = 1;
-	}
-}
-
-
-
-
-
-
-
-
-void Pressure_Hyd::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
+		switcvoid Pressure_Hyd::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 
@@ -439,12 +428,11 @@ void Pressure_Hyd::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the,
 
 			for ( int k = 1; k < km-1; k++ )
 			{
+				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j + 2 ][ k ] == 0. ) ) )		aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-1 ][ j + 1 ][ k ] - c13 * aux_v.x[ im-1 ][ j + 2 ][ k ];
+				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j - 2 ][ k ] == 0. ) )				aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-1 ][ j - 1 ][ k ] - c13 * aux_v.x[ im-1 ][ j - 2 ][ k ];
 
-				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) )			aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-1 ][ j + 1 ][ k ] - c13 * aux_v.x[ im-1 ][ j + 2 ][ k ];
-				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) )			aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-1 ][ j - 1 ][ k ] - c13 * aux_v.x[ im-1 ][ j - 2 ][ k ];
-
-				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) )			aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-1 ][ j ][ k + 1 ] - c13 * aux_w.x[ im-1 ][ j ][ k + 2 ];
-				if ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 1. ) )			aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-1 ][ j ][ k - 1 ] - c13 * aux_w.x[ im-1 ][ j ][ k - 2 ];
+				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k + 2 ] == 0. ) )			aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-1 ][ j ][ k + 1 ] - c13 * aux_w.x[ im-1 ][ j ][ k + 2 ];
+				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k - 2 ] == 0. ) )				aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-1 ][ j ][ k - 1 ] - c13 * aux_w.x[ im-1 ][ j ][ k - 2 ];
 
 				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) )			aux_v.x[ im-1 ][ j ][ k ] = aux_v.x[ im-1 ][ j + 1 ][ k ];
 				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) )			aux_v.x[ im-1 ][ j ][ k ] = aux_v.x[ im-1 ][ j - 1 ][ k ];

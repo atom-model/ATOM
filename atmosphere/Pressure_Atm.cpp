@@ -426,11 +426,11 @@ void Pressure_Atm::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the,
 
 			for ( int k = 1; k < km-1; k++ )
 			{
-				if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) )			aux_v.x[ 0 ][ j ][ k ] = c43 * aux_v.x[ 0 ][ j + 1 ][ k ] - c13 * aux_v.x[ 0 ][ j + 2 ][ k ];
-				if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) )			aux_v.x[ 0 ][ j ][ k ] = c43 * aux_v.x[ 0 ][ j - 1 ][ k ] - c13 * aux_v.x[ 0 ][ j - 2 ][ k ];
+				if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) && ( h.x[ 0 ][ j + 2 ][ k ] == 0. ) ) )			aux_v.x[ 0 ][ j ][ k ] = c43 * aux_v.x[ 0 ][ j + 1 ][ k ] - c13 * aux_v.x[ 0 ][ j + 2 ][ k ];
+				if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) && ( h.x[ 0 ][ j - 2 ][ k ] == 0. ) )					aux_v.x[ 0 ][ j ][ k ] = c43 * aux_v.x[ 0 ][ j - 1 ][ k ] - c13 * aux_v.x[ 0 ][ j - 2 ][ k ];
 
-				if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) )			aux_w.x[ 0 ][ j ][ k ] = c43 * aux_w.x[ 0 ][ j ][ k + 1 ] - c13 * aux_w.x[ 0 ][ j ][ k + 2 ];
-				if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) )			aux_w.x[ 0 ][ j ][ k ] = c43 * aux_w.x[ 0 ][ j ][ k - 1 ] - c13 * aux_w.x[ 0 ][ j ][ k - 2 ];
+				if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) && ( h.x[ 0 ][ j ][ k + 2 ] == 0. ) )					aux_w.x[ 0 ][ j ][ k ] = c43 * aux_w.x[ 0 ][ j ][ k + 1 ] - c13 * aux_w.x[ 0 ][ j ][ k + 2 ];
+				if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 0. ) && ( h.x[ 0 ][ j ][ k - 2 ] == 0. ) )					aux_w.x[ 0 ][ j ][ k ] = c43 * aux_w.x[ 0 ][ j ][ k - 1 ] - c13 * aux_w.x[ 0 ][ j ][ k - 2 ];
 
 				if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) )			aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j + 1 ][ k ];
 				if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) )			aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j - 1 ][ k ];
