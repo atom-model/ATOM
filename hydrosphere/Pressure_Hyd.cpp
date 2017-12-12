@@ -344,7 +344,18 @@ void Pressure_Hyd::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the,
 				}
 			}
 		}
-		switcvoid Pressure_Hyd::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
+	}
+}
+
+
+
+
+
+
+
+
+
+void Pressure_Hyd::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 
