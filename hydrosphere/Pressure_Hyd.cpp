@@ -198,7 +198,7 @@ void Pressure_Hyd::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the,
 
 
 
-					if ( ( j >= 2 ) && ( j < jm - 2 ) )
+					if ( ( j >= 2 ) && ( j < jm - 3 ) )
 					{
 						if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j + 2 ][ k ] == 0. ) ) )
 						{
@@ -213,7 +213,7 @@ void Pressure_Hyd::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the,
 						else		aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j - 1 ][ k ];
 					}
 
-					if ( ( k >= 2 ) && ( k < km - 2 ) )
+					if ( ( k >= 2 ) && ( k < km - 3 ) )
 					{
 						if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) )
 						{
@@ -247,7 +247,7 @@ void Pressure_Hyd::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the,
 					if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) )			drhs_vdthe = ( aux_v.x[ i ][ j + 1 ][ k ] - aux_v.x[ i ][ j ][ k ] ) / ( rm * dthe );					// 1. order accurate
 					if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )				drhs_vdthe = ( aux_v.x[ i ][ j ][ k ] - aux_v.x[ i ][ j - 1 ][ k ] ) / ( rm * dthe );					// 1. order accurate
 
-					if ( ( j >= 2 ) && ( j < jm - 2 ) )
+					if ( ( j >= 2 ) && ( j < jm - 3 ) )
 					{
 						if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j + 2 ][ k ] == 0. ) ) )
 						{
@@ -270,7 +270,7 @@ void Pressure_Hyd::computePressure_3D ( double pa, Array_1D &rad, Array_1D &the,
 					if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) )			drhs_wdphi = ( aux_w.x[ i ][ j ][ k + 1 ] - aux_w.x[ i ][ j ][ k ] ) / ( rmsinthe * dphi );					// 1. order accurate
 					if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) )				drhs_wdphi = ( aux_w.x[ i ][ j ][ k ] - aux_w.x[ i ][ j ][ k - 1 ] ) / ( rmsinthe * dphi );					// 1. order accurate
 
-					if ( ( k >= 2 ) && ( k < km - 2 ) )
+					if ( ( k >= 2 ) && ( k < km - 3 ) )
 					{
 						if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) )
 						{
@@ -439,12 +439,13 @@ void Pressure_Hyd::computePressure_2D ( double pa, Array_1D &rad, Array_1D &the,
 
 			for ( int k = 1; k < km-1; k++ )
 			{
+/*
 				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j + 2 ][ k ] == 0. ) ) )		aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-1 ][ j + 1 ][ k ] - c13 * aux_v.x[ im-1 ][ j + 2 ][ k ];
 				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j - 2 ][ k ] == 0. ) )				aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-1 ][ j - 1 ][ k ] - c13 * aux_v.x[ im-1 ][ j - 2 ][ k ];
 
 				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k + 2 ] == 0. ) )			aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-1 ][ j ][ k + 1 ] - c13 * aux_w.x[ im-1 ][ j ][ k + 2 ];
 				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k - 2 ] == 0. ) )				aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-1 ][ j ][ k - 1 ] - c13 * aux_w.x[ im-1 ][ j ][ k - 2 ];
-
+*/
 				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) )			aux_v.x[ im-1 ][ j ][ k ] = aux_v.x[ im-1 ][ j + 1 ][ k ];
 				if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) )			aux_v.x[ im-1 ][ j ][ k ] = aux_v.x[ im-1 ][ j - 1 ][ k ];
 
