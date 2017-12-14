@@ -2566,7 +2566,7 @@ void BC_Thermo::BC_NASAbasedSurfTempWrite ( const string &Name_NASAbasedSurfaceT
 	{
 		for ( int j = 0; j < jm; j++ ) 
 		{
-			Name_NASAbasedSurfaceTemperature_File_Write << t.x[ i ][ j ][ k ] << " " << c.x[ i ][ j ][ k ] << " " << cloud.x[ i ][ j ][ k ] << " " << ice.x[ i ][ j ][ k ] << endl;
+			Name_NASAbasedSurfaceTemperature_File_Write << t.x[ 0 ][ j ][ k ] << " " << c.x[ 0 ][ j ][ k ] << " " << cloud.x[ 0 ][ j ][ k ] << " " << ice.x[ 0 ][ j ][ k ] << endl;
 			Name_NASAbasedSurfaceTemperature_File_Write << t.x[ 0 ][ j ][ k ] << endl;
 		}
 	}

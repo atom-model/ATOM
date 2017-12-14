@@ -50,7 +50,7 @@ class BC_Thermo
 		double j_par_f, j_pol_f, e, j_d, t_dd, k_par_f, k_pol_f;
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
 		double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
-		double eps, c_ocean, c_land, c_coeff, t_average, co2_average, co2_pole, gam, t_Ik, Ik_loss, Ik_tot;
+		double eps, c_ocean, t_land, c_land, c_coeff, t_average, co2_average, co2_pole, gam, t_Ik, Ik_loss, Ik_tot;
 		double albedo_co2_eff, albedo_equator, albedo_pole;
 		double ik_co2_eff, ik_equator, ik_pole;
 		double aa, bb, cc, dd, f;
