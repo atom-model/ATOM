@@ -263,22 +263,22 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	int i_beg = 16;		 // corresponds to about 6.4 km above sea level, maximum hight of the tropopause at poles
 
 //	naming a file to read the surface temperature by NASA of the modern world
-	string Name_NASAbasedSurfaceTemperature_File;
-	stringstream ssNameNASAbasedSurfaceTemperature;
-	ssNameNASAbasedSurfaceTemperature << "../data/" << "NASA_based_SurfaceTemperature.xyz";
-	Name_NASAbasedSurfaceTemperature_File = ssNameNASAbasedSurfaceTemperature.str();
+	string Name_NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
+	if(Ma == 0){
+        	Name_NASAbasedSurfaceTemperature_File =  "../data/NASA_based_SurfaceTemperature.xyz";
+     	}
 
 //	naming a file to read the surface temperature by NASA of the modern world
-	string Name_SurfaceTemperature_File;
-	stringstream ssNameSurfaceTemperature;
-	ssNameSurfaceTemperature << "../data/" << "SurfaceTemperature_NASA.xyz";
-	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
+	string Name_SurfaceTemperature_File = temperature_file;	
+ 	if(Ma != 0 && use_earthbyte_reconstruction){
+        	Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
+     	}
 
 // naming a file to read the surface precipitation by NASA
-	string Name_SurfacePrecipitation_File;
-	stringstream ssNameSurfacePrecipitation;
-	ssNameSurfacePrecipitation << "../data/" << "SurfacePrecipitation_NASA.xyz";
-	Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
+	string Name_SurfacePrecipitation_File = precipitation_file;	
+	if(Ma != 0 && use_earthbyte_reconstruction){
+		Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfacePrecipitation.xyz";
+ 	}
 
 	string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
 	string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
@@ -287,7 +287,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	cout << "   Ma = " << Ma << "\n";
 	cout << "   bathymetry_path = " << bathymetry_path << "\n";
 	cout << "   bathymetry_filepath = " << bathymetry_filepath << "\n\n";
-
+	cout << "   Name_SurfaceTemperature_File = " << Name_SurfaceTemperature_File << std::endl;
+	cout << "   Name_SurfacePrecipitation_File = " << Name_SurfacePrecipitation_File << std::endl;
+	
 	if (verbose) {
 		cout << endl << endl << endl;
 		cout << "***** Atmosphere General Circulation Model ( AGCM ) applied to laminar flow" << endl;
@@ -353,14 +355,20 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	circulation.TropopauseLocation ( im_tropopause );
 
 //  class element for the surface temperature from NASA for comparison
-	if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
+	if ( Ma == 0 ){ 
+		circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
+	}else if(use_earthbyte_reconstruction){
+             	circulation.BC_NASAbasedSurfTempRead ( Name_SurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
+        }
+	
 
 //  class element for the surface temperature based on NASA temperature for progressing timeslices
 //	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
 
 //  class element for the surface precipitation from NASA for comparison
-	if ( Ma == 0 ) circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
-
+	if ( Ma == 0 || use_earthbyte_reconstruction){ 
+		circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
+        }
 //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
 	circulation.BC_Temperature ( im_tropopause, temperature_NASA, h, t, p_dyn, p_stat );
 	t_cretaceous = circulation.out_t_cretaceous (  );
@@ -833,7 +841,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 	t_cret_cor = t_cretaceous;
 
-	if ( NASATemperature == 1 ) circulation.BC_NASAbasedSurfTempWrite ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
+	if ( NASATemperature == 1 && !use_earthbyte_reconstruction){ 
+		circulation.BC_NASAbasedSurfTempWrite ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
+	}
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
 
