@@ -1,5 +1,5 @@
 /*
- * Ocean General Circulation Modell ( OGCM ) applied to laminar flow
+ * Atmosphere General Circulation Modell ( AGCM ) applied to laminar flow
  * Program for the computation of geo-atmospherical circulating flows in a spherical shell
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include "Restore_Hyd.h"
-#include "Array.h"
 
 using namespace std;
 
@@ -26,9 +25,10 @@ Restore_Hyd::Restore_Hyd ( int im, int jm, int km )
 Restore_Hyd::~Restore_Hyd () {}
 
 
-void Restore_Hyd::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &un, Array &vn, Array &wn, Array &tn, Array &aux_p, Array &cn )
+void Restore_Hyd::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &un, Array &vn, Array &wn, Array &tn, Array &p_dynn, Array &cn )
 {
-// Restore from old to new values
+
+// Restore_Hyd from old to new values
 	for ( int i = 0; i < im; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -36,30 +36,29 @@ void Restore_Hyd::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w,
 			for ( int k = 0; k < km; k++ )
 			{
 				tn.x[ i ][ j ][ k ] = coeff * t.x[ i ][ j ][ k ];
-				cn.x[ i ][ j ][ k ] = coeff * c.x[ i ][ j ][ k ];
 				un.x[ i ][ j ][ k ] = coeff * u.x[ i ][ j ][ k ];
 				vn.x[ i ][ j ][ k ] = coeff * v.x[ i ][ j ][ k ];
 				wn.x[ i ][ j ][ k ] = coeff * w.x[ i ][ j ][ k ];
-				p_dyn.x[ i ][ j ][ k ] = coeff * aux_p.x[ i ][ j ][ k ];
+				cn.x[ i ][ j ][ k ] = coeff * c.x[ i ][ j ][ k ];
+				p_dynn.x[ i ][ j ][ k ] = coeff * p_dyn.x[ i ][ j ][ k ];
 			}
 		}
 	}
-
 }
 
 
-void Restore_Hyd::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &aux_p )
+
+
+void Restore_Hyd::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn, Array &p_dynn, Array &vn, Array &wn )
 {
-// Restore of velocity components and temperature at sea surface for the next time step
-
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int k = 0; k < km; k++ )
-				{
-					p_dyn.x[ im-1 ][ j ][ k ] = coeff * aux_p.x[ im-1 ][ j ][ k ];
-					vn.x[ im-1 ][ j ][ k ] = coeff * v.x[ im-1 ][ j ][ k ];
-					wn.x[ im-1 ][ j ][ k ] = coeff * w.x[ im-1 ][ j ][ k ];
-				}
-			}
+// Restore_Hyd of velocity components and temperature at sea surface for the next time step
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int k = 0; k < km; k++ )
+		{
+			vn.x[ 0 ][ j ][ k ] = coeff * v.x[ 0 ][ j ][ k ];
+			wn.x[ 0 ][ j ][ k ] = coeff * w.x[ 0 ][ j ][ k ];
+			p_dynn.x[ 0 ][ j ][ k ] = coeff * p_dyn.x[ 0 ][ j ][ k ];
+		}
+	}
 }
-

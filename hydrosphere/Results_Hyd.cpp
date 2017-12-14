@@ -75,7 +75,6 @@ void Results_Hyd::run_data ( double u_0, double c_0, Array &h, Array &u, Array &
 		for ( int j = 0; j < jm; j++ )
 		{
 			Downwelling.y[ j ][ k ] = fabs ( Downwelling.y[ j ][ k ] );
-//			BuoyancyForce_2D.y[ j ][ k ] = fabs ( BuoyancyForce_2D.y[ j ][ k ] );
 		}
 	}
 
@@ -90,11 +89,30 @@ void Results_Hyd::run_data ( double u_0, double c_0, Array &h, Array &u, Array &
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					BottomWater.y[ j ][ k ] += sqrt ( u.x[ i ][ j ][ k ] * u.x[ i ][ j ][ k ] + v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] ) * u_0;
+					BottomWater.y[ j ][ k ] += sqrt ( ( u.x[ i ][ j ][ k ] * u.x[ i ][ j ][ k ] + v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] ) / 3. ) * u_0;
+					if ( BottomWater.y[ j ][ k ] >= .1 )			BottomWater.y[ j ][ k ] = .1;
 				}
 			}
 		}
 	}
+
+
+		for ( int j = 0; j <= 3; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				BottomWater.y[ j ][ k ] = .0;
+			}
+		}
+
+		for ( int j = jm - 3; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				BottomWater.y[ j ][ k ] = .0;
+			}
+		}
+
 
 
 

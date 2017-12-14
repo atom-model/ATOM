@@ -31,8 +31,6 @@ class Pressure_Atm
 		double rm, rm2, sinthe, sinthe2, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2, rm2dthe2;
 		double drhs_udr, drhs_vdthe, drhs_wdphi;
 		double denom, num1, num2, num3, c43, c13;
-		double aa, bb, cc, dd;
-		double *alfa, *beta;
 
 	public:
 		Pressure_Atm ( int, int, int, double, double, double );

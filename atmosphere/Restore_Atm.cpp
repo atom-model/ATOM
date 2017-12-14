@@ -14,7 +14,7 @@
 using namespace std;
 
 
-Restore::Restore ( int im, int jm, int km )
+Restore_Atm::Restore_Atm ( int im, int jm, int km )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -22,14 +22,13 @@ Restore::Restore ( int im, int jm, int km )
 }
 
 
-Restore::~Restore () {}
+Restore_Atm::~Restore_Atm () {}
 
 
-void Restore::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2, Array &un, Array &vn, Array &wn, Array &tn, Array &p_dynn, Array &cn, Array &cloudn, Array &icen, Array &co2n )
+void Restore_Atm::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2, Array &un, Array &vn, Array &wn, Array &tn, Array &p_dynn, Array &cn, Array &cloudn, Array &icen, Array &co2n )
 {
 
-// Restore from old to new values
-
+// Restore_Atm from old to new values
 	for ( int i = 0; i < im; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -53,10 +52,9 @@ void Restore::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w, Arr
 
 
 
-void Restore::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn, Array &p_dynn, Array &vn, Array &wn )
+void Restore_Atm::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn, Array &p_dynn, Array &vn, Array &wn )
 {
-// Restore of velocity components and temperature at sea surface for the next time step
-
+// Restore_Atm of velocity components and temperature at sea surface for the next time step
 			for ( int j = 0; j < jm; j++ )
 			{
 				for ( int k = 0; k < km; k++ )

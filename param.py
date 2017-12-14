@@ -10,20 +10,17 @@ def main():
         'common': [
             ( 'bathymetry_path', '', 'string', '../data/Paleotopography_bathymetry/Golonka_rev210' ),
             ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
-            ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
-            ( 'precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
             ( 'verbose', '', 'bool', False ),
-#           ( 'verbose', '', 'bool', True ),
+#            ( 'verbose', '', 'bool', True ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
-            ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False ),
         ],
 
 
         'atmosphere': [
-            ( 'velocity_iter_max', '', 'int', 10 ),
-            ( 'pressure_iter_max', '', 'int', 1 ),
-            ( 'velocity_iter_max_2D', '', 'int', 5 ),
-            ( 'pressure_iter_max_2D', '', 'int', 1 ),
+            ( 'velocity_iter_max_2D', '', 'int',20 ),
+            ( 'pressure_iter_max_2D', '', 'int', 2 ),
+            ( 'velocity_iter_max', '', 'int', 5 ),
+            ( 'pressure_iter_max', '', 'int', 2 ),
 
             ( 'coriolis', 'coriolis force', 'double', 1.0 ),
             ( 'centrifugal', 'centrifugal force', 'double', 1.0 ),
@@ -35,7 +32,7 @@ def main():
 
             ( 'sun', 'while no variable sun position wanted', 'int', 0 ),
             ( 'NASATemperature', 'surface temperature given by NASA', 'int', 1 ),
-            ( 'RadiationModel', 'surface temperature computation by a radiation model', 'int', 3 ),
+            ( 'RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1 ),
             ( 'IceShield', 'compute ice shields? computation of ice shield following the theorie by Milankowitsch', 'int', 0 ),
 
             ( 'declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0 ),
@@ -47,7 +44,6 @@ def main():
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
 
-            ( 'ik', 'solar constant in W/m2', 'double', 1366. ),
             ( 'ik_equator', 'solar short wave radiation on the surface of the earth, Ik / 4', 'double', 341.5 ),
             ( 'ik_pole', 'solar short wave radiation at the poles, an approximation for the singularity at the poles', 'double', 60. ),
 
@@ -59,11 +55,6 @@ def main():
             ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.594 ),
             ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),
             ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.5 ),
-            ( 'epsilon_extra', 'capability of emissions in the atmosphere, 2D approach', 'double', 0.71 ),
-
-            ( 'radiation_ocean', 'increase of radiation at equator in W/m²', 'double', 40.0 ),
-            ( 'radiation_pole', 'negative amount of radiation at poles in W/m²', 'double', -40.0 ),
-            ( 'radiation_equator', 'positive amount of radiation at equator in W/m²', 'double', 100.0 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
             ( 'ec', 'Eckert number: ratio kinetic energy to enthalpy, Ec = u² / cp T', 'double', 0.00044 ),
@@ -113,7 +104,7 @@ def main():
 
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
             ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.5 ),
-           ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
+            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 372.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),
@@ -127,20 +118,16 @@ def main():
 
         'hydrosphere': [
             ( 'input_path', 'directory where Atmosphere output can be read (must end in /)', 'string', 'output' ),
-            ( 'velocity_iter_max', '', 'int', 2 ),
-            ( 'pressure_iter_max', '', 'int', 2 ),
-            ( 'velocity_iter_max_2D', '', 'int', 2 ),
+            ( 'velocity_iter_max_2D', '', 'int',10 ),
             ( 'pressure_iter_max_2D', '', 'int', 2 ),
+            ( 'velocity_iter_max', '', 'int', 5 ),
+            ( 'pressure_iter_max', '', 'int', 2 ),
 
             ( 'coriolis', 'computation with Coriolis force', 'double', 1.0 ),
             ( 'centrifugal', 'computation with centrifugal force', 'double', 1.0 ),
             ( 'buoyancy', 'computation with buoyancy', 'double', 1.0 ),
 
             ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m', 'double', 6000.0 ),
-
-            ( 'dt', 'time step coincides with the CFL condition', 'double', 0.0001 ),
-
-            ( 'dr', 'compares to 150m depth', 'double', 0.0005 ),
 
             ( 're', 'Reynolds numberc_0', 'double', 1000.0 ),
             ( 'ec', 'Eckert number', 'double', 0.0001 ),
@@ -307,9 +294,9 @@ cdef extern from "c%sModel.h":
 
     def write_config_xml ( filename, sections ):
         with open ( filename, 'w' ) as f:
-            f.write ( """<!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. -->\n""" )
+            f.write ( """<!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. -->""" )
 
-            f.write ( '<atom>\n' )
+            f.write ( '<atom>' )
 
             for section in sections:
                 f.write ( '    <%s>\n' % section )

@@ -45,10 +45,10 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 	cout.precision ( 8 );
 	cout.setf ( ios::fixed );
 
-	// default adjustment, h must be 0 everywhere
+// default adjustment, h must be 0 everywhere
 	h.initArray(im, jm, km, 0.);
 
-	// reading data from file Name_Bathymetry_File_Read
+// reading data from file Name_Bathymetry_File_Read
 	ifstream Name_Bathymetry_File_Read;
 	Name_Bathymetry_File_Read.open(Name_Bathymetry_File);
 
@@ -79,8 +79,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 			 else
 			{
 				hight = ( int ) ( dummy_3 / ( L_atm / ( im - 1 ) ) );
-
-//	cout << " j = " << j << " k = " << k << " hight = " << hight << " hight_400 = " << hight * 400. << " dummy_3 = " << dummy_3 << " Topography = " << Topography.y[ j ][ k ] << endl;
 
 				for ( int i = 0; i <= hight; i++ )
 				{
@@ -132,142 +130,12 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 			for ( int i = 0; i < im; i++ )
 			{
 				h.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k ];
-//				h.x[ i ][ j ][ k ] = 0.;
 				aux_w.x[ i ][ j ][ k ] = 0.;
 			}
 		}
 	}
-
-	// end rewriting bathymetry
 }
 
-
-
-
-
-void BC_Bathymetry_Atmosphere::BC_IceShield ( int Ma, double t_0, Array &h, Array &t, Array &c, Array &IceLayer, Array_2D &Ice_Balance, Array_2D &Ice_Balance_add )
-{
-// computation of ice shield following the theorie by Milankowitsch
-
-	min = 0.;
-	max = 0.;
-
-// prescribed reference level still to be fixed!
-
-	Hoehe_equi_km = 3000;
-	Hoehe_delta = 500;
-	Hoehe_equi = Hoehe_equi_km / Hoehe_delta;
-
-// limit of temperature for accumulation 1 and 2 and ablation
-
-	t_equi_Celsius = - 8.;
-	t_plus_Celsius = + 2.;
-	t_pluss_Celsius = + 12.;
-	t_minus_Celsius = - 15.;
-	t_minuss_Celsius = - 30.;
-
-	t_equi = ( t_equi_Celsius + t_0 ) / t_0;
-	t_plus = ( t_plus_Celsius + t_0 ) / t_0;
-	t_pluss = ( t_pluss_Celsius + t_0 ) / t_0;
-	t_minus = ( t_minus_Celsius + t_0 ) / t_0;
-	t_minuss = ( t_minuss_Celsius + t_0 ) / t_0;
-
-
-
-
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			if ( t.x[ 0 ][ j ][ k ] >= t_plus ) break;
-			{
-				for ( int i = 0; i < im; i++ )																		// ice balance performed over total hight
-				{
-					if ( ( t.x[ i ][ j ][ k ] >= t_minuss ) && ( t.x[ i ][ j ][ k ] <= t_plus ) )
-					{
-						Akkumulation_1 = 0.0125 * ( t.x[ i ][ j ][ k ] * t_0 ) - 2.9735;			//	formula valid from -30°C to +2°C by Ruddiman
-					}
-					else
-					{
-						Akkumulation_1 = 0.;
-					}
-
-					if ( ( t.x[ i ][ j ][ k ] > t_plus ) && ( t.x[ i ][ j ][ k ] <= t_pluss ) )
-					{
-						Akkumulation_2 = - 0.04 * ( t.x[ i ][ j ][ k ] * t_0 ) + 11.5;					//	formula valid from +2°C to +12°C by Ruddiman
-					}
-					else
-					{
-						Akkumulation_2 = 0.;
-					}
-
-					if ( ( t.x[ i ][ j ][ k ] >= t_minus ) && ( t.x[ i ][ j ][ k ] <= t_plus ) )
-					{
-						Ablation = 0.01384 * ( t.x[ i ][ j ][ k ] * t_0 ) * ( t.x[ i ][ j ][ k ] * t_0 ) - 7.14186 * ( t.x[ i ][ j ][ k ] * t_0 ) + 921.2458;	//	formula valid from -15°C to +2°C by Ruddiman
-					}
-					else
-					{
-						Ablation = 0.;
-					}
-
-
-					if ( ( t.x[ i ][ j ][ k ] >= t_minuss ) && ( t.x[ i ][ j ][ k ] <= t_plus ) )
-					{
-						Ice_Balance.y[ j ][ k ] = Akkumulation_1 - Ablation;						// ice balance for accumulation_1 minus ablation
-					}
-
-
-					if ( ( t.x[ i ][ j ][ k ] > t_plus ) && ( t.x[ i ][ j ][ k ] <= t_pluss ) )
-					{
-						Ice_Balance.y[ j ][ k ] = Akkumulation_2;										// ice balance for accumulation_2
-					}
-
-					Ice_Balance_add.y[ j ][ k ] = Ice_Balance_add.y[ j ][ k ] + Ice_Balance.y[ j ][ k ];		// average of ice balance out of the two parts across hight
-				}
-			}
-		}
-	}
-
-// searching minimum and maximum values of mean ice balance
-
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			if ( Ice_Balance_add.y[ j ][ k ] >= max ) 
-			{
-				max = Ice_Balance_add.y[ j ][ k ];
-			}
-
-			if ( Ice_Balance_add.y[ j ][ k ] <= min ) 
-			{
-				min = Ice_Balance_add.y[ j ][ k ];
-			}
-		}
-	}
-
-
-	Ice_Balance_add_diff = max - min;										// maximum crosswise extension of ice balance
-
-// presentation of ice shield hight following the local dimensionless ice balance values, maximum value now 1
-
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			Ice_Hoehe = ( Ice_Balance_add.y[ j ][ k ] - min ) / max * 2.;			// assumed actual ice shield hight
-			i_Ice_lauf = ( int ) Ice_Hoehe;
-
-			for ( int i = 0; i < i_Ice_lauf; i++ )
-			{
-				if ( ( t.x[ 0 ][ j ][ k ] >= t_plus ) || ( h.x[ 0 ][ j ][ k ] == 0. ) ) break;
-				{
-					IceLayer.x[ i ][ j ][ k ] = 1.;
-				}
-			}
-		}
-	}
-}
 
 
 
@@ -278,7 +146,6 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 {
 
 // boundary conditions for the total solid ground
-
 	j_half = ( jm -1 ) / 2;
 	j_max = jm - 1;
 
@@ -286,12 +153,10 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 
-//	t_co2_eff = t_pole - t_equator;
 	co_co2_eff = co2_pole - co2_equator;
 
 
 // velocity components, dynamioc pressure, temperature, water vapour and CO2-content as boundary condition at the sea surface and on ground
-
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -345,20 +210,14 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 						t.x[ i ][ j ][ k ] = t.x[ i_mount + 1 ][ j ][ k ];
 						c.x[ i ][ j ][ k ] = c.x[ i_mount + 1 ][ j ][ k ];				// water vapour amount above mount surface repeated
 						co2.x[ i ][ j ][ k ] = co2.x[ i_mount + 1 ][ j ][ k ];		// co2 amount above mount surface repeated
-//						t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
-//						c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];				// water vapour amount above mount surface repeated
-//						co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ];		// co2 amount above mount surface repeated
 					}
 
 					if ( NASATemperature == 1 )
 					{
 						if ( Ma == 0 ) 				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
 						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount + 1 ][ j ][ k ];
-//						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
 						c.x[ i ][ j ][ k ] = c.x[ i_mount + 1 ][ j ][ k ];				// water vapour amount above mount surface repeated
 						co2.x[ i ][ j ][ k ] = co2.x[ i_mount + 1 ][ j ][ k ];		// co2 amount above mount surface repeated
-//						c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];				// water vapour amount above mount surface repeated
-//						co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ];		// co2 amount above mount surface repeated
 					}
 				}
 			}

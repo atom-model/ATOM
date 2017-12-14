@@ -1,14 +1,14 @@
 <!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. --><atom>    <common>
         <bathymetry_path>../data/Paleotopography_bathymetry/Golonka_rev210</bathymetry_path>  <!--  (string ) -->
         <BathymetrySuffix>Ma_Golonka.xyz</BathymetrySuffix>  <!--  (string ) -->
-        <verbose>true</verbose>  <!--  (bool ) -->
+        <verbose>false</verbose>  <!--  (bool ) -->
         <output_path>output</output_path>  <!-- directory where model outputs should be placed ( must end in / ) (string ) -->
     </common>
     <atmosphere>
-        <velocity_iter_max>2</velocity_iter_max>  <!--  (int ) -->
-        <pressure_iter_max>2</pressure_iter_max>  <!--  (int ) -->
-        <velocity_iter_max_2D>2</velocity_iter_max_2D>  <!--  (int ) -->
+        <velocity_iter_max_2D>20</velocity_iter_max_2D>  <!--  (int ) -->
         <pressure_iter_max_2D>2</pressure_iter_max_2D>  <!--  (int ) -->
+        <velocity_iter_max>5</velocity_iter_max>  <!--  (int ) -->
+        <pressure_iter_max>2</pressure_iter_max>  <!--  (int ) -->
         <coriolis>1.0</coriolis>  <!-- coriolis force (double ) -->
         <centrifugal>1.0</centrifugal>  <!-- centrifugal force (double ) -->
         <WaterVapour>1.0</WaterVapour>  <!-- water vapour (double ) -->
@@ -17,16 +17,14 @@
         <epsres>1e-05</epsres>  <!-- accuracy of relative and absolute errors (double ) -->
         <sun>0</sun>  <!-- while no variable sun position wanted (int ) -->
         <NASATemperature>1</NASATemperature>  <!-- surface temperature given by NASA (int ) -->
-        <RadiationModel>3</RadiationModel>  <!-- surface temperature computation by a radiation model (int ) -->
+        <RadiationModel>1</RadiationModel>  <!-- surface temperature computation by a multi-layer radiation model (int ) -->
         <IceShield>0</IceShield>  <!-- compute ice shields? computation of ice shield following the theorie by Milankowitsch (int ) -->
         <declination>0</declination>  <!-- position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form (int ) -->
         <sun_position_lat>60</sun_position_lat>  <!-- position of sun j = 120 means 30°S, j = 60 means 30°N (int ) -->
         <sun_position_lon>180</sun_position_lon>  <!-- position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian  ) (int ) -->
         <Ma_max>300</Ma_max>  <!-- parabolic temperature distribution 300 Ma ( from Ruddiman ) (int ) -->
         <Ma_max_half>150</Ma_max_half>  <!-- half of time scale (int ) -->
-        <L_atm>20000.0</L_atm>  <!-- extension of the atmosphere shell in m, 20000 m / 40 steps = 500 m (double ) -->
-        <dt>0.0001</dt>  <!-- time step coincides with the CFL condition (double ) -->
-        <dr>0.025</dr>  <!-- compares to 500 m hight, 0.0005 * 40 = .02 * 1000 km = 20 km (double ) -->
+        <L_atm>16000.0</L_atm>  <!-- extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m (double ) -->
         <ik>1366.0</ik>  <!-- solar constant in W/m2 (double ) -->
         <ik_equator>341.5</ik_equator>  <!-- solar short wave radiation on the surface of the earth, Ik / 4 (double ) -->
         <ik_pole>60.0</ik_pole>  <!-- solar short wave radiation at the poles, an approximation for the singularity at the poles (double ) -->
@@ -45,7 +43,7 @@
         <sc_WaterVapour>0.6</sc_WaterVapour>  <!-- Schmidt number of water vapour, Sc = nue / D (double ) -->
         <sc_CO2>0.96</sc_CO2>  <!-- Schmidt number of CO2 (double ) -->
         <pr>0.7179</pr>  <!-- Prandtl number of air for laminar flows (double ) -->
-        <g>9.8066</g>  <!-- gravitational acceleration of the earth (double ) -->
+        <g>9.8066</g>  <!-- gravitational acceleration of the earth in m/s² (double ) -->
         <omega>7.29e-05</omega>  <!-- rotation number of the earth (double ) -->
         <ep>0.623</ep>  <!-- ratio of the gas constants of dry air to water vapour [ / ] (double ) -->
         <hp>6.1078</hp>  <!-- water vapour pressure at T = 0°C: E = 6.1 hPa (double ) -->
@@ -75,6 +73,7 @@
         <coa>1.0</coa>  <!-- initial value of co2 = 1.0 compares to 280 ppm in pre-industrial times (double ) -->
         <t_cretaceous_max>10.0</t_cretaceous_max>  <!-- maximum add of mean temperature in °C during cretaceous times (double ) -->
         <t_cretaceous>0.0</t_cretaceous>  <!-- value at modern times (double ) -->
+        <t_cret_cor>0.0</t_cret_cor>  <!-- value at modern times (double ) -->
         <t_average>15.0</t_average>  <!-- mean temperature of the modern earth (double ) -->
         <t_equator>1.11</t_equator>  <!-- temperature t_0 = 1.11 compares to 30.0° C compares to 303.15 K (double ) -->
         <t_pole>0.927</t_pole>  <!-- temperature at the poles t_pole = 0.927 compares to -20.0°C compares to 253.15 K (double ) -->

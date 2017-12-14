@@ -18,15 +18,15 @@ using namespace std;
 
 
 
-class Restore
+class Restore_Atm
 {
 	private:
 		int im, jm, km;
 		// double coeff;
 
 	public:
-		Restore ( int, int, int );
-		~Restore ();
+		Restore_Atm ( int, int, int );
+		~Restore_Atm ();
 
 		void restoreOldNew_3D ( double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
