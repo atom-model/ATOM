@@ -264,11 +264,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	stringstream ssName_v_w_Transfer_File;
 
 // naming a file to read the surface temperature of the modern world
-	string Name_SurfaceTemperature_File; 
-	stringstream ssNameSurfaceTemperature;
-	ssNameSurfaceTemperature << "../data/" << "SurfaceTemperature_NASA.xyz";
-	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
-
+	string Name_SurfaceTemperature_File = temperature_file;
+        if(Ma != 0 && use_earthbyte_reconstruction){
+                Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
+        }
 // naming a file to read the surface salinity of the modern world
 	string Name_SurfaceSalinity_File; 
 	stringstream ssNameSurfaceSalinity;
@@ -347,7 +346,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	BC_Thermohalin		oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, t_pole, input_path );
 
 //	surface temperature from World Ocean Atlas 2009 given as boundary condition
-	if ( Ma == 0 ) oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
+	if ( Ma == 0 || use_earthbyte_reconstruction){
+ 		oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
+	}
 
 //	surface salinity from World Ocean Atlas 2009 given as boundary condition
 //	if ( Ma == 0 ) oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
