@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-
-from pyatom import Model
+import os
+import numpy as np
+from pyatom import Model, Atmosphere, Hydrosphere
 
 model = Model()
-model.load_config('benchmark.xml')
+times=range(0,150,10)
 
-# FIXME: there needs to be a trailing slash on output_path; the software should be more tolerant
-model.run(t=14, output_path='output-14/')
-model.run(t=0, output_path='output-0/')
+for t in range(len(times)):
+    time = times[t]
+    model.run_atm( time, './output/', './config_atm.xml' )
