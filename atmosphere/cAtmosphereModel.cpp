@@ -355,11 +355,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	circulation.TropopauseLocation ( im_tropopause );
 
 //  class element for the surface temperature from NASA for comparison
-	if ( Ma == 0 ){ 
-		circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
-	}else if(use_earthbyte_reconstruction){
-             	circulation.BC_NASAbasedSurfTempRead ( Name_SurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
-        }
+	if ( Ma == 0 || use_earthbyte_reconstruction){ 
+            circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
+	}
 	
 
 //  class element for the surface temperature based on NASA temperature for progressing timeslices
