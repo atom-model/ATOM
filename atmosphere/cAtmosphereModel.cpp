@@ -374,7 +374,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //  class element for the correction of the temperature initial distribution around coasts
-	if ( ( NASATemperature == 1 ) && ( Ma > 0 ) ) circulation.IC_Temperature_WestEastCoast ( h, t );
+	if ( ( NASATemperature == 1 ) && ( Ma > 0 ) && !use_earthbyte_reconstruction ) circulation.IC_Temperature_WestEastCoast ( h, t );
 
 //  class element for the surface pressure computed by surface temperature with gas equation
 	circulation.BC_Pressure ( p_stat, p_dyn, t, h );
