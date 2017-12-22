@@ -15,6 +15,7 @@
 #include <cstring>
 #include <iomanip>
 #include <sstream>
+#include <limits>
 
 #include "BC_Bath_Atm.h"
 
@@ -230,19 +231,24 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 
 
 
-void BC_Bathymetry_Atmosphere::vegetationDistribution ( double max_Precipitation, Array_2D &Precipitation, Array_2D &Vegetation, Array &t, Array &h )
+void BC_Bathymetry_Atmosphere::vegetationDistribution ( 
+    double max_Precipitation, 
+    Array_2D &Precipitation, 
+    Array_2D &Vegetation, 
+    Array &t, 
+    Array &h )
 {
-// description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
-
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( t.x[ 0 ][ j ][ k ] >= 1. ) ) Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation;			// actual vegetation areas
-			else Vegetation.y[ j ][ k ] = 0.;
-			if ( max_Precipitation <= 0. ) Vegetation.y[ j ][ k ] = 0.;
-		}
-	}
+  // description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
+  for ( int j = 0; j < jm; j++ ){
+    for ( int k = 0; k < km; k++ ){
+      if (( abs(h.x[ 0 ][ j ][ k ] - 1.) < std::numeric_limits<double>::epsilon() ) && 
+          !(t.x[ 0 ][ j ][ k ] < 1.) && (max_Precipitation > 0.)){
+        Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation;	// actual vegetation areas
+      }else{
+        Vegetation.y[ j ][ k ] = 0.;
+      }
+    }
+  }
 }
 
 
