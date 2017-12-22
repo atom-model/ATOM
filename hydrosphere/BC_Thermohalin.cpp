@@ -56,6 +56,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 	i_half = i_beg + 6;
 	i_middle = i_beg - 7;
 	j_half = ( jm - 1 ) / 2;
+	j_half_1 = j_half + 1;
 
 	d_i_half = ( double ) i_half;
 	d_i_max = ( double ) ( im - 1 );
@@ -168,7 +169,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 	k_water = 0;																		// on water closest to coast
 	k_sequel = 1;																		// on solid ground
 
-	for ( int j = 0; j < 91; j++ )													// outer loop: latitude
+	for ( int j = 0; j < j_half_1; j++ )													// outer loop: latitude
 	{
 		for ( int k = 0; k < km - k_grad; k++ )											// inner loop: longitude
 		{
@@ -201,9 +202,9 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 	k_water = 0;
 	k_sequel = 1;
 
-	for ( int j = 91; j < jm; j++ )
+	for ( int j = j_half_1; j < jm; j++ )
 	{
-		for ( int k = 0; k < km; k++ )
+		for ( int k = 0; k < km - k_grad; k++ )
 		{
 			if ( h.x[ i_max ][ j ][ k ] == 1. ) k_sequel = 0;
 
@@ -239,7 +240,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 	k_water = 0;																		// somewhere on water
 	flip = 0;																				// somewhere on water
 
-	for ( int j = 0; j < 91; j++ )													// outer loop: latitude
+	for ( int j = 0; j < j_half_1; j++ )													// outer loop: latitude
 	{
 		for ( int k = k_grad; k < km; k++ )											// inner loop: longitude
 		{
@@ -274,7 +275,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 	k_water = 0;
 	flip = 0;
 
-	for ( int j = 91; j < jm; j++ )
+	for ( int j = j_half_1; j < jm; j++ )
 	{
 		for ( int k = k_grad; k < km; k++ )
 		{
