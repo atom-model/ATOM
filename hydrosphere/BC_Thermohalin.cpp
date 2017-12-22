@@ -203,7 +203,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 
 	for ( int j = 91; j < jm; j++ )
 	{
-		for ( int k = 0; k < km; k++ )
+		for ( int k = 0; k < km-k_grad; k++ )
 		{
 			if ( h.x[ i_max ][ j ][ k ] == 1. ) k_sequel = 0;
 
