@@ -389,7 +389,12 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	co2_cretaceous = circulation.out_co2 (  );
 
 // class element for the surface temperature computation by radiation flux density
-	if ( RadiationModel == 1 ) circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, Ik, Q_Radiation, Radiation_Balance, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice );
+    if ( RadiationModel == 1 ){ 
+        circulation.BC_Radiation_multi_layer(im_tropopause, n, albedo, epsilon, precipitable_water, 
+                                             Ik, Q_Radiation, Radiation_Balance, Q_latent, Q_sensible, 
+                                             Q_bottom, co2_total, p_stat, t, c, h.to_Int3DArray(), 
+                                             epsilon_3D, radiation_3D, cloud, ice );
+    }
 
 // 	class element for the initial conditions for u-v-w-velocity components
 	circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
@@ -529,7 +534,14 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			LandArea.BC_SolidGround ( RadiationModel, Ma, i_max, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
 
 // class element for the surface temperature computation by radiation flux density
-			if ( RadiationModel == 1 )			circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, Ik, Q_Radiation, Radiation_Balance, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice );
+            if ( RadiationModel == 1 ){
+                circulation.BC_Radiation_multi_layer(im_tropopause, n, albedo, epsilon, 
+                                                     precipitable_water, Ik, Q_Radiation, 
+                                                     Radiation_Balance, Q_latent, Q_sensible, 
+                                                     Q_bottom, co2_total, p_stat, t, c, 
+                                                     h.to_Int3DArray(), epsilon_3D, radiation_3D, 
+                                                     cloud, ice );
+            }
 
 
 //	new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )

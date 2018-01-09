@@ -206,7 +206,13 @@ BC_Thermo::~BC_Thermo()
 
 
 
-void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, Array_2D &Q_Radiation, Array_2D &Radiation_Balance, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice )
+void BC_Thermo::BC_Radiation_multi_layer(int *im_tropopause, int n, Array_2D &albedo, 
+                                         Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, 
+                                         Array_2D &Q_Radiation, Array_2D &Radiation_Balance, 
+                                         Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, 
+                                         Array_2D & co2_total, Array &p_stat, Array &t, Array &c, 
+                                         const Int3DArray &h, Array &epsilon_3D, Array &radiation_3D, 
+                                         Array &cloud, Array &ice )
 {
 // class element for the computation of the radiation and the temperature distribution
 // computation of the local temperature based on short and long wave radiation

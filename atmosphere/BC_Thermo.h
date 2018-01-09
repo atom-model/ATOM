@@ -97,9 +97,15 @@ class BC_Thermo
 
 		void TropopauseLocation ( int * );
 
-		void BC_Radiation_2D_layer ( Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array & );
+        void BC_Radiation_2D_layer(Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, 
+                                   Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, 
+                                   Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, 
+                                   Array &, Array &, Array &, Array &, Array & );
 
-		void BC_Radiation_multi_layer ( int*, int, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void BC_Radiation_multi_layer(int*, int, Array_2D &, Array_2D &, Array_2D &, Array_2D &, 
+                                      Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, 
+                                      Array_2D &, Array &, Array &, Array &, const Int3DArray &h, 
+                                      Array &, Array &, Array &, Array & );
 
 		void BC_WaterVapour ( Array &, Array &, Array & );
 
