@@ -201,11 +201,10 @@ BC_Thermo::~BC_Thermo()
 }
 
 
-
-
-
-
-
+/*
+ * output: albedo(reflection), epsilon_3D(absorption), radiation_3D, t(temperature)
+ *         Ik(short wave)
+ */
 void BC_Thermo::BC_Radiation_multi_layer(int *im_tropopause, int n, Array_2D &albedo, 
                                          Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, 
                                          Array_2D &Q_Radiation, Array_2D &Radiation_Balance, 
@@ -243,7 +242,7 @@ void BC_Thermo::BC_Radiation_multi_layer(int *im_tropopause, int n, Array_2D &al
 
 // effective temperature, albedo and emissivity/absorptivity for the two layer model
     for ( int j = 0; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
+        for ( int k = 0; k < km; k++ ){//the logic in this loop is confusing.
             double albedo_val = albedo_co2_eff * ( j * j / (double)( j_half * j_half ) - 
                 2. * j / j_half ) + albedo_pole;
 
@@ -266,177 +265,142 @@ void BC_Thermo::BC_Radiation_multi_layer(int *im_tropopause, int n, Array_2D &al
             }
 
             TK = .54;
-
             Ik.y[ j ][ k ] = TK * Ik.y[ j ][ k ];
         }
     }
 
 // absorption/emissivity computation
-//  epsilon_co2_eff_max = .594;                                                         // constant  given by Häckel ( F. Baur and H. Philips, 1934 )
+//  epsilon_co2_eff_max = .594;  // constant  given by Häckel ( F. Baur and H. Philips, 1934 )
 
     epsilon_co2_eff_2D = epsilon_pole - epsilon_equator;
 
-    d_i_max = ( double ) ( im - 1 );
+    for ( int j = 0; j < jm; j++ ){
+        epsilon_co2_eff_max = epsilon_co2_eff_2D * ( j * j / (double)( j_half * j_half ) - 
+                              2. * j / j_half ) + epsilon_pole;
 
-    for ( int j = 0; j < jm; j++ )
-    {
-        d_j = ( double ) j;
-        epsilon_co2_eff_max = epsilon_co2_eff_2D * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + epsilon_pole;
+        for ( int k = 0; k < km; k++ ){
+            for ( int i = 0; i < im; i++ ){
+                if ( !(c.x[ i ][ j ][ k ] > 0.) ){
+                    c.x[ i ][ j ][ k ] = 0.;
+                }
 
-        for ( int k = 0; k < km; k++ )
-        {
-            for ( int i = 0; i < im; i++ )
-            {
-                if ( c.x[ i ][ j ][ k ] <= 0. )                                         c.x[ i ][ j ][ k ] = 0.;
-                if ( cloud.x[ i ][ j ][ k ] <= 0. )                                 cloud.x[ i ][ j ][ k ] = 0.;
-                if ( ice.x[ i ][ j ][ k ] <= 0. )                                       ice.x[ i ][ j ][ k ] = 0.;
+                if ( !(cloud.x[ i ][ j ][ k ] > 0.) ){
+                    cloud.x[ i ][ j ][ k ] = 0.;
+                }
 
-                e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep; // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
+                if ( !(ice.x[ i ][ j ][ k ] > 0.) ){
+                    ice.x[ i ][ j ][ k ] = 0.;
+                }
 
-                d_i = ( double ) i;
+                e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * 
+                    p_stat.x[ i ][ j ][ k ] / ep; /* COSMO water vapour pressure based 
+                                                    on local water vapour, cloud water, cloud ice in hPa*/
 
-                epsilon_co2_eff = epsilon_co2_eff_max - ( epsilon_tropopause - epsilon_co2_eff_max ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) ); // radial distribution
-                epsilon_3D.x[ i ][ j ][ k ] = epsilon_co2_eff + .0416 * sqrt ( e );                                     // dependency given by Häckel ( F. Baur and H. Philips, 1934 )
+                epsilon_co2_eff = epsilon_co2_eff_max - ( epsilon_tropopause - epsilon_co2_eff_max ) * 
+                                  ( i / (double)(im-1) * ( i / (double)(im-1) - 2. ) ); // radial distribution
+
+                epsilon_3D.x[ i ][ j ][ k ] = epsilon_co2_eff + .0416 * sqrt ( e );/* dependency 
+                    given by Häckel ( F. Baur and H. Philips, 1934 )*/
             }
         }
     }
 
 
-//  iteration procedure for the computation of the temperature based on the multi-layer radiation model
+// iteration procedure for the computation of the temperature based on the multi-layer radiation model
 // temperature needs an initial guess which must be corrected by the long and short wave radiation remaining in the atmosphere
-    iter_rad = 0;
-    while ( iter_rad <= 5 )                                                             // iter_rad may be varied
-    {
-        iter_rad = iter_rad + 1;
-
+    for(iter_rad = 0; iter_rad < 6; iter_rad++ ){    // iter_rad may be varied    
 // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
-        for ( int j = 1; j < jm-1; j++ )
-        {
-            for ( int k = 1; k < km-1; k++ )
-            {
+        for ( int j = 1; j < jm-1; j++ ){
+            for ( int k = 1; k < km-1; k++ ){
 // radiation boundary conditions for the top ot the troposphere
-                radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4. ); // long wave radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
-
-                rad_lon_terrestic = sigma * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );                                   // long wave surface radiation based on local temperature, Stephan-Bolzmann law
-                rad_lon_back = epsilon_3D.x[ 1 ][ j ][ k ] * sigma * pow ( t.x[ 1 ][ j ][ k ] * t_0, 4. );  // long wave back radiation absorbed from the first water vapour layer out of 40
+                radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * 
+                                                     sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4 ); /* 
+                    long wave radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation */
+                rad_lon_terrestic = sigma * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4 ); /* 
+                    long wave surface radiation based on local temperature, Stephan-Bolzmann law */
+                rad_lon_back = epsilon_3D.x[ 1 ][ j ][ k ] * sigma * pow ( t.x[ 1 ][ j ][ k ] * t_0, 4 );  /* 
+                    long wave back radiation absorbed from the first water vapour layer out of 40 */
  
-                Ik_loss = .07 * Ik.y[ j ][ k ] / TK;                                                                                // short wave radiation loss on the surface
-                Ik_tot = rad_lon_back + Ik.y[ j ][ k ] - Ik_loss;                                                           // total short and long wave radiation leaving the surface
+                Ik_loss = .07 * Ik.y[ j ][ k ] / TK; // short wave radiation loss on the surface
+                Ik_tot = rad_lon_back + Ik.y[ j ][ k ] - Ik_loss; // total short and long wave radiation leaving the surface
 
-                AA[ 0 ] = Ik_tot / radiation_3D.x[ im - 1 ][ j ][ k ];                                                  // non-dimensional surface radiation
-                CC[ 0 ][ 0 ] = 0.;                                                                                                  // no absorption of radiation on the surface by water vapour
+                AA[ 0 ] = Ik_tot / radiation_3D.x[ im - 1 ][ j ][ k ]; // non-dimensional surface radiation
+                CC[ 0 ][ 0 ] = 0.; // no absorption of radiation on the surface by water vapour
 
-                radiation_3D.x[ 0 ][ j ][ k ] = ( 1. - epsilon_3D.x[ 0 ][ j ][ k ] ) * sigma * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ im - 1 ][ j ][ k ]; // long wave radiation leaving the surface
+                radiation_3D.x[ 0 ][ j ][ k ] = ( 1. - epsilon_3D.x[ 0 ][ j ][ k ] ) * sigma * 
+                                                pow ( t.x[ 0 ][ j ][ k ] * t_0, 4 ) / 
+                                                radiation_3D.x[ im - 1 ][ j ][ k ]; // long wave radiation leaving the surface
 
-                for ( int i = 1; i < im - 1; i++ )
-                {
-                    AA[ i ] = AA[ i - 1 ] * ( 1. - epsilon_3D.x[ i ][ j ][ k ] );                                           // transmitted long wave radiation from each layer
-                    CC[ i ][ i ]= epsilon_3D.x[ i ][ j ][ k ] * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ im - 1 ][ j ][ k ]; // absorbed long wave radiation in each layer
+                for ( int i = 1; i < im - 1; i++ ){
+                    AA[ i ] = AA[ i - 1 ] * ( 1. - epsilon_3D.x[ i ][ j ][ k ] );// transmitted long wave radiation from each layer
+                    CC[ i ][ i ] = epsilon_3D.x[ i ][ j ][ k ] * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4 ) / 
+                                  radiation_3D.x[ im - 1 ][ j ][ k ]; // absorbed long wave radiation in each layer
 
-                    radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ im - 1 ][ j ][ k ]; // long wave radiation leaving each layer
+                    radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
+                                                    pow ( t.x[ i ][ j ][ k ] * t_0, 4 ) / 
+                                                    radiation_3D.x[ im - 1 ][ j ][ k ]; // long wave radiation leaving each layer
 
-                    for ( int l = i + 1; l < im; l++ )
-                    {
-                        CC[ i ][ l ]= CC[ i ][ l - 1 ] * ( 1. - epsilon_3D.x[ l ][ j ][ k ] );                              // additional transmitted radiation from layer to layer in radial direction
+                    for ( int l = i + 1; l < im; l++ ){
+                        CC[ i ][ l ]= CC[ i ][ l - 1 ] * ( 1. - epsilon_3D.x[ l ][ j ][ k ] );/* additional 
+                            transmitted radiation from layer to layer in radial direction */
                     }
                 }
 
 
 // Thomas algorithm to solve the tridiogonal equation system for the solution of the radiation with a recurrence formula
 // additionally embedded in an iterational process
-                for ( int i = 0; i < im-1; i++ )
-                {
-// values at the surface
-                    if ( i == 0 )
-                    {
-                        aa = 0.;
-                        bb = - radiation_3D.x[ 0 ][ j ][ k ];
-                        cc = radiation_3D.x[ 1 ][ j ][ k ];
-                        dd = - AA[ 0 ];
-                        CCC = 0.;
-                        DDD = 0.;
-                        alfa[ 0 ] = 0.;
-                        beta[ 0 ] = 0.;
+                // i == 0  values at the surface 
+                bb = - radiation_3D.x[ 0 ][ j ][ k ];
+                cc = radiation_3D.x[ 1 ][ j ][ k ];
+                dd = - AA[ 0 ];
+                alfa[ 0 ] = cc / bb;
+                beta[ 0 ] = dd / bb;
+
+                for ( int i = 1; i < im-1; i++ ){// values in the field
+                    CCC = 0.;
+                    DDD = 0.;
+
+                    for ( int l = 1; l <= i - 1; l++ ){
+                        CCC = CCC + CC[ l ][ i ];
                     }
 
-// values in the field
-                    if ( i == 1 )
-                    {
-                        aa = radiation_3D.x[ 0 ][ j ][ k ];
-                        bb = - 2. * radiation_3D.x[ 1 ][ j ][ k ];
-                        cc = radiation_3D.x[ 2 ][ j ][ k ];
-                        dd = - AA[ 0 ] + AA[ 1 ];
-                        CCC = 0.;
-                        DDD = 0.;
+                    for ( int l = 1; l <= i - 2; l++ ){
+                        DDD = DDD + CC[ l ][ i - 1 ];
                     }
 
-                    if ( i == 2 )
-                    {
-                        CCC = CC[ 1 ][ 2 ];
-                        aa = radiation_3D.x[ 1 ][ j ][ k ];
-                        bb = - 2. * radiation_3D.x[ 2 ][ j ][ k ];
-                        cc = radiation_3D.x[ 3 ][ j ][ k ];
-                        dd = - AA[ 1 ] + AA[ 2 ] + CCC;
-                    }
+                    aa = radiation_3D.x[ i - 1 ][ j ][ k ];
+                    bb = - 2. * radiation_3D.x[ i ][ j ][ k ];
+                    if ( i == im - 2 ){
+                        cc = radiation_3D.x[ i + 1 ][ j ][ k ] / radiation_3D.x[ im - 1 ][ j ][ k ]; //always equals 1.0?
+                    }else{ 
+                        cc = radiation_3D.x[ i + 1 ][ j ][ k ];
+                    }    
+                    dd = - AA[ i - 1 ] + AA[ i ] + CCC - DDD;
+                    
 
-                    if ( i > 2 )
-                    {
-                        CCC = 0.;
-                        DDD = 0.;
-
-                        for ( int l = 1; l <= i - 1; l++ )
-                        {
-                            CCC = CCC + CC[ l ][ i ];
-                        }
-
-                        for ( int l = 1; l <= i - 2; l++ )
-                        {
-                            DDD = DDD + CC[ l ][ i - 1 ];
-                        }
-
-                        aa = radiation_3D.x[ i - 1 ][ j ][ k ];
-                        bb = - 2. * radiation_3D.x[ i ][ j ][ k ];
-                        if ( i == im - 2 )  cc = radiation_3D.x[ i + 1 ][ j ][ k ] / radiation_3D.x[ im - 1 ][ j ][ k ];
-                        else cc = radiation_3D.x[ i + 1 ][ j ][ k ];
-                        dd = - AA[ i - 1 ] + AA[ i ] + CCC - DDD;
-                    }
-
-                    if ( i > 0 )
-                    {
-                        alfa[ i ] = cc / ( bb - aa * alfa[ i - 1 ] );
-                        beta[ i ] = ( dd - aa * beta[ i - 1 ] ) / ( bb - aa * alfa[ i - 1 ] );
-                    }
-                    else
-                    {
-                        alfa[ i ] = cc / bb;
-                        beta[ i ] = dd / bb;
-                    }
+                    alfa[ i ] = cc / ( bb - aa * alfa[ i - 1 ] );
+                    beta[ i ] = ( dd - aa * beta[ i - 1 ] ) / ( bb - aa * alfa[ i - 1 ] );
                 }
  
 
-                radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4. ); // dimensional form of the radiation leaving the last layer
-
-
-
-
 // recurrence formula for the radiation and temperature
-
-                for ( int i = im - 2; i >= 0; i-- )
-                {
-
+                for ( int i = im - 2; i >= 0; i-- ){
 // above assumed tropopause constant temperature t_tropopause
-                    radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];                            // Thomas algorithm, recurrence formula
-                    t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, ( 1. / 4. ) ) / t_0 );    // averaging of temperature values to smooth the iterations
+                    radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + 
+                                                    beta[ i ];//Thomas algorithm, recurrence formula
+                    if(radiation_3D.x[ i ][ j ][ k ] > 0){
+                        t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + 
+                                             pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, ( 1. / 4. ) ) / 
+                                             t_0 );    // averaging of temperature values to smooth the iterations
+                    }else{
+                        std::cerr << "The radiation at "<<i<<" "<<j<<" "<<k<<" is negative! "<<
+                            radiation_3D.x[ i ][ j ][ k ]<<std::endl;
+                    }
                 }
             }
         }
     }
-
 }
-
-
-
-
 
 
 void BC_Thermo::BC_Temperature ( int *im_tropopause, Array_2D &temperature_NASA, Array &h, Array &t, Array &p_dyn, Array &p_stat )
