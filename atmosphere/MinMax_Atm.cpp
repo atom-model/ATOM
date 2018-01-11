@@ -47,7 +47,8 @@ MinMax_Atm::MinMax_Atm ( int im, int jm, int km )
 MinMax_Atm::~MinMax_Atm () {}
 
 
-void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &val_D, Array &h )
+void MinMax_Atm::searchMinMax_3D(string &name_maxValue, string &name_minValue, 
+                                 string &name_unitValue, Array &val_D, Array &h)
 {
 // search for minimum and maximum values of the 3-dimensional data sets
 	level = "m";
@@ -59,7 +60,8 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 	heading_1 = " printout of maximum and minimum values of properties at their locations: latitude, longitude, level";
 	heading_2 = " results based on three dimensional considerations of the problem";
 
-	maxValue = 0.;
+	maxValue = val_D.x[ 0 ][ 0 ][ 0 ];
+    minValue = val_D.x[ 0 ][ 0 ][ 0 ];
 	imax = 0;
 	jmax = 0;
 	kmax = 0;
@@ -85,8 +87,6 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 			}
 		}
 	}
-
-	minValue = maxValue;
 
 	for ( int j = 0; j < jm; j++ )
 	{
@@ -236,19 +236,20 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 		minValue = minValue * 280.;
 	}
 
-
-		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
+    cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << 
+    " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << 
+    maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << 
+    deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << 
+    imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << 
+    setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << 
+    setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << 
+    deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << 
+    setw ( 2 ) << level << endl;
 
 }
 
-
-
-
-
-
-
-
-void MinMax_Atm::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &val, Array &h )
+void MinMax_Atm::searchMinMax_2D(string &name_maxValue, string &name_minValue, 
+                                 string &name_unitValue, Array_2D &val, Array &h)
 {
 // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
 
@@ -258,8 +259,9 @@ void MinMax_Atm::searchMinMax_2D ( string &name_maxValue, string &name_minValue,
 	deg_west = "°W";
 	deg_east = "°E";
 
-	maxValue = 0.;
-	jmax = 0;
+	maxValue = val.y[0][0];
+	minValue = val.y[0][0];
+    jmax = 0;
 	kmax = 0;
 	jmin = 0;
 	kmin = 0;
@@ -278,8 +280,6 @@ void MinMax_Atm::searchMinMax_2D ( string &name_maxValue, string &name_minValue,
 			}
 		}
 	}
-
-	minValue = maxValue;
 
 	for ( int j = 1; j < jm-1; j++ )
 	{
@@ -350,53 +350,36 @@ void MinMax_Atm::searchMinMax_2D ( string &name_maxValue, string &name_minValue,
 		deg_lon_min = deg_west;
 	}
 
-
 	cout.precision ( 6 );
 
-	if ( name_maxValue != " max co2_total " )
-	{
-		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
-	}
-
+    double max_value=maxValue, min_value=minValue;
 
 	if ( name_maxValue == " max co2_total " )
 	{
-		maxValue = 280. * maxValue;
-		minValue = 280. * minValue;
-
+		max_value = maxValue = 280. * maxValue;
+		min_value = minValue = 280. * minValue;
 		name_unitValue = "ppm";
-
-
-		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
 	}
 
-	if ( name_maxValue == " max precipitation " )
+	if (name_maxValue == " max precipitation " || 
+        name_maxValue == " max precipitation_NASA " ||  
+        name_maxValue == " max precipitable water " )
 	{
 		name_unitValue = "g/kg";
+        max_value = maxValue / coeff_mmWS;
+        min_value = minValue / coeff_mmWS;
+    }
 
-		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue / coeff_mmWS << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue / coeff_mmWS << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
-	}
-
-
-	if ( name_maxValue == " max precipitation_NASA " )
-	{
-		name_unitValue = "g/kg";
-		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue / coeff_mmWS << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue / coeff_mmWS << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
-	}
-
-
-	if ( name_maxValue == " max precipitable water " )
-	{
-		name_unitValue = "g/kg";
-		cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue / coeff_mmWS << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue / coeff_mmWS << setw ( 6 ) << name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
-	}
-
+    cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << 
+    " = " << resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << 
+    max_value << setw ( 6 ) << name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << 
+    deg_lat_max << setw ( 4 ) << kmax_deg << setw ( 3 ) << deg_lon_max << setw ( 6 ) << 
+    imax_level << setw ( 2 ) << level << "          " << setiosflags ( ios::left ) << setw ( 26 ) << 
+    setfill ( '.' ) << name_minValue << " = "<< resetiosflags ( ios::left ) << setw ( 12 ) << 
+    fixed << setfill ( ' ' ) << min_value << setw ( 6 ) << name_unitValue << 
+    setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << setw ( 3 ) << 
+    deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
 }
-
-
-
-
-
 
 double MinMax_Atm::out_maxValue (  ) const
 {

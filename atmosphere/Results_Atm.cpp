@@ -566,7 +566,8 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                         break;
 
 	        default : 	cout << "This should never happen! Check the for loop above!" << endl;
-	    }
+	                    abort();//Get attention from human
+        }
 
 
 	    Value_1 = Q_Radiation.y[ j_loc ][ k_loc ];

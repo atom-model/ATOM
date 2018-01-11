@@ -35,7 +35,32 @@
 using namespace std;
 using namespace tinyxml2;
 
-cAtmosphereModel::cAtmosphereModel() {
+const double cAtmosphereModel::pi180 = 180./ M_PI;      // pi180 = 57.3
+
+const double cAtmosphereModel::the_degree = 1.;         // compares to 1° step size laterally
+const double cAtmosphereModel::phi_degree = 1.;         // compares to 1° step size longitudinally
+
+const double cAtmosphereModel::dthe = the_degree / pi180; // dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
+const double cAtmosphereModel::dphi = phi_degree / pi180; // dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
+    
+const double cAtmosphereModel::dr = 0.025;    // 0.025 x 40 = 1.0 compares to 16 km : 40 = 400 m for 1 radial step
+const double cAtmosphereModel::dt = 0.00001;  // time step coincides with the CFL condition
+    
+const double cAtmosphereModel::the0 = 0.;             // North Pole
+const double cAtmosphereModel::phi0 = 0.;             // zero meridian in Greenwich
+const double cAtmosphereModel::r0 = 1.;       /* earth's radius is r_earth = 6731 km, here it is assumed to be infinity, 
+                                                circumference of the earth 40074 km */
+
+cAtmosphereModel::cAtmosphereModel():
+    im(41),
+    jm(181), 
+    km(361), 
+    nm(200),
+    j_res(0), 
+    k_res(0),
+    im_tropopause(new int [ jm ]),                        
+    albedo(jm, km, 0.) 
+{
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
 
@@ -47,6 +72,8 @@ cAtmosphereModel::cAtmosphereModel() {
     // set default configuration
     SetDefaultConfig();
 
+    coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
+    
 
 
 //#include "PythonStream.h"
@@ -54,14 +81,12 @@ cAtmosphereModel::cAtmosphereModel() {
 //	std::ostream RogerStream ( &buff );
 //	RogerStream << 1000;
 //	RogerStream.flush();
-
-
 }
 
 
-
-
-cAtmosphereModel::~cAtmosphereModel() { }
+cAtmosphereModel::~cAtmosphereModel() {
+    delete [] im_tropopause;
+}
  
 #include "cAtmosphereDefaults.cpp.inc"
 
@@ -69,7 +94,6 @@ cAtmosphereModel::~cAtmosphereModel() { }
 void cAtmosphereModel::LoadConfig ( const char *filename ) {
 	XMLDocument doc;
 	XMLError err = doc.LoadFile ( filename );
-
 
 	if (err) {
 		doc.PrintError();
@@ -98,8 +122,6 @@ void cAtmosphereModel::LoadConfig ( const char *filename ) {
 
 }
 
-
-
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
 // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
@@ -108,27 +130,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
 	mkdir(output_path.c_str(), 0777);
-
-	const int im = 41, jm = 181, km = 361, nm = 200;
-
-	int j_res = 0, k_res = 0;
-
-	constexpr double pi180 = 180./ M_PI;								// pi180 = 57.3
-	constexpr double the_degree = 1.;										// compares to 1° step size laterally
-	constexpr double phi_degree = 1.;										// compares to 1° step size longitudinally
-
-	double dthe = the_degree / pi180;										// dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
-	double dphi = phi_degree / pi180;										// dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
-	double dr = 0.025;																	// 0.025 x 40 = 1.0 compares to 16 km : 40 = 400 m for 1 radial step
-	double dt = 0.00001;																// time step coincides with the CFL condition
-
-	const double the0 = 0.;														// North Pole
-	const double phi0 = 0.;														// zero meridian in Greenwich
-	const double r0 = 1.;															// earth's radius is r_earth = 6731 km, here it is assumed to be infinity, circumference of the earth 40074 km
-
-	const double coeff_mmWS = r_air / r_water_vapour;			// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
-
-	int *im_tropopause = new int [ jm ];									// location of the tropopause
 
 //  class Array for 1-D, 2-D and 3-D field declarations
 
@@ -1037,3 +1038,47 @@ void cAtmosphereModel::Run() {
 	delete [ ] time_slice;
 
 }
+
+void cAtmosphereModel::PrintMaxMinValues() {
+/*//  searching of maximum and minimum values of temperature
+            string str_max_temperature = " max 3D temperature ", str_min_temperature = " min 3D temperature ", str_unit_temperature = "C";
+            MinMax_Atm      minmaxTemperature ( im, jm, km );
+            minmaxTemperature.searchMinMax_3D ( str_max_temperature, str_min_temperature, str_unit_temperature, t, h );
+
+//  searching of maximum and minimum values of u-component
+            string str_max_u = " max 3D u-component ", str_min_u = " min 3D u-component ", str_unit_u = "m/s";
+            MinMax_Atm      minmax_u ( im, jm, km );
+            minmax_u.searchMinMax_3D ( str_max_u, str_min_u, str_unit_u, u, h );
+
+//  searching of maximum and minimum values of v-component
+            string str_max_v = " max 3D v-component ", str_min_v = " min 3D v-component ", str_unit_v = "m/s";
+            MinMax_Atm      minmax_v ( im, jm, km );
+            minmax_v.searchMinMax_3D ( str_max_v, str_min_v, str_unit_v, v, h );
+
+//  searching of maximum and minimum values of w-component
+            string str_max_w = " max 3D w-component ", str_min_w = " min 3D w-component ", str_unit_w = "m/s";
+            MinMax_Atm      minmax_w ( im, jm, km );
+            minmax_w.searchMinMax_3D ( str_max_w, str_min_w, str_unit_w, w, h );
+
+//  searching of maximum and minimum values of dynamic pressure
+            string str_max_pressure = " max 3D pressure dynamic ", str_min_pressure = " min 3D pressure dynamic ", str_unit_pressure = "hPa";
+            MinMax_Atm  minmaxPressure ( im, jm, km );
+            minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, p_dyn, h );
+
+//  searching of maximum and minimum values of static pressure
+            string str_max_pressure_stat = " max 3D pressure static ", str_min_pressure_stat = " min 3D pressure static ", str_unit_pressure_stat = "hPa";
+            MinMax_Atm      minmaxPressure_stat ( im, jm, km );
+            minmaxPressure_stat.searchMinMax_3D ( str_max_pressure_stat, str_min_pressure_stat, str_unit_pressure_stat, p_stat, h );
+
+            cout << endl << " energies in the three dimensional space: " << endl << endl;
+
+//  searching of maximum and minimum values of radiation_3D
+            string str_max_radiation_3D = " max 3D radiation ", str_min_radiation_3D = " min 3D radiation ", str_unit_radiation_3D = "W/m2";
+            MinMax_Atm      minmaxLatency ( im, jm, km );
+            minmaxLatency.searchMinMax_3D ( str_max_radiation_3D, str_min_radiation_3D, str_unit_radiation_3D, radiation_3D, h );
+
+//  searching of maximum and minimum values of sensible heat
+            string str_max_Q_Sensible = " max 3D sensible heat ", str_min_Q_Sensible = " min 3D sensible heat ", str_unit_Q_Sensible = "W/m2";
+            MinMax_Atm  minmaxQ_Sensible ( im, jm, km );
+            minmaxQ_Sensible.searchMinMax_3D ( str_max_Q_Sensible, str_min_Q_Sensible, str_unit_Q_Sensible, Q_Sensible, h );
+*/}
