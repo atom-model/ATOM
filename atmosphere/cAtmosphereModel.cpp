@@ -13,9 +13,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "Array.h"
-#include "Array_2D.h"
-#include "Array_1D.h"
 #include "BC_Atm.h"
 #include "BC_Bath_Atm.h"
 #include "BC_Thermo.h"
@@ -52,14 +49,82 @@ const double cAtmosphereModel::r0 = 1.;       /* earth's radius is r_earth = 673
                                                 circumference of the earth 40074 km */
 
 cAtmosphereModel::cAtmosphereModel():
-    im(41),
-    jm(181), 
-    km(361), 
-    nm(200),
     j_res(0), 
     k_res(0),
     im_tropopause(new int [ jm ]),                        
-    albedo(jm, km, 0.) 
+    rad(im, 1.),
+    the(jm, 2.),
+    phi(km, 3.),
+    Topography(jm, km, 0.),
+    value_top(jm, km, 0.),
+    Vegetation(jm, km, 0.),
+    LatentHeat(jm, km, 0.),
+    Condensation(jm, km, 0.),
+    Evaporation(jm, km, 0.),
+    Precipitation(jm, km, 0.),
+    precipitable_water(jm, km, 0.),
+    precipitation_NASA(jm, km, 0.),
+    Ik(jm, km, 0.),
+    Radiation_Balance(jm, km, 0.),
+    temperature_NASA(jm, km, 0.),
+    albedo(jm, km, 0.),
+    epsilon(jm, km, 0.),
+    Q_Radiation(jm, km, 0.),
+    Q_Evaporation(jm, km, 0.),
+    Q_latent(jm, km, 0.),
+    Q_sensible(jm, km, 0.),
+    Q_bottom(jm, km, 0.),
+    Evaporation_Haude(jm, km, 0.),
+    Evaporation_Penman(jm, km, 0.),
+    co2_total(jm, km, 0.),
+    h(im, jm, km, 0.),
+    t(im, jm, km, 0.),    
+    u(im, jm, km, 0.),
+    v(im, jm, km, 0.),
+    w(im, jm, km, 0.),
+    c(im, jm, km, 0.),
+    cloud(im, jm, km, 0.),
+    ice(im, jm, km, 0.),
+    co2(im, jm, km, 0.),
+    tn(im, jm, km, 0.),
+    un(im, jm, km, 0.),
+    vn(im, jm, km, 0.),
+    wn(im, jm, km, 0.),
+    cn(im, jm, km, 0.),
+    cloudn(im, jm, km, 0.),
+    icen(im, jm, km, 0.),
+    co2n(im, jm, km, 0.),
+    p_dyn(im, jm, km, 0.),
+    p_dynn(im, jm, km, 0.),
+    p_stat(im, jm, km, 0.),
+    rhs_t(im, jm, km, 0.),
+    rhs_u(im, jm, km, 0.),
+    rhs_v(im, jm, km, 0.),
+    rhs_w(im, jm, km, 0.),
+    rhs_p(im, jm, km, 0.),
+    rhs_c(im, jm, km, 0.),
+    rhs_cloud(im, jm, km, 0.),
+    rhs_ice(im, jm, km, 0.),
+    rhs_co2(im, jm, km, 0.),
+    aux_u(im, jm, km, 0.),
+    aux_v(im, jm, km, 0.),
+    aux_w(im, jm, km, 0.),
+    Latency(im, jm, km, 0.),
+    Q_Sensible(im, jm, km, 0.),
+    IceLayer(im, jm, km, 0.),
+    t_cond_3D(im, jm, km, 0.),
+    t_evap_3D(im, jm, km, 0.),
+    BuoyancyForce(im, jm, km, 0.),
+    epsilon_3D(im, jm, km, 0.),
+    radiation_3D(im, jm, km, 0.),
+    P_rain(im, jm, km, 0.),
+    P_snow(im, jm, km, 0.),
+    S_v(im, jm, km, 0.),
+    S_c(im, jm, km, 0.),
+    S_i(im, jm, km, 0.),
+    S_r(im, jm, km, 0.),
+    S_s(im, jm, km, 0.),
+    S_c_c(im, jm, km, 0.)
 {
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
@@ -74,6 +139,23 @@ cAtmosphereModel::cAtmosphereModel():
 
     coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     
+    t=Array(im, jm, km, ta); // temperature
+    u=Array(im, jm, km, ua); // u-component velocity component in r-direction
+    v=Array(im, jm, km, va); // v-component velocity component in theta-direction
+    w=Array(im, jm, km, wa); // w-component velocity component in phi-direction
+    c=Array(im, jm, km, ca); // water vapour
+    co2=Array(im, jm, km, coa); // CO2
+
+    tn=Array(im, jm, km, ta); // temperature new
+    un=Array(im, jm, km, ua); // u-velocity component in r-direction new
+    vn=Array(im, jm, km, va); // v-velocity component in theta-direction new
+    wn=Array(im, jm, km, wa); // w-velocity component in phi-direction new
+    cn=Array(im, jm, km, ca); // water vapour new
+    co2n=Array(im, jm, km, coa); // CO2 new
+
+    p_dyn=Array(im, jm, km, pa); // dynamic pressure
+    p_dynn=Array(im, jm, km, pa); // dynamic pressure
+    p_stat=Array(im, jm, km, pa); // static pressure
 
 
 //#include "PythonStream.h"
@@ -131,87 +213,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 	mkdir(output_path.c_str(), 0777);
 
-//  class Array for 1-D, 2-D and 3-D field declarations
-
-// 1D arrays
-	Array_1D rad(im, 1.); // radial coordinate direction
-	Array_1D the(jm, 2.); // lateral coordinate direction
-	Array_1D phi(km, 3.); // longitudinal coordinate direction
-
-// 2D arrays
-	Array_2D Topography(jm, km, 0.); // topography
-	Array_2D value_top(jm, km, 0.); // auxiliar topography
-
-	Array_2D Vegetation(jm, km, 0.); // vegetation via precipitation
-
-	Array_2D LatentHeat(jm, km, 0.); // areas of higher latent heat
-	Array_2D Condensation(jm, km, 0.); // areas of higher condensation
-	Array_2D Evaporation(jm, km, 0.); // areas of higher evaporation
-
-	Array_2D Precipitation(jm, km, 0.); // areas of higher precipitation
-	Array_2D precipitable_water(jm, km, 0.); // areas of precipitable water in the air
-	Array_2D precipitation_NASA(jm, km, 0.); // surface precipitation from NASA
-
-	Array_2D Ik(jm, km, 0.); // direct sun radiation, short wave
-	Array_2D Radiation_Balance(jm, km, 0.); // radiation balance at the surface
-
-	Array_2D temperature_NASA(jm, km, 0.); // surface temperature from NASA
-
-	Array_2D albedo(jm, km, 0.); // albedo = reflectivity
-	Array_2D epsilon(jm, km, 0.); // epsilon = absorptivity
-
-	Array_2D Q_Radiation(jm, km, 0.); // heat from the radiation balance in [W/m2]
-	Array_2D Q_Evaporation(jm, km, 0.); // evaporation heat of water by Kuttler
-	Array_2D Q_latent(jm, km, 0.); // latent heat from bottom values by the energy transport equation
-	Array_2D Q_sensible(jm, km, 0.); // sensible heat from bottom values by the energy transport equation
-	Array_2D Q_bottom(jm, km, 0.); // difference by Q_Radiation - Q_latent - Q_sensible
-
-	Array_2D Evaporation_Haude(jm, km, 0.); // evaporation by Haude in [mm/d]
-	Array_2D Evaporation_Penman(jm, km, 0.); // evaporation by Penman in [mm/d]
-
-	Array_2D co2_total(jm, km, 0.); // areas of higher co2 concentration
-
-// 3D arrays
-	Array h(im, jm, km, 0.); // bathymetry, depth from sea level
-
-	Array t(im, jm, km, ta); // temperature
-	Array u(im, jm, km, ua); // u-component velocity component in r-direction
-	Array v(im, jm, km, va); // v-component velocity component in theta-direction
-	Array w(im, jm, km, wa); // w-component velocity component in phi-direction
-	Array c(im, jm, km, ca); // water vapour
-	Array cloud(im, jm, km, 0.); // cloud water
-	Array ice(im, jm, km, 0.); // cloud ice
-	Array co2(im, jm, km, coa); // CO2
-
-	Array tn(im, jm, km, ta); // temperature new
-	Array un(im, jm, km, ua); // u-velocity component in r-direction new
-	Array vn(im, jm, km, va); // v-velocity component in theta-direction new
-	Array wn(im, jm, km, wa); // w-velocity component in phi-direction new
-	Array cn(im, jm, km, ca); // water vapour new
-	Array cloudn(im, jm, km, 0.); // cloud water new
-	Array icen(im, jm, km, 0.); // cloud ice new
-	Array co2n(im, jm, km, coa); // CO2 new
-
-	Array p_dyn(im, jm, km, pa); // dynamic pressure
-	Array p_dynn(im, jm, km, pa); // dynamic pressure
-	Array p_stat(im, jm, km, pa); // static pressure
-
-	Array rhs_t(im, jm, km, 0.); // auxilliar field RHS temperature
-	Array rhs_u(im, jm, km, 0.); // auxilliar field RHS u-velocity component
-	Array rhs_v(im, jm, km, 0.); // auxilliar field RHS v-velocity component
-	Array rhs_w(im, jm, km, 0.); // auxilliar field RHS w-velocity component
-	Array rhs_p(im, jm, km, 0.); // auxilliar field RHS w-velocity component
-	Array rhs_c(im, jm, km, 0.); // auxilliar field RHS water vapour
-	Array rhs_cloud(im, jm, km, 0.); // auxilliar field RHS cloud water
-	Array rhs_ice(im, jm, km, 0.); // auxilliar field RHS cloud ice
-	Array rhs_co2(im, jm, km, 0.); // auxilliar field RHS CO2
-
-	Array aux_u(im, jm, km, 0.); // auxilliar field u-velocity component
-	Array aux_v(im, jm, km, 0.); // auxilliar field v-velocity component
-	Array aux_w(im, jm, km, 0.); // auxilliar field w-velocity component
-
-	Array Latency(im, jm, km, 0.); // latent heat
-	Array Q_Sensible(im, jm, km, 0.); // sensible heat
 	Array IceLayer(im, jm, km, 0.); // ice shield
 	Array t_cond_3D(im, jm, km, 0.); // condensation temperature
 	Array t_evap_3D(im, jm, km, 0.); // evaporation temperature
