@@ -102,10 +102,9 @@ class BC_Thermo
                                    Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, 
                                    Array &, Array &, Array &, Array &, Array & );
 
-        void BC_Radiation_multi_layer(int*, int, Array_2D &, Array_2D &, Array_2D &, Array_2D &, 
-                                      Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, 
-                                      Array_2D &, Array &, Array &, Array &, const Int3DArray &h, 
-                                      Array &, Array &, Array &, Array & );
+        void BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik, Array &p_stat, 
+                                      Array &t, Array &c, const Int3DArray &h, 
+                                      Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice);
 
 		void BC_WaterVapour ( Array &, Array &, Array & );
 

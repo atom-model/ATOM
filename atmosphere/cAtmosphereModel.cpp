@@ -390,9 +390,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){ 
-        circulation.BC_Radiation_multi_layer(im_tropopause, n, albedo, epsilon, precipitable_water, 
-                                             Ik, Q_Radiation, Radiation_Balance, Q_latent, Q_sensible, 
-                                             Q_bottom, co2_total, p_stat, t, c, h.to_Int3DArray(), 
+        circulation.BC_Radiation_multi_layer(albedo, Ik, p_stat,t, c, h.to_Int3DArray(), 
                                              epsilon_3D, radiation_3D, cloud, ice );
     }
 
@@ -535,10 +533,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 // class element for the surface temperature computation by radiation flux density
             if ( RadiationModel == 1 ){
-                circulation.BC_Radiation_multi_layer(im_tropopause, n, albedo, epsilon, 
-                                                     precipitable_water, Ik, Q_Radiation, 
-                                                     Radiation_Balance, Q_latent, Q_sensible, 
-                                                     Q_bottom, co2_total, p_stat, t, c, 
+                circulation.BC_Radiation_multi_layer(albedo, Ik, p_stat, t, c, 
                                                      h.to_Int3DArray(), epsilon_3D, radiation_3D, 
                                                      cloud, ice );
             }

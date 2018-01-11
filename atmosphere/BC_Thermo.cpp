@@ -205,11 +205,8 @@ BC_Thermo::~BC_Thermo()
  * output: albedo(reflection), epsilon_3D(absorption), radiation_3D, t(temperature)
  *         Ik(short wave)
  */
-void BC_Thermo::BC_Radiation_multi_layer(int *im_tropopause, int n, Array_2D &albedo, 
-                                         Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, 
-                                         Array_2D &Q_Radiation, Array_2D &Radiation_Balance, 
-                                         Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, 
-                                         Array_2D & co2_total, Array &p_stat, Array &t, Array &c, 
+void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik, 
+                                         Array &p_stat, Array &t, Array &c, 
                                          const Int3DArray &h, Array &epsilon_3D, Array &radiation_3D, 
                                          Array &cloud, Array &ice )
 {
@@ -382,6 +379,10 @@ void BC_Thermo::BC_Radiation_multi_layer(int *im_tropopause, int n, Array_2D &al
                     beta[ i ] = ( dd - aa * beta[ i - 1 ] ) / ( bb - aa * alfa[ i - 1 ] );
                 }
  
+                //This code is very suspicious! The same assignment happened earlier in this function. 
+                radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * 
+                                                     sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4. ); /* 
+                    dimensional form of the radiation leaving the last layer */ 
 
 // recurrence formula for the radiation and temperature
                 for ( int i = im - 2; i >= 0; i-- ){
