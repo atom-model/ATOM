@@ -532,95 +532,73 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
 	cout << endl << endl << heading << endl << endl;
 
-	int choice = { 1 };
-
-	preparation:
-
-	switch ( choice )
-	{
-		case 1 :	cout << heading_Dresden << endl;
-						i_loc_level = 0;																		// sea level
-						j_loc = 39;																				// 51°N, Dresden Germany
-						k_loc = 346;																			// 14°W, Dresden Germany
+    for(int i=1; i<4; i++){
+	    switch ( i )
+	    {
+		    case 1 :	cout << heading_Dresden << endl;
+						i_loc_level = 0;				// sea level
+						j_loc = 39;						// 51°N, Dresden Germany
+						k_loc = 346;				    // 14°W, Dresden Germany
+                        j_loc_deg = 51;
+                        k_loc_deg = 14;
+                        deg_lat = deg_north;
+                        deg_lon = deg_west;
 						break;
 
-		case 2 :	cout << heading_Sydney << endl;
-						i_loc_level = 0;																		// sea level
-						j_loc = 123;																			// 33°S, Dresden Germany
-						k_loc = 151;																			// 151°E, Dresden Germany
-						break;
+		    case 2 :	cout << heading_Sydney << endl;
+						i_loc_level = 0;				// sea level
+						j_loc = 123;					// 33°S, Sydney Australia
+						k_loc = 151;				    // 151°E, Sydney Australia
+						j_loc_deg = 33;
+                        k_loc_deg = 151;
+                        deg_lat = deg_south;
+                        deg_lon = deg_east;
+                        break;
 
-		case 3 :	cout << heading_Equator << endl;
-						i_loc_level = 0;																		// sea level
-						j_loc = 90;																				// 0°N, Equator
-						k_loc = 180;																			// 180°E, central Pacific
-						break;
+		    case 3 :	cout << heading_Equator << endl;
+						i_loc_level = 0;				// sea level
+						j_loc = 90;					    // 0°N, Equator
+						k_loc = 180;					// 180°E, central Pacific
+						j_loc_deg = 0;
+                        k_loc_deg = 180;
+                        deg_lat = deg_north;
+                        deg_lon = deg_east;
+                        break;
 
-	default : 	cout << choice << "error in iterationPrintout member function in class Accuracy" << endl;
-	}
-
-
-	if ( j_loc <= 90 )
-	{
-		j_loc_deg = 90 - j_loc;
-		deg_lat = deg_north;
-	}
-
-	if ( j_loc > 90 )
-	{
-		j_loc_deg = j_loc - 90;
-		deg_lat = deg_south;
-	}
+	        default : 	cout << "This should never happen! Check the for loop above!" << endl;
+	    }
 
 
-	if ( k_loc <= 180 )
-	{
-		k_loc_deg = k_loc;
-		deg_lon = deg_east;
-	}
+	    Value_1 = Q_Radiation.y[ j_loc ][ k_loc ];
+	    Value_2 = Q_latent.y[ j_loc ][ k_loc ];
+	    Value_3 = Q_sensible.y[ j_loc ][ k_loc ];
+	    Value_4 = Q_bottom.y[ j_loc ][ k_loc ];
 
-	if ( k_loc > 180 )
-	{
-		k_loc_deg = 360 - k_loc;
-		deg_lon = deg_east;
-	}
+	    cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon<< "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_1 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_1 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_2 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_2 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_3 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_3 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_4 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_4 << setw ( 6 ) << name_unit_wm2 << endl;
 
+	    Value_17 = Latency.x[ 0 ][ j_loc ][ k_loc ];
+	    Value_18 = t_cond_3D.x[ 0 ][ j_loc ][ k_loc ];
+	    Value_19 = t_evap_3D.x[ 0 ][ j_loc ][ k_loc ];
+	    Value_23 = precipitable_water.y[ j_loc ][ k_loc ];
 
-	Value_1 = Q_Radiation.y[ j_loc ][ k_loc ];
-	Value_2 = Q_latent.y[ j_loc ][ k_loc ];
-	Value_3 = Q_sensible.y[ j_loc ][ k_loc ];
-	Value_4 = Q_bottom.y[ j_loc ][ k_loc ];
-
-	cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon<< "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_1 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_1 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_2 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_2 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_3 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_3 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_4 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_4 << setw ( 6 ) << name_unit_wm2 << endl;
-
-	Value_17 = Latency.x[ 0 ][ j_loc ][ k_loc ];
-	Value_18 = t_cond_3D.x[ 0 ][ j_loc ][ k_loc ];
-	Value_19 = t_evap_3D.x[ 0 ][ j_loc ][ k_loc ];
-	Value_23 = precipitable_water.y[ j_loc ][ k_loc ];
-
-	cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon<< "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_23 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_23 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_19 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_17 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_20 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_18 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_21 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_19 << setw ( 6 ) << name_unit_wm2 << endl;
+	    cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon<< "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_23 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_23 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_19 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_17 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_20 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_18 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_21 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_19 << setw ( 6 ) << name_unit_wm2 << endl;
 
 
-	Value_14 = Condensation.y[ j_loc ][ k_loc ] + Evaporation.y[ j_loc ][ k_loc ];
-	Value_15 = Condensation.y[ j_loc ][ k_loc ];
-	Value_16 = Evaporation.y[ j_loc ][ k_loc ];
-	Value_24 = Precipitation.y[ j_loc ][ k_loc ];
+	    Value_14 = Condensation.y[ j_loc ][ k_loc ] + Evaporation.y[ j_loc ][ k_loc ];
+	    Value_15 = Condensation.y[ j_loc ][ k_loc ];
+	    Value_16 = Evaporation.y[ j_loc ][ k_loc ];
+	    Value_24 = Precipitation.y[ j_loc ][ k_loc ];
 
-	cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon<< "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_24 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_24 << setw ( 6 ) << name_unit_mmd << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_16 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_14 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_17 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_15 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_18 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_16 << setw ( 6 ) << name_unit_wm2 << endl;
+	    cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon<< "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_24 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_24 << setw ( 6 ) << name_unit_mmd << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_16 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_14 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_17 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_15 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_18 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_16 << setw ( 6 ) << name_unit_wm2 << endl;
 
-	Value_5 = Evaporation_Penman.y[ j_loc ][ k_loc ];
-	Value_6 = Evaporation_Haude.y[ j_loc ][ k_loc ];
+	    Value_5 = Evaporation_Penman.y[ j_loc ][ k_loc ];
+	    Value_6 = Evaporation_Haude.y[ j_loc ][ k_loc ];
 
-	cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon << "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_5 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_5 << setw ( 6 ) << name_unit_mmd << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_6 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_6 << setw ( 6 ) << name_unit_mmd << endl << endl;
+	    cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon << "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_5 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_5 << setw ( 6 ) << name_unit_mmd << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_6 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_6 << setw ( 6 ) << name_unit_mmd << endl << endl;
 
-
-	choice++;
-	if ( choice <= 3 ) goto preparation;
+   }
 
 	cout << endl;
-
-
-
 
 	Value_7 = precipitablewater_average;
 	Value_8 = precipitation_average;
