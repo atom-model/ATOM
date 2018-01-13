@@ -15,6 +15,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <cassert>
 
 using namespace std;
 
@@ -50,8 +51,45 @@ public:
     Array(int idim, int jdim, int kdim, double val);
     ~Array ( );
 
+    Array(const Array &a){
+        im = a.im;
+        jm = a.jm;
+        km = a.km;
+
+        x = new double**[im];
+
+        for ( int i = 0; i < im; i++ )
+        {
+            x[ i ] = new double*[jm];
+
+            for ( int j = 0; j < jm; j++ )
+            {
+                x[ i ][ j ] = new double[km];
+                for ( int k = 0; k < km; k++ )
+                {
+                    x[ i ][ j ][ k ] = a.x[i][j][k];
+                }
+            }
+        }
+    }
+
     void printArray ( int, int, int );
     void initArray ( int, int, int, double );
+
+    friend Array operator* (double coeff, const Array &a);
+
+    void operator=(const Array &a){
+        assert(this->im == a.im);
+        assert(this->jm == a.jm);
+        assert(this->km == a.km);
+        for(int i=0; i<im; i++){
+            for(int j=0; j<jm; j++){
+                for(int k=0; k<km; k++){
+                    this->x[i][j][k]=a.x[i][j][k];
+                }
+            }
+        }
+    }
 
     Int3DArray to_Int3DArray(){
         Int3DArray a(im,jm,km,0);
@@ -65,4 +103,17 @@ public:
         return a;
     }
 };
+
+inline Array operator* (double coeff, const Array &a){
+    Array ret(a.im,a.jm,a.km, 0.);
+    for(int i=0; i<a.im; i++){
+        for(int j=0; j<a.jm; j++){
+            for(int k=0; k<a.km; k++){
+                ret.x[i][j][k]=coeff * a.x[i][j][k];
+            }
+        }
+    }
+    return ret;
+}
+
 #endif

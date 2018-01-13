@@ -7,9 +7,6 @@
  * 
  * class to build 3D arrays
 */
-
-
-#include <cassert>
 #include <iostream>
 
 #include "Array.h"
