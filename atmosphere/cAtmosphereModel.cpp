@@ -26,8 +26,6 @@
 #include "MinMax_Atm.h"
 
 #include "Config.h"
-#include "tinyxml2.h"
-#include "PythonStream.h"
 
 using namespace std;
 using namespace tinyxml2;
@@ -128,8 +126,9 @@ cAtmosphereModel::cAtmosphereModel():
 {
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
-
-    PythonStream::OverrideCout();
+    //PythonStream::OverrideCout();
+    backup = std::cout.rdbuf();
+    std::cout.rdbuf(&ps);
 
     // If Ctrl-C is pressed, quit
     signal(SIGINT, exit);
@@ -138,7 +137,8 @@ cAtmosphereModel::cAtmosphereModel():
     SetDefaultConfig();
 
     coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
-    
+    residuum_min = epsres * 100.;    
+ 
     t.initArray(im, jm, km, ta); 
     u.initArray(im, jm, km, ua); 
     v.initArray(im, jm, km, va); 
@@ -159,38 +159,39 @@ cAtmosphereModel::cAtmosphereModel():
 }
 
 cAtmosphereModel::~cAtmosphereModel() {
+    std::cout.rdbuf(backup);
     delete [] im_tropopause;
 }
  
 #include "cAtmosphereDefaults.cpp.inc"
 
 void cAtmosphereModel::LoadConfig ( const char *filename ) {
-	XMLDocument doc;
-	XMLError err = doc.LoadFile ( filename );
-	
+    XMLDocument doc;
+    XMLError err = doc.LoadFile ( filename );
+    
     if (err) {
-		doc.PrintError();
+        doc.PrintError();
         std::cerr <<"Failed to load config file: "<<filename<<std::endl;
-		throw std::invalid_argument("  couldn't load config file inside cAtmosphereModel");
-	}
+        throw std::invalid_argument("  couldn't load config file inside cAtmosphereModel");
+    }
 
-	XMLElement *atom = doc.FirstChildElement("atom");
-	if (!atom) {
+    XMLElement *atom = doc.FirstChildElement("atom");
+    if (!atom) {
         std::cerr <<"Failed to find the 'atom' element in config file: "<<filename<<std::endl;
-		abort();//get attention
-	}
+        abort();//get attention
+    }
 
-	XMLElement* elem_common = doc.FirstChildElement( "atom" )->FirstChildElement( "common" );
-	if (!elem_common) {
+    XMLElement* elem_common = doc.FirstChildElement( "atom" )->FirstChildElement( "common" );
+    if (!elem_common) {
         std::cerr <<"Failed to find the 'common' element in 'atom' element in config file: "<<filename<<std::endl;
-		abort();//get attention
-	}
+        abort();//get attention
+    }
 
-	XMLElement* elem_atmosphere = doc.FirstChildElement( "atom" )->FirstChildElement( "atmosphere" );
-	if (!elem_atmosphere) {
+    XMLElement* elem_atmosphere = doc.FirstChildElement( "atom" )->FirstChildElement( "atmosphere" );
+    if (!elem_atmosphere) {
         std::cerr <<"Failed to find the 'atmosphere' element in 'atom' element in config file: "<<filename<<std::endl;
-		abort();//get attention
-	}
+        abort();//get attention
+    }
 
 #include "AtmosphereLoadConfig.cpp.inc"
 }
@@ -202,174 +203,186 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 // maximum number of inner velocity loop iterations ( velocity_iter_max )
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-	mkdir(output_path.c_str(), 0777);
+    mkdir(output_path.c_str(), 0777);
 
-	cout.precision ( 6 );
-	cout.setf ( ios::fixed );
+    cout.precision ( 6 );
+    cout.setf ( ios::fixed );
 
-//	Coordinate system in form of a spherical shell
-//	rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
-	rad.Coordinates ( im, r0, dr );
-	the.Coordinates ( jm, the0, dthe );
-	phi.Coordinates ( km, phi0, dphi );
+//  Coordinate system in form of a spherical shell
+//  rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
+    rad.Coordinates ( im, r0, dr );
+    the.Coordinates ( jm, the0, dthe );
+    phi.Coordinates ( km, phi0, dphi );
 
-//	initial values for the number of computed steps and the time
-	int n = 1;
-	int n_pres = 2;
-	int switch_2D = 0;
+//  initial values for the number of computed steps and the time
+    int n = 1;
+    int n_pres = 2;
 
-//	radial expansion of the computational field for the computation of initial values
-	int i_max = 32;		 // corresponds to about 12.8 km above sea level, maximum hight of the tropopause at equator
-	int i_beg = 16;		 // corresponds to about 6.4 km above sea level, maximum hight of the tropopause at poles
+//  radial expansion of the computational field for the computation of initial values
+    int i_max = 32;      // corresponds to about 12.8 km above sea level, maximum hight of the tropopause at equator
+    int i_beg = 16;      // corresponds to about 6.4 km above sea level, maximum hight of the tropopause at poles
 
-//	naming a file to read the surface temperature by NASA of the modern world
-	string Name_NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
-	if(Ma == 0){
-        	Name_NASAbasedSurfaceTemperature_File =  "../data/NASA_based_SurfaceTemperature.xyz";
-     	}
+//  naming a file to read the surface temperature by NASA of the modern world
+    string Name_NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
+    if(Ma == 0){
+        Name_NASAbasedSurfaceTemperature_File =  "../data/NASA_based_SurfaceTemperature.xyz";
+    }
 
-//	naming a file to read the surface temperature by NASA of the modern world
-	string Name_SurfaceTemperature_File = temperature_file;	
- 	if(Ma != 0 && use_earthbyte_reconstruction){
-        	Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
-     	}
+//  naming a file to read the surface temperature by NASA of the modern world
+    string Name_SurfaceTemperature_File = temperature_file; 
+    if(Ma != 0 && use_earthbyte_reconstruction){
+            Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
+        }
 
 // naming a file to read the surface precipitation by NASA
-	string Name_SurfacePrecipitation_File = precipitation_file;	
-	if(Ma != 0 && use_earthbyte_reconstruction){
-		Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfacePrecipitation.xyz";
- 	}
+    string Name_SurfacePrecipitation_File = precipitation_file; 
+    if(Ma != 0 && use_earthbyte_reconstruction){
+        Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfacePrecipitation.xyz";
+    }
 
-	string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
-	string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
+    string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
+    string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
 
-	cout << "\n   Output is being written to " << output_path << "\n";
-	cout << "   Ma = " << Ma << "\n";
-	cout << "   bathymetry_path = " << bathymetry_path << "\n";
-	cout << "   bathymetry_filepath = " << bathymetry_filepath << "\n\n";
-	cout << "   Name_SurfaceTemperature_File = " << Name_SurfaceTemperature_File << std::endl;
-	cout << "   Name_SurfacePrecipitation_File = " << Name_SurfacePrecipitation_File << std::endl;
-	
-	if (verbose) {
-		cout << endl << endl << endl;
-		cout << "***** Atmosphere General Circulation Model ( AGCM ) applied to laminar flow" << endl;
-		cout << "***** program for the computation of geo-atmospherical circulating flows in a spherical shell" << endl;
-		cout << "***** finite difference scheme for the solution of the 3D Navier-Stokes equations" << endl;
-		cout << "***** with 4 additional transport equations to describe the water vapour, cloud water, cloud ice and co2 concentration" << endl;
-		cout << "***** 4th order Runge-Kutta scheme to solve 2nd order differential equations inside an inner iterational loop" << endl;
-		cout << "***** Poisson equation for the pressure solution in an outer iterational loop" << endl;
-		cout << "***** multi-layer and two-layer radiation model for the computation of the surface temperature" << endl;
-		cout << "***** temperature distribution given as a parabolic distribution from pole to pole, zonaly constant" << endl;
-		cout << "***** water vapour distribution given by Clausius-Claperon equation for the partial pressure" << endl;
-		cout << "***** water vapour is part of the Boussinesq approximation and the absorptivity in the radiation model" << endl;
-		cout << "***** two category ice scheme for cold clouds applying parameterization schemes provided by the COSMO code ( German Weather Forecast )" << endl;
-		cout << "***** rain and snow precipitation solved by column equilibrium applying the diagnostic equations" << endl;
-		cout << "***** co2 concentration appears in the absorptivity of the radiation models" << endl;
-		cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )" << endl << endl;
+    cout << "\n   Output is being written to " << output_path << "\n";
+    cout << "   Ma = " << Ma << "\n";
+    cout << "   bathymetry_path = " << bathymetry_path << "\n";
+    cout << "   bathymetry_filepath = " << bathymetry_filepath << "\n\n";
+    cout << "   Name_SurfaceTemperature_File = " << Name_SurfaceTemperature_File << std::endl;
+    cout << "   Name_SurfacePrecipitation_File = " << Name_SurfacePrecipitation_File << std::endl;
+    
+    if (verbose) {
+        cout << endl << endl << endl;
+        cout << "***** Atmosphere General Circulation Model ( AGCM ) applied to laminar flow" << endl;
+        cout << "***** program for the computation of geo-atmospherical circulating flows in a spherical shell" << endl;
+        cout << "***** finite difference scheme for the solution of the 3D Navier-Stokes equations" << endl;
+        cout << "***** with 4 additional transport equations to describe the water vapour, cloud water, cloud ice and co2 concentration" << endl;
+        cout << "***** 4th order Runge-Kutta scheme to solve 2nd order differential equations inside an inner iterational loop" << endl;
+        cout << "***** Poisson equation for the pressure solution in an outer iterational loop" << endl;
+        cout << "***** multi-layer and two-layer radiation model for the computation of the surface temperature" << endl;
+        cout << "***** temperature distribution given as a parabolic distribution from pole to pole, zonaly constant" << endl;
+        cout << "***** water vapour distribution given by Clausius-Claperon equation for the partial pressure" << endl;
+        cout << "***** water vapour is part of the Boussinesq approximation and the absorptivity in the radiation model" << endl;
+        cout << "***** two category ice scheme for cold clouds applying parameterization schemes provided by the COSMO code ( German Weather Forecast )" << endl;
+        cout << "***** rain and snow precipitation solved by column equilibrium applying the diagnostic equations" << endl;
+        cout << "***** co2 concentration appears in the absorptivity of the radiation models" << endl;
+        cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )" << endl << endl;
 
-		cout << "***** original program name:  " << __FILE__ << endl;
-		cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
-	}
-
-
-//	initialization of the bathymetry/topography
-
-//	class BC_Bathymetry_Atmosphere for the geometrical boundary condition of the computational area
-	BC_Bathymetry_Atmosphere		LandArea ( NASATemperature, im, jm, km, co2_vegetation, co2_land, co2_ocean );
-
-//	topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-	LandArea.BC_MountainSurface ( bathymetry_filepath, L_atm, Topography, value_top, h, aux_w );
-
-//	class element for the computation of the ratio ocean to land areas, also supply and removal of CO2 on land, ocean and by vegetation
-	LandArea.land_oceanFraction ( h );
+        cout << "***** original program name:  " << __FILE__ << endl;
+        cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
+    }
 
 
-//	class calls for the solution of the flow properties
+    //  initialization of the bathymetry/topography
 
-//	class BC_Atmosphere for the boundary conditions for the variables at the spherical shell surfaces and the meridional interface
-	BC_Atmosphere							boundary ( im, jm, km, t_tropopause );
+    //  class BC_Bathymetry_Atmosphere for the geometrical boundary condition of the computational area
+    BC_Bathymetry_Atmosphere   LandArea(NASATemperature, im, jm, km, co2_vegetation, 
+                                        co2_land, co2_ocean );
 
-//	class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-	RHS_Atmosphere						prepare ( im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, sc_CO2, g, pr, omega, coriolis, centrifugal, WaterVapour, buoyancy, CO2, gam, sigma, lamda );
-	RHS_Atmosphere						prepare_2D ( jm, km, dthe, dphi, re, omega, coriolis, centrifugal );
+    //topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
+    LandArea.BC_MountainSurface(bathymetry_filepath, L_atm, Topography, value_top, h, aux_w );
 
-//	class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
-	RungeKutta_Atmosphere			result ( im, jm, km, dt, dr, dphi, dthe );
+    //class element for the computation of the ratio ocean to land areas, also supply and 
+    //removal of CO2 on land, ocean and by vegetation
+    LandArea.land_oceanFraction(h);
 
-//	class Results_MSL_Atm to compute and show results on the mean sea level, MSL
-	Results_MSL_Atm						calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_equator, lv, ls, cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water, r_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous );
 
-//	class Pressure for the subsequent computation of the pressure by a separate Euler equation
-	Pressure_Atm										startPressure ( im, jm, km, dr, dthe, dphi );
+    //class calls for the solution of the flow properties
 
-//	class BC_Thermo for the initial and boundary conditions of the flow properties
-	BC_Thermo									circulation ( output_path, im, jm, km, i_beg, i_max, RadiationModel, NASATemperature, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cret_cor, t_cretaceous_max, t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
+    //class BC_Atmosphere for the boundary conditions for the variables at the 
+    //spherical shell surfaces and the meridional interface
+    BC_Atmosphere boundary ( im, jm, km, t_tropopause );
 
-//	class Restore to restore the iterational values from new to old
-	Restore_Atm								oldnew( im, jm, km );
+    //  class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
+    RHS_Atmosphere  prepare(im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, 
+                            sc_CO2, g, pr, omega, coriolis, centrifugal, WaterVapour, 
+                            buoyancy, CO2, gam, sigma, lamda );
+    
+    RHS_Atmosphere  prepare_2D ( jm, km, dthe, dphi, re, omega, coriolis, centrifugal );
 
-//	class element calls for the preparation of initial conditions for the flow properties
-//	class element for the tropopause location as a parabolic distribution from pole to pole 
-	circulation.TropopauseLocation ( im_tropopause );
+    //  class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
+    RungeKutta_Atmosphere           result ( im, jm, km, dt, dr, dphi, dthe );
 
-//  class element for the surface temperature from NASA for comparison
-	if ( Ma == 0 || use_earthbyte_reconstruction){ 
+    //  class Results_MSL_Atm to compute and show results on the mean sea level, MSL
+    Results_MSL_Atm calculate_MSL(im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, 
+                                  sigma, albedo_equator, lv, ls, cp_l, L_atm, dt, dr, 
+                                  dthe, dphi, r_air, R_Air, r_water, r_water_vapour, R_WaterVapour, 
+                                  co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous );
+
+    //  class Pressure for the subsequent computation of the pressure by a separate Euler equation
+    Pressure_Atm    startPressure ( im, jm, km, dr, dthe, dphi );
+
+    //  class BC_Thermo for the initial and boundary conditions of the flow properties
+    BC_Thermo   circulation(output_path, im, jm, km, i_beg, i_max, RadiationModel, NASATemperature, 
+                            sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, 
+                            Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, 
+                            lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, 
+                            co2_cretaceous, co2_vegetation, co2_ocean, co2_land, c_tropopause, co2_tropopause, 
+                            c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cret_cor, t_cretaceous_max, 
+                            t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, 
+                            epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
+
+    //  class Restore to restore the iterational values from new to old
+    Restore_Atm  oldnew( im, jm, km );
+
+    //  class element calls for the preparation of initial conditions for the flow properties
+    //  class element for the tropopause location as a parabolic distribution from pole to pole 
+    circulation.TropopauseLocation ( im_tropopause );
+
+    //  class element for the surface temperature from NASA for comparison
+    if ( Ma == 0 || use_earthbyte_reconstruction){ 
             circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
-	}
-	
-//  class element for the surface temperature based on NASA temperature for progressing timeslices
-//	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
-
-//  class element for the surface precipitation from NASA for comparison
-	if ( Ma == 0 || use_earthbyte_reconstruction){ 
-		circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
+    }
+    
+    //  class element for the surface precipitation from NASA for comparison
+    if ( Ma == 0 || use_earthbyte_reconstruction){ 
+        circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
         }
-//  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
-	circulation.BC_Temperature ( im_tropopause, temperature_NASA, h, t, p_dyn, p_stat );
-	t_cretaceous = circulation.out_t_cretaceous (  );
+    //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
+    circulation.BC_Temperature ( im_tropopause, temperature_NASA, h, t, p_dyn, p_stat );
+    t_cretaceous = circulation.out_t_cretaceous (  );
 
-//  class element for the correction of the temperature initial distribution around coasts
+    //  class element for the correction of the temperature initial distribution around coasts
     if ( ( NASATemperature == 1 ) && ( Ma > 0 ) && !use_earthbyte_reconstruction ){ 
         circulation.IC_Temperature_WestEastCoast ( h, t );
     }
 
-//  class element for the surface pressure computed by surface temperature with gas equation
-	circulation.BC_Pressure ( p_stat, p_dyn, t, h );
+    //  class element for the surface pressure computed by surface temperature with gas equation
+    circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
-//  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-	circulation.BC_WaterVapour ( h, t, c );
+    //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
+    circulation.BC_WaterVapour ( h, t, c );
 
-//  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-	circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
-	co2_cretaceous = circulation.out_co2 (  );
+    //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
+    circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
+    co2_cretaceous = circulation.out_co2 (  );
 
-// class element for the surface temperature computation by radiation flux density
+    // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){ 
         circulation.BC_Radiation_multi_layer(albedo, Ik, p_stat,t, c, h.to_Int3DArray(), 
                                              epsilon_3D, radiation_3D, cloud, ice );
     }
 
-// 	class element for the initial conditions for u-v-w-velocity components
-	circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
+    //  class element for the initial conditions for u-v-w-velocity components
+    circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
 
     //class element for the storing of velocity components, pressure and temperature for iteration start
-	oldnew.restoreOldNew_3D(.9, u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n);
-	oldnew.restoreOldNew_2D(.9, v, w, p_dyn, p_dynn, vn, wn);
+    oldnew.restoreOldNew_3D(.9, u, v, w, t, p_dyn, c, cloud, ice, co2, 
+                            un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n);
+    oldnew.restoreOldNew_2D(.9, v, w, p_dyn, p_dynn, vn, wn);
 
 
     //start of pressure and velocity iterations
-	double emin = epsres * 100.;
-
-	if ( switch_2D != 1 )
-	{
+    int switch_2D = 0;
+    if ( switch_2D != 1 )
+    {
         Run2DLoop(Ma, n, nm, n_pres, i_max, pressure_iter_max_2D, velocity_iter_max_2D,
                   boundary, result, LandArea, prepare_2D,
                   startPressure, oldnew);
-	}
+    }
 
-	cout << endl << endl;
+    cout << endl << endl;
 
-	n_pres = 2;
+    n_pres = 2;
     
     Run3DLoop(Ma, n, nm, n_pres, i_max, pressure_iter_max,
               velocity_iter_max, boundary, result,
@@ -378,22 +391,22 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
               circulation);
 
 
-	cout << endl << endl;
+    cout << endl << endl;
 
-	t_cret_cor = t_cretaceous;
+    t_cret_cor = t_cretaceous;
 
-	if ( NASATemperature == 1 && !use_earthbyte_reconstruction){ 
-		circulation.BC_NASAbasedSurfTempWrite ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
-	}
+    if ( NASATemperature == 1 && !use_earthbyte_reconstruction){ 
+        circulation.BC_NASAbasedSurfTempWrite ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
+    }
 
     WriteFile(n, bathymetry_name, output_path);
 
     Reset();
 
     //  final remarks
-	cout << endl << Ma <<"Ma ***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
-	if ( emin <= epsres ){
-		cout << "***** steady solution reached! *****" << endl;
+    cout << endl << Ma <<"Ma ***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
+    if ( residuum_min <= epsres ){
+        cout << "***** steady solution reached! *****" << endl;
     }
 }
 
@@ -403,7 +416,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
                                  BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
                                  Pressure_Atm &startPressure, Restore_Atm &oldnew, Results_MSL_Atm &calculate_MSL, 
                                  BC_Thermo &circulation){
-    double emin=0., residuum_old=0.,residuum=0.;
+    double residuum_old=0.,residuum=0.;
     int velocity_n=1;
 
     for (int p_iter = 1; p_iter <= pressure_iter_max; p_iter++ )
@@ -430,9 +443,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
             //old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm        min_Residuum_old ( im, jm, km, dr, dthe, dphi );
             min_Residuum_old.residuumQuery_3D ( rad, the, u, v, w );
-            emin = min_Residuum_old.out_min (  );
-
-            residuum_old = emin;
+            residuum_old = min_Residuum_old.out_min (  );
 
             //class BC_Atmosphaere for the geometry of a shell of a sphere
             boundary.BC_radius ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
@@ -474,14 +485,15 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
             //new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm      min_Residuum ( im, jm, km, dr, dthe, dphi );
             min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
-            emin = min_Residuum.out_min (  );
+            residuum = min_Residuum.out_min (  );
             int i_res = min_Residuum.out_i_res (  );
             j_res = min_Residuum.out_j_res (  );
             k_res = min_Residuum.out_k_res (  );
 
-            residuum = emin;
-            emin = fabs ( ( residuum - residuum_old ) / residuum_old );
-
+            double emin = fabs ( ( residuum - residuum_old ) / residuum_old );
+            if(emin < residuum_min){
+                residuum_min=emin;
+            }
             //statements on the convergence und iterational process
             Accuracy_Atm min_Stationary(n, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, 
                                                v_iter, p_iter, velocity_iter_max, 
@@ -555,7 +567,7 @@ void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
                                  int velocity_iter_max_2D, BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                                  BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D, 
                                  Pressure_Atm &startPressure, Restore_Atm &oldnew){
-    double emin = 0.,residuum_old=0., residuum=0.;
+    double residuum_old=0., residuum=0.;
     for ( int p_iter= 1; p_iter <= pressure_iter_max_2D; p_iter++){
         for (int v_iter=1; v_iter <= velocity_iter_max_2D; v_iter++){
             cout << endl << endl;
@@ -578,9 +590,7 @@ void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
             //old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm        min_Residuum_old_2D ( im, jm, km, dthe, dphi );
             min_Residuum_old_2D.residuumQuery_2D ( rad, the, v, w );
-            emin = min_Residuum_old_2D.out_min (  );
-
-            residuum_old = emin;
+            residuum_old = min_Residuum_old_2D.out_min (  );
 
             //  class RungeKutta for the solution of the differential equations describing the flow properties
             result.solveRungeKutta_2D_Atmosphere(prepare_2D, n, n_pres, r_air, u_0, p_0, L_atm, rad, the, 
@@ -596,13 +606,14 @@ void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
             //new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm            min_Residuum_2D ( im, jm, km, dthe, dphi );
             min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
-            emin = min_Residuum_2D.out_min (  );
+            residuum = min_Residuum_2D.out_min (  );
             j_res = min_Residuum_2D.out_j_res (  );
             k_res = min_Residuum_2D.out_k_res (  );
 
-            residuum = emin;
-            emin = fabs ( ( residuum - residuum_old ) / residuum_old );
-
+            double emin = fabs ( ( residuum - residuum_old ) / residuum_old );
+            if(emin < residuum_min){
+                residuum_min=emin;
+            }
             //state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
             Accuracy_Atm            min_Stationary_2D(n, nm, Ma, im, jm, km, emin, j_res, k_res, 
                                                       v_iter, p_iter, 
@@ -629,70 +640,70 @@ void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
 }
 
 void cAtmosphereModel::Run() {
-	mkdir(output_path.c_str(), 0777);
+    mkdir(output_path.c_str(), 0777);
 
-	cout << "Output is being written to " << output_path << "\n";
+    cout << "Output is being written to " << output_path << "\n";
 
-	if (verbose) {
-		cout << endl << endl << endl;
-		cout << "***** Atmosphere General Circulation Model ( AGCM ) applied to laminar flow" << endl;
-		cout << "***** program for the computation of geo-atmospherical circulating flows in a spherical shell" << endl;
-		cout << "***** finite difference scheme for the solution of the 3D Navier-Stokes equations" << endl;
-		cout << "***** with 4 additional transport equations to describe the water vapour, cloud water, cloud ice and co2 concentration" << endl;
-		cout << "***** 4th order Runge-Kutta scheme to solve 2nd order differential equations inside an inner iterational loop" << endl;
-		cout << "***** Poisson equation for the pressure solution in an outer iterational loop" << endl;
-		cout << "***** multi-layer and two-layer radiation model for the computation of the surface temperature" << endl;
-		cout << "***** temperature distribution given as a parabolic distribution from pole to pole, zonaly constant" << endl;
-		cout << "***** water vapour distribution given by Clausius-Claperon equation for the partial pressure" << endl;
-		cout << "***** water vapour is part of the Boussinesq approximation and the absorptivity in the radiation model" << endl;
-		cout << "***** two category ice scheme for cold clouds applying parameterization schemes provided by the COSMO code ( German Weather Forecast )" << endl;
-		cout << "***** rain and snow precipitation solved by column equilibrium applying the diagnostic equations" << endl;
-		cout << "***** co2 concentration appears in the absorptivity of the radiation models" << endl;
-		cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )" << endl << endl;
+    if (verbose) {
+        cout << endl << endl << endl;
+        cout << "***** Atmosphere General Circulation Model ( AGCM ) applied to laminar flow" << endl;
+        cout << "***** program for the computation of geo-atmospherical circulating flows in a spherical shell" << endl;
+        cout << "***** finite difference scheme for the solution of the 3D Navier-Stokes equations" << endl;
+        cout << "***** with 4 additional transport equations to describe the water vapour, cloud water, cloud ice and co2 concentration" << endl;
+        cout << "***** 4th order Runge-Kutta scheme to solve 2nd order differential equations inside an inner iterational loop" << endl;
+        cout << "***** Poisson equation for the pressure solution in an outer iterational loop" << endl;
+        cout << "***** multi-layer and two-layer radiation model for the computation of the surface temperature" << endl;
+        cout << "***** temperature distribution given as a parabolic distribution from pole to pole, zonaly constant" << endl;
+        cout << "***** water vapour distribution given by Clausius-Claperon equation for the partial pressure" << endl;
+        cout << "***** water vapour is part of the Boussinesq approximation and the absorptivity in the radiation model" << endl;
+        cout << "***** two category ice scheme for cold clouds applying parameterization schemes provided by the COSMO code ( German Weather Forecast )" << endl;
+        cout << "***** rain and snow precipitation solved by column equilibrium applying the diagnostic equations" << endl;
+        cout << "***** co2 concentration appears in the absorptivity of the radiation models" << endl;
+        cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )" << endl << endl;
 
-		cout << "***** original program name:  " << __FILE__ << endl;
-		cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
-	}
+        cout << "***** original program name:  " << __FILE__ << endl;
+        cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
+    }
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 // time slices to be run after actualizing
-	int i_time_slice_max = 15;
-	int *time_slice = new int [ i_time_slice_max ];	 // time slices in Ma
+    int i_time_slice_max = 15;
+    int *time_slice = new int [ i_time_slice_max ];  // time slices in Ma
 
-	time_slice [ 0 ] = 0;								   // Golonka Bathymetry and Topography
-	time_slice [ 1 ] = 10;
-	time_slice [ 2 ] = 20;
-	time_slice [ 3 ] = 30;
-	time_slice [ 4 ] = 40;
-	time_slice [ 5 ] = 50;
-	time_slice [ 6 ] = 60;
-	time_slice [ 7 ] = 70;
-	time_slice [ 8 ] = 80;
-	time_slice [ 9 ] = 90;
-	time_slice [ 10 ] = 100;
-	time_slice [ 11 ] = 110;
-	time_slice [ 12 ] = 120;
-	time_slice [ 13 ] = 130;
-	time_slice [ 14 ] = 140;
+    time_slice [ 0 ] = 0;                                  // Golonka Bathymetry and Topography
+    time_slice [ 1 ] = 10;
+    time_slice [ 2 ] = 20;
+    time_slice [ 3 ] = 30;
+    time_slice [ 4 ] = 40;
+    time_slice [ 5 ] = 50;
+    time_slice [ 6 ] = 60;
+    time_slice [ 7 ] = 70;
+    time_slice [ 8 ] = 80;
+    time_slice [ 9 ] = 90;
+    time_slice [ 10 ] = 100;
+    time_slice [ 11 ] = 110;
+    time_slice [ 12 ] = 120;
+    time_slice [ 13 ] = 130;
+    time_slice [ 14 ] = 140;
 
 //  choice of the time slice to be computed
-	for (int i_time_slice = 0; i_time_slice < i_time_slice_max; i_time_slice++) {
-		int Ma = time_slice[i_time_slice];
-		cout << "Ma = " << Ma << "\n";
+    for (int i_time_slice = 0; i_time_slice < i_time_slice_max; i_time_slice++) {
+        int Ma = time_slice[i_time_slice];
+        cout << "Ma = " << Ma << "\n";
 
-		RunTimeSlice(Ma);
-	}
+        RunTimeSlice(Ma);
+    }
 //   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 //  final remarks
-	cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
+    cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
 
-	cout << endl;
-	cout << "***** end of object oriented C++ program for the computation of 3D-atmospheric circulation *****";
-	cout << "\n\n\n\n";
+    cout << endl;
+    cout << "***** end of object oriented C++ program for the computation of 3D-atmospheric circulation *****";
+    cout << "\n\n\n\n";
 
-	delete [ ] time_slice;
+    delete [ ] time_slice;
 
 }
 
