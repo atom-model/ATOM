@@ -82,8 +82,9 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			if ( RadiationModel >= 2 ) Q_Radiation.y[ j ][ k ] = radiation_3D.x[ 0 ][ j ][ k ];		 // two- and multi-layer radiation balance assumed
-
+			if ( RadiationModel >= 2 ){
+                Q_Radiation.y[ j ][ k ] = radiation_3D.x[ 0 ][ j ][ k ]; // two- and multi-layer radiation balance assumed
+            }
 			Evaporation.y[ j ][ k ] = 0.;												// Evaporation
 			Condensation.y[ j ][ k ] = 0.;											// Condensation
 			LatentHeat.y[ j ][ k ] = 0.;												// Condensation

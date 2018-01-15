@@ -336,9 +336,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class element for the surface precipitation from NASA for comparison
     if ( Ma == 0 || use_earthbyte_reconstruction){ 
         circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
-        }
+    }
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
-    circulation.BC_Temperature ( im_tropopause, temperature_NASA, h, t, p_dyn, p_stat );
+    circulation.BC_Temperature ( im_tropopause, temperature_NASA, h.to_Int3DArray(), t, p_dyn, p_stat );
     t_cretaceous = circulation.out_t_cretaceous (  );
 
     //  class element for the correction of the temperature initial distribution around coasts

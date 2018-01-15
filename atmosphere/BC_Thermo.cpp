@@ -394,8 +394,8 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
                                              pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, ( 1. / 4. ) ) / 
                                              t_0 );    // averaging of temperature values to smooth the iterations
                     }else{
-                        std::cerr << "The radiation at "<<i<<" "<<j<<" "<<k<<" is negative! "<<
-                            radiation_3D.x[ i ][ j ][ k ]<<std::endl;
+                        //std::cerr << "The radiation at "<<i<<" "<<j<<" "<<k<<" is negative! "<<
+                        //    radiation_3D.x[ i ][ j ][ k ]<<std::endl;
                     }
                 }
             }
@@ -404,14 +404,15 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
 }
 
 
-void BC_Thermo::BC_Temperature ( int *im_tropopause, Array_2D &temperature_NASA, Array &h, Array &t, Array &p_dyn, Array &p_stat )
+void BC_Thermo::BC_Temperature(int *im_tropopause, Array_2D &temperature_NASA, 
+                               const Int3DArray &h, Array &t, Array &p_dyn, Array &p_stat )
 {
-// boundary condition of  temperature on land 
-// parabolic distribution from pole to pole accepted
-// temperature on land at equator t_max = 1.055 compares to 15° C compared to 288 K
-// temperature at tropopause t_min = 0.77 compares to -62° C compares to 211 K
-// temperature at tropopause t_min = 0.89 compares to -30° C compares to 243 K
-// temperature difference from equator to pole   18°C compares to  t_delta = 0.0659  compares to  18 K
+    // boundary condition of  temperature on land 
+    // parabolic distribution from pole to pole accepted
+    // temperature on land at equator t_max = 1.055 compares to 15° C compared to 288 K
+    // temperature at tropopause t_min = 0.77 compares to -62° C compares to 211 K
+    // temperature at tropopause t_min = 0.89 compares to -30° C compares to 243 K
+    // temperature difference from equator to pole   18°C compares to  t_delta = 0.0659  compares to  18 K
     j_half = ( jm -1 ) / 2;
     j_max = jm - 1;
 
@@ -419,10 +420,13 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array_2D &temperature_NASA,
     d_j_half = ( double ) j_half;
     d_j_max = ( double ) j_max;
 
-// temperature-distribution by Ruddiman approximated by a parabola
+    // temperature-distribution by Ruddiman approximated by a parabola
     t_co2_eff = t_pole - t_equator;
-    t_cretaceous_co2_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
+    t_cretaceous_co2_eff = t_cretaceous_max / ( ( double ) Ma_max_half -   
+                           ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
+    
     t_cretaceous = t_cretaceous_co2_eff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
+    
     if ( Ma == 0 )  t_cretaceous = t_cret_cor = 0.;
 
     cout.precision ( 3 );
@@ -452,14 +456,15 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array_2D &temperature_NASA,
 
         if ( ( Ma > 0 ) && ( sun == 1 ) )
         {
-            j_par = sun_position_lat;                                                                   // position of maximum temperature, sun position
-            j_par = j_par + declination;                                                                // angle of sun axis, declination = 23,4°
+            j_par = sun_position_lat;       // position of maximum temperature, sun position
+            j_par = j_par + declination;    // angle of sun axis, declination = 23,4°
             j_pol = jm - 1;
 
             j_par_f = ( double ) j_par;
             j_pol_f = ( double ) j_pol;
 
-            aa = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) - ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * ( j_par_f - j_pol_f ) );
+            aa = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) - 
+                 ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * ( j_par_f - j_pol_f ) );
             bb = - 2. * aa * j_par_f;
             cc = t_equator + aa * j_par_f * j_par_f;
             j_d = sqrt ( ( cc - t_pole ) / aa );
@@ -468,7 +473,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array_2D &temperature_NASA,
             e = t_pole;
 
 
-    // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
+            // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
             for ( int k = 0; k < km; k++ )
             {
                 for ( int j = 0; j < jm; j++ )
@@ -486,16 +491,16 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array_2D &temperature_NASA,
             }
 
 
-    // transfer of zonal constant temperature into aa 1D-temperature field
+            // transfer of zonal constant temperature into aa 1D-temperature field
             for ( int j = 0; j < jm; j++ )
             {
                 jm_temp_asym[ j ] = t.x[ 0 ][ j ][ 20 ];
             }
 
 
-    // longitudinally variable temperature distribution from west to east in parabolic form
-    // communicates the impression of local sun radiation on the southern hemisphere
-            k_par = sun_position_lon;                                               // position of the sun at constant longitude
+            // longitudinally variable temperature distribution from west to east in parabolic form
+            // communicates the impression of local sun radiation on the southern hemisphere
+            k_par = sun_position_lon;   // position of the sun at constant longitude
             k_pol = km - 1;
 
             t_360 = (  t_0 + 5. ) / t_0;
@@ -508,39 +513,49 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array_2D &temperature_NASA,
                     k_pol_f = ( double ) k_pol;
                     d_k = ( double ) k;
 
-                    aa = ( jm_temp_asym[ j ] - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * ( k_par_f - k_pol_f ) );
+                    aa = ( jm_temp_asym[ j ] - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 
+                           2. * k_par_f * ( k_par_f - k_pol_f ) );
                     bb = - 2. * aa * k_par_f;
                     cc = jm_temp_asym[ j ] + aa * k_par_f * k_par_f;
 
                     t.x[ 0 ][ j ][ k ] = aa * d_k * d_k + bb * d_k + cc;
                 }
             }
-        }                                                                                               // temperatur distribution at aa prescribed sun position
-
-
+        } // temperatur distribution at aa prescribed sun position
 
 
 //      cout << endl << "   NASATemperature = " << NASATemperature << "   t_pole = " << t_pole << "   t_cretaceous = " << t_cretaceous << "   t_land = " << t_land << "   t_co2_eff = " << t_co2_eff << "   d_j_half = " << d_j_half << "   sun = " << sun << endl;
 
 
     if ( RadiationModel == 1 )
-    {       if ( sun == 0 )
+    {       
+        if ( sun == 0 )
         {
             for ( int k = 0; k < km; k++ )
             {
                 for ( int j = 0; j < jm; j++ )
                 {
                     d_j = ( double ) j;
-                    if ( NASATemperature == 0 )                                 // if ( NASATemperature == 0 ) parabolic surface temperature is used
+                    if ( NASATemperature == 0 )// if ( NASATemperature == 0 ) parabolic surface temperature is used
                     {
-                        t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous;
-                        if ( h.x[ 0 ][ j ][ k ] == 1. )                                     t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;    // end parabolic temperature distribution
+                        if ( h.x[ 0 ][ j ][ k ]){//land
+                            t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 
+                                                 2. * d_j / d_j_half ) + t_pole + t_cretaceous + 
+                                                 t_land;    // end parabolic temperature distribution
+                        }else{
+                             t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) -
+                                                  2. * d_j / d_j_half ) + t_pole + t_cretaceous;
+                        }
                     }
-
-                    if ( NASATemperature == 1 )                                 // if ( NASATemperature == 1 ) surface temperature is NASA based
+                    else if ( NASATemperature == 1 )// if ( NASATemperature == 1 ) surface temperature is NASA based
                     {
-                        t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + ( t_cretaceous - t_cret_cor );
-                        if ( h.x[ 0 ][ j ][ k ] == 1. )                                     t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous + t_land;    // end parabolic temperature distribution
+                        if ( h.x[ 0 ][ j ][ k ]){//land
+                            t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 
+                                                 2. * d_j / d_j_half ) + t_pole + t_cretaceous + 
+                                                 t_land;    // end parabolic temperature distribution
+                        }else{
+                            t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + ( t_cretaceous - t_cret_cor );
+                        }
                     }
                 }
             }
@@ -548,19 +563,15 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, Array_2D &temperature_NASA,
     }
 
 
-// temperature approaching the tropopause, above constant temperature following Standard Atmosphere
-
-    d_i_max = ( double ) ( im - 1 );
-
+    // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ )
     {
         for ( int k = 0; k < km; k++ )
         {
             for ( int i = 1; i <= im - 1; i++ )
             {
-                hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
-                d_i = ( double ) i;
-                t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];                // linear temperature decay up to tropopause, privat approximation
+                t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / (double)(im-1) * i + 
+                                     t.x[ 0 ][ j ][ k ];// linear temperature decay up to tropopause, privat approximation
             }
         }
     }

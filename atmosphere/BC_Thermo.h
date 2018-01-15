@@ -93,7 +93,7 @@ class BC_Thermo
 
 		void IC_CellStructure ( int *, Array &, Array &, Array &, Array & );
 
-		void BC_Temperature ( int *, Array_2D &, Array &, Array &, Array &, Array & );
+		void BC_Temperature ( int *, Array_2D &, const Int3DArray &h, Array &, Array &, Array & );
 
 		void TropopauseLocation ( int * );
 
