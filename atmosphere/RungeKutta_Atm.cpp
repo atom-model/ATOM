@@ -29,7 +29,7 @@ RungeKutta_Atmosphere::RungeKutta_Atmosphere ( int im, int jm, int km, double dt
 RungeKutta_Atmosphere::~RungeKutta_Atmosphere () {}
 
 
-void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prepare, int &n, int &n_pres, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_air, double r_water, double r_water_vapour, double r_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c, Array_2D &Topography )
+void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prepare, int &n, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_air, double r_water, double r_water_vapour, double r_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &t_cond_3D, Array &t_evap_3D, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c, Array_2D &Topography )
 {
 // Runge-Kutta 4. order for u, v and w component, temperature, water vapour and co2 content
 
@@ -140,22 +140,6 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
 			}
 		}
 	}
-
-	if ( n == n_pres )
-	{
-		for ( int i = 1; i < im-1; i++ )
-		{
-			for ( int j = 1; j < jm-1; j++ )
-			{
-				for ( int k = 1; k < km-1; k++ )
-				{
-					p_dyn.x[ i ][ j ][ k ] = p_dynn.x[ i ][ j ][ k ];
-				}
-			}
-		}
-		n_pres = n_pres + 2;
-	}
-
 }
 
 
@@ -163,7 +147,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
 
 
 
-void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prepare_2D, int &n, int &n_pres, double r_air, double u_0, double p_0, double L_atm, Array_1D &rad, Array_1D &the, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &aux_v, Array &aux_w )
+void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prepare_2D, int &n, double r_air, double u_0, double p_0, double L_atm, Array_1D &rad, Array_1D &the, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &aux_v, Array &aux_w )
 {
 // Runge-Kutta 4. order for u, v and w component, temperature, water vapour and co2 content
 //  2D surface iterations
@@ -220,18 +204,5 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
 			w.x[ 0 ][ j ][ k ] = wn.x[ 0 ][ j ][ k ] + ( kw1 + 2. * kw2 + 2. * kw3 + kw4 ) / 6.;
 			p_dyn.x[ 0 ][ j ][ k ] = p_dynn.x[ 0 ][ j ][ k ] + ( kp1 + 2. * kp2 + 2. * kp3 + kp4 ) / 6.;
 		}
-	}
-
-
-	if ( n == n_pres )
-	{
-		for ( int j = 1; j < jm-1; j++ )
-		{
-			for ( int k = 1; k < km-1; k++ )
-			{
-				p_dyn.x[ 0 ][ j ][ k ] = p_dynn.x[ 0 ][ j ][ k ];
-			}
-		}
-		n_pres = n_pres + 2;
 	}
 }

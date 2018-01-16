@@ -29,9 +29,9 @@ class RungeKutta_Hydrosphere
 		RungeKutta_Hydrosphere ( int, int, int, int, double );
 		~RungeKutta_Hydrosphere ();
 
-		void solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &, int &, int &, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &, int &, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &, int &, int &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &, int &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 };
 #endif

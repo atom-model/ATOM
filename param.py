@@ -17,9 +17,9 @@ def main():
 
 
         'atmosphere': [
-            ( 'velocity_iter_max_2D', '', 'int',20 ),
+            ( 'velocity_iter_max_2D', '', 'int',2 ),
             ( 'pressure_iter_max_2D', '', 'int', 2 ),
-            ( 'velocity_iter_max', '', 'int', 5 ),
+            ( 'velocity_iter_max', '', 'int', 2 ),
             ( 'pressure_iter_max', '', 'int', 2 ),
 
             ( 'coriolis', 'coriolis force', 'double', 1.0 ),

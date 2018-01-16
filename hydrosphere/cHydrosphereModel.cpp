@@ -246,7 +246,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //	initial values for the number of computed steps and the time
 	int n = 1;
-	int n_pres = 2;
 	int velocity_iter = 0;
 	int velocity_iter_2D = 0;
 	int pressure_iter = 0;
@@ -391,10 +390,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 				cout << endl << endl;
 				cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-				cout << " 2D AGCM iterational process" << endl;
+				cout << " 2D OGCM iterational process" << endl;
 				cout << " max total iteration number nm = " << nm << endl << endl;
 
-				cout << " present state of the 2D computation " << endl << "  current time slice, number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations " << endl << endl << " Ma = " << Ma << "     n = " << n << "     n_pres = " << n_pres << "    velocity_iter_max_2D = " << velocity_iter_max_2D << "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " << pressure_iter_max_2D << "    pressure_iter_2D = " << pressure_iter_2D << endl;
+				cout << " present state of the 2D computation " << endl << "  current time slice, number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations " << endl << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max_2D = " << velocity_iter_max_2D << "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " << pressure_iter_max_2D << "    pressure_iter_2D = " << pressure_iter_2D << endl;
 
 //		class BC_Atmosphaere for the geometry of a shell of a sphere
 				boundary.RB_theta ( ca, ta, pa, t, u, v, w, p_dyn, c );
@@ -408,7 +407,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 				residuum_old = emin;
 
 //		class RungeKutta for the solution of the differential equations describing the flow properties
-				result.solveRungeKutta_2D_Hydrosphere ( prepare_2D, n, n_pres, rad, the, phi, rhs_v, rhs_w, rhs_p, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
+				result.solveRungeKutta_2D_Hydrosphere ( prepare_2D, n, rad, the, phi, rhs_v, rhs_w, rhs_p, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
 
 //		new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
 				Accuracy_Hyd		min_Residuum_2D ( im, jm, km, dthe, dphi );
@@ -454,7 +453,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 	cout << endl << endl;
 
-	n_pres = 2;
 
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
@@ -473,7 +471,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //  restoring the velocity component and the temperature for the new time step
 			oldnew.restoreOldNew_3D(1., u, v, w, t, p_dyn, c, un, vn, wn, tn, p_dynn, cn);
 
-			cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations " << endl << endl << " Ma = " << Ma << "     n = " << n << "     n_pres = " << n_pres << "    velocity_iter_max = " << velocity_iter_max << "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << "    pressure_iter = " << pressure_iter << endl;
+			cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations " << endl << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << "    pressure_iter = " << pressure_iter << endl;
 
 //		old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
 			Accuracy_Hyd		min_Residuum_old ( im, jm, km, dr, dthe, dphi );
@@ -488,7 +486,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			boundary.RB_phi ( t, u, v, w, p_dyn, c );
 
 //		class RungeKutta for the solution of the differential equations describing the flow properties
-			result.solveRungeKutta_3D_Hydrosphere ( prepare, n, n_pres, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat );
+			result.solveRungeKutta_3D_Hydrosphere ( prepare, n, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat );
 
 //		class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 			depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );

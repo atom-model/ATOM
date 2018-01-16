@@ -250,21 +250,9 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &
 			for ( int i = 1; i < im-1; i++ )
 			{
 				if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i+1 ][ j ][ k ] == 0. ) ) 	albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + albedo_pole;
-
-				if ( ( t.x[ i ][ j ][ k ] * t_0 - t_0 <= 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i+1 ][ j ][ k ] == 0. ) ) 	albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + albedo_pole;
 			}
 
-				Ik.y[ j ][ k ] = ik_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + ik_pole;
-
-				if ( ( Ma == 0 ) && ( h.x[ 0 ][ j ][ k ]  == 1. ) )
-				{
-					t_Ik = pow ( Ik.y[ j ][ k ] / sigma, ( 1. / 4. ) );
-					Ik.y[ j ][ k ] = sigma * pow ( ( t_Ik ), 4. );
-				}
-
-			TK = .54;
-
-			Ik.y[ j ][ k ] = TK * Ik.y[ j ][ k ];
+			Ik.y[ j ][ k ] = ik_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + ik_pole;				// in W/m²
 		}
 	}
 
@@ -317,10 +305,10 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &
 // radiation boundary conditions for the top ot the troposphere
 				radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4. ); // long wave radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
-				rad_lon_terrestic = sigma * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );									// long wave surface radiation based on local temperature, Stephan-Bolzmann law
+				rad_lon_terrestic = sigma * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );									// long wave surface radiation based on local temperature, Stefan-Boltzmann law
 				rad_lon_back = epsilon_3D.x[ 1 ][ j ][ k ] * sigma * pow ( t.x[ 1 ][ j ][ k ] * t_0, 4. );	// long wave back radiation absorbed from the first water vapour layer out of 40
  
-				Ik_loss = .07 * Ik.y[ j ][ k ] / TK;																				// short wave radiation loss on the surface
+				Ik_loss = .07 * Ik.y[ j ][ k ];																				// short wave radiation loss on the surface
 				Ik_tot = rad_lon_back + Ik.y[ j ][ k ] - Ik_loss;															// total short and long wave radiation leaving the surface
 
 				AA[ 0 ] = Ik_tot / radiation_3D.x[ im - 1 ][ j ][ k ];													// non-dimensional surface radiation
@@ -427,6 +415,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &
 // above assumed tropopause constant temperature t_tropopause
 					radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];							// Thomas algorithm, recurrence formula
 					t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, ( 1. / 4. ) ) / t_0 );	// averaging of temperature values to smooth the iterations
+					if ( t.x[ i ][ j ][ k ] >= 1.1464 )									t.x[ i ][ j ][ k ] = 1.1464;
 				}
 			}
 		}
@@ -630,13 +619,13 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c )
 			d_j = ( double ) j;
 			if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
 			{
-				c.x[ 0 ][ j ][ k ]  = hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );	// saturation of relative water vapour in kg/kg
+				c.x[ 0 ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );	// saturation of relative water vapour in kg/kg
 				c.x[ 0 ][ j ][ k ] = c_ocean * c.x[ 0 ][ j ][ k ];														// relativ water vapour contents on ocean surface reduced by factor
 			}
 
-			if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
+			if ( h.x[ 0 ][ j ][ k ] == 1. ) 
 			{
-				c.x[ 0 ][ j ][ k ]  = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );
+				c.x[ 0 ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );
 				c.x[ 0 ][ j ][ k ] = c_land * c.x[ 0 ][ j ][ k ];															// relativ water vapour contents on land reduced by factor
 			}
 		}
@@ -2512,9 +2501,11 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
 
 
 
-void BC_Thermo::BC_NASAbasedSurfTempRead ( const string &Name_NASAbasedSurfaceTemperature_File, double &t_cretaceous, double &t_cret_cor, Array &t, Array &c, Array &cloud, Array &ice )
+//void BC_Thermo::BC_NASAbasedSurfTempRead ( const string &Name_NASAbasedSurfaceTemperature_File, double &t_cretaceous, double &t_cret_cor, Array &t, Array &c, Array &cloud, Array &ice )
+void BC_Thermo::BC_NASAbasedSurfTempRead ( Array &t, Array &c, Array &cloud, Array &ice )
 {
-    string NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
+//    string NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
+    string NASAbasedSurfaceTemperature_File = output_path + "/" + std::to_string( Ma ) + "Ma_NASAbasedSurfaceTemperature.xyz";
     ifstream Name_NASAbasedSurfaceTemperature_File_Read;
     Name_NASAbasedSurfaceTemperature_File_Read.precision(4);
     Name_NASAbasedSurfaceTemperature_File_Read.setf(ios::fixed);
@@ -2526,7 +2517,7 @@ void BC_Thermo::BC_NASAbasedSurfTempRead ( const string &Name_NASAbasedSurfaceTe
     }
 
 
-	Name_NASAbasedSurfaceTemperature_File_Read >> t_cretaceous >> t_cret_cor;
+//	Name_NASAbasedSurfaceTemperature_File_Read >> t_cretaceous >> t_cret_cor;
 
 	for ( int k = 0; k < km; k++ ) 
 	{
@@ -2543,30 +2534,38 @@ void BC_Thermo::BC_NASAbasedSurfTempRead ( const string &Name_NASAbasedSurfaceTe
 
 
 
-void BC_Thermo::BC_NASAbasedSurfTempWrite ( const string &Name_NASAbasedSurfaceTemperature_File, double &t_cretaceous, double &t_cret_cor, Array &t, Array &c, Array &cloud, Array &ice )
+//void BC_Thermo::BC_NASAbasedSurfTempWrite ( const string &Name_NASAbasedSurfaceTemperature_File, double &t_cretaceous, double &t_cret_cor, Array &t, Array &c, Array &cloud, Array &ice )
+void BC_Thermo::BC_NASAbasedSurfTempWrite ( Array &t, Array &c, Array &cloud, Array &ice )
 {
 // initial conditions for the Name_NASAbasedSurfaceTemperature_File at the sea surface
 
 	cout.precision ( 4 );
 	cout.setf ( ios::fixed );
 
-    string NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
+//    string NASAbasedSurfaceTemperature_File = output_path + "/NASAbasedSurfaceTemperature.xyz";
+    string NASAbasedSurfaceTemperature_File = output_path + "/" + std::to_string( Ma ) + "Ma_NASAbasedSurfaceTemperature.xyz";
 
 	ofstream Name_NASAbasedSurfaceTemperature_File_Write;
 	Name_NASAbasedSurfaceTemperature_File_Write.open(NASAbasedSurfaceTemperature_File);
 
+    if (!Name_NASAbasedSurfaceTemperature_File_Write.is_open()) {
+        cerr << "ERROR: could not open NASAbased file " << __FILE__ << " at line " << __LINE__ << "\n";
+        abort();
+/*
 	if (!Name_NASAbasedSurfaceTemperature_File_Write.is_open()) {
-		cerr << "ERROR: could not open Name_NASAbasedSurfaceTemperature_File file at " << Name_NASAbasedSurfaceTemperature_File << "\n";
+//		cerr << "ERROR: could not open Name_NASAbasedSurfaceTemperature_File file at " << Name_NASAbasedSurfaceTemperature_File << "\n";
+		cerr << "ERROR: could not open NASAbasedSurfaceTemperature_File file at " << NASAbasedSurfaceTemperature_File << "\n";
 		abort();
+*/
 	}
 
-	Name_NASAbasedSurfaceTemperature_File_Write << t_cretaceous << " " << t_cret_cor << endl;
+//	Name_NASAbasedSurfaceTemperature_File_Write << t_cretaceous << " " << t_cret_cor << endl;
 
 	for ( int k = 0; k < km; k++ ) 
 	{
 		for ( int j = 0; j < jm; j++ ) 
 		{
-			Name_NASAbasedSurfaceTemperature_File_Write << t.x[ 0 ][ j ][ k ] << " " << c.x[ 0 ][ j ][ k ] << " " << cloud.x[ 0 ][ j ][ k ] << " " << ice.x[ 0 ][ j ][ k ] << endl;
+//			Name_NASAbasedSurfaceTemperature_File_Write << t.x[ 0 ][ j ][ k ] << " " << c.x[ 0 ][ j ][ k ] << " " << cloud.x[ 0 ][ j ][ k ] << " " << ice.x[ 0 ][ j ][ k ] << endl;
 			Name_NASAbasedSurfaceTemperature_File_Write << t.x[ 0 ][ j ][ k ] << endl;
 		}
 	}
