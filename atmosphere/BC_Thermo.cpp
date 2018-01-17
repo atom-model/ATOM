@@ -255,14 +255,6 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
             }
 
             Ik.y[ j ][ k ] = ik_co2_eff * ( j * j / (double)( j_half * j_half ) - 2. * j / j_half ) + ik_pole;
-
-            if ( ( Ma == 0 ) && h.x[ 0 ][ j ][ k ]){//?? value does not change??
-                    t_Ik = pow ( Ik.y[ j ][ k ] / sigma, ( 1. / 4. ) );
-                    Ik.y[ j ][ k ] = sigma * pow ( ( t_Ik ), 4. );
-            }
-
-            TK = .54;
-            Ik.y[ j ][ k ] = TK * Ik.y[ j ][ k ];
         }
     }
 
@@ -314,11 +306,11 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
                                                      sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4 ); /* 
                     long wave radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation */
                 rad_lon_terrestic = sigma * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4 ); /* 
-                    long wave surface radiation based on local temperature, Stephan-Bolzmann law */
+                    long wave surface radiation based on local temperature, Stefan-Boltzmann law */
                 rad_lon_back = epsilon_3D.x[ 1 ][ j ][ k ] * sigma * pow ( t.x[ 1 ][ j ][ k ] * t_0, 4 );  /* 
                     long wave back radiation absorbed from the first water vapour layer out of 40 */
  
-                Ik_loss = .07 * Ik.y[ j ][ k ] / TK; // short wave radiation loss on the surface
+                Ik_loss = .07 * Ik.y[ j ][ k ]; // short wave radiation loss on the surface
                 Ik_tot = rad_lon_back + Ik.y[ j ][ k ] - Ik_loss; // total short and long wave radiation leaving the surface
 
                 AA[ 0 ] = Ik_tot / radiation_3D.x[ im - 1 ][ j ][ k ]; // non-dimensional surface radiation
@@ -393,6 +385,9 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
                         t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + 
                                              pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, ( 1. / 4. ) ) / 
                                              t_0 );    // averaging of temperature values to smooth the iterations
+                        if((t.x[ i ][ j ][ k ]*t_0 - t_0) > 35.0){
+                            //t.x[ i ][ j ][ k ] = 35.0/t_0 + 1;
+                        }
                     }else{
                         //std::cerr << "The radiation at "<<i<<" "<<j<<" "<<k<<" is negative! "<<
                         //    radiation_3D.x[ i ][ j ][ k ]<<std::endl;

@@ -28,7 +28,7 @@ RungeKutta_Hydrosphere::~RungeKutta_Hydrosphere () {}
 
 
 
-void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &prepare, int &n, int &n_pres, double L_hyd, double g, double cp_w, double u_0, double t_0, double c_0, double r_0_water, double ta, double pa, double ca, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &rhs_c, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array &p_stat )
+void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &prepare, int &n, double L_hyd, double g, double cp_w, double u_0, double t_0, double c_0, double r_0_water, double ta, double pa, double ca, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &rhs_c, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array &p_stat )
 {
 //  3D volume iterations
 // Runge-Kutta 4. order for u, v and w component, temperature and salt concentration
@@ -115,7 +115,7 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
 
 
 
-void RungeKutta_Hydrosphere::solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &prepare_2D, int &n, int &n_pres, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &aux_v, Array &aux_w )
+void RungeKutta_Hydrosphere::solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &prepare_2D, int &n, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &aux_v, Array &aux_w )
 {
 //  2D surface iterations
 // Runge-Kutta 4. order for u, v and w component, temperature and salt concentration
@@ -171,18 +171,5 @@ void RungeKutta_Hydrosphere::solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &p
 			w.x[ im-1 ][ j ][ k ] = wn.x[ im-1 ][ j ][ k ] + ( kw1 + 2. * kw2 + 2. * kw3 + kw4 ) / 6.;
 			p_dyn.x[ im-1 ][ j ][ k ] = p_dynn.x[ im-1 ][ j ][ k ] + ( kp1 + 2. * kp2 + 2. * kp3 + kp4 ) / 6.;
 		}
-	}
-
-
-	if ( n == n_pres )
-	{
-		for ( int j = 1; j < jm-1; j++ )
-		{
-			for ( int k = 1; k < km-1; k++ )
-			{
-				p_dyn.x[ im-1 ][ j ][ k ] = p_dynn.x[ im-1 ][ j ][ k ];
-			}
-		}
-		n_pres = n_pres + 2;
 	}
 }

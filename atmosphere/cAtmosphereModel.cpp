@@ -216,7 +216,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //  initial values for the number of computed steps and the time
     int n = 1;
-    int n_pres = 2;
 
 //  radial expansion of the computational field for the computation of initial values
     int i_max = 32;      // corresponds to about 12.8 km above sea level, maximum hight of the tropopause at equator
@@ -332,7 +331,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     if ( Ma == 0 || use_earthbyte_reconstruction){ 
             circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
     }
-    
+
     //  class element for the surface precipitation from NASA for comparison
     if ( Ma == 0 || use_earthbyte_reconstruction){ 
         circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
@@ -375,16 +374,15 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     int switch_2D = 0;
     if ( switch_2D != 1 )
     {
-        Run2DLoop(Ma, n, nm, n_pres, i_max, pressure_iter_max_2D, velocity_iter_max_2D,
+        Run2DLoop(Ma, n, nm, i_max, pressure_iter_max_2D, velocity_iter_max_2D,
                   boundary, result, LandArea, prepare_2D,
                   startPressure, oldnew);
     }
 
     cout << endl << endl;
 
-    n_pres = 2;
     
-    Run3DLoop(Ma, n, nm, n_pres, i_max, pressure_iter_max,
+    Run3DLoop(Ma, n, nm, i_max, pressure_iter_max,
               velocity_iter_max, boundary, result,
               LandArea, prepare,
               startPressure, oldnew, calculate_MSL,
@@ -411,7 +409,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 }
 
 
-void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int n_pres, int i_max, int pressure_iter_max_3D, 
+void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_iter_max_3D, 
                                  int velocity_iter_max_3D, BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                                  BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
                                  Pressure_Atm &startPressure, Restore_Atm &oldnew, Results_MSL_Atm &calculate_MSL, 
@@ -435,7 +433,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
             cout << " present state of the computation " << endl << " current time slice, \
                 number of iterations, maximum and current number of velocity iterations, \
                 maximum and current number of pressure iterations " << endl << endl << 
-                " Ma = " << Ma << "     n = " << n << "     n_pres = " << n_pres << 
+                " Ma = " << Ma << "     n = " << n  << 
                 "    velocity_iter_max = " << velocity_iter_max << "     velocity_iter = " << 
                 v_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << p_iter << endl;
@@ -458,7 +456,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
                                                             ice, icen, t, p_stat, S_c_c );
             }
             //class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_3D_Atmosphere(prepare, n, n_pres, lv, ls, ep, hp, u_0, t_0, c_0, 
+            result.solveRungeKutta_3D_Atmosphere(prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, 
                                                  co2_0, p_0, r_air, r_water, r_water_vapour, r_co2, 
                                                  L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, 
                                                  phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, rhs_cloud, 
@@ -475,7 +473,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
                                     sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
 
             //class element for the surface temperature computation by radiation flux density
-            if ( RadiationModel == 1 ){
+            if( RadiationModel == 1 ){
                 circulation.BC_Radiation_multi_layer(albedo, Ik, p_stat, t, c, 
                                                      h.to_Int3DArray(), epsilon_3D, radiation_3D, 
                                                      cloud, ice );
@@ -563,7 +561,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
 }
 
 
-void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int n_pres, int i_max, int pressure_iter_max_2D, 
+void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int i_max, int pressure_iter_max_2D, 
                                  int velocity_iter_max_2D, BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                                  BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D, 
                                  Pressure_Atm &startPressure, Restore_Atm &oldnew){
@@ -578,7 +576,7 @@ void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
             cout << " present state of the 2D computation " << endl << 
                 "  current time slice, number of iterations, maximum and current number of velocity \
                 iterations, maximum and current number of pressure iterations " << endl << endl << 
-                " Ma = " << Ma << "     n = " << n << "     n_pres = " << n_pres << "    velocity_iter_max_2D = " 
+                " Ma = " << Ma << "     n = " << n << "    velocity_iter_max_2D = " 
                 << velocity_iter_max_2D << "     velocity_iter_2D = " << v_iter << 
                 "    pressure_iter_max_2D = " << pressure_iter_max_2D << "    pressure_iter_2D = " << 
                 p_iter << endl;
@@ -593,7 +591,7 @@ void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int n_pres, int i_max, i
             residuum_old = min_Residuum_old_2D.out_min (  );
 
             //  class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_2D_Atmosphere(prepare_2D, n, n_pres, r_air, u_0, p_0, L_atm, rad, the, 
+            result.solveRungeKutta_2D_Atmosphere(prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, 
                                                  rhs_v, rhs_w, rhs_p, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
 
             //class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
