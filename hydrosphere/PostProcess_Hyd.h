@@ -47,7 +47,7 @@ class PostProcess_Hydrosphere
 
 		void Hydrosphere_SequelFile_read ( const string &, int &, int &, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void Atmosphere_TransferFile_read ( const string &, Array &, Array &, Array & );
+		void Atmosphere_TransferFile_read ( const string &, Array &, Array &, Array &, Array & );
 
 		void paraview_vts ( const string &, int &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 

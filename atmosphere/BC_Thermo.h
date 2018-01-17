@@ -46,7 +46,7 @@ class BC_Thermo
 		double wa_equator_Tropopause, wa_equator_SL, va_equator_Tropopause, va_equator_SL, trop_co2_eff;
 		double d_i, d_i_max, d_i_half, d_j, d_j_half, d_j_max, d_k, pi180, d_j_w;
 		double d_j_5n, d_j_15n, d_j_45n, d_j_75n, d_j_30n, d_j_5s, d_j_15s, d_j_45s, d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
-		double t_cretaceous, t_cretaceous_co2_eff, t_cretaceous_max, t_cret_cor, t_360;
+		double t_cretaceous, t_cretaceous_co2_eff, t_cretaceous_max, t_360;
 		double j_par_f, j_pol_f, e, j_d, t_dd, k_par_f, k_pol_f;
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
 		double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
@@ -87,7 +87,7 @@ class BC_Thermo
 
 
 	public:
-		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
 

@@ -307,7 +307,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //	class PostProcess for data transport, read and write
 	PostProcess_Hydrosphere		read_Transfer ( im, jm, km, input_path, output_path );
-	read_Transfer.Atmosphere_TransferFile_read ( bathymetry_name, v, w, p_dyn );
+	read_Transfer.Atmosphere_TransferFile_read ( bathymetry_name, v, w, t, p_dyn );
 
 
 	cout << "***** time slice for the Oceanic Global Circulation Modell ( OGCM ) is:    Ma = " << Ma << " million years" << endl << endl;
