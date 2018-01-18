@@ -316,7 +316,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
                             Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, 
                             lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, 
                             co2_cretaceous, co2_vegetation, co2_ocean, co2_land, c_tropopause, co2_tropopause, 
-                            c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cret_cor, t_cretaceous_max, 
+                            c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_max, 
                             t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, 
                             epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
 
@@ -391,10 +391,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     cout << endl << endl;
 
-    t_cret_cor = t_cretaceous;
-
     if ( NASATemperature == 1 && !use_earthbyte_reconstruction){ 
-        circulation.BC_NASAbasedSurfTempWrite ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t_cret_cor, t, c, cloud, ice );
+        circulation.BC_NASAbasedSurfTempWrite ( Name_NASAbasedSurfaceTemperature_File, t_cretaceous, t, c, cloud, ice );
     }
 
     WriteFile(n, bathymetry_name, output_path);
@@ -728,7 +726,7 @@ void cAtmosphereModel::WriteFile(int n, std::string &bathymetry_name, std::strin
 
     //  writing of v-w-data in the v_w_transfer file
     PostProcess_Atmosphere ppa ( im, jm, km, output_path );
-    ppa.Atmosphere_v_w_Transfer ( bathymetry_name, v, w, p_dyn );
+    ppa.Atmosphere_v_w_Transfer ( bathymetry_name, v, w, t, p_dyn );
     ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
 }
 

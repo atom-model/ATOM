@@ -110,7 +110,8 @@ void PostProcess_Atmosphere::dump_longal( const string &desc, Array &a, double m
 
 
 
-void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_File, Array &v, Array &w, Array &p_dyn )
+void PostProcess_Atmosphere::Atmosphere_v_w_Transfer( string &Name_Bathymetry_File, Array &v, 
+                                                      Array &w, Array &t, Array &p_dyn )
 {
     string Name_v_w_Transfer_File = output_path + "/[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
     ofstream v_w_Transfer_File;
@@ -126,7 +127,7 @@ void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_F
 
     for ( int j = 0; j < jm; j++ ) {
         for ( int k = 0; k < km; k++ ) {
-            v_w_Transfer_File << v.x[ 0 ][ j ][ k ] << " " << w.x[ 0 ][ j ][ k ] << " " << p_dyn.x[ 0 ][ j ][ k ]  << endl;
+            v_w_Transfer_File << v.x[ 0 ][ j ][ k ] << " " << w.x[ 0 ][ j ][ k ] << " " << t.x[ 0 ][ j ][ k ] << " " << p_dyn.x[ 0 ][ j ][ k ]  << endl;
         }
     }
     v_w_Transfer_File.close();

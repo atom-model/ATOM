@@ -658,7 +658,8 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 
 
 
-void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_Bathymetry_File, Array &v, Array &w, Array &p )
+void PostProcess_Hydrosphere::Atmosphere_TransferFile_read( const string &Name_Bathymetry_File, 
+                                                            Array &v, Array &w, Array &t, Array &p )
 {
 	ifstream v_w_Transfer_File;
     string Name_v_w_Transfer_File = input_path + "/[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
@@ -679,7 +680,8 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 		{
 			v_w_Transfer_File >> v.x[ im-1 ][ j ][ k ];
 			v_w_Transfer_File >> w.x[ im-1 ][ j ][ k ];
-			v_w_Transfer_File >> p.x[ im-1 ][ j ][ k ];
+	        v_w_Transfer_File >> t.x[ im-1 ][ j ][ k ];
+    		v_w_Transfer_File >> p.x[ im-1 ][ j ][ k ];
 		}
 	}
 	v_w_Transfer_File.close();
