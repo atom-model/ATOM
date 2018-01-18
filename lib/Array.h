@@ -102,6 +102,46 @@ public:
         }
         return a;
     }
+
+    double max(){
+        assert(im && jm && km);
+        double ret=x[0][0][0];
+        for(int i=0; i<im; i++){
+            for(int j=0; j<jm; j++){
+                for(int k=0; k<km; k++){
+                    ret=std::max(ret, x[i][j][k]);
+                }
+            }
+        }
+        return ret;
+    }
+
+    double min(){
+        assert(im && jm && km);
+        double ret=x[0][0][0];
+        for(int i=0; i<im; i++){
+            for(int j=0; j<jm; j++){
+                for(int k=0; k<km; k++){
+                    ret=std::min(ret, x[i][j][k]);
+                }
+            }
+        }
+        return ret;
+    }
+
+    double mean(){
+        assert(im && jm && km);
+        double ret=0;
+        for(int i=0; i<im; i++){
+            for(int j=0; j<jm; j++){
+                for(int k=0; k<km; k++){
+                    ret+=x[i][j][k];
+                }
+            }
+        }
+        return ret/(im*jm*km);
+    }
+
 };
 
 inline Array operator* (double coeff, const Array &a){
