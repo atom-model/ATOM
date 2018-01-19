@@ -27,7 +27,7 @@ class BC_Thermo
 		int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
 		int j_had_n_end, j_had_s_end, k_w, k_w_end, k_e;
 		int j_n, j_s;
-		int sun, Ma, Ma_max, Ma_max_half;
+		int sun, Ma, Ma_prev, Ma_max, Ma_max_half;
 		int j_par, j_pol, k_par, k_pol;
 		int k_a, k_b, flip, j_grad, k_grad, k_grad_init, i_middle;
 		int j_water, k_water, j_sequel, k_sequel;
@@ -46,7 +46,7 @@ class BC_Thermo
 		double wa_equator_Tropopause, wa_equator_SL, va_equator_Tropopause, va_equator_SL, trop_co2_eff;
 		double d_i, d_i_max, d_i_half, d_j, d_j_half, d_j_max, d_k, pi180, d_j_w;
 		double d_j_5n, d_j_15n, d_j_45n, d_j_75n, d_j_30n, d_j_5s, d_j_15s, d_j_45s, d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
-		double t_cretaceous, t_cretaceous_co2_eff, t_cretaceous_max, t_360;
+		double t_cretaceous, t_cretaceous_prev, t_cretaceous_add, t_cretaceous_eff, t_cretaceous_max, t_360;
 		double j_par_f, j_pol_f, e, j_d, t_dd, k_par_f, k_pol_f;
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
 		double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
@@ -66,8 +66,8 @@ class BC_Thermo
 		double r_dry, r_humid, p_SL, t_SL, exp_pressure, hight;
 		double t_u, t_Celsius_SL, t_dew, t_dew_SL, T, T_nue, T_it, q_T, q_Rain_n;
 		double q_v_b, q_c_b, q_i_b, q_v_hyp, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
-		double t_equator, t_tropopause, t_co2_eff, t_pole, c_equator, c_tropopause, coeff_mmWS;
-		double co2_equator, co2_tropopause, co_co2_eff, co_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous;
+		double t_equator, t_tropopause, t_eff, t_pole, c_equator, c_tropopause, coeff_mmWS;
+		double co2_equator, co2_tropopause, co2_eff, co_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous;
 		double *AA, **CC, CCC, DDD;
 		double *jm_temp_asym, *alfa, *beta;
 
@@ -87,13 +87,13 @@ class BC_Thermo
 
 
 	public:
-		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
 
 		void IC_CellStructure ( int *, Array &, Array &, Array &, Array & );
 
-		void BC_Temperature ( int *, Array_2D &, Array &, Array &, Array &, Array & );
+		void BC_Temperature ( double &, double &, Array_2D &, Array &, Array &, Array &, Array & );
 
 		void TropopauseLocation ( int * );
 
@@ -111,17 +111,9 @@ class BC_Thermo
 
 		void BC_CO2 ( Array_2D &, Array &, Array &, Array &, Array & );
 
-//		void BC_NASAbasedSurfTempRead ( const string &, double &, double &, Array &, Array &, Array &, Array & );
+		void BC_NASAbasedSurfTempRead ( int &, double &, Array &, Array &, Array &, Array & );
 
-//		void BC_NASAbasedSurfTempWrite ( const string &, double &, double &, Array &, Array &, Array &, Array & );
-
-		void BC_NASAbasedSurfTempRead ( Array &, Array &, Array &, Array & );
-
-		void BC_NASAbasedSurfTempWrite ( Array &, Array &, Array &, Array & );
-
-		void BC_NASAbasedSurfTempRead ( const string &, double &, double &, Array &, Array &, Array &, Array & );
-
-		void BC_NASAbasedSurfTempWrite ( const string &, double &, double &, Array &, Array &, Array &, Array & );
+		void BC_NASAbasedSurfTempWrite ( int &, double &, Array &, Array &, Array &, Array & );
 
 		void BC_Surface_Temperature_NASA ( const string &, Array_2D &, Array & );
 
@@ -138,6 +130,10 @@ class BC_Thermo
 		double cloud_ice ( const double &, int, const int & );
 
 		double out_t_cretaceous (  ) const;
+
+		double out_Ma_prev (  ) const;
+
+		double out_t_cretaceous_prev (  ) const;
 
 		double out_t_cret_cor (  ) const;
 

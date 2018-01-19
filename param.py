@@ -28,6 +28,8 @@ def main():
             ( 'buoyancy', 'buoyancy', 'double', 1.0 ),
             ( 'CO2', 'CO2', 'double', 1.0 ),
 
+            ( 'Ma_step', 'step size between timeslices', 'int', 10 ),
+
             ( 'epsres', 'accuracy of relative and absolute errors', 'double', 0.00001 ),
 
             ( 'sun', 'while no variable sun position wanted', 'int', 0 ),
@@ -94,6 +96,7 @@ def main():
 
             ( 't_cretaceous_max', 'maximum add of mean temperature in °C during cretaceous times', 'double', 10.0 ),
             ( 't_cretaceous', 'value at modern times', 'double', 0.0 ),
+#            ( 't_cretaceous_prev', 'initial value at modern times', 'double', 0.0 ),
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
             ( 't_equator', 'temperature t_0 = 1.11 compares to 30.0° C compares to 303.15 K', 'double', 1.11 ),

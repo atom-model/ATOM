@@ -339,8 +339,21 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	class Pressure for the subsequent computation of the pressure by a separate Euler equation
 	Pressure_Atm										startPressure ( im, jm, km, dr, dthe, dphi );
 
+
+	int Ma_prev;
+	double t_cretaceous_prev;
+
+	if ( Ma == 0 ){
+		Ma_prev = 0;
+		t_cretaceous_prev = 0.;
+	}else{
+		Ma_prev = Ma - Ma_step;
+	}
+
+
+
 //	class BC_Thermo for the initial and boundary conditions of the flow properties
-	BC_Thermo									circulation ( output_path, im, jm, km, i_beg, i_max, RadiationModel, NASATemperature, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_max, Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_max, t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
+	BC_Thermo									circulation ( output_path, im, jm, km, i_beg, i_max, RadiationModel, NASATemperature, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_prev, Ma_max, Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_prev, t_cretaceous_max, t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
 
 //	class Restore to restore the iterational values from new to old
 	Restore_Atm								oldnew( im, jm, km );
@@ -352,19 +365,18 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	circulation.TropopauseLocation ( im_tropopause );
 
 //  class element for the surface temperature from NASA for comparison
-	if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
+//	if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
+	circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 
 //  class element for the surface temperature based on NASA temperature for progressing timeslices
-	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( t, c, cloud, ice );
+//	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
+
 
 //  class element for the surface precipitation from NASA for comparison
 	if ( Ma == 0 ) circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
 //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
-	circulation.BC_Temperature ( im_tropopause, temperature_NASA, h, t, p_dyn, p_stat );
-	t_cretaceous = circulation.out_t_cretaceous (  );
-
-
+	circulation.BC_Temperature ( t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
 
 //  class element for the correction of the temperature initial distribution around coasts
 	if ( ( NASATemperature == 1 ) && ( Ma > 0 ) ) circulation.IC_Temperature_WestEastCoast ( h, t );
@@ -830,7 +842,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
 
 
-	if ( NASATemperature == 1 ) circulation.BC_NASAbasedSurfTempWrite ( t, c, cloud, ice );
+	if ( NASATemperature == 1 ) circulation.BC_NASAbasedSurfTempWrite ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
 
