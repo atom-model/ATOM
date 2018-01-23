@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <algorithm>
 
+#include "cAtmosphereModel.h"
 #include "BC_Thermo.h"
 #include "Array.h"
 #include "Array_2D.h"
@@ -24,7 +25,8 @@ using namespace std;
 
 
 
-BC_Thermo::BC_Thermo( string &output_path, int im, int jm, int km, int i_beg, int i_max, int RadiationModel, 
+BC_Thermo::BC_Thermo( cAtmosphereModel &model, 
+                      string &output_path, int im, int jm, int km, int i_beg, int i_max, int RadiationModel, 
                       int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, 
                       int Ma, int Ma_max, int Ma_max_half, double dt, double dr, double dthe, double dphi, double g, 
                       double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double lv, 

@@ -52,6 +52,9 @@ private:
     PythonStream ps;
     std::streambuf *backup;
 
+    std::vector<int> m_time_list;
+    std::vector<int>::const_iterator m_current_time;
+
     static const int im=41, jm=181, km=361, nm=200;
     int j_res, k_res;    
 

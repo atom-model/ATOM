@@ -18,6 +18,8 @@
 #ifndef _BC_THERMO_
 #define _BC_THERMO_
 
+class cAtmosphereModel;
+
 using namespace std;
 
 class BC_Thermo
@@ -87,7 +89,7 @@ class BC_Thermo
 
 
 	public:
-		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo (cAtmosphereModel &model, string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
 
