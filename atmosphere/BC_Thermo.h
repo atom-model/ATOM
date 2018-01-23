@@ -25,6 +25,7 @@ using namespace std;
 class BC_Thermo
 {
 	private:
+        cAtmosphereModel &m_model;
 		int i, j, k, im, jm, km, k_half, j_half, i_half, i_max, j_max, k_max, i_beg, im_1, i_land, iter_rad, ll;
 		int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
 		int j_had_n_end, j_had_s_end, k_w, k_w_end, k_e;
@@ -139,6 +140,14 @@ class BC_Thermo
 		double out_t_cretaceous (  ) const;
 
 		double out_co2 (  ) const;
+
+    private:
+        double get_temperature_increment(int Ma){
+            double t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - 
+                                      ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
+            return t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
+        }
+
 
 };
 #endif

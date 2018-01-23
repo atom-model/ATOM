@@ -2,6 +2,7 @@
 #define CATMOSPHEREMODEL_H
 
 #include <string>
+#include <set>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -33,6 +34,22 @@ public:
     void Run();
     void RunTimeSlice(int time_slice);
     void PrintMaxMinValues();
+
+    std::set<int>::const_iterator get_current_time() const{
+        return m_current_time;
+    }
+
+    std::set<int>::const_iterator get_previous_time() const{
+        if(m_current_time != m_time_list.begin()){
+            std::set<int>::const_iterator ret = m_current_time;
+            ret--;
+            return ret;
+        }
+        else{
+            return m_current_time;
+        }
+    }
+
     #include "AtmosphereParams.h.inc"
 
 private:
@@ -52,8 +69,8 @@ private:
     PythonStream ps;
     std::streambuf *backup;
 
-    std::vector<int> m_time_list;
-    std::vector<int>::const_iterator m_current_time;
+    std::set<int> m_time_list;
+    std::set<int>::const_iterator m_current_time;
 
     static const int im=41, jm=181, km=361, nm=200;
     int j_res, k_res;    

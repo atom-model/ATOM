@@ -198,10 +198,12 @@ void cAtmosphereModel::LoadConfig ( const char *filename ) {
 
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
-// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
-// maximum number of overall iterations ( n )
-// maximum number of inner velocity loop iterations ( velocity_iter_max )
-// maximum number of outer pressure loop iterations ( pressure_iter_max )
+    // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
+    // maximum number of overall iterations ( n )
+    // maximum number of inner velocity loop iterations ( velocity_iter_max )
+    // maximum number of outer pressure loop iterations ( pressure_iter_max )
+
+    m_current_time = m_time_list.insert(Ma).first;
 
     mkdir(output_path.c_str(), 0777);
 

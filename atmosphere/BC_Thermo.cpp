@@ -36,7 +36,8 @@ BC_Thermo::BC_Thermo( cAtmosphereModel &model,
                       double t_average, double co2_average, double co2_pole, double t_cretaceous, double t_cretaceous_max, 
                       double t_land, double t_tropopause, double t_equator, double t_pole, double gam, 
                       double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, 
-                      double albedo_pole, double ik_equator, double ik_pole)
+                      double albedo_pole, double ik_equator, double ik_pole):
+    m_model(model)
 {
     this ->output_path = output_path;
     this -> im = im;
@@ -428,12 +429,14 @@ void BC_Thermo::BC_Temperature(int *im_tropopause, Array_2D &temperature_NASA,
 
     // temperature-distribution by Ruddiman approximated by a parabola
     t_co2_eff = t_pole - t_equator;
-    t_cretaceous_co2_eff = t_cretaceous_max / ( ( double ) Ma_max_half -   
-                           ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
-    
-    t_cretaceous = t_cretaceous_co2_eff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
-    
-    if ( Ma == 0 )  t_cretaceous = 0.;
+
+    double t_cretaceous_prev = 0.0;
+    if ( Ma == 0 ){  
+        t_cretaceous = t_cretaceous_prev = 0.;
+    }else{
+        t_cretaceous = get_temperature_increment(Ma);
+        t_cretaceous_prev = get_temperature_increment(*m_model.get_previous_time());
+    }
 
     cout.precision ( 3 );
 
@@ -454,6 +457,9 @@ void BC_Thermo::BC_Temperature(int *im_tropopause, Array_2D &temperature_NASA,
     cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_cretaceous << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << temperature_unit << endl;
 
     t_cretaceous = ( t_cretaceous + t_average + t_0 ) / t_0 - ( ( t_average + t_0 ) / t_0 );    // non-dimensional
+    double t_cretaceous_add = t_cretaceous - t_cretaceous_prev/t_0; // non-dimensional
+
+    std::cerr << "temperature increment: " << t_cretaceous_add<<"  "<<t_cretaceous*t_0<<"  "<< t_cretaceous_prev << std::endl;
 
     // temperatur distribution at aa prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
@@ -546,21 +552,21 @@ void BC_Thermo::BC_Temperature(int *im_tropopause, Array_2D &temperature_NASA,
                     {
                         if ( h.x[ 0 ][ j ][ k ]){//land
                             t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 
-                                                 2. * d_j / d_j_half ) + t_pole + t_cretaceous + 
+                                                 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + 
                                                  t_land;    // end parabolic temperature distribution
                         }else{
                              t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) -
-                                                  2. * d_j / d_j_half ) + t_pole + t_cretaceous;
+                                                  2. * d_j / d_j_half ) + t_pole + t_cretaceous_add;
                         }
                     }
                     else if ( NASATemperature == 1 )// if ( NASATemperature == 1 ) surface temperature is NASA based
                     {
                         if ( h.x[ 0 ][ j ][ k ]){//land
                             t.x[ 0 ][ j ][ k ] = t_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 
-                                                 2. * d_j / d_j_half ) + t_pole + t_cretaceous + 
+                                                 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + 
                                                  t_land;    // end parabolic temperature distribution
                         }else{
-                            t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous;
+                            t.x[ 0 ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
                         }
                     }
                 }
