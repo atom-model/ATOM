@@ -23,7 +23,20 @@
 
 using namespace std;
 
+BC_Thermo::BC_Thermo(cAtmosphereModel &model) :
+    m_model(model),
+    Ma_max(model.Ma_max),
+    Ma_max_half(model.Ma_max_half),
+    t_cretaceous_max(model.t_cretaceous_max)
+{
+    im = 0;
+    CC=0;
 
+    jm_temp_asym =0;
+    alfa=0;
+    beta=0;
+    AA=0;
+}
 
 BC_Thermo::BC_Thermo( cAtmosphereModel &model, 
                       string &output_path, int im, int jm, int km, int i_beg, int i_max, int RadiationModel, 
@@ -456,10 +469,9 @@ void BC_Thermo::BC_Temperature(int *im_tropopause, Array_2D &temperature_NASA,
 
     cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_cretaceous << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << temperature_unit << endl;
 
-    t_cretaceous = ( t_cretaceous + t_average + t_0 ) / t_0 - ( ( t_average + t_0 ) / t_0 );    // non-dimensional
+    t_cretaceous /= t_0;    // non-dimensional
     double t_cretaceous_add = t_cretaceous - t_cretaceous_prev/t_0; // non-dimensional
 
-    std::cerr << "temperature increment: " << t_cretaceous_add<<"  "<<t_cretaceous*t_0<<"  "<< t_cretaceous_prev << std::endl;
 
     // temperatur distribution at aa prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N

@@ -9,6 +9,10 @@
 
 using namespace std;
 
+bool PythonStream::is_enable(){
+    return true;
+}
+
 void PythonStream::OverrideCout() {
     // FIXME: leaks a PythonStream object
     // also permanently mangles the output, but that's fine in this application

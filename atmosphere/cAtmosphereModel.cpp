@@ -127,8 +127,11 @@ cAtmosphereModel::cAtmosphereModel():
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
     //PythonStream::OverrideCout();
-    backup = std::cout.rdbuf();
-    std::cout.rdbuf(&ps);
+    if(PythonStream::is_enable())
+    {
+        backup = std::cout.rdbuf();
+        std::cout.rdbuf(&ps);
+    }
 
     // If Ctrl-C is pressed, quit
     signal(SIGINT, exit);
@@ -158,8 +161,12 @@ cAtmosphereModel::cAtmosphereModel():
     p_stat.initArray(im, jm, km, pa); 
 }
 
-cAtmosphereModel::~cAtmosphereModel() {
-    std::cout.rdbuf(backup);
+cAtmosphereModel::~cAtmosphereModel() 
+{
+    if(PythonStream::is_enable())
+    {    
+        std::cout.rdbuf(backup);
+    }
     delete [] im_tropopause;
 }
  
@@ -399,6 +406,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     WriteFile(n, bathymetry_name, output_path);
 
+    cout << "Mean temperature: " << (t.mean()-1)*t_0 <<" Max temperature: "<<(t.max()-1)*t_0<<std::endl<<std::endl;
+
     Reset();
 
     //  final remarks
@@ -472,13 +481,6 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
                                     co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, 
                                     sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
 
-            //class element for the surface temperature computation by radiation flux density
-            if( RadiationModel == 1 ){
-                circulation.BC_Radiation_multi_layer(albedo, Ik, p_stat, t, c, 
-                                                     h.to_Int3DArray(), epsilon_3D, radiation_3D, 
-                                                     cloud, ice );
-            }
-
 
             //new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm      min_Residuum ( im, jm, km, dr, dthe, dphi );
@@ -544,6 +546,14 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
             startPressure.computePressure_3D(pa, rad, the, p_dyn, p_dynn, h, rhs_u,
                                              rhs_v, rhs_w, aux_u, aux_v, aux_w );
         }
+
+        //class element for the surface temperature computation by radiation flux density
+        if( RadiationModel == 1 ){
+            circulation.BC_Radiation_multi_layer(albedo, Ik, p_stat, t, c,
+                                                 h.to_Int3DArray(), epsilon_3D, radiation_3D,
+                                                 cloud, ice );
+        }
+
 
         //Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
         //resulting the precipitation distribution formed of rain and snow

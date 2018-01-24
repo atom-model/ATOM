@@ -19,11 +19,14 @@
 #define _BC_THERMO_
 
 class cAtmosphereModel;
+class AtomTest;
 
 using namespace std;
 
 class BC_Thermo
 {
+    friend class AtomTest;
+
 	private:
         cAtmosphereModel &m_model;
 		int i, j, k, im, jm, km, k_half, j_half, i_half, i_max, j_max, k_max, i_beg, im_1, i_land, iter_rad, ll;
@@ -90,6 +93,8 @@ class BC_Thermo
 
 
 	public:
+        BC_Thermo (cAtmosphereModel &model);
+
 		BC_Thermo (cAtmosphereModel &model, string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
@@ -143,9 +148,9 @@ class BC_Thermo
 
     private:
         double get_temperature_increment(int Ma){
-            double t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - 
-                                      ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
-            return t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
+            double t_cretaceous_eff = t_cretaceous_max / 
+                                      ( Ma_max_half - Ma_max_half * Ma_max_half / (double)Ma_max );   // in °C
+            return t_cretaceous_eff * (Ma - ( Ma * Ma ) / (double)Ma_max );   // in °C
         }
 
 
