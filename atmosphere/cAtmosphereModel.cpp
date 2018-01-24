@@ -334,7 +334,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	RungeKutta_Atmosphere			result ( im, jm, km, dt, dr, dphi, dthe );
 
 //	class Results_MSL_Atm to compute and show results on the mean sea level, MSL
-	Results_MSL_Atm						calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_equator, lv, ls, cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water, r_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous );
+	Results_MSL_Atm						calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_equator, lv, ls, cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water, r_water_vapour, R_WaterVapour, co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous, t_average );
 
 //	class Pressure for the subsequent computation of the pressure by a separate Euler equation
 	Pressure_Atm										startPressure ( im, jm, km, dr, dthe, dphi );
@@ -377,6 +377,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
 	circulation.BC_Temperature ( t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
+//	t_cretaceous = circulation.out_t_cretaceous (  );
 
 //  class element for the correction of the temperature initial distribution around coasts
 	if ( ( NASATemperature == 1 ) && ( Ma > 0 ) ) circulation.IC_Temperature_WestEastCoast ( h, t );
@@ -773,7 +774,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //	composition of results
-			calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, rad, the, phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Latency, Q_Sensible, radiation_3D, t_cond_3D, t_evap_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, precipitation_NASA, Evaporation, Condensation, LatentHeat, precipitable_water, Q_Radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, Vegetation, Radiation_Balance, albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
+			calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Latency, Q_Sensible, radiation_3D, t_cond_3D, t_evap_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, precipitation_NASA, Evaporation, Condensation, LatentHeat, precipitable_water, Q_Radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, Vegetation, Radiation_Balance, albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
 
 //  restoring the velocity component and the temperature for the new time step
@@ -841,6 +842,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	ppa.Atmosphere_v_w_Transfer ( bathymetry_name, v, w, t, p_dyn );
 	ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
 
+	Ma_prev = Ma;
+	t_cretaceous_prev = t_cretaceous;
 
 	if ( NASATemperature == 1 ) circulation.BC_NASAbasedSurfTempWrite ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
 

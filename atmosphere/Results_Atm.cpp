@@ -17,7 +17,7 @@
 
 using namespace std;
 
-Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double co2_0, double sigma, double albedo_equator, double lv, double ls, double cp_l, double L_atm, double dt, double dr, double dthe, double dphi, double r_air, double R_Air, double r_water, double r_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam, double t_pole, double t_cretaceous )
+Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double co2_0, double sigma, double albedo_equator, double lv, double ls, double cp_l, double L_atm, double dt, double dr, double dthe, double dphi, double r_air, double R_Air, double r_water, double r_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam, double t_pole, double t_cretaceous, double t_average )
 :	coeff_Diffusion_latent ( .005 ),													// diffusion coefficient for latent heat in [m²/s]    0.015
 	coeff_Diffusion_sensibel ( .2 ),													// diffusion coefficient for sensible heat in [m²/s]     0.03
 	f_Haude ( .3 )																				// Haude factor for evapotranspiration 0.3 for low, dense vegetation as raw average value by Kuttler
@@ -55,6 +55,58 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, do
 	this-> co2_land = co2_land;
 	this-> t_pole = t_pole;
 	this-> t_cretaceous = t_cretaceous;
+	this-> t_average = t_average;
+
+
+// array "vel_av" for velocity averaging
+	vel_av = 0L;
+
+	vel_av = new double[ im ];
+
+	for ( int l = 0; l < im; l++ )
+	{
+		vel_av[ l ] = 0.;
+	}
+
+	coeff_mmWS = r_air / r_water_vapour;									// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
+	coeff_lv = lv / ( cp_l * t_0 );														// coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
+	coeff_ls = ls / ( cp_l * t_0 );														// coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_ls = 10.3091 in [ / ]
+
+
+// array "temp_av" for air temperature averaging
+	temp_av = 0L;
+
+	temp_av = new double[ im ];
+
+	for ( int l = 0; l < im; l++ )
+	{
+		temp_av[ l ] = 0.;
+	}
+
+
+// array "lat_" for air temperature averaging
+	lat_av = 0L;
+
+	lat_av = new double[ im ];
+
+	for ( int l = 0; l < im; l++ )
+	{
+		lat_av[ l ] = 0.;
+	}
+
+
+// array "sen_av" for air temperature averaging
+	sen_av = 0L;
+
+	sen_av = new double[ im ];
+
+	for ( int l = 0; l < im; l++ )
+	{
+		sen_av[ l ] = 0.;
+	}
+
+
+
 
 	coeff_mmWS = r_air / r_water_vapour;									// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 	coeff_lv = lv / ( cp_l * t_0 );														// coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
@@ -65,11 +117,16 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, do
 }
 
 
-Results_MSL_Atm::~Results_MSL_Atm (){}
+Results_MSL_Atm::~Results_MSL_Atm (){
+		delete [  ] vel_av;
+		delete [  ] temp_av;
+		delete [  ] lat_av;
+		delete [  ] sen_av;
+}
 
 
 
-void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int RadiationModel, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &c, Array &cn, Array &co2, Array &co2n, Array &t, Array &tn, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Latency, Array &Q_Sensible, Array &radiation_3D, Array &t_cond_3D, Array &t_evap_3D, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &P_rain, Array &P_snow, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &precipitation_NASA, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &LatentHeat, Array_2D &precipitable_water, Array_2D &Q_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Vegetation, Array_2D &Radiation_Balance, Array_2D &albedo, Array_2D &co2_total, Array_2D &Precipitation, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
+void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int RadiationModel, double &t_cretaceous, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &c, Array &cn, Array &co2, Array &co2n, Array &t, Array &tn, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Latency, Array &Q_Sensible, Array &radiation_3D, Array &t_cond_3D, Array &t_evap_3D, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &P_rain, Array &P_snow, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &precipitation_NASA, Array_2D &Evaporation, Array_2D &Condensation, Array_2D &LatentHeat, Array_2D &precipitable_water, Array_2D &Q_Radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Vegetation, Array_2D &Radiation_Balance, Array_2D &albedo, Array_2D &co2_total, Array_2D &Precipitation, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
 {
 // determination of temperature and pressure by the law of Clausius-Clapeyron for water vapour concentration
 // reaching saturation of water vapour pressure leads to formation of rain or ice
@@ -334,6 +391,21 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	Evaporation_Penman_average = 0.;
 	Evaporation_Haude_average = 0.;
 	co2_vegetation_average = 0.;
+	temperature_surf_average = 0.;
+	velocity_average = 0.;
+	temperature_average = 0.;
+	latent_heat_average = 0.;
+	sensible_heat_average = 0.;
+
+	for ( int i = 0; i < im; i++ )
+	{
+		vel_av[ i ] = 0.;
+		temp_av[ i ] = 0.;
+		lat_av[ i ] = 0.;
+		sen_av[ i ] = 0.;
+	}
+
+
 
 	for ( int j = 0; j < jm; j++ )
 	{
@@ -392,6 +464,8 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 			precipitablewater_average += precipitable_water.y[ j ][ k ];
 			precipitation_average += Precipitation.y[ j ][ k ];
 
+			temperature_surf_average += t.x[ 0 ][ j ][ k ] * t_0 - t_0;
+
 //			Evaporation_Penman_average += Evaporation_Penman.y[ j ][ k ];
 //			Evaporation_Haude_average += Evaporation_Haude.y[ j ][ k ];
 
@@ -402,12 +476,50 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 		}
 	}
 
-	co2_vegetation_average = co2_vegetation_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
-	precipitablewater_average = precipitablewater_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
-	precipitation_average = 365. * precipitation_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
-	precipitation_NASA_average = 365. * precipitation_NASA_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
-	Evaporation_Penman_average = 365. * Evaporation_Penman_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
-	Evaporation_Haude_average = 365. * Evaporation_Haude_average / ( double ) ( ( jm -1 ) * ( km - 1 ) );
+	temperature_surf_average = temperature_surf_average / ( double ) ( ( jm - 1 ) * ( km - 1 ) );
+
+	co2_vegetation_average = co2_vegetation_average / ( double ) ( ( jm - 1 ) * ( km - 1 ) );
+
+	precipitablewater_average = precipitablewater_average / ( double ) ( ( jm - 1 ) * ( km - 1 ) );
+	precipitation_average = 365. * precipitation_average / ( double ) ( ( jm - 1 ) * ( km - 1 ) );
+	precipitation_NASA_average = 365. * precipitation_NASA_average / ( double ) ( ( jm - 1 ) * ( km - 1 ) );
+
+	Evaporation_Penman_average = 365. * Evaporation_Penman_average / ( double ) ( ( jm - 1 ) * ( km - 1 ) );
+	Evaporation_Haude_average = 365. * Evaporation_Haude_average / ( double ) ( ( jm - 1 ) * ( km - 1 ) );
+
+
+
+	for ( int i = 0; i < im; i++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				vel_av[ i ] += sqrt ( u.x[ i ][ j ][ k ] * u.x[ i ][ j ][ k ] + v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+				temp_av[ i ] += t.x[ i ][ j ][ k ];
+				lat_av[ i ] += Latency.x[ i ][ j ][ k ];
+				sen_av[ i ] += Q_Sensible.x[ i ][ j ][ k ];
+			}
+		}
+	}
+
+	for ( int i = 0; i < im; i++ )
+	{
+		velocity_average += vel_av[ i ];
+		temperature_average += temp_av[ i ];
+		latent_heat_average += lat_av[ i ];
+		sensible_heat_average += sen_av[ i ];
+	}
+
+	velocity_average = velocity_average / ( double ) ( ( im - 1 ) * ( jm - 1 ) * ( km - 1 ) ) * u_0;
+	temperature_average = temperature_average / ( double ) ( ( im - 1 ) * ( jm - 1 ) * ( km - 1 ) ) * t_0 - t_0;
+	latent_heat_average = latent_heat_average / ( double ) ( ( im - 1 ) * ( jm - 1 ) * ( km - 1 ) );
+	sensible_heat_average = sensible_heat_average / ( double ) ( ( im - 1 ) * ( jm - 1 ) * ( km - 1 ) );
+
+	cout << endl << endl << "      u_0 = " << u_0 << "     velocity_average = " << velocity_average << endl;
+	cout << endl << "      t_0 = " << t_0 << "     temperature_average = " << temperature_average << endl << endl;
+	cout << endl << "      t_0 = " << t_0 << "     latent_heat_average = " << latent_heat_average << endl << endl;
+	cout << endl << "      t_0 = " << t_0 << "     sensible_heat_average = " << sensible_heat_average << endl << endl << endl;
 
 
 
@@ -518,12 +630,16 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	name_Value_22 = " co2_average ";
 	name_Value_23 = " precipitable water ";
 	name_Value_24 = " precipitation ";
+	name_Value_25 = " temperature_modern_average ";
+	name_Value_26 = " temperature_surf_average ";
+	name_Value_27 = " temperature_expected_average ";
 
 	name_unit_wm2 = " W/m2";
 	name_unit_mmd = " mm/d";
 	name_unit_mm = " mm";
 	name_unit_mma = " mm/a";
 	name_unit_ppm = " ppm";
+	name_unit_t = " C";
 
 	heading = " printout of surface data at predefinded locations: level, latitude, longitude";
 	heading_Dresden = " City of Dresden, Germany, Europe";
@@ -642,6 +758,14 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	Value_12 = Evaporation_Penman_average;
 
 	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_22 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_9 << setw ( 6 ) << name_unit_ppm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_12 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_13 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_12 / 365. << setw ( 6 ) << name_unit_mmd << endl << endl << endl;
+
+
+	Value_25 = t_average;
+	Value_26 = temperature_surf_average;
+	Value_27 = t_average + t_cretaceous * t_0;
+
+	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_25 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_25 << setw ( 6 ) << name_unit_t << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_26 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_26 << setw ( 6 ) << name_unit_t << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_27 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_27 << setw ( 6 ) << name_unit_t << endl << endl << endl;
+
 }
 
 

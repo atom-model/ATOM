@@ -467,7 +467,7 @@ void BC_Thermo::BC_Temperature ( double &t_cretaceous, double &t_cretaceous_prev
 
 	cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_cretaceous << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << temperature_unit << endl;
 
-	t_cretaceous = ( t_cretaceous + t_average + t_0 ) / t_0 - ( ( t_average + t_0 ) / t_0 );    // non-dimensional
+	t_cretaceous = t_cretaceous / t_0;  								 // non-dimensional
 	t_cretaceous_add = t_cretaceous - t_cretaceous_prev; // non-dimensional
 
 
@@ -2654,8 +2654,11 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 	double Latency_Ice = 0.; 
 
 // collection of coefficients for phase transformation
-	coeff_L = 100. * r_air * lv * u_0 / L_atm;							// coefficient for Latency
+//	coeff_L = 100. * r_air * lv * u_0 / L_atm;							// coefficient for Latency
 	coeff_Q = 100. * cp_l * r_air * u_0 * t_0 / L_atm;				// coefficient for Q_Sensible
+
+
+	coeff_L = lv * u_0 / ( L_atm / ( double ) ( im-1 ) );
 
 	c32 = 3. / 2.;
 	c42 = 4. / 2.;
@@ -2723,7 +2726,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 				q_Rain  = ep * E_Rain / ( p_h - E_Rain );																// water vapour amount at saturation with water formation in kg/kg
 				q_Ice  = ep * E_Ice / ( p_h - E_Ice );																		// water vapour amount at saturation with ice formation in kg/kg
 
-				u_av = .5 * ( u.x[ i+1 ][ j ][ k ] + u.x[ i-1 ][ j ][ k ] );
+				u_av = .5 * ( u.x[ i+1 ][ j ][ k ] + u.x[ i-1 ][ j ][ k ] );								// average velocity at i
 
 				if ( c.x[ i ][ j ][ k ] >= q_Rain )			Latency.x[ i ][ j ][ k ] = coeff_L * ( u_av * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) );
 				else 												Latency.x[ i ][ j ][ k ] = 0.;
