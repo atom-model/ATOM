@@ -341,6 +341,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
             circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
     }
 
+    cout << "Mean temperature: " << (t.mean_2D()-1)*t_0 <<" Max temperature: "<<(t.max_2D()-1)*t_0<<
+        " Min temperature: "<<(t.min_2D()-1)*t_0<<std::endl<<std::endl;
+
     //  class element for the surface precipitation from NASA for comparison
     if ( Ma == 0 || use_earthbyte_reconstruction){ 
         circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
@@ -406,7 +409,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     WriteFile(n, bathymetry_name, output_path);
 
-    cout << "Mean temperature: " << (t.mean()-1)*t_0 <<" Max temperature: "<<(t.max()-1)*t_0<<std::endl<<std::endl;
+    cout << "Mean temperature: " << (t.mean_2D()-1)*t_0 <<" Max temperature: "<<(t.max_2D()-1)*t_0<<
+        " Min temperature: "<<(t.min_2D()-1)*t_0<<std::endl<<std::endl;
 
     Reset();
 

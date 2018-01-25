@@ -2656,7 +2656,8 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
     double Latency_Ice = 0.; 
 
 // collection of coefficients for phase transformation
-    coeff_L = 100. * r_air * lv * u_0 / L_atm;                          // coefficient for Latency
+    //coeff_L = 100. * r_air * lv * u_0 / L_atm;                          // coefficient for Latency
+    coeff_L = lv * u_0 / ( L_atm / ( double ) ( im-1 ) );
     coeff_Q = 100. * cp_l * r_air * u_0 * t_0 / L_atm;              // coefficient for Q_Sensible
 
     c32 = 3. / 2.;

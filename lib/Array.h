@@ -142,6 +142,38 @@ public:
         return ret/(im*jm*km);
     }
 
+    double max_2D(){
+        assert(jm && km);
+        double ret=x[0][0][0];
+        for(int j=0; j<jm; j++){
+            for(int k=0; k<km; k++){
+                ret=std::max(ret, x[0][j][k]);
+            }
+        }
+        return ret;
+    }
+
+    double min_2D(){
+        assert(jm && km);
+        double ret=x[0][0][0];
+        for(int j=0; j<jm; j++){
+            for(int k=0; k<km; k++){
+                ret=std::min(ret, x[0][j][k]);
+            }
+        }
+        return ret;
+    }
+
+    double mean_2D(){
+        assert(jm && km);
+        double ret=0;
+        for(int j=0; j<jm; j++){
+            for(int k=0; k<km; k++){
+                ret+=x[0][j][k];
+            }
+        }
+        return ret/(jm*km);
+    }
 };
 
 inline Array operator* (double coeff, const Array &a){
