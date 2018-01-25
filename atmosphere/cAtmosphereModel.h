@@ -71,6 +71,8 @@ private:
 
     void LoadTemperatureCurve();
 
+    float GetMeanTemperatureFromCurve(float time) const;
+
     PythonStream ps;
     std::streambuf *backup;
 

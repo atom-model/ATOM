@@ -17,7 +17,7 @@ public:
         {
             std::cout << it->first << " " << it->second << std::endl;
         }
-
+        std::cout << model.GetMeanTemperatureFromCurve(51) << std::endl;
 
         BC_Thermo thermo(model);
         std::cout.precision(10);

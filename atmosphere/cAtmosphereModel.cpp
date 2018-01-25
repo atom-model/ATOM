@@ -670,6 +670,32 @@ void cAtmosphereModel::LoadTemperatureCurve()
 }
 
 
+float cAtmosphereModel::GetMeanTemperatureFromCurve(float time) const
+{
+    if(time<m_temperature_curve.begin()->first || time>(--m_temperature_curve.end())->first){
+        std::cout << "Input time out of range: " <<time<< std::endl;    
+        return NAN;
+    }
+    if(m_temperature_curve.size()<2){
+        std::cout << "No enough data in m_temperature_curve  map" << std::endl;
+        return NAN;
+    }
+    map<float, float >::const_iterator upper=m_temperature_curve.begin(), bottom=++m_temperature_curve.begin(); 
+    for(map<float, float >::const_iterator it = m_temperature_curve.begin();
+            it != m_temperature_curve.end(); ++it)
+    {
+        if(time < it->first){
+            bottom = it;
+            break;
+        }else{
+            upper = it;
+        }
+    }
+    std::cout << upper->first << " " << bottom->first << std::endl;
+    return upper->second + (time - upper->first) / (bottom->first - upper->first) * (bottom->second - upper->second);
+}
+
+
 void cAtmosphereModel::Run() {
     mkdir(output_path.c_str(), 0777);
 
