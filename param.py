@@ -12,10 +12,11 @@ def main():
             ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
             ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
             ( 'precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
+            ( 'temperature_curve_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
             ( 'verbose', '', 'bool', False ),
             #( 'verbose', '', 'bool', True ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
-            ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False ),
+            ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True ),
         ],
 
 

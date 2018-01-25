@@ -651,6 +651,25 @@ void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int i_max, int pressure_
     return;
 }
 
+
+void cAtmosphereModel::LoadTemperatureCurve()
+{
+    std::string line;
+    std::ifstream f(temperature_curve_file);
+    
+    if (!f.is_open()){
+        std::cout << "error while opening file: "<< temperature_curve_file << std::endl;
+    }
+
+    float time=0.,temperature=0;
+    while(getline(f, line)) {
+        std::stringstream(line) >> time >> temperature;
+        m_temperature_curve.insert(std::pair<float,float>(time, temperature));
+        //std::cout << time <<"  " <<temperature<< std::endl;
+    }
+}
+
+
 void cAtmosphereModel::Run() {
     mkdir(output_path.c_str(), 0777);
 

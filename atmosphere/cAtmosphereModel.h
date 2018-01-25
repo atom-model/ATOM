@@ -3,6 +3,7 @@
 
 #include <string>
 #include <set>
+#include <map>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -21,8 +22,10 @@ class Pressure_Atm;
 class Restore_Atm;
 class Results_MSL_Atm;
 class BC_Thermo;
+class AtomTest;
 
 class cAtmosphereModel {
+    friend AtomTest;
 public:
     const char *filename;
 
@@ -66,11 +69,15 @@ private:
                    BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
                    Pressure_Atm &startPressure, Restore_Atm &oldnew, Results_MSL_Atm &calculate_MSL, BC_Thermo &circulation);
 
+    void LoadTemperatureCurve();
+
     PythonStream ps;
     std::streambuf *backup;
 
     std::set<int> m_time_list;
     std::set<int>::const_iterator m_current_time;
+
+    std::map<float,float> m_temperature_curve;
 
     static const int im=41, jm=181, km=361, nm=200;
     int j_res, k_res;    

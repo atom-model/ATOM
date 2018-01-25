@@ -150,6 +150,7 @@ class BC_Thermo
         double get_temperature_increment(int Ma){
             double t_cretaceous_eff = t_cretaceous_max / 
                                       ( Ma_max_half - Ma_max_half * Ma_max_half / (double)Ma_max );   // in °C
+            //std::cout << t_cretaceous_eff <<"  " << t_cretaceous_eff * (Ma - ( Ma * Ma ) / (double)Ma_max ) << std::endl;
             return t_cretaceous_eff * (Ma - ( Ma * Ma ) / (double)Ma_max );   // in °C
         }
 

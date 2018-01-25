@@ -11,9 +11,17 @@ public:
         cAtmosphereModel model;
         model.LoadConfig("../benchmark/config_atm.xml");
 
+        model.LoadTemperatureCurve();
+        for(map<float, float >::const_iterator it = model.m_temperature_curve.begin();
+            it != model.m_temperature_curve.end(); ++it)
+        {
+            std::cout << it->first << " " << it->second << std::endl;
+        }
+
+
         BC_Thermo thermo(model);
         std::cout.precision(10);
-        std::cout <<"the increment: "<< thermo.get_temperature_increment(10) << std::endl;
+        std::cout <<"the increment: "<< thermo.get_temperature_increment(140) << std::endl;
     }
 };
 
