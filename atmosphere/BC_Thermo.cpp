@@ -29,8 +29,19 @@ BC_Thermo::BC_Thermo(cAtmosphereModel &model) :
     Ma_max_half(model.Ma_max_half),
     t_cretaceous_max(model.t_cretaceous_max)
 {
-    im = 0;
-    CC=0;
+    im = 40;
+    jm = 181;
+    km = 361;
+    
+    t_0=model.t_0;
+
+    CC = new double*[ im ];
+
+    for ( int l = 0; l < im; l++ )
+    {
+        CC[ l ] = 0;
+    }
+
 
     jm_temp_asym =0;
     alfa=0;
@@ -2462,50 +2473,36 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 
 void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperature_File, Array_2D &temperature_NASA, Array &t )
 {
-// initial conditions for the Name_SurfaceTemperature_File at the sea surface
-
     cout.precision ( 3 );
     cout.setf ( ios::fixed );
 
-    ifstream Name_SurfaceTemperature_File_Read;
-    Name_SurfaceTemperature_File_Read.open(Name_SurfaceTemperature_File);
-
+    ifstream Name_SurfaceTemperature_File_Read(Name_SurfaceTemperature_File);
     if (!Name_SurfaceTemperature_File_Read.is_open()) {
         cerr << "ERROR: could not open SurfaceTemperature_File file at " << Name_SurfaceTemperature_File << "\n";
         abort();
     }
 
-    k_half = ( km -1 ) / 2;                                                             // position at 180°E ( Greenwich )
-
-    j = 0;
-    k = 0;
-
-
-    while ( ( k < km ) && !Name_SurfaceTemperature_File_Read.eof() )
+    for(int k=0;k<km;k++)
     {
-        while ( j < jm )
-        {
-            Name_SurfaceTemperature_File_Read >> dummy_1;
-            Name_SurfaceTemperature_File_Read >> dummy_2;
-            Name_SurfaceTemperature_File_Read >> dummy_3;
+        for(int j=0;j<jm;j++)
+        {   
+            double lat=0., lon=0., temperature=0.;
+            Name_SurfaceTemperature_File_Read >> lon;
+            Name_SurfaceTemperature_File_Read >> lat;
+            Name_SurfaceTemperature_File_Read >> temperature;
 
-            t.x[ 0 ][ j ][ k ] = temperature_NASA.y[ j ][ k ] = ( dummy_3 + 273.15 ) / 273.15;
-
-            j++;
+            t.x[ 0 ][ j ][ k ] = temperature_NASA.y[ j ][ k ] = temperature/t_0 + 1;
         }
-    j = 0;
-    k++;
     }
 
-// correction of surface temperature around 180°E
+    // correction of surface temperature around 180°E
+    //why??
+    int k_half = ( km -1 ) / 2; // position at 180°E ( Greenwich )
     for ( int j = 0; j < jm; j++ )
     {
         t.x[ 0 ][ j ][ k_half ] = ( t.x[ 0 ][ j ][ k_half + 1 ] + t.x[ 0 ][ j ][ k_half - 1 ] ) / 2.;
         temperature_NASA.y[ j ][ k_half ] = ( temperature_NASA.y[ j ][ k_half + 1 ] + temperature_NASA.y[ j ][ k_half - 1 ] ) / 2.;
     }
-
-    Name_SurfaceTemperature_File_Read.close();
-
 }
 
 

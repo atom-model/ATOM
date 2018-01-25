@@ -236,12 +236,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         Name_NASAbasedSurfaceTemperature_File =  "../data/NASA_based_SurfaceTemperature.xyz";
     }
 
-//  naming a file to read the surface temperature by NASA of the modern world
-    string Name_SurfaceTemperature_File = temperature_file; 
-    if(Ma != 0 && use_earthbyte_reconstruction){
-            Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
-        }
-
 // naming a file to read the surface precipitation by NASA
     string Name_SurfacePrecipitation_File = precipitation_file; 
     if(Ma != 0 && use_earthbyte_reconstruction){
@@ -255,7 +249,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     cout << "   Ma = " << Ma << "\n";
     cout << "   bathymetry_path = " << bathymetry_path << "\n";
     cout << "   bathymetry_filepath = " << bathymetry_filepath << "\n\n";
-    cout << "   Name_SurfaceTemperature_File = " << Name_SurfaceTemperature_File << std::endl;
     cout << "   Name_SurfacePrecipitation_File = " << Name_SurfacePrecipitation_File << std::endl;
     
     if (verbose) {
@@ -329,20 +322,14 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
                             t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, 
                             epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
 
+    LoadTemperatureData(Ma, circulation);
+
     //  class Restore to restore the iterational values from new to old
     Restore_Atm  oldnew( im, jm, km );
 
     //  class element calls for the preparation of initial conditions for the flow properties
     //  class element for the tropopause location as a parabolic distribution from pole to pole 
     circulation.TropopauseLocation ( im_tropopause );
-
-    //  class element for the surface temperature from NASA for comparison
-    if ( Ma == 0 || use_earthbyte_reconstruction){ 
-            circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
-    }
-
-    cout << "Mean temperature: " << (t.mean_2D()-1)*t_0 <<" Max temperature: "<<(t.max_2D()-1)*t_0<<
-        " Min temperature: "<<(t.min_2D()-1)*t_0<<std::endl<<std::endl;
 
     //  class element for the surface precipitation from NASA for comparison
     if ( Ma == 0 || use_earthbyte_reconstruction){ 
@@ -652,6 +639,20 @@ void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int i_max, int pressure_
 }
 
 
+void cAtmosphereModel::LoadTemperatureData(int Ma, BC_Thermo &circulation){
+    //  naming a file to read the surface temperature by NASA of the modern world
+    string Name_SurfaceTemperature_File = temperature_file;
+    if(Ma != 0 && use_earthbyte_reconstruction){
+        Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
+    }
+    cout << "   Name_SurfaceTemperature_File = " << Name_SurfaceTemperature_File << std::endl;
+    
+    if ( Ma == 0 || use_earthbyte_reconstruction){
+        circulation.BC_Surface_Temperature_NASA( Name_SurfaceTemperature_File, temperature_NASA, t );
+    }
+}
+
+
 void cAtmosphereModel::LoadTemperatureCurve()
 {
     std::string line;
@@ -693,6 +694,38 @@ float cAtmosphereModel::GetMeanTemperatureFromCurve(float time) const
     }
     std::cout << upper->first << " " << bottom->first << std::endl;
     return upper->second + (time - upper->first) / (bottom->first - upper->first) * (bottom->second - upper->second);
+}
+
+
+float cAtmosphereModel::GetMeanTemperature() const
+{
+    double ret=0., weight=0.;
+    for(int j=0; j<jm; j++){
+        for(int k=0; k<km; k++){
+            //std::cout << (t.x[0][j][k]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
+            ret+=t.x[0][j][k]*m_node_weights[j][k];
+            weight+=m_node_weights[j][k];
+        }
+    }
+    return (ret/weight-1)*t_0;
+}
+
+
+void cAtmosphereModel::CalculateNodeWeights()
+{
+    //use cosine of latitude as weights for now
+    //longitudes: 0-360(km) latitudes: 90-(-90)(jm)
+    double weight = 0.;
+    for(int i=0; i<jm; i++){
+        if(i<=90){
+            weight = cos((90-i) * M_PI / 180.0 );
+        }else{
+            weight = cos((i-90) * M_PI / 180.0 );
+        }
+        m_node_weights.push_back(std::vector<double>());
+        m_node_weights[i].resize(km, weight);
+    }
+    return;
 }
 
 

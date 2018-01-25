@@ -67,12 +67,19 @@ private:
     void Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_iter_max_3D, 
                    int velocity_iter_max_3D, BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                    BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
-                   Pressure_Atm &startPressure, Restore_Atm &oldnew, Results_MSL_Atm &calculate_MSL, BC_Thermo &circulation);
+                   Pressure_Atm &startPressure, Restore_Atm &oldnew, Results_MSL_Atm &calculate_MSL, 
+                   BC_Thermo &circulation);
 
     void LoadTemperatureCurve();
 
     float GetMeanTemperatureFromCurve(float time) const;
+    
+    float GetMeanTemperature() const;
 
+    void CalculateNodeWeights();
+
+    void LoadTemperatureData(int time, BC_Thermo &circulation);
+    
     PythonStream ps;
     std::streambuf *backup;
 
@@ -80,6 +87,8 @@ private:
     std::set<int>::const_iterator m_current_time;
 
     std::map<float,float> m_temperature_curve;
+
+    std::vector<std::vector<double> > m_node_weights;
 
     static const int im=41, jm=181, km=361, nm=200;
     int j_res, k_res;    
