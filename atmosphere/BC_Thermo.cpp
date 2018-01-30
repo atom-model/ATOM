@@ -246,9 +246,9 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
                                          const Int3DArray &h, Array &epsilon_3D, Array &radiation_3D, 
                                          Array &cloud, Array &ice )
 {
-// class element for the computation of the radiation and the temperature distribution
-// computation of the local temperature based on short and long wave radiation
-// multi layer radiation model
+    // class element for the computation of the radiation and the temperature distribution
+    // computation of the local temperature based on short and long wave radiation
+    // multi layer radiation model
 
     cout.precision ( 4 );
     cout.setf ( ios::fixed );
@@ -273,7 +273,7 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
 
     albedo_co2_eff = albedo_pole - albedo_equator;
 
-// effective temperature, albedo and emissivity/absorptivity for the two layer model
+    // effective temperature, albedo and emissivity/absorptivity for the two layer model
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){//the logic in this loop is confusing.
             double albedo_val = albedo_co2_eff * ( j * j / (double)( j_half * j_half ) - 
@@ -290,18 +290,18 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
                 }
             }
 
-            Ik.y[ j ][ k ] = ik_co2_eff * ( j * j / (double)( j_half * j_half ) - 2. * j / j_half ) + ik_pole;
+            Ik.y[ j ][ k ] = ik_co2_eff * ( j * j / (double)( j_half * j_half ) - 2. * j / (double)j_half ) + ik_pole;
         }
     }
 
-// absorption/emissivity computation
-//  epsilon_co2_eff_max = .594;  // constant  given by Häckel ( F. Baur and H. Philips, 1934 )
+    // absorption/emissivity computation
+    //  epsilon_co2_eff_max = .594;  // constant  given by Häckel ( F. Baur and H. Philips, 1934 )
 
     epsilon_co2_eff_2D = epsilon_pole - epsilon_equator;
 
     for ( int j = 0; j < jm; j++ ){
         epsilon_co2_eff_max = epsilon_co2_eff_2D * ( j * j / (double)( j_half * j_half ) - 
-                              2. * j / j_half ) + epsilon_pole;
+                              2. * j / (double)j_half ) + epsilon_pole;
 
         for ( int k = 0; k < km; k++ ){
             for ( int i = 0; i < im; i++ ){
@@ -331,13 +331,15 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
     }
 
 
-// iteration procedure for the computation of the temperature based on the multi-layer radiation model
-// temperature needs an initial guess which must be corrected by the long and short wave radiation remaining in the atmosphere
+    // iteration procedure for the computation of the temperature based on the multi-layer radiation model
+    // temperature needs an initial guess which must be corrected by the long and short wave radiation 
+    // remaining in the atmosphere
     for(iter_rad = 0; iter_rad < 6; iter_rad++ ){    // iter_rad may be varied    
-// coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
+    // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of 
+    //the multi-layer radiation model
         for ( int j = 1; j < jm-1; j++ ){
             for ( int k = 1; k < km-1; k++ ){
-// radiation boundary conditions for the top ot the troposphere
+                // radiation boundary conditions for the top ot the troposphere
                 radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * 
                                                      sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4 ); /* 
                     long wave radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation */
@@ -372,8 +374,9 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
                 }
 
 
-// Thomas algorithm to solve the tridiogonal equation system for the solution of the radiation with a recurrence formula
-// additionally embedded in an iterational process
+                // Thomas algorithm to solve the tridiogonal equation system for the solution of the radiation 
+                // with a recurrence formula
+                // additionally embedded in an iterational process
                 // i == 0  values at the surface 
                 bb = - radiation_3D.x[ 0 ][ j ][ k ];
                 cc = radiation_3D.x[ 1 ][ j ][ k ];
@@ -407,14 +410,9 @@ void BC_Thermo::BC_Radiation_multi_layer(Array_2D &albedo, Array_2D &Ik,
                     beta[ i ] = ( dd - aa * beta[ i - 1 ] ) / ( bb - aa * alfa[ i - 1 ] );
                 }
  
-                //This code is very suspicious! The same assignment happened earlier in this function. 
-                radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * 
-                                                     sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4. ); /* 
-                    dimensional form of the radiation leaving the last layer */ 
-
-// recurrence formula for the radiation and temperature
+                // recurrence formula for the radiation and temperature
                 for ( int i = im - 2; i >= 0; i-- ){
-// above assumed tropopause constant temperature t_tropopause
+                // above assumed tropopause constant temperature t_tropopause
                     radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + 
                                                     beta[ i ];//Thomas algorithm, recurrence formula
                     if(radiation_3D.x[ i ][ j ][ k ] > 0){

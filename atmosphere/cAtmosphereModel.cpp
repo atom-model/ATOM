@@ -159,6 +159,8 @@ cAtmosphereModel::cAtmosphereModel():
     p_dyn.initArray(im, jm, km, pa);
     p_dynn.initArray(im, jm, km, pa); 
     p_stat.initArray(im, jm, km, pa); 
+
+    CalculateNodeWeights();
 }
 
 cAtmosphereModel::~cAtmosphereModel() 
@@ -323,6 +325,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
                             epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
 
     LoadTemperatureData(Ma, circulation);
+    std::cout << "The Mean Temperature after loading: "<<GetMeanTemperature()
+    <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
 
     //  class Restore to restore the iterational values from new to old
     Restore_Atm  oldnew( im, jm, km );
@@ -338,6 +342,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
     circulation.BC_Temperature ( im_tropopause, temperature_NASA, h.to_Int3DArray(), t, p_dyn, p_stat );
     t_cretaceous = circulation.out_t_cretaceous (  );
+    std::cout << "The Mean Temperature after BC_Temperature(): "<<GetMeanTemperature()
+    <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
 
     //  class element for the correction of the temperature initial distribution around coasts
     if ( ( NASATemperature == 1 ) && ( Ma > 0 ) && !use_earthbyte_reconstruction ){ 
@@ -349,6 +355,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
     circulation.BC_WaterVapour ( h, t, c );
+    std::cout << "The Mean water vapour: "<<c.mean()
+    <<"Max water vapour: "<<c.max()<<std::endl;
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
@@ -359,6 +367,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         circulation.BC_Radiation_multi_layer(albedo, Ik, p_stat,t, c, h.to_Int3DArray(), 
                                              epsilon_3D, radiation_3D, cloud, ice );
     }
+    std::cout << "The Mean Temperature after first BC_Radiation_multi_layer(): "<<GetMeanTemperature()
+    <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
 
     //  class element for the initial conditions for u-v-w-velocity components
     circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
@@ -395,9 +405,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     }
 
     WriteFile(n, bathymetry_name, output_path);
-
-    cout << "Mean temperature: " << (t.mean_2D()-1)*t_0 <<" Max temperature: "<<(t.max_2D()-1)*t_0<<
-        " Min temperature: "<<(t.min_2D()-1)*t_0<<std::endl<<std::endl;
 
     Reset();
 
@@ -466,7 +473,11 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
                                                  BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, 
                                                  S_s, S_c_c, Topography );
 
-            //class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
+            std::cout << "The Mean Temperature after solveRungeKutta_3D_Atmosphere(): "<<GetMeanTemperature()
+            <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
+            
+            //class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
+            //the continents and the ocean ground
             LandArea.BC_SolidGround(RadiationModel, Ma, i_max, g, hp, ep, r_air, R_Air, t_0, t_land, 
                                     t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, 
                                     co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, 
@@ -545,6 +556,8 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
                                                  cloud, ice );
         }
 
+        std::cout << "The Mean Temperature after second BC_Radiation_multi_layer(): "<<GetMeanTemperature()
+        <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
 
         //Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
         //resulting the precipitation distribution formed of rain and snow
@@ -699,6 +712,7 @@ float cAtmosphereModel::GetMeanTemperatureFromCurve(float time) const
 
 float cAtmosphereModel::GetMeanTemperature() const
 {
+    assert(m_node_weights.size()==jm);
     double ret=0., weight=0.;
     for(int j=0; j<jm; j++){
         for(int k=0; k<km; k++){
@@ -716,6 +730,7 @@ void cAtmosphereModel::CalculateNodeWeights()
     //use cosine of latitude as weights for now
     //longitudes: 0-360(km) latitudes: 90-(-90)(jm)
     double weight = 0.;
+    m_node_weights.clear();
     for(int i=0; i<jm; i++){
         if(i<=90){
             weight = cos((90-i) * M_PI / 180.0 );
