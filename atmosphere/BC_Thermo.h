@@ -114,7 +114,7 @@ class BC_Thermo
                                       Array &t, Array &c, const Int3DArray &h, 
                                       Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice);
 
-		void BC_WaterVapour ( Array &, Array &, Array & );
+		void BC_WaterVapour ( const Int3DArray &h, Array &t, Array &c );
 
 		void BC_CloudWaterIce ( Array &, Array &, Array &, Array & );
 
@@ -154,6 +154,18 @@ class BC_Thermo
             return t_cretaceous_eff * (Ma - ( Ma * Ma ) / (double)Ma_max );   // in °C
         }
 
-
+        double calculate_water_vapour(double temperature, bool is_ocean)
+        {
+            double ret=0.;
+            ret  = hp * ep *exp ( 17.0809 * temperature / ( 234.175 + temperature) ) /
+                       ( ( r_air * R_Air * (temperature + t_0)) * .01 );    // saturation of relative water vapour in kg/kg
+            if( is_ocean )
+            {
+                ret *= c_ocean; // relativ water vapour contents on ocean surface reduced by factor
+            }else{
+                ret *= c_land; // relativ water vapour contents on land surface reduced by factor
+            }
+            return ret;
+        }
 };
 #endif

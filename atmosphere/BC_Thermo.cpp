@@ -34,6 +34,12 @@ BC_Thermo::BC_Thermo(cAtmosphereModel &model) :
     km = 361;
     
     t_0=model.t_0;
+    hp=model.hp;
+    ep=model.ep;
+    r_air=model.r_air;
+    R_Air=model.R_Air;
+    c_land=model.c_land;
+    c_ocean=model.c_ocean;
 
     CC = new double*[ im ];
 
@@ -616,65 +622,41 @@ void BC_Thermo::BC_Temperature(int *im_tropopause, Array_2D &temperature_NASA,
 
 
 
-void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c )
+void BC_Thermo::BC_WaterVapour ( const Int3DArray &h, Array &t, Array &c )
 {
-// initial and boundary conditions of water vapour on water and land surfaces
-// parabolic water vapour distribution from pole to pole accepted
+    // initial and boundary conditions of water vapour on water and land surfaces
+    // parabolic water vapour distribution from pole to pole accepted
 
-// maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
-// minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
-// value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
+    // maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
+    // minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
+    // value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
 
-    d_i_max = ( double ) i_max;
-    j_half = ( jm -1 ) / 2;
-
-    d_j_half = ( double ) j_half;
-    d_j_max = ( double ) j_max;
-
-// water vapour contents computed by Clausius-Clapeyron-formula
+    // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ )
     {
         for ( int j = 0; j < jm; j++ )
         {
-            d_j = ( double ) j;
-            if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
-            {
-                c.x[ 0 ][ j ][ k ]  = hp * ep *exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );    // saturation of relative water vapour in kg/kg
-                c.x[ 0 ][ j ][ k ] = c_ocean * c.x[ 0 ][ j ][ k ];                                                      // relativ water vapour contents on ocean surface reduced by factor
-            }
-
-            if ( h.x[ 0 ][ j ][ k ]  == 1. ) 
-            {
-                c.x[ 0 ][ j ][ k ]  = hp * ep * exp ( 17.0809 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01 );
-                c.x[ 0 ][ j ][ k ] = c_land * c.x[ 0 ][ j ][ k ];                                                           // relativ water vapour contents on land reduced by factor
-            }
+            c.x[ 0 ][ j ][ k ] = calculate_water_vapour(t.x[ 0 ][ j ][ k ] * t_0 - t_0, 
+                                 h.x[ 0 ][ j ][ k ]?false:true);
+            //if(c.x[ 0 ][ j ][ k ] > 0.01){
+            //    c.x[ 0 ][ j ][ k ] = int(c.x[ 0 ][ j ][ k ]*1000)%10/(double)1000;
+            //};
         }
     }
 
-
-
-// water vapour distribution decreasing approaching tropopause
+    // water vapour distribution decreasing approaching tropopause
     for ( int j = 0; j < jm; j++ )
     {
         for ( int k = 0; k < km; k++ )
         {
             for ( int i = 1; i < im; i++ )
             {
-                d_i_max = ( double ) ( im - 1 );
-                d_i = ( double ) i;
-
-                c.x[ i ][ j ][ k ] = c.x[ 0 ][ j ][ k ] - ( c_tropopause - c.x[ 0 ][ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );       // parabolic decrease
-            }                                                                                                                           // end i
-        }                                                                                                                               // end j
-    }                                                                                                                                   // end k
+                c.x[ i ][ j ][ k ] = c.x[ 0 ][ j ][ k ] - ( c_tropopause - c.x[ 0 ][ j ][ k ] ) * 
+                                     ( i / (double)(im-1) * ( i / (double)(im-1) - 2. ) );       // parabolic decrease
+            }                                                                                                                           
+        }                                                                                                                               
+    }                                                                                                                                  
 }
-
-
-
-
-
-
-
 
 
 void BC_Thermo::BC_CO2 ( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 )

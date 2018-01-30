@@ -354,7 +354,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-    circulation.BC_WaterVapour ( h, t, c );
+    circulation.BC_WaterVapour ( h.to_Int3DArray(), t, c );
     std::cout << "The Mean water vapour: "<<c.mean()
     <<"Max water vapour: "<<c.max()<<std::endl;
 
