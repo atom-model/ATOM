@@ -17,20 +17,17 @@ using namespace std;
 
 
 
-RHS_Hydrosphere::RHS_Hydrosphere ( int jm, int km, double dthe, double dphi, double re, double omega, double coriolis, double centrifugal )
+RHS_Hydrosphere::RHS_Hydrosphere ( int jm, int km, double dthe, double dphi, double re )
 {
 	this-> jm = jm;
 	this-> km = km;
 	this-> dthe = dthe;
 	this-> dphi = dphi;
 	this-> re = re;
-	this-> omega = omega;
-	this-> coriolis = coriolis;
-	this-> centrifugal = centrifugal;
 }
 
 
-RHS_Hydrosphere::RHS_Hydrosphere ( int im, int jm, int km, double r0, double dt, double dr, double dthe, double dphi, double re, double ec, double sc, double g, double pr, double omega, double coriolis, double centrifugal, double buoyancy )
+RHS_Hydrosphere::RHS_Hydrosphere ( int im, int jm, int km, double r0, double dt, double dr, double dthe, double dphi, double re, double ec, double sc, double g, double pr, double buoyancy )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -45,9 +42,6 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int im, int jm, int km, double r0, double dt,
 	this-> sc = sc;
 	this-> g = g;
 	this-> pr = pr;
-	this-> omega = omega;
-	this-> coriolis = coriolis;
-	this-> centrifugal = centrifugal;
 	this-> buoyancy = buoyancy;
 
 }
@@ -441,24 +435,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 
 
-
-
-// coriolis and centrifugal forces are due to the very small rotation number of the earth extremely small
-// their effect will be imagined after a huge number of iterations
-	RS_Coriolis_Energy = ( + u.x[ i ][ j ][ k ] * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ]
-							- w.x[ i ][ j ][ k ] * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] )
-							+ v.x[ i ][ j ][ k ] * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ] ) * ec * pr;
-
-	RS_Centrifugal_Energy = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 ) * ec * pr
-							 + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 ) * ec * pr;
-
-	RS_Coriolis_Momentum_rad = +  h_d_i * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ];
-	RS_Coriolis_Momentum_the = +  h_d_j * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ];
-	RS_Coriolis_Momentum_phi = -  h_d_k * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] );
-
-	RS_Centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
-	RS_Centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
-
 	RS_buoyancy_Momentum = L_hyd / ( r_0_water * u_0 * u_0 ) * buoyancy * g * ( ( c.x[ i ][ j ][ k ] * ca - 7.3 ) / ( ca - 7.3 ) - 1. );		// buoyancy based on water density 
 
 	RS_buoyancy_Energy = u_0 * ec * u.x[ i ][ j ][ k ] * RS_buoyancy_Momentum;																							// energy increase by buoyancy
@@ -494,15 +470,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 		BuoyancyForce_3D.x[ i ][ j ][ k ] = 0.;
 
 		RS_Salt_Energy = 0.;
-
-		RS_Coriolis_Energy = 0.;
-		RS_Coriolis_Momentum_rad = 0.;
-		RS_Coriolis_Momentum_the = 0.;
-		RS_Coriolis_Momentum_phi = 0.;
-
-		RS_Centrifugal_Energy = 0.;
-		RS_Centrifugal_Momentum_rad = 0.;
-		RS_Centrifugal_Momentum_the = 0.;
 	}
 
 
@@ -516,15 +483,13 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 			+ pow ( ( dwdphi / rmsinthe + h_d_i * u.x[ i ][ j ][ k ] / rm + h_d_j * v.x[ i ][ j ][ k ] * cotthe / rm ), 2. ) )
 			+ ec / re * ( pow ( ( dvdr - h_d_j * v.x[ i ][ j ][ k ] / rm + dudthe / rm ), 2. ) + pow ( ( dudphi / rmsinthe + dwdr - h_d_k * w.x[ i ][ j ][ k ] / rm ), 2. )
 			+ pow ( ( dwdthe * sinthe / rm2 - h_d_k * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
-			+ RS_buoyancy_Energy
-			+ RS_Coriolis_Energy + RS_Centrifugal_Energy;
+			+ RS_buoyancy_Energy;
 //			- h_c_i * t.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 
 	rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
 			- dpdr + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
 			+ RS_buoyancy_Momentum
-			+ RS_Coriolis_Momentum_rad + RS_Centrifugal_Momentum_rad
 			- h_c_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 
@@ -532,7 +497,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 			- dpdthe / rm + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
 			- ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[ i ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2
 			+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-			+ RS_Coriolis_Momentum_the + RS_Centrifugal_Momentum_the
 			- h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 
@@ -540,7 +504,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 			- dpdphi / rmsinthe + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
 			- ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[ i ][ j ][ k ] / rm + d2wdphi2 / rm2sinthe2
 			+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-			+ RS_Coriolis_Momentum_phi
 			- h_c_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;					// immersed boundary condition as a negative force addition
 
 	rhs_p.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] *  ( rhs_u.x[ i ][ j ][ k ] + dpdr ) + v.x[ i ][ j ][ k ] * ( rhs_v.x[ i ][ j ][ k ] + dpdthe / rm ) + w.x[ i ][ j ][ k ] * ( rhs_w.x[ i ][ j ][ k ] + dpdphi / rmsinthe ) )
@@ -813,22 +776,14 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, Array_1D &rad, Array
 
 
 
-
-
-	RS_Coriolis_Momentum_the = + coriolis * 2. * omega * costhe * w.x[ im-1 ][ j ][ k ] * h_d_j;
-	RS_Centrifugal_Momentum_the = + centrifugal * rad.z[ 0 ] * sinthe * costhe * pow ( ( omega ), 2 );
-	RS_Coriolis_Momentum_phi = - coriolis * omega * costhe * v.x[ im-1 ][ j ][ k ] * h_d_k;
-
 	rhs_v.x[ im-1 ][ j ][ k ] = - ( v.x[ im-1 ][ j ][ k ] * dvdthe / rm + w.x[ im-1 ][ j ][ k ] * dvdphi / rmsinthe ) +
 				- dpdthe / rm - ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
 				- ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[ im-1 ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-				+ RS_Coriolis_Momentum_the + RS_Centrifugal_Momentum_the
 				- h_c_j * v.x[ im-1 ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 	rhs_w.x[ im-1 ][ j ][ k ] = - ( v.x[ im-1 ][ j ][ k ] * dwdthe / rm +  w.x[ im-1 ][ j ][ k ] * dwdphi / rmsinthe ) +
 				- dpdphi / rmsinthe + ( d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
 				- ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[ im-1 ][ j ][ k ] / rm + d2wdphi2 / rm2sinthe2 + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-				+ RS_Coriolis_Momentum_phi
 				- h_c_k * w.x[ im-1 ][ j ][ k ] * k_Force / dphi2;					// immersed boundary condition as a negative force addition
 
 	rhs_p.x[ im-1 ][ j ][ k ] = - ( v.x[ im-1 ][ j ][ k ] * ( rhs_v.x[ im-1 ][ j ][ k ] + dpdthe / rm ) + w.x[ im-1 ][ j ][ k ] * ( rhs_w.x[ im-1 ][ j ][ k ] + dpdphi / rmsinthe ) )

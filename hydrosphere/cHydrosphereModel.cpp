@@ -45,19 +45,6 @@
 using namespace std;
 using namespace tinyxml2;
 
-// "omega"					Default for the rotation of the earth by omega = 7.29e-5 in radians for Coriolis und centrifugal forces
-// "omega 1"				with earth rotation, Coriolis and centrifugal forces are different of zero
-// "omega 0"				without earth rotation, Coriolis and centrifugal forces are different of zero
-
-// "coriolis"					Computation with and without a rate of Coriolis force
-// "coriolis 1"				with inclusion of the Coriolis force
-// "coriolis 0"				without inclusion of the Coriolis force
-
-// "centrifugal"				Computation with and without a rate of centrifugal force
-// "centrifugal 1"			with inclusion of the centrifugal force
-// "centrifugal 0"			without inclusion of the centrifugal force
-
-
 // Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
 // for 6 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005 
 
@@ -324,8 +311,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	BC_Hydrosphere		boundary ( im, jm, km );
 
 // class RHS_Hydrosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-	RHS_Hydrosphere		prepare ( im, jm, km, r0, dt, dr, dthe, dphi, re, ec, sc, g, pr, omega, coriolis, centrifugal, buoyancy );
-	RHS_Hydrosphere		prepare_2D ( jm, km, dthe, dphi, re, omega, coriolis, centrifugal );
+	RHS_Hydrosphere		prepare ( im, jm, km, r0, dt, dr, dthe, dphi, re, ec, sc, g, pr, buoyancy );
+	RHS_Hydrosphere		prepare_2D ( jm, km, dthe, dphi, re );
 
 // class RungeKutta_Hydrosphere for the explicit solution of the Navier-Stokes equations
 	RungeKutta_Hydrosphere		result ( n, im, jm, km, dt );

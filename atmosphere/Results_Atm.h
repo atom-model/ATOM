@@ -30,7 +30,7 @@ class Results_MSL_Atm
 		double e, a, e_SL, a_SL, p_SL;
 		double t_dew_SL, t_Celsius_SL;
 		double sun, albedo_equator, q_T;
-		double e_h, a_h, p_h, q_h, t_dew, t_Celsius, t_Celsius_1, c_grad, t_grad, t_denom, Delta, E_a, gamma, g, gam;
+		double e_h, a_h, p_h, q_h, t_dew, t_Celsius, t_Celsius_1, t_denom, Delta, E_a, gamma, g, gam;
 		double i_level, h_level, h_h, sat_deficit, RF_e;
 		double Evaporation_Penman_average, Evaporation_Haude_average;
 		double ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, ls, cp_l, r_air, dt, dr;
@@ -71,7 +71,7 @@ class Results_MSL_Atm
 
 		~Results_MSL_Atm (  );
 
-		void run_MSL_data ( int, int, int, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void run_MSL_data ( int, int, int, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 };
 #endif

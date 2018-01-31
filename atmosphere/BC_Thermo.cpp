@@ -107,14 +107,14 @@ BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int i_beg, i
 																									// fall velocity for water droplets of 0.3 mm compares to 2.4 m/s
 																									// fall velocity for water droplets of 1.0 mm compares to 6.3 m/s
 																									// fall velocity for water droplets of 5.0 mm compares to 14.1 m/s
-	dt_rain_dim = 250.;																// dt_rain_dim is the time  in 250 s to pass dr = 500 m, 500 m / 250 s = 2 m/s fallout velocity
+	dt_rain_dim = 250.;																// dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
 
 																									// fall velocity for snow flakes of 1.0 mm compares to 0.9 m/s
 																									// fall velocity for snow flakes of 2.0 mm compares to 1.2 m/s
 																									// fall velocity for snow flakes of 4.0 mm compares to 1.4 m/s
-	dt_snow_dim = 417.;																// dt_snow_dim is the time  in 417 s to pass dr = 500 m, 500 m / 417 s = 1.2 m/s fallout velocity
+	dt_snow_dim = 417.;																// dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
 
-	dt_dim = L_atm / u_0 * dt;														// dimensional time step of system
+	dt_dim = L_atm / u_0 * dt;														// dimensional time step of system in s
 
 
 
@@ -207,7 +207,7 @@ BC_Thermo::~BC_Thermo()
 
 
 
-void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, Array_2D &Q_Radiation, Array_2D &Radiation_Balance, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice )
+void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &Ik, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice )
 {
 // class element for the computation of the radiation and the temperature distribution
 // computation of the local temperature based on short and long wave radiation
@@ -306,7 +306,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &
 // radiation boundary conditions for the top ot the troposphere
 				radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4. ); // long wave radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
-				rad_lon_terrestic = sigma * pow ( t.x[ 0 ][ j ][ k ] * t_0, 4. );									// long wave surface radiation based on local temperature, Stefan-Boltzmann law
 				rad_lon_back = epsilon_3D.x[ 1 ][ j ][ k ] * sigma * pow ( t.x[ 1 ][ j ][ k ] * t_0, 4. );	// long wave back radiation absorbed from the first water vapour layer out of 40
  
 				Ik_loss = .07 * Ik.y[ j ][ k ];																				// short wave radiation loss on the surface
@@ -385,7 +384,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &
 
 						aa = radiation_3D.x[ i - 1 ][ j ][ k ];
 						bb = - 2. * radiation_3D.x[ i ][ j ][ k ];
-						if ( i == im - 2 )  cc = radiation_3D.x[ i + 1 ][ j ][ k ] / radiation_3D.x[ im - 1 ][ j ][ k ];
+						if ( i == im - 2 )  cc = 1.;
 						else cc = radiation_3D.x[ i + 1 ][ j ][ k ];
 						dd = - AA[ i - 1 ] + AA[ i ] + CCC - DDD;
 					}
@@ -406,17 +405,12 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, Array_2D &
 				radiation_3D.x[ im - 1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im - 1 ][ j ][ k ] ) * sigma * pow ( t.x[ im - 1 ][ j ][ k ] * t_0, 4. ); // dimensional form of the radiation leaving the last layer
 
 
-
-
 // recurrence formula for the radiation and temperature
-
 				for ( int i = im - 2; i >= 0; i-- )
 				{
-
 // above assumed tropopause constant temperature t_tropopause
 					radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];							// Thomas algorithm, recurrence formula
 					t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, ( 1. / 4. ) ) / t_0 );	// averaging of temperature values to smooth the iterations
-//					if ( t.x[ i ][ j ][ k ] >= 1.1464 )									t.x[ i ][ j ][ k ] = 1.1464;									// max temperature t=40°C
 				}
 			}
 		}
@@ -2649,16 +2643,15 @@ void BC_Thermo::BC_Pressure ( Array &p_stat, Array &p_dyn, Array &t, Array &h )
 
 
 
-void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &tn, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &Latency, Array &Q_Sensible, Array &t_cond_3D, Array &t_evap_3D, Array &radiation_3D )
+void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &tn, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &ice, Array &Q_Latent, Array &Q_Sensible, Array &radiation_3D, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom )
 {
-	double Latency_Ice = 0.; 
+	double Q_Latent_Ice = 0.; 
 
 // collection of coefficients for phase transformation
-//	coeff_L = 100. * r_air * lv * u_0 / L_atm;							// coefficient for Latency
-	coeff_Q = 100. * cp_l * r_air * u_0 * t_0 / L_atm;				// coefficient for Q_Sensible
+	coeff_Lv = 6.04 * lv / ( L_atm / ( double ) ( im-1 ) );
+	coeff_Ls = 6.04 * ls / ( L_atm / ( double ) ( im-1 ) );
+	coeff_Q = .324 * cp_l * r_air * t_0 / ( L_atm / ( double ) ( im-1 ) );				// coefficient for Q_Sensible
 
-
-	coeff_L = lv * u_0 / ( L_atm / ( double ) ( im-1 ) );
 
 	c32 = 3. / 2.;
 	c42 = 4. / 2.;
@@ -2671,27 +2664,40 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 	dphi2 = dphi * dphi;
 	rm = rad.z[ 0 ];
 
-	for ( int j = 1; j < jm-1; j++ )
+	for ( int j = 0; j < jm; j++ )
 	{
 // collection of coefficients
 		sinthe = sin( the.z[ j ] );
 		rmsinthe = rm * sinthe;
 
-		for ( int k = 1; k < km-1; k++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			Latency.x[ 0 ][ j ][ k ] = 0.;
-			Q_Sensible.x[ 0 ][ j ][ k ] = 0.;							// sensible heat in [W/m2] from energy transport equation
+			t_Celsius = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
+			T = t.x[ 0 ][ j ][ k ] * t_0;
 
-			if ( Latency.x[ 0 ][ j ][ k ] <= 0. )			t_cond_3D.x[ 0 ][ j ][ k ] = pow ( ( radiation_3D.x[ 0 ][ j ][ k ] - Latency.x[ 0 ][ j ][ k ] - Q_Sensible.x[ 0 ][ j ][ k ] ) / sigma, .25 ) - pow ( radiation_3D.x[ 0 ][ j ][ k ] / sigma, .25 );						// temperature increase due to condensation
-			else 													t_cond_3D.x[ 0 ][ j ][ k ] = 0.;
+			p_h = p_stat.x[ 0 ][ j ][ k ];
+			E_Rain = hp * exp_func ( T, 17.2694, 35.86 );										// saturation water vapour pressure for the water phase at t > 0°C in hPa
+			E_Ice = hp * exp_func ( T, 21.8746, 7.66 );											// saturation water vapour pressure for the ice phase in hPa
 
-			if ( Latency.x[ 0 ][ j ][ k ] > 0. )			t_evap_3D.x[ 0 ][ j ][ k ] = pow ( ( radiation_3D.x[ 0 ][ j ][ k ] - Latency.x[ 0 ][ j ][ k ] - Q_Sensible.x[ 0 ][ j ][ k ] ) / sigma, .25 ) - pow ( radiation_3D.x[ 0 ][ j ][ k ] / sigma, .25 );						// temperature decrease due to evaporation
-			else 													t_evap_3D.x[ 0 ][ j ][ k ] = 0.;
+			q_Rain  = ep * E_Rain / ( p_h - E_Rain );																// water vapour amount at saturation with water formation in kg/kg
+			q_Ice  = ep * E_Ice / ( p_h - E_Ice );																		// water vapour amount at saturation with ice formation in kg/kg
+
+			e = c.x[ 0 ][ j ][ k ] * p_stat.x[ 0 ][ j ][ k ] / ep; 													// water vapour pressure in hPa
+			a = 216.6 * e / ( t.x[ 0 ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
+
+			if ( c.x[ 0 ][ j ][ k ] >= q_Rain )		Q_Latent.x[ 0 ][ j ][ k ] = coeff_Lv * a * ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / ( 2. * dr );
+			else 												Q_Latent.x[ 0 ][ j ][ k ] = 0.;
+			if ( c.x[ 0 ][ j ][ k ] >= q_Ice )			Q_Latent_Ice = coeff_Ls * a * ( - 3. * ice.x[ 0 ][ j ][ k ] + 4. * ice.x[ 1 ][ j ][ k ] - ice.x[ 2 ][ j ][ k ] ) / ( 2. * dr );
+			else 												Q_Latent_Ice = 0.;
+
+			Q_Latent.x[ 0 ][ j ][ k ] = Q_Latent.x[ 0 ][ j ][ k ] + Q_Latent_Ice;
+
+			Q_Sensible.x[ 0 ][ j ][ k ] = coeff_Q * ( - 3. * t.x[ 0 ][ j ][ k ] + 4. * t.x[ 1 ][ j ][ k ] - t.x[ 2 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
 		}
 	}
 
 
-	for ( int j = 1; j < jm-1; j++ )
+	for ( int j = 0; j < jm; j++ )
 	{
 // collection of coefficients
 		sinthe = sin( the.z[ j ] );
@@ -2706,17 +2712,15 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 // water vapour turns to or developes from water or ice
 // latent heat of water vapour
 
-		for ( int k = 1; k < km-1; k++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int i = im-2; i >= 1; i-- )
+			for ( int i = 1; i < im-2; i++ )
 			{
 // collection of coefficients
 				rm = rad.z[ i ];
 				rm2 = rm * rm;
 
 				t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-				t_Celsius_ni = t.x[ i - 1 ][ j ][ k ] * t_0 - t_0;																// conversion from Kelvin to Celsius
-				t_Celsius_pi = t.x[ i + 1 ][ j ][ k ] * t_0 - t_0;															// conversion from Kelvin to Celsius
 				T = t.x[ i ][ j ][ k ] * t_0;
 
 				p_h = p_stat.x[ i ][ j ][ k ];
@@ -2726,32 +2730,47 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 				q_Rain  = ep * E_Rain / ( p_h - E_Rain );																// water vapour amount at saturation with water formation in kg/kg
 				q_Ice  = ep * E_Ice / ( p_h - E_Ice );																		// water vapour amount at saturation with ice formation in kg/kg
 
-				u_av = .5 * ( u.x[ i+1 ][ j ][ k ] + u.x[ i-1 ][ j ][ k ] );								// average velocity at i
+				e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
+				a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
-				if ( c.x[ i ][ j ][ k ] >= q_Rain )			Latency.x[ i ][ j ][ k ] = coeff_L * ( u_av * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) );
-				else 												Latency.x[ i ][ j ][ k ] = 0.;
+				if ( c.x[ i ][ j ][ k ] >= q_Rain )		Q_Latent.x[ i ][ j ][ k ] = coeff_Lv * a * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
+				else 												Q_Latent.x[ i ][ j ][ k ] = 0.;
+				if ( c.x[ i ][ j ][ k ] >= q_Ice )			Q_Latent_Ice = coeff_Ls * a * ( ice.x[ i+1 ][ j ][ k ] - ice.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
+				else 												Q_Latent_Ice = 0.;
 
-				if ( c.x[ i ][ j ][ k ] >= q_Ice )			Latency_Ice = coeff_L * ( u_av * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) );
-				else 												Latency_Ice = 0.;
-				Latency.x[ i ][ j ][ k ] = Latency.x[ i ][ j ][ k ] + Latency_Ice;
-				Q_Sensible.x[ i ][ j ][ k ] = - coeff_Q * ( u_av * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) );	// sensible heat in [W/m2] from energy transport equation
+				Q_Latent.x[ i ][ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] + Q_Latent_Ice;
 
-				if ( Latency.x[ i ][ j ][ k ] <= 0. )		t_cond_3D.x[ i ][ j ][ k ] = pow ( ( radiation_3D.x[ i ][ j ][ k ] - Latency.x[ i ][ j ][ k ] - Q_Sensible.x[ i ][ j ][ k ] ) / sigma, .25 ) - pow ( radiation_3D.x[ i ][ j ][ k ] / sigma , .25 );																								// temperature increase due to condensation
-				else 												t_cond_3D.x[ i ][ j ][ k ] = 0.;
-
-				if ( Latency.x[ i ][ j ][ k ] > 0. )			t_evap_3D.x[ i ][ j ][ k ] = pow ( ( radiation_3D.x[ i ][ j ][ k ] - Latency.x[ i ][ j ][ k ] - Q_Sensible.x[ i ][ j ][ k ] ) / sigma, .25 ) - pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, .25 );																									// temperature decrease due to evaporation
-				else 												t_evap_3D.x[ i ][ j ][ k ] = 0.;
-
-				if ( h.x[ i ][ j ][ k ] == 1. )
-				{
-					Latency.x[ i ][ j ][ k ] = 0.;
-					Q_Sensible.x[ i ][ j ][ k ] = 0.;
-					t_cond_3D.x[ i ][ j ][ k ] = 0.;
-					t_evap_3D.x[ i ][ j ][ k ] = 0.;
-				}
+				Q_Sensible.x[ i ][ j ][ k ] = coeff_Q * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
 			}
 		}
 	}
+
+
+	int i_mount = 0;
+
+// boundary conditions for solid ground areas
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int i = im-2; i >= 0; i-- )													// i = 0 a must: to keep velocities at surfaces to zero
+			{
+				if ( h.x[ i ][ j ][ k ] == 1. )
+				{
+					if ( i_mount == 0 ) 		i_mount = i;
+
+					if ( c.x[ i ][ j ][ k ] >= q_Rain )		Q_latent.y[ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] = Q_Latent.x[ i_mount ][ j ][ k ];
+					else 												Q_Latent.x[ 0 ][ j ][ k ] = 0.;
+
+					Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ] = Q_Sensible.x[ i_mount ][ j ][ k ];
+					Q_radiation.y[ j ][ k ] = radiation_3D.x[ i ][ j ][ k ];
+					Q_bottom.y[ j ][ k ] = radiation_3D.x[ i ][ j ][ k ] + Q_latent.y[ j ][ k ] + Q_sensible.y[ j ][ k ];
+				}
+			}
+			i_mount = 0;
+		}
+	}
+
 }
 
 
@@ -2778,21 +2797,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			t_u = t.x[ 0 ][ j ][ k ] * t_0;
-
-			t_Celsius_SL = t_u - t_0;
-			p_SL = .01 * r_air * R_Air * t_u;																	// from gas equation given in hPa
-
-			E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 );										// saturation water vapour pressure for the water phase at t > 0°C in hPa
-			E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 );											// saturation water vapour pressure for the ice phase in hPa
-
-			q_Rain  = ep * E_Rain / ( p_SL - E_Rain );													// water vapour amount at saturation with water formation in kg/kg
-			q_Ice = ep * E_Ice / ( p_SL - E_Ice );															// water vapour amount at saturation with ice formation in kg/kg
-
-			r_dry = 100. * p_SL / ( R_Air * t_u );
-			r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ 0 ][ j ][ k ] );	// density of humid air, COSMO version withot cloud and ice water, masses negligible
-
-			for ( int i = 1; i < im-1; i++ )
+			for ( int i = 0; i < im; i++ )
 			{
 				t_u = t.x[ i ][ j ][ k ] * t_0;																		// in K
 
@@ -2826,7 +2831,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 
 
 // warm cloud phase in case water vapour is over-saturated
-				if ( t_Celsius >= 0. )
+				if ( t_Celsius > 0. )
 				{
 					q_T = c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ];										// total water content
 					t_u = t.x[ i ][ j ][ k ] * t_0;																	// in K
@@ -2890,7 +2895,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 
 
 // mixed cloud phase, if 0°C > t > -38°C
-				if ( t_Celsius < 0. )
+				if ( t_Celsius <= 0. )
 				{
 					if ( t_Celsius < t_Celsius_2 ) 										cloud.x[ i ][ j ][ k ] = 0.;
 					if ( t_Celsius > 0. ) 													ice.x[ i ][ j ][ k ] = 0.;
@@ -2978,6 +2983,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 
 					t.x[ i ][ j ][ k ] = T / t_0;
 				}																												// end ( ( t_Celsius < 0. ) && ( t_Celsius >= t_Celsius_2 ) )
+
 			}																													// end i
 		}																														// end j
 	}																															// end k
@@ -3028,7 +3034,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 	t_hn = 236.15;																		// in K
 	t_r_frz = 271.15;																		// in K
 	m_i_0 = 1.e-12;																		// in kg
-	c_i_dep = 1.3e-5;
+	c_i_dep = 1.3e-5;																	// in m3/(kg*s)
 	m_i_max = 1.e-9;																	// in kg
 	m_s_0 = 3.e-9;																		// in kg
 	c_c_au = 4.e-4;																		// in 1/s
@@ -3042,7 +3048,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 	c_s_melt = 8.43e-5;
 	b_s_melt = 12.05;
 	a_s_melt = 2.31e3;
-	c_r_frz = 3.75e-2;
+	c_r_frz = 3.75e-2;																	// in m2*s/kg
 	a_i_m = 130.;																			// in kg/m3
 	a_s_m = .038;																			// in kg/m3
 	N_r_0 = 8.e6;																			// in 1/m4
@@ -3117,7 +3123,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 				}
 
 
-				if ( ( t_Celsius < 0. ) && ( t_Celsius >= t_Celsius_2 ) )
+				if ( ( t_Celsius <= 0. ) && ( t_Celsius > t_Celsius_2 ) )
 				{
 					if ( c.x[ i ][ j ][ k ] > q_Ice )											// supersaturation
 					{
@@ -3205,7 +3211,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 						if ( ( t_u < t_hn ) && ( cloud.x[ i ][ j ][ k ] > 0. ) ) 		S_c_frz = cloud.x[ i ][ j ][ k ] / dt_rain_dim;		//nucleationof cloud ice due to freezing of cloud water
 						else 																		S_c_frz = 0.;
 
-						if ( ( t_Celsius < 0. ) && ( t_Celsius >= t_Celsius_2 ) )
+						if ( ( t_Celsius <= 0. ) && ( t_Celsius > t_Celsius_2 ) )
 						{	
 							if ( c.x[ i ][ j ][ k ] > q_Ice )								// supersaturation
 							{
