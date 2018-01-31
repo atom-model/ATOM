@@ -462,8 +462,8 @@ void BC_Thermo::BC_Temperature(int *im_tropopause, Array_2D &temperature_NASA,
     if ( Ma == 0 ){  
         t_cretaceous = t_cretaceous_prev = 0.;
     }else{
-        t_cretaceous = get_temperature_increment(Ma);
-        t_cretaceous_prev = get_temperature_increment(*m_model.get_previous_time());
+        //t_cretaceous = get_temperature_increment(Ma);
+        //t_cretaceous_prev = get_temperature_increment(*m_model.get_previous_time());
     }
 
     cout.precision ( 3 );
@@ -484,9 +484,17 @@ void BC_Thermo::BC_Temperature(int *im_tropopause, Array_2D &temperature_NASA,
 
     cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_cretaceous << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << temperature_unit << endl;
 
-    t_cretaceous /= t_0;    // non-dimensional
-    double t_cretaceous_add = t_cretaceous - t_cretaceous_prev/t_0; // non-dimensional
+    //t_cretaceous /= t_0;    // non-dimensional
+    //double t_cretaceous_add = t_cretaceous - t_cretaceous_prev/t_0; // non-dimensional
 
+    t_cretaceous = (m_model.GetMeanTemperatureFromCurve(Ma) -
+                   m_model.GetMeanTemperatureFromCurve(0) ) / t_0;
+
+    double t_cretaceous_add = m_model.GetMeanTemperatureFromCurve(Ma) - 
+                       m_model.GetMeanTemperatureFromCurve(*m_model.get_previous_time());
+    t_cretaceous_add /= t_0;
+    
+    std::cout << "t_cretaceous_add: " << t_cretaceous_add << std::endl; 
 
     // temperatur distribution at aa prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N

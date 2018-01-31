@@ -161,6 +161,7 @@ cAtmosphereModel::cAtmosphereModel():
     p_stat.initArray(im, jm, km, pa); 
 
     CalculateNodeWeights();
+    LoadTemperatureCurve();
 }
 
 cAtmosphereModel::~cAtmosphereModel() 
@@ -705,7 +706,7 @@ float cAtmosphereModel::GetMeanTemperatureFromCurve(float time) const
             upper = it;
         }
     }
-    std::cout << upper->first << " " << bottom->first << std::endl;
+    //std::cout << upper->first << " " << bottom->first << std::endl;
     return upper->second + (time - upper->first) / (bottom->first - upper->first) * (bottom->second - upper->second);
 }
 

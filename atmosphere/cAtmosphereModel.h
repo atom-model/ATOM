@@ -53,6 +53,8 @@ public:
         }
     }
 
+    float GetMeanTemperatureFromCurve(float time) const;
+
     #include "AtmosphereParams.h.inc"
 
 private:
@@ -72,8 +74,6 @@ private:
 
     void LoadTemperatureCurve();
 
-    float GetMeanTemperatureFromCurve(float time) const;
-    
     float GetMeanTemperature() const;
 
     void CalculateNodeWeights();
