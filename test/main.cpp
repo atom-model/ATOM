@@ -23,7 +23,7 @@ public:
         std::cout.precision(10);
         std::cout <<"the increment: "<< thermo.get_temperature_increment(140) << std::endl;
 
-        std::cout <<"the water vapour: "<< thermo.calculate_water_vapour(25,true) << std::endl;
+        std::cout <<"the water vapour: "<< thermo.calculate_water_vapour(34,true) << std::endl;
         std::cout <<"the water vapour: "<< thermo.calculate_water_vapour(30,true) << std::endl;
     
         model.CalculateNodeWeights();

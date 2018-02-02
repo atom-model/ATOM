@@ -326,6 +326,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
                             epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
 
     LoadTemperatureData(Ma, circulation);
+    
     std::cout << "The Mean Temperature after loading: "<<GetMeanTemperature()
     <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
 
@@ -398,7 +399,16 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
               startPressure, oldnew, calculate_MSL,
               circulation);
 
-
+    double tmp_1 = GetMeanTemperatureFromCurve(Ma);
+    double tmp_2 = GetMeanTemperature();
+    double diff = tmp_2 - tmp_1;
+    for(int j=0;j<jm;j++){
+        for(int k=0; k<km; k++){
+            t.x[0][j][k] -= diff/t_0;
+            if(t.x[0][j][k]>35.0/t_0+1) t.x[0][j][k]=35.0/t_0+1;
+        }
+    }
+    
     cout << endl << endl;
 
     if ( NASATemperature == 1 && !use_earthbyte_reconstruction){ 
@@ -509,7 +519,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
             circulation.Latent_Heat(rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, Latency, 
                                     Q_Sensible, t_cond_3D, t_evap_3D, radiation_3D );
 
-            if (verbose) {
+            if (1){//verbose) {
                 PrintMaxMinValues();
             }
 
