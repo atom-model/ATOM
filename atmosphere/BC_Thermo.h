@@ -53,7 +53,7 @@ class BC_Thermo
 		double d_i, d_i_max, d_i_half, d_j, d_j_half, d_j_max, d_k, pi180, d_j_w;
 		double d_j_5n, d_j_15n, d_j_45n, d_j_75n, d_j_30n, d_j_5s, d_j_15s, d_j_45s, d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
 		double t_cretaceous, t_cretaceous_co2_eff, t_cretaceous_max, t_360;
-		double j_par_f, j_pol_f, e, j_d, t_dd, k_par_f, k_pol_f;
+		double j_par_f, j_pol_f, e, a, j_d, t_dd, k_par_f, k_pol_f;
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
 		double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
 		double eps, c_ocean, t_land, c_land, c_coeff, t_average, co2_average, co2_pole, gam, t_Ik, Ik_loss, Ik_tot;
@@ -62,13 +62,13 @@ class BC_Thermo
 		double aa, bb, cc, dd, f;
 		double epsilon_co2_eff_2D, epsilon_co2_eff, epsilon_pole, epsilon_equator, epsilon_tropopause, epsilon_co2_eff_max;
 
-		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, t_Celsius_ni, t_Celsius_pi, t_Celsius_nj, t_Celsius_pj, t_Celsius_nk, t_Celsius_pk, dp_hdr, dp_hdthe, dp_hdphi;
+		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, dp_hdr, dp_hdthe, dp_hdphi;
 		double sinthe, sinthe2, lv, ls, coeff_lv, coeff_ls, coeff_L_atm_u_0, r_0;
 		double dt, dt_dim, dt_rain_dim, dt_snow_dim, dr, dthe, dphi, dt2, dr2, dthe2, dphi2, rm2;
 		double rm, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2;
 		double E, E_Rain_SL, E_Rain, E_Rain_super, E_Ice, q_Rain, q_Rain_super, q_Ice;
 		double c12, c32, c42, t_Celsius_it, t_Celsius_0, t_Celsius_1, t_Celsius_2;
-		double rad_lon_terrestic, rad_lon_back;
+		double rad_lon_back;
 		double r_dry, r_humid, p_SL, t_SL, exp_pressure, hight;
 		double t_u, t_Celsius_SL, t_dew, t_dew_SL, T, T_nue, T_it, q_T, q_Rain_n;
 		double q_v_b, q_c_b, q_i_b, q_v_hyp, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
@@ -83,7 +83,7 @@ class BC_Thermo
 		double tau_r, tau_s, t_1, t_00, t_m1, t_m2, t_r_frz, c_r_frz, alf_ev, alf_dep, a_d, b_u, alf_1, alf_2, p_ps, bet_p, p_t_in, E_Rain_t_in, q_Rain_t_in;
 		double a_mc, a_mv, a_m, coeff_P, a_i_m, a_s_m, N_r_0, N_s_0;
 		double N_i_0, N_i, t_nuc, t_d, t_hn, m_i, m_i_0, m_i_max, m_s_0, c_i_dep, c_c_au, c_i_au, c_agg, c_i_cri, c_r_cri, c_s_dep, c_s_melt;
-		double u_av, v_av, w_av, coeff_L, coeff_Q;
+		double coeff_Lv, coeff_Ls, coeff_Q;
 
  
  
@@ -134,7 +134,9 @@ class BC_Thermo
 
 		void BC_Pressure ( Array &, Array &, Array &, Array & );
 
-		void Latent_Heat ( Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void Latent_Heat ( Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, 
+                           Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, 
+                           Array_2D &, Array_2D & );
 
 		void IC_Temperature_WestEastCoast ( Array &, Array & );
 

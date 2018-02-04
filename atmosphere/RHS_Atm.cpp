@@ -15,16 +15,13 @@
 using namespace std;
 
 
-RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, double re, double omega, double coriolis, double centrifugal )
+RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, double re )
 {
 	this-> jm = jm;
 	this-> km = km;
 	this-> dthe = dthe;
 	this-> dphi = dphi;
 	this-> re = re;
-	this-> omega = omega;
-	this-> coriolis = coriolis;
-	this-> centrifugal = centrifugal;
 
 // array "im_tropopause" for configuring data due to latitude dependent tropopause
 	im_tropopause = new int*[ jm ];
@@ -36,7 +33,7 @@ RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, doubl
 }
 
 
-RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double ec, double sc_WaterVapour, double sc_CO2, double g, double pr, double omega, double coriolis, double centrifugal, double WaterVapour, double buoyancy, double CO2, double gam, double sigma, double lambda )
+RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double ec, double sc_WaterVapour, double sc_CO2, double g, double pr, double WaterVapour, double buoyancy, double CO2, double gam, double sigma, double lambda )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -52,12 +49,6 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 	this-> g = g;
 	this-> pr = pr;
 	this-> gam = gam;
-	this-> lambda = lambda;
-	this-> omega = omega;
-	this-> coriolis = coriolis;
-	this-> centrifugal = centrifugal;
-	this-> WaterVapour = WaterVapour;
-	this-> buoyancy = buoyancy;
 	this-> CO2 = CO2;
 	this-> sigma = sigma;
 
@@ -85,14 +76,15 @@ RHS_Atmosphere::~RHS_Atmosphere()
 
 
 
-void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_air, double r_water, double r_water_vapour, double r_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Latency, Array &IceLayer, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c, Array_2D &Topography )
+void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep, double hp, double u_0, double t_0, double c_0, double co2_0, double p_0, double r_air, double r_water, double r_water_vapour, double r_co2, double L_atm, double cp_l, double R_Air, double R_WaterVapour, double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c, Array_2D &Topography )
 {
+	cout.precision ( 8 );
+	cout.setf ( ios::fixed );
+
 // collection of coefficients for phase transformation
 	coeff_lv = lv / ( cp_l * t_0 );					// coefficient for the specific latent vapourisation heat ( condensation heat ), coeff_lv = 9.1069 in [ / ]
 	coeff_ls = ls / ( cp_l * t_0 );					// coefficient for the specific latent sublimation heat ( sublimation heat ) coeff_ls = 10.9031 in [ / ]
-	coeff_lf = ( lv + ls ) / ( cp_l * t_0 );			// coefficient for the specific latent fusion heat ( sublimation heat ) coeff_ls = 20.01 in [ / ]
-	coeff_L_atm_u_0 = L_atm / u_0;					// coefficient for the source terms in the ice-water transport equations
-	coeff_temp = L_atm / ( r_air * cp_l * u_0 * t_0 );					 											// = 0.003227
+	coeff_L_atm_u_0 = 1000. * L_atm / u_0;					// coefficient for the source terms in the ice-water transport equations, = 1066
 	coeff_buoy = L_atm / ( r_air * u_0 * u_0 );																			// = 59.259
 
 	c43 = 4. / 3.;
@@ -550,23 +542,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 
 
-
-// Coriolis and centrifugal terms in the energy and momentum equations
-	RS_Coriolis_Energy = ( + u.x[ i ][ j ][ k ] * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ]
-									   - w.x[ i ][ j ][ k ] * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] )
-									  + v.x[ i ][ j ][ k ] * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ] ) * ec * pr;
-
-	RS_centrifugal_Energy = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 ) * ec * pr
-										 + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 ) * ec * pr;
-
-	RS_Coriolis_Momentum_rad = + h_d_i * coriolis * 2. * omega * sinthe * w.x[ i ][ j ][ k ];
-	RS_Coriolis_Momentum_the = + h_d_j * coriolis * 2. * omega * costhe * w.x[ i ][ j ][ k ];
-	RS_Coriolis_Momentum_phi = - h_d_k * coriolis * ( 2. * omega * sinthe * u.x[ i ][ j ][ k ] + 2. * omega * costhe * v.x[ i ][ j ][ k ] );
-
-	RS_Centrifugal_Momentum_rad = + centrifugal * rad.z[ i ] * pow ( ( omega * sinthe ), 2 );
-	RS_Centrifugal_Momentum_the = + centrifugal * rad.z[ i ] * sinthe * costhe * pow ( ( omega ), 2 );
-
-
 // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
 	r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );													// density of dry air 
 	r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );											// density of humid air, COSMO version without cloud and ice water, masses negligible
@@ -579,8 +554,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	RS_buoyancy_Water_Vapour = buoyancy * ( cloud.x[ i ][ j ][ k ] - cloudn.x[ i ][ j ][ k ] );
 
 
-	S_c.x[ i ][ j ][ k ] = S_i.x[ i ][ j ][ k ] = S_r.x[ i ][ j ][ k ] = S_s.x[ i ][ j ][ k ] = 0.;
-
 
 // Right Hand Side of the time derivative ot temperature, pressure, water vapour concentration and velocity components
 	rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe )
@@ -591,33 +564,29 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 			+ ec / re * ( pow ( ( dvdr - h_d_j * v.x[ i ][ j ][ k ] / rm + dudthe / rm ), 2. )
 			+ pow ( ( dudphi / rmsinthe + dwdr - h_d_k * w.x[ i ][ j ][ k ] / rm ), 2. )
 			+ pow ( ( dwdthe * sinthe / rm2 - h_d_k * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
-			+ RS_Coriolis_Energy + RS_centrifugal_Energy
 			+ coeff_lv * coeff_L_atm_u_0 * ( S_c.x[ i ][ j ][ k ] + S_r.x[ i ][ j ][ k ] )
 			+ coeff_ls * coeff_L_atm_u_0 * ( S_i.x[ i ][ j ][ k ] + S_s.x[ i ][ j ][ k ] )
-			- h_c_i * t.x[ i ][ j ][ k ] * k_Force / dthe2;																					// immersed boundary condition as a negative force addition
+			- h_c_i * t.x[ i ][ j ][ k ] * k_Force / dthe2;
 
 	rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
 			- dpdr + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
 			- RS_buoyancy_Momentum
-			+ RS_Coriolis_Momentum_rad + RS_Centrifugal_Momentum_rad
-			- h_c_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;																					// immersed boundary condition as a negative force addition
+			- h_c_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;
 
 	rhs_v.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dvdr + v.x[ i ][ j ][ k ] * dvdthe / rm + w.x[ i ][ j ][ k ] * dvdphi / rmsinthe ) +
 			- dpdthe / rm + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
 			- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_j * v.x[ i ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2
 			+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-			+ RS_Coriolis_Momentum_the + RS_Centrifugal_Momentum_the
-			- h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;																					// immersed boundary condition as a negative force addition
+			- h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;
 
 	rhs_w.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dwdr + v.x[ i ][ j ][ k ] * dwdthe / rm + w.x[ i ][ j ][ k ] * dwdphi / rmsinthe ) +
 			- dpdphi / rmsinthe + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
 			- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_k * w.x[ i ][ j ][ k ] / rm + d2wdphi2 / rm2sinthe2
 			+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-			+ RS_Coriolis_Momentum_phi
-			- h_c_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;																					// immersed boundary condition as a negative force addition
+			- h_c_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;
 
 	rhs_p.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] *  ( rhs_u.x[ i ][ j ][ k ] + dpdr ) + v.x[ i ][ j ][ k ] * ( rhs_v.x[ i ][ j ][ k ] + dpdthe / rm ) + w.x[ i ][ j ][ k ] * ( rhs_w.x[ i ][ j ][ k ] + dpdphi / rmsinthe ) )
-				- h_c_k * p_dyn.x[ i ][ j ][ k ] * k_Force / dphi2;					// immersed boundary condition as a negative force addition
+				- h_c_k * p_dyn.x[ i ][ j ][ k ] * k_Force / dphi2;
 
 	rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
 			+ ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
@@ -636,7 +605,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 	rhs_co2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcodr + v.x[ i ][ j ][ k ] * dcodthe / rm + w.x[ i ][ j ][ k ] * dcodphi / rmsinthe )
 			+ ( d2codr2 + dcodr * 2. / rm + d2codthe2 / rm2 + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
-			- h_c_i * co2.x[ i ][ j ][ k ] * k_Force / dthe2;						// immersed boundary condition as a negative force addition
+			- h_c_i * co2.x[ i ][ j ][ k ] * k_Force / dthe2;
 
 
 // for the Poisson equation to solve for the pressure, pressure gradient substracted from the above RHS
@@ -901,22 +870,14 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 
 
-
-
-	RS_Coriolis_Momentum_the = + coriolis * 2. * omega * costhe * w.x[ 0 ][ j ][ k ] * h_d_j;
-	RS_Centrifugal_Momentum_the = + centrifugal * rad.z[ 0 ] * sinthe * costhe * pow ( ( omega ), 2 );
-	RS_Coriolis_Momentum_phi = - coriolis * omega * costhe * v.x[ 0 ][ j ][ k ] * h_d_k;
-
 	rhs_v.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dvdthe / rm + w.x[ 0 ][ j ][ k ] * dvdphi / rmsinthe ) +
 				- dpdthe / rm - ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
 				- ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[ 0 ][ j ][ k ] / rm + d2vdphi2 / rm2sinthe2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-				+ RS_Coriolis_Momentum_the + RS_Centrifugal_Momentum_the
 				- h_c_j * v.x[ 0 ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 	rhs_w.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dwdthe / rm +  w.x[ 0 ][ j ][ k ] * dwdphi / rmsinthe ) +
 				- dpdphi / rmsinthe + ( d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
 				- ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[ 0 ][ j ][ k ] / rm + d2wdphi2 / rm2sinthe2 + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-				+ RS_Coriolis_Momentum_phi
 				- h_c_k * w.x[ 0 ][ j ][ k ] * k_Force / dphi2;					// immersed boundary condition as a negative force addition
 
 	rhs_p.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * ( rhs_v.x[ 0 ][ j ][ k ] + dpdthe / rm ) + w.x[ 0 ][ j ][ k ] * ( rhs_w.x[ 0 ][ j ][ k ] + dpdphi / rmsinthe ) )

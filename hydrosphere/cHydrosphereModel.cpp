@@ -45,19 +45,6 @@
 using namespace std;
 using namespace tinyxml2;
 
-// "omega"					Default for the rotation of the earth by omega = 7.29e-5 in radians for Coriolis und centrifugal forces
-// "omega 1"				with earth rotation, Coriolis and centrifugal forces are different of zero
-// "omega 0"				without earth rotation, Coriolis and centrifugal forces are different of zero
-
-// "coriolis"					Computation with and without a rate of Coriolis force
-// "coriolis 1"				with inclusion of the Coriolis force
-// "coriolis 0"				without inclusion of the Coriolis force
-
-// "centrifugal"				Computation with and without a rate of centrifugal force
-// "centrifugal 1"			with inclusion of the centrifugal force
-// "centrifugal 0"			without inclusion of the centrifugal force
-
-
 // Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
 // for 6 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005 
 
@@ -263,10 +250,11 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	stringstream ssName_v_w_Transfer_File;
 
 // naming a file to read the surface temperature of the modern world
-	string Name_SurfaceTemperature_File = temperature_file;
-        if(Ma != 0 && use_earthbyte_reconstruction){
-                Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
-        }
+	string Name_SurfaceTemperature_File; 
+	stringstream ssNameSurfaceTemperature;
+	ssNameSurfaceTemperature << "../data/" << "SurfaceTemperature_NASA.xyz";
+	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
+
 // naming a file to read the surface salinity of the modern world
 	string Name_SurfaceSalinity_File; 
 	stringstream ssNameSurfaceSalinity;
@@ -323,8 +311,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	BC_Hydrosphere		boundary ( im, jm, km );
 
 // class RHS_Hydrosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-	RHS_Hydrosphere		prepare ( im, jm, km, r0, dt, dr, dthe, dphi, re, ec, sc, g, pr, omega, coriolis, centrifugal, buoyancy );
-	RHS_Hydrosphere		prepare_2D ( jm, km, dthe, dphi, re, omega, coriolis, centrifugal );
+	RHS_Hydrosphere		prepare ( im, jm, km, r0, dt, dr, dthe, dphi, re, ec, sc, g, pr, buoyancy );
+	RHS_Hydrosphere		prepare_2D ( jm, km, dthe, dphi, re );
 
 // class RungeKutta_Hydrosphere for the explicit solution of the Navier-Stokes equations
 	RungeKutta_Hydrosphere		result ( n, im, jm, km, dt );
@@ -345,14 +333,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	BC_Thermohalin		oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, t_pole, input_path );
 
 //	surface temperature from World Ocean Atlas 2009 given as boundary condition
-	if ( Ma == 0 || use_earthbyte_reconstruction){
- 		oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
-	}
+	if ( Ma == 0 ) oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
 
 //	surface salinity from World Ocean Atlas 2009 given as boundary condition
 //	if ( Ma == 0 ) oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
 
-//	import of surface v- and w-velocity components from OGCM, surface velocity reduced to 3% of the wind velocity
+//	import of surface v- and w-velocity components from AGCM, surface velocity reduced to 3% of the wind velocity
 	oceanflow.IC_v_w_Atmosphere ( h, u, v, w );
 
 //	salinity distribution as initial condition in 3 dimensions
@@ -455,6 +441,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	cout << endl << endl;
 
 
+
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
 	for ( pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
 	{
@@ -471,7 +458,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //  restoring the velocity component and the temperature for the new time step
 			oldnew.restoreOldNew_3D(1., u, v, w, t, p_dyn, c, un, vn, wn, tn, p_dynn, cn);
 
-			cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations " << endl << endl << " Ma = " << Ma << "     n = " << n  << "    velocity_iter_max = " << velocity_iter_max << "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << "    pressure_iter = " << pressure_iter << endl;
+			cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations " << endl << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << "    pressure_iter = " << pressure_iter << endl;
 
 //		old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
 			Accuracy_Hyd		min_Residuum_old ( im, jm, km, dr, dthe, dphi );

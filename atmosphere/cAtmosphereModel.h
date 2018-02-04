@@ -114,27 +114,23 @@ private:
 
     Array_2D Vegetation; // vegetation via precipitation
 
-    Array_2D LatentHeat; // areas of higher latent heat
-    Array_2D Condensation; // areas of higher condensation
-    Array_2D Evaporation; // areas of higher evaporation
 
     Array_2D Precipitation; // areas of higher precipitation
     Array_2D precipitable_water; // areas of precipitable water in the air
     Array_2D precipitation_NASA; // surface precipitation from NASA
 
     Array_2D Ik; // direct sun radiation, short wave
-    Array_2D Radiation_Balance; // radiation balance at the surface
 
     Array_2D temperature_NASA; // surface temperature from NASA
 
     Array_2D albedo; // albedo = reflectivity
     Array_2D epsilon; // epsilon = absorptivity
 
-    Array_2D Q_Radiation; // heat from the radiation balance in [W/m2]
+    Array_2D Q_radiation; // heat from the radiation balance in [W/m2]
     Array_2D Q_Evaporation; // evaporation heat of water by Kuttler
     Array_2D Q_latent; // latent heat from bottom values by the energy transport equation
     Array_2D Q_sensible; // sensible heat from bottom values by the energy transport equation
-    Array_2D Q_bottom; // difference by Q_Radiation - Q_latent - Q_sensible
+    Array_2D Q_bottom; // difference by Q_radiation - Q_latent - Q_sensible
 
     Array_2D Evaporation_Haude; // evaporation by Haude in [mm/d]
     Array_2D Evaporation_Penman; // evaporation by Penman in [mm/d]
@@ -179,11 +175,8 @@ private:
     Array aux_v; // auxilliar field v-velocity component
     Array aux_w; // auxilliar field w-velocity component
 
-    Array Latency; // latent heat
+    Array Q_Latent; // latent heat
     Array Q_Sensible; // sensible heat
-    Array IceLayer; // ice shield
-    Array t_cond_3D; // condensation temperature
-    Array t_evap_3D; // evaporation temperature
     Array BuoyancyForce; // buoyancy force, Boussinesque approximation
     Array epsilon_3D; // emissivity/ absorptivity
     Array radiation_3D; // radiation

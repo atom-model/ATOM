@@ -165,16 +165,15 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 			if ( h.x[ 0 ][ j ][ k ] == 0. ) 
 			{
 				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = ( co_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_ocean ) / co2_0; // non-dimensional
+				co2.x[ 0 ][ j ][ k ] = ( co_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+                                        co2_pole + co2_cretaceous + co2_ocean ) / co2_0; // non-dimensional
 			}
 			if ( h.x[ 0 ][ j ][ k ] == 1. ) 
 			{
 				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = ( co_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;	// parabolic distribution from pole to pole
-
-				u.x[ 0 ][ j ][ k ] = 0.;
-				v.x[ 0 ][ j ][ k ] = 0.;
-				w.x[ 0 ][ j ][ k ] = 0.;
+				co2.x[ 0 ][ j ][ k ] = ( co_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+                                        co2_pole + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ] ) / 
+                                        co2_0;	// parabolic distribution from pole to pole
 			}
 		}
 	}
@@ -203,8 +202,6 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int 
 
 					co2.x[ i ][ j ][ k ] = 0.;
 					p_dyn.x[ i ][ j ][ k ] = 0.;
-
-					d_i = ( double ) i_mount;
 
 					if ( NASATemperature == 0 )
 					{

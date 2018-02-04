@@ -36,7 +36,8 @@ BC_Atmosphere::~BC_Atmosphere() {}
 
 
 
-void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2 )
+void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, 
+                                Array &ice, Array &co2 )
 {
 // boundary conditions for the r-direction, loop index i
 	for ( int j = 1; j < jm-1; j++ )
@@ -51,10 +52,18 @@ void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p
 			v.x[ im-1 ][ j ][ k ] = 0.;
 			w.x[ im-1 ][ j ][ k ] = 0.;
 
-			c.x[ im-1 ][ j ][ k ] = c.x[ im-4 ][ j ][ k ] - 3. * c.x[ im-3 ][ j ][ k ] + 3. * c.x[ im-2 ][ j ][ k ];
-			cloud.x[ im-1 ][ j ][ k ] = cloud.x[ im-4 ][ j ][ k ] - 3. * cloud.x[ im-3 ][ j ][ k ] + 3. * cloud.x[ im-2 ][ j ][ k ];
-			ice.x[ im-1 ][ j ][ k ] = ice.x[ im-4 ][ j ][ k ] - 3. * ice.x[ im-3 ][ j ][ k ] + 3. * ice.x[ im-2 ][ j ][ k ];
-			co2.x[ im-1 ][ j ][ k ] = co2.x[ im-4 ][ j ][ k ] - 3. * co2.x[ im-3 ][ j ][ k ] + 3. * co2.x[ im-2 ][ j ][ k ];
+			t.x[ im-1 ][ j ][ k ] = t.x[ im-4 ][ j ][ k ] - 3. * t.x[ im-3 ][ j ][ k ] + 3. * 
+                                    t.x[ im-2 ][ j ][ k ];        // extrapolation
+            p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 
+                                        3. * p_dyn.x[ im-2 ][ j ][ k ];        // extrapolation
+            c.x[ im-1 ][ j ][ k ] = c.x[ im-4 ][ j ][ k ] - 3. * c.x[ im-3 ][ j ][ k ] + 3. * 
+                                    c.x[ im-2 ][ j ][ k ];        // extrapolation
+            cloud.x[ im-1 ][ j ][ k ] = cloud.x[ im-4 ][ j ][ k ] - 3. * cloud.x[ im-3 ][ j ][ k ] + 
+                                        3. * cloud.x[ im-2 ][ j ][ k ];
+			ice.x[ im-1 ][ j ][ k ] = ice.x[ im-4 ][ j ][ k ] - 3. * ice.x[ im-3 ][ j ][ k ] + 3. * 
+                                      ice.x[ im-2 ][ j ][ k ];
+			co2.x[ im-1 ][ j ][ k ] = co2.x[ im-4 ][ j ][ k ] - 3. * co2.x[ im-3 ][ j ][ k ] + 3. * 
+                                      co2.x[ im-2 ][ j ][ k ];
 		}
 	}
 }

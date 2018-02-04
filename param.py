@@ -26,8 +26,6 @@ def main():
             ( 'velocity_iter_max', '', 'int', 5 ),
             ( 'pressure_iter_max', '', 'int', 2 ),
 
-            ( 'coriolis', 'coriolis force', 'double', 1.0 ),
-            ( 'centrifugal', 'centrifugal force', 'double', 1.0 ),
             ( 'WaterVapour', 'water vapour', 'double', 1.0 ),
             ( 'buoyancy', 'buoyancy', 'double', 1.0 ),
             ( 'CO2', 'CO2', 'double', 1.0 ),
@@ -37,7 +35,6 @@ def main():
             ( 'sun', 'while no variable sun position wanted', 'int', 0 ),
             ( 'NASATemperature', 'surface temperature given by NASA', 'int', 1 ),
             ( 'RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1 ),
-            ( 'IceShield', 'compute ice shields? computation of ice shield following the theorie by Milankowitsch', 'int', 0 ),
 
             ( 'declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0 ),
             ( 'sun_position_lat', 'position of sun j = 120 means 30°S, j = 60 means 30°N', 'int', 60 ),
@@ -66,7 +63,6 @@ def main():
             ( 'sc_CO2', 'Schmidt number of CO2', 'double', 0.96 ),
             ( 'pr', 'Prandtl number of air for laminar flows', 'double', 0.7179 ),
             ( 'g', 'gravitational acceleration of the earth in m/s²', 'double', 9.8066 ),
-            ( 'omega', 'rotation number of the earth', 'double', 7.29e-5 ),
             ( 'ep', 'ratio of the gas constants of dry air to water vapour [ / ]', 'double', 0.623 ),
             ( 'hp', 'water vapour pressure at T = 0°C: E = 6.1 hPa', 'double', 6.1078 ),
             ( 'R_Air', 'specific gas constant of air in J/( kg*K )', 'double', 287.1 ),
@@ -74,7 +70,7 @@ def main():
             ( 'R_WaterVapour', 'specific gas constant of water vapour in J/( kg*K )', 'double', 461.6 ),
             ( 'r_water_vapour', 'density of saturated water vapour in kg/m³ at 10°C', 'double', 0.0094),
             ( 'R_co2', 'specific gas constant of CO2 in J/( kg*4.5K )', 'double', 188.91 ),
-            ( 'lv', 'specific latent Evaporation heat ( Condensation heat ) in J/kg', 'double', 2.52e6 ),
+            ( 'lv', 'specific latent evaporation heat ( Condensation heat ) in J/kg', 'double', 2.52e6 ),
             ( 'ls', 'specific latent vaporisation heat ( sublimation heat ) in J/kg', 'double', 2.83e6 ),
             ( 'cp_l', 'specific heat capacity of dry air at constant pressure and 20°C in J/( kg K )', 'double', 1005. ),
             ( 'lamda', 'heat transfer coefficient of air in W/m² K )', 'double', 0.0262 ),
@@ -126,8 +122,6 @@ def main():
             ( 'velocity_iter_max', '', 'int', 5 ),
             ( 'pressure_iter_max', '', 'int', 2 ),
 
-            ( 'coriolis', 'computation with Coriolis force', 'double', 1.0 ),
-            ( 'centrifugal', 'computation with centrifugal force', 'double', 1.0 ),
             ( 'buoyancy', 'computation with buoyancy', 'double', 1.0 ),
 
             ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m', 'double', 6000.0 ),
@@ -138,7 +132,6 @@ def main():
             ( 'pr', 'Prandtl number for water', 'double', 6.957 ),
             ( 'g', 'gravitational acceleration of the earth', 'double', 9.8066 ),
             ( 'cp_w', 'specific heat capacity of water at constant pressure and 20°C in J/( kg K )', 'double', 4182.0 ),
-            ( 'omega', 'rotation number of the earth', 'double', 7.29e-5 ),
 
             ( 'p_0', 'pressure at sea level in hPa', 'double', 1013.25 ),
             ( 't_0', 'temperature in K compares to 0°C', 'double', 273.15 ),

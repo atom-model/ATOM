@@ -56,18 +56,14 @@ cAtmosphereModel::cAtmosphereModel():
     Topography(jm, km, 0.),
     value_top(jm, km, 0.),
     Vegetation(jm, km, 0.),
-    LatentHeat(jm, km, 0.),
-    Condensation(jm, km, 0.),
-    Evaporation(jm, km, 0.),
     Precipitation(jm, km, 0.),
     precipitable_water(jm, km, 0.),
     precipitation_NASA(jm, km, 0.),
     Ik(jm, km, 0.),
-    Radiation_Balance(jm, km, 0.),
     temperature_NASA(jm, km, 0.),
     albedo(jm, km, 0.),
     epsilon(jm, km, 0.),
-    Q_Radiation(jm, km, 0.),
+    Q_radiation(jm, km, 0.),
     Q_Evaporation(jm, km, 0.),
     Q_latent(jm, km, 0.),
     Q_sensible(jm, km, 0.),
@@ -107,11 +103,8 @@ cAtmosphereModel::cAtmosphereModel():
     aux_u(im, jm, km, 0.),
     aux_v(im, jm, km, 0.),
     aux_w(im, jm, km, 0.),
-    Latency(im, jm, km, 0.),
+    Q_Latent(im, jm, km, 0.),
     Q_Sensible(im, jm, km, 0.),
-    IceLayer(im, jm, km, 0.),
-    t_cond_3D(im, jm, km, 0.),
-    t_evap_3D(im, jm, km, 0.),
     BuoyancyForce(im, jm, km, 0.),
     epsilon_3D(im, jm, km, 0.),
     radiation_3D(im, jm, km, 0.),
@@ -298,19 +291,20 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
     RHS_Atmosphere  prepare(im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, 
-                            sc_CO2, g, pr, omega, coriolis, centrifugal, WaterVapour, 
+                            sc_CO2, g, pr, WaterVapour, 
                             buoyancy, CO2, gam, sigma, lamda );
     
-    RHS_Atmosphere  prepare_2D ( jm, km, dthe, dphi, re, omega, coriolis, centrifugal );
+    RHS_Atmosphere  prepare_2D ( jm, km, dthe, dphi, re);
 
     //  class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
     RungeKutta_Atmosphere           result ( im, jm, km, dt, dr, dphi, dthe );
 
     //  class Results_MSL_Atm to compute and show results on the mean sea level, MSL
-    Results_MSL_Atm calculate_MSL(im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, 
-                                  sigma, albedo_equator, lv, ls, cp_l, L_atm, dt, dr, 
-                                  dthe, dphi, r_air, R_Air, r_water, r_water_vapour, R_WaterVapour, 
-                                  co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous );
+
+    Results_MSL_Atm  calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, 
+            albedo_equator, lv, ls, cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water, r_water_vapour, R_WaterVapour, 
+            co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous, t_average );
+
 
     //  class Pressure for the subsequent computation of the pressure by a separate Euler equation
     Pressure_Atm    startPressure ( im, jm, km, dr, dthe, dphi );
@@ -474,15 +468,11 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
                                                             ice, icen, t, p_stat, S_c_c );
             }
             //class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_3D_Atmosphere(prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, 
-                                                 co2_0, p_0, r_air, r_water, r_water_vapour, r_co2, 
-                                                 L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, 
-                                                 phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, rhs_cloud, 
-                                                 rhs_ice, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, cloud, 
-                                                 ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, 
-                                                 aux_u, aux_v, aux_w, Latency, t_cond_3D, t_evap_3D, IceLayer, 
-                                                 BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, 
-                                                 S_s, S_c_c, Topography );
+            result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
+                    r_water, r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, 
+                    rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, rhs_cloud, rhs_ice, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, 
+                    cloud, ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, 
+                    BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography );
 
             std::cout << "The Mean Temperature after solveRungeKutta_3D_Atmosphere(): "<<GetMeanTemperature()
             <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
@@ -516,8 +506,8 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
 
             //3D_fields
             //class element for the initial conditions the latent heat
-            circulation.Latent_Heat(rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, Latency, 
-                                    Q_Sensible, t_cond_3D, t_evap_3D, radiation_3D );
+            circulation.Latent_Heat(rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, ice, Q_Latent, 
+                                    Q_Sensible, radiation_3D, Q_radiation, Q_latent, Q_sensible, Q_bottom );
 
             if (1){//verbose) {
                 PrintMaxMinValues();
@@ -528,16 +518,12 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
 
 
             //  composition of results
-            calculate_MSL.run_MSL_data(n, velocity_iter_max, RadiationModel, rad, the, phi, h, c, cn,   
-                                       co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, 
-                                       Latency, Q_Sensible, radiation_3D, t_cond_3D, t_evap_3D, cloud, 
-                                       cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, 
-                                       precipitation_NASA, Evaporation, Condensation, LatentHeat, 
-                                       precipitable_water, Q_Radiation, Q_Evaporation, Q_latent, 
-                                       Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, 
-                                       Vegetation, Radiation_Balance, albedo, co2_total, Precipitation, 
-                                       S_v, S_c, S_i, S_r, S_s, S_c_c );
-
+            calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, 
+                    phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, 
+                    Q_Sensible, radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, 
+                    precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, 
+                    Evaporation_Penman, Evaporation_Haude, Vegetation, albedo, co2_total, Precipitation, 
+                    S_v, S_c, S_i, S_r, S_s, S_c_c );
 
             //restoring the velocity component and the temperature for the new time step
             oldnew.restoreOldNew_3D(1., u, v, w, t, p_dyn, c, cloud, ice, co2, 
@@ -832,17 +818,16 @@ void cAtmosphereModel::WriteFile(int n, std::string &bathymetry_name, std::strin
     //  writing of data in ParaView files
     //  radial data along constant hight above ground
     int i_radial = 0;
-    write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, t_cond_3D, t_evap_3D , BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow, Evaporation, Condensation, precipitable_water, Q_bottom, Radiation_Balance, Q_Radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation );
-
+    write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation );
     //  londitudinal data along constant latitudes
     int j_longal = 62;          // Mount Everest/Himalaya
-    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow );
+    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow );
 
     int k_zonal = 87;           // Mount Everest/Himalaya
-    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, t_cond_3D, t_evap_3D, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
+    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-    write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow );
+    //write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Latency, Q_Sensible, IceLayer, epsilon_3D, P_rain, P_snow );
 
     //  writing of v-w-data in the v_w_transfer file
     PostProcess_Atmosphere ppa ( im, jm, km, output_path );
@@ -863,23 +848,18 @@ void cAtmosphereModel::Reset(){
 
     Vegetation.initArray_2D(jm, km, 0.); // vegetation via precipitation
 
-    LatentHeat.initArray_2D(jm, km, 0.); // areas of higher latent heat
-    Condensation.initArray_2D(jm, km, 0.); // areas of higher condensation
-    Evaporation.initArray_2D(jm, km, 0.); // areas of higher evaporation
-
     Precipitation.initArray_2D(jm, km, 0.); // areas of higher precipitation
     precipitable_water.initArray_2D(jm, km, 0.); // areas of precipitable water in the air
     precipitation_NASA.initArray_2D(jm, km, 0.); // surface precipitation from NASA
 
     Ik.initArray_2D(jm, km, 0.); // direct sun radiation, short wave
-    Radiation_Balance.initArray_2D(jm, km, 0.); // radiation balance at the surface
 
     temperature_NASA.initArray_2D(jm, km, 0.); // surface temperature from NASA
 
     albedo.initArray_2D(jm, km, 0.); // albedo = reflectivity
     epsilon.initArray_2D(jm, km, 0.); // epsilon = absorptivity
 
-    Q_Radiation.initArray_2D(jm, km, 0.); // heat from the radiation balance in [W/m2]
+    Q_radiation.initArray_2D(jm, km, 0.); // heat from the radiation balance in [W/m2]
     Q_Evaporation.initArray_2D(jm, km, 0.); // evaporation heat of water by Kuttler
     Q_latent.initArray_2D(jm, km, 0.); // latent heat from bottom values by the energy transport equation
     Q_sensible.initArray_2D(jm, km, 0.); // sensible heat from bottom values by the energy transport equation
@@ -929,11 +909,8 @@ void cAtmosphereModel::Reset(){
     aux_v.initArray(im, jm, km, 0.); // auxilliar field v-velocity component
     aux_w.initArray(im, jm, km, 0.); // auxilliar field w-velocity component
 
-    Latency.initArray(im, jm, km, 0.); // latent heat
+    Q_Latent.initArray(im, jm, km, 0.); // latent heat
     Q_Sensible.initArray(im, jm, km, 0.); // sensible heat
-    IceLayer.initArray(im, jm, km, 0.); // ice shield
-    t_cond_3D.initArray(im, jm, km, 0.); // condensation temperature
-    t_evap_3D.initArray(im, jm, km, 0.); // evaporation temperature
     BuoyancyForce.initArray(im, jm, km, 0.); // buoyancy force, Boussinesque approximation
     epsilon_3D.initArray(im, jm, km, 0.); // emissivity/ absorptivity
     radiation_3D.initArray(im, jm, km, 0.); // radiation
@@ -991,22 +968,12 @@ void cAtmosphereModel::PrintMaxMinValues() {
             string str_max_Q_Sensible = " max 3D sensible heat ", str_min_Q_Sensible = " min 3D sensible heat ", str_unit_Q_Sensible = "W/m2";
             MinMax_Atm  minmaxQ_Sensible ( im, jm, km );
             minmaxQ_Sensible.searchMinMax_3D ( str_max_Q_Sensible, str_min_Q_Sensible, str_unit_Q_Sensible, Q_Sensible, h );
+
 //  searching of maximum and minimum values of latency
             string str_max_latency = " max 3D latent heat ", str_min_latency = " min 3D latent heat ", str_unit_latency = "W/m2";
             MinMax_Atm      minmaxRadiation ( im, jm, km );
-            minmaxRadiation.searchMinMax_3D ( str_max_latency, str_min_latency, str_unit_latency, Latency, h );
+            minmaxRadiation.searchMinMax_3D ( str_max_latency, str_min_latency, str_unit_latency, Q_Latent, h );
 
-//  searching of maximum and minimum values of t_cond_3D
-            string str_max_t_cond_3D = " max 3D condensation temp ", str_min_t_cond_3D = " min 3D condensation temp ", str_unit_t_cond_3D = "C";
-            MinMax_Atm      minmaxt_cond_3D ( im, jm, km );
-            minmaxt_cond_3D.searchMinMax_3D ( str_max_t_cond_3D, str_min_t_cond_3D, str_unit_t_cond_3D, t_cond_3D, h );
-
-//  searching of maximum and minimum values of t_evap_3D
-            string str_max_t_evap_3D = " max 3D evaporation temp ", str_min_t_evap_3D = " min 3D evaporation temp ", str_unit_t_evap_3D = "C";
-            MinMax_Atm      minmaxt_evap_3D ( im, jm, km );
-            minmaxt_evap_3D.searchMinMax_3D ( str_max_t_evap_3D, str_min_t_evap_3D, str_unit_t_evap_3D, t_evap_3D, h );
-
-            cout << endl << " greenhouse gases: " << endl << endl;
 
 //  searching of maximum and minimum values of water vapour
             string str_max_water_vapour = " max 3D water vapour ", str_min_water_vapour = " min 3D water vapour ", str_unit_water_vapour = "g/kg";
@@ -1094,7 +1061,7 @@ void cAtmosphereModel::PrintMaxMinValues() {
 //  searching of maximum and minimum values of radiation
             string str_max_Q_Radiation = " max 2D Q radiation ", str_min_Q_Radiation = " min 2D Q radiation ", str_unit_Q_Radiation = "W/m2";
             MinMax_Atm      minmaxQ_Radiation ( jm, km, coeff_mmWS );
-            minmaxQ_Radiation.searchMinMax_2D ( str_max_Q_Radiation, str_min_Q_Radiation, str_unit_Q_Radiation, Q_Radiation, h );
+            minmaxQ_Radiation.searchMinMax_2D ( str_max_Q_Radiation, str_min_Q_Radiation, str_unit_Q_Radiation, Q_radiation, h );
 
 //  searching of maximum and minimum values of latent energy
             string str_max_Q_latent = " max 2D Q latent ", str_min_Q_latent = " min 2D Q latent ", str_unit_Q_latent = "W/m2";
@@ -1112,21 +1079,6 @@ void cAtmosphereModel::PrintMaxMinValues() {
             MinMax_Atm      minmaxQ_bottom ( jm, km, coeff_mmWS );
             minmaxQ_bottom.searchMinMax_2D ( str_max_Q_bottom, str_min_Q_bottom, str_unit_Q_bottom, Q_bottom, h );
 
-
-//  searching of maximum and minimum values of latent heat
-            string str_max_LatentHeat = " max 2D latent heat ", str_min_LatentHeat = " min 2D latent heat ", str_unit_LatentHeat = "W/m2";
-            MinMax_Atm      minmaxLatentHeat_2D ( jm, km, coeff_mmWS );
-            minmaxLatentHeat_2D.searchMinMax_2D ( str_max_LatentHeat, str_min_LatentHeat, str_unit_LatentHeat, LatentHeat, h );
-
-//  searching of maximum and minimum values of t_cond_2D
-            string str_max_t_cond = " max 2D Condensation ", str_min_t_cond = " min 2D Condensation ", str_unit_t_cond = "W/m2";
-            MinMax_Atm      minmaxt_cond_2D ( jm, km, coeff_mmWS );
-            minmaxt_cond_2D.searchMinMax_2D ( str_max_t_cond, str_min_t_cond, str_unit_t_cond, Condensation, h );
-
-//  searching of maximum and minimum values of t_evap_2D
-            string str_max_t_evap = " max 2D Evaporation ", str_min_t_evap = " min 2D Evaporation ", str_unit_t_evap = "W/m2";
-            MinMax_Atm      minmaxt_evap_2D ( jm, km, coeff_mmWS );
-            minmaxt_evap_2D.searchMinMax_2D ( str_max_t_evap, str_min_t_evap, str_unit_t_evap, Evaporation, h );
 
             cout << endl << " secondary data: " << endl << endl;
 
