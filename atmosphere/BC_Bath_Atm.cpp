@@ -142,14 +142,13 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 
 
 
-void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, int i_max, double g, double hp, double ep, double r_air, double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_land, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double pa, double gam, double sigma, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2, Array &radiation_3D, Array_2D &Vegetation )
+void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, double g, double hp, double ep, double r_air, double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator, double t_pole, double t_tropopause, double c_land, double c_tropopause, double co2_0, double co2_equator, double co2_pole, double co2_tropopause, double co2_cretaceous, double pa, double gam, double sigma, Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2, Array &radiation_3D, Array_2D &Vegetation )
 {
 
 // boundary conditions for the total solid ground
 	j_half = ( jm -1 ) / 2;
 	j_max = jm - 1;
 
-	d_i_max = ( double ) i_max;
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 

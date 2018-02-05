@@ -23,7 +23,7 @@ using namespace std;
 class BC_Thermo
 {
 	private:
-		int i, j, k, im, jm, km, k_half, j_half, i_half, i_max, j_max, k_max, i_beg, im_1, i_land, iter_rad, ll;
+		int i, j, k, im, jm, km, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator, tropopause_pole, im_1, i_land, iter_rad, ll;
 		int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
 		int j_had_n_end, j_had_s_end, k_w, k_w_end, k_e;
 		int j_n, j_s;
@@ -93,7 +93,7 @@ class BC_Thermo
 
 		void IC_CellStructure ( int *, Array &, Array &, Array &, Array & );
 
-		void BC_Temperature ( double &, double &, Array_2D &, Array &, Array &, Array &, Array & );
+		void BC_Temperature ( int *, double &, double &, Array_2D &, Array &, Array &, Array &, Array & );
 
 		void TropopauseLocation ( int * );
 
@@ -101,7 +101,7 @@ class BC_Thermo
 
 		void BC_Radiation_multi_layer ( int*, int, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_WaterVapour ( Array &, Array &, Array & );
+		void BC_WaterVapour ( int *, Array &, Array &, Array & );
 
 		void BC_CloudWaterIce ( Array &, Array &, Array &, Array & );
 

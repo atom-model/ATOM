@@ -249,9 +249,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	double residuum;
 	double residuum_old = 0.;
 
-//	radial expansion of the computational field for the computation of initial values
-	int i_max = 32;		 // corresponds to about 12.8 km above sea level, maximum hight of the tropopause at equator
-	int i_beg = 16;		 // corresponds to about 6.4 km above sea level, maximum hight of the tropopause at poles
 /*
 //	naming a file to read the surface temperature by NASA of the modern world
 	string Name_NASAbasedSurfaceTemperature_File;
@@ -345,7 +342,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //	class BC_Thermo for the initial and boundary conditions of the flow properties
-	BC_Thermo									circulation ( output_path, im, jm, km, i_beg, i_max, RadiationModel, NASATemperature, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_prev, Ma_max, Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_prev, t_cretaceous_max, t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
+	BC_Thermo									circulation ( output_path, im, jm, km, tropopause_equator, tropopause_pole, RadiationModel, NASATemperature, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_prev, Ma_max, Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_prev, t_cretaceous_max, t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
 
 //	class Restore to restore the iterational values from new to old
 	Restore_Atm								oldnew( im, jm, km );
@@ -368,7 +365,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	if ( Ma == 0 ) circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
 //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
-	circulation.BC_Temperature ( t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
+	circulation.BC_Temperature ( im_tropopause, t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
 //	t_cretaceous = circulation.out_t_cretaceous (  );
 
 //  class element for the correction of the temperature initial distribution around coasts
@@ -378,7 +375,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
 //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-	circulation.BC_WaterVapour ( h, t, c );
+	circulation.BC_WaterVapour ( im_tropopause, h, t, c );
 
 //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
 	circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
@@ -434,7 +431,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 				result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, rhs_p, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
 
 //	class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-				LandArea.BC_SolidGround ( RadiationModel, Ma, i_max, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
+				LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
 
 //	new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 				Accuracy_Atm		min_Residuum_2D ( im, jm, km, dthe, dphi );
@@ -521,7 +518,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, r_water, r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, rhs_cloud, rhs_ice, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography );
 
 //	class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-			LandArea.BC_SolidGround ( RadiationModel, Ma, i_max, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
+			LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
 
 // class element for the surface temperature computation by radiation flux density
 			if ( RadiationModel == 1 )			circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, Ik, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice );
@@ -775,6 +772,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 	n--;
 
+//	Printout:
 
 //	printout in ParaView files and sequel files
 
@@ -784,15 +782,13 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	writing of data in ParaView files
 //	radial data along constant hight above ground
 	int i_radial = 0;
-	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation );
+	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation );
 
 //	londitudinal data along constant latitudes
 	int j_longal = 62;			// Mount Everest/Himalaya
-//	int j_longal = 180;			// Mount Everest/Himalaya
 	write_File.paraview_vtk_longal ( bathymetry_name, j_longal, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow );
 
 	int k_zonal = 87;			// Mount Everest/Himalaya
-//	int k_zonal = 90;			// Mount Everest/Himalaya
 	write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view

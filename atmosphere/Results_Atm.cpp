@@ -214,10 +214,11 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					E_a = .35 * ( 1. + .15 * sqrt ( v.x[ 1 ][ j ][ k ] * v.x[ 1 ][ j ][ k ] + w.x[ 1 ][ j ][ k ] * w.x[ 1 ][ j ][ k ] ) ) * sat_deficit;	// ventilation-humidity for Penman's formula
 
 					Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) * 1.e-3;	// heat of Evaporation of water in [MJ/kg] (Kuttler) = lv
+/*
 					Q_latent.y[ j ][ k ] = Q_Latent.x[ 0 ][ j ][ k ];					// latente heat in [W/m2] from energy transport equation
 					Q_sensible.y[ j ][ k ] = Q_Sensible.x[ 0 ][ j ][ k ];		// sensible heat in [W/m2] from energy transport equation
 					Q_bottom.y[ j ][ k ] = Q_radiation.y[ j ][ k ] + Q_latent.y[ j ][ k ] + Q_sensible.y[ j ][ k ];	// difference understood as heat of the ground
-
+*/
 					Evaporation_Haude.y[ j ][ k ] = 0.;
 					if ( Evaporation_Haude.y[ j ][ k ] <= 0. ) 		Evaporation_Haude.y[ j ][ k ] = 0.;
 //					Evaporation_Penman.y[ j ][ k ] = .0346 * ( ( Q_radiation.y[ j ][ k ] - Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );
@@ -334,6 +335,8 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	temperature_average = 0.;
 	latent_heat_average = 0.;
 	sensible_heat_average = 0.;
+	lat_av_loc = 0.;
+	sen_av_loc = 0.;
 
 	for ( int i = 0; i < im; i++ )
 	{
@@ -343,6 +346,16 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 		sen_av[ i ] = 0.;
 	}
 
+
+// printout of surface data at one predefinded location
+	int j_loc_Dresden = 39;
+	int k_loc_Dresden = 346;
+
+	int j_loc_Sydney = 123;
+	int k_loc_Sydney = 151;
+
+	int j_loc_Pacific = 90;
+	int k_loc_Pacific = 180;
 
 
 	for ( int j = 0; j < jm; j++ )
@@ -416,7 +429,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	Evaporation_Haude_average = 365. * Evaporation_Haude_average / ( double ) ( ( jm - 1 ) * ( km - 1 ) );
 
 
-
 	for ( int i = 0; i < im; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -429,10 +441,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 				sen_av[ i ] += Q_Sensible.x[ i ][ j ][ k ];
 			}
 		}
-	}
-
-	for ( int i = 0; i < im; i++ )
-	{
 		velocity_average += vel_av[ i ];
 		temperature_average += temp_av[ i ];
 		latent_heat_average += lat_av[ i ];
@@ -443,6 +451,30 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	temperature_average = temperature_average / ( double ) ( ( im - 1 ) * ( jm - 1 ) * ( km - 1 ) ) * t_0 - t_0;
 	latent_heat_average = latent_heat_average / ( double ) ( ( im - 1 ) * ( jm - 1 ) * ( km - 1 ) );
 	sensible_heat_average = sensible_heat_average / ( double ) ( ( im - 1 ) * ( jm - 1 ) * ( km - 1 ) );
+
+
+
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int k = 0; k < km; k++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				lat_av_loc += Q_Latent.x[ i ][ j ][ k ];
+				sen_av_loc += Q_Sensible.x[ i ][ j ][ k ];
+			}
+//	cout << endl << "      t_0 = " << t_0 << "     lat_av_loc = " << lat_av_loc << endl << endl;
+//	cout << endl << "      t_0 = " << t_0 << "     sen_av_loc = " << sen_av_loc << endl << endl << endl;
+
+			Q_latent.y[ j ][ k ] = lat_av_loc / ( double ) ( im - 1 );							// latente heat in [W/m2] from energy transport equation
+			Q_sensible.y[ j ][ k ] =sen_av_loc / ( double ) ( im - 1 );						// sensible heat in [W/m2] from energy transport equation
+			Q_bottom.y[ j ][ k ] = Q_radiation.y[ j ][ k ] + Q_latent.y[ j ][ k ] + Q_sensible.y[ j ][ k ];	// difference understood as heat of the ground
+
+			lat_av_loc = 0.;
+			sen_av_loc = 0.;
+		}
+	}
+
 
 	cout << endl << endl << "      u_0 = " << u_0 << "     velocity_average = " << velocity_average << endl;
 	cout << endl << "      t_0 = " << t_0 << "     temperature_average = " << temperature_average << endl << endl;
@@ -501,8 +533,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
 	cout.precision ( 2 );
 
-// printout of surface data at one predefinded location
-
 	level = "m";
 	deg_north = "°N";
 	deg_south = "°S";
@@ -547,9 +577,10 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	heading = " printout of surface data at predefinded locations: level, latitude, longitude";
 	heading_Dresden = " City of Dresden, Germany, Europe";
 	heading_Sydney = " City of Sydney, New South Wales, Australia";
-	heading_Equator = " Equator in the central Pacific";
+	heading_Pacific = " Equator in the central Pacific";
 
 	cout << endl << endl << heading << endl << endl;
+
 
 	int choice = { 1 };
 
@@ -559,20 +590,20 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	{
 		case 1 :	cout << heading_Dresden << endl;
 						i_loc_level = 0;																		// sea level
-						j_loc = 39;																				// 51°N, Dresden Germany
-						k_loc = 346;																			// 14°W, Dresden Germany
+						j_loc = j_loc_Dresden;																				// 51°N, Dresden Germany
+						k_loc = k_loc_Dresden;																			// 14°W, Dresden Germany
 						break;
 
 		case 2 :	cout << heading_Sydney << endl;
 						i_loc_level = 0;																		// sea level
-						j_loc = 123;																			// 33°S, Dresden Germany
-						k_loc = 151;																			// 151°E, Dresden Germany
+						j_loc = j_loc_Sydney;																			// 33°S, Dresden Germany
+						k_loc = k_loc_Sydney;																			// 151°E, Dresden Germany
 						break;
 
-		case 3 :	cout << heading_Equator << endl;
+		case 3 :	cout << heading_Pacific << endl;
 						i_loc_level = 0;																		// sea level
-						j_loc = 90;																				// 0°N, Equator
-						k_loc = 180;																			// 180°E, central Pacific
+						j_loc = j_loc_Pacific;																				// 0°N, Equator
+						k_loc = k_loc_Pacific;																			// 180°E, central Pacific
 						break;
 
 	default : 	cout << choice << "error in iterationPrintout member function in class Accuracy" << endl;

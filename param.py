@@ -43,6 +43,8 @@ def main():
             ( 'Ma_max_half', 'half of time scale', 'int', 150 ),
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
+            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 30 ),
+            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 20 steps = 8000 m', 'int', 20 ),
 
             ( 'ik_equator', 'solar short wave radiation on the surface of the earth, Ik / 4', 'double', 341.5 ),
             ( 'ik_pole', 'solar short wave radiation at the poles, an approximation for the singularity at the poles', 'double', 60. ),
@@ -53,8 +55,8 @@ def main():
             ( 'albedo_equator', 'albedo around the equator', 'double', 0.15 ),
 
             ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.594 ),
+            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.59 ),
             ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),
-            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.5 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
             ( 'ec', 'Eckert number: ratio kinetic energy to enthalpy, Ec = u² / cp T', 'double', 0.00044 ),
@@ -99,10 +101,10 @@ def main():
             ( 't_equator', 'temperature t_0 = 1.11 compares to 30.0° C compares to 303.15 K', 'double', 1.11 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.927 compares to -20.0°C compares to 253.15 K', 'double', 0.927 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
-            ( 't_land', 'temperature increase on land by 1°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.0 ),
+            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.007322 ),
 
-            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
-            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.5 ),
+            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.0001 ),
+            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.52 ),
             ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 372.0 ),
