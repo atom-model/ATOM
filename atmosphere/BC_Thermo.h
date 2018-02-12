@@ -23,7 +23,7 @@ using namespace std;
 class BC_Thermo
 {
 	private:
-		int i, j, k, im, jm, km, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator, tropopause_pole, im_1, i_land, iter_rad, ll;
+		int i, j, k, im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator, tropopause_pole, im_1, i_land, iter_rad, i_trop, i_mount;
 		int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
 		int j_had_n_end, j_had_s_end, k_w, k_w_end, k_e;
 		int j_n, j_s;
@@ -35,7 +35,7 @@ class BC_Thermo
 		int j_r, k_r, j_sun;
 		int RadiationModel, sun_position_lat, sun_position_lon, declination, NASATemperature;
 		int iter_prec; 
-		int *im_tropopause;
+		int *im_tropopause, **i_topography;
 
 		double d_k_half, d_k_max; 
 		double dummy_1, dummy_2, dummy_3;
@@ -50,11 +50,11 @@ class BC_Thermo
 		double j_par_f, j_pol_f, e, a, j_d, t_dd, k_par_f, k_pol_f;
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
 		double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
-		double eps, c_ocean, t_land, c_land, c_coeff, t_average, co2_average, co2_pole, gam, t_Ik, Ik_loss, Ik_tot;
+		double eps, c_ocean, t_land, c_land, c_coeff, t_average, co2_average, co2_equator, co2_pole, gam, t_Ik, atmospheric_window, rad_surf_diff;
 		double albedo_co2_eff, albedo_equator, albedo_pole;
-		double ik_co2_eff, ik_equator, ik_pole;
+		double rad_eff, rad_equator, rad_pole;
 		double aa, bb, cc, dd, f;
-		double epsilon_co2_eff_2D, epsilon_co2_eff, epsilon_pole, epsilon_equator, epsilon_tropopause, epsilon_co2_eff_max;
+		double epsilon_eff_2D, epsilon_eff, epsilon_pole, epsilon_equator, epsilon_tropopause, epsilon_eff_max;
 
 		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, dp_hdr, dp_hdthe, dp_hdphi;
 		double sinthe, sinthe2, lv, ls, coeff_lv, coeff_ls, coeff_L_atm_u_0, r_0;
@@ -62,12 +62,12 @@ class BC_Thermo
 		double rm, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2;
 		double E, E_Rain_SL, E_Rain, E_Rain_super, E_Ice, q_Rain, q_Rain_super, q_Ice;
 		double c12, c32, c42, t_Celsius_it, t_Celsius_0, t_Celsius_1, t_Celsius_2;
-		double rad_lon_back;
+		double radiation_net;
 		double r_dry, r_humid, p_SL, t_SL, exp_pressure, hight;
 		double t_u, t_Celsius_SL, t_dew, t_dew_SL, T, T_nue, T_it, q_T, q_Rain_n;
 		double q_v_b, q_c_b, q_i_b, q_v_hyp, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
 		double t_equator, t_tropopause, t_eff, t_pole, c_equator, c_tropopause, coeff_mmWS;
-		double co2_equator, co2_tropopause, co2_eff, co_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous;
+		double co2_tropopause, co2_eff, co2_coeff, co_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous, co2_factor;
 		double *AA, **CC, CCC, DDD;
 		double *jm_temp_asym, *alfa, *beta;
 
@@ -87,7 +87,7 @@ class BC_Thermo
 
 
 	public:
-		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
 
@@ -99,7 +99,7 @@ class BC_Thermo
 
 		void BC_Radiation_2D_layer ( Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_Radiation_multi_layer ( int*, int, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_Radiation_multi_layer ( int*, int, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void BC_WaterVapour ( int *, Array &, Array &, Array & );
 
@@ -109,7 +109,7 @@ class BC_Thermo
 
 		void Two_Category_Ice_Scheme ( int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_CO2 ( Array_2D &, Array &, Array &, Array &, Array & );
+		void BC_CO2 ( int *, Array_2D &, Array &, Array &, Array &, Array & );
 
 		void BC_NASAbasedSurfTempRead ( int &, double &, Array &, Array &, Array &, Array & );
 

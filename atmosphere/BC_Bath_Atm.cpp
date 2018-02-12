@@ -152,28 +152,6 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 
-	co_co2_eff = co2_pole - co2_equator;
-
-
-// velocity components, dynamioc pressure, temperature, water vapour and CO2-content as boundary condition at the sea surface and on ground
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			if ( h.x[ 0 ][ j ][ k ] == 0. ) 
-			{
-				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = ( co_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_ocean ) / co2_0; // non-dimensional
-			}
-			if ( h.x[ 0 ][ j ][ k ] == 1. ) 
-			{
-				d_j = ( double ) j;
-				co2.x[ 0 ][ j ][ k ] = ( co_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;	// parabolic distribution from pole to pole
-			}
-		}
-	}
-
-
 	int i_mount = 0;
 
 // boundary conditions for solid ground areas
@@ -207,8 +185,8 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
 
 					if ( NASATemperature == 1 )
 					{
-						if ( Ma == 0 ) 				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
-						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount + 1 ][ j ][ k ];
+//						if ( Ma == 0 ) 				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
+//						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount + 1 ][ j ][ k ];
 						c.x[ i ][ j ][ k ] = c.x[ i_mount + 1 ][ j ][ k ];				// water vapour amount above mount surface repeated
 						co2.x[ i ][ j ][ k ] = co2.x[ i_mount + 1 ][ j ][ k ];		// co2 amount above mount surface repeated
 					}

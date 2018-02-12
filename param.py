@@ -44,10 +44,10 @@ def main():
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
             ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 30 ),
-            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 20 steps = 8000 m', 'int', 20 ),
+            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 20 steps = 7200 m', 'int', 18 ),
 
-            ( 'ik_equator', 'solar short wave radiation on the surface of the earth, Ik / 4', 'double', 341.5 ),
-            ( 'ik_pole', 'solar short wave radiation at the poles, an approximation for the singularity at the poles', 'double', 60. ),
+            ( 'rad_equator', 'long wave radiation on the surface of the earth, fitted to NASA temperature', 'double', 320. ),
+            ( 'rad_pole', 'long wave radiation at the poles, an approximation for the singularity at the poles', 'double', 60. ),
 
             ( 'sigma', 'Stefan-Boltzmann constant W/( m²*K4 )', 'double', 5.670280e-8 ),
 
@@ -98,8 +98,8 @@ def main():
 #            ( 't_cretaceous_prev', 'initial value at modern times', 'double', 0.0 ),
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
-            ( 't_equator', 'temperature t_0 = 1.11 compares to 30.0° C compares to 303.15 K', 'double', 1.11 ),
-            ( 't_pole', 'temperature at the poles t_pole = 0.927 compares to -20.0°C compares to 253.15 K', 'double', 0.927 ),
+            ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
+            ( 't_pole', 'temperature at the poles t_pole = 0.927 compares to -15.0°C compares to 258.15 K', 'double', 0.945 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
             ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.007322 ),
 
@@ -107,14 +107,15 @@ def main():
             ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.52 ),
             ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
 
-            ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 372.0 ),
+            ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),
-            ( 'co2_tropopause', 'minimum rate CO2 at tropopause 0 ppm', 'double', 0.0 ),
-            ( 'co2_pole', 'maximum rate of CO2 of the sea surface at poles', 'double', 305.0 ),
-            ( 'co2_cretaceous', 'value at modern times', 'double', 0.0 ),
+            ( 'co2_tropopause', 'minimum rate CO2 at tropopause 0 ppm', 'double', 320.0 ),
+            ( 'co2_pole', 'maximum rate of CO2 of the sea surface at poles', 'double', 320.0 ),
+            ( 'co2_cretaceous', 'value at modern times', 'double', 330.0 ),
             ( 'co2_vegetation', 'value compares to 100/600Gt per year on the global surface by vegetation', 'double', 3.0 ),
             ( 'co2_ocean', 'value compares to 0.6/600Gt per year on the sea surface', 'double', 0.0 ),
-            ( 'co2_land', 'value compares to 0.2/600Gt per year on land', 'double', 3.0 ),
+            ( 'co2_land', 'value compares to 0.2/600Gt per year on land', 'double', 0. ),
+            ( 'co2_factor', 'adjusts the ratio of co2_equator/co2_tropopause and the influence of co2 in the atmosphere', 'double', .98 ),
         ],
 
         'hydrosphere': [

@@ -147,7 +147,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	Array_2D precipitable_water(jm, km, 0.); // areas of precipitable water in the air
 	Array_2D precipitation_NASA(jm, km, 0.); // surface precipitation from NASA
 
-	Array_2D Ik(jm, km, 0.); // direct sun radiation, short wave
+	Array_2D radiation_surface(jm, km, 0.); // direct sun radiation, short wave
 
 	Array_2D temperature_NASA(jm, km, 0.); // surface temperature from NASA
 
@@ -342,7 +342,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //	class BC_Thermo for the initial and boundary conditions of the flow properties
-	BC_Thermo									circulation ( output_path, im, jm, km, tropopause_equator, tropopause_pole, RadiationModel, NASATemperature, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_prev, Ma_max, Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_pole, t_cretaceous, t_cretaceous_prev, t_cretaceous_max, t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, ik_equator, ik_pole );
+	BC_Thermo									circulation ( output_path, im, jm, km, tropopause_equator, tropopause_pole, RadiationModel, NASATemperature, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_prev, Ma_max, Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, co2_factor, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_equator, co2_pole, t_cretaceous, t_cretaceous_prev, t_cretaceous_max, t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, rad_equator, rad_pole );
 
 //	class Restore to restore the iterational values from new to old
 	Restore_Atm								oldnew( im, jm, km );
@@ -378,11 +378,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	circulation.BC_WaterVapour ( im_tropopause, h, t, c );
 
 //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-	circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
+	circulation.BC_CO2 ( im_tropopause, Vegetation, h, t, p_dyn, co2 );
 	co2_cretaceous = circulation.out_co2 (  );
 
 // class element for the surface temperature computation by radiation flux density
-	if ( RadiationModel == 1 ) circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, Ik, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice );
+	if ( RadiationModel == 1 ) circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
 
 // 	class element for the initial conditions for u-v-w-velocity components
 	circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
@@ -521,8 +521,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
 
 // class element for the surface temperature computation by radiation flux density
-			if ( RadiationModel == 1 )			circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, Ik, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice );
-
+			if ( RadiationModel == 1 )			circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
 
 //	new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 			Accuracy_Atm	  min_Residuum ( im, jm, km, dr, dthe, dphi );
@@ -698,13 +697,13 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 /*
 //	searching of maximum and minimum values of Evaporation
 			string str_max_heat_t_Evaporation = " max heat Evaporation ", str_min_heat_t_Evaporation = " min heat Evaporation ", str_unit_heat_t_Evaporation = " W/m2";
-			MinMax		minmaxQ_t_Evaporation ( jm, km, coeff_mmWS );
+			MinMax_Atm		minmaxQ_t_Evaporation ( jm, km, coeff_mmWS );
 			minmaxQ_t_Evaporation.searchMinMax_2D ( str_max_heat_t_Evaporation, str_min_heat_t_Evaporation, str_unit_heat_t_Evaporation, Q_Evaporation, h );
 */
 /*
 //	searching of maximum and minimum values of Evaporation by Haude
 			string str_max_t_Evaporation_Haude = " max Evaporation Haude ", str_min_t_Evaporation_Haude = " min Evaporation Haude ", str_unit_t_Evaporation_Haude = "mm/d";
-			MinMax		minmaxt_Evaporation_Haude ( jm, km, coeff_mmWS );
+			MinMax_Atm		minmaxt_Evaporation_Haude ( jm, km, coeff_mmWS );
 			minmaxt_Evaporation_Haude.searchMinMax_2D ( str_max_t_Evaporation_Haude, str_min_t_Evaporation_Haude, str_unit_t_Evaporation_Haude, Evaporation_Haude, h );
 */
 //	searching of maximum and minimum values of Evaporation by Penman
@@ -721,9 +720,13 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 /*
 //	searching of maximum and minimum values of epsilon
 			string str_max_epsilon = " max 2D epsilon ", str_min_epsilon = " min 2D epsilon ", str_unit_epsilon = "%";
-			MinMax	minmaxEpsilon ( jm, km, coeff_mmWS );
+			MinMax_Atm	minmaxEpsilon ( jm, km, coeff_mmWS );
 			minmaxEpsilon.searchMinMax_2D ( str_max_epsilon, str_min_epsilon, str_unit_epsilon, epsilon, h );
 */
+//	searching of maximum and minimum values of topography
+			string str_max_topography = " max 2D topography ", str_min_topography = " min 2D topography ", str_unit_topography = "m";
+			MinMax_Atm	minmaxTopography ( jm, km, coeff_mmWS );
+			minmaxTopography.searchMinMax_2D ( str_max_topography, str_min_topography, str_unit_topography, Topography, h );
 
 //	computation of vegetation areas
 			LandArea.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
@@ -756,6 +759,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //	Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
 	circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, h, c, t, p_stat, cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
+
+//	goto Printout;
 
 
 //	limit of the computation in the sense of time steps
@@ -819,7 +824,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 			temperature_NASA.y[ j ][ k ] = 0.;
 
-			Ik.y[ j ][ k ] = 0.;
+			radiation_surface.y[ j ][ k ] = 0.;
 
 			albedo.y[ j ][ k ] = 0.;
 			epsilon.y[ j ][ k ] = 0.;
