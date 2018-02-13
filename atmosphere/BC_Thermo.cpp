@@ -630,13 +630,21 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 					if ( NASATemperature == 0 )									// if ( NASATemperature == 0 ) parabolic surface temperature is used
 					{
 						t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add;
-						if ( h.x[ i_mount ][ j ][ k ] == 1. ) 			t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// end parabolic temperature distribution
+						if ( h.x[ i_mount ][ j ][ k ] == 1. ) 		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
 					}
 
 					if ( NASATemperature == 1 )									// if ( NASATemperature == 1 ) surface temperature is NASA based
 					{
-						t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
-						if ( h.x[ 0 ][ j ][ k ] == 1. ) 			t.x[ 0 ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// end parabolic temperature distribution
+						if ( Ma == 0 )
+						{
+							t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
+						}
+						else
+						{
+							t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
+						}
+
+						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
 					}
 				}
 			}
@@ -660,8 +668,9 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 				{
 					d_i = ( double ) i;
 					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+//					t.x[ i ][ j ][ k ] = - 2.6 / t_0 * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, 0.65K/100m
 				}
-				else 		t.x[ i ][ j ][ k ] = t.x[ i_trop ][ j ][ k ];
+				else 		t.x[ i ][ j ][ k ] = t_tropopause;
 			}
 			for ( int i = i_trop - 1; i >= 0; i-- )
 			{
