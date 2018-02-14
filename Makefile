@@ -2,11 +2,11 @@
 # Builds everything: atmosphere, hydrosphere, Python interface and CLI interface
 
 # TODO: don't always enable debugging
-CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2
+CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2 -Dmchin_dev
 
 # Common files for the shared lib (libatom.a)
 LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o lib/Config.o
-ATM_OBJ = atmosphere/cAtmosphereModel.o atmosphere/Pressure_Atm.o atmosphere/PostProcess_Atm.o atmosphere/BC_Atm.o atmosphere/BC_Bath_Atm.o atmosphere/BC_Thermo.o atmosphere/RHS_Atm.o atmosphere/RungeKutta_Atm.o atmosphere/Results_Atm.o atmosphere/Restore_Atm.o atmosphere/MinMax_Atm.o atmosphere/Accuracy_Atm.o
+ATM_OBJ = atmosphere/cAtmosphereModel.o atmosphere/cAtmosphereModelEx.o atmosphere/Pressure_Atm.o atmosphere/PostProcess_Atm.o atmosphere/BC_Atm.o atmosphere/BC_Bath_Atm.o atmosphere/BC_Thermo.o atmosphere/RHS_Atm.o atmosphere/RungeKutta_Atm.o atmosphere/Results_Atm.o atmosphere/Restore_Atm.o atmosphere/MinMax_Atm.o atmosphere/Accuracy_Atm.o
 HYD_OBJ = hydrosphere/cHydrosphereModel.o hydrosphere/Accuracy_Hyd.o hydrosphere/BC_Hyd.o hydrosphere/MinMax_Hyd.o hydrosphere/PostProcess_Hyd.o hydrosphere/Restore_Hyd.o hydrosphere/RungeKutta_Hyd.o hydrosphere/BC_Bath_Hyd.o hydrosphere/BC_Thermohalin.o hydrosphere/Pressure_Hyd.o hydrosphere/RHS_Hyd.o hydrosphere/Results_Hyd.o
 XML_OBJ = tinyxml2/tinyxml2.o
 
@@ -36,7 +36,7 @@ hyd: libatom.a $(HYD_CLI_OBJ)
 
 $(PARAM_OUTPUTS): param.py
 # explicitly clean dependent files
-	rm -f atmosphere/cAtmosphereModel.o hydrosphere/cHydrosphereModel.o
+	rm -f atmosphere/cAtmosphereModel.o hydrosphere/cHydrosphereModel.o atmosphere/cAtmosphereModelEx.o
 	python param.py
 
 

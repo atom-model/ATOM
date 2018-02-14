@@ -1,7 +1,11 @@
 #include <iostream>
 #include <stdlib.h>
 
+#ifdef mchin_dev
+#include "cAtmosphereModelEx.h"
+#else
 #include "cAtmosphereModel.h"
+#endif 
 
 int main(int argc, char **argv) {
     cAtmosphereModel model;

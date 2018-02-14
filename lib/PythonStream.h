@@ -10,7 +10,7 @@ class PythonStream : public std::stringbuf
 {
 public:
     static void OverrideCout();
-
+    static bool is_enable();
 private:
     virtual int sync();
 };

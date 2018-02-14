@@ -1,3 +1,5 @@
+#ifndef mchin_dev
+
 #include "cAtmosphereModel.h"
 
 #include <fstream>
@@ -986,3 +988,5 @@ void cAtmosphereModel::Run() {
 	delete [ ] time_slice;
 
 }
+
+#endif 

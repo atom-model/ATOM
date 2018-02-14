@@ -1,7 +1,5 @@
-#ifndef mchin_dev
-
-#ifndef CATMOSPHEREMODEL_H
-#define CATMOSPHEREMODEL_H
+#ifndef CHYDROSPHEREMODEL_H
+#define CHYDROSPHEREMODEL_H
 
 #include <string>
 
@@ -10,25 +8,22 @@
 using namespace std;
 using namespace tinyxml2;
 
-class cAtmosphereModel {
+class cHydrosphereModel {
 public:
     const char *filename;
 
-    cAtmosphereModel();
-    ~cAtmosphereModel();
+    cHydrosphereModel();
+    ~cHydrosphereModel();
 
     // FUNCTIONS
     void LoadConfig(const char *filename);
     void Run();
     void RunTimeSlice(int time_slice);
 
-    #include "AtmosphereParams.h.inc"
+    #include "HydrosphereParams.h.inc"
 
 private:
     void SetDefaultConfig();
 };
 
 #endif
-
-#endif
-
