@@ -1,8 +1,14 @@
 # Top-level Makefile
 # Builds everything: atmosphere, hydrosphere, Python interface and CLI interface
 
+MCHIN_DEV=mchin_dev
+
 # TODO: don't always enable debugging
+ifeq ($(MCHIN_DEV),mchin_dev)
 CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2 -Dmchin_dev
+else
+CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2
+endif
 
 # Common files for the shared lib (libatom.a)
 LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o lib/Config.o
@@ -37,7 +43,7 @@ hyd: libatom.a $(HYD_CLI_OBJ)
 $(PARAM_OUTPUTS): param.py
 # explicitly clean dependent files
 	rm -f atmosphere/cAtmosphereModel.o hydrosphere/cHydrosphereModel.o atmosphere/cAtmosphereModelEx.o
-	python param.py
+	python param.py $(MCHIN_DEV)
 
 
 analyze:
