@@ -316,7 +316,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	BC_Atmosphere							boundary ( im, jm, km, t_tropopause );
 
 //	class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-	RHS_Atmosphere						prepare ( im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, sc_CO2, g, pr, WaterVapour, buoyancy, CO2, gam, sigma, lamda );
+	RHS_Atmosphere						prepare ( im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, sc_CO2, g, pr, WaterVapour, Buoyancy, CO2, gam, sigma, lamda );
 	RHS_Atmosphere						prepare_2D ( jm, km, dthe, dphi, re );
 
 //	class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
@@ -382,7 +382,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	co2_cretaceous = circulation.out_co2 (  );
 
 // class element for the surface temperature computation by radiation flux density
-	if ( RadiationModel == 1 ) circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+	if ( RadiationModel == 1 ) circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
 
 // 	class element for the initial conditions for u-v-w-velocity components
 	circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
@@ -479,6 +479,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 	int velocity_n = 1;
 
+//	circulation.BC_Temperature ( im_tropopause, t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
+
 //	goto Printout;
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
@@ -521,7 +523,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
 
 // class element for the surface temperature computation by radiation flux density
-			if ( RadiationModel == 1 )			circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+			if ( RadiationModel == 1 )			circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
 
 //	new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 			Accuracy_Atm	  min_Residuum ( im, jm, km, dr, dthe, dphi );
@@ -787,7 +789,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	writing of data in ParaView files
 //	radial data along constant hight above ground
 	int i_radial = 0;
-	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation );
+	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation, Topography );
 
 //	londitudinal data along constant latitudes
 	int j_longal = 62;			// Mount Everest/Himalaya
@@ -808,8 +810,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	t_cretaceous_prev = t_cretaceous;
 
 	if ( NASATemperature == 1 ) circulation.BC_NASAbasedSurfTempWrite ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
-
-// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of pressure loop: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
 
 // reset of results to the initial value
 	for ( int k = 0; k < km; k++ )

@@ -33,7 +33,7 @@ RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, doubl
 }
 
 
-RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double ec, double sc_WaterVapour, double sc_CO2, double g, double pr, double WaterVapour, double buoyancy, double CO2, double gam, double sigma, double lambda )
+RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double ec, double sc_WaterVapour, double sc_CO2, double g, double pr, double WaterVapour, double Buoyancy, double CO2, double gam, double sigma, double lambda )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -546,12 +546,12 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );													// density of dry air 
 	r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );											// density of humid air, COSMO version without cloud and ice water, masses negligible
 
-	RS_buoyancy_Momentum = buoyancy * g * ( r_humid - r_dry ) * coeff_buoy; 								// any humid air is less dense than dry air
+	RS_buoyancy_Momentum = Buoyancy * g * ( r_humid - r_dry ) * coeff_buoy; 								// any humid air is less dense than dry air
 
 	BuoyancyForce.x[ i ][ j ][ k ] = - RS_buoyancy_Momentum / coeff_buoy;											// dimension as pressure in N/m2
 	if ( h.x[ i ][ j ][ k ] == 1. ) 	BuoyancyForce.x[ i ][ j ][ k ] = 0.;
 
-	RS_buoyancy_Water_Vapour = buoyancy * ( cloud.x[ i ][ j ][ k ] - cloudn.x[ i ][ j ][ k ] );
+	RS_buoyancy_Water_Vapour = Buoyancy * ( cloud.x[ i ][ j ][ k ] - cloudn.x[ i ][ j ][ k ] );
 
 
 
