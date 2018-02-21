@@ -26,9 +26,9 @@ def main():
             ( 'velocity_iter_max', '', 'int', 2 ),
             ( 'pressure_iter_max', '', 'int', 2 ),
 
-            ( 'WaterVapour', 'water vapour', 'double', 1.0 ),
-            ( 'buoyancy', 'buoyancy', 'double', 1.0 ),
-            ( 'CO2', 'CO2', 'double', 1.0 ),
+            ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
+            ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
+            ( 'CO2', 'CO2 influence on atmospheric thermodynamics', 'double', 1.0 ),
 
             ( 'Ma_step', 'step size between timeslices', 'int', 10 ),
 
@@ -124,16 +124,16 @@ def main():
 
         'hydrosphere': [
             ( 'input_path', 'directory where Atmosphere output can be read (must end in /)', 'string', 'output' ),
-            ( 'velocity_iter_max_2D', '', 'int',10 ),
+            ( 'velocity_iter_max_2D', '', 'int', 10 ),
             ( 'pressure_iter_max_2D', '', 'int', 2 ),
             ( 'velocity_iter_max', '', 'int', 5 ),
             ( 'pressure_iter_max', '', 'int', 2 ),
 
-            ( 'buoyancy', 'computation with buoyancy', 'double', 1.0 ),
+            ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 
             ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m', 'double', 6000.0 ),
 
-            ( 're', 'Reynolds numberc_0', 'double', 1000.0 ),
+            ( 're', 'Reynolds number', 'double', 1000.0 ),
             ( 'ec', 'Eckert number', 'double', 0.0001 ),
             ( 'sc', 'Schmidt number for salt water', 'double', 10.0 ),
             ( 'pr', 'Prandtl number for water', 'double', 6.957 ),

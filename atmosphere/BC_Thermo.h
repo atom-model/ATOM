@@ -52,7 +52,7 @@ class BC_Thermo
 		double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
 		double eps, c_ocean, t_land, c_land, c_coeff, t_average, co2_average, co2_equator, co2_pole, gam, t_Ik, atmospheric_window, rad_surf_diff;
 		double albedo_co2_eff, albedo_equator, albedo_pole;
-		double rad_eff, rad_equator, rad_pole;
+		double rad_eff, rad_equator, rad_pole, rad_surf;
 		double aa, bb, cc, dd, f;
 		double epsilon_eff_2D, epsilon_eff, epsilon_pole, epsilon_equator, epsilon_tropopause, epsilon_eff_max;
 
@@ -62,7 +62,7 @@ class BC_Thermo
 		double rm, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2;
 		double E, E_Rain_SL, E_Rain, E_Rain_super, E_Ice, q_Rain, q_Rain_super, q_Ice;
 		double c12, c32, c42, t_Celsius_it, t_Celsius_0, t_Celsius_1, t_Celsius_2;
-		double radiation_net;
+		double radiation_back;
 		double r_dry, r_humid, p_SL, t_SL, exp_pressure, hight;
 		double t_u, t_Celsius_SL, t_dew, t_dew_SL, T, T_nue, T_it, q_T, q_Rain_n;
 		double q_v_b, q_c_b, q_i_b, q_v_hyp, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
@@ -99,7 +99,7 @@ class BC_Thermo
 
 		void BC_Radiation_2D_layer ( Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_Radiation_multi_layer ( int*, int, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_Radiation_multi_layer ( int*, int, double, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void BC_WaterVapour ( int *, Array &, Array &, Array & );
 

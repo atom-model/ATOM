@@ -311,7 +311,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	BC_Hydrosphere		boundary ( im, jm, km );
 
 // class RHS_Hydrosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-	RHS_Hydrosphere		prepare ( im, jm, km, r0, dt, dr, dthe, dphi, re, ec, sc, g, pr, buoyancy );
+	RHS_Hydrosphere		prepare ( im, jm, km, r0, dt, dr, dthe, dphi, re, ec, sc, g, pr, Buoyancy );
 	RHS_Hydrosphere		prepare_2D ( jm, km, dthe, dphi, re );
 
 // class RungeKutta_Hydrosphere for the explicit solution of the Navier-Stokes equations

@@ -28,7 +28,7 @@ class RHS_Atmosphere
 		int **im_tropopause;
 
 		double zeit, dt, dr, dthe, dphi;
-		double re, pr, ec, sc_WaterVapour, sc_CO2, g, WaterVapour, buoyancy, CO2, lambda;
+		double re, pr, ec, sc_WaterVapour, sc_CO2, g, WaterVapour, Buoyancy, CO2, lambda;
 		double E_Rain_SL, E_Rain, E_Rain_super, E_Ice;
 		double e_SL, a_SL, p_SL, q_SL, t_tau_SL, t_Celsius_SL;
 		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, t_Celsius_ni, t_Celsius_pi, t_Celsius_nj, t_Celsius_pj, t_Celsius_nk, t_Celsius_pk, dp_hdr, dp_hdthe, dp_hdphi;

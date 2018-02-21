@@ -42,7 +42,7 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int im, int jm, int km, double r0, double dt,
 	this-> sc = sc;
 	this-> g = g;
 	this-> pr = pr;
-	this-> buoyancy = buoyancy;
+	this-> Buoyancy = Buoyancy;
 
 }
 
@@ -435,7 +435,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 
 
-	RS_buoyancy_Momentum = L_hyd / ( r_0_water * u_0 * u_0 ) * buoyancy * g * ( ( c.x[ i ][ j ][ k ] * ca - 7.3 ) / ( ca - 7.3 ) - 1. );		// buoyancy based on water density 
+	RS_buoyancy_Momentum = Buoyancy * L_hyd / ( r_0_water * u_0 * u_0 ) * g * ( ( c.x[ i ][ j ][ k ] * ca - 7.3 ) / ( ca - 7.3 ) - 1. );		// buoyancy based on water density 
 
 	RS_buoyancy_Energy = u_0 * ec * u.x[ i ][ j ][ k ] * RS_buoyancy_Momentum;																							// energy increase by buoyancy
 
