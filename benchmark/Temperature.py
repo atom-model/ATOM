@@ -127,6 +127,10 @@ def reconstruct_grid(
         'gmt_surface_fill_the_gap.nc','gmt_surface_fill_the_gap_filter.nc',1000))
     os.system(gmt_cmd+' grd2xyz gmt_surface_fill_the_gap_filter.nc > {0}'.format(new_ascii_grid_file) )
     
+    #os.system(gmt_cmd+' grdfilter %s -G%s -Fg%0.2f -D4 -Vl' % (
+    #    'nearest_neighbour_fill_the_gap.nc','nearest_neighbour_fill_the_gap_filter.nc',1000))
+    #os.system(gmt_cmd+' grd2xyz nearest_neighbour_fill_the_gap_filter.nc > {0}'.format(new_ascii_grid_file) )    
+
     #write_xyz_file(new_ascii_grid_file, zip(tmpX, tmpY, interp_total_temp))
     data = np.loadtxt(new_ascii_grid_file)
     new_data = []
@@ -140,12 +144,12 @@ def reconstruct_grid(
                 l[0]+=360
                 new_data.append(l)
     
-    '''for line in new_data:
+    for line in new_data:
         if line[2] > 40:
             line[2] = 40
-        if line[2] < -40:
-            line[2] = -40
-    '''
+        if line[2] < -60:
+            line[2] = -60
+    
     os.system('rm '+ new_ascii_grid_file)       
     write_xyz_file(new_ascii_grid_file, new_data)
     print "Reconstruction done!"
@@ -176,8 +180,10 @@ def reconstruct_temperature(time,times):
             times[t+1],
             './output/{0}Ma_SurfaceTemperature.xyz'.format(times[t+1]))       
 
-
-# In[ ]:
+        #d1 = np.genfromtxt('./output/[{0}Ma_Golonka.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
+        #d2 = np.genfromtxt('./output/{0}Ma_SurfaceTemperature.xyz'.format(times[t+1]))
+        #print 'Max input: ', np.max(d1[:,6])
+        #print 'Max output: ', np.max(d2[:,2])
 
 
 def reconstruct_precipitation(time,times):

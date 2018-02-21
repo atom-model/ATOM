@@ -58,6 +58,8 @@ public:
 
     #include "AtmosphereParams.h.inc"
 
+    void PrintDebug(const string&) const;
+
 private:
     void SetDefaultConfig();
     void Reset();

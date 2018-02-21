@@ -537,7 +537,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 	t_cretaceous = t_cretaceous / t_0;  								 // non-dimensional
 	t_cretaceous_add = t_cretaceous - t_cretaceous_prev; // non-dimensional
 
-
+std::cout<< "t_cretaceous_add: " << t_cretaceous_add*t_0 << std::endl;
 
 	// temperatur distribution at aa prescribed sun position
 	// sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N

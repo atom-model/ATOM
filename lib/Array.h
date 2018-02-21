@@ -103,7 +103,7 @@ public:
         return a;
     }
 
-    double max(){
+    double max() const{
         assert(im && jm && km);
         double ret=x[0][0][0];
         for(int i=0; i<im; i++){
@@ -116,7 +116,7 @@ public:
         return ret;
     }
 
-    double min(){
+    double min() const{
         assert(im && jm && km);
         double ret=x[0][0][0];
         for(int i=0; i<im; i++){
@@ -129,7 +129,7 @@ public:
         return ret;
     }
 
-    double mean(){
+    double mean() const {
         assert(im && jm && km);
         double ret=0;
         for(int i=0; i<im; i++){
@@ -142,7 +142,7 @@ public:
         return ret/(im*jm*km);
     }
 
-    double max_2D(){
+    double max_2D() const{
         assert(jm && km);
         double ret=x[0][0][0];
         for(int j=0; j<jm; j++){
@@ -153,7 +153,7 @@ public:
         return ret;
     }
 
-    double min_2D(){
+    double min_2D() const{
         assert(jm && km);
         double ret=x[0][0][0];
         for(int j=0; j<jm; j++){
@@ -164,7 +164,7 @@ public:
         return ret;
     }
 
-    double mean_2D(){
+    double mean_2D() const{
         assert(jm && km);
         double ret=0;
         for(int j=0; j<jm; j++){

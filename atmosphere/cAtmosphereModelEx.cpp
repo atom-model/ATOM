@@ -318,11 +318,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
     BC_Thermo  circulation ( output_path, im, jm, km, tropopause_equator, tropopause_pole, RadiationModel, NASATemperature, sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_prev, Ma_max, Ma_max_half, dt, dr, dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, co2_factor, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_equator, co2_pole, t_cretaceous, t_cretaceous_prev, t_cretaceous_max, t_land, t_tropopause, t_equator, t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, rad_equator, rad_pole );
- 
+
     LoadTemperatureData(Ma, circulation);
     
-    std::cout << "The Mean Temperature after loading: "<<GetMeanTemperature()
-    <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
+    PrintDebug("The Mean Temperature after loading: ");
 
     //  class Restore to restore the iterational values from new to old
     Restore_Atm  oldnew( im, jm, km );
@@ -337,9 +336,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     }
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
     circulation.BC_Temperature ( im_tropopause, t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );    
-
-    std::cout << "The Mean Temperature after BC_Temperature(): "<<GetMeanTemperature()
-    <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
+    PrintDebug("After circulation.BC_Temperature");
 
     //  class element for the correction of the temperature initial distribution around coasts
     if ( ( NASATemperature == 1 ) && ( Ma > 0 ) && !use_earthbyte_reconstruction ){ 
@@ -352,8 +349,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
     circulation.BC_WaterVapour ( im_tropopause, h, t, c );
  
-    std::cout << "The Mean water vapour: "<<c.mean()
-    <<"Max water vapour: "<<c.max()<<std::endl;
+    PrintDebug("After circulation.BC_WaterVapour");
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     circulation.BC_CO2(im_tropopause, Vegetation, h, t, p_dyn, co2 );
@@ -361,18 +357,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){
-        std::cout << "first multi layer" << std::endl;
-        std::cout << "temperature: " << (t.min()-1)*t_0 << "  "<<GetMeanTemperature() <<"  "<<(t.max()-1)*t_0<<std::endl; 
-        std::cout << "water vapour " << c.min() << "  " << c.mean() << "  " << c.max() << std::endl;
-        std::cout << "p_stat " << p_stat.min() << "  " << p_stat.mean() << "  " << p_stat.max() << std::endl;
-        std::cout << "cloud " << cloud.min() << "  " << cloud.mean() << "  " << cloud.max() << std::endl;
-        std::cout << "ice " << ice.min() << "  " << ice.mean() << "  " << ice.max() << std::endl;
-
+        PrintDebug("before first BC_Radiation_multi_layer");
         circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
-
-    std::cout << "The Mean Temperature after first BC_Radiation_multi_layer(): "<<GetMeanTemperature()
-    <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
+    PrintDebug("after first BC_Radiation_multi_layer");
 
     //  class element for the initial conditions for u-v-w-velocity components
     circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
@@ -401,7 +389,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
               startPressure, oldnew, calculate_MSL,
               circulation);
 
-   /* 
+    
     double tmp_1 = GetMeanTemperatureFromCurve(Ma);
     double tmp_2 = GetMeanTemperature();
     double diff = tmp_2 - tmp_1;
@@ -411,10 +399,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
             if(t.x[0][j][k]>40.0/t_0+1) t.x[0][j][k]=40.0/t_0+1;
         }
     }
-    */
-    cout << endl << endl;
-
+    
     t_cretaceous_prev = t_cretaceous;
+
+    PrintDebug("end of time slice: ");
 
     WriteFile(n, bathymetry_name, output_path);
 
@@ -466,6 +454,8 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
             boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
             boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
 
+            PrintDebug("Before circulation.Ice_Water_Saturation_Adjustment");
+
             //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water 
             //dependent on water vapour amount and temperature
             if ( v_iter == velocity_n ){
@@ -473,6 +463,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
                                                             RadiationModel, h, c, cn, cloud, cloudn, 
                                                             ice, icen, t, p_stat, S_c_c );
             }
+            PrintDebug("Before result.solveRungeKutta_3D_Atmosphere");
             //class RungeKutta for the solution of the differential equations describing the flow properties
             result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
                     r_water, r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, 
@@ -480,9 +471,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
                     cloud, ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, 
                     BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography );
 
-            std::cout << "The Mean Temperature after solveRungeKutta_3D_Atmosphere(): "<<GetMeanTemperature()
-            <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
-            
+            PrintDebug("After result.solveRungeKutta_3D_Atmosphere"); 
             //class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
             //the continents and the ocean ground
             LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
@@ -490,18 +479,10 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
 
         //class element for the surface temperature computation by radiation flux density
         if( RadiationModel == 1 ){
-            std::cout << "second multi layer" << std::endl;
-            std::cout << "temperature: " << (t.min()-1)*t_0 << "  "<<GetMeanTemperature() <<"  "<<(t.max()-1)*t_0<<std::endl;
-            std::cout << "water vapour " << c.min() << "  " << c.mean() << "  " << c.max() << std::endl;
-            std::cout << "p_stat " << p_stat.min() << "  " << p_stat.mean() << "  " << p_stat.max() << std::endl;
-            std::cout << "cloud " << cloud.min() << "  " << cloud.mean() << "  " << cloud.max() << std::endl;
-            std::cout << "ice " << ice.min() << "  " << ice.mean() << "  " << ice.max() << std::endl;
-
+            PrintDebug("before second circulation.BC_Radiation_multi_layer");
             circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
         }
-
-            std::cout << "The Mean Temperature after second BC_Radiation_multi_layer(): "<<GetMeanTemperature()
-         <<"Max Temperature: "<<(t.max()-1)*t_0<<std::endl;
+        PrintDebug("after second circulation.BC_Radiation_multi_layer");
 
             //new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm      min_Residuum ( im, jm, km, dr, dthe, dphi );
@@ -522,10 +503,12 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
             min_Stationary.steadyQuery_3D(u, un, v, vn, w, wn, t, tn, c, cn, cloud, cloudn, ice, 
                                           icen, co2, co2n, p_dyn, p_dynn );
 
+            PrintDebug("Before circulation.Latent_Heat");
             //3D_fields
             //class element for the initial conditions the latent heat
             circulation.Latent_Heat(rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, ice, Q_Latent, 
                                     Q_Sensible, radiation_3D, Q_radiation, Q_latent, Q_sensible, Q_bottom );
+            PrintDebug("after circulation.Latent_Heat");
 
             if (1){//verbose) {
                 PrintMaxMinValues();
@@ -534,7 +517,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
             //computation of vegetation areas
             LandArea.vegetationDistribution ( d_max_Precipitation, Precipitation, Vegetation, t, h );
 
-
+            PrintDebug("Before calculate_MSL.run_MSL_data");
             //  composition of results
             calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, 
                     phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, 
@@ -542,10 +525,13 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
                     precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, 
                     Evaporation_Penman, Evaporation_Haude, Vegetation, albedo, co2_total, Precipitation, 
                     S_v, S_c, S_i, S_r, S_s, S_c_c );
+            PrintDebug("After calculate_MSL.run_MSL_data");
 
             //restoring the velocity component and the temperature for the new time step
             oldnew.restoreOldNew_3D(1., u, v, w, t, p_dyn, c, cloud, ice, co2, 
                                     un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n );
+
+            PrintDebug("Before first circulation.Two_Category_Ice_Scheme");
 
             //Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
             if ( v_iter == velocity_n )
@@ -564,6 +550,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
                                              rhs_v, rhs_w, aux_u, aux_v, aux_w );
         }
 
+        PrintDebug("Before second circulation.Two_Category_Ice_Scheme");
         //Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
         //resulting the precipitation distribution formed of rain and snow
         circulation.Two_Category_Ice_Scheme(n, velocity_iter_max, RadiationModel, h, c, t, p_stat,
@@ -1113,5 +1100,14 @@ void cAtmosphereModel::PrintMaxMinValues() {
             MinMax  minmaxEpsilon ( jm, km, coeff_mmWS );
             minmaxEpsilon.searchMinMax_2D ( str_max_epsilon, str_min_epsilon, str_unit_epsilon, epsilon, h );
 */
+}
+
+void cAtmosphereModel::PrintDebug(const string &msg ) const{
+    std::cout << std::endl << std::endl <<  "debug info: " << msg << std::endl;
+    std::cout << "temperature: " << (t.min_2D()-1)*t_0 << "  "<<GetMeanTemperature() <<"  "<<(t.max_2D()-1)*t_0<<std::endl;
+    std::cout << "water vapour " << c.min() << "  " << c.mean() << "  " << c.max() << std::endl;
+    std::cout << "p_stat " << p_stat.min() << "  " << p_stat.mean() << "  " << p_stat.max() << std::endl;
+    std::cout << "cloud " << cloud.min() << "  " << cloud.mean() << "  " << cloud.max() << std::endl;
+    std::cout << "ice " << ice.min() << "  " << ice.mean() << "  " << ice.max() << std::endl << std::endl << std::endl;
 }
 #endif
