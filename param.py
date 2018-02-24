@@ -44,7 +44,9 @@ def main():
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
             ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 30 ),
-            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 20 steps = 7200 m', 'int', 18 ),
+#            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 29 steps = 11600 m', 'int', 29 ),
+            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 18 steps = 7200 m', 'int', 18 ),
+#            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 22 steps = 8800 m', 'int', 22 ),
 
             ( 'rad_equator', 'long wave radiation on the surface of the earth, fitted to NASA temperature', 'double', 320. ),
             ( 'rad_pole', 'long wave radiation at the poles, an approximation for the singularity at the poles', 'double', 60. ),

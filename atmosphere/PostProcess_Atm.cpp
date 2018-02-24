@@ -263,7 +263,7 @@ void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int &Ma, int &i_radial, int &n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Topography)
+void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int &Ma, int &i_radial, int &n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Q_Evaporation, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Topography, Array_2D &temp_NASA, Array_2D &temp_NASA_diff, Array_2D &temp_pot, Array_2D &temp_pot_diff )
 {
     double x, y, z, dx, dy;
 
@@ -308,6 +308,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
     }
 
 
+	i_mount = 0;
 
 	if ( Ma == 0 )
 	{
@@ -315,11 +316,18 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
 		{
 			for ( int j = 0; j < jm; j++ )
 			{
+				temp_NASA.y[ j ][ k ] = temperature_NASA.y[ j ][ k ] * t_0 - t_0;
+
 				for ( int i = im-2; i >= 0; i-- )
 				{
-					if ( ( h.x[ i + 1 ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) )		aux_u.x[ i_radial ][ j ][ k ] = ( t.x[ i_radial ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
-					if ( h.x[ 0 ][ j ][ k ] == 0. )																aux_u.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+					if ( ( h.x[ i + 1 ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) )		temp_NASA_diff.y[ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+					if ( h.x[ 0 ][ j ][ k ] == 0. )																temp_NASA_diff.y[ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+
+					if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )				i_mount = i;
+					temp_pot.y[ j ][ k ] = ( t.x[ i_mount ][ j ][ k ] * t_0 ) * pow ( ( p_0 / p_stat.x[ i_mount ][ j ][ k ] ), 0.286 ) - t_0;
+					temp_pot_diff.y[ j ][ k ] = - ( ( t.x[ i_mount ][ j ][ k ] * t_0 ) * pow ( ( p_0 / p_stat.x[ i_mount ][ j ][ k ] ), 0.286 ) - temperature_NASA.y[ j ][ k ] * t_0 );
 				}
+				i_mount = 0;
 			}
 		}
 	}
@@ -342,46 +350,49 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
         }
     }
 
-// writing temperature_NASA
-    Atmosphere_vtk_radial_File <<  "SCALARS Temperature_NASA float " << 1 << endl;
-    Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            Atmosphere_vtk_radial_File << temperature_NASA.y[ j ][ k ] * t_0 - t_0 << endl;
-        }
-    }
 
-    dump_radial("Temperature_diff", aux_u, 1., i_radial, Atmosphere_vtk_radial_File);
+
+    dump_radial_2d("Temp_potential", temp_pot, 1., Atmosphere_vtk_radial_File);
+    dump_radial_2d("Temp_potential_diff", temp_pot_diff, 1., Atmosphere_vtk_radial_File);
+    dump_radial_2d("Temp_NASA", temp_NASA, 1., Atmosphere_vtk_radial_File);
+    dump_radial_2d("Temp_NASA_diff", temp_NASA_diff, 1., Atmosphere_vtk_radial_File);
+
     dump_radial("Topography", h, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial_2d("Topography_m", Topography, 1., Atmosphere_vtk_radial_File);
+
     dump_radial("WaterVapour", c, 1000., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("CloudWater", cloud, 1000., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("CloudIce", ice, 1000., i_radial, Atmosphere_vtk_radial_File);
+
     dump_radial("PrecipitationRain", P_rain, 1000., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("PrecipitationSnow", P_snow, 1000., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Precipitation", Precipitation, 1., Atmosphere_vtk_radial_File);
-    dump_radial("PressureDynamic", p_dyn, u_0 * u_0 * r_air *.01, i_radial, Atmosphere_vtk_radial_File);
-//    dump_radial("PressureStatic", p_stat, 1., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial_2d("Topography_m", Topography, 1., Atmosphere_vtk_radial_File);
-//    dump_radial_2d("Temperature_NASA", temperature_NASA, 1., Atmosphere_vtk_radial_File);
+    dump_radial_2d("PrecipitableWater_2D", precipitable_water, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Precipitation_NASA", precipitation_NASA, 1., Atmosphere_vtk_radial_File);
+
+    dump_radial("PressureDynamic", p_dyn, u_0 * u_0 * r_air *.01, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("PressureStatic", p_stat, 1., i_radial, Atmosphere_vtk_radial_File);
+
+    dump_radial("Epsilon_3D", epsilon_3D, 1., i_radial, Atmosphere_vtk_radial_File);
 //    dump_radial_2d("albedo_2D", albedo, 1., Atmosphere_vtk_radial_File);
 //    dump_radial_2d("epsilon_2D", epsilon, 1., Atmosphere_vtk_radial_File);
-    dump_radial_2d("PrecipitableWater_2D", precipitable_water, 1., Atmosphere_vtk_radial_File);
+
     dump_radial_2d("Q_radiation_2D", Q_radiation, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Q_bottom_2D", Q_bottom, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Q_latent_2D", Q_latent, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Q_sensible_2D", Q_sensible, 1., Atmosphere_vtk_radial_File);
-    dump_radial("Epsilon_3D", epsilon_3D, 1., i_radial, Atmosphere_vtk_radial_File);
+
     dump_radial("BuoyancyForce", BuoyancyForce, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("Q_Latent", Q_Latent, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("Q_Sensible", Q_Sensible, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Evaporation_Penman", Evaporation_Penman, 1., Atmosphere_vtk_radial_File);
     // dump_radial_2d("t_EvaporationHaude", Evaporation_Haude, 1., Atmosphere_vtk_radial_File); // normally this would be normalized
     // dump_radial_2d("Q_Evaporation", Q_Evaporation, 1., Atmosphere_vtk_radial_File); // normally this would be normalized
+
     dump_radial_2d("Vegetation", Vegetation, 1., Atmosphere_vtk_radial_File);
+
     dump_radial("CO2-Concentration", co2, co2_0, i_radial, Atmosphere_vtk_radial_File);
+
 
 // writing zonal u-v cell structure
     Atmosphere_vtk_radial_File <<  "VECTORS v-w-Cell float " << endl;

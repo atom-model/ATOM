@@ -669,6 +669,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 						if ( Ma == 0 )
 						{
 							t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
+//							t.x[ 0 ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
 //							t.x[ 0 ][ j ][ k ] = ( ( temperature_NASA.y[ j ][ k ] * t_0 ) * pow ( ( p_0 / p_stat.x[ i_mount ][ j ][ k ] ), 0.286 ) ) / t_0 + t_cretaceous_add;
 //							t.x[ 0 ][ j ][ k ] = ( ( temperature_NASA.y[ j ][ k ] * t_0 ) * pow ( ( p_0 / 500. ), 0.286 ) ) / t_0 + t_cretaceous_add;
 						}
@@ -677,8 +678,8 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 							t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
 						}
 
-//						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
-						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ 0 ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
+						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
+//						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ 0 ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
 					}
 				}
 			}
@@ -701,8 +702,8 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 				if ( i <= i_trop )
 				{
 					d_i = ( double ) i;
-//					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
-					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+//					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
 //					t.x[ i ][ j ][ k ] = - 2.6 / t_0 * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, 0.65K/100m
 				}
 				else 		t.x[ i ][ j ][ k ] = t_tropopause;
@@ -710,6 +711,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 			for ( int i = i_trop - 1; i >= 0; i-- )
 			{
 				if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )				t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
+//				if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
 			}
 		}
 	}
