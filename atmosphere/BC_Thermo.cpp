@@ -312,8 +312,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 																										// constant value stands for other non-condensable gases than water vapour in the equation for epsilon
 	epsilon_eff_2D = epsilon_pole - epsilon_equator;
 
-//	d_i_max = ( double ) ( im - 1 );
-
 	for ( int j = 0; j < jm; j++ )
 	{
 		i_trop = im_tropopause[ j ];
@@ -357,26 +355,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 			}
 		}
 	}
-
-
-
-/*
-	for ( int j = 0; j < jm; j++ )
-	{
-		i_trop = im_tropopause[ j ];
-		d_j = ( double ) j;
-		rad_surf = rad_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + rad_pole;				// in W/m², assumption of parabolic surface radiation at zero level
-
-		for ( int k = 0; k < km; k++ )
-		{
-			i_mount = i_topography[ j ][ k ];
-			d_i_max = ( double ) i_trop;
-			d_i = ( double ) i_mount;
-			radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. );
-			radiation_surface.y[ j ][ k ] = ( radiation_3D.x[ i_trop ][ j ][ k ] - rad_surf ) / d_i_max * d_i + rad_surf;				// linear temperature decay up to tropopause, privat approximation
-		}
-	}
-*/
 
 
 
