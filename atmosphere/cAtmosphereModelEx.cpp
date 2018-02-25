@@ -296,7 +296,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
     RHS_Atmosphere  prepare(im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, 
                             sc_CO2, g, pr, WaterVapour, 
-                            buoyancy, CO2, gam, sigma, lamda );
+                            Buoyancy, CO2, gam, sigma, lamda );
     
     RHS_Atmosphere  prepare_2D ( jm, km, dthe, dphi, re);
 
@@ -358,7 +358,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){
         PrintDebug("before first BC_Radiation_multi_layer");
-        circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+        circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
     PrintDebug("after first BC_Radiation_multi_layer");
 
@@ -480,7 +480,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
         //class element for the surface temperature computation by radiation flux density
         if( RadiationModel == 1 ){
             PrintDebug("before second circulation.BC_Radiation_multi_layer");
-            circulation.BC_Radiation_multi_layer ( im_tropopause, n, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+            circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
         }
         PrintDebug("after second circulation.BC_Radiation_multi_layer");
 
