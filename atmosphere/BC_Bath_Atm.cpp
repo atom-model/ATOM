@@ -190,7 +190,8 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
 					{
 //						if ( Ma == 0 ) 				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
 //						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount + 1 ][ j ][ k ];
-						if ( Ma == 0 ) 				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
+//						if ( Ma == 0 ) 				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
+						if ( Ma == 0 ) 				t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
 						else 							t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
 						c.x[ i ][ j ][ k ] = c.x[ i_mount + 1 ][ j ][ k ];				// water vapour amount above mount surface repeated
 						co2.x[ i ][ j ][ k ] = co2.x[ i_mount + 1 ][ j ][ k ];		// co2 amount above mount surface repeated

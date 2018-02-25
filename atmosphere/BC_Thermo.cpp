@@ -312,8 +312,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 																										// constant value stands for other non-condensable gases than water vapour in the equation for epsilon
 	epsilon_eff_2D = epsilon_pole - epsilon_equator;
 
-//	d_i_max = ( double ) ( im - 1 );
-
 	for ( int j = 0; j < jm; j++ )
 	{
 		i_trop = im_tropopause[ j ];
@@ -360,31 +358,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 
 
 
-/*
-	for ( int j = 0; j < jm; j++ )
-	{
-		i_trop = im_tropopause[ j ];
-		d_j = ( double ) j;
-		rad_surf = rad_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + rad_pole;				// in W/m², assumption of parabolic surface radiation at zero level
-
-		for ( int k = 0; k < km; k++ )
-		{
-			i_mount = i_topography[ j ][ k ];
-			d_i_max = ( double ) i_trop;
-
-
-//			for ( int i = 0; i < im-1; i++ )
-//			{
-				d_i = ( double ) i_mount;
-				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. );
-				radiation_surface.y[ j ][ k ] = ( radiation_3D.x[ i_trop ][ j ][ k ] - rad_surf ) / d_i_max * d_i + rad_surf;				// linear temperature decay up to tropopause, privat approximation
-//			}
-		}
-	}
-*/
-
-
-
 
 
 //	iteration procedure for the computation of the temperature based on the multi-layer radiation model
@@ -406,11 +379,11 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 				radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );		// back radiation absorbed from the first water vapour layer out of 40
-//				radiation_back = epsilon_3D.x[ 1 ][ j ][ k ] * sigma * pow ( t.x[ 1 ][ j ][ k ] * t_0, 4. );		// back radiation absorbed from the first water vapour layer out of 40
  
 				atmospheric_window = .1007 * radiation_surface.y[ j ][ k ];																				// radiation loss through the atmospheric window
 				rad_surf_diff = radiation_back + radiation_surface.y[ j ][ k ] - atmospheric_window;											// radiation leaving the surface
- 
+				if ( (Ma != 0 ) && ( i_mount != 0 ) ) 		rad_surf_diff = 1.35 * rad_surf_diff;		// compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity which produces higher backradiation
+
 				AA[ i_mount ] = rad_surf_diff / radiation_3D.x[ i_trop ][ j ][ k ];										// non-dimensional surface radiation
 				CC[ i_mount ][ i_mount ] = 0.;																							// no absorption of radiation on the surface by water vapour
 
@@ -669,6 +642,7 @@ std::cout<< "t_cretaceous_add: " << t_cretaceous_add*t_0 << std::endl;
 						if ( Ma == 0 )
 						{
 							t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
+//							t.x[ 0 ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
 //							t.x[ 0 ][ j ][ k ] = ( ( temperature_NASA.y[ j ][ k ] * t_0 ) * pow ( ( p_0 / p_stat.x[ i_mount ][ j ][ k ] ), 0.286 ) ) / t_0 + t_cretaceous_add;
 //							t.x[ 0 ][ j ][ k ] = ( ( temperature_NASA.y[ j ][ k ] * t_0 ) * pow ( ( p_0 / 500. ), 0.286 ) ) / t_0 + t_cretaceous_add;
 						}
@@ -677,8 +651,8 @@ std::cout<< "t_cretaceous_add: " << t_cretaceous_add*t_0 << std::endl;
 							t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
 						}
 
-//						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
-						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ 0 ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
+						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
+//						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ 0 ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
 					}
 				}
 			}
@@ -701,8 +675,8 @@ std::cout<< "t_cretaceous_add: " << t_cretaceous_add*t_0 << std::endl;
 				if ( i <= i_trop )
 				{
 					d_i = ( double ) i;
-//					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
-					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+//					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
 //					t.x[ i ][ j ][ k ] = - 2.6 / t_0 * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, 0.65K/100m
 				}
 				else 		t.x[ i ][ j ][ k ] = t_tropopause;
@@ -710,6 +684,7 @@ std::cout<< "t_cretaceous_add: " << t_cretaceous_add*t_0 << std::endl;
 			for ( int i = i_trop - 1; i >= 0; i-- )
 			{
 				if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )				t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
+//				if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
 			}
 		}
 	}
