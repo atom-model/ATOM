@@ -320,12 +320,17 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
 
 				for ( int i = im-2; i >= 0; i-- )
 				{
-					if ( ( h.x[ i + 1 ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) )		temp_NASA_diff.y[ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
-					if ( h.x[ 0 ][ j ][ k ] == 0. )																temp_NASA_diff.y[ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+					if ( Ma == 0 )
+					{
+						if ( ( h.x[ i + 1 ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) )		temp_NASA_diff.y[ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+						if ( h.x[ 0 ][ j ][ k ] == 0. )																temp_NASA_diff.y[ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+					}
+					else 																									temp_NASA_diff.y[ j ][ k ] = 0.;
 
 					if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )				i_mount = i;
 					temp_pot.y[ j ][ k ] = ( t.x[ i_mount ][ j ][ k ] * t_0 ) * pow ( ( p_0 / p_stat.x[ i_mount ][ j ][ k ] ), 0.286 ) - t_0;
-					temp_pot_diff.y[ j ][ k ] = - ( ( t.x[ i_mount ][ j ][ k ] * t_0 ) * pow ( ( p_0 / p_stat.x[ i_mount ][ j ][ k ] ), 0.286 ) - temperature_NASA.y[ j ][ k ] * t_0 );
+					if ( Ma == 0 ) 				temp_pot_diff.y[ j ][ k ] = - ( temp_pot.y[ j ][ k ] - temperature_NASA.y[ j ][ k ] * t_0 );
+					else 							temp_pot_diff.y[ j ][ k ] = 0.;
 				}
 				i_mount = 0;
 			}

@@ -371,14 +371,9 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 		{
 			i_mount = i_topography[ j ][ k ];
 			d_i_max = ( double ) i_trop;
-
-
-//			for ( int i = 0; i < im-1; i++ )
-//			{
-				d_i = ( double ) i_mount;
-				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. );
-				radiation_surface.y[ j ][ k ] = ( radiation_3D.x[ i_trop ][ j ][ k ] - rad_surf ) / d_i_max * d_i + rad_surf;				// linear temperature decay up to tropopause, privat approximation
-//			}
+			d_i = ( double ) i_mount;
+			radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. );
+			radiation_surface.y[ j ][ k ] = ( radiation_3D.x[ i_trop ][ j ][ k ] - rad_surf ) / d_i_max * d_i + rad_surf;				// linear temperature decay up to tropopause, privat approximation
 		}
 	}
 */
@@ -406,11 +401,11 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 				radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );		// back radiation absorbed from the first water vapour layer out of 40
-//				radiation_back = epsilon_3D.x[ 1 ][ j ][ k ] * sigma * pow ( t.x[ 1 ][ j ][ k ] * t_0, 4. );		// back radiation absorbed from the first water vapour layer out of 40
  
 				atmospheric_window = .1007 * radiation_surface.y[ j ][ k ];																				// radiation loss through the atmospheric window
 				rad_surf_diff = radiation_back + radiation_surface.y[ j ][ k ] - atmospheric_window;											// radiation leaving the surface
- 
+				if ( (Ma != 0 ) && ( i_mount != 0 ) ) 		rad_surf_diff = 1.35 * rad_surf_diff;		// compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity which produces higher backradiation
+
 				AA[ i_mount ] = rad_surf_diff / radiation_3D.x[ i_trop ][ j ][ k ];										// non-dimensional surface radiation
 				CC[ i_mount ][ i_mount ] = 0.;																							// no absorption of radiation on the surface by water vapour
 

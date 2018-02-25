@@ -48,8 +48,10 @@ def main():
             ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 18 steps = 7200 m', 'int', 18 ),
 #            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 22 steps = 8800 m', 'int', 22 ),
 
-            ( 'rad_equator', 'long wave radiation on the surface of the earth, fitted to NASA temperature', 'double', 320. ),
-            ( 'rad_pole', 'long wave radiation at the poles, an approximation for the singularity at the poles', 'double', 60. ),
+#            ( 'rad_equator', 'long wave radiation on the surface of the earth, fitted to NASA temperature', 'double', 320. ),
+#            ( 'rad_pole', 'long wave radiation at the poles, an approximation for the singularity at the poles', 'double', 60. ),
+            ( 'rad_equator', 'long wave radiation on the surface of the earth, fitted to NASA temperature', 'double', 300. ),
+            ( 'rad_pole', 'long wave radiation at the poles, an approximation for the singularity at the poles', 'double', 100. ),
 
             ( 'sigma', 'Stefan-Boltzmann constant W/( m²*K4 )', 'double', 5.670280e-8 ),
 
