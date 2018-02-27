@@ -382,7 +382,9 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
  
 				atmospheric_window = .1007 * radiation_surface.y[ j ][ k ];																				// radiation loss through the atmospheric window
 				rad_surf_diff = radiation_back + radiation_surface.y[ j ][ k ] - atmospheric_window;											// radiation leaving the surface
-				if ( (Ma != 0 ) && ( i_mount != 0 ) ) 		rad_surf_diff = 1.35 * rad_surf_diff;		// compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity which produces higher backradiation
+
+				fac_rad = ( double ) i_mount * .07 + 1.;															// linear increase with hight, best choice for Ma>0
+				rad_surf_diff = fac_rad * rad_surf_diff;		// compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity which produces higher backradiation
 
 				AA[ i_mount ] = rad_surf_diff / radiation_3D.x[ i_trop ][ j ][ k ];										// non-dimensional surface radiation
 				CC[ i_mount ][ i_mount ] = 0.;																							// no absorption of radiation on the surface by water vapour
