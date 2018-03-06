@@ -350,8 +350,10 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 
 			for ( int i = i_trop + 1; i < im; i++ )
 			{
-				epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_trop ][ j ][ k ];
-				radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_trop ][ j ][ k ];
+//				epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_trop ][ j ][ k ];
+				epsilon_3D.x[ i ][ j ][ k ] = 0.;
+//				radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_trop ][ j ][ k ];
+				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. );
 			}
 		}
 	}
@@ -368,15 +370,18 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 		iter_rad = iter_rad + 1;
 
 // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
-		for ( int j = 1; j < jm-1; j++ )
+//		for ( int j = 1; j < jm-1; j++ )
+		for ( int j = 0; j < jm; j++ )
 		{
 			i_trop = im_tropopause[ j ];
 
-			for ( int k = 1; k < km-1; k++ )
+//			for ( int k = 1; k < km-1; k++ )
+			for ( int k = 0; k < km; k++ )
 			{
 				i_mount = i_topography[ j ][ k ];
 
-				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+//				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 				radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );		// back radiation absorbed from the first water vapour layer out of 40
  
@@ -384,7 +389,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 				rad_surf_diff = radiation_back + radiation_surface.y[ j ][ k ] - atmospheric_window;											// radiation leaving the surface
 
 				fac_rad = ( double ) i_mount * .07 + 1.;															// linear increase with hight, best choice for Ma>0
-				rad_surf_diff = fac_rad * rad_surf_diff;		// compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity which produces higher backradiation
+				rad_surf_diff = fac_rad * rad_surf_diff;		// compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity for higher back radiation
 
 				AA[ i_mount ] = rad_surf_diff / radiation_3D.x[ i_trop ][ j ][ k ];										// non-dimensional surface radiation
 				CC[ i_mount ][ i_mount ] = 0.;																							// no absorption of radiation on the surface by water vapour
@@ -473,7 +478,8 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 					}
 				}
 
-				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // dimensional form of the radiation leaving the last layer
+//				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // dimensional form of the radiation leaving the last layer
+				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 // recurrence formula for the radiation and temperature
 				for ( int i = i_trop - 1; i >= i_mount; i-- )
@@ -518,8 +524,8 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 
 // temperature-distribution by Ruddiman approximated by a parabola
 	t_eff = t_pole - t_equator;
-	t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
-	t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
+	t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / ( double ) Ma_max ) );   // in °C
+	t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / ( double ) Ma_max + Ma );   // in °C
 	if ( Ma == 0 ) 	t_cretaceous = t_cretaceous_prev = 0.;
 
 	cout.precision ( 3 );
@@ -644,9 +650,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 						if ( Ma == 0 )
 						{
 							t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
-//							t.x[ 0 ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
-//							t.x[ 0 ][ j ][ k ] = ( ( temperature_NASA.y[ j ][ k ] * t_0 ) * pow ( ( p_0 / p_stat.x[ i_mount ][ j ][ k ] ), 0.286 ) ) / t_0 + t_cretaceous_add;
-//							t.x[ 0 ][ j ][ k ] = ( ( temperature_NASA.y[ j ][ k ] * t_0 ) * pow ( ( p_0 / 500. ), 0.286 ) ) / t_0 + t_cretaceous_add;
+							if ( h.x[ 0 ][ j ][ k ] != 0. )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add;
 						}
 						else
 						{
@@ -654,7 +658,6 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 						}
 
 						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
-//						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ 0 ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
 					}
 				}
 			}
@@ -678,16 +681,15 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 				{
 					d_i = ( double ) i;
 					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
-//					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ 0 ][ j ][ k ] ) / d_i_max * d_i + t.x[ 0 ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
-//					t.x[ i ][ j ][ k ] = - 2.6 / t_0 * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, 0.65K/100m
 				}
 				else 		t.x[ i ][ j ][ k ] = t_tropopause;
 			}
+
 			for ( int i = i_trop - 1; i >= 0; i-- )
 			{
 				if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )				t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
-//				if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )				t.x[ i ][ j ][ k ] = t.x[ 0 ][ j ][ k ];
 			}
+
 		}
 	}
 }
@@ -878,20 +880,36 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, Array_2D &Vegetation, Array &h, Arr
 void BC_Thermo::TropopauseLocation ( int *im_tropopause )
 {
 // parabolic tropopause location distribution from pole to pole assumed
+	j_max = jm - 1;
 
 	j_half = ( jm -1 ) / 2;
+//	j_eq = 30;
+//	j_eq = 20;
+	j_eq = 60;
 
 	d_j_half = ( double ) j_half;
+	d_j_infl = 3./ 2. * ( double ) ( ( j_max * j_max - j_eq * j_eq ) / ( j_max - j_eq ) );
 
 	trop_co2_eff = ( double ) ( tropopause_pole - tropopause_equator );
-
+	int trop = 0.;
 // computation of the tropopause from pole to pole
 
-	for ( int j = 0; j < jm; j++ )
+	for ( int j = 0; j <= j_half; j++ )
 	{
 		d_j = ( double ) j;
-		im_tropopause[ j ] = ( trop_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) ) + tropopause_pole;
+//		im_tropopause[ j ] = ( trop_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) ) + tropopause_pole; // parabolic approach
+
+		trop = ( int ) ( - trop_co2_eff * ( d_j * d_j * d_j - d_j_infl *d_j * d_j ) / ( d_j_half * d_j_half * d_j_half - d_j_infl * d_j_half * d_j_half ) + ( double ) tropopause_pole );  // cubic approach
+		im_tropopause[ j ] = trop;
+
 	}
+
+	for ( int j = j_half + 1; j < jm; j++ )
+	{
+		im_tropopause[ j ] = im_tropopause[ j_max - j ];
+	}
+
+
 }
 
 
@@ -2944,6 +2962,8 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 		{
 			for ( int i = 0; i < im; i++ )
 			{
+				i_trop = im_tropopause[ j ];
+
 				t_u = t.x[ i ][ j ][ k ] * t_0;																		// in K
 
 				t_Celsius = t_u - t_0;																				// in C
@@ -3045,6 +3065,13 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 					if ( t_Celsius < t_Celsius_2 ) 										cloud.x[ i ][ j ][ k ] = 0.;
 					if ( t_Celsius > 0. ) 													ice.x[ i ][ j ][ k ] = 0.;
 
+					if ( i > i_trop )
+					{
+						c.x[ i ][ j ][ k ] = 0.;
+						cloud.x[ i ][ j ][ k ] = 0.;
+						ice.x[ i ][ j ][ k ] = 0.;
+					}
+
 					q_v_b = c.x[ i ][ j ][ k ];
 					q_c_b = cloud.x[ i ][ j ][ k ];
 					q_i_b = ice.x[ i ][ j ][ k ];
@@ -3103,7 +3130,8 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 						if ( ( q_c_b <= 0. ) && ( q_i_b <= 0. ) )					q_v_hyp = 0.;
 						else 																		q_v_hyp = ( q_c_b * q_Rain + q_i_b * q_Ice ) / ( q_c_b + q_i_b );
 
-						S_c_c.x[ i ][ j ][ k ] = .5 * d_q_c / dt_rain_dim;								// rate of condensating or evaporating water vapour to form cloud water, 0.5 by COSMO
+						S_c_c.x[ i ][ j ][ k ] = .5 * d_q_c / dt_rain_dim;								// rate of condensating or evaporating water vapour to form cloud water, 0.5 given by COSMO
+						if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 1. ) )				S_c_c.x[ i ][ j ][ k ] = 0.;
 
 						if ( ( iter_prec >= 3 ) && ( fabs ( q_v_b / q_v_hyp - 1. ) <= 1.e-5 ) )		break;
 
@@ -3115,6 +3143,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 					}																												// iter_prec end
 
 // above assumed tropopause constant temperature t_tropopause
+
 					if ( q_v_b <= 0. )	q_v_b = 0.;
 					if ( q_c_b <= 0. )	q_c_b = 0.;
 					if ( q_i_b <= 0. )		q_i_b = 0.;
@@ -3133,8 +3162,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 			}																													// end i
 		}																														// end j
 	}																															// end k
-
-
+/*
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -3147,6 +3175,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 			}
 		}
 	}
+*/
 }
 
 
@@ -3215,9 +3244,31 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 // besides the transport equation for the water vapour exists two equations for the cloud water and the cloud ice transport
 // since the diagnostic version of the code is applied the rain and snow mass transport is computed by column equilibrium integral equation
 
-	for ( int k = 1; k < km-1; k++ )
+
+	for ( int k = 0; k < km; k++ )
 	{
-		for ( int j = 1; j < jm-1; j++ )
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				if ( c.x[ i ][ j ][ k ] < 0. ) 											c.x[ i ][ j ][ k ] = 0.;
+				if ( cloud.x[ i ][ j ][ k ] < 0. ) 									cloud.x[ i ][ j ][ k ] = 0.;
+				if ( ice.x[ i ][ j ][ k ] < 0. ) 										ice.x[ i ][ j ][ k ] = 0.;
+				if ( P_rain.x[ i ][ j ][ k ] < 0. ) 										P_rain.x[ i ][ j ][ k ] = 0.;
+				if ( P_snow.x[ i ][ j ][ k ] < 0. ) 										P_snow.x[ i ][ j ][ k ] = 0.;
+			}
+		}
+	}
+
+
+
+//	for ( int k = 1; k < km-1; k++ )
+//	{
+//		for ( int j = 1; j < jm-1; j++ )
+//		{
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
 		{
 			P_rain.x[ im-1 ][ j ][ k ] = 0.;
 			P_snow.x[ im-1 ][ j ][ k ] = 0.;
@@ -3284,14 +3335,20 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 				S_r.x[ i ][ j ][ k ] = S_c_au;
 				S_s.x[ i ][ j ][ k ] = S_i_au;
 
-				if ( h.x[ i ][ j ][ k ] == 1. )
+				if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 1. ) )
 				{
 					S_r.x[ i ][ j ][ k ] = 0.;
 					S_s.x[ i ][ j ][ k ] = 0.;
 				}
 
+				if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )									P_rain.x[ i + 1 ][ j ][ k ] = 0.;
+				if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )									P_snow.x[ i + 1 ][ j ][ k ] = 0.;
+
 				P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
 				P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
+
+				if ( P_rain.x[ i ][ j ][ k ] < 0. ) 											P_rain.x[ i ][ j ][ k ] = 0.;
+				if ( P_snow.x[ i ][ j ][ k ] < 0. ) 										P_snow.x[ i ][ j ][ k ] = 0.;
 			}
 		}
 	}
@@ -3304,9 +3361,13 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 		{
 			iter_prec = iter_prec + 1;
 
-			for ( int k = 1; k < km-1; k++ )
+//			for ( int k = 1; k < km-1; k++ )
+//			{
+//				for ( int j = 1; j < jm-1; j++ )
+//				{
+			for ( int k = 0; k < km; k++ )
 			{
-				for ( int j = 1; j < jm-1; j++ )
+				for ( int j = 0; j < jm; j++ )
 				{
 					P_rain.x[ im-1 ][ j ][ k ] = 0.;
 					P_snow.x[ im-1 ][ j ][ k ] = 0.;
@@ -3437,34 +3498,41 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 						}
 						else 																	S_s_melt = 0.;
 
-					if ( t_r_frz -  t_u > 0. ) 											S_r_frz = c_r_frz * pow ( ( t_r_frz -  t_u ), ( 3. / 2. ) ) * pow ( P_rain.x[ i ][ j ][ k ], ( 3. / 2. ) );
-					else 																		S_r_frz = 0.;
+						if ( t_r_frz -  t_u > 0. ) 											S_r_frz = c_r_frz * pow ( ( t_r_frz -  t_u ), ( 3. / 2. ) ) * pow ( P_rain.x[ i ][ j ][ k ], ( 3. / 2. ) );
+						else 																		S_r_frz = 0.;
 
 
 // sinks and sources
-					S_v.x[ i ][ j ][ k ] = - S_c_c.x[ i ][ j ][ k ] + S_ev - S_i_dep - S_s_dep - S_nuc;
-					S_c.x[ i ][ j ][ k ] = S_c_c.x[ i ][ j ][ k ] - S_c_au - S_ac - S_c_frz + S_i_melt - S_rim - S_shed;
-					S_i.x[ i ][ j ][ k ] = S_nuc + S_c_frz + S_i_dep - S_i_melt - S_i_au - S_d_au - S_agg - S_i_cri;
-					S_r.x[ i ][ j ][ k ] = S_c_au + S_ac - S_ev + S_shed - S_r_cri - S_r_frz + S_s_melt;
-					S_s.x[ i ][ j ][ k ] = S_i_au + S_d_au + S_agg + S_rim + S_s_dep + S_i_cri + S_r_cri + S_r_frz - S_s_melt;
+						S_v.x[ i ][ j ][ k ] = - S_c_c.x[ i ][ j ][ k ] + S_ev - S_i_dep - S_s_dep - S_nuc;
+						S_c.x[ i ][ j ][ k ] = S_c_c.x[ i ][ j ][ k ] - S_c_au - S_ac - S_c_frz + S_i_melt - S_rim - S_shed;
+						S_i.x[ i ][ j ][ k ] = S_nuc + S_c_frz + S_i_dep - S_i_melt - S_i_au - S_d_au - S_agg - S_i_cri;
+						S_r.x[ i ][ j ][ k ] = S_c_au + S_ac - S_ev + S_shed - S_r_cri - S_r_frz + S_s_melt;
+						S_s.x[ i ][ j ][ k ] = S_i_au + S_d_au + S_agg + S_rim + S_s_dep + S_i_cri + S_r_cri + S_r_frz - S_s_melt;
+
+						if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 1. ) )
+						{
+							S_c_c.x[ i ][ j ][ k ] = 0.;
+							S_v.x[ i ][ j ][ k ] = 0.;
+							S_c.x[ i ][ j ][ k ] = 0.;
+							S_i.x[ i ][ j ][ k ] = 0.;
+							S_r.x[ i ][ j ][ k ] = 0.;
+							S_s.x[ i ][ j ][ k ] = 0.;
+						}
 
 
 // rain and snow integration
-					if ( h.x[ i ][ j ][ k ] == 1. )
-					{
-						S_r.x[ i ][ j ][ k ] = 0.;
-						S_s.x[ i ][ j ][ k ] = 0.;
-					}
+						if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )												P_rain.x[ i + 1 ][ j ][ k ] = 0.;
+						if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )												P_snow.x[ i + 1 ][ j ][ k ] = 0.;
+	
+						P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
+						P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
 
-					P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
-					P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
+						if ( P_rain.x[ i ][ j ][ k ] < 0. )														P_rain.x[ i ][ j ][ k ] = 0.;
+						if ( P_snow.x[ i ][ j ][ k ] < 0. )													P_snow.x[ i ][ j ][ k ] = 0.;
 
-					if ( P_rain.x[ i ][ j ][ k ] < 0. )										P_rain.x[ i ][ j ][ k ] = 0.;
-					if ( P_snow.x[ i ][ j ][ k ] < 0. )										P_snow.x[ i ][ j ][ k ] = 0.;
-
-					if ( c.x[ i ][ j ][ k ] < 0. ) 											c.x[ i ][ j ][ k ] = 0.;
-					if ( cloud.x[ i ][ j ][ k ] < 0. ) 										cloud.x[ i ][ j ][ k ] = 0.;
-					if ( ice.x[ i ][ j ][ k ] < 0. ) 											ice.x[ i ][ j ][ k ] = 0.;
+						if ( c.x[ i ][ j ][ k ] < 0. ) 											c.x[ i ][ j ][ k ] = 0.;
+						if ( cloud.x[ i ][ j ][ k ] < 0. ) 									cloud.x[ i ][ j ][ k ] = 0.;
+						if ( ice.x[ i ][ j ][ k ] < 0. ) 										ice.x[ i ][ j ][ k ] = 0.;
 					}																					// end i RainSnow
 				}																						// end j
 			}																							// end k

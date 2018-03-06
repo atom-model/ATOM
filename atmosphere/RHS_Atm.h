@@ -31,7 +31,7 @@ class RHS_Atmosphere
 		double re, pr, ec, sc_WaterVapour, sc_CO2, g, WaterVapour, Buoyancy, CO2, lambda;
 		double E_Rain_SL, E_Rain, E_Rain_super, E_Ice;
 		double e_SL, a_SL, p_SL, q_SL, t_tau_SL, t_Celsius_SL;
-		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, t_Celsius_ni, t_Celsius_pi, t_Celsius_nj, t_Celsius_pj, t_Celsius_nk, t_Celsius_pk, dp_hdr, dp_hdthe, dp_hdphi;
+		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, dp_hdr, dp_hdthe, dp_hdphi;
 		double h_level, h_h, sat_Deficit, RF_e, RF_c, Evaporation_Haude;
 		double a2, dt2, dr2, dthe2, dphi2, rm2;
 		double kr1, kr2, kthe1, kthe2, rm, c43, c13;
