@@ -893,26 +893,27 @@ void BC_Thermo::TropopauseLocation ( int *im_tropopause )
 
 	trop_co2_eff = ( double ) ( tropopause_pole - tropopause_equator );
 
-	double trop = 0;
+//	double trop = 0;
 
 // computation of the tropopause from pole to pole
 
-	for ( int j = 0; j <= j_half; j++ )
+//	for ( int j = 0; j <= j_half; j++ )
+	for ( int j = 0; j < jm; j++ )
 	{
 		d_j = ( double ) j;
-//		im_tropopause[ j ] = ( trop_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) ) + tropopause_pole; // parabolic approach
+		im_tropopause[ j ] = ( trop_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) ) + tropopause_pole; // parabolic approach
 
-		trop = ( - trop_co2_eff * ( d_j * d_j * d_j - d_j_infl *d_j * d_j ) / ( d_j_half * d_j_half * d_j_half - d_j_infl * d_j_half * d_j_half ) + ( double ) tropopause_pole );  // cubic approach
+//		trop = ( - trop_co2_eff * ( d_j * d_j * d_j - d_j_infl *d_j * d_j ) / ( d_j_half * d_j_half * d_j_half - d_j_infl * d_j_half * d_j_half ) + ( double ) tropopause_pole );  // cubic approach
 
-		im_tropopause[ j ] = ( int ) trop;
+//		im_tropopause[ j ] = ( int ) trop;
 	}
-
+/*
 	for ( int j = j_half + 1; j < jm; j++ )
 	{
 		im_tropopause[ j ] = im_tropopause[ j_max - j ];
 
 	}
-
+*/
 //	cout << "    j = " << j << "    trop_co2_eff = " << trop_co2_eff << "    j_infl = " << j_infl << "    d_j_half = " << d_j_half << "    d_j_infl = " << d_j_infl << "    d_j = " << d_j << "    trop = " << trop << "    im_tropopause = " << im_tropopause[ j ] << endl;
 }
 
