@@ -47,6 +47,7 @@ def main():
 #            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 22 steps = 8800 m', 'int', 22 ),
 #            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 38 steps = 15200 m', 'int', 38 ),
             ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 22 steps = 8800 m', 'int', 22 ),
+#            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 35 steps = 14000 m', 'int', 35 ),
             ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 30 ),
 #            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 18 steps = 7200 m', 'int', 18 ),
 
@@ -112,9 +113,8 @@ def main():
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.0001 ),
 #            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.52 ),
 #            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
-            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.60 ),
-#            ( 'c_ocean', 'water vapour reduction on sea surface ( 68% of the saturation value )', 'double', 0.68 ),
-            ( 'c_ocean', 'water vapour reduction on sea surface ( 68% of the saturation value )', 'double', 0.60 ),
+            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.55 ),
+            ( 'c_ocean', 'water vapour reduction on sea surface ( 68% of the saturation value )', 'double', 0.53 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),

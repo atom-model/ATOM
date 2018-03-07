@@ -49,6 +49,8 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 	this-> g = g;
 	this-> pr = pr;
 	this-> gam = gam;
+	this-> WaterVapour = WaterVapour;
+	this-> Buoyancy = Buoyancy;
 	this-> CO2 = CO2;
 	this-> sigma = sigma;
 

@@ -776,28 +776,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //	Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
 	circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, h, c, t, p_stat, cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
-/*
-	cout << endl << " ***** after Two_Category_Ice_Scheme printout of 3D-field S_v ***** " << endl << endl;
-	S_v.printArray( im, jm, km );
 
-	cout << endl << " ***** after Two_Category_Ice_Scheme printout of 3D-field S_c ***** " << endl << endl;
-	S_c.printArray( im, jm, km );
-
-	cout << endl << " ***** after Two_Category_Ice_Scheme printout of 3D-field S_i ***** " << endl << endl;
-	S_i.printArray( im, jm, km );
-
-	cout << endl << " ***** after Two_Category_Ice_Scheme printout of 3D-field S_r ***** " << endl << endl;
-	S_r.printArray( im, jm, km );
-
-	cout << endl << " ***** after Two_Category_Ice_Scheme printout of 3D-field S_s ***** " << endl << endl;
-	S_s.printArray( im, jm, km );
-
-	cout << endl << " ***** after Two_Category_Ice_Scheme printout of 3D-field P_rain ***** " << endl << endl;
-	P_rain.printArray( im, jm, km );
-
-	cout << endl << " ***** after Two_Category_Ice_Scheme printout of 3D-field P_snow ***** " << endl << endl;
-	P_snow.printArray( im, jm, km );
-*/
 //	goto Printout;
 
 
