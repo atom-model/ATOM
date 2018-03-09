@@ -318,6 +318,22 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	}
 
 
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				if ( c.x[ i ][ j ][ k ] < 0. ) 																		c.x[ i ][ j ][ k ] = 0.;
+				if ( cloud.x[ i ][ j ][ k ] < 0. ) 																cloud.x[ i ][ j ][ k ] = 0.;
+				if ( ice.x[ i ][ j ][ k ] < 0. ) 																	ice.x[ i ][ j ][ k ] = 0.;
+				if ( P_rain.x[ i ][ j ][ k ] < 0. ) 																P_rain.x[ i ][ j ][ k ] = 0.;
+				if ( P_snow.x[ i ][ j ][ k ] < 0. ) 															P_snow.x[ i ][ j ][ k ] = 0.;
+			}
+		}
+	}
+
+
 
 // surface values of Evaporation, Condensation, Water, Water_super, IceAir, precipitable_water only for radial printout
 	precipitable_water.y[ 0 ][ 0 ] = 0.;

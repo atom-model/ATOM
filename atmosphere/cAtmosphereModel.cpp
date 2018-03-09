@@ -364,7 +364,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 
 //  class element for the surface temperature based on NASA temperature for progressing timeslices
-//	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
+	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
 
 
 //  class element for the surface precipitation from NASA for comparison
@@ -519,11 +519,21 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
 			boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
 
+//	cout << endl << " ***** before Ice printout of 3D-field temperature ***** " << endl << endl;
+//	t.printArray( im, jm, km );
+
+
 //		Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
 			if ( velocity_iter == velocity_n )		circulation.Ice_Water_Saturation_Adjustment ( im_tropopause, n, velocity_iter_max, RadiationModel, h, c, cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
 
+//	cout << endl << " ***** after Ice printout of 3D-field temperature ***** " << endl << endl;
+//	t.printArray( im, jm, km );
+
 // 		class RungeKutta for the solution of the differential equations describing the flow properties
 			result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, r_water, r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, rhs_cloud, rhs_ice, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography );
+
+//	cout << endl << " ***** before RK printout of 3D-field temperature ***** " << endl << endl;
+//	t.printArray( im, jm, km );
 
 //	class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 			LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
@@ -761,7 +771,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-		if ( pressure_iter == 1 ) 			startPressure.computePressure_3D ( pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+//		if ( pressure_iter == 1 ) 			startPressure.computePressure_3D ( pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+		startPressure.computePressure_3D ( pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
 
 
 
@@ -795,6 +806,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	writing of data in ParaView files
 //	radial data along constant hight above ground
 	int i_radial = 0;
+//	int i_radial = 10;
 	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation, Topography, temp_NASA, temp_NASA_diff, temp_pot, temp_pot_diff );
 
 //	londitudinal data along constant latitudes
