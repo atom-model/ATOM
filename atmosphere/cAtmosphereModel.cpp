@@ -336,10 +336,13 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	int Ma_prev;
 	double t_cretaceous_prev;
 
-	if ( Ma == 0 ){
+	if ( Ma == 0 )
+	{
 		Ma_prev = 0;
 		t_cretaceous_prev = 0.;
-	}else{
+	}
+	else
+	{
 		Ma_prev = Ma - Ma_step;
 	}
 

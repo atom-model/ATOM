@@ -124,6 +124,17 @@ BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int tropopau
 	cout.precision ( 8 );
 	cout.setf ( ios::fixed );
 
+// array "temp_tropopause" for a variable temperature distribution along the tropopause
+	temp_tropopause = 0L;
+
+	temp_tropopause = new double[ jm ];
+
+	for ( int l = 0; l < jm; l++ )
+	{
+		temp_tropopause[ l ] = 0;
+	}
+
+
 // array "jm_temp_asym" for configuring data due to latitude dependent tropopause
 	jm_temp_asym = 0L;
 
@@ -353,7 +364,8 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 //				epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_trop ][ j ][ k ];
 				epsilon_3D.x[ i ][ j ][ k ] = 0.;
 //				radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_trop ][ j ][ k ];
-				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. );
+//				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. );
+				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( temp_tropopause[ j ] * t_0, 4. );
 			}
 		}
 	}
@@ -381,7 +393,8 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 				i_mount = i_topography[ j ][ k ];
 
 //				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
-				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+//				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( temp_tropopause[ j ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 				radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );		// back radiation absorbed from the first water vapour layer out of 40
  
@@ -479,7 +492,8 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 				}
 
 //				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // dimensional form of the radiation leaving the last layer
-				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+//				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( temp_tropopause[ j ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 // recurrence formula for the radiation and temperature
 				for ( int i = i_trop - 1; i >= i_mount; i-- )
@@ -665,6 +679,21 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 	}
 
 
+// zonal temperature along tropopause
+	t_tropopause_pole = - 4.;								// temperature reduction at poles in°C
+	t_tropopause_pole = t_tropopause + t_tropopause_pole / t_0;
+
+	t_eff_tropo = t_tropopause_pole - t_tropopause;
+
+	for ( int j = 0; j < jm; j++ )
+	{
+			d_j = ( double ) j;
+			temp_tropopause[ j ] =  t_eff_tropo * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_tropopause_pole;
+	}
+
+
+
+
 // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
 	for ( int j = 0; j < jm; j++ )
 	{
@@ -680,9 +709,11 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 				if ( i <= i_trop )
 				{
 					d_i = ( double ) i;
-					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+//					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
+					t.x[ i ][ j ][ k ] = ( temp_tropopause[ j ] - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
 				}
-				else 		t.x[ i ][ j ][ k ] = t_tropopause;
+//				else 		t.x[ i ][ j ][ k ] = t_tropopause;
+				else 		t.x[ i ][ j ][ k ] = temp_tropopause[ j ];
 			}
 
 			for ( int i = i_trop - 1; i >= 0; i-- )
@@ -893,24 +924,25 @@ void BC_Thermo::TropopauseLocation ( int *im_tropopause )
 
 	trop_co2_eff = ( double ) ( tropopause_pole - tropopause_equator );
 
-//	double trop = 0;
+//	double trop = 0;  // cubic approach
 
 // computation of the tropopause from pole to pole
 
-//	for ( int j = 0; j <= j_half; j++ )
-	for ( int j = 0; j < jm; j++ )
+//	for ( int j = 0; j <= j_half; j++ )  // cubic approach
+	for ( int j = 0; j < jm; j++ ) // parabolic approach
 	{
 		d_j = ( double ) j;
-		im_tropopause[ j ] = ( trop_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) ) + tropopause_pole; // parabolic approach
+//		im_tropopause[ j ] = ( trop_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) ) + tropopause_pole; // parabolic approach
+		im_tropopause[ j ] = tropopause_equator; // constant approach
 
 //		trop = ( - trop_co2_eff * ( d_j * d_j * d_j - d_j_infl *d_j * d_j ) / ( d_j_half * d_j_half * d_j_half - d_j_infl * d_j_half * d_j_half ) + ( double ) tropopause_pole );  // cubic approach
 
-//		im_tropopause[ j ] = ( int ) trop;
+//		im_tropopause[ j ] = ( int ) trop;  // cubic approach
 	}
 /*
-	for ( int j = j_half + 1; j < jm; j++ )
+	for ( int j = j_half + 1; j < jm; j++ )  // cubic approach
 	{
-		im_tropopause[ j ] = im_tropopause[ j_max - j ];
+		im_tropopause[ j ] = im_tropopause[ j_max - j ];  // cubic approach
 
 	}
 */
@@ -3148,8 +3180,6 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 						q_c_b = .5 * ( cloud.x[ i ][ j ][ k ] + q_c_b );
 						q_i_b = .5 * ( ice.x[ i ][ j ][ k ] + q_i_b );
 					}																												// iter_prec end
-
-// above assumed tropopause constant temperature t_tropopause
 
 					if ( q_v_b <= 0. )	q_v_b = 0.;
 					if ( q_c_b <= 0. )	q_c_b = 0.;
