@@ -8,7 +8,7 @@ def main():
     # name, description, datatype, default
     PARAMS = {
         'common': [
-            ( 'bathymetry_path', '', 'string', '../data/Paleotopography_bathymetry/Golonka_rev210' ),
+            ( 'bathymetry_path', '', 'string', '/home/mchin/workspaces/ATOM/smoothed_Paleotopography_bathymetry_Golonka_rev210' ),
             ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
             ( 'verbose', '', 'bool', False ),
 #            ( 'verbose', '', 'bool', True ),

@@ -3,6 +3,7 @@
 #include "cAtmosphereModelEx.h"
 
 #include <fstream>
+#include <fenv.h>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -127,6 +128,8 @@ cAtmosphereModel::cAtmosphereModel():
         std::cout.rdbuf(&ps);
     }
 
+    m_log_file.open("mchin.log");
+
     im_tropopause = new int [ jm ];
 
     // If Ctrl-C is pressed, quit
@@ -206,6 +209,7 @@ void cAtmosphereModel::LoadConfig ( const char *filename ) {
 
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
+    //feenableexcept(FE_INVALID | FE_OVERFLOW);
     // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
     // maximum number of overall iterations ( n )
     // maximum number of inner velocity loop iterations ( velocity_iter_max )
@@ -1103,11 +1107,22 @@ void cAtmosphereModel::PrintMaxMinValues() {
 }
 
 void cAtmosphereModel::PrintDebug(const string &msg ) const{
-    std::cout << std::endl << std::endl <<  "debug info: " << msg << std::endl;
-    std::cout << "temperature: " << (t.min_2D()-1)*t_0 << "  "<<GetMeanTemperature() <<"  "<<(t.max_2D()-1)*t_0<<std::endl;
-    std::cout << "water vapour " << c.min() << "  " << c.mean() << "  " << c.max() << std::endl;
-    std::cout << "p_stat " << p_stat.min() << "  " << p_stat.mean() << "  " << p_stat.max() << std::endl;
-    std::cout << "cloud " << cloud.min() << "  " << cloud.mean() << "  " << cloud.max() << std::endl;
-    std::cout << "ice " << ice.min() << "  " << ice.mean() << "  " << ice.max() << std::endl << std::endl << std::endl;
+    m_log_file << std::endl <<  "debug info: " << msg << std::endl;
+    m_log_file << "Ma: " << *get_current_time()<<std::endl;
+    m_log_file << "temperature: " << (t.min_2D()-1)*t_0 << "  "<<GetMeanTemperature() <<"  "<<(t.max_2D()-1)*t_0<<std::endl;
+    m_log_file << "temperature_3d: " << (t.min()-1)*t_0 << "  "<<(t.mean()-1)*t_0<<"  "<<(t.max()-1)*t_0<<std::endl;
+    m_log_file << "water vapour: " << c.min() << "  " << c.mean() << "  " << c.max() << std::endl;
+    m_log_file << "p_stat: " << p_stat.min() << "  " << p_stat.mean() << "  " << p_stat.max() << std::endl;
+    m_log_file << "cloud: " << cloud.min() << "  " << cloud.mean() << "  " << cloud.max() << std::endl;
+    m_log_file << "ice: " << ice.min() << "  " << ice.mean() << "  " << ice.max() << std::endl;
+    m_log_file << "CO2: " << co2.min() << "  " << co2.mean() << "  " << co2.max() << std::endl;
+    m_log_file << "u: " << u.min() << "  " << u.mean() << "  " << u.max() << std::endl;
+    m_log_file << "v: " << v.min() << "  " << v.mean() << "  " << v.max() << std::endl;
+    m_log_file << "w: " << w.min() << "  " << w.mean() << "  " << w.max() << std::endl;
+    m_log_file << "S_c: " << S_c.min() << "  " << S_c.mean() << "  " << S_c.max() << std::endl;
+    m_log_file << "S_r: " << S_r.min() << "  " << S_r.mean() << "  " << S_r.max() << std::endl;
+    if(t.has_nan()){
+        m_log_file << "temperature contains nan!" << std::endl;
+    }
 }
 #endif

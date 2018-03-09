@@ -4,7 +4,7 @@
 # In[1]:
 
 
-import sys
+import sys, random
 sys.path.append('./grid_reconstruction')
 
 import pygplates
@@ -146,9 +146,9 @@ def reconstruct_grid(
     
     for line in new_data:
         if line[2] > 40:
-            line[2] = 40
+            line[2] = 40 + random.randint(-100,100)/100.
         if line[2] < -60:
-            line[2] = -60
+            line[2] = -60 + random.randint(-100,100)/100.
     
     os.system('rm '+ new_ascii_grid_file)       
     write_xyz_file(new_ascii_grid_file, new_data)

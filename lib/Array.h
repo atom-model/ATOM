@@ -174,6 +174,19 @@ public:
         }
         return ret/(jm*km);
     }
+
+    bool has_nan() const{
+        for ( int i = 0; i < im; i++ ){
+            for ( int j = 0; j < jm; j++ ){
+                for ( int k = 0; k < km; k++ ){
+                    if(isnan(x[ i ][ j ][ k ])){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 };
 
 inline Array operator* (double coeff, const Array &a){

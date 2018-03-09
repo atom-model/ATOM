@@ -5,6 +5,7 @@
 #include <set>
 #include <map>
 #include <vector>
+#include <fstream>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -85,6 +86,8 @@ private:
     
     PythonStream ps;
     std::streambuf *backup;
+
+    mutable std::ofstream m_log_file;    
 
     std::set<int> m_time_list;
     std::set<int>::const_iterator m_current_time;
