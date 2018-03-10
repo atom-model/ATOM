@@ -2,8 +2,10 @@
 #define CATMOSPHEREMODEL_H
 
 #include <string>
+#include <vector>
 
 #include "tinyxml2.h"
+#include "Array.h"
 
 using namespace std;
 using namespace tinyxml2;
@@ -24,6 +26,10 @@ public:
 
 private:
     void SetDefaultConfig();
+
+    std::vector<std::vector<double> > m_node_weights;
+    float GetMeanTemperature(int jm, int km, Array &t);
+    void CalculateNodeWeights(int jm, int km);
 };
 
 #endif
