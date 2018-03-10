@@ -33,6 +33,8 @@
 using namespace std;
 using namespace tinyxml2;
 
+cAtmosphereModel *cAtmosphereModel::m_model = NULL;
+
 const double cAtmosphereModel::pi180 = 180./ M_PI;      // pi180 = 57.3
 
 const double cAtmosphereModel::the_degree = 1.;         // compares to 1° step size laterally
@@ -128,6 +130,8 @@ cAtmosphereModel::cAtmosphereModel():
         std::cout.rdbuf(&ps);
     }
 
+    m_model = this;
+    
     m_log_file.open("mchin.log");
 
     im_tropopause = new int [ jm ];
@@ -549,10 +553,8 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
        
         //pressure from the Euler equation ( 2. order derivatives of the pressure by 
         //adding the Poisson right hand sides )
-        if ( p_iter == 1 ){
-            startPressure.computePressure_3D(pa, rad, the, p_dyn, p_dynn, h, rhs_u,
+        startPressure.computePressure_3D(pa, rad, the, p_dyn, p_dynn, h, rhs_u,
                                              rhs_v, rhs_w, aux_u, aux_v, aux_w );
-        }
 
         PrintDebug("Before second circulation.Two_Category_Ice_Scheme");
         //Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 

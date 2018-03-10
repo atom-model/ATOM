@@ -61,7 +61,12 @@ public:
 
     void PrintDebug(const string&) const;
 
+    static cAtmosphereModel* GetModel(){
+        return m_model;
+    }
 private:
+    static cAtmosphereModel *m_model;
+
     void SetDefaultConfig();
     void Reset();
     void WriteFile(int n, std::string &bathymetry_name, string& filepath);

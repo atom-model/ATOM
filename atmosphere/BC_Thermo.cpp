@@ -16,6 +16,10 @@
 #include <iomanip>
 #include <algorithm>
 
+#ifdef mchin_dev
+#include "cAtmosphereModelEx.h"
+#endif
+
 #include "BC_Thermo.h"
 #include "Array.h"
 #include "Array_2D.h"
@@ -549,8 +553,13 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 	t_cretaceous = t_cretaceous / t_0;  								 // non-dimensional
 	t_cretaceous_add = t_cretaceous - t_cretaceous_prev; // non-dimensional
 
-std::cout<< "t_cretaceous_add: " << t_cretaceous_add*t_0 << std::endl;
-
+#ifdef mchin_dev
+    cAtmosphereModel *m = cAtmosphereModel::GetModel();
+    t_cretaceous = m->GetMeanTemperatureFromCurve(*m->get_current_time());
+    t_cretaceous_prev = m->GetMeanTemperatureFromCurve(*m->get_previous_time());
+    t_cretaceous_add = (t_cretaceous - t_cretaceous_prev) / t_0;
+    std::cout<< "t_cretaceous_add: " << t_cretaceous_add*t_0 <<"  "<<*m->get_current_time() <<"  " << *m->get_previous_time()<<std::endl;
+#endif
 	// temperatur distribution at aa prescribed sun position
 	// sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
 	// sun_position_lon = 180, position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
@@ -785,6 +794,12 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, Array_2D &Vegetation, Array &h, Arr
 	t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
 	t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
 	if ( Ma == 0 ) 	t_cretaceous = 0.;
+
+#ifdef mchin_dev
+    cAtmosphereModel *m = cAtmosphereModel::GetModel();
+    t_cretaceous = m->GetMeanTemperatureFromCurve(*m->get_current_time()) / t_0;
+    std::cout<< "t_cretaceous in BC_CO2: " << t_cretaceous*t_0 << std::endl;
+#endif
 
 // CO2-distribution by Ruddiman approximated by a parabola
 	co2_cretaceous = 3.2886 * pow ( ( t_cretaceous + t_average ), 2 ) - 32.8859 * ( t_cretaceous + t_average ) + 102.2148;  // in ppm
