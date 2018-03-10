@@ -66,10 +66,10 @@ class BC_Thermo
 		double r_dry, r_humid, p_SL, t_SL, exp_pressure, hight;
 		double t_u, t_Celsius_SL, t_dew, t_dew_SL, T, T_nue, T_it, q_T, q_Rain_n;
 		double q_v_b, q_c_b, q_i_b, q_v_hyp, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
-		double t_equator, t_tropopause, t_eff, t_pole, c_equator, c_tropopause, coeff_mmWS;
+		double t_equator, t_tropopause, t_eff, t_pole, t_eff_tropo, t_tropopause_pole, c_equator, c_tropopause, coeff_mmWS;
 		double co2_tropopause, co2_eff, co2_coeff, co_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous, co2_factor;
 		double *AA, **CC, CCC, DDD;
-		double *jm_temp_asym, *alfa, *beta;
+		double *jm_temp_asym, *alfa, *beta, *temp_tropopause;
 
 		double S_c_c, S_au, S_nuc, S_ac, S_rim, S_shed, S_ev, S_dep, S_i_dep, S_melt, S_if_frz, S_cf_frz, S_r_frz, S_c_frz, S_c_au, S_i_au, S_d_au, S_agg, S_i_cri, S_r_cri, S_s_dep, S_i_melt, S_s_melt;
 		double S_v, S_c, S_i, S_r, S_s, P_rain_n, P_snow_n, P_rain_n_o, P_snow_n_o;

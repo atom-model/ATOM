@@ -11,7 +11,6 @@ def main():
             ( 'bathymetry_path', '', 'string', '/home/mchin/workspaces/ATOM/smoothed_Paleotopography_bathymetry_Golonka_rev210' ),
             ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
             ( 'verbose', '', 'bool', False ),
-#            ( 'verbose', '', 'bool', True ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
             ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
             ( 'precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
@@ -36,7 +35,6 @@ def main():
 
             ( 'sun', 'while no variable sun position wanted', 'int', 0 ),
             ( 'NASATemperature', 'surface temperature given by NASA', 'int', 1 ),
-#            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 0 ),
             ( 'RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1 ),
 
             ( 'declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0 ),
@@ -47,18 +45,11 @@ def main():
             ( 'Ma_max_half', 'half of time scale', 'int', 150 ),
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
-#            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 28 steps = 11200 m', 'int', 28 ),
-#            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 22 steps = 8800 m', 'int', 22 ),
-#            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 38 steps = 15200 m', 'int', 38 ),
             ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 22 steps = 8800 m', 'int', 22 ),
-#            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 35 steps = 14000 m', 'int', 35 ),
             ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 30 ),
-#            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 18 steps = 7200 m', 'int', 18 ),
 
-#            ( 'rad_equator', 'long wave radiation on the surface of the earth, fitted to NASA temperature', 'double', 320. ),
-#            ( 'rad_pole', 'long wave radiation at the poles, an approximation for the singularity at the poles', 'double', 60. ),
             ( 'rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 300. ),
-            ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 100. ),
+            ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 10. ),
 
             ( 'sigma', 'Stefan-Boltzmann constant W/( m²*K4 )', 'double', 5.670280e-8 ),
 
@@ -114,10 +105,8 @@ def main():
             ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.007322 ),
 
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.0001 ),
-#            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.52 ),
-#            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
-            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.55 ),
-            ( 'c_ocean', 'water vapour reduction on sea surface ( 68% of the saturation value )', 'double', 0.53 ),
+            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
+            ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.55 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),
