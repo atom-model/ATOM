@@ -47,15 +47,6 @@ cAtmosphereModel::cAtmosphereModel() {
     // set default configuration
     SetDefaultConfig();
 
-
-
-//#include "PythonStream.h"
-//	PythonStream buff;
-//	std::ostream RogerStream ( &buff );
-//	RogerStream << 1000;
-//	RogerStream.flush();
-
-
 }
 
 
