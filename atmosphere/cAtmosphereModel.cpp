@@ -355,6 +355,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 	circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 
+    std::cout << "Mean Temperature: " << GetMeanTemperature(jm, km, t) << std::endl;
+
 //  class element for the surface temperature based on NASA temperature for progressing timeslices
 	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
 
@@ -996,3 +998,41 @@ void cAtmosphereModel::Run() {
 	delete [ ] time_slice;
 
 }
+
+
+float cAtmosphereModel::GetMeanTemperature(int jm, int km, Array &t) 
+{
+    if(m_node_weights.size() != (unsigned)jm)
+    {
+        CalculateNodeWeights(jm, km);
+    }
+    double ret=0., weight=0.;
+    for(int j=0; j<jm; j++){
+        for(int k=0; k<km; k++){
+            //std::cout << (t.x[0][j][k]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
+            ret+=t.x[0][j][k]*m_node_weights[j][k];
+            weight+=m_node_weights[j][k];
+        }
+    }
+    return (ret/weight-1)*t_0;
+}
+
+
+void cAtmosphereModel::CalculateNodeWeights(int jm, int km)
+{
+    //use cosine of latitude as weights for now
+    //longitudes: 0-360(km) latitudes: 90-(-90)(jm)
+    double weight = 0.;
+    m_node_weights.clear();
+    for(int i=0; i<jm; i++){
+        if(i<=90){
+            weight = cos((90-i) * M_PI / 180.0 );
+        }else{
+            weight = cos((i-90) * M_PI / 180.0 );
+        }
+        m_node_weights.push_back(std::vector<double>());
+        m_node_weights[i].resize(km, weight);
+    }
+    return;
+}
+
