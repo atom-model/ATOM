@@ -653,12 +653,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			minmaxPrecipitation.searchMinMax_2D ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, Precipitation, h );
 			double max_Precipitation = minmaxPrecipitation.out_maxValue (  );
 
-//	searching of maximum and minimum values of NASA precipitation
-			string str_max_precipitation = " max precipitation_NASA ", str_min_precipitation = " min precipitation_NASA ", str_unit_precipitation = "mm";
-			MinMax	minmaxPrecipitation_NASA ( jm, km, coeff_mmWS );
-			minmaxPrecipitation_NASA.searchMinMax_2D ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, precipitation_NASA, h );
-
-
 //	searching of maximum and minimum values of precipitable water
 			string str_max_precipitable_water = " max precipitable water ", str_min_precipitable_water = " min precipitable water ", str_unit_precipitable_water = "mm";
 			MinMax_Atm		minmaxPrecipitable_water ( jm, km, coeff_mmWS );
