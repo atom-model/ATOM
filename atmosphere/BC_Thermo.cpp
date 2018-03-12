@@ -361,10 +361,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 
 			for ( int i = i_trop + 1; i < im; i++ )
 			{
-//				epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_trop ][ j ][ k ];
 				epsilon_3D.x[ i ][ j ][ k ] = 0.;
-//				radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_trop ][ j ][ k ];
-//				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. );
 				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( temp_tropopause[ j ] * t_0, 4. );
 			}
 		}
@@ -382,18 +379,14 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 		iter_rad = iter_rad + 1;
 
 // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
-//		for ( int j = 1; j < jm-1; j++ )
 		for ( int j = 0; j < jm; j++ )
 		{
 			i_trop = im_tropopause[ j ];
 
-//			for ( int k = 1; k < km-1; k++ )
 			for ( int k = 0; k < km; k++ )
 			{
 				i_mount = i_topography[ j ][ k ];
 
-//				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
-//				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( temp_tropopause[ j ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 				radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );		// back radiation absorbed from the first water vapour layer out of 40
@@ -491,8 +484,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 					}
 				}
 
-//				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // dimensional form of the radiation leaving the last layer
-//				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t_tropopause * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( temp_tropopause[ j ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 // recurrence formula for the radiation and temperature
@@ -946,7 +937,6 @@ void BC_Thermo::TropopauseLocation ( int *im_tropopause )
 
 	}
 */
-//	cout << "    j = " << j << "    trop_co2_eff = " << trop_co2_eff << "    j_infl = " << j_infl << "    d_j_half = " << d_j_half << "    d_j_infl = " << d_j_infl << "    d_j = " << d_j << "    trop = " << trop << "    im_tropopause = " << im_tropopause[ j ] << endl;
 }
 
 
@@ -966,7 +956,8 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 // do not change the velocity initial conditions !!
 
 // velocity assumptions at the equator 0°
-	ua_00 = 0.1;																				// in m/s compares to 1.08 km/h, non-dimensionalized by u_0 at the end of this class elemen
+//	ua_00 = 0.1;																				// in m/s compares to 1.08 km/h, non-dimensionalized by u_0 at the end of this class elemen
+	ua_00 = 1.;																				// in m/s compares to 1.08 km/h, non-dimensionalized by u_0 at the end of this class elemen
 
 	va_equator_SL =  0.000;
 	va_equator_Tropopause = 0.000;
@@ -975,7 +966,8 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 	wa_equator_Tropopause = - 7.5;
 
 // velocity assumptions for latitude at 15° and 30° in the Hadley cell
-	ua_30 = - 0.1;
+//	ua_30 = - 0.1;
+	ua_30 = - 1.;
 
 	va_Hadley_SL = 1.;
 	va_Hadley_Tropopause = - 1.;
@@ -987,7 +979,8 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 	wa_Hadley_Tropopause = 30.;													// subtropic jet in m/s compares to 108 km/h
 
 // velocity assumptions for latitude at 45° and 60° in the Ferrel cell
-	ua_60 = 0.1;
+//	ua_60 = 0.1;
+	ua_60 = 0.5;
 
 	va_Ferrel_SL = - 0.75;
 	va_Ferrel_Tropopause = 1.;
@@ -999,7 +992,8 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 	wa_Ferrel_Tropopause = 10.;														// subpolar jet in m/s compares to 36 km/h
 
 // velocity assumptions for latitude 90° in the Polar cell
-	ua_90 = - 0.1;
+//	ua_90 = - 0.1;
+	ua_90 = - 0.5;
 
 	va_Polar_SL = 0.;
 	va_Polar_Tropopause = 0.;
@@ -2846,16 +2840,18 @@ void BC_Thermo::BC_Pressure ( Array &p_stat, Array &p_dyn, Array &t, Array &h )
 void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &tn, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, Array &c, Array &ice, Array &Q_Latent, Array &Q_Sensible, Array &radiation_3D, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom )
 {
 	double Q_Latent_Ice = 0.; 
+	int i_mount = 0;
 
 // collection of coefficients for phase transformation
-	coeff_Lv = 6.04 * lv / ( L_atm / ( double ) ( im-1 ) );										// coefficient for Q_latent generated by cloud water
-	coeff_Ls = 6.04 * ls / ( L_atm / ( double ) ( im-1 ) );										// coefficient for Q_latent generated by cloud ice
-	coeff_Q = .324 * cp_l * r_air * t_0 / ( L_atm / ( double ) ( im-1 ) );				// coefficient for Q_Sensible
+	coeff_Lv = .01 * lv / ( L_atm / ( double ) ( im-1 ) );										// coefficient for Q_latent generated by cloud water
+	coeff_Ls = .01 * ls / ( L_atm / ( double ) ( im-1 ) );										// coefficient for Q_latent generated by cloud ice
+	coeff_Q = .01 * cp_l * r_air * t_0 / ( L_atm / ( double ) ( im-1 ) );				// coefficient for Q_Sensible
 
 
 	c32 = 3. / 2.;
 	c42 = 4. / 2.;
 	c12 = 1. / 2.;
+
 
 // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
 // collection of coefficients
@@ -2872,34 +2868,36 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 		for ( int k = 0; k < km; k++ )
 		{
-			t_Celsius = t.x[ 0 ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
-			T = t.x[ 0 ][ j ][ k ] * t_0;
+			i_mount = i_topography[ j ][ k ];
+			t_Celsius = t.x[ i_mount ][ j ][ k ] * t_0 - t_0;																		// conversion from Kelvin to Celsius
 
-			p_h = p_stat.x[ 0 ][ j ][ k ];
+			T = t.x[ i_mount ][ j ][ k ] * t_0;
+
+			p_h = p_stat.x[ i_mount ][ j ][ k ];
 			E_Rain = hp * exp_func ( T, 17.2694, 35.86 );										// saturation water vapour pressure for the water phase at t > 0°C in hPa
 			E_Ice = hp * exp_func ( T, 21.8746, 7.66 );											// saturation water vapour pressure for the ice phase in hPa
 
 			q_Rain  = ep * E_Rain / ( p_h - E_Rain );																// water vapour amount at saturation with water formation in kg/kg
 			q_Ice  = ep * E_Ice / ( p_h - E_Ice );																		// water vapour amount at saturation with ice formation in kg/kg
 
-			e = c.x[ 0 ][ j ][ k ] * p_stat.x[ 0 ][ j ][ k ] / ep; 													// water vapour pressure in hPa
-			a = 216.6 * e / ( t.x[ 0 ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
+			e = c.x[ i_mount ][ j ][ k ] * p_stat.x[ i_mount ][ j ][ k ] / ep; 													// water vapour pressure in hPa
+			a = 216.6 * e / ( t.x[ i_mount ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
-			if ( c.x[ 0 ][ j ][ k ] >= q_Rain )		Q_Latent.x[ 0 ][ j ][ k ] = coeff_Lv * a * ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / ( 2. * dr );
-			else 												Q_Latent.x[ 0 ][ j ][ k ] = 0.;
-			if ( c.x[ 0 ][ j ][ k ] >= q_Ice )			Q_Latent_Ice = coeff_Ls * a * ( - 3. * ice.x[ 0 ][ j ][ k ] + 4. * ice.x[ 1 ][ j ][ k ] - ice.x[ 2 ][ j ][ k ] ) / ( 2. * dr );
+			if ( c.x[ i_mount ][ j ][ k ] >= q_Rain )		Q_Latent.x[ i_mount ][ j ][ k ] = - coeff_Lv * a * ( - 3. * c.x[ i_mount ][ j ][ k ] + 4. * c.x[ i_mount + 1 ][ j ][ k ] - c.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );
+			else 												Q_Latent.x[ i_mount ][ j ][ k ] = 0.;
+			if ( c.x[ i_mount ][ j ][ k ] >= q_Ice )			Q_Latent_Ice = - coeff_Ls * a * ( - 3. * ice.x[ i_mount ][ j ][ k ] + 4. * ice.x[ i_mount + 1 ][ j ][ k ] - ice.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );
 			else 												Q_Latent_Ice = 0.;
 
-			Q_Latent.x[ 0 ][ j ][ k ] = Q_Latent.x[ 0 ][ j ][ k ] + Q_Latent_Ice;
+			Q_latent.y[ j ][ k ] = Q_Latent.x[ i_mount ][ j ][ k ] = Q_Latent.x[ i_mount ][ j ][ k ] + Q_Latent_Ice;
 
-			Q_Sensible.x[ 0 ][ j ][ k ] = coeff_Q * ( - 3. * t.x[ 0 ][ j ][ k ] + 4. * t.x[ 1 ][ j ][ k ] - t.x[ 2 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
+			Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i_mount ][ j ][ k ] = - coeff_Q * ( - 3. * t.x[ i_mount ][ j ][ k ] + 4. * t.x[ i_mount + 1 ][ j ][ k ] - t.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
 		}
 	}
 
 
 	for ( int j = 0; j < jm; j++ )
 	{
-// collection of coefficients
+// collection of coefficients + 
 		sinthe = sin( the.z[ j ] );
 		sinthe2 = sinthe * sinthe;
 		costhe = cos( the.z[ j ] );
@@ -2914,7 +2912,9 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 		for ( int k = 0; k < km; k++ )
 		{
-			for ( int i = 1; i < im-2; i++ )
+			i_mount = i_topography[ j ][ k ];
+
+			for ( int i = i_mount + 1; i < im-2; i++ )
 			{
 // collection of coefficients
 				rm = rad.z[ i ];
@@ -2933,44 +2933,23 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 				e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
 				a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
 
-				if ( c.x[ i ][ j ][ k ] >= q_Rain )		Q_Latent.x[ i ][ j ][ k ] = coeff_Lv * a * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
+				if ( c.x[ i ][ j ][ k ] >= q_Rain )		Q_Latent.x[ i ][ j ][ k ] = - coeff_Lv * a * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 				else 												Q_Latent.x[ i ][ j ][ k ] = 0.;
-				if ( c.x[ i ][ j ][ k ] >= q_Ice )			Q_Latent_Ice = coeff_Ls * a * ( ice.x[ i+1 ][ j ][ k ] - ice.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
+				if ( c.x[ i ][ j ][ k ] >= q_Ice )			Q_Latent_Ice = - coeff_Ls * a * ( ice.x[ i+1 ][ j ][ k ] - ice.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 				else 												Q_Latent_Ice = 0.;
 
-				Q_Latent.x[ i ][ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] + Q_Latent_Ice;
+				Q_latent.y[ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] + Q_Latent_Ice;
 
-				Q_Sensible.x[ i ][ j ][ k ] = coeff_Q * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
-			}
-		}
-	}
+				Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ] = - coeff_Q * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
 
-
-//	int i_mount = 0;
-
-// boundary conditions for solid ground areas
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int i = im-2; i >= 0; i-- )													// i = 0 a must: to keep velocities at surfaces to zero
-			{
-				if ( h.x[ i ][ j ][ k ] == 1. )
+				if ( ( h.x[ i ][ j ][ k ] ) && ( h.x[ i + 1 ][ j ][ k ] ) )
 				{
-					if ( i_mount == 0 ) 		i_mount = i;
-
-					if ( c.x[ i ][ j ][ k ] >= q_Rain )		Q_latent.y[ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] = Q_Latent.x[ i_mount ][ j ][ k ];
-					else 												Q_Latent.x[ 0 ][ j ][ k ] = 0.;
-
-					Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ] = Q_Sensible.x[ i_mount ][ j ][ k ];
-					Q_radiation.y[ j ][ k ] = radiation_3D.x[ i ][ j ][ k ];
-					Q_bottom.y[ j ][ k ] = radiation_3D.x[ i ][ j ][ k ] + Q_latent.y[ j ][ k ] + Q_sensible.y[ j ][ k ];
+					Q_latent.y[ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] = 0.;
+					Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ] = 0.;
 				}
 			}
-			i_mount = 0;
 		}
 	}
-
 }
 
 

@@ -355,14 +355,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 	circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 
-    std::cout << "Mean Temperature: " << GetMeanTemperature(jm, km, t) << std::endl;
-
 //  class element for the surface temperature based on NASA temperature for progressing timeslices
 	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
 
-
 //  class element for the surface precipitation from NASA for comparison
-	if ( Ma == 0 ) circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
+	circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
 //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
 	circulation.BC_Temperature ( im_tropopause, t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
@@ -513,21 +510,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
 			boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
 
-//	cout << endl << " ***** before Ice printout of 3D-field temperature ***** " << endl << endl;
-//	t.printArray( im, jm, km );
-
-
 //		Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
 			if ( velocity_iter == velocity_n )		circulation.Ice_Water_Saturation_Adjustment ( im_tropopause, n, velocity_iter_max, RadiationModel, h, c, cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
 
-//	cout << endl << " ***** after Ice printout of 3D-field temperature ***** " << endl << endl;
-//	t.printArray( im, jm, km );
-
 // 		class RungeKutta for the solution of the differential equations describing the flow properties
 			result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, r_water, r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, rhs_cloud, rhs_ice, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography );
-
-//	cout << endl << " ***** before RK printout of 3D-field temperature ***** " << endl << endl;
-//	t.printArray( im, jm, km );
 
 //	class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 			LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
@@ -601,6 +588,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			string str_max_latency = " max 3D latent heat ", str_min_latency = " min 3D latent heat ", str_unit_latency = "W/m2";
 			MinMax_Atm		minmaxQ_Latent ( im, jm, km );
 			minmaxQ_Latent.searchMinMax_3D ( str_max_latency, str_min_latency, str_unit_latency, Q_Latent, h );
+
 			cout << endl << " greenhouse gases: " << endl << endl;
 
 //	searching of maximum and minimum values of water vapour
@@ -665,15 +653,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			minmaxPrecipitation.searchMinMax_2D ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, Precipitation, h );
 			double max_Precipitation = minmaxPrecipitation.out_maxValue (  );
 
-/*
 //	searching of maximum and minimum values of NASA precipitation
-			if ( Ma == 0 )
-			{
-				string str_max_precipitation = " max precipitation_NASA ", str_min_precipitation = " min precipitation_NASA ", str_unit_precipitation = "mm";
-				MinMax	minmaxPrecipitation_NASA ( jm, km, coeff_mmWS );
-				minmaxPrecipitation_NASA.searchMinMax_2D ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, precipitation_NASA, h );
-			}
-*/
+			string str_max_precipitation = " max precipitation_NASA ", str_min_precipitation = " min precipitation_NASA ", str_unit_precipitation = "mm";
+			MinMax	minmaxPrecipitation_NASA ( jm, km, coeff_mmWS );
+			minmaxPrecipitation_NASA.searchMinMax_2D ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, precipitation_NASA, h );
+
 
 //	searching of maximum and minimum values of precipitable water
 			string str_max_precipitable_water = " max precipitable water ", str_min_precipitable_water = " min precipitable water ", str_unit_precipitable_water = "mm";
@@ -706,18 +690,18 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 			cout << endl << " secondary data: " << endl << endl;
 
-/*
+
 //	searching of maximum and minimum values of Evaporation
 			string str_max_heat_t_Evaporation = " max heat Evaporation ", str_min_heat_t_Evaporation = " min heat Evaporation ", str_unit_heat_t_Evaporation = " W/m2";
 			MinMax_Atm		minmaxQ_t_Evaporation ( jm, km, coeff_mmWS );
 			minmaxQ_t_Evaporation.searchMinMax_2D ( str_max_heat_t_Evaporation, str_min_heat_t_Evaporation, str_unit_heat_t_Evaporation, Q_Evaporation, h );
-*/
-/*
+
+
 //	searching of maximum and minimum values of Evaporation by Haude
 			string str_max_t_Evaporation_Haude = " max Evaporation Haude ", str_min_t_Evaporation_Haude = " min Evaporation Haude ", str_unit_t_Evaporation_Haude = "mm/d";
 			MinMax_Atm		minmaxt_Evaporation_Haude ( jm, km, coeff_mmWS );
 			minmaxt_Evaporation_Haude.searchMinMax_2D ( str_max_t_Evaporation_Haude, str_min_t_Evaporation_Haude, str_unit_t_Evaporation_Haude, Evaporation_Haude, h );
-*/
+
 //	searching of maximum and minimum values of Evaporation by Penman
 			string str_max_t_Evaporation_Penman = " max Evaporation Penman ", str_min_t_Evaporation_Penman = " min Evaporation Penman ", str_unit_t_Evaporation_Penman = "mm/d";
 			MinMax_Atm		minmaxt_Evaporation_Penman ( jm, km, coeff_mmWS );
@@ -745,8 +729,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //	composition of results
-			calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, Vegetation, albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
-
+			calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, Vegetation, albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
 //  restoring the velocity component and the temperature for the new time step
 			oldnew.restoreOldNew_3D ( 1., u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n );
@@ -801,7 +784,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	radial data along constant hight above ground
 	int i_radial = 0;
 //	int i_radial = 10;
-	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation, Topography, temp_NASA, temp_NASA_diff, temp_pot, temp_pot_diff );
+	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation, Topography, temp_NASA, temp_NASA_diff, temp_pot, temp_pot_diff );
 
 //	londitudinal data along constant latitudes
 	int j_longal = 62;			// Mount Everest/Himalaya
@@ -929,13 +912,6 @@ void cAtmosphereModel::Run() {
 
 	cout << "Output is being written to " << output_path << "\n";
 
-// write out the config for reproducibility
-// disabled for now
-// std::stringstream output_config_path;
-// output_config_path << output_path << "/config_atm.xml";
-// WriteConfig(output_config_path.str().c_str());
-
-
 	if (verbose) {
 		cout << endl << endl << endl;
 		cout << "***** Atmosphere General Circulation Model ( AGCM ) applied to laminar flow" << endl;
@@ -999,40 +975,4 @@ void cAtmosphereModel::Run() {
 
 }
 
-
-float cAtmosphereModel::GetMeanTemperature(int jm, int km, Array &t) 
-{
-    if(m_node_weights.size() != (unsigned)jm)
-    {
-        CalculateNodeWeights(jm, km);
-    }
-    double ret=0., weight=0.;
-    for(int j=0; j<jm; j++){
-        for(int k=0; k<km; k++){
-            //std::cout << (t.x[0][j][k]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
-            ret+=t.x[0][j][k]*m_node_weights[j][k];
-            weight+=m_node_weights[j][k];
-        }
-    }
-    return (ret/weight-1)*t_0;
-}
-
-
-void cAtmosphereModel::CalculateNodeWeights(int jm, int km)
-{
-    //use cosine of latitude as weights for now
-    //longitudes: 0-360(km) latitudes: 90-(-90)(jm)
-    double weight = 0.;
-    m_node_weights.clear();
-    for(int i=0; i<jm; i++){
-        if(i<=90){
-            weight = cos((90-i) * M_PI / 180.0 );
-        }else{
-            weight = cos((i-90) * M_PI / 180.0 );
-        }
-        m_node_weights.push_back(std::vector<double>());
-        m_node_weights[i].resize(km, weight);
-    }
-    return;
-}
 
