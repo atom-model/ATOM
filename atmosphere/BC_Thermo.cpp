@@ -351,7 +351,11 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, int n, double CO2
 
 				epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );										// dependency given by Häckel ( F. Baur and H. Philips, 1934 )
 				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
+
+				epsilon.y[ j ][ k ] = epsilon_3D.x[ i ][ j ][ k ];
+
 			}
+
 
 			for ( int i = i_trop - 1; i >= 0; i-- )
 			{
@@ -2882,15 +2886,20 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 			e = c.x[ i_mount ][ j ][ k ] * p_stat.x[ i_mount ][ j ][ k ] / ep; 													// water vapour pressure in hPa
 			a = 216.6 * e / ( t.x[ i_mount ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
-
+/*
 			if ( c.x[ i_mount ][ j ][ k ] >= q_Rain )		Q_Latent.x[ i_mount ][ j ][ k ] = - coeff_Lv * a * ( - 3. * c.x[ i_mount ][ j ][ k ] + 4. * c.x[ i_mount + 1 ][ j ][ k ] - c.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );
 			else 												Q_Latent.x[ i_mount ][ j ][ k ] = 0.;
 			if ( c.x[ i_mount ][ j ][ k ] >= q_Ice )			Q_Latent_Ice = - coeff_Ls * a * ( - 3. * ice.x[ i_mount ][ j ][ k ] + 4. * ice.x[ i_mount + 1 ][ j ][ k ] - ice.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );
 			else 												Q_Latent_Ice = 0.;
+*/
+			Q_Latent.x[ i_mount ][ j ][ k ] = - coeff_Lv * a * ( - 3. * c.x[ i_mount ][ j ][ k ] + 4. * c.x[ i_mount + 1 ][ j ][ k ] - c.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );
+			Q_Latent_Ice = - coeff_Ls * a * ( - 3. * ice.x[ i_mount ][ j ][ k ] + 4. * ice.x[ i_mount + 1 ][ j ][ k ] - ice.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );
 
-			Q_latent.y[ j ][ k ] = Q_Latent.x[ i_mount ][ j ][ k ] = Q_Latent.x[ i_mount ][ j ][ k ] + Q_Latent_Ice;
+//			Q_latent.y[ j ][ k ] = Q_Latent.x[ i_mount ][ j ][ k ] = Q_Latent.x[ i_mount ][ j ][ k ] + Q_Latent_Ice;
+			Q_Latent.x[ i_mount ][ j ][ k ] = Q_Latent.x[ i_mount ][ j ][ k ] + Q_Latent_Ice;
 
-			Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i_mount ][ j ][ k ] = - coeff_Q * ( - 3. * t.x[ i_mount ][ j ][ k ] + 4. * t.x[ i_mount + 1 ][ j ][ k ] - t.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
+//			Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i_mount ][ j ][ k ] = - coeff_Q * ( - 3. * t.x[ i_mount ][ j ][ k ] + 4. * t.x[ i_mount + 1 ][ j ][ k ] - t.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
+			Q_Sensible.x[ i_mount ][ j ][ k ] = - coeff_Q * ( - 3. * t.x[ i_mount ][ j ][ k ] + 4. * t.x[ i_mount + 1 ][ j ][ k ] - t.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
 		}
 	}
 
@@ -2932,20 +2941,27 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 				e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
 				a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
-
+/*
 				if ( c.x[ i ][ j ][ k ] >= q_Rain )		Q_Latent.x[ i ][ j ][ k ] = - coeff_Lv * a * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 				else 												Q_Latent.x[ i ][ j ][ k ] = 0.;
 				if ( c.x[ i ][ j ][ k ] >= q_Ice )			Q_Latent_Ice = - coeff_Ls * a * ( ice.x[ i+1 ][ j ][ k ] - ice.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 				else 												Q_Latent_Ice = 0.;
+*/
+				Q_Latent.x[ i ][ j ][ k ] = - coeff_Lv * a * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
+				Q_Latent_Ice = - coeff_Ls * a * ( ice.x[ i+1 ][ j ][ k ] - ice.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 
-				Q_latent.y[ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] + Q_Latent_Ice;
+//				Q_latent.y[ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] + Q_Latent_Ice;
+				Q_Latent.x[ i ][ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] + Q_Latent_Ice;
 
-				Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ] = - coeff_Q * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
+//				Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ] = - coeff_Q * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
+				Q_Sensible.x[ i ][ j ][ k ] = - coeff_Q * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );	// sensible heat in [W/m2] from energy transport equation
 
 				if ( ( h.x[ i ][ j ][ k ] ) && ( h.x[ i + 1 ][ j ][ k ] ) )
 				{
-					Q_latent.y[ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] = 0.;
-					Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ] = 0.;
+//					Q_latent.y[ j ][ k ] = Q_Latent.x[ i ][ j ][ k ] = 0.;
+//					Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ] = 0.;
+					Q_Latent.x[ i ][ j ][ k ] = 0.;
+					Q_Sensible.x[ i ][ j ][ k ] = 0.;
 				}
 			}
 		}

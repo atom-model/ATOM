@@ -686,7 +686,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //	searching of maximum and minimum values of Evaporation
-			string str_max_heat_t_Evaporation = " max heat Evaporation ", str_min_heat_t_Evaporation = " min heat Evaporation ", str_unit_heat_t_Evaporation = " W/m2";
+			string str_max_heat_t_Evaporation = " max heat Evaporation ", str_min_heat_t_Evaporation = " min heat Evaporation ", str_unit_heat_t_Evaporation = " kJ/kg";
 			MinMax_Atm		minmaxQ_t_Evaporation ( jm, km, coeff_mmWS );
 			minmaxQ_t_Evaporation.searchMinMax_2D ( str_max_heat_t_Evaporation, str_min_heat_t_Evaporation, str_unit_heat_t_Evaporation, Q_Evaporation, h );
 
@@ -707,12 +707,12 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			string str_max_albedo = " max 2D albedo ", str_min_albedo = " min 2D albedo ", str_unit_albedo = "%";
 			MinMax_Atm		minmaxAlbedo ( jm, km, coeff_mmWS );
 			minmaxAlbedo.searchMinMax_2D ( str_max_albedo, str_min_albedo, str_unit_albedo, albedo, h );
-/*
+
 //	searching of maximum and minimum values of epsilon
-			string str_max_epsilon = " max 2D epsilon ", str_min_epsilon = " min 2D epsilon ", str_unit_epsilon = "%";
+			string str_max_epsilon_2D = " max 2D epsilon ", str_min_epsilon_2D = " min 2D epsilon ", str_unit_epsilon_2D = "%";
 			MinMax_Atm	minmaxEpsilon ( jm, km, coeff_mmWS );
-			minmaxEpsilon.searchMinMax_2D ( str_max_epsilon, str_min_epsilon, str_unit_epsilon, epsilon, h );
-*/
+			minmaxEpsilon.searchMinMax_2D ( str_max_epsilon_2D, str_min_epsilon_2D, str_unit_epsilon_2D, epsilon, h );
+
 //	searching of maximum and minimum values of topography
 			string str_max_topography = " max 2D topography ", str_min_topography = " min 2D topography ", str_unit_topography = "m";
 			MinMax_Atm	minmaxTopography ( jm, km, coeff_mmWS );
