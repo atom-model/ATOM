@@ -8,6 +8,7 @@
 
 #include "tinyxml2.h"
 #include "Array.h"
+#include "Array_2D.h"
 
 using namespace std;
 using namespace tinyxml2;
@@ -28,10 +29,6 @@ public:
 
 private:
     void SetDefaultConfig();
-
-    std::vector<std::vector<double> > m_node_weights;
-    float GetMeanTemperature(int jm, int km, Array &t);
-    void CalculateNodeWeights(int jm, int km);
 };
 
 #endif
