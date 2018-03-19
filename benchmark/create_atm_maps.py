@@ -25,14 +25,23 @@ def create_maps(directory):
         index = 8
     elif directory == 'precipitable_water':
         index = 9
+    elif  directory == 'topography':
+        index = 10
 
     for time in range(0,150,10):
-        data = np.genfromtxt('./output/[{}Ma_Golonka.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
-        for d in data:
-            d[1]=90-d[1]
-        x = data[:,0]
-        y = data[:,1]
-        z = data[:,index]
+        if index < 10:
+            data = np.genfromtxt('./output/[{}Ma_Golonka.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
+            for d in data:
+                d[1]=90-d[1]
+            x = data[:,0]
+            y = data[:,1]
+            z = data[:,index]
+        elif index == 10:
+            data = np.genfromtxt('../data/Golonka_Smoothed/{}Ma_Golonka.xyz'.format(time))
+            x = data[:,0]
+            y = data[:,1]
+            z = data[:,2]
+        
 
         topo = data[:,2]
 
@@ -40,14 +49,25 @@ def create_maps(directory):
 
         m = Basemap(llcrnrlon=-180,llcrnrlat=-90,urcrnrlon=180,urcrnrlat=90,projection='kav7', lon_0=0)  
 
-        xx = x
-        x, topo = m.shiftdata(xx, datain = topo, lon_0=0)
-        x, z = m.shiftdata(xx, datain = z, lon_0=0)
+        if index != 10:
+            xx = x
+            x, topo = m.shiftdata(xx, datain = topo, lon_0=0)
+            x, z = m.shiftdata(xx, datain = z, lon_0=0)
 
         xi, yi = m(x, y)
-        cs = m.scatter(xi, yi, marker='.', c=z, alpha=0.5, lw=0)
+        v_min=None
+        v_max=None
+        if index == 6: #tempetature
+            v_min = -60
+            v_max = 35
+        elif index == 8:
+            v_min = 0
+            v_max = 7
 
-        m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
+        cs = m.scatter(xi, yi, marker='.', c=z, alpha=0.5, lw=0, vmin=v_min, vmax=v_max)
+
+        if index !=10:
+            m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
                             colors ='k', linewidths= 0.3 )
 
         m.drawparallels(np.arange(-90., 90., 10.), labels=[1,0,0,0], fontsize=10)
@@ -64,7 +84,7 @@ def create_maps(directory):
 if  __name__ == "__main__":
     #output_dir = 'atm_maps'
     #v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), precipitation(mm), precipitable water(mm)
-    sub_dirs = ['temperature','v_velocity','w_velocity','velocity_mag', 'water_vapour', 'precipitation', 'precipitable_water']
+    sub_dirs = ['temperature','v_velocity','w_velocity','velocity_mag', 'water_vapour', 'precipitation', 'precipitable_water', 'topography']
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
