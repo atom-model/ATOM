@@ -530,6 +530,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
             calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, 
                     phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, 
                     Q_Sensible, radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, 
+                    temperature_NASA,
                     precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, 
                     Evaporation_Penman, Evaporation_Haude, Vegetation, albedo, co2_total, Precipitation, 
                     S_v, S_c, S_i, S_r, S_s, S_c_c );

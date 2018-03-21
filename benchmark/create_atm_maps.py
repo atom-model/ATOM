@@ -27,6 +27,8 @@ def create_maps(directory):
         index = 9
     elif  directory == 'topography':
         index = 10
+    elif  directory == 'topo_simon':
+        index = 11
 
     for time in range(0,150,10):
         if index < 10:
@@ -42,6 +44,11 @@ def create_maps(directory):
             y = data[:,1]
             z = data[:,2]
         
+        elif index == 11:
+            data = np.genfromtxt('./paleotopo_grids/{}Ma.xyz'.format(time))
+            x = data[:,0]
+            y = data[:,1]
+            z = data[:,2]
 
         topo = data[:,2]
 
@@ -49,7 +56,7 @@ def create_maps(directory):
 
         m = Basemap(llcrnrlon=-180,llcrnrlat=-90,urcrnrlon=180,urcrnrlat=90,projection='kav7', lon_0=0)  
 
-        if index != 10:
+        if index != 10 and index != 11:
             xx = x
             x, topo = m.shiftdata(xx, datain = topo, lon_0=0)
             x, z = m.shiftdata(xx, datain = z, lon_0=0)
@@ -66,7 +73,7 @@ def create_maps(directory):
 
         cs = m.scatter(xi, yi, marker='.', c=z, alpha=0.5, lw=0, vmin=v_min, vmax=v_max)
 
-        if index !=10:
+        if index != 10 and index != 11:
             m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
                             colors ='k', linewidths= 0.3 )
 
@@ -84,7 +91,8 @@ def create_maps(directory):
 if  __name__ == "__main__":
     #output_dir = 'atm_maps'
     #v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), precipitation(mm), precipitable water(mm)
-    sub_dirs = ['temperature','v_velocity','w_velocity','velocity_mag', 'water_vapour', 'precipitation', 'precipitable_water', 'topography']
+    #sub_dirs = ['temperature','v_velocity','w_velocity','velocity_mag', 'water_vapour', 'precipitation', 'precipitable_water', 'topography', 'topo_simon']
+    sub_dirs = ['topo_simon']
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
