@@ -54,6 +54,8 @@ class BC_Thermohalin
 
 		void IC_v_w_Atmosphere ( Array &, Array &, Array &, Array & );
 
+		void IC_v_w_Ekman ( Array &, Array &, Array & );
+
 		void IC_v_w_WestEastCoast ( Array &, Array &, Array &, Array &, Array & );
 
 		void BC_Temperature_Salinity ( Array &, Array &, Array &, Array & );

@@ -340,12 +340,25 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //	import of surface v- and w-velocity components from AGCM, surface velocity reduced to 3% of the wind velocity
 	oceanflow.IC_v_w_Atmosphere ( h, u, v, w );
+/*
+	cout << endl << " ***** before Ekman       printout of 3D-field v-component ***** " << endl << endl;
+	v.printArray( im, jm, km );
+	cout << endl << " ***** before Ekman       printout of 3D-field w-component ***** " << endl << endl;
+	w.printArray( im, jm, km );
+*/
+// 	initial conditions for u-v-w-velocity components following the Ekman spiral
+	oceanflow.IC_v_w_Ekman ( h, v, w );
 
 //	salinity distribution as initial condition in 3 dimensions
 	oceanflow.BC_Temperature_Salinity ( h, t, c, p_dyn );
 
+	cout << endl << " ***** after temp       printout of 3D-field t-component ***** " << endl << endl;
+	t.printArray( im, jm, km );
+	cout << endl << " ***** after temp       printout of 3D-field w-component ***** " << endl << endl;
+	c.printArray( im, jm, km );
+
 //  surface pressure computed by surface temperature with gas equation
-	oceanflow.BC_Pressure ( p_stat, t, h );
+//	oceanflow.BC_Pressure ( p_stat, t, h );
 
 //	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
 	oceanflow.IC_v_w_WestEastCoast ( h, u, v, w, c );
@@ -362,6 +375,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 	double emin = epsres * 100.;
 
+//goto Printout;
 
 // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	if ( switch_2D != 1 )
@@ -419,7 +433,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
 //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-		if ( pressure_iter_2D == 1 ) 			startPressure.computePressure_2D ( pa, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
+//		if ( pressure_iter_2D == 1 ) 			startPressure.computePressure_2D ( pa, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
 
 
 //		limit of the computation in the sense of time steps
@@ -440,6 +454,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 	cout << endl << endl;
 
+//goto Printout;
 
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::::::::::::::::
@@ -604,7 +619,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-		if ( pressure_iter == 1 ) 			startPressure.computePressure_3D ( pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+//		if ( pressure_iter == 1 ) 			startPressure.computePressure_3D ( pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+		startPressure.computePressure_3D ( pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
 
 
 //	limit of the computation in the sense of time steps
@@ -621,6 +637,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 	n--;
 
+//Printout:
 
 //	printout in ParaView and plot files
 

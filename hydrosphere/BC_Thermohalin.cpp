@@ -64,7 +64,8 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 
 // reduction or amplification of flow velocities along coasts
 // for the artificial initial and boundary conditions
-	IC_water = .0015;				// reduced radial velocity u ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,000675 m/s )
+//	IC_water = .0015;				// reduced radial velocity u ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,000675 m/s )
+	IC_water = .015;				// reduced radial velocity u ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,000675 m/s )
 
 
 // ocean surface velocity is about 3% of the wind velocity at the surface
@@ -143,6 +144,334 @@ void BC_Thermohalin::IC_v_w_Atmosphere ( Array &h, Array &u, Array &v, Array &w 
 					u.x[ i ][ j ][ k ] = 0.;
 					v.x[ i ][ j ][ k ] = 0.;
 					w.x[ i ][ j ][ k ] = 0.;
+				}
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+void BC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w )
+{
+// initial conditions for v and w velocity components at the sea surface
+
+
+// north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° )
+
+	for ( int i = i_beg; i < im; i++ )
+	{
+		for ( int j = 0; j < 31; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] != 1. )
+				{
+					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
+					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+					alfa = asin ( fabs ( w.x[ i ][ j ][ k ] ) / vel_magnitude );
+					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. )
+					{
+						angle = + alfa - Ekman_angle - Ekman;
+					}
+					else
+					{
+						angle = - alfa - Ekman_angle - Ekman;
+					}
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+					{
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+				}
+			}
+		}
+	}
+
+
+
+// north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° )
+
+	for ( int i = i_beg; i < im; i++ )
+	{
+		for ( int j = 31; j < 60; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] != 1. )
+				{
+					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
+					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+					alfa = asin ( fabs ( w.x[ i ][ j ][ k ] ) / vel_magnitude );
+					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+
+					if ( v.x[ im-1 ][ j ][ k ] >= 0. )
+					{
+						angle = + alfa - Ekman_angle - Ekman;
+					}
+					else
+					{
+						angle = - alfa - Ekman_angle - Ekman;
+					}
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+					{
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
+					}
+
+					if (  v.x[ i ][ j ][ k ] <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
+					}
+
+				}
+			}
+		}
+	}
+
+
+
+
+// north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° )
+
+	for ( int i = i_beg; i < im; i++ )
+	{
+		for ( int j = 60; j < 91; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] != 1. )
+				{
+					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
+					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+					alfa = asin ( fabs ( w.x[ i ][ j ][ k ] ) / vel_magnitude );
+					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. )
+					{
+						angle = + alfa - Ekman_angle - Ekman;
+					}
+					else
+					{
+						angle = - alfa - Ekman_angle - Ekman;
+					}
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+					{
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+				}
+			}
+		}
+	}
+
+
+
+
+// south equatorial Hadley cell ( from j=90 till j=120 compares to 0° till 30° )
+
+	for ( int i = i_beg; i < im; i++ )
+	{
+		for ( int j = 91; j < 122; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] != 1. )
+				{
+					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
+					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+					beta = asin ( fabs( w.x[ i ][ j ][ k ] ) / vel_magnitude );
+					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. )
+					{
+						angle = beta - Ekman_angle - Ekman;
+					}
+					else
+					{
+						angle = - beta - Ekman_angle - Ekman;
+					}
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+					{
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+				}
+			}
+		}
+	}
+
+
+// south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° )
+
+	for ( int i = i_beg; i < im; i++ )
+	{
+		for ( int j = 121; j < 151; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] != 1. )
+				{
+					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
+					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+					beta = asin ( fabs( w.x[ i ][ j ][ k ] ) / vel_magnitude );
+					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+
+					if ( v.x[ im-1 ][ j ][ k ] <= 0. )
+					{
+						angle = beta - Ekman_angle - Ekman;
+					}
+					else
+					{
+						angle = - beta - Ekman_angle - Ekman;
+					}
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+					{
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
+					}
+
+					if (  v.x[ i ][ j ][ k ] >= 0. )
+					{
+						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
+					}
+
+				}
+			}
+		}
+	}
+
+
+// south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° )
+
+	for ( int i = i_beg; i < im; i++ )
+	{
+		for ( int j = 151; j < jm; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] != 1. )
+				{
+					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+
+					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
+					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
+					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+					beta = asin ( fabs( w.x[ i ][ j ][ k ] ) / vel_magnitude );
+					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. )
+					{
+						angle = beta - Ekman_angle - Ekman;
+					}
+					else
+					{
+						angle = - beta - Ekman_angle - Ekman;
+					}
+
+					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+					{
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
+					if (  w.x[ im-1 ][ j ][ k ] <= 0. )
+					{
+						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
+						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
+					}
+
 				}
 			}
 		}

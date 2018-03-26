@@ -30,8 +30,8 @@ def main():
             ( 'epsres', 'accuracy of relative and absolute errors', 'double', 0.00001 ),
 
             ( 'sun', 'while no variable sun position wanted', 'int', 0 ),
-#            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 1 ),
-            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 0 ),
+            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 1 ),
+#            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 0 ),
             ( 'RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1 ),
 
             ( 'declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0 ),
@@ -128,9 +128,9 @@ def main():
 
         'hydrosphere': [
             ( 'input_path', 'directory where Atmosphere output can be read (must end in /)', 'string', 'output' ),
-            ( 'velocity_iter_max_2D', '', 'int', 10 ),
+            ( 'velocity_iter_max_2D', '', 'int', 2 ),
             ( 'pressure_iter_max_2D', '', 'int', 2 ),
-            ( 'velocity_iter_max', '', 'int', 5 ),
+            ( 'velocity_iter_max', '', 'int', 2 ),
             ( 'pressure_iter_max', '', 'int', 2 ),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),

@@ -30,7 +30,7 @@ BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int tropopau
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;
-	this -> i_max = i_max;
+//	this -> i_max = i_max;
 	this -> tropopause_equator = tropopause_equator;
 	this -> tropopause_pole = tropopause_pole;
 	this-> L_atm = L_atm;
@@ -118,44 +118,6 @@ BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int tropopau
 	dt_snow_dim = 417.;																// dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
 
 	dt_dim = L_atm / u_0 * dt;														// dimensional time step of system in s
-
-
-
-	int Ma_1 = 0;
-	int Ma_2 = 40;
-	double t_1 = t_pole;
-	double t_2 = ( 13. + t_0 ) / t_0;
-//	double t_pole_0 = t_pole;
-
-	cout << endl << "   init  t_pole = " << t_pole << "     t_1 = " << t_1 << "     t_2 = " << t_2 << "     Ma_1 = " << Ma_1 << "     Ma_2 = " << Ma_2 << "     Ma = " << Ma << endl;
-
-
-	if ( Ma <= Ma_1 )
-	{
-//		t_pole = t_pole_0 + BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-		t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-	}
-
-
-	cout << endl  << "     &&&&&&&&&&&&&&&&&&&&&&&6&&&&&&&&&&&&&&&        1. step" << endl;
-
-		Ma_1 = 40;
-		Ma_2 = 90;
-		t_1 = ( 13. + t_0 ) / t_0;
-		t_2 = ( 20. + t_0 ) / t_0;
-//		t_pole_0 = t_1;
-
-	cout << "   after 1. step  t_pole = " << t_pole << "     t_1 = " << t_1 << "     t_2 = " << t_2 << "     Ma_1 = " << Ma_1 << "     Ma_2 = " << Ma_2 << "     Ma = " << Ma << endl;
-
-
-	if ( ( Ma >= Ma_1 ) && ( Ma <= Ma_2) )
-	{
-//		t_pole = t_pole_0 + BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-		t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-	}
-
-	cout << endl  << "     &&&&&&&&&&&&&&&&&&&&&&&6&&&&&&&&&&&&&&&        2. step" << endl;
-
 
 
 
@@ -564,6 +526,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 // temperature at tropopause t_min = 0.77 compares to -62° C compares to 211 K
 // temperature at tropopause t_min = 0.89 compares to -30° C compares to 243 K
 // temperature difference from equator to pole   18°C compares to  t_delta = 0.0659  compares to  18 K
+	i_max = im - 1;
 	j_half = ( jm -1 ) / 2;
 	j_max = jm - 1;
 
@@ -672,44 +635,18 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 		}																								// temperatur distribution at aa prescribed sun position
 
 
-/*
+
+
+
+
+
+// pole temperature adjustment 
 	int Ma_1 = 0;
-	int Ma_2 = 40;
+	int Ma_2 = 45;
 	double t_1 = t_pole;
 	double t_2 = ( 13. + t_0 ) / t_0;
-//	double t_pole_0 = t_pole;
-
-	cout << endl << "   init  t_pole = " << t_pole << "     t_1 = " << t_1 << "     t_2 = " << t_2 << "     Ma_1 = " << Ma_1 << "     Ma_2 = " << Ma_2 << "     Ma = " << Ma << endl;
-
-
-	if ( Ma <= Ma_1 )
-	{
-//		t_pole = t_pole_0 + BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-		t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-	}
-
-
-	cout << endl  << "     &&&&&&&&&&&&&&&&&&&&&&&6&&&&&&&&&&&&&&&        1. step" << endl;
-
-		Ma_1 = 40;
-		Ma_2 = 90;
-		t_1 = ( 13. + t_0 ) / t_0;
-		t_2 = ( 20. + t_0 ) / t_0;
-//		t_pole_0 = t_1;
-
-	cout << "   after 1. step  t_pole = " << t_pole << "     t_1 = " << t_1 << "     t_2 = " << t_2 << "     Ma_1 = " << Ma_1 << "     Ma_2 = " << Ma_2 << "     Ma = " << Ma << endl;
-
-
-	if ( ( Ma >= Ma_1 ) && ( Ma <= Ma_2) )
-	{
-//		t_pole = t_pole_0 + BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-		t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-	}
-
-	cout << endl  << "     &&&&&&&&&&&&&&&&&&&&&&&6&&&&&&&&&&&&&&&        2. step" << endl;
-*/
-
-	t_eff = t_pole - t_equator;
+	double t_pole_add = 0.;
+	double t_pole_diff = 0.;
 
 
 	if ( RadiationModel == 1 )
@@ -718,6 +655,36 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 		{
 			for ( int k = 0; k < km; k++ )
 			{
+				if ( Ma <= Ma_1 )
+				{
+					t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
+				}
+
+				Ma_1 = 45;
+				Ma_2 = 93;
+				t_1 = ( 13. + t_0 ) / t_0;
+				t_2 = ( 23. + t_0 ) / t_0;
+
+				if ( ( Ma > Ma_1 ) && ( Ma <= Ma_2) )
+				{
+					t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
+				}
+
+				Ma_1 = 93;
+				Ma_2 = 140;
+				t_1 = ( 23. + t_0 ) / t_0;
+				t_2 = ( 16. + t_0 ) / t_0;
+
+				if ( ( Ma > Ma_1 ) && ( Ma <= Ma_2) )
+				{
+					t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
+				}
+
+
+				t_eff = t_pole - t_equator;
+				t_pole_diff = t_pole - t.x[ 0 ][ 0 ][ k ];
+
+
 				for ( int j = 0; j < jm; j++ )
 				{
 					i_mount = i_topography[ j ][ k ];
@@ -739,7 +706,15 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 						}
 						else
 						{
-							t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
+							if ( ( j >= 0 ) && ( j <= j_half ) )		t_pole_add = t_pole_diff * ( 1. - ( double ) j / ( double ) j_half );
+
+//	if ( ( j >= 0 ) && ( j <= j_half ) )		cout << endl << "   north    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
+
+							if ( ( j > j_half ) && ( j < jm ) )		t_pole_add = t_pole_diff * ( double ) ( j - j_half ) / ( double ) ( j_max - j_half );
+
+//	if ( ( j > j_half ) && ( j < jm ) )		cout << endl << "   south    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
+
+							t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add;
 						}
 
 						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
@@ -767,7 +742,6 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
 	for ( int j = 0; j < jm; j++ )
 	{
-//		i_trop = im_tropopause[ j ];
 		i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
 		d_i_max = ( double ) i_trop;
 
@@ -780,10 +754,8 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 				if ( i <= i_trop )
 				{
 					d_i = ( double ) i;
-//					t.x[ i ][ j ][ k ] = ( t_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
 					t.x[ i ][ j ][ k ] = ( temp_tropopause[ j ] - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + t.x[ i_mount ][ j ][ k ];				// linear temperature decay up to tropopause, privat approximation
 				}
-//				else 		t.x[ i ][ j ][ k ] = t_tropopause;
 				else 		t.x[ i ][ j ][ k ] = temp_tropopause[ j ];
 			}
 
@@ -811,9 +783,9 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, double &t_cretaceous, Array
 // minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
 // value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
 
+	i_max = im - 1;
 	d_i_max = ( double ) i_max;
 	j_half = ( jm -1 ) / 2;
-
 	d_j_half = ( double ) j_half;
 	d_j_max = ( double ) j_max;
 
@@ -1099,13 +1071,15 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 	va_Polar_SL = 0.;
 	va_Polar_Tropopause = 0.;
 
-	va_Polar_SL_75 = 0.75;
-	va_Polar_Tropopause_75 = - 0.75;
+//	va_Polar_SL_75 = 0.75;
+//	va_Polar_Tropopause_75 = - 0.75;
 
-	va_Polar_SL_75 = 0.75;
-	va_Polar_Tropopause_75 = - 0.75;
+	va_Polar_SL_75 = 1.;
+	va_Polar_Tropopause_75 = - 1.;
 
-	wa_Polar_SL = 0.;
+//	wa_Polar_SL = 0.;
+//	wa_Polar_SL = 0.75;
+	wa_Polar_SL = 1.;
 	wa_Polar_Tropopause = 0.;
 
 
@@ -2252,7 +2226,7 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 
 
 
-
+/*
 /////////////////////////////////////////// forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
 /////////////////////////////////////////// forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
 
@@ -2536,7 +2510,7 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 
 /////////////////////////////////////////// end of forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
 /////////////////////////////////////////// end of forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
-
+*/
 
 
 
@@ -3826,12 +3800,9 @@ int BC_Thermo::GetTropopauseHightAdd ( double t_cret )
 
 double BC_Thermo::GetPoleTemperature ( int Ma, int Ma_1, int Ma_2, double t_1, double t_2 )
 {
-
-	cout << "   before  t_pole = " << t_pole << "     t_1 = " << t_1 << "     t_2 = " << t_2 << "     Ma_1 = " << Ma_1 << "     Ma_2 = " << Ma_2 << "     Ma = " << Ma << endl;
-
 	t_pole = ( t_2 - t_1 ) / ( Ma_2 - Ma_1 ) * ( double ) ( Ma - Ma_1 ) + t_1;
 
-	cout << "   behind  t_pole = " << t_pole << "     t_1 = " << t_1 << "     t_2 = " << t_2 << "     Ma_1 = " << Ma_1 << "     Ma_2 = " << Ma_2 << "     Ma = " << Ma << endl;
+//	cout << "     t_pole = " << t_pole << "     t_1 = " << t_1 << "     t_2 = " << t_2 << "     Ma_1 = " << Ma_1 << "     Ma_2 = " << Ma_2 << "     Ma = " << Ma << endl;
 
 	return t_pole;
 }
