@@ -99,17 +99,17 @@ class BC_Thermo
 
 		void BC_Radiation_2D_layer ( Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_Radiation_multi_layer ( int*, int, double, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_Radiation_multi_layer ( int*, double , int, double, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_WaterVapour ( int *, Array &, Array &, Array & );
+		void BC_WaterVapour ( int *, double &, Array &, Array &, Array & );
 
 		void BC_CloudWaterIce ( Array &, Array &, Array &, Array & );
 
 		void Ice_Water_Saturation_Adjustment ( int *, int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void Two_Category_Ice_Scheme ( int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void Two_Category_Ice_Scheme ( int, int, int, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_CO2 ( int *, Array_2D &, Array &, Array &, Array &, Array & );
+		void BC_CO2 ( int *, double, Array_2D &, Array &, Array &, Array &, Array & );
 
 		void BC_NASAbasedSurfTempRead ( int &, double &, Array &, Array &, Array &, Array & );
 
@@ -138,6 +138,10 @@ class BC_Thermo
 		double out_t_cret_cor (  ) const;
 
 		double out_co2 (  ) const;
+
+		int GetTropopauseHightAdd ( double );
+
+		double GetPoleTemperature ( int, int, int, double, double );
 
 };
 #endif

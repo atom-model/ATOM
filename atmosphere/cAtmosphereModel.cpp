@@ -358,14 +358,17 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 
 //  class element for the surface temperature based on NASA temperature for progressing timeslices
-	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
+//	if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
 
 //  class element for the surface precipitation from NASA for comparison
 	circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
 //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
 	circulation.BC_Temperature ( im_tropopause, t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
-//	t_cretaceous = circulation.out_t_cretaceous (  );
+	t_cretaceous = circulation.out_t_cretaceous (  );
+
+//	class element for the tropopause location with changing global temperature 
+//	if ( Ma > 0 ) 			circulation.TropopauseLocation ( im_tropopause, t_cretaceous );
 
 //  class element for the correction of the temperature initial distribution around coasts
 	if ( ( NASATemperature == 1 ) && ( Ma > 0 ) ) circulation.IC_Temperature_WestEastCoast ( h, t );
@@ -374,14 +377,14 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
 //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-	circulation.BC_WaterVapour ( im_tropopause, h, t, c );
+	circulation.BC_WaterVapour ( im_tropopause, t_cretaceous, h, t, c );
 
 //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-	circulation.BC_CO2 ( im_tropopause, Vegetation, h, t, p_dyn, co2 );
+	circulation.BC_CO2 ( im_tropopause, t_cretaceous, Vegetation, h, t, p_dyn, co2 );
 	co2_cretaceous = circulation.out_co2 (  );
 
 // class element for the surface temperature computation by radiation flux density
-	if ( RadiationModel == 1 ) circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+	if ( RadiationModel == 1 ) circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, t_cretaceous, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
 
 // 	class element for the initial conditions for u-v-w-velocity components
 	circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
@@ -522,7 +525,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
 
 // class element for the surface temperature computation by radiation flux density
-			if ( RadiationModel == 1 )			circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+			if ( RadiationModel == 1 )			circulation.BC_Radiation_multi_layer ( im_tropopause, t_cretaceous, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
 
 //	new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 			Accuracy_Atm	  min_Residuum ( im, jm, km, dr, dthe, dphi );
@@ -735,7 +738,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
 			if ( velocity_iter == velocity_n )
 			{
-				circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, h, c, t, p_stat, cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
+				circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
 				velocity_n = velocity_iter + 2;
 			}
 			n++;
@@ -750,7 +753,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //	Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
-	circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, h, c, t, p_stat, cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
+	circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
 //	goto Printout;
 

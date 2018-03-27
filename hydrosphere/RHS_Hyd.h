@@ -18,38 +18,35 @@
 
 using namespace std;
 
-
 class RHS_Hydrosphere
 {
 	private:
 		int im, jm, km;
-		int h_check_i, h_check_j, h_check_k;
-
-		double dt, dr, dthe, dphi, r0;
-		double re, pr, ec, sc, g;
-		double dr2, dthe2, dphi2, rm2;
-		double rm;
-		double c_0, t_0, c_Boussinesq, r_fluid, r_salt_water, coeff_density, coeff_buoy;
-		double sinthe, sinthe2, c43, c13, k_Force;
-		double costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2;
-		double dudr, dudthe, dudphi, dvdr, dvdthe, dvdphi, dwdr, dwdthe, dwdphi;
-		double d2udr2, d2udthe2, d2udphi2, d2vdr2, d2vdthe2, d2vdphi2, d2wdr2, d2wdthe2, d2wdphi2;
-		double dtdr, dpdr, dtdthe, dpdthe, dtdphi, dpdphi, d2tdr2, d2tdthe2, d2tdphi2;
-		double dcdr, dcdthe, dcdphi, d2cdr2, d2cdthe2, d2cdphi2;
-		double RS_Salt_Balance, RS_Salt_Energy, RS_Coriolis_Energy, RS_Centrifugal_Energy;
-		double Buoyancy, RS_buoyancy_Energy, RS_buoyancy_Momentum;
-		double h_0_i, h_c_i, h_d_i, h_0_j, h_c_j, h_d_j, h_0_k, h_c_k, h_d_k, cc;
-
+		
+        double dt, dr, dthe, dphi, r0;
+		double re, pr, ec, sc, m_g;
+		
+		double Buoyancy;
 
 	public:
-		RHS_Hydrosphere ( int, int, double, double, double );
+        RHS_Hydrosphere ( int jm, int km, double dthe, double dphi, double re );
 
-		RHS_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double );
-		~RHS_Hydrosphere ();
+	    RHS_Hydrosphere ( int im, int jm, int km, double r0, double dt, double dr, double dthe, double dphi, double re, 
+            double ec, double sc, double g, double pr, double buoyancy );
 
-		void RK_RHS_3D_Hydrosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+        ~RHS_Hydrosphere ();
 
-		void RK_RHS_2D_Hydrosphere ( int, int, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd, double g, double cp_w, double u_0, double t_0, 
+            double c_0, 
+            double r_0_water, double ta, double pa, double ca, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, 
+            Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, 
+            Array &p_dynn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &rhs_c, 
+            Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D, 
+            Array &Salt_Balance, Array &p_stat );
+
+        void RK_RHS_2D_Hydrosphere ( int j, int k, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w, 
+            Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &aux_v, 
+            Array &aux_w );
 
 };
 #endif
