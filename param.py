@@ -8,8 +8,8 @@ def main():
     # name, description, datatype, default
     PARAMS = {
         'common': [
-            ( 'bathymetry_path', '', 'string', '/home/mchin/workspaces/ATOM/smoothed_Paleotopography_bathymetry_Golonka_rev210' ),
-            ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
+            ( 'bathymetry_path', '', 'string', '/home/mchin/workspaces/ATOM/paleotopography/paleotopo_grids' ),
+            ( 'BathymetrySuffix', '', 'string', 'Ma.xyz' ),
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
             ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),

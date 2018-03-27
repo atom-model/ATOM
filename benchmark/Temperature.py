@@ -160,14 +160,14 @@ def reconstruct_grid(
 
 
 def reconstruct_temperature(time,times):
-    st = np.genfromtxt('./output/[{0}Ma_Golonka.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
+    st = np.genfromtxt('./output/[{0}Ma.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
     data = st[:,[0,1,6]]
     for d in data:
         d[1]=90-d[1]
     ind = np.lexsort((-data[:,1],data[:,0]))    
     print data[ind]
     
-    with open('./output/[{0}Ma_Golonka.xyz]_PlotData_Atm_temperature.xyz'.format(time), 'w') as of:
+    with open('./output/[{0}Ma.xyz]_PlotData_Atm_temperature.xyz'.format(time), 'w') as of:
         for l in data[ind]:
             of.write(' '.join(str(item) for item in l) + '\n')
 
@@ -176,7 +176,7 @@ def reconstruct_temperature(time,times):
             os.mkdir('./output'.format(times[t+1]))
         reconstruct_grid(
             time,
-           './output/[{0}Ma_Golonka.xyz]_PlotData_Atm_temperature.xyz'.format(time),
+           './output/[{0}Ma.xyz]_PlotData_Atm_temperature.xyz'.format(time),
             times[t+1],
             './output/{0}Ma_SurfaceTemperature.xyz'.format(times[t+1]))       
 
@@ -187,14 +187,14 @@ def reconstruct_temperature(time,times):
 
 
 def reconstruct_precipitation(time,times):
-    st = np.genfromtxt('./output/[{0}Ma_Golonka.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
+    st = np.genfromtxt('./output/[{0}Ma.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
     data = st[:,[0,1,8]]
     for d in data:
         d[1]=90-d[1]
     ind = np.lexsort((-data[:,1],data[:,0]))    
     print data[ind]
     
-    with open('./output/[{0}Ma_Golonka.xyz]_PlotData_Atm_precipitation.xyz'.format(time), 'w') as of:
+    with open('./output/[{0}Ma.xyz]_PlotData_Atm_precipitation.xyz'.format(time), 'w') as of:
         for l in data[ind]:
             of.write(' '.join(str(item) for item in l) + '\n')
 
@@ -203,7 +203,7 @@ def reconstruct_precipitation(time,times):
             os.mkdir('./output'.format(times[t+1]))
         reconstruct_grid(
             time,
-           './output/[{0}Ma_Golonka.xyz]_PlotData_Atm_precipitation.xyz'.format(time),
+           './output/[{0}Ma.xyz]_PlotData_Atm_precipitation.xyz'.format(time),
             times[t+1],
             './output/{0}Ma_SurfacePrecipitation.xyz'.format(times[t+1]))  
 
@@ -216,7 +216,7 @@ import numpy as np
 from pyatom import Model, Atmosphere, Hydrosphere
 
 model = Model()
-times=range(0,150,10)
+times=range(0,55,5)
 
 for t in range(len(times)):
     time = times[t]

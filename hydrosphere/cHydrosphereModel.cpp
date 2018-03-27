@@ -249,11 +249,18 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	string Name_v_w_Transfer_File;
 	stringstream ssName_v_w_Transfer_File;
 
+#ifdef mchin_dev
+    string Name_SurfaceTemperature_File = temperature_file;
+    if(Ma != 0 && use_earthbyte_reconstruction){
+        Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_SurfaceTemperature.xyz";
+    }
+#else
 // naming a file to read the surface temperature of the modern world
 	string Name_SurfaceTemperature_File; 
 	stringstream ssNameSurfaceTemperature;
 	ssNameSurfaceTemperature << "../data/" << "SurfaceTemperature_NASA.xyz";
 	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
+#endif
 
 // naming a file to read the surface salinity of the modern world
 	string Name_SurfaceSalinity_File; 
@@ -332,8 +339,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 // class BC_Thermohalin for the initial and boundary conditions of the flow properties
 	BC_Thermohalin		oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, t_pole, input_path );
 
+#ifdef mchin_dev
+    oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
+#else
 //	surface temperature from World Ocean Atlas 2009 given as boundary condition
 	if ( Ma == 0 ) oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
+#endif
 
 //	surface salinity from World Ocean Atlas 2009 given as boundary condition
 //	if ( Ma == 0 ) oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
@@ -356,7 +367,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 // computation of the ratio ocean to land areas
 	calculate_MSL.land_oceanFraction ( h );
-
 
 // ******************************************   start of pressure and velocity iterations ************************************************************************
 
@@ -705,6 +715,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     if ( velocity_iter == velocity_iter_max )   cout << "***** number of time steps      n = " << n << ", end of program reached because of limit of maximum time steps ***** \n\n" << endl;
 
     if ( emin <= epsres )        cout << "***** steady solution reached! *****" << endl;
+
 }
 
 
