@@ -434,6 +434,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
 //		if ( pressure_iter_2D == 1 ) 			startPressure.computePressure_2D ( pa, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
+//		startPressure.computePressure_2D ( pa, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
 
 
 //		limit of the computation in the sense of time steps
