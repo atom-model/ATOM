@@ -34,7 +34,6 @@ BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int tropopau
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;
-//	this -> i_max = i_max;
 	this -> tropopause_equator = tropopause_equator;
 	this -> tropopause_pole = tropopause_pole;
 	this-> L_atm = L_atm;
@@ -650,84 +649,82 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 
 
 // pole temperature adjustment 
-	int Ma_1 = 0;
-	int Ma_2 = 45;
-	double t_1 = t_pole;
-	double t_2 = ( 13. + t_0 ) / t_0;
+	int Ma_1_1 = 0;
+	int Ma_2_1 = 45;
+	int Ma_1_2 = 45;
+	int Ma_2_2 = 93;
+	int Ma_1_3 = 93;
+	int Ma_2_3 = 140;
+
+	double t_1 = 0.;
+	double t_2 = 0.;
 	double t_pole_add = 0.;
 	double t_pole_diff = 0.;
 
 
 	if ( RadiationModel == 1 )
 	{
-		if ( sun == 0 )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int k = 0; k < km; k++ )
+			if ( Ma <= Ma_2_1 )
 			{
-				if ( Ma <= Ma_1 )
-				{
-					t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-				}
+				t_1 = t_pole;
+				t_2 = ( 13. + t_0 ) / t_0;
+				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_1, Ma_2_1, t_1, t_2 );
+			}
 
-				Ma_1 = 45;
-				Ma_2 = 93;
+			if ( ( Ma > Ma_1_2 ) && ( Ma <= Ma_2_2 ) )
+			{
 				t_1 = ( 13. + t_0 ) / t_0;
 				t_2 = ( 23. + t_0 ) / t_0;
+				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_2, Ma_2_2, t_1, t_2 );
+			}
 
-				if ( ( Ma > Ma_1 ) && ( Ma <= Ma_2) )
-				{
-					t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
-				}
-
-				Ma_1 = 93;
-				Ma_2 = 140;
+			if ( ( Ma > Ma_1_3 ) && ( Ma <= Ma_2_3 ) )
+			{
 				t_1 = ( 23. + t_0 ) / t_0;
 				t_2 = ( 16. + t_0 ) / t_0;
+				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 );
+			}
 
-				if ( ( Ma > Ma_1 ) && ( Ma <= Ma_2) )
+
+			t_eff = t_pole - t_equator;
+			t_pole_diff = t_pole - t.x[ 0 ][ 0 ][ k ];
+
+
+			for ( int j = 0; j < jm; j++ )
+			{
+				i_mount = i_topography[ j ][ k ];
+
+				d_j = ( double ) j;
+
+				if ( NASATemperature == 0 )									// if ( NASATemperature == 0 ) parabolic surface temperature is used
 				{
-					t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1, Ma_2, t_1, t_2 );
+					t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add;
+					if ( h.x[ i_mount ][ j ][ k ] == 1. ) 		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
 				}
 
-
-				t_eff = t_pole - t_equator;
-				t_pole_diff = t_pole - t.x[ 0 ][ 0 ][ k ];
-
-
-				for ( int j = 0; j < jm; j++ )
+				if ( NASATemperature == 1 )									// if ( NASATemperature == 1 ) surface temperature is NASA based
 				{
-					i_mount = i_topography[ j ][ k ];
-
-					d_j = ( double ) j;
-
-					if ( NASATemperature == 0 )									// if ( NASATemperature == 0 ) parabolic surface temperature is used
+					if ( Ma == 0 )
 					{
-						t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add;
-						if ( h.x[ i_mount ][ j ][ k ] == 1. ) 		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
+						t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
+						if ( h.x[ 0 ][ j ][ k ] != 0. )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add;
 					}
-
-					if ( NASATemperature == 1 )									// if ( NASATemperature == 1 ) surface temperature is NASA based
+					else
 					{
-						if ( Ma == 0 )
-						{
-							t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
-							if ( h.x[ 0 ][ j ][ k ] != 0. )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add;
-						}
-						else
-						{
-							if ( ( j >= 0 ) && ( j <= j_half ) )		t_pole_add = t_pole_diff * ( 1. - ( double ) j / ( double ) j_half );
+						if ( ( j >= 0 ) && ( j <= j_half ) )		t_pole_add = t_pole_diff * ( 1. - ( double ) j / ( double ) j_half );
 
 //	if ( ( j >= 0 ) && ( j <= j_half ) )		cout << endl << "   north    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
 
-							if ( ( j > j_half ) && ( j < jm ) )		t_pole_add = t_pole_diff * ( double ) ( j - j_half ) / ( double ) ( j_max - j_half );
+						if ( ( j > j_half ) && ( j < jm ) )		t_pole_add = t_pole_diff * ( double ) ( j - j_half ) / ( double ) ( j_max - j_half );
 
 //	if ( ( j > j_half ) && ( j < jm ) )		cout << endl << "   south    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
 
-							t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add;
-						}
-
-						if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
+						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add;
 					}
+
+					if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
 				}
 			}
 		}
