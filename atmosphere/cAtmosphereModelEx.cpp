@@ -355,18 +355,18 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-    circulation.BC_WaterVapour ( im_tropopause, h, t, c );
+    circulation.BC_WaterVapour ( im_tropopause, t_cretaceous, h, t, c );
  
     PrintDebug("After circulation.BC_WaterVapour");
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-    circulation.BC_CO2(im_tropopause, Vegetation, h, t, p_dyn, co2 );
+    circulation.BC_CO2(im_tropopause, t_cretaceous, Vegetation, h, t, p_dyn, co2 );
     co2_cretaceous = circulation.out_co2 (  );
 
     // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){
         PrintDebug("before first BC_Radiation_multi_layer");
-        circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+        circulation.BC_Radiation_multi_layer ( im_tropopause, t_cretaceous, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
     PrintDebug("after first BC_Radiation_multi_layer");
 
@@ -488,7 +488,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
         //class element for the surface temperature computation by radiation flux density
         if( RadiationModel == 1 ){
             PrintDebug("before second circulation.BC_Radiation_multi_layer");
-            circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+            circulation.BC_Radiation_multi_layer ( im_tropopause, t_cretaceous, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
         }
         PrintDebug("after second circulation.BC_Radiation_multi_layer");
 
@@ -545,7 +545,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
             //Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
             if ( v_iter == velocity_n )
             {
-                circulation.Two_Category_Ice_Scheme(n, velocity_iter_max, RadiationModel, h, c, t, p_stat, 
+                circulation.Two_Category_Ice_Scheme(n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, 
                                                     cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
                 velocity_n = v_iter + 2;
             }
@@ -560,7 +560,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
         PrintDebug("Before second circulation.Two_Category_Ice_Scheme");
         //Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
         //resulting the precipitation distribution formed of rain and snow
-        circulation.Two_Category_Ice_Scheme(n, velocity_iter_max, RadiationModel, h, c, t, p_stat,
+        circulation.Two_Category_Ice_Scheme(n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat,
                                         cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c);
 
 

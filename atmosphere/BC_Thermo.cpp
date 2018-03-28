@@ -566,9 +566,9 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 
 #ifdef mchin_dev
     cAtmosphereModel *m = cAtmosphereModel::GetModel();
-    t_cretaceous = m->GetMeanTemperatureFromCurve(*m->get_current_time());
-    t_cretaceous_prev = m->GetMeanTemperatureFromCurve(*m->get_previous_time());
-    t_cretaceous_add = (t_cretaceous - t_cretaceous_prev) / t_0;
+    t_cretaceous = m->GetMeanTemperatureFromCurve(*m->get_current_time()) / t_0;
+    t_cretaceous_prev = m->GetMeanTemperatureFromCurve(*m->get_previous_time()) / t_0;
+    t_cretaceous_add = (t_cretaceous - t_cretaceous_prev);
     std::cout<< "t_cretaceous_add: " << t_cretaceous_add*t_0 <<"  "<<*m->get_current_time() <<"  " << *m->get_previous_time()<<std::endl;
 #endif
 	// temperatur distribution at aa prescribed sun position
@@ -872,8 +872,8 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, double t_cretaceous, Array_2D &Vege
 
 #ifdef mchin_dev
     cAtmosphereModel *m = cAtmosphereModel::GetModel();
-    t_cretaceous = m->GetMeanTemperatureFromCurve(*m->get_current_time()) / t_0;
-    std::cout<< "t_cretaceous in BC_CO2: " << t_cretaceous*t_0 << std::endl;
+    t_cretaceous = m->GetMeanTemperatureFromCurve(*m->get_current_time());
+    std::cout<< "t_cretaceous in BC_CO2: " << t_cretaceous << std::endl;
 #endif
 
 // CO2-distribution by Ruddiman approximated by a parabola
