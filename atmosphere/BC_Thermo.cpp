@@ -288,6 +288,10 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
 					i_topography[ j ][ k ] = i;
 					break;
 				}
+					if ( h.x[ 0 ][ j ][ k ] == 0. )
+				{
+					i_topography[ j ][ k ] = 0;
+				}
 			}
 		}
 	}
@@ -316,7 +320,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
 
 
 
-
 // absorption/emissivity computation
 	epsilon_eff_max = .594;															// constant  given by Häckel ( F. Baur and H. Philips, 1934 )
 																										// constant value stands for other non-condensable gases than water vapour in the equation for epsilon
@@ -324,8 +327,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
 
 	for ( int j = 0; j < jm; j++ )
 	{
-		i_trop = im_tropopause[ j ];
-//		i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
+		i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
 
 		d_j = ( double ) j;
 		epsilon_eff_max = epsilon_eff_2D * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + epsilon_pole;		// on zero level, lateral parabolic distribution
@@ -353,12 +355,12 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
 				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
 
 				epsilon.y[ j ][ k ] = epsilon_3D.x[ i ][ j ][ k ];
-
 			}
 
 
 			for ( int i = i_trop - 1; i >= 0; i-- )
 			{
+				i_mount = i_topography[ j ][ k ];
 				if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )				epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_mount ][ j ][ k ];
 				if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )				radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_mount ][ j ][ k ];
 			}
@@ -366,14 +368,12 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
 			for ( int i = i_trop + 1; i < im; i++ )
 			{
 				epsilon_3D.x[ i ][ j ][ k ] = 0.;
-				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( temp_tropopause[ j ] * t_0, 4. );
+				radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
 			}
 		}
 	}
 
-
-
-
+//	cout << endl << "                                              nach epsilon" << endl;
 
 //	iteration procedure for the computation of the temperature based on the multi-layer radiation model
 // temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
@@ -385,14 +385,13 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
 // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
 		for ( int j = 0; j < jm; j++ )
 		{
-			i_trop = im_tropopause[ j ];
-//			i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
+			i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
 
 			for ( int k = 0; k < km; k++ )
 			{
 				i_mount = i_topography[ j ][ k ];
 
-				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( temp_tropopause[ j ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 				radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );		// back radiation absorbed from the first water vapour layer out of 40
  
@@ -489,7 +488,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
 					}
 				}
 
-				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( temp_tropopause[ j ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+				radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
 // recurrence formula for the radiation and temperature
 				for ( int i = i_trop - 1; i >= i_mount; i-- )
@@ -558,7 +557,6 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 
 	t_cretaceous = t_cretaceous / t_0;  								 // non-dimensional
 	t_cretaceous_add = t_cretaceous - t_cretaceous_prev; // non-dimensional
-
 
 
 	// temperatur distribution at aa prescribed sun position
@@ -633,12 +631,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 			}
 		}																								// temperatur distribution at aa prescribed sun position
 
-
-
-
-
-
-
+/*
 // pole temperature adjustment 
 	int Ma_1_1 = 0;
 	int Ma_2_1 = 45;
@@ -649,24 +642,25 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 
 	double t_1 = 0.;
 	double t_2 = 0.;
-	double t_pole_add = 0.;
 	double t_pole_diff = 0.;
-
+	double t_pole_add = 0.;
+*/
 
 	if ( RadiationModel == 1 )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
+/*
 			if ( Ma <= Ma_2_1 )
 			{
 				t_1 = t_pole;
-				t_2 = ( 13. + t_0 ) / t_0;
+				t_2 = ( 10. + t_0 ) / t_0;
 				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_1, Ma_2_1, t_1, t_2 );
 			}
 
 			if ( ( Ma > Ma_1_2 ) && ( Ma <= Ma_2_2 ) )
 			{
-				t_1 = ( 13. + t_0 ) / t_0;
+				t_1 = ( 10. + t_0 ) / t_0;
 				t_2 = ( 23. + t_0 ) / t_0;
 				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_2, Ma_2_2, t_1, t_2 );
 			}
@@ -677,10 +671,10 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 				t_2 = ( 16. + t_0 ) / t_0;
 				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 );
 			}
-
+*/
 
 			t_eff = t_pole - t_equator;
-			t_pole_diff = t_pole - t.x[ 0 ][ 0 ][ k ];
+//			t_pole_diff = t_pole - t.x[ 0 ][ 0 ][ k ];
 
 
 			for ( int j = 0; j < jm; j++ )
@@ -704,15 +698,16 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 					}
 					else
 					{
-						if ( ( j >= 0 ) && ( j <= j_half ) )		t_pole_add = t_pole_diff * ( 1. - ( double ) j / ( double ) j_half );
+//						if ( ( j >= 0 ) && ( j <= j_half ) )		t_pole_add = t_pole_diff * ( 1. - ( double ) j / ( double ) j_half );
 
 //	if ( ( j >= 0 ) && ( j <= j_half ) )		cout << endl << "   north    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
 
-						if ( ( j > j_half ) && ( j < jm ) )		t_pole_add = t_pole_diff * ( double ) ( j - j_half ) / ( double ) ( j_max - j_half );
+//						if ( ( j > j_half ) && ( j < jm ) )		t_pole_add = t_pole_diff * ( double ) ( j - j_half ) / ( double ) ( j_max - j_half );
 
 //	if ( ( j > j_half ) && ( j < jm ) )		cout << endl << "   south    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
 
-						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add;
+//						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add;
+						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
 					}
 
 					if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
@@ -813,7 +808,6 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, double &t_cretaceous, Array
 // water vapour distribution decreasing approaching tropopause
 	for ( int j = 0; j < jm; j++ )
 	{
-//		i_trop = im_tropopause[ j ];
 		i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
 		d_i_max = ( double ) i_trop;
 
@@ -854,16 +848,18 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, double t_cretaceous, Array_2D &Vege
 
 	j_half = j_max / 2;
 
-	t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
-	t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
-	if ( Ma == 0 ) 	t_cretaceous = 0.;
+// temperature-distribution by Ruddiman approximated by a parabola
+	t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / ( double ) Ma_max ) );   // in °C
+	t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / ( double ) Ma_max + Ma );   // in °C
+	if ( Ma == 0 ) 	t_cretaceous = t_cretaceous_prev = 0.;
 
 // CO2-distribution by Ruddiman approximated by a parabola
 	co2_cretaceous = 3.2886 * pow ( ( t_cretaceous + t_average ), 2 ) - 32.8859 * ( t_cretaceous + t_average ) + 102.2148;  // in ppm
 	co2_average = 3.2886 * pow ( t_average, 2 ) - 32.8859 * t_average + 102.2148;  // in ppm
 	co2_cretaceous = co2_cretaceous - co2_average;
 
-	t_cretaceous = t_cretaceous / t_0;  								 // non-dimensional
+
+	t_cretaceous = t_cretaceous / t_0;
 
 	cout.precision ( 3 );
 
@@ -913,7 +909,6 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, double t_cretaceous, Array_2D &Vege
 
 
 
-
 // co2 distribution decreasing approaching tropopause, above no co2
 	for ( int j = 0; j < jm; j++ )
 	{
@@ -942,7 +937,6 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, double t_cretaceous, Array_2D &Vege
 			}
 		}
 	}
-
 }
 
 
@@ -1032,7 +1026,8 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 	va_equator_SL =  0.000;
 	va_equator_Tropopause = 0.000;
 
-	wa_equator_SL = - 5.;
+//	wa_equator_SL = - 5.;
+	wa_equator_SL = - 2.;
 	wa_equator_Tropopause = - 7.5;
 
 // velocity assumptions for latitude at 15° and 30° in the Hadley cell
@@ -1045,7 +1040,8 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 	va_Hadley_SL_15 = 1.;
 	va_Hadley_Tropopause_15 = - 1.;
 
-	wa_Hadley_SL = 5.;																	// at surface
+//	wa_Hadley_SL = 5.;																	// at surface
+	wa_Hadley_SL = 2.;																	// at surface
 	wa_Hadley_Tropopause = 30.;													// subtropic jet in m/s compares to 108 km/h
 
 // velocity assumptions for latitude at 45° and 60° in the Ferrel cell
@@ -1058,7 +1054,8 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 	va_Ferrel_SL_45 = - 1.;
 	va_Ferrel_Tropopause_45 = 1.;
 
-	wa_Ferrel_SL = 1.5;																	// subpolar jet
+//	wa_Ferrel_SL = 1.5;																	// subpolar jet
+	wa_Ferrel_SL = 0.75;																	// subpolar jet
 	wa_Ferrel_Tropopause = 10.;														// subpolar jet in m/s compares to 36 km/h
 
 // velocity assumptions for latitude 90° in the Polar cell
@@ -3052,8 +3049,8 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-				i_trop = im_tropopause[ j ];
-//				i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
+//				i_trop = im_tropopause[ j ];
+				i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
 
 				t_u = t.x[ i ][ j ][ k ] * t_0;																		// in K
 
@@ -3787,7 +3784,10 @@ double BC_Thermo::out_co2 (  ) const
 int BC_Thermo::GetTropopauseHightAdd ( double t_cret )
 {
 	double d_i_h_round = round ( ( t_cret * t_0 ) / 2.6 );		// adiabatic slope of radial temperature 0.65/100m, stepsize 400m => 2.6/400m
-	int i_h = ( int ) d_i_h_round;
+	int i_h = 0;
+
+	d_i_h_round = round ( d_i_h_round );
+	i_h = ( int ) d_i_h_round;
 
 //	cout << "     t_cret = " << t_cret * t_0 << "     d_i_h_round = " << d_i_h_round << "     t_0 = " << t_0 << "     i_h = " << i_h << endl;
 

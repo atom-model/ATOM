@@ -102,7 +102,7 @@ def main():
             ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
 #            ( 't_equator', 'temperature t_0 = 1.11 compares to 26.0° C compares to 299.15 K', 'double', 1.095 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.945 compares to -15.0°C compares to 258.15 K', 'double', 0.945 ),
-#            ( 't_pole', 'temperature at the poles t_pole = 0.927 compares to -20.0°C compares to 253.15 K', 'double', 0.927 ),
+#            ( 't_pole', 'temperature at the poles t_pole = 0.981 compares to -5.0°C compares to 253.15 K', 'double', 0.981 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
 #            ( 't_tropopause', 'temperature in the tropopause, t = 0.780 compares to -60°C compares to 213.15 K', 'double', 0.780 ),
 #            ( 't_tropopause', 'temperature in the tropopause, t = 0.791 compares to -57°C compares to 216.15 K', 'double', 0.791 ),
