@@ -643,7 +643,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //	radial data along constant hight above ground
 	int i_radial = 40;
-	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, r_0_water, h, p_dyn, p_stat, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater );
+	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
 	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
