@@ -69,6 +69,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 
 // ocean surface velocity is about 3% of the wind velocity at the surface
 	water_wind = .03;
+//	water_wind = .01;
 
 	pi180 = 180./M_PI;
 
