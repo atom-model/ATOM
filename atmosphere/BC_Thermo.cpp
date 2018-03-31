@@ -631,7 +631,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 			}
 		}																								// temperatur distribution at aa prescribed sun position
 
-/*
+
 // pole temperature adjustment 
 	int Ma_1_1 = 0;
 	int Ma_2_1 = 45;
@@ -644,13 +644,13 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 	double t_2 = 0.;
 	double t_pole_diff = 0.;
 	double t_pole_add = 0.;
-*/
+
 
 	if ( RadiationModel == 1 )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
-/*
+
 			if ( Ma <= Ma_2_1 )
 			{
 				t_1 = t_pole;
@@ -671,10 +671,10 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 				t_2 = ( 16. + t_0 ) / t_0;
 				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 );
 			}
-*/
+
 
 			t_eff = t_pole - t_equator;
-//			t_pole_diff = t_pole - t.x[ 0 ][ 0 ][ k ];
+			t_pole_diff = t_pole - t.x[ 0 ][ 0 ][ k ];
 
 
 			for ( int j = 0; j < jm; j++ )
@@ -698,16 +698,17 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 					}
 					else
 					{
-//						if ( ( j >= 0 ) && ( j <= j_half ) )		t_pole_add = t_pole_diff * ( 1. - ( double ) j / ( double ) j_half );
+						if ( ( j >= 0 ) && ( j <= j_half ) )		t_pole_add = t_pole_diff * ( 1. - ( double ) j / ( double ) j_half );
 
 //	if ( ( j >= 0 ) && ( j <= j_half ) )		cout << endl << "   north    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
 
-//						if ( ( j > j_half ) && ( j < jm ) )		t_pole_add = t_pole_diff * ( double ) ( j - j_half ) / ( double ) ( j_max - j_half );
+						if ( ( j > j_half ) && ( j < jm ) )		t_pole_add = t_pole_diff * ( double ) ( j - j_half ) / ( double ) ( j_max - j_half );
 
 //	if ( ( j > j_half ) && ( j < jm ) )		cout << endl << "   south    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
 
 //						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add;
-						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
+						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_pole_add;
+//						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
 					}
 
 					if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution

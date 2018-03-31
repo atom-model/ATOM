@@ -64,7 +64,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 
 // reduction or amplification of flow velocities along coasts
 // for the artificial initial and boundary conditions
-	IC_water = .0015;				// reduced radial velocity u ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,000675 m/s )
+	IC_water = .0015;				// reduced radial velocity u ( average velocity compares to          u_0 = 0,0015 m/s )
 
 
 // ocean surface velocity is about 3% of the wind velocity at the surface

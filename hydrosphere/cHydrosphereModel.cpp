@@ -340,22 +340,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //	import of surface v- and w-velocity components from AGCM, surface velocity reduced to 3% of the wind velocity
 	oceanflow.IC_v_w_Atmosphere ( h, u, v, w );
-/*
-	cout << endl << " ***** before Ekman       printout of 3D-field v-component ***** " << endl << endl;
-	v.printArray( im, jm, km );
-	cout << endl << " ***** before Ekman       printout of 3D-field w-component ***** " << endl << endl;
-	w.printArray( im, jm, km );
-*/
+
 // 	initial conditions for u-v-w-velocity components following the Ekman spiral
 	oceanflow.IC_v_w_Ekman ( h, v, w );
 
 //	salinity distribution as initial condition in 3 dimensions
 	oceanflow.BC_Temperature_Salinity ( h, t, c, p_dyn );
-
-	cout << endl << " ***** after temp       printout of 3D-field t-component ***** " << endl << endl;
-	t.printArray( im, jm, km );
-	cout << endl << " ***** after temp       printout of 3D-field w-component ***** " << endl << endl;
-	c.printArray( im, jm, km );
 
 //  surface pressure computed by surface temperature with gas equation
 //	oceanflow.BC_Pressure ( p_stat, t, h );
@@ -434,7 +424,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
 //		if ( pressure_iter_2D == 1 ) 			startPressure.computePressure_2D ( pa, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
-//		startPressure.computePressure_2D ( pa, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
 
 
 //		limit of the computation in the sense of time steps
