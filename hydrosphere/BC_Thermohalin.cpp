@@ -492,7 +492,8 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: east coast
-	k_grad = 8;																			// extension of velocity change
+//	k_grad = 8;																			// extension of velocity change
+	k_grad = 12;																			// extension of velocity change
 
 	k_water = 0;																		// on water closest to coast
 	k_sequel = 1;																		// on solid ground
@@ -563,7 +564,8 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: west coast
-	k_grad = 8;																			// extension of velocity change
+//	k_grad = 8;																			// extension of velocity change
+	k_grad = 12;																			// extension of velocity change
 
 	k_water = 0;																		// somewhere on water
 	flip = 0;																				// somewhere on water
