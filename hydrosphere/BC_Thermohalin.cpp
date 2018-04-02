@@ -64,8 +64,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 
 // reduction or amplification of flow velocities along coasts
 // for the artificial initial and boundary conditions
-//	IC_water = .0015;				// reduced radial velocity u ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,000675 m/s )
-	IC_water = .015;				// reduced radial velocity u ( average velocity compares to          u_0 * IC_water = 0,45 * IC_water = 0,000675 m/s )
+	IC_water = .0015;				// reduced radial velocity u ( average velocity compares to          u_0 = 0,0015 m/s )
 
 
 // ocean surface velocity is about 3% of the wind velocity at the surface
@@ -493,7 +492,8 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: east coast
-	k_grad = 8;																			// extension of velocity change
+//	k_grad = 8;																			// extension of velocity change
+	k_grad = 12;																			// extension of velocity change
 
 	k_water = 0;																		// on water closest to coast
 	k_sequel = 1;																		// on solid ground
@@ -564,7 +564,8 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: west coast
-	k_grad = 8;																			// extension of velocity change
+//	k_grad = 8;																			// extension of velocity change
+	k_grad = 12;																			// extension of velocity change
 
 	k_water = 0;																		// somewhere on water
 	flip = 0;																				// somewhere on water

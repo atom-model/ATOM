@@ -106,6 +106,15 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
 				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] + ( kw1 + 2. * kw2 + 2. * kw3 + kw4 ) / 6.;
 				p_dyn.x[ i ][ j ][ k ] = p_dynn.x[ i ][ j ][ k ] + ( kp1 + 2. * kp2 + 2. * kp3 + kp4 ) / 6.;
 				c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] + ( kc1 + 2. * kc2 + 2. * kc3 + kc4 ) / 6.;
+
+				if ( u.x[ i ][ j ][ k ] >= .0002 )			u.x[ i ][ j ][ k ] = .0002;
+				if ( u.x[ i ][ j ][ k ] <= - .0002 )			u.x[ i ][ j ][ k] = - .0002;
+
+				if ( v.x[ i ][ j ][ k ] >= .0024 )					v.x[ i ][ j ][ k ] = .0024;
+				if ( v.x[ i ][ j ][ k ] <= - .0024 )				v.x[ i ][ j ][ k ] = - .0024;
+
+				if ( w.x[ i ][ j ][ k ] >= .054 )				w.x[ i ][ j ][ k ] = .054;
+				if ( w.x[ i ][ j ][ k ] <= - .054 )				w.x[ i ][ j ][ k ] = - .054;
 			}
 		}
 	}

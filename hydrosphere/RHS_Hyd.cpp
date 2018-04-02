@@ -568,16 +568,15 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     aux_v.x[ i ][ j ][ k ] = rhs_v.x[ i ][ j ][ k ] + dpdthe / rm;
     aux_w.x[ i ][ j ][ k ] = rhs_w.x[ i ][ j ][ k ] + dpdphi / rmsinthe;
 
-/*
-    if ( u.x[ i ][ j ][ k ] >= .0002 )          u.x[ i ][ j ][ k ] = .0002;
-    if ( u.x[ i ][ j ][ k ] <= - .0002 )            u.x[ i ][ j ][ k] = - .0002;
+	if ( u.x[ i ][ j ][ k ] >= .0002 )			u.x[ i ][ j ][ k ] = .0002;
+	if ( u.x[ i ][ j ][ k ] <= - .0002 )			u.x[ i ][ j ][ k] = - .0002;
 
-    if ( v.x[ i ][ j ][ k ] >= .0024 )                  v.x[ i ][ j ][ k ] = .0024;
-    if ( v.x[ i ][ j ][ k ] <= - .0024 )                v.x[ i ][ j ][ k ] = - .0024;
+	if ( v.x[ i ][ j ][ k ] >= .0024 )					v.x[ i ][ j ][ k ] = .0024;
+	if ( v.x[ i ][ j ][ k ] <= - .0024 )				v.x[ i ][ j ][ k ] = - .0024;
 
-    if ( w.x[ i ][ j ][ k ] >= .054 )               w.x[ i ][ j ][ k ] = .054;
-    if ( w.x[ i ][ j ][ k ] <= - 054 )              w.x[ i ][ j ][ k ] = - .054;
-*/
+	if ( w.x[ i ][ j ][ k ] >= .054 )				w.x[ i ][ j ][ k ] = .054;
+	if ( w.x[ i ][ j ][ k ] <= - .054 )				w.x[ i ][ j ][ k ] = - .054;
+
 }
 
 

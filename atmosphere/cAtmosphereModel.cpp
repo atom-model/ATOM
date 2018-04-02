@@ -245,6 +245,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	int switch_2D = 0;
 	double residuum;
 	double residuum_old = 0.;
+	double t_cretaceous = 0.;
+	double co2_cretaceous = 0.;
 
 /*
 //	naming a file to read the surface temperature by NASA of the modern world
@@ -365,10 +367,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
 	circulation.BC_Temperature ( im_tropopause, t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
-	t_cretaceous = circulation.out_t_cretaceous (  );
-
-//	class element for the tropopause location with changing global temperature 
-//	if ( Ma > 0 ) 			circulation.TropopauseLocation ( im_tropopause, t_cretaceous );
+//	t_cretaceous = circulation.out_t_cretaceous (  );
 
 //  class element for the correction of the temperature initial distribution around coasts
 	if ( ( NASATemperature == 1 ) && ( Ma > 0 ) ) circulation.IC_Temperature_WestEastCoast ( h, t );
@@ -381,10 +380,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
 	circulation.BC_CO2 ( im_tropopause, t_cretaceous, Vegetation, h, t, p_dyn, co2 );
-	co2_cretaceous = circulation.out_co2 (  );
+//	co2_cretaceous = circulation.out_co2 (  );
 
 // class element for the surface temperature computation by radiation flux density
-	if ( RadiationModel == 1 ) circulation.BC_Radiation_multi_layer ( im_tropopause, n, CO2, t_cretaceous, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+	if ( RadiationModel == 1 ) circulation.BC_Radiation_multi_layer ( im_tropopause, t_cretaceous, n, CO2, albedo, epsilon, precipitable_water, radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
 
 // 	class element for the initial conditions for u-v-w-velocity components
 	circulation.IC_CellStructure ( im_tropopause, h, u, v, w );

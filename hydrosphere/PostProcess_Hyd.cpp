@@ -485,7 +485,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &n, double &u_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater )
+void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &n, double &u_0, double &t_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater )
 {
 	double x, y, z, dx, dy;
 
@@ -534,13 +534,24 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 
 	Hydrosphere_vtk_radial_File <<  "POINT_DATA " << j_max * k_max << endl;
 
+// writing temperature
+    Hydrosphere_vtk_radial_File <<  "SCALARS Temperature float " << 1 << endl;
+    Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
+    for ( int j = 0; j < jm; j++ )
+    {
+        for ( int k = 0; k < km; k++ )
+        {
+            Hydrosphere_vtk_radial_File << t.x[ i_radial ][ j ][ k ] * t_0 - t_0 << endl;
+        }
+    }
+
     dump_radial("Topography", h, 1., i_radial, Hydrosphere_vtk_radial_File);
 
     dump_radial("u-Component", u, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("v-Component", v, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("w-Component", w, 1., i_radial, Hydrosphere_vtk_radial_File);
 
-    dump_radial("Temperature", t, 1., i_radial, Hydrosphere_vtk_radial_File);
+//    dump_radial("Temperature", t, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("Salinity", c, 1., i_radial, Hydrosphere_vtk_radial_File);
 
     dump_radial("SaltFinger", Salt_Finger, 1., i_radial, Hydrosphere_vtk_radial_File);

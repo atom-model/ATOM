@@ -134,6 +134,15 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
 				ice.x[ i ][ j ][ k ] = icen.x[ i ][ j ][ k ] + ( kice1 + 2. * kice2 + 2. * kice3 + kice4 ) / 6.;
 				co2.x[ i ][ j ][ k ] = co2n.x[ i ][ j ][ k ] + ( kco1 + 2. * kco2 + 2. * kco3 + kco4 ) / 6.;
 
+				if ( u.x[ i ][ j ][ k ] >= .00667 )			u.x[ i ][ j ][ k ] = .00667;
+				if ( u.x[ i ][ j ][ k ] <= - .00667 )			u.x[ i ][ j ][ k] = - .00667;
+
+				if ( v.x[ i ][ j ][ k ] >= .08 )					v.x[ i ][ j ][ k ] = .08;
+				if ( v.x[ i ][ j ][ k ] <= - .08 )				v.x[ i ][ j ][ k ] = - .08;
+
+				if ( w.x[ i ][ j ][ k ] >= 1.8 )				w.x[ i ][ j ][ k ] = 1.8;
+				if ( w.x[ i ][ j ][ k ] <= - 1.8 )				w.x[ i ][ j ][ k ] = - 1.8;
+
 				if ( c.x[ i ][ j ][ k ] >= .04 )			c.x[ i ][ j ][ k ] = .04;
 				if ( cloud.x[ i ][ j ][ k ] >= .008 )	cloud.x[ i ][ j ][ k ] = .008;
 				if ( ice.x[ i ][ j ][ k ] >= .004 )		ice.x[ i ][ j ][ k ] = .004;

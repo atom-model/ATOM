@@ -351,22 +351,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //	import of surface v- and w-velocity components from AGCM, surface velocity reduced to 3% of the wind velocity
 	oceanflow.IC_v_w_Atmosphere ( h, u, v, w );
-/*
-	cout << endl << " ***** before Ekman       printout of 3D-field v-component ***** " << endl << endl;
-	v.printArray( im, jm, km );
-	cout << endl << " ***** before Ekman       printout of 3D-field w-component ***** " << endl << endl;
-	w.printArray( im, jm, km );
-*/
+
 // 	initial conditions for u-v-w-velocity components following the Ekman spiral
 	oceanflow.IC_v_w_Ekman ( h, v, w );
 
 //	salinity distribution as initial condition in 3 dimensions
 	oceanflow.BC_Temperature_Salinity ( h, t, c, p_dyn );
-
-	cout << endl << " ***** after temp       printout of 3D-field t-component ***** " << endl << endl;
-	t.printArray( im, jm, km );
-	cout << endl << " ***** after temp       printout of 3D-field w-component ***** " << endl << endl;
-	c.printArray( im, jm, km );
 
 //  surface pressure computed by surface temperature with gas equation
 //	oceanflow.BC_Pressure ( p_stat, t, h );
@@ -663,7 +653,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //	radial data along constant hight above ground
 	int i_radial = 40;
-	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, r_0_water, h, p_dyn, p_stat, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater );
+	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
 	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
