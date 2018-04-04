@@ -16,6 +16,24 @@ RUN pip install jupyter
 RUN pip install netcdf4
 RUN pip install colorlover
 
+RUN apt-get update -y
+RUN apt-get install -y gmt wget
+RUN apt-get install -y libglew-dev
+RUN apt-get install -y python2.7-dev
+RUN apt-get install -y libboost-dev libboost-python-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev libboost-system-dev
+RUN apt-get install -y libqt4-dev
+RUN apt-get install -y libgdal1-dev
+RUN apt-get install -y libcgal-dev
+RUN apt-get install -y libproj-dev
+RUN apt-get install -y libqwt-dev
+RUN apt-get install -y libxrender-dev libice-dev libsm-dev libfreetype6-dev libfontconfig1-dev
+
+RUN wget --content-disposition -c  https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-12/pygplates-ubuntu-xenial_1.5_1_amd64.deb/download
+RUN dpkg -i pygplates-ubuntu-xenial_1.5_1_amd64.deb
+RUN apt-get -f install
+RUN dpkg -i pygplates-ubuntu-xenial_1.5_1_amd64.deb
+RUN cp /usr/lib/pygplates/revision12/pygplates.so /usr/lib/python2.7/dist-packages/
+
 WORKDIR /build
 RUN git clone https://github.com/atom-model/ATOM.git
 WORKDIR /build/ATOM
