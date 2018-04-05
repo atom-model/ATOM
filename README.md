@@ -4,11 +4,52 @@ ATOM (Atmospheric and Ocean Model) is a fast climate model.
 
 ## Getting started
 
-The easiest way to get started is with the Docker container.
+## Run ATOM inside the Docker container
 
-If you're not familiar with Docker, start by downloading and installing the [Docker Toolbox](https://www.docker.com/products/docker-toolbox). Run Kitematic.
+The ATOM depends on pygplates, gmt, matplotlib and other libraries. The easiest way to get started is with the Docker container. Using the Docker container prepared by the GPlates team can avoid the hassle of installing all the dependencies in your system.
 
-From within Kitematic, search for and run the `atommodel/demo` container.
+First, you need to install Docker and be familiar yourself with the basic Docker operations. [Docker download] https://www.docker.com/community-edition 
+
+Run "docker pull gplates/atom" or use Kitematic to download the container from Docker Hub.
+
+Run "docker run -it --rm -v YOUR_LOCAL_FOLDER:FOLDER_INSIDE_DOCKER -p 18888:8888 gplates/atom /bin/bash" to get a bash shell.
+
+Run "docker run -d -p 18888:8888 gplates/atom" to run the ATOM container as a daemon. A Jupyter Notebook server can be accessed at localhost:18888.
+
+### Run Python script
+
+    You can write Python scripts to manipulate and run the model. See `benchmark/Temperature.py` for an example.
+
+    Go into bechmark directory and run:
+
+        python Temperature.py
+
+    You will then have output in the `output/` directory to analyse.
+
+    You can run "./create_atm_maps.py" to create maps in the directory ./atm_maps.
+
+### Command line usage
+
+    The simplest way to run a model is to configure it through the XML file and then run it, batch style. The model will run to completion and you will have output files to examine once it completes.
+
+    Go into cli directory and run:
+
+        ./atm config_atm.xml
+        ./hyd config_hyd.xml
+
+    Model output will be visible in the `output/` directory.
+
+### Jupyter Notebook usage
+
+    The Python module can be installed with:
+
+        pip install -e python
+
+    Then, start a Jupyter Notebook server:
+
+        jupyter notebook
+
+    From within the Jupyter web interface, you can open `examples/Demo.ipynb`. This includes some basic visualisation of the model output.     if you are using Docker container, the Jyputer Notebook server can be accessed at localhost:18888. 
 
 ## Repo contents
 
@@ -23,42 +64,6 @@ From within Kitematic, search for and run the `atommodel/demo` container.
 * `lib`: common files used by both Atmosphere and Hydrosphere
 * `python`: source code for the Python interface
 * `tinyxml2`: the [TinyXML-2](http://www.grinninglizard.com/tinyxml2/) XML parser
-
-## Compilation
-
-TODO
-
-## CLI usage
-
-The simplest way to run a model is to configure it through the XML file and then run it, batch style. The model will run to completion and you will have output files to examine once it completes.
-
-To get started with this, look at `examples/config.xml` for the default configuration. You can run it with:
-
-    atm examples/config.xml
-
-Model output will be visible in the `output/` directory.
-
-## Jupyter Notebook usage
-
-The Python module can be installed with:
-
-    pip install -e python
-
-Then, start a Jupyter Notebook server:
-
-    jupyter notebook
-
-From within the Jupyter web interface, you can open `examples/Demo.ipynb`. This includes some basic visualisation of the model output.
-
-## Python script usage
-
-You can write Python scripts to manipulate and run the model. See `examples/sample.py` for an example.
-
-Run:
-
-    python examples/sample.py
-
-You will then have output in the `output/` directory to analyse.
 
 ## Configuration
 
@@ -104,6 +109,8 @@ As a regular user:
     cd ATOM
     make
     pip install -e python/
+
+Run "make clean" to clean up the build.
 
 ## Parameters
 
