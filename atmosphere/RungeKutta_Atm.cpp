@@ -146,6 +146,9 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
 				if ( c.x[ i ][ j ][ k ] >= .04 )			c.x[ i ][ j ][ k ] = .04;
 				if ( cloud.x[ i ][ j ][ k ] >= .008 )	cloud.x[ i ][ j ][ k ] = .008;
 				if ( ice.x[ i ][ j ][ k ] >= .004 )		ice.x[ i ][ j ][ k ] = .004;
+
+				if ( t.x[ i ][ j ][ k ] >= 1.16 )				t.x[ i ][ j ][ k ] = 1.16;							// equals 45°C
+				if ( t.x[ i ][ j ][ k ] <= - .784 )				t.x[ i ][ j ][ k ] = - .784;						// equals -59°C
 			}
 		}
 	}

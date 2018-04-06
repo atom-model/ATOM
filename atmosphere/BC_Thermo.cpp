@@ -632,7 +632,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 		}																								// temperatur distribution at aa prescribed sun position
 
 
-// pole temperature adjustment 
+// pole temperature adjustment, combination of linear time dependent functions 
 	int Ma_1_1 = 0;
 	int Ma_2_1 = 45;
 	int Ma_1_2 = 45;
@@ -644,39 +644,41 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 	double t_2 = 0.;
 	double t_pole_diff = 0.;
 	double t_pole_add = 0.;
-
+	double t_pole_Ma0 = t_pole;
 
 	if ( RadiationModel == 1 )
 	{
+		if ( Ma <= Ma_2_1 )
+		{
+			t_1 = t_pole;
+			t_2 = ( 10. + t_0 ) / t_0;
+			t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_1, Ma_2_1, t_1, t_2 );
+		}
+
+		if ( ( Ma > Ma_1_2 ) && ( Ma <= Ma_2_2 ) )
+		{
+			t_1 = ( 10. + t_0 ) / t_0;
+			t_2 = ( 23. + t_0 ) / t_0;
+			t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_2, Ma_2_2, t_1, t_2 );
+		}
+
+		if ( ( Ma > Ma_1_3 ) && ( Ma <= Ma_2_3 ) )
+		{
+			t_1 = ( 23. + t_0 ) / t_0;
+			t_2 = ( 16. + t_0 ) / t_0;
+			t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 );
+		}
+
+//		t_pole = t_pole + t_cretaceous_add;
+		t_pole = t_pole_Ma0 + t_cretaceous_add;
+//		t_eff = t_pole - t_equator;
+		t_eff = t_pole - ( t_equator + t_cretaceous_add );
+		t_pole_diff = t_pole - t_pole_Ma0;
+
+	cout << "   t_pole_Ma0 = " << t_pole_Ma0 << "   t_equator = " << t_equator << "   t_pole = " << t_pole << "   t_eff = " << t_eff << "   t_pole_diff = " << t_pole_diff << endl;
+
 		for ( int k = 0; k < km; k++ )
 		{
-
-			if ( Ma <= Ma_2_1 )
-			{
-				t_1 = t_pole;
-				t_2 = ( 10. + t_0 ) / t_0;
-				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_1, Ma_2_1, t_1, t_2 );
-			}
-
-			if ( ( Ma > Ma_1_2 ) && ( Ma <= Ma_2_2 ) )
-			{
-				t_1 = ( 10. + t_0 ) / t_0;
-				t_2 = ( 23. + t_0 ) / t_0;
-				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_2, Ma_2_2, t_1, t_2 );
-			}
-
-			if ( ( Ma > Ma_1_3 ) && ( Ma <= Ma_2_3 ) )
-			{
-				t_1 = ( 23. + t_0 ) / t_0;
-				t_2 = ( 16. + t_0 ) / t_0;
-				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 );
-			}
-
-
-			t_eff = t_pole - t_equator;
-			t_pole_diff = t_pole - t.x[ 0 ][ 0 ][ k ];
-
-
 			for ( int j = 0; j < jm; j++ )
 			{
 				i_mount = i_topography[ j ][ k ];
@@ -707,8 +709,11 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 //	if ( ( j > j_half ) && ( j < jm ) )		cout << endl << "   south    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
 
 //						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add;
-						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_pole_add;
+//						t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_cretaceous_add + t_pole_add;
+						t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_pole_add;
+//						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_pole_add;
 //						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
+
 					}
 
 					if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution

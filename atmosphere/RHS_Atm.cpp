@@ -623,6 +623,9 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	if ( w.x[ i ][ j ][ k ] >= 1.8 )				w.x[ i ][ j ][ k ] = 1.8;
 	if ( w.x[ i ][ j ][ k ] <= - 1.8 )				w.x[ i ][ j ][ k ] = - 1.8;
 
+	if ( t.x[ i ][ j ][ k ] >= 1.16 )				t.x[ i ][ j ][ k ] = 1.16;							// equals 45°C
+	if ( t.x[ i ][ j ][ k ] <= - .784 )				t.x[ i ][ j ][ k ] = - .784;						// equals -59°C
+
 }
 
 
