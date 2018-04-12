@@ -16,8 +16,25 @@ RUN pip install jupyter
 RUN pip install netcdf4
 RUN pip install colorlover
 
+
+
+RUN apt-get update -y
+RUN apt-get install -y gmt wget
+RUN apt-get install -y libglew-dev
+RUN apt-get install -y python2.7-dev
+RUN apt-get install -y libboost-dev libboost-python-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev libboost-system-dev
+RUN apt-get install -y libqt4-dev
+RUN apt-get install -y libgdal1-dev
+RUN apt-get install -y libcgal-dev
+RUN apt-get install -y libproj-dev
+RUN apt-get install -y libqwt-dev
+RUN apt-get install -y libxrender-dev libice-dev libsm-dev libfreetype6-dev libfontconfig1-dev
+
+
+
+
 WORKDIR /build
-RUN git clone https://github.com/atom-model/ATOM.git
+RUN git clone https://github.com/atom-model/ATOM.git -b Roger --single-branch /CloudStation/Roger_dev
 WORKDIR /build/ATOM
 RUN make
 RUN pip install -e /build/ATOM/python
