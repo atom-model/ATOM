@@ -1,7 +1,7 @@
 # Pull base image.
 FROM phusion/baseimage
 
-MAINTAINER Ian Howson
+MAINTAINER Michael Chin
 
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
@@ -31,7 +31,6 @@ RUN apt-get install -y libxrender-dev libice-dev libsm-dev libfreetype6-dev libf
 RUN wget --content-disposition -c  https://sourceforge.net/projects/gplates/files/pygplates/beta-revision-12/pygplates-ubuntu-xenial_1.5_1_amd64.deb/download
 RUN dpkg -i pygplates-ubuntu-xenial_1.5_1_amd64.deb
 RUN apt-get -f install
-RUN dpkg -i pygplates-ubuntu-xenial_1.5_1_amd64.deb
 RUN cp /usr/lib/pygplates/revision12/pygplates.so /usr/lib/python2.7/dist-packages/
 
 WORKDIR /build
