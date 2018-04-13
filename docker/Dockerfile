@@ -16,11 +16,11 @@ RUN pip install jupyter
 RUN pip install netcdf4
 RUN pip install colorlover
 
-WORKDIR /build
+WORKDIR ~/CloudStation/Roger_dev/build
 RUN git clone https://github.com/atom-model/ATOM.git -b Roger --single-branch ~/CloudStation/Roger_dev/build/ATOM
-WORKDIR /build/ATOM
+WORKDIR ~/CloudStation/Roger_dev/build/ATOM
 RUN make
-RUN pip install -e /build/ATOM/python
+RUN pip install -e ~/CloudStation/Roger_dev/build/ATOM/python
 
 RUN mkdir /workspace && \
     mkdir /workspace/volume
