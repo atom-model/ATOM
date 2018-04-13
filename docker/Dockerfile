@@ -32,13 +32,13 @@ WORKDIR /CloudStation/Roger_dev
 RUN git clone https://github.com/atom-model/ATOM.git -b Roger --single-branch /CloudStation/Roger_dev
 WORKDIR /CloudStation/Roger_dev/ATOM
 RUN make
-RUN pip install -e /build/ATOM/python
+RUN pip install -e /CloudStation/Roger_dev/ATOM/python
 
 RUN mkdir /workspace && \
     mkdir /workspace/volume
 
 # Copy test files to workspace
-RUN cp -av /build/ATOM/examples/* /workspace/
+RUN cp -av /CloudStation/Roger_dev/ATOM/examples/* /workspace/
 
 # setup space for working in
 VOLUME /workspace/volume
