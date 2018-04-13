@@ -30,7 +30,7 @@ RUN apt-get install -y libxrender-dev libice-dev libsm-dev libfreetype6-dev libf
 
 WORKDIR /CloudStation/Roger_dev
 RUN git clone https://github.com/atom-model/ATOM.git -b Roger --single-branch /CloudStation/Roger_dev
-#WORKDIR /build/ATOM
+WORKDIR /CloudStation/Roger_dev/ATOM
 RUN make
 RUN pip install -e /build/ATOM/python
 
