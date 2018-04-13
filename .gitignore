@@ -28,3 +28,5 @@ examples/config.xml
 *.pxi
 python/pyatom.h
 python/pyatom.pyx
+Roger_dev.geany
+.gitignore
