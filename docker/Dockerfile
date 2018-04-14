@@ -26,7 +26,7 @@ RUN mkdir /workspace && \
     mkdir /workspace/volume
 
 # Copy test files to workspace
-RUN cp -av ~/CloudStation/Roger_dev/docker/build/ATOM/examples/* /workspace/
+RUN cp -av /CloudStation/Roger_dev/docker/build/ATOM/examples/* /workspace/
 
 # setup space for working in
 VOLUME /workspace/volume
