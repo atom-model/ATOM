@@ -28,7 +28,7 @@ class MinMax_Atm
 		int im, jm, km, imax, jmax, kmax, imin, jmin, kmin;
 		int imax_level, imin_level, jmax_deg, kmax_deg, jmin_deg, kmin_deg;
 
-		double maxValue, minValue, coeff_mmWS;
+		double maxValue, minValue, u_0, coeff_mmWS;
 
 		Array_2D			value ( int, int, double );
 		Array				value_D ( int, int, int, double );
@@ -39,7 +39,7 @@ class MinMax_Atm
 
 	public:
 		MinMax_Atm ( int, int, double );
-		MinMax_Atm ( int, int, int );
+		MinMax_Atm ( int, int, int, double );
 		~MinMax_Atm ();
 
 		void searchMinMax_2D ( string &, string &, string &, Array_2D &, Array & );

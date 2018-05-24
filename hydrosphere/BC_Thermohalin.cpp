@@ -16,6 +16,7 @@
 #include <iomanip>
 
 #include "BC_Thermohalin.h"
+#include "Array.h"
 
 using namespace std;
 
@@ -48,23 +49,22 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 	this -> t_cretaceous_max = t_cretaceous_max;
 	this -> t_equator = t_equator;
 	this -> t_pole = t_pole;
-	this->input_path = input_path;
+	this -> input_path = input_path;
 
 
-	i_bottom = 8;
-	i_deep = i_bottom + 17;
-	i_half = i_beg + 6;
-	i_middle = i_beg - 7;
+	i_middle = i_beg + 30;							// 0 + 20 = 30 for total depth 1000m, asymmetric with depth for stepsizes of 25m
 	j_half = ( jm - 1 ) / 2;
 	j_half_1 = j_half + 1;
 
-	d_i_half = ( double ) i_half;
+	d_i_beg = ( double ) i_beg;
+	d_i_middle = ( double ) i_middle;
 	d_i_max = ( double ) ( im - 1 );
 
 
 // reduction or amplification of flow velocities along coasts
 // for the artificial initial and boundary conditions
-	IC_water = .0015;				// reduced radial velocity u ( average velocity compares to          u_0 = 0,0015 m/s )
+//	u_max = .01 / u_0;				// numerator radial velocity u-max in m/s          u_max = 0.01 m/s
+	u_max = .1 / u_0;				// numerator radial velocity u-max in m/s          u_max = 0.01 m/s
 
 
 // ocean surface velocity is about 3% of the wind velocity at the surface
@@ -77,296 +77,207 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 	Ekman_angle = 45.0 / pi180;
 	Ekman_angle_add = 4.5 / pi180;
 
-
-
-// array "dr_var" for Thomas algorithm
-	dr_var = new double[ im ];
-
-	for ( int l = 0; l < im; l++ )
-	{
-		dr_var[ l ] = 0.;
-	}
-
 }
 
 
-BC_Thermohalin::~BC_Thermohalin()
-{
-	delete [  ] dr_var;
-}
+BC_Thermohalin::~BC_Thermohalin() {}
 
 
-
-
-
-void BC_Thermohalin::IC_v_w_Atmosphere ( Array &h, Array &u, Array &v, Array &w )
+void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & the, Array &h, Array &v, Array &w )
 {
 // initial conditions for v and w velocity components at the sea surface
-// surface velocity reduced to 3% of the wind velocity ( water_wind )
-	for ( int i = i_beg; i < im; i++ )
+	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int j = 0; j < jm; j++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int k = 0; k < km; k++ )
+			if ( h.x[ im - 1 ][ j ][ k ] != 1. )
 			{
-				if ( h.x[ i ][ j ][ k ] == 0. )
-				{
-					u.x[ i ][ j ][ k ] = 0.;
-					v.x[ i ][ j ][ k ] = water_wind * v.x[ i_max ][ j ][ k ] * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-					w.x[ i ][ j ][ k ] = water_wind * w.x[ i_max ][ j ][ k ] * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg );
-				}
-				else
-				{
-					u.x[ i ][ j ][ k ] = 0.;
-					v.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = 0.;
-				}
+				v.x[ im - 1 ][ j ][ k ] = water_wind * v.x[ im - 1 ][ j ][ k ] / u_0;
+				w.x[ im - 1 ][ j ][ k ] = water_wind * w.x[ im - 1 ][ j ][ k ] / u_0;
 			}
 		}
 	}
-
-
-	for ( int i = 0; i < i_beg; i++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
-			{
-				if ( h.x[ i ][ j ][ k ] == 0. )
-				{
-					u.x[ i ][ j ][ k ] = 0.;
-					v.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = 0.;
-				}
-				else
-				{
-					u.x[ i ][ j ][ k ] = 0.;
-					v.x[ i ][ j ][ k ] = 0.;
-					w.x[ i ][ j ][ k ] = 0.;
-				}
-			}
-		}
-	}
-}
-
-
-
-
-
-
-
-void BC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w )
-{
-// initial conditions for v and w velocity components at the sea surface
 
 
 // north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° )
-
-	for ( int i = i_beg; i < im; i++ )
+	for ( int j = 0; j < 31; j++ )
 	{
-		for ( int j = 0; j < 31; j++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int k = 0; k < km; k++ )
+			if ( h.x[ im-1 ][ j ][ k ] != 1. )
 			{
-				if ( h.x[ i ][ j ][ k ] != 1. )
+				vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+
+				if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+				alfa = asin ( fabs ( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
+
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. )
 				{
-					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+					angle = + alfa - Ekman_angle;
+				}
+				else
+				{
+					angle = - alfa - Ekman_angle;
+				}
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
-					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
 
-					alfa = asin ( fabs ( w.x[ i ][ j ][ k ] ) / vel_magnitude );
-					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+				if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
 
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. )
-					{
-						angle = + alfa - Ekman_angle - Ekman;
-					}
-					else
-					{
-						angle = - alfa - Ekman_angle - Ekman;
-					}
-
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-					{
-						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
+				if (  w.x[ im-1 ][ j ][ k ] <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
 				}
 			}
 		}
 	}
-
 
 
 // north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° )
-
-	for ( int i = i_beg; i < im; i++ )
+	for ( int j = 31; j < 60; j++ )
 	{
-		for ( int j = 31; j < 60; j++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int k = 0; k < km; k++ )
+			if ( h.x[ im-1 ][ j ][ k ] != 1. )
 			{
-				if ( h.x[ i ][ j ][ k ] != 1. )
+				vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+
+				if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+				alfa = asin ( fabs ( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
+
+				if ( v.x[ im-1 ][ j ][ k ] >= 0. )
 				{
-					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
-
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
-					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
-
-					alfa = asin ( fabs ( w.x[ i ][ j ][ k ] ) / vel_magnitude );
-					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
-
-					if ( v.x[ im-1 ][ j ][ k ] >= 0. )
-					{
-						angle = + alfa - Ekman_angle - Ekman;
-					}
-					else
-					{
-						angle = - alfa - Ekman_angle - Ekman;
-					}
-
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-					{
-						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
-					}
-
-					if (  v.x[ i ][ j ][ k ] <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
-					}
-
+					angle = + alfa - Ekman_angle;
 				}
+				else
+				{
+					angle = - alfa - Ekman_angle;
+				}
+
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
+
+				if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
+				}
+
+				if (  v.x[ im-1 ][ j ][ k ] <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
+				}
+
 			}
 		}
 	}
-
-
 
 
 // north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° )
-
-	for ( int i = i_beg; i < im; i++ )
+	for ( int j = 60; j < 91; j++ )
 	{
-		for ( int j = 60; j < 91; j++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int k = 0; k < km; k++ )
+			if ( h.x[ im-1 ][ j ][ k ] != 1. )
 			{
-				if ( h.x[ i ][ j ][ k ] != 1. )
+				vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+
+				if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+				alfa = asin ( fabs ( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
+
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. )
 				{
-					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+					angle = + alfa - Ekman_angle;
+				}
+				else
+				{
+					angle = - alfa - Ekman_angle;
+				}
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
-					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
 
-					alfa = asin ( fabs ( w.x[ i ][ j ][ k ] ) / vel_magnitude );
-					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+				if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
 
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. )
-					{
-						angle = + alfa - Ekman_angle - Ekman;
-					}
-					else
-					{
-						angle = - alfa - Ekman_angle - Ekman;
-					}
-
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-					{
-						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
+				if (  w.x[ im-1 ][ j ][ k ] <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
 				}
 			}
 		}
 	}
 
 
-
-
 // south equatorial Hadley cell ( from j=90 till j=120 compares to 0° till 30° )
-
-	for ( int i = i_beg; i < im; i++ )
+	for ( int j = 91; j < 122; j++ )
 	{
-		for ( int j = 91; j < 122; j++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int k = 0; k < km; k++ )
+			if ( h.x[ im-1 ][ j ][ k ] != 1. )
 			{
-				if ( h.x[ i ][ j ][ k ] != 1. )
+				vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+
+				if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+				beta = asin ( fabs( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
+
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. )
 				{
-					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+					angle = beta - Ekman_angle;
+				}
+				else
+				{
+					angle = - beta - Ekman_angle;
+				}
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
-					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
 
-					beta = asin ( fabs( w.x[ i ][ j ][ k ] ) / vel_magnitude );
-					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+				if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
 
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. )
-					{
-						angle = beta - Ekman_angle - Ekman;
-					}
-					else
-					{
-						angle = - beta - Ekman_angle - Ekman;
-					}
-
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-					{
-						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
+				if (  w.x[ im-1 ][ j ][ k ] <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
 				}
 			}
 		}
@@ -374,51 +285,45 @@ void BC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w )
 
 
 // south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° )
-
-	for ( int i = i_beg; i < im; i++ )
+	for ( int j = 121; j < 151; j++ )
 	{
-		for ( int j = 121; j < 151; j++ )
+		for ( int k = 0; k < km; k++ )
 		{
-			for ( int k = 0; k < km; k++ )
+			if ( h.x[ im-1 ][ j ][ k ] != 1. )
 			{
-				if ( h.x[ i ][ j ][ k ] != 1. )
+				vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+
+				if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+				beta = asin ( fabs( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
+
+				if ( v.x[ im-1 ][ j ][ k ] <= 0. )
 				{
-					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+					angle = beta - Ekman_angle;
+				}
+				else
+				{
+					angle = - beta - Ekman_angle;
+				}
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
-					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
 
-					beta = asin ( fabs( w.x[ i ][ j ][ k ] ) / vel_magnitude );
-					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
+				if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
+				}
 
-					if ( v.x[ im-1 ][ j ][ k ] <= 0. )
-					{
-						angle = beta - Ekman_angle - Ekman;
-					}
-					else
-					{
-						angle = - beta - Ekman_angle - Ekman;
-					}
-
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-					{
-						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
-					}
-
-					if (  v.x[ i ][ j ][ k ] >= 0. )
-					{
-						v.x[ i ][ j ][ k ] = + vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = - vel_magnitude * sin ( angle );
-					}
-
+				if (  v.x[ im-1 ][ j ][ k ] >= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
 				}
 			}
 		}
@@ -426,56 +331,91 @@ void BC_Thermohalin::IC_v_w_Ekman ( Array &h, Array &v, Array &w )
 
 
 // south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° )
-
-	for ( int i = i_beg; i < im; i++ )
+	for ( int j = 151; j < jm; j++ )
 	{
-		for ( int j = 151; j < jm; j++ )
+		for ( int k = 0; k < km; k++ )
 		{
+			if ( h.x[ im-1 ][ j ][ k ] != 1. )
+			{
+				vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+
+				if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
+				if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
+
+				beta = asin ( fabs( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
+
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. )
+				{
+					angle = beta - Ekman_angle;
+				}
+				else
+				{
+					angle = - beta - Ekman_angle;
+				}
+
+				if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
+
+				if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
+
+				if (  w.x[ im-1 ][ j ][ k ] <= 0. )
+				{
+					v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
+					w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
+				}
+			}
+		}
+	}
+
+
+// surface wind vector driving the Ekman spiral in the Ekman layer
+// northern hemisphere
+	double Omega = 7.29e-5;
+	double f = 0.;
+	double K = 10.;
+	double gam_f_K = f * K;
+	double gam_z = 0.;
+	double exp_gam_z = 0.;
+	double sin_gam_z = 0;
+	double cos_gam_z = 0;
+	double v_g = 0.;
+	double w_g = 0.;
+
+
+	for ( int i = im-2; i >= i_beg; i-- )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			f = Omega * sin ( the.z[ j ] );
+			gam_f_K = f * K;
+			gam_z = gam_f_K * ( double ) (  im - 2 - i );
+			exp_gam_z = exp ( - gam_z );
+			sin_gam_z = sin ( gam_z );
+			cos_gam_z = sin ( gam_z );
+
 			for ( int k = 0; k < km; k++ )
 			{
 				if ( h.x[ i ][ j ][ k ] != 1. )
 				{
-					vel_magnitude = sqrt ( v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] );
+					v_g = v.x[ i + 1 ][ j ][ k ];
+					w_g = w.x[ i + 1 ][ j ][ k ];
 
-					if ( w.x[ i ][ j ][ k ] == 0. ) w.x[ i ][ j ][ k ] = 1.e-6;
-					if ( v.x[ i ][ j ][ k ] == 0. ) v.x[ i ][ j ][ k ] = 1.e-6;
-					if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
-
-					beta = asin ( fabs( w.x[ i ][ j ][ k ] ) / vel_magnitude );
-					Ekman = ( double ) ( i_max - i ) * Ekman_angle_add;
-
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. )
-					{
-						angle = beta - Ekman_angle - Ekman;
-					}
-					else
-					{
-						angle = - beta - Ekman_angle - Ekman;
-					}
-
-					if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-					{
-						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
-					if (  w.x[ im-1 ][ j ][ k ] <= 0. )
-					{
-						v.x[ i ][ j ][ k ] = - vel_magnitude * cos ( angle );
-						w.x[ i ][ j ][ k ] = + vel_magnitude * sin ( angle );
-					}
-
+					v.x[ i ][ j ][ k ] = v_g * ( 1. - exp_gam_z * cos_gam_z ) - w_g * exp_gam_z * sin_gam_z;
+					w.x[ i ][ j ][ k ] = v_g * exp_gam_z * sin_gam_z + w_g * exp_gam_z * ( 1. - exp_gam_z * cos_gam_z );
 				}
 			}
 		}
 	}
 }
+
 
 
 
@@ -492,71 +432,51 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: east coast
-//	k_grad = 8;																			// extension of velocity change
-	k_grad = 12;																			// extension of velocity change
+	k_grad = 10;																			// extension of velocity change
 
-	k_water = 0;																		// on water closest to coast
-	k_sequel = 1;																		// on solid ground
+	int l_add = 0;
 
-	for ( int j = 0; j < j_half_1; j++ )													// outer loop: latitude
+	double d_k = 0.;
+	double d_l = 0.;
+
+	for ( int j = 0; j < jm; j++ )													// outer loop: latitude
 	{
 		for ( int k = 0; k < km - k_grad; k++ )											// inner loop: longitude
 		{
-			if ( h.x[ i_max ][ j ][ k ] == 1. ) k_sequel = 0;				// if solid ground: k_sequel = 0
-
-			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;	// if water and and k_sequel = 0 then is water closest to coast
-			else k_water = 1;														// somewhere on water
-
-			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_water == 0 ) )	// if water is closest to coast, change of velocity components begins
+			if ( ( h.x[ i_max ][ j ][ k ] == 1. ) && ( h.x[ i_max ][ j ][ k + 1 ] == 0. ) )			//  then water is closest to coast
 			{
-				for ( int l = 0; l < k_grad; l++ )								// extension of change, sign change in v-velocity and distribution of u-velocity with depth
+				l_add = 0;
+				for ( int l = k; l < k + k_grad; l++ )								// extension of change, sign change in v-velocity and distribution of u-velocity with depth
 				{
-					for ( int i = i_middle; i <= i_half; i++ )					// loop in radial direction, extension for u -velocity component, downwelling here
+					d_l = ( double ) ( k_grad + l_add );
+					d_k = ( double ) ( k_grad );
+
+					for ( int i = i_middle; i <= i_max; i++ )
 					{
-						m = i_half - i;
 						d_i = ( double ) i;
-						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
-						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
+						u.x[ i ][ j ][ l ] = - ( d_i - d_i_max ) / ( d_i_middle - d_i_max ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
+					}
+
+					for ( int i = i_beg; i <= i_middle; i++ )
+					{
+						d_i = ( double ) i;
+						u.x[ i ][ j ][ l ] = - ( d_i - d_i_beg ) / ( d_i_middle - d_i_beg ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
+					}
+					l_add--;
+
+
+					for ( int i = i_beg; i <= i_max; i++ )
+					{
+						for ( int l = k; l < ( k + k_grad ); l++ )		// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension
+						{
+							v.x[ i ][ j ][ l ] = v.x[ i ][ j ][ k + k_grad ] / ( double )( ( k + k_grad ) - k ) * ( double )( l - k ); // extension of v-velocity
+							w.x[ i ][ j ][ l ] = w.x[ i ][ j ][ k + k_grad ] / ( double )( ( k + k_grad ) - k ) * ( double )( l - k ); // extension of v-velocity
+						}
 					}
 				}
-				k_sequel = 1;															// looking for another east coast
 			}
 		}																						// end of longitudinal loop
-		k_water = 0;																	// starting at another latitude
 	}																							// end of latitudinal loop
-
-
-
-// southern hemisphere: east coast
-	k_water = 0;
-	k_sequel = 1;
-
-	for ( int j = j_half_1; j < jm; j++ )
-	{
-		for ( int k = 0; k < km - k_grad; k++ )
-		{
-			if ( h.x[ i_max ][ j ][ k ] == 1. ) k_sequel = 0;
-
-			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;
-			else k_water = 1;
-
-			if ( ( h.x[ i_max ][ j ][ k ] == 0. ) && ( k_water == 0 ) )
-			{
-				for ( int l = 0; l < k_grad; l++ )
-				{
-					for ( int i = i_middle; i <= i_half; i++ )
-					{
-						m = i_half - i;
-						d_i = ( double ) i;
-						u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// increase with depth, decrease with distance from coast
-						u.x[ m ][ j ][ k + l ] = - d_i / d_i_half * IC_water / ( ( double )( l + 1 ) );			// decrease with depth, decrease with distance from coast
-					}
-				}
-				k_sequel = 1;
-			}
-		}
-		k_water = 0;
-	}
 
 
 
@@ -564,76 +484,48 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: west coast
-//	k_grad = 8;																			// extension of velocity change
-	k_grad = 12;																			// extension of velocity change
-
-	k_water = 0;																		// somewhere on water
-	flip = 0;																				// somewhere on water
-
-	for ( int j = 0; j < j_half_1; j++ )													// outer loop: latitude
+	for ( int j = 0; j < jm; j++ )													// outer loop: latitude
 	{
-		for ( int k = k_grad; k < km; k++ )											// inner loop: longitude
+		for ( int k = km - 2; k > k_grad; k-- )											// inner loop: longitude
 		{
-			if ( h.x[ i_max ][ j ][ k ] == 0. )										// if somewhere on water
+			if ( ( h.x[ i_max ][ j ][ k ] == 1. ) && ( h.x[ i_max ][ j ][ k - 1 ] == 0. ) )			//  then water is closest to coast
 			{
-				k_water = 0;															// somewhere on water: k_water = 0
-				flip = 0;																	// somewhere on water: flip = 0
-			}
-			else k_water = 1;														// first time on land
+				l_add = 0;
 
-			if ( ( flip == 0 ) && ( k_water == 1 ) )							// on water closest to land
-			{
-				for ( int l = k; l > ( k - k_grad - 1 ); l-- )						// backward extention of velocity change: nothing changes
+				for ( int l = k; l > ( k - k_grad ); l-- )						// backward extention of velocity change: nothing changes
 				{
-					for ( int i = i_middle; i <= i_half; i++ )					// loop in radial direction, extension for u -velocity component, upwelling here
+					d_l = ( double ) ( k_grad - l_add );
+					d_k = ( double ) ( k_grad );
+
+					for ( int i = i_middle; i <= i_max; i++ )
 					{
-						m = i_half - i;
 						d_i = ( double ) i;
-						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// increase with depth, decrease with distance from coast
-						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );			// decrease with depth, decrease with distance from coast
+						u.x[ i ][ j ][ l ] = + ( d_i - d_i_max ) / ( d_i_middle - d_i_max ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
+					}
+
+					for ( int i = i_beg; i <= i_middle; i++ )
+					{
+						d_i = ( double ) i;
+						u.x[ i ][ j ][ l ] = + ( d_i - d_i_beg ) / ( d_i_middle - d_i_beg ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
+					}
+					l_add++;
+
+
+					for ( int i = i_beg; i <= i_max; i++ )
+					{
+						for ( int l = k; l > ( k - k_grad ); l-- )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension
+						{
+							v.x[ i ][ j ][ l ] = v.x[ i ][ j ][ k - k_grad ] / ( double )( ( k - k_grad ) - k ) * ( double )( l - k ); // extension of v-velocity
+							w.x[ i ][ j ][ l ] = w.x[ i ][ j ][ k - k_grad ] / ( double )( ( k - k_grad ) - k ) * ( double )( l - k ); // extension of v-velocity
+						}
 					}
 				}
-				flip = 1;
 			}
 		}
-		flip = 0;
 	}
 
-
-
-// southern hemisphere: west coast
-	k_water = 0;
-	flip = 0;
-
-	for ( int j = j_half_1; j < jm; j++ )
-	{
-		for ( int k = k_grad; k < km; k++ )
-		{
-			if ( h.x[ i_max ][ j ][ k ] == 0. )
-			{
-				k_water = 0;
-				flip = 0;
-			}
-			else k_water = 1;
-
-			if ( ( flip == 0 ) && ( k_water == 1 ) )
-			{
-				for ( int l = k; l > ( k - k_grad + 1 ); l-- )
-				{
-					for ( int i = i_middle; i <= i_half; i++ )
-					{
-						m = i_half - i;
-						d_i = ( double ) i;
-						u.x[ i ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
-						u.x[ m ][ j ][ l ] = + d_i / d_i_half * IC_water / ( ( double )( k - l + 1 ) );
-					}
-				}
-				flip = 1;
-			}
-		}
-		flip = 0;
-	}
 }
+
 
 
 
@@ -725,7 +617,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 						t_Celsius = ( ta + t_cretaceous ) * t_0 - t_0;										// water temperature not below 4°C
 					}
 
-					c.x[ im-1 ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. + c_cretaceous ) / c_0;	// non-dimensional
+					c.x[ im-1 ][ j ][ k ] = ( ( 350 - t_Celsius ) / 10. + c_cretaceous ) / c_0;	// non-dimensional
 
 				}
 				else
@@ -738,30 +630,35 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 	}
 
 
+	double tm_tbeg = 0.;
 
 // distribution of t and c with increasing depth till i_beg valid for all time slices including the modern world
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-		for ( int i = i_beg; i < im-1; i++ )
+			tm_tbeg = ( t.x[ im-1 ][ j ][ k ] - ta ) / ( double ) ( i_max * i_max - i_beg * i_beg );
+			for ( int i = i_beg; i < im-1; i++ )
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					t.x[ i ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k ] - ta ) * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg ) + ta + t_cretaceous;
+//					t.x[ i ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k ] - ta ) * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg ); // linear approach
+					t.x[ i ][ j ][ k ] = ta + tm_tbeg * ( double ) ( i * i - i_beg * i_beg );				// parabolic approach
+
 					t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
-					c.x[ i ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. + c_cretaceous ) / c_0;
+					c.x[ i ][ j ][ k ] = ( ( 350 - t_Celsius ) / 10. + c_cretaceous ) / c_0;				// liear function
 
 					if ( t_Celsius < 4. )
 					{
-						t.x[ i ][ j ][ k ] = ta + t_cretaceous;
-						c.x[ i ][ j ][ k ] = ca + c_cretaceous / c_0;
+						t.x[ i ][ j ][ k ] = ta;
+						c.x[ i ][ j ][ k ] = ca;
 					}
+
 				}
 				else
 				{
-					t.x[ i ][ j ][ k ] = ta + t_cretaceous;
-					c.x[ i ][ j ][ k ] = ca + c_cretaceous / c_0;
+					t.x[ i ][ j ][ k ] = ta;
+					c.x[ i ][ j ][ k ] = ca;
 				}
 			}
 		}
@@ -776,8 +673,8 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					t.x[ i ][ j ][ k ] = ta + t_cretaceous;
-					c.x[ i ][ j ][ k ] = ca + c_cretaceous / c_0;
+					t.x[ i ][ j ][ k ] = ta;
+					c.x[ i ][ j ][ k ] = ca;
 				}
 			}
 		}
@@ -790,21 +687,45 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
 
 
-void BC_Thermohalin::BC_Pressure ( Array &p_stat, Array &t, Array &h )
+void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &c, Array &h )
 {
-// hydrostatic pressure distribution at surface
+// hydrostatic pressure, equations of state for water and salt water density
+// as functions of salinity, temperature and hydrostatic pressure
 
+	double t_Celsius_0 = 0.;
+	double t_Celsius_1 = 0.;
+	double p_km = 0.;
+	double C_p = 0.;
+	double beta_p =  0.;
+	double alfa_t_p =  0.;
+	double gamma_t_p =  0.;
+
+	double E_water = 2.15e9; 								// given in N/m²
+	double beta_water = 8.8e-5;							// given in m³/( m³ * °C)
+	double r_air = 1.2041;										// given in kg/m³
+	double R_Air = 287.1;										// given in J/( kg*K )
+
+// hydrostatic pressure, water and salt water density at the surface
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			p_stat.x[ im-1 ][ j ][ k ] = p_0 / 1000.;		// given in bar
+			p_stat.x[ im-1 ][ j ][ k ] =  .01 * ( r_air * R_Air * t.x[ im-1 ][ j ][ k ] * t_0 ) / 1000.;		// given in bar, isochoric approach, constant air density at the surface
+			r_water.x[ im-1 ][ j ][ k ] = r_0_water;				// given in kg/m³
+
+			t_Celsius_1 = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
+			p_km = 0.;
+			C_p = 999.83;
+			beta_p = .808;
+			alfa_t_p = .0708 * ( 1. + .068 * t_Celsius_1 );
+			gamma_t_p = .003 * ( 1. - .012 * t_Celsius_1 );
+
+			r_salt_water.x[ im-1 ][ j ][ k ] = C_p + beta_p * c.x[ im-1 ][ j ][ k ] * c_0 - alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[ im-1 ][ j ][ k ] * c_0 ) * t_Celsius_1;
 		}
 	}
 
 
-// hydrostatic pressure distribution increasing with depth
-
+// hydrostatic pressure, water and salt water density in the field
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -812,11 +733,23 @@ void BC_Thermohalin::BC_Pressure ( Array &p_stat, Array &t, Array &h )
 			for ( int i = im-2; i >= 0; i-- )
 			{
 				d_i = ( double ) ( im - 1 - i );
-				p_stat.x[ i ][ j ][ k ] = r_0_water * g * d_i * ( L_hyd / ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;				// current water pressure in bar
+
+				t_Celsius_1 = t.x[ i ][ j ][ k ] * t_0 - t_0;
+				t_Celsius_0 = t.x[ i + 1 ][ j ][ k ] * t_0 - t_0;
+
+				p_stat.x[ i ][ j ][ k ] = r_0_water * g * d_i * ( L_hyd / ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;				// hydrostatic pressure in bar
+				r_water.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] / ( 1. + beta_water * ( t_Celsius_1 - t_Celsius_0 ) ) / ( 1. - ( p_stat.x[ i ][ j ][ k ] - p_stat.x[ i+1 ][ j ][ k ] ) / E_water * 1e5 );				// given in kg/m³
+
+				p_km  = ( double ) ( im - 1 - i ) * ( L_hyd / ( double ) ( im-1 ) ) / 1000.;
+				C_p = 999.83 + 5.053 * p_km - .048 * p_km * p_km;
+				beta_p = .808 - .0085* p_km;
+				alfa_t_p = .0708 * ( 1. + .351 * p_km + .068 *( 1. - .0683 * p_km ) * t_Celsius_1 );
+				gamma_t_p = .003 * ( 1. - .059 * p_km - .012 * ( 1. - .064 * p_km ) * t_Celsius_1 );
+
+				r_salt_water.x[ i ][ j ][ k ] = C_p + beta_p * c.x[ i ][ j ][ k ] * c_0 - alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[ i ][ j ][ k ] * c_0 ) * t_Celsius_1;
 			}
 		}
 	}
-
 }
 
 
@@ -858,6 +791,16 @@ void BC_Thermohalin::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTem
 	}
 
 	Name_SurfaceTemperature_File_Read.close();
+
+
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int k = 1; k < km-1; k++ )
+		{
+			if ( k == 180 )	t.x[ im-1 ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k + 1 ] + t.x[ im-1 ][ j ][ k - 1 ] ) * .5;
+		}
+	}
+
 }
 
 
@@ -902,4 +845,32 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalini
 	}
 
 	Name_SurfaceSalinity_File_Read.close();
+}
+
+
+
+
+
+void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Array &w, Array &c )
+{
+// south polar sea
+// antarctic circumpolar current ( -5000m deep ) ( from j=147 until j=152 compares to 57°S until 62°S,
+//                                                                            from k=0 until k=km compares to 0° until 360° )
+
+
+	for ( int i = i_beg; i < im; i++ )
+	{
+		for ( int j = 147; j < 153; j++ )
+		{
+			for ( int k = 0; k < km; k++ )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					c.x[ i ][ j ][ k ] = ca;
+					w.x[ i ][ j ][ k ] = .01 / u_0;					// 1 cm/s
+				}
+			}
+		}
+	}
+
 }

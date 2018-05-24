@@ -57,6 +57,8 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 		abort();
 	}
 
+	double i_h = 0.;
+
 	for (int j = 0; j < jm && !Name_Bathymetry_File_Read.eof(); j++) {
 		for (int k = 0; k < km; k++) {
 			Name_Bathymetry_File_Read >> dummy_1;
@@ -65,24 +67,16 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 
 			if ( dummy_3 < 0. )
 			{
-				Topography.y[ j ][ k ] = 0.;
+				h.x[ 0 ][ j ][ k ] = Topography.y[ j ][ k ] = 0.;
 			}
 			 else
 			{
-				Topography.y[ j ][ k ] = dummy_3;
-			}
-
-			if ( dummy_3 < 0. )
-			{
-				h.x[ 0 ][ j ][ k ] = 0.;
-			}
-			 else
-			{
-				hight = ( int ) ( dummy_3 / ( L_atm / ( im - 1 ) ) );
+				i_h = round ( dummy_3 / ( L_atm / ( double) ( im - 1 ) ) );
+				hight = ( int ) i_h;
 
 				for ( int i = 0; i <= hight; i++ )
 				{
-					h.x[ i ][ j ][ k ] = 1.;
+					h.x[ i ][ j ][ k ] = Topography.y[ j ][ k ] = 1.;
 				}
 			}
 		}
@@ -137,6 +131,7 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 			}
 		}
 	}
+
 }
 
 

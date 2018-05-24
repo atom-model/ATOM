@@ -33,11 +33,12 @@ MinMax_Atm::MinMax_Atm ( int jm, int km, double coeff_mmWS )
 }
 
 
-MinMax_Atm::MinMax_Atm ( int im, int jm, int km )
+MinMax_Atm::MinMax_Atm ( int im, int jm, int km, double u_0 )
 {
 	this-> im = im;
 	this-> jm = jm;
 	this-> km = km;
+	this-> u_0 = u_0;
 
 	minValue = maxValue = 0.;
 	imax = jmax = kmax = imin = jmin = kmin = 0;
@@ -175,20 +176,20 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 
 	if ( name_maxValue == " max 3D u_component " )
 	{
-		maxValue = maxValue * 15.;
-		minValue = minValue * 15.;
+		maxValue = maxValue * u_0;
+		minValue = minValue * u_0;
 	}
 
 	if ( name_maxValue == " max 3D v_component " )
 	{
-		maxValue = maxValue * 15.;
-		minValue = minValue * 15.;
+		maxValue = maxValue * u_0;
+		minValue = minValue * u_0;
 	}
 
 	if ( name_maxValue == " max 3D w_component " )
 	{
-		maxValue = maxValue * 15.;
-		minValue = minValue * 15.;
+		maxValue = maxValue * u_0;
+		minValue = minValue * u_0;
 	}
 
 	if ( name_maxValue == " max 3D water vapour " )
@@ -222,11 +223,10 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 	}
 
 
-// coefficient for units in hPa for the dynamic pressure 		coeff = r_air * u_0 * u_0 = 1.2 * 15 * 15 * 0.01 = 2.70 hPa
 	if ( name_maxValue == " max 3D pressure dynamic " )
 	{
-		maxValue = maxValue * 2.70;
-		minValue = minValue * 2.70;
+		maxValue = maxValue * .01;				// in hPa
+		minValue = minValue * .01;				// in hPa
 	}
 
 

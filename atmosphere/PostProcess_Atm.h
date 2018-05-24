@@ -48,7 +48,7 @@ public:
 
     void paraview_vtk_radial ( string &, int &, int &, int &, double &, double &, double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
-    void Atmosphere_v_w_Transfer ( string &, Array &, Array &, Array &, Array & );
+    void Atmosphere_v_w_Transfer ( string &, double, Array &, Array &, Array &, Array & );
 
     void Atmosphere_PlotData ( string &, double, double, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 

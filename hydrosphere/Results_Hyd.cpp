@@ -31,9 +31,10 @@ Results_Hyd::Results_Hyd ( int im, int jm, int km )
 Results_Hyd::~Results_Hyd () {}
 
 
-void Results_Hyd::run_data ( double u_0, double c_0, Array &h, Array &u, Array &v, Array &w, Array &c, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force_3D, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce_2D, Array_2D &Salt_total, Array_2D &BottomWater )
+void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array &u, Array &v, Array &w, Array &c, Array &Salt_Balance, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force_3D, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce_2D, Array_2D &Salt_total, Array_2D &BottomWater )
 {
 // total upwelling as sum on normal velocity component values in a virtual vertical column
+	int i_half = ( im - 1 ) / 2;
 
 	for ( int k = 0; k < km; k++ )
 	{
@@ -54,7 +55,7 @@ void Results_Hyd::run_data ( double u_0, double c_0, Array &h, Array &u, Array &
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			for ( int i = 0; i < im; i++ )
+			for ( int i = i_half; i < im; i++ )
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
@@ -85,7 +86,7 @@ void Results_Hyd::run_data ( double u_0, double c_0, Array &h, Array &u, Array &
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			for ( int i = 0; i < 30; i++ )
+			for ( int i = 0; i <= i_beg; i++ )
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
@@ -123,14 +124,17 @@ void Results_Hyd::run_data ( double u_0, double c_0, Array &h, Array &u, Array &
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-//			p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];
-//			p_dyn.x[ im-1 ][ j ][ k ] = c43 * p_dyn.x[ im-2 ][ j ][ k ] - c13 * p_dyn.x[ im-3 ][ j ][ k ];
-//			p_dyn.x[ im-1 ][ j ][ k ] = 0.;
-
-//			Buoyancy_Force_3D.x[ 0 ][ j ][ k ] = c43 * Buoyancy_Force_3D.x[ 1 ][ j ][ k ] - c13 * Buoyancy_Force_3D.x[ 2 ][ j ][ k ];
-			Buoyancy_Force_3D.x[ 0 ][ j ][ k ] = 0.;
+			Buoyancy_Force_3D.x[ 0 ][ j ][ k ] = c43 * Buoyancy_Force_3D.x[ 1 ][ j ][ k ] - c13 * Buoyancy_Force_3D.x[ 2 ][ j ][ k ];
 			Buoyancy_Force_3D.x[ im-1 ][ j ][ k ] = c43 * Buoyancy_Force_3D.x[ im-2 ][ j ][ k ] - c13 * Buoyancy_Force_3D.x[ im-3 ][ j ][ k ];
-//			Buoyancy_Force_3D.x[ im-1 ][ j ][ k ] = 0.;
+
+			Salt_Finger.x[ 0 ][ j ][ k ] = c43 * Salt_Finger.x[ 1 ][ j ][ k ] - c13 * Salt_Finger.x[ 2 ][ j ][ k ];
+			Salt_Finger.x[ im-1 ][ j ][ k ] = c43 * Salt_Finger.x[ im-2 ][ j ][ k ] - c13 * Salt_Finger.x[ im-3 ][ j ][ k ];
+
+			Salt_Diffusion.x[ 0 ][ j ][ k ] = c43 * Salt_Diffusion.x[ 1 ][ j ][ k ] - c13 * Salt_Diffusion.x[ 2 ][ j ][ k ];
+			Salt_Diffusion.x[ im-1 ][ j ][ k ] = c43 * Salt_Diffusion.x[ im-2 ][ j ][ k ] - c13 * Salt_Diffusion.x[ im-3 ][ j ][ k ];
+
+			Salt_Balance.x[ 0 ][ j ][ k ] = c43 * Salt_Balance.x[ 1 ][ j ][ k ] - c13 * Salt_Balance.x[ 2 ][ j ][ k ];
+			Salt_Balance.x[ im-1 ][ j ][ k ] = c43 * Salt_Balance.x[ im-2 ][ j ][ k ] - c13 * Salt_Balance.x[ im-3 ][ j ][ k ];
 		}
 	}
 
@@ -139,9 +143,17 @@ void Results_Hyd::run_data ( double u_0, double c_0, Array &h, Array &u, Array &
 	{
 		for ( int i = 0; i < im; i++ )
 		{
-//			Buoyancy_Force_3D.x[ i ][ 0 ][ k ] = c43 * Buoyancy_Force_3D.x[ i ][ 1 ][ k ] - c13 * Buoyancy_Force_3D.x[ i ][ 2 ][ k ];
-			Buoyancy_Force_3D.x[ i ][ 0 ][ k ] = 0.;
+			Buoyancy_Force_3D.x[ i ][ 0 ][ k ] = c43 * Buoyancy_Force_3D.x[ i ][ 1 ][ k ] - c13 * Buoyancy_Force_3D.x[ i ][ 2 ][ k ];
 			Buoyancy_Force_3D.x[ i ][ jm-1 ][ k ] = c43 * Buoyancy_Force_3D.x[ i ][ jm-2 ][ k ] - c13 * Buoyancy_Force_3D.x[ i ][ jm-3 ][ k ];
+
+			Salt_Finger.x[ i ][ 0 ][ k ] = c43 * Salt_Finger.x[ i ][ 1 ][ k ] - c13 * Salt_Finger.x[ i ][ 2 ][ k ];
+			Salt_Finger.x[ i ][ jm-1 ][ k ] = c43 * Salt_Finger.x[ i ][ jm-2 ][ k ] - c13 * Salt_Finger.x[ i ][ jm-3 ][ k ];
+
+			Salt_Diffusion.x[ i ][ 0 ][ k ] = c43 * Salt_Diffusion.x[ i ][ 1 ][ k ] - c13 * Salt_Diffusion.x[ i ][ 2 ][ k ];
+			Salt_Diffusion.x[ i ][ jm-1 ][ k ] = c43 * Salt_Diffusion.x[ i ][ jm-2 ][ k ] - c13 * Salt_Diffusion.x[ i ][ jm-3 ][ k ];
+
+			Salt_Balance.x[ i ][ 0 ][ k ] = c43 * Salt_Balance.x[ i ][ 1 ][ k ] - c13 * Salt_Balance.x[ i ][ 2 ][ k ];
+			Salt_Balance.x[ i ][ jm-1 ][ k ] = c43 * Salt_Balance.x[ i ][ jm-2 ][ k ] - c13 * Salt_Balance.x[ i ][ jm-3 ][ k ];
 		}
 	}
 
@@ -153,6 +165,18 @@ void Results_Hyd::run_data ( double u_0, double c_0, Array &h, Array &u, Array &
 			Buoyancy_Force_3D.x[ i ][ j ][ 0 ] = c43 * Buoyancy_Force_3D.x[ i ][ j ][ 1 ] - c13 * Buoyancy_Force_3D.x[ i ][ j ][ 2 ];
 			Buoyancy_Force_3D.x[ i ][ j ][ km-1 ] = c43 * Buoyancy_Force_3D.x[ i ][ j ][ km-2 ] - c13 * Buoyancy_Force_3D.x[ i ][ j ][ km-3 ];
 			Buoyancy_Force_3D.x[ i ][ j ][ 0 ] = Buoyancy_Force_3D.x[ i ][ j ][ km-1 ] = ( Buoyancy_Force_3D.x[ i ][ j ][ 0 ] + Buoyancy_Force_3D.x[ i ][ j ][ km-1 ] ) / 2.;
+
+			Salt_Finger.x[ i ][ j ][ 0 ] = c43 * Salt_Finger.x[ i ][ j ][ 1 ] - c13 * Salt_Finger.x[ i ][ j ][ 2 ];
+			Salt_Finger.x[ i ][ j ][ km-1 ] = c43 * Salt_Finger.x[ i ][ j ][ km-2 ] - c13 * Salt_Finger.x[ i ][ j ][ km-3 ];
+			Salt_Finger.x[ i ][ j ][ 0 ] = Salt_Finger.x[ i ][ j ][ km-1 ] = ( Salt_Finger.x[ i ][ j ][ 0 ] + Salt_Finger.x[ i ][ j ][ km-1 ] ) / 2.;
+
+			Salt_Diffusion.x[ i ][ j ][ 0 ] = c43 * Salt_Diffusion.x[ i ][ j ][ 1 ] - c13 * Salt_Diffusion.x[ i ][ j ][ 2 ];
+			Salt_Diffusion.x[ i ][ j ][ km-1 ] = c43 * Salt_Diffusion.x[ i ][ j ][ km-2 ] - c13 * Salt_Diffusion.x[ i ][ j ][ km-3 ];
+			Salt_Diffusion.x[ i ][ j ][ 0 ] = Salt_Diffusion.x[ i ][ j ][ km-1 ] = ( Salt_Diffusion.x[ i ][ j ][ 0 ] + Salt_Diffusion.x[ i ][ j ][ km-1 ] ) / 2.;
+
+			Salt_Balance.x[ i ][ j ][ 0 ] = c43 * Salt_Balance.x[ i ][ j ][ 1 ] - c13 * Salt_Balance.x[ i ][ j ][ 2 ];
+			Salt_Balance.x[ i ][ j ][ km-1 ] = c43 * Salt_Balance.x[ i ][ j ][ km-2 ] - c13 * Salt_Balance.x[ i ][ j ][ km-3 ];
+			Salt_Balance.x[ i ][ j ][ 0 ] = Salt_Balance.x[ i ][ j ][ km-1 ] = ( Salt_Balance.x[ i ][ j ][ 0 ] + Salt_Balance.x[ i ][ j ][ km-1 ] ) / 2.;
 		}
 	}
 

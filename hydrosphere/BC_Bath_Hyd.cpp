@@ -55,7 +55,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, cons
 	j = 0;
 	k = 0;
 
-	L_hyd = - L_hyd;
+	double i_h = 0.;
 
 	while ( ( j < jm ) && ( !Name_Bathymetry_File_Read.eof() ) )
 	{
@@ -67,7 +67,8 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, cons
 
 			if ( dummy_3 > 0. ) dummy_3 = 0.;
 
-			i = ( im -1 ) - im * ( dummy_3 / L_hyd );
+			i_h = round ( dummy_3 / ( L_hyd / ( double) ( im - 1 ) ) );
+			i = ( im -1 ) + ( int ) i_h;
 			i_boden = i;
 
 			for ( i = 0; i <= i_boden; i++ )
@@ -124,6 +125,42 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, cons
 				}
 			}
 		}
+
+// reduction and smoothing of peaks and needles in the bathymetry
+		double h_center = 0.;
+/*
+		for ( int k = 1; k < km-1; k++ )
+		{
+			for ( int j = 1; j < jm-1; j++ )
+			{
+				for ( int i = 1; i < im-1; i++ )
+				{
+*/
+		for ( int k = 2; k < km-2; k++ )
+		{
+			for ( int j = 2; j < jm-2; j++ )
+			{
+				for ( int i = 2; i < im-2; i++ )
+				{
+					if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )
+					 && ( ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 0.  ) ) )
+					 {
+						 h_center = h.x[ i ][ j ][ k ];
+						 h.x[ i ][ j ][ k ] = 0.;
+					 }
+
+					if ( ( h_center == 1. ) && ( ( h.x[ i ][ j - 2 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) ) )					h.x[ i ][ j - 1 ][ k + 1 ] = 0.;
+					if ( ( h_center == 1. ) && ( ( h.x[ i ][ j - 2 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) ) )					h.x[ i ][ j - 1 ][ k - 1 ] = 0.;
+					if ( ( h_center == 1. ) && ( ( h.x[ i ][ j + 2 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) ) )					h.x[ i ][ j + 1 ][ k - 1 ] = 0.;
+					if ( ( h_center == 1. ) && ( ( h.x[ i ][ j + 2 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) ) )				h.x[ i ][ j + 1 ][ k + 1 ] = 0.;
+				}
+			}
+		}
+
+
+
+
+
 }
 
 
@@ -133,7 +170,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_path, cons
 void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn )
 {
 // boundary conditions for the total solid ground
-	for ( int i = 0; i < im-1; i++ )
+	for ( int i = 0; i < im; i++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{

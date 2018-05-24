@@ -39,14 +39,17 @@ BC_Atmosphere::~BC_Atmosphere() {}
 void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &cloud, Array &ice, Array &co2 )
 {
 // boundary conditions for the r-direction, loop index i
-	for ( int j = 1; j < jm-1; j++ )
+	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int k = 1; k < km-1; k++ )
+		for ( int k = 0; k < km; k++ )
 		{
 			u.x[ 0 ][ j ][ k ] = 0.;
 
-			p_dyn.x[ im-1 ][ j ][ k ] = 0.;
+			v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
+			w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
+			p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];
 
+			p_dyn.x[ im-1 ][ j ][ k ] = 0.;
 			u.x[ im-1 ][ j ][ k ] = 0.;
 			v.x[ im-1 ][ j ][ k ] = 0.;
 			w.x[ im-1 ][ j ][ k ] = 0.;
