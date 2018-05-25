@@ -290,7 +290,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
 
 
 
-void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathymetry_File, int &n, double &u_0, double &r_0_water, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathymetry_File, int &n, double &u_0, double &r_0_water, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, dx, dy, dz;
 
@@ -333,23 +333,20 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 	Hydrosphere_panorama_vts_File <<  "\n"  << endl;
 	Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
-
     dump_array("Topography", h, 1.0, Hydrosphere_panorama_vts_File);
-
     dump_array("u-velocity", u, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("v-velocity", v, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("w-velocity", w, 1.0, Hydrosphere_panorama_vts_File);
-
     dump_array("Temperature", t, 1.0, Hydrosphere_panorama_vts_File);
-
-    dump_array("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water, Hydrosphere_panorama_vts_File);
-//    dump_array("PressureStatic", p_stat, 1.0, Hydrosphere_panorama_vts_File);
-
+//    dump_array("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water, Hydrosphere_panorama_vts_File);
+    dump_array("PressureDynamic", p_dyn, 1., Hydrosphere_panorama_vts_File);
+    dump_array("PressureStatic", p_stat, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("Salinity", c, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("DensityWater", r_water, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("DensitySaltWater", r_salt_water, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("Salt_Finger", Salt_Finger, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("SaltDiffusion", Salt_Diffusion, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("SaltBalance", Salt_Balance, 1.0, Hydrosphere_panorama_vts_File);
-
     dump_array("BuoyancyForce", Buoyancy_Force, 1.0, Hydrosphere_panorama_vts_File);
 
 
@@ -400,7 +397,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetry_File, int &j_longal, int &n, double &u_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetry_File, int &j_longal, int &n, double &u_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, dx, dz;
 
@@ -450,17 +447,16 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 	Hydrosphere_vtk_longal_File <<  "POINT_DATA " << i_max * k_max << endl;
 
     dump_longal("Topography", h, 1., j_longal, Hydrosphere_vtk_longal_File);
-
     dump_longal("u-Component", u, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("v-Component", v, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("w-Component", w, 1., j_longal, Hydrosphere_vtk_longal_File);
-
     dump_longal("Temperature", t, 1., j_longal, Hydrosphere_vtk_longal_File);
+//    dump_longal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("PressureDynamic", p_dyn, 1., j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("PressureStatic", p_stat, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("Salinity", c, 1., j_longal, Hydrosphere_vtk_longal_File);
-
-    dump_longal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water, j_longal, Hydrosphere_vtk_longal_File);
-// dump_longal("PressureStatic", p_stat, 1., j_longal, Hydrosphere_vtk_longal_File);
-
+    dump_longal("DensityWater", r_water, 1., j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("DensitySaltWater", r_salt_water, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("SaltFinger", Salt_Finger, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("SaltDiffusion", Salt_Diffusion, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("SaltBalance", Salt_Balance, 1., j_longal, Hydrosphere_vtk_longal_File);
@@ -485,7 +481,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &n, double &u_0, double &t_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater )
+void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &n, double &u_0, double &t_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater, Array_2D &Oscar_u_v, Array_2D &Oscar_v_w )
 {
 	double x, y, z, dx, dy;
 
@@ -550,22 +546,23 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     dump_radial("u-Component", u, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("v-Component", v, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("w-Component", w, 1., i_radial, Hydrosphere_vtk_radial_File);
-
 //    dump_radial("Temperature", t, 1., i_radial, Hydrosphere_vtk_radial_File);
+//    dump_radial("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("PressureDynamic", p_dyn, 1., i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("PressureStatic", p_stat, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("Salinity", c, 1., i_radial, Hydrosphere_vtk_radial_File);
-
+    dump_radial("DensityWater", r_water, 1., i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("DensitySaltWater", r_salt_water, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("SaltFinger", Salt_Finger, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("SaltDiffusion", Salt_Diffusion, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("SaltBalance", Salt_Balance, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("BuoyancyForce", Buoyancy_Force, 1., i_radial, Hydrosphere_vtk_radial_File);
-
-    dump_radial("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water, i_radial, Hydrosphere_vtk_radial_File);
-//    dump_radial("PressureStatic", p_stat, 1., i_radial, Hydrosphere_vtk_radial_File);
-
     dump_radial_2d("Upwelling", Upwelling, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Downwelling", Downwelling, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("BottomWater", BottomWater, 1., Hydrosphere_vtk_radial_File);
 
+//    dump_radial_2d("Oscar_u_v", Oscar_u_v, 1., Hydrosphere_vtk_radial_File);
+//    dump_radial_2d("Oscar_v_w", Oscar_v_w, 1., Hydrosphere_vtk_radial_File);
 
 	Hydrosphere_vtk_radial_File <<  "VECTORS v-w-Cell float" << endl;
 
@@ -584,7 +581,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int &k_zonal, int &n, double &u_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &t, Array &u, Array &v, Array &w, Array &c, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int &k_zonal, int &n, double &u_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, dx, dy;
 
@@ -640,18 +637,18 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
     dump_zonal("u-Component", u, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("v-Component", v, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("w-Component", w, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-
     dump_zonal("Temperature", t, 1., k_zonal, Hydrosphere_vtk_zonal_File);
+//    dump_zonal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("PressureDynamic", p_dyn, 1., k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("PressureStatic", p_stat, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("Salinity", c, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-
-    dump_zonal("Salinity", c, 1., k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("DensityWater", r_water, 1., k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("DensitySaltWater", r_salt_water, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("SaltFinger", Salt_Finger, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("SaltDiffusion", Salt_Diffusion, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("SaltBalance", Salt_Balance, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("BuoyancyForce", Buoyancy_Force, 1., k_zonal, Hydrosphere_vtk_zonal_File);
 
-    dump_zonal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water, k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("PressureStatic", p_stat, 1., k_zonal, Hydrosphere_vtk_zonal_File);
 
 	Hydrosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
 
@@ -692,9 +689,81 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 			v_w_Transfer_File >> w.x[ im-1 ][ j ][ k ];
 			v_w_Transfer_File >> t.x[ im-1 ][ j ][ k ];
 			v_w_Transfer_File >> p.x[ im-1 ][ j ][ k ];
+
+			p.x[ im-1 ][ j ][ k ] = 0.;
+
 		}
 	}
 	v_w_Transfer_File.close();
+}
+
+
+
+
+
+void PostProcess_Hydrosphere::OscarFile_u_read ( Array_2D &Oscar_u_v )
+{
+	int dummy_1 = 0;
+	int dummy_2 = 0;
+
+	ifstream v_w_Oscar_File;
+    string Name_v_w_Oscar_File = "../data/Oscar_u.xyz";
+    v_w_Oscar_File.precision(4);
+    v_w_Oscar_File.setf(ios::fixed);
+	v_w_Oscar_File.open(Name_v_w_Oscar_File);
+
+	if (!v_w_Oscar_File.is_open())
+	{
+        cout << "ERROR: transfer file name in hydrosphere: " << Name_v_w_Oscar_File << "\n";
+        cerr << "ERROR: could not open transfer file " << __FILE__ << " at line " << __LINE__ << "\n";
+		abort();
+	}
+
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int   k = 0; k < km; k++ )
+		{
+			v_w_Oscar_File >> dummy_1;
+			v_w_Oscar_File >> dummy_2;
+			v_w_Oscar_File >> Oscar_u_v.y[ j ][ k ];
+		}
+	}
+	v_w_Oscar_File.close();
+}
+
+
+
+
+
+
+void PostProcess_Hydrosphere::OscarFile_v_read ( Array_2D &Oscar_v_w )
+{
+	int dummy_1 = 0;
+	int dummy_2 = 0;
+
+	ifstream v_w_Oscar_File;
+    string Name_v_w_Oscar_File = "../data/Oscar_v.xyz";
+    v_w_Oscar_File.precision(4);
+    v_w_Oscar_File.setf(ios::fixed);
+	v_w_Oscar_File.open(Name_v_w_Oscar_File);
+
+	if (!v_w_Oscar_File.is_open())
+	{
+        cout << "ERROR: transfer file name in hydrosphere: " << Name_v_w_Oscar_File << "\n";
+        cerr << "ERROR: could not open transfer file " << __FILE__ << " at line " << __LINE__ << "\n";
+		abort();
+	}
+
+	for ( int j = 0; j < jm; j++ )
+	{
+		for ( int   k = 0; k < km; k++ )
+		{
+			v_w_Oscar_File >> dummy_1;
+			v_w_Oscar_File >> dummy_2;
+			v_w_Oscar_File >> Oscar_v_w.y[ j ][ k ];
+		}
+	}
+	v_w_Oscar_File.close();
 }
 
 

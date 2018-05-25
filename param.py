@@ -21,9 +21,9 @@ def main():
     
         'atmosphere': [
             ( 'velocity_iter_max_2D', '', 'int',2 ),
-            ( 'pressure_iter_max_2D', '', 'int', 2 ),
+            ( 'pressure_iter_max_2D', '', 'int', 10 ),
             ( 'velocity_iter_max', '', 'int', 2 ),
-            ( 'pressure_iter_max', '', 'int', 2 ),
+            ( 'pressure_iter_max', '', 'int', 8 ),
 
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
@@ -65,8 +65,8 @@ def main():
             ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
-            ( 'ec', 'Eckert number: ratio kinetic energy to enthalpy, Ec = u² / cp T', 'double', 0.00044 ),
-            ( 'sc_WaterVapour', 'Schmidt number of water vapour, Sc = nue / D', 'double', 0.6 ),
+            ( 'ec', 'Eckert number: ratio kinetic energy to enthalpy, Ec = u² / cp T', 'double', 0.00082 ),
+            ( 'sc_WaterVapour', 'Schmidt number of water vapour, Sc = nue / D', 'double', 0.61 ),
             ( 'sc_CO2', 'Schmidt number of CO2', 'double', 0.96 ),
             ( 'pr', 'Prandtl number of air for laminar flows', 'double', 0.7179 ),
             ( 'g', 'gravitational acceleration of the earth in m/s²', 'double', 9.8066 ),
@@ -85,7 +85,8 @@ def main():
             ( 'r_co2', 'density of CO2 in kg/m³ at 25°C', 'double', 0.0019767 ),
             ( 'gam', 'constant slope of temperature    gam = 0.65 K/100 m', 'double', 0.65 ),
 
-            ( 'u_0', 'maximum value of velocity in 15 m/s compares to 54 km/h', 'double', 15.0 ),
+#            ( 'u_0', 'maximum value of velocity in 15 m/s compares to 54 km/h', 'double', 15.0 ),
+            ( 'u_0', 'annual mean of surface wind velocity in m/s, 8 m/s compare to 28.8 km/h', 'double', 8.0 ),
             ( 'p_0', 'pressure at sea level in hPa', 'double', 1013.25 ),
             ( 't_0', 'temperature in K compare to 0°C', 'double', 273.15 ),
             ( 'c_0', 'maximum value of water vapour in kg / kg', 'double', 0.035 ),
@@ -133,17 +134,20 @@ def main():
         'hydrosphere': [
             ( 'input_path', 'directory where Atmosphere output can be read (must end in /)', 'string', 'output' ),
             ( 'velocity_iter_max_2D', '', 'int', 2 ),
-            ( 'pressure_iter_max_2D', '', 'int', 2 ),
+            ( 'pressure_iter_max_2D', '', 'int', 10 ),
             ( 'velocity_iter_max', '', 'int', 2 ),
-            ( 'pressure_iter_max', '', 'int', 2 ),
+            ( 'pressure_iter_max', '', 'int', 8 ),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 
-            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m', 'double', 6000.0 ),
+#            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m', 'double', 6000.0 ),
+#            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 2000 m compares to 40 steps times 50 m', 'double', 2000.0 ),
+            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 1000 m compares to 40 steps times 25 m', 'double', 1000.0 ),
 
-            ( 're', 'Reynolds number', 'double', 1000.0 ),
-            ( 'ec', 'Eckert number', 'double', 0.0001 ),
-            ( 'sc', 'Schmidt number for salt water', 'double', 10.0 ),
+#            ( 're', 'Reynolds number', 'double', 1000.0 ),
+            ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 10.0 ),
+            ( 'ec', 'Eckert number', 'double', 5.5e-8 ),
+            ( 'sc', 'Schmidt number for salt water', 'double', 1.7329 ),
             ( 'pr', 'Prandtl number for water', 'double', 6.957 ),
             ( 'g', 'gravitational acceleration of the earth', 'double', 9.8066 ),
             ( 'cp_w', 'specific heat capacity of water at constant pressure and 20°C in J/( kg K )', 'double', 4182.0 ),
@@ -151,8 +155,8 @@ def main():
             ( 'p_0', 'pressure at sea level in hPa', 'double', 1013.25 ),
             ( 't_0', 'temperature in K compares to 0°C', 'double', 273.15 ),
             ( 'c_0', 'rate of salt in psu at temperature t_0', 'double', 34.6 ),
-            ( 'u_0', 'maximum value of velocity in m/s', 'double', 0.45 ),
-            ( 'r_0_water', 'reference density of salt water in kg/m3', 'double', 1026.0 ),
+            ( 'u_0', 'annual mean of surface water velocity in m/s', 'double', 0.25 ),
+            ( 'r_0_water', 'reference density of fresh water in kg/m3', 'double', 1000.0 ),
 
             ( 'epsres', 'accuracy for relative and absolute errors0,988571429', 'double', 0.0005 ),
 
@@ -161,7 +165,7 @@ def main():
             ( 'wa', 'initial velocity component in phi-direction', 'double', 0.0 ),
             ( 'pa', 'initial value for the pressure field', 'double', 0.0 ),
             ( 'ta', 'compares to 4°C', 'double', 1.01464 ),
-            ( 'ca', 'c = 1.01156 compares to a salinity of 35.0 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 1.01156 ),
+            ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 1.0 ),
 
             ( 'ca_max', 'c = 1.0983 compares to a salinity of 38.00 psu  used for deep flow initialization', 'double', 1.0983 ),
 

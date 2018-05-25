@@ -33,12 +33,11 @@ class BC_Thermohalin
 		int j1, j2, j3, jn, jd, k1, k2, k3, kn, kd;
 
 		double dummy_1, dummy_2, dummy_3, IC_water, water_wind, c_0, Ekman_angle, vel_magnitude, alfa, beta, angle, Ekman_angle_add, Ekman, pi180;
-		double t_equator, t_pole, d_i, d_i_half, d_i_max, d_j, d_j_half, d_j_max, t_coeff, c_average, c_cretaceous, p_0, t_0;
-		double v_grad, t_Celsius;
+		double t_equator, t_pole, d_i, d_i_half, d_i_middle, d_i_beg, d_i_max, d_j, d_j_half, d_j_max, t_coeff, c_average, c_cretaceous, p_0, t_0;
+		double v_grad, t_Celsius, u_max;
 		double t_cretaceous, t_cretaceous_max, t_cretaceous_coeff;
 		double rg;
 		double dr, g, r_0_water, ua, va, wa, ca, pa, ta, u_0, cp_w, L_hyd, t_average;
-		double *dr_var;
 
 		string time_slice_comment, time_slice_number, time_slice_unit;
 		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
@@ -51,10 +50,7 @@ class BC_Thermohalin
 		BC_Thermohalin (int, int, int, int , int , int, int, int, double, double, double, double, double, double, double, double, double,  double, double, double, double, double, double, double, double, double, double, const string &);
 		~BC_Thermohalin();
 
-
-		void IC_v_w_Atmosphere ( Array &, Array &, Array &, Array & );
-
-		void IC_v_w_Ekman ( Array &, Array &, Array & );
+		void IC_v_w_EkmanSpiral ( Array_1D &, Array &, Array &, Array & );
 
 		void IC_v_w_WestEastCoast ( Array &, Array &, Array &, Array &, Array & );
 
@@ -64,7 +60,9 @@ class BC_Thermohalin
 
 		void BC_Surface_Salinity_NASA ( const string &, Array & );
 
-		void BC_Pressure ( Array &, Array &, Array & );
+		void BC_Pressure_Density ( Array &, Array &, Array &, Array &, Array &, Array & );
+
+		void IC_CircumPolar_Current ( Array &, Array &, Array &, Array &, Array & );
 
 };
 #endif

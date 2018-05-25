@@ -36,7 +36,7 @@ class Results_Hyd
 
 		~Results_Hyd (  );
 
-		void run_data ( double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+		void run_data ( int, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 		void land_oceanFraction ( Array & );
 

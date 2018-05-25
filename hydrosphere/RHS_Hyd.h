@@ -40,12 +40,12 @@ class RHS_Hydrosphere
             double c_0, 
             double r_0_water, double ta, double pa, double ca, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, 
             Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, 
-            Array &p_dynn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &rhs_c, 
+            Array &p_dynn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, 
             Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D, 
-            Array &Salt_Balance, Array &p_stat );
+            Array &Salt_Balance, Array &p_stat, Array &ro_water, Array &ro_salt_water );
 
-        void RK_RHS_2D_Hydrosphere ( int j, int k, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w, 
-            Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &rhs_v, Array &rhs_w, Array &rhs_p, Array &aux_v, 
+        void RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w, 
+            Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &rhs_v, Array &rhs_w, Array &aux_v, 
             Array &aux_w );
 
 };

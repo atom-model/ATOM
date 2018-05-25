@@ -31,11 +31,12 @@ MinMax_Hyd::MinMax_Hyd ( int jm, int km, double c_0 )
 }
 
 
-MinMax_Hyd::MinMax_Hyd ( int im, int jm, int km, double c_0, double L_hyd )
+MinMax_Hyd::MinMax_Hyd ( int im, int jm, int km, double u_0, double c_0, double L_hyd )
 {
 	this-> im = im;
 	this-> jm = jm;
 	this-> km = km;
+	this-> u_0 = u_0;
 	this-> c_0 = c_0;
 	this-> L_hyd = L_hyd;
 
@@ -174,28 +175,27 @@ void MinMax_Hyd::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 
 	if ( name_maxValue == " max 3D u_component " )
 	{
-		maxValue = maxValue * .45;
-		minValue = minValue * .45;
+		maxValue = maxValue * u_0;
+		minValue = minValue * u_0;
 	}
 
 	if ( name_maxValue == " max 3D v_component " )
 	{
-		maxValue = maxValue * .45;
-		minValue = minValue * .45;
+		maxValue = maxValue * u_0;
+		minValue = minValue * u_0;
 	}
 
 	if ( name_maxValue == " max 3D w_component " )
 	{
-		maxValue = maxValue * .45;
-		minValue = minValue * .45;
+		maxValue = maxValue * u_0;
+		minValue = minValue * u_0;
 	}
 
 
-// coefficient for units in hPa for the dynamic pressure 		coeff = r_0_water * u_0 * u_0 = 1026 * 15 * 15 * 0.01 = 207.77 hPa
 	if ( name_maxValue == " max 3D pressure dynamic " )
 	{
-		maxValue = maxValue * 207.77;
-		minValue = minValue * 207.77;
+		maxValue = maxValue * .01;									// in hPa
+		minValue = minValue * 01;									// in hPa
 	}
 
 

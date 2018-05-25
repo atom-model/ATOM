@@ -643,7 +643,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 		}																								// temperatur distribution at aa prescribed sun position
 
 
-// pole temperature adjustment 
+// pole temperature adjustment, combination of linear time dependent functions 
 	int Ma_1_1 = 0;
 	int Ma_2_1 = 45;
 	int Ma_1_2 = 45;
@@ -655,39 +655,41 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 	double t_2 = 0.;
 	double t_pole_diff = 0.;
 	double t_pole_add = 0.;
-
+	double t_pole_Ma0 = t_pole;
 
 	if ( RadiationModel == 1 )
 	{
+		if ( Ma <= Ma_2_1 )
+		{
+			t_1 = t_pole;
+			t_2 = ( 10. + t_0 ) / t_0;
+			t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_1, Ma_2_1, t_1, t_2 );
+		}
+
+		if ( ( Ma > Ma_1_2 ) && ( Ma <= Ma_2_2 ) )
+		{
+			t_1 = ( 10. + t_0 ) / t_0;
+			t_2 = ( 23. + t_0 ) / t_0;
+			t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_2, Ma_2_2, t_1, t_2 );
+		}
+
+		if ( ( Ma > Ma_1_3 ) && ( Ma <= Ma_2_3 ) )
+		{
+			t_1 = ( 23. + t_0 ) / t_0;
+			t_2 = ( 16. + t_0 ) / t_0;
+			t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 );
+		}
+
+//		t_pole = t_pole + t_cretaceous_add;
+		t_pole = t_pole_Ma0 + t_cretaceous_add;
+//		t_eff = t_pole - t_equator;
+		t_eff = t_pole - ( t_equator + t_cretaceous_add );
+		t_pole_diff = t_pole - t_pole_Ma0;
+
+//	cout << "   t_pole_Ma0 = " << t_pole_Ma0 << "   t_equator = " << t_equator << "   t_pole = " << t_pole << "   t_eff = " << t_eff << "   t_pole_diff = " << t_pole_diff << endl;
+
 		for ( int k = 0; k < km; k++ )
 		{
-
-			if ( Ma <= Ma_2_1 )
-			{
-				t_1 = t_pole;
-				t_2 = ( 10. + t_0 ) / t_0;
-				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_1, Ma_2_1, t_1, t_2 );
-			}
-
-			if ( ( Ma > Ma_1_2 ) && ( Ma <= Ma_2_2 ) )
-			{
-				t_1 = ( 10. + t_0 ) / t_0;
-				t_2 = ( 23. + t_0 ) / t_0;
-				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_2, Ma_2_2, t_1, t_2 );
-			}
-
-			if ( ( Ma > Ma_1_3 ) && ( Ma <= Ma_2_3 ) )
-			{
-				t_1 = ( 23. + t_0 ) / t_0;
-				t_2 = ( 16. + t_0 ) / t_0;
-				t_pole = BC_Thermo::GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 );
-			}
-
-
-			t_eff = t_pole - t_equator;
-			t_pole_diff = t_pole - t.x[ 0 ][ 0 ][ k ];
-
-
 			for ( int j = 0; j < jm; j++ )
 			{
 				i_mount = i_topography[ j ][ k ];
@@ -718,8 +720,11 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 //	if ( ( j > j_half ) && ( j < jm ) )		cout << endl << "   south    " << "   j = " << j << "   k = " << k << "   t_cretaceous = " << t_cretaceous << "   t_pole = " << t_pole << "     t_pole_add = " << t_pole_add << "     t_pole_diff = " << t_pole_diff << "     t_NASA = " << t.x[ 0 ][ j ][ k ] << "     t = " << t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add << "     t °C = " << ( t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add ) * t_0 - t_0 << "     Ma = " << Ma << endl;
 
 //						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add;
-						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_pole_add;
+//						t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_cretaceous_add + t_pole_add;
+						t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_pole_add;
+//						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_pole_add;
 //						t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
+
 					}
 
 					if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) )		t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land;	// parabolic temperature distribution
@@ -770,6 +775,7 @@ void BC_Thermo::BC_Temperature ( int *im_tropopause, double &t_cretaceous, doubl
 
 		}
 	}
+
 }
 
 
@@ -1038,60 +1044,57 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 // do not change the velocity initial conditions !!
 
 // velocity assumptions at the equator 0°
-//	ua_00 = 0.1;																				// in m/s compares to 1.08 km/h, non-dimensionalized by u_0 at the end of this class elemen
-	ua_00 = 1.;																				// in m/s compares to 1.08 km/h, non-dimensionalized by u_0 at the end of this class elemen
+	ua_00 = 1.;																				// in m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this class elemen
 
 	va_equator_SL =  0.000;
 	va_equator_Tropopause = 0.000;
 
-//	wa_equator_SL = - 5.;
-	wa_equator_SL = - 2.;
+//	wa_equator_SL = - 2.;
+	wa_equator_SL = - 1.;
 	wa_equator_Tropopause = - 7.5;
 
 // velocity assumptions for latitude at 15° and 30° in the Hadley cell
-//	ua_30 = - 0.1;
 	ua_30 = - 1.;
 
-	va_Hadley_SL = 1.;
+//	va_Hadley_SL = .5;
+	va_Hadley_SL = .25;
 	va_Hadley_Tropopause = - 1.;
 
 	va_Hadley_SL_15 = 1.;
 	va_Hadley_Tropopause_15 = - 1.;
 
-//	wa_Hadley_SL = 5.;																	// at surface
-	wa_Hadley_SL = 2.;																	// at surface
+//	wa_Hadley_SL = .5;																	// at surface
+	wa_Hadley_SL = 1.;																	// at surface
+//	wa_Hadley_SL = .5;																	// at surface
 	wa_Hadley_Tropopause = 30.;													// subtropic jet in m/s compares to 108 km/h
 
 // velocity assumptions for latitude at 45° and 60° in the Ferrel cell
-//	ua_60 = 0.1;
 	ua_60 = 0.5;
 
-	va_Ferrel_SL = - 0.75;
+//	va_Ferrel_SL = 0.1;
+	va_Ferrel_SL = 0.5;
 	va_Ferrel_Tropopause = 1.;
 
-	va_Ferrel_SL_45 = - 1.;
+	va_Ferrel_SL_45 = - .1;
 	va_Ferrel_Tropopause_45 = 1.;
 
-//	wa_Ferrel_SL = 1.5;																	// subpolar jet
-	wa_Ferrel_SL = 0.75;																	// subpolar jet
+//	wa_Ferrel_SL = 1.;																	// subpolar jet
+//	wa_Ferrel_SL = -.1;																	// subpolar jet
+	wa_Ferrel_SL = -.2;																	// subpolar jet
+//	wa_Ferrel_SL = -.4;																	// subpolar jet
 	wa_Ferrel_Tropopause = 10.;														// subpolar jet in m/s compares to 36 km/h
 
 // velocity assumptions for latitude 90° in the Polar cell
-//	ua_90 = - 0.1;
 	ua_90 = - 0.5;
 
 	va_Polar_SL = 0.;
 	va_Polar_Tropopause = 0.;
 
-//	va_Polar_SL_75 = 0.75;
-//	va_Polar_Tropopause_75 = - 0.75;
-
-	va_Polar_SL_75 = 1.;
+	va_Polar_SL_75 = .5;
 	va_Polar_Tropopause_75 = - 1.;
 
-//	wa_Polar_SL = 0.;
-//	wa_Polar_SL = 0.75;
-	wa_Polar_SL = 1.;
+//	wa_Polar_SL = - 0.05;
+	wa_Polar_SL = - 0.01;
 	wa_Polar_Tropopause = 0.;
 
 
@@ -2711,6 +2714,11 @@ void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array
 		{
 			for ( int j = 0; j < jm; j++ )
 			{
+/*
+				u.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] / u_0;
+				v.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] / u_0;
+				w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] / u_0;
+*/
 				u.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] / u_0;
 				v.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] / u_0;
 				w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] / u_0;
@@ -3073,7 +3081,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 				t_u = t.x[ i ][ j ][ k ] * t_0;																		// in K
 
 				t_Celsius = t_u - t_0;																				// in C
-	
+
 				p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );		// given in hPa
 
 				hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
@@ -3082,7 +3090,8 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 				else 						p_h = p_SL;
 
 				r_dry = 100. * p_h / ( R_Air * t_u );
-				r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );	// density of humid air, COSMO version withot cloud and ice water, masses negligible
+//				r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );	// density of humid air, COSMO version withot cloud and ice water, masses negligible
+				r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
 
 				e_h = .01 * r_humid * R_WaterVapour * t_u;											// delivers the same results
 
@@ -3367,11 +3376,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 	}
 
 
-
-//	for ( int k = 1; k < km-1; k++ )
-//	{
-//		for ( int j = 1; j < jm-1; j++ )
-//		{
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -3398,7 +3402,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 				else 					p_h = p_SL;
 
 				r_dry = 100. * p_h / ( R_Air * t_u );																// density of dry air in kg/m³
-				r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );							// density of humid air, COSMO version without cloud and ice water, masses negligible in kg/m³
+				r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
 
 				q_h = c.x[ i ][ j ][ k ];																					// threshold value for water vapour at local hight h in kg/kg
 
@@ -3468,10 +3472,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 		{
 			iter_prec = iter_prec + 1;
 
-//			for ( int k = 1; k < km-1; k++ )
-//			{
-//				for ( int j = 1; j < jm-1; j++ )
-//				{
 			for ( int k = 0; k < km; k++ )
 			{
 				for ( int j = 0; j < jm; j++ )
@@ -3492,7 +3492,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 						else 						p_h = p_SL;
 
 						r_dry = 100. * p_h / ( R_Air * t_u );																// density of dry air in kg/m³
-						r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );		// density of humid air, COSMO version without cloud and ice water, masses negligible in kg/m³
+						r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
 
 						q_h = c.x[ i ][ j ][ k ];																					// threshold value for water vapour at local hight h in kg/kg
 
@@ -3577,7 +3577,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 
 
 // diffusional growth of rain and snow
-
 						if ( t_u >= t_0 )			S_ev = alf_ev * ( 1. + bet_ev * pow ( P_rain.x[ i ][ j ][ k ], ( 1. / 6. ) ) ) * ( q_Rain - c.x[ i ][ j ][ k ] ) * pow ( P_rain.x[ i ][ j ][ k ], ( 4. / 9. ) );
 																									// evaporation of rain due to water vapour diffusion
 						else 							S_ev = 0.;
@@ -3585,7 +3584,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 						if ( t_u < t_0 ) 			S_s_dep = c_s_dep * ( 1. + bet_s_dep * pow ( P_snow.x[ i ][ j ][ k ], ( 5. / 26. ) ) ) * ( c.x[ i ][ j ][ k ] - q_Ice ) * pow ( P_snow.x[ i ][ j ][ k ], ( 8. / 13. ) );
 																									// deposition/sublimation of snow 
 						else 							S_s_dep = 0.;
-
 
 // melting and freezing
 						if ( ( t_u > t_0 ) && ( ice.x[ i ][ j ][ k ] > 0. ) ) 			S_i_melt = ice.x[ i ][ j ][ k ] / dt_snow_dim; // cloud ice particles melting to cloud water
@@ -3804,7 +3802,6 @@ int BC_Thermo::GetTropopauseHightAdd ( double t_cret )
 	double d_i_h_round = round ( ( t_cret * t_0 ) / 2.6 );		// adiabatic slope of radial temperature 0.65/100m, stepsize 400m => 2.6/400m
 	int i_h = 0;
 
-	d_i_h_round = round ( d_i_h_round );
 	i_h = ( int ) d_i_h_round;
 
 //	cout << "     t_cret = " << t_cret * t_0 << "     d_i_h_round = " << d_i_h_round << "     t_0 = " << t_0 << "     i_h = " << i_h << endl;

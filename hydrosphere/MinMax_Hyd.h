@@ -27,7 +27,7 @@ class MinMax_Hyd
 		int im, jm, km, imax, jmax, kmax, imin, jmin, kmin;
 		int imax_level, imin_level, jmax_deg, kmax_deg, jmin_deg, kmin_deg;
 
-		double maxValue, minValue, c_0, L_hyd;
+		double maxValue, minValue, u_0, c_0, L_hyd;
 
 		Array_2D			value ( int, int, double );
 		Array				value_D ( int, int, int, double );
@@ -37,7 +37,7 @@ class MinMax_Hyd
 
 	public:
 		MinMax_Hyd ( int, int, double );
-		MinMax_Hyd ( int, int, int, double, double );
+		MinMax_Hyd ( int, int, int, double, double, double );
 
 		~MinMax_Hyd ();
 

@@ -191,7 +191,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	Array rhs_u(im, jm, km, 0.); // auxilliar field RHS u-velocity component
 	Array rhs_v(im, jm, km, 0.); // auxilliar field RHS v-velocity component
 	Array rhs_w(im, jm, km, 0.); // auxilliar field RHS w-velocity component
-	Array rhs_p(im, jm, km, 0.); // auxilliar field RHS w-velocity component
 	Array rhs_c(im, jm, km, 0.); // auxilliar field RHS water vapour
 	Array rhs_cloud(im, jm, km, 0.); // auxilliar field RHS cloud water
 	Array rhs_ice(im, jm, km, 0.); // auxilliar field RHS cloud ice
@@ -389,14 +388,16 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
 
 // class element for the storing of velocity components, pressure and temperature for iteration start
-	oldnew.restoreOldNew_3D(.9, u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n);
-	oldnew.restoreOldNew_2D(.9, v, w, p_dyn, p_dynn, vn, wn);
+//	oldnew.restoreOldNew_3D(.9, u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n);
+//	oldnew.restoreOldNew_2D(.9, v, w, p_dyn, p_dynn, vn, wn);
 
 
 
 // ***********************************   start of pressure and velocity iterations ************************************************************************
 
 	double emin = epsres * 100.;
+	int pressure_plus_2D = 1;
+	int pressure_plus_3D = 1;
 
 // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	if ( switch_2D != 1 )
@@ -429,7 +430,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 				residuum_old = emin;
 
 //	class RungeKutta for the solution of the differential equations describing the flow properties
-				result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, rhs_p, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
+				result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
 
 //	class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 				LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
@@ -448,16 +449,20 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 				Accuracy_Atm		min_Stationary_2D ( n, nm, Ma, im, jm, km, emin, j_res, k_res, velocity_iter_2D, pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
 				min_Stationary_2D.steadyQuery_2D ( v, vn, w, wn, p_dyn, p_dynn );
 
-				oldnew.restoreOldNew_2D ( 1., v, w, p_dyn, p_dynn, vn, wn );
-
 				n++;
 			}
 
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
+
 //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-		if ( pressure_iter_2D == 1 ) 			startPressure.computePressure_2D ( pa, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
+		if ( pressure_iter_2D == pressure_plus_2D )
+		{
+			startPressure.computePressure_2D ( r_air, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
+			pressure_plus_2D = pressure_plus_2D + 1;
+		}
+
 
 
 //		limit of the computation in the sense of time steps
@@ -478,9 +483,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 	cout << endl << endl;
 
-	int velocity_n = 1;
 
-//	circulation.BC_Temperature ( im_tropopause, t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
+	int velocity_n = 1;
 
 //	goto Printout;
 
@@ -496,9 +500,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
 			cout << " 3D AGCM iterational process" << endl;
 			cout << " max total iteration number nm = " << nm << endl << endl;
-
-//  restoring the velocity component and the temperature for the new time step
-			oldnew.restoreOldNew_3D ( 1., u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n );
 
 			cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations " << endl << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << "    pressure_iter = " << pressure_iter << endl;
 
@@ -518,7 +519,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			if ( velocity_iter == velocity_n )		circulation.Ice_Water_Saturation_Adjustment ( im_tropopause, n, velocity_iter_max, RadiationModel, h, c, cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
 
 // 		class RungeKutta for the solution of the differential equations describing the flow properties
-			result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, r_water, r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, rhs_cloud, rhs_ice, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography );
+			result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, r_water, r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography );
 
 //	class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 			LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
@@ -548,49 +549,49 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //	searching of maximum and minimum values of temperature
 			string str_max_temperature = " max 3D temperature ", str_min_temperature = " min 3D temperature ", str_unit_temperature = "C";
-			MinMax_Atm		minmaxTemperature ( im, jm, km );
+			MinMax_Atm		minmaxTemperature ( im, jm, km, u_0 );
 			minmaxTemperature.searchMinMax_3D ( str_max_temperature, str_min_temperature, str_unit_temperature, t, h );
 
 //	searching of maximum and minimum values of u-component
 			string str_max_u = " max 3D u-component ", str_min_u = " min 3D u-component ", str_unit_u = "m/s";
-			MinMax_Atm		minmax_u ( im, jm, km );
+			MinMax_Atm		minmax_u ( im, jm, km, u_0 );
 			minmax_u.searchMinMax_3D ( str_max_u, str_min_u, str_unit_u, u, h );
 
 //	searching of maximum and minimum values of v-component
 			string str_max_v = " max 3D v-component ", str_min_v = " min 3D v-component ", str_unit_v = "m/s";
-			MinMax_Atm		minmax_v ( im, jm, km );
+			MinMax_Atm		minmax_v ( im, jm, km, u_0 );
 			minmax_v.searchMinMax_3D ( str_max_v, str_min_v, str_unit_v, v, h );
 
 //	searching of maximum and minimum values of w-component
 			string str_max_w = " max 3D w-component ", str_min_w = " min 3D w-component ", str_unit_w = "m/s";
-			MinMax_Atm		minmax_w ( im, jm, km );
+			MinMax_Atm		minmax_w ( im, jm, km, u_0 );
 			minmax_w.searchMinMax_3D ( str_max_w, str_min_w, str_unit_w, w, h );
 
 //	searching of maximum and minimum values of dynamic pressure
 			string str_max_pressure = " max 3D pressure dynamic ", str_min_pressure = " min 3D pressure dynamic ", str_unit_pressure = "hPa";
-			MinMax_Atm	minmaxPressure ( im, jm, km );
+			MinMax_Atm	minmaxPressure ( im, jm, km, u_0 );
 			minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, p_dyn, h );
 
 //	searching of maximum and minimum values of static pressure
 			string str_max_pressure_stat = " max 3D pressure static ", str_min_pressure_stat = " min 3D pressure static ", str_unit_pressure_stat = "hPa";
-			MinMax_Atm		minmaxPressure_stat ( im, jm, km );
+			MinMax_Atm		minmaxPressure_stat ( im, jm, km, u_0 );
 			minmaxPressure_stat.searchMinMax_3D ( str_max_pressure_stat, str_min_pressure_stat, str_unit_pressure_stat, p_stat, h );
 
 			cout << endl << " energies in the three dimensional space: " << endl << endl;
 
 //	searching of maximum and minimum values of radiation_3D
 			string str_max_radiation_3D = " max 3D radiation ", str_min_radiation_3D = " min 3D radiation ", str_unit_radiation_3D = "W/m2";
-			MinMax_Atm		minmaxRadiation ( im, jm, km );
+			MinMax_Atm		minmaxRadiation ( im, jm, km, u_0 );
 			minmaxRadiation.searchMinMax_3D ( str_max_radiation_3D, str_min_radiation_3D, str_unit_radiation_3D, radiation_3D, h );
 
 //	searching of maximum and minimum values of sensible heat
 			string str_max_Q_Sensible = " max 3D sensible heat ", str_min_Q_Sensible = " min 3D sensible heat ", str_unit_Q_Sensible = "W/m2";
-			MinMax_Atm	minmaxQ_Sensible ( im, jm, km );
+			MinMax_Atm	minmaxQ_Sensible ( im, jm, km, u_0 );
 			minmaxQ_Sensible.searchMinMax_3D ( str_max_Q_Sensible, str_min_Q_Sensible, str_unit_Q_Sensible, Q_Sensible, h );
 
 //	searching of maximum and minimum values of latency
 			string str_max_latency = " max 3D latent heat ", str_min_latency = " min 3D latent heat ", str_unit_latency = "W/m2";
-			MinMax_Atm		minmaxQ_Latent ( im, jm, km );
+			MinMax_Atm		minmaxQ_Latent ( im, jm, km, u_0 );
 			minmaxQ_Latent.searchMinMax_3D ( str_max_latency, str_min_latency, str_unit_latency, Q_Latent, h );
 
 			cout << endl << " greenhouse gases: " << endl << endl;
@@ -602,37 +603,37 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //	searching of maximum and minimum values of cloud water
 			string str_max_cloud_water = " max 3D cloud water ", str_min_cloud_water = " min 3D cloud water ", str_unit_cloud_water = "g/kg";
-			MinMax_Atm		minmaxCloudWater ( im, jm, km );
+			MinMax_Atm		minmaxCloudWater ( im, jm, km, u_0 );
 			minmaxCloudWater.searchMinMax_3D ( str_max_cloud_water, str_min_cloud_water, str_unit_cloud_water, cloud, h );
 
 //	searching of maximum and minimum values of cloud ice
 			string str_max_cloud_ice = " max 3D cloud ice ", str_min_cloud_ice = " min 3D cloud ice ", str_unit_cloud_ice = "g/kg";
-			MinMax_Atm		minmaxCloudIce ( im, jm, km );
+			MinMax_Atm		minmaxCloudIce ( im, jm, km, u_0 );
 			minmaxCloudIce.searchMinMax_3D ( str_max_cloud_ice, str_min_cloud_ice, str_unit_cloud_ice, ice, h );
 
 //	searching of maximum and minimum values of rain precipitation
 			string str_max_P_rain = " max 3D rain ", str_min_P_rain = " min 3D rain ", str_unit_P_rain = "g/kg";
-			MinMax_Atm		minmaxPRain ( im, jm, km );
+			MinMax_Atm		minmaxPRain ( im, jm, km, u_0 );
 			minmaxPRain.searchMinMax_3D ( str_max_P_rain, str_min_P_rain, str_unit_P_rain, P_rain, h );
 
 //	searching of maximum and minimum values of snow precipitation
 			string str_max_P_snow = " max 3D snow ", str_min_P_snow = " min 3D snow ", str_unit_P_snow = "g/kg";
-			MinMax_Atm		minmaxPSnow ( im, jm, km );
+			MinMax_Atm		minmaxPSnow ( im, jm, km, u_0 );
 			minmaxPSnow.searchMinMax_3D ( str_max_P_snow, str_min_P_snow, str_unit_P_snow, P_snow, h );
 
 //	searching of maximum and minimum values of co2
 			string str_max_co2 = " max 3D co2 ", str_min_co2 = " min 3D co2 ", str_unit_co2 = "ppm";
-			MinMax_Atm		minmaxCO2 ( im, jm, km );
+			MinMax_Atm		minmaxCO2 ( im, jm, km, u_0 );
 			minmaxCO2.searchMinMax_3D ( str_max_co2, str_min_co2, str_unit_co2, co2, h );
 
 //	searching of maximum and minimum values of epsilon
 			string str_max_epsilon = " max 3D epsilon ", str_min_epsilon = " min 3D epsilon ", str_unit_epsilon = "%";
-			MinMax_Atm		minmaxEpsilon_3D ( im, jm, km );
+			MinMax_Atm		minmaxEpsilon_3D ( im, jm, km, u_0 );
 			minmaxEpsilon_3D.searchMinMax_3D ( str_max_epsilon, str_min_epsilon, str_unit_epsilon, epsilon_3D, h );
 
 //	searching of maximum and minimum values of buoyancy force
-			string str_max_buoyancy_force = " max 3D buoyancy force ", str_min_buoyancy_force = " min 3D buoyancy force ", str_unit_buoyancy_force = "N/m2";
-			MinMax_Atm		minmaxBuoyancyForce ( im, jm, km );
+			string str_max_buoyancy_force = " max 3D buoyancy force ", str_min_buoyancy_force = " min 3D buoyancy force ", str_unit_buoyancy_force = "N";
+			MinMax_Atm		minmaxBuoyancyForce ( im, jm, km, u_0 );
 			minmaxBuoyancyForce.searchMinMax_3D ( str_max_buoyancy_force, str_min_buoyancy_force, str_unit_buoyancy_force, BuoyancyForce, h );
 
 
@@ -642,7 +643,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	searching of maximum and minimum values of co2 total
 			cout << endl << " printout of maximum and minimum values of properties at their locations: latitude, longitude" << endl << " results based on two dimensional considerations of the problem" << endl;
 
-			cout << endl << " co2 distribution columnwise: " << endl << endl;
+			cout << endl << " co2 distribution row-wise: " << endl << endl;
 
 			string str_max_co2_total = " max co2_total ", str_min_co2_total = " min co2_total ", str_unit_co2_total = " / ";
 			MinMax_Atm	minmaxCO2_total ( jm, km, coeff_mmWS );
@@ -729,8 +730,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	composition of results
 			calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, Vegetation, albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
-//  restoring the velocity component and the temperature for the new time step
-			oldnew.restoreOldNew_3D ( 1., u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n );
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of loop: while ( min >= epsres )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -746,10 +745,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-//		if ( pressure_iter == 1 ) 			startPressure.computePressure_3D ( pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
-		startPressure.computePressure_3D ( pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
-
-
+		if ( pressure_iter == pressure_plus_3D )
+		{
+			startPressure.computePressure_3D ( r_air, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+			pressure_plus_3D = pressure_plus_3D + 1;
+		}
 
 //	Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
 	circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
@@ -792,11 +792,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-//	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow );
+	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow );
 
 //	writing of v-w-data in the v_w_transfer file
 	PostProcess_Atmosphere ppa ( im, jm, km, output_path );
-	ppa.Atmosphere_v_w_Transfer ( bathymetry_name, v, w, t, p_dyn );
+	ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn );
 	ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
 
 	Ma_prev = Ma;
