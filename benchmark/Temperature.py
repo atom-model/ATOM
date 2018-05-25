@@ -145,8 +145,8 @@ def reconstruct_grid(
                 new_data.append(l)
     
     for line in new_data:
-        if line[2] > 40:
-            line[2] = 40 + random.randint(-100,100)/100.
+        if line[2] > 34:
+            line[2] = 34 + random.randint(-200,0)/100.
         if line[2] < -60:
             line[2] = -60 + random.randint(-100,100)/100.
     
