@@ -25,13 +25,70 @@ Results_Hyd::Results_Hyd ( int im, int jm, int km )
 
 	c43 = 4./3.;
 	c13 = 1./3.;
+
+
+
+// auxiliar 2D Array "aux_v" for the computation of Ekman pumping
+	aux_v = 0L;
+
+	aux_v = new double*[ km ];
+
+	for ( int l = 0; l < jm; l++ )
+	{
+		aux_v[ l ] = new double[ km ];
+	}
+
+// default values
+	for ( int l = 0; l < jm; l++ )
+	{
+		for ( int n = 0; n < km; n++ )
+		{
+			aux_v[ l ][ n ] = 0.;
+		}
+	}
+
+
+// auxiliar 2D Array "aux_w" for the computation of Ekman pumping
+	aux_w = 0L;
+
+	aux_w = new double*[ km ];
+
+	for ( int l = 0; l < jm; l++ )
+	{
+		aux_w[ l ] = new double[ km ];
+	}
+
+// default values
+	for ( int l = 0; l < jm; l++ )
+	{
+		for ( int n = 0; n < km; n++ )
+		{
+			aux_w[ l ][ n ] = 0.;
+		}
+	}
 }
 
 
-Results_Hyd::~Results_Hyd () {}
+Results_Hyd::~Results_Hyd ()
+{
+	for ( int k = 0; k < km; k++ )
+	{
+		delete [  ] aux_v[ k ];
+	}
+
+	delete [  ] aux_v;
 
 
-void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array &u, Array &v, Array &w, Array &c, Array &Salt_Balance, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force_3D, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce_2D, Array_2D &Salt_total, Array_2D &BottomWater )
+	for ( int k = 0; k < km; k++ )
+	{
+		delete [  ] aux_w[ k ];
+	}
+
+	delete [  ] aux_w;
+}
+
+
+void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, double u_0, double c_0, Array_1D &rad, Array_1D &the, Array &h, Array &u, Array &v, Array &w, Array &c, Array &Salt_Balance, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force_3D, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce_2D, Array_2D &Salt_total, Array_2D &BottomWater )
 {
 // total upwelling as sum on normal velocity component values in a virtual vertical column
 	int i_half = ( im - 1 ) / 2;
@@ -42,11 +99,88 @@ void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array 
 		{
 			Upwelling.y[ j ][ k ] = 0.;																// Upwelling
 			Downwelling.y[ j ][ k ] = 0.;																// Downwelling
+			aux_v[ j ][ k ] = 0.;																			// auxiliar field for Upwelling
+			aux_w[ j ][ k ] = 0.;																			// auxiliar field for Downwelling
 			BottomWater.y[ j ][ k ] = 0.;																// Bottom water
 			SaltFinger.y[ j ][ k ] = 0.;																// SaltFinger
 			SaltDiffusion.y[ j ][ k ] = 0.;																// SaltFinger
 			BuoyancyForce_2D.y[ j ][ k ] = 0.;																// Saltdiffusion
 			Salt_total.y[ j ][ k ] = 0.;																// total Salt
+		}
+	}
+
+
+
+	double i_Ekman_layer = 50.;									// assumed Ekman-layer depth of 50m
+	double coeff = i_Ekman_layer / L_hyd;
+	int i_Ekman = ( im - 1 ) * ( 1. - coeff );
+
+//	Ekman pumping, upwelling, downwelling
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = im-2; i >= i_Ekman; i-- )
+			{
+				if ( h.x[ i ][ j ][ k ] == 0. )
+				{
+					aux_v[ j ][ k ] = aux_v[ j ][ k ] + ( v.x[ i ][ j ][ k ] + v.x[ i + 1 ][ j ][ k ] ) * .5 * dr;
+					aux_w[ j ][ k ] = aux_w[ j ][ k ] + ( w.x[ i ][ j ][ k ] + w.x[ i + 1 ][ j ][ k ] ) * .5 * dr;
+				}
+				else
+				{
+					aux_v[ j ][ k ] = 0.;
+					aux_w[ j ][ k ] = 0.;
+				}
+			}
+		}
+	}
+
+
+	double rmsinthe = 0.;
+
+	for ( int k = 1; k < km-1; k++ )
+	{
+		for ( int j = 1; j < jm-1; j++ )
+		{
+			rmsinthe = rad.z[ im-1 ] * sin( the.z[ j ] );
+
+			BottomWater.y[ j ][ k ] = ( aux_v[ j + 1 ][ k ] - aux_v[ j - 1 ][ k ] ) / ( 2. * rad.z[ im-1 ] * dthe )
+													+ ( aux_w[ j ][ k + 1 ] - aux_w[ j ][ k + 1 ] ) / ( 2. * rmsinthe * dphi );
+			BottomWater.y[ j ][ k ] = BottomWater.y[ j ][ k ] * u_0;
+
+			if ( BottomWater.y[ j ][ k ] >= 0. )		 Upwelling.y[ j ][ k ] = BottomWater.y[ j ][ k ];
+			else														Upwelling.y[ j ][ k ] = 0.;
+
+			if ( BottomWater.y[ j ][ k ] < 0. )		 Downwelling.y[ j ][ k ] = BottomWater.y[ j ][ k ];
+			else														Downwelling.y[ j ][ k ] = 0.;
+		}
+	}
+
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int i = 0; i < im; i++ )
+		{
+			Upwelling.y[ 0 ][ k ] = c43 * Upwelling.y[ 1 ][ k ] - c13 * Upwelling.y[ 2 ][ k ];
+			Upwelling.y[ jm-1 ][ k ] = c43 * Upwelling.y[ jm-2 ][ k ] - c13 * Upwelling.y[ jm-3 ][ k ];
+
+			Downwelling.y[ 0 ][ k ] = c43 * Downwelling.y[ 1 ][ k ] - c13 * Downwelling.y[ 2 ][ k ];
+			Downwelling.y[ jm-1 ][ k ] = c43 * Downwelling.y[ jm-2 ][ k ] - c13 * Downwelling.y[ jm-3 ][ k ];
+		}
+	}
+
+	for ( int i = 0; i < im; i++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			Upwelling.y[ j ][ 0 ] = c43 * Upwelling.y[ j ][ 1 ] - c13 * Upwelling.y[ j ][ 2 ];
+			Upwelling.y[ j ][ km-1 ] = c43 * Upwelling.y[ j ][ km-2 ] - c13 * Upwelling.y[ j ][ km-3 ];
+			Upwelling.y[ j ][ 0 ] = Upwelling.y[ j ][ km-1 ] = ( Upwelling.y[ j ][ 0 ] + Upwelling.y[ j ][ km-1 ] ) / 2.;
+
+			Downwelling.y[ j ][ 0 ] = c43 * Downwelling.y[ j ][ 1 ] - c13 * Downwelling.y[ j ][ 2 ];
+			Downwelling.y[ j ][ km-1 ] = c43 * Downwelling.y[ j ][ km-2 ] - c13 * Downwelling.y[ j ][ km-3 ];
+			Downwelling.y[ j ][ 0 ] = Downwelling.y[ j ][ km-1 ] = ( Downwelling.y[ j ][ 0 ] + Downwelling.y[ j ][ km-1 ] ) / 2.;
 		}
 	}
 
@@ -59,8 +193,6 @@ void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array 
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					if ( u.x[ i ][ j ][ k ] > 0. ) Upwelling.y[ j ][ k ] += u.x[ i ][ j ][ k ] * u_0;
-					if ( u.x[ i ][ j ][ k ] < 0. ) Downwelling.y[ j ][ k ] += u.x[ i ][ j ][ k ] * u_0;
 					SaltFinger.y[ j ][ k ] += Salt_Finger.x[ i ][ j ][ k ];
 					SaltDiffusion.y[ j ][ k ] += Salt_Diffusion.x[ i ][ j ][ k ];
 					BuoyancyForce_2D.y[ j ][ k ] += Buoyancy_Force_3D.x[ i ][ j ][ k ];
@@ -69,7 +201,6 @@ void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array 
 			}
 		}
 	}
-
 
 	for ( int k = 0; k < km; k++ )
 	{
@@ -81,7 +212,6 @@ void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array 
 
 
 //	ideal age		corresponds to deep currents
-
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
@@ -96,7 +226,6 @@ void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array 
 			}
 		}
 	}
-
 
 		for ( int j = 0; j <= 3; j++ )
 		{
@@ -113,9 +242,6 @@ void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array 
 				BottomWater.y[ j ][ k ] = .0;
 			}
 		}
-
-
-
 
 
 // boundaries of buoyancy force
@@ -138,7 +264,6 @@ void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array 
 		}
 	}
 
-
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int i = 0; i < im; i++ )
@@ -156,7 +281,6 @@ void Results_Hyd::run_data ( int i_beg, double u_0, double c_0, Array &h, Array 
 			Salt_Balance.x[ i ][ jm-1 ][ k ] = c43 * Salt_Balance.x[ i ][ jm-2 ][ k ] - c13 * Salt_Balance.x[ i ][ jm-3 ][ k ];
 		}
 	}
-
 
 	for ( int i = 0; i < im; i++ )
 	{
