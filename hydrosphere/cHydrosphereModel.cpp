@@ -352,7 +352,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	if ( Ma == 0 ) oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
 
 // 	initial conditions for u-v-w-velocity components following the Ekman spiral
-	oceanflow.IC_v_w_EkmanSpiral ( the, h, v, w );
+	oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
 
 //	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
 	oceanflow.IC_v_w_WestEastCoast ( h, u, v, w, c );
@@ -694,13 +694,13 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //	class PostProcess_Hydrosphaere for the printing of results
 	PostProcess_Hydrosphere		write_File ( im, jm, km, input_path, output_path );
 
-//	int j_longal = 75;
-	int j_longal = 90;
+	int j_longal = 75;
+//	int j_longal = 90;
 	write_File.paraview_vtk_longal ( bathymetry_name, j_longal, n, u_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
 //	zonal data along constant longitudes
-//	int k_zonal = 185;
-	int k_zonal = 140;
+	int k_zonal = 185;
+//	int k_zonal = 140;
 	write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, u_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
 //	radial data along constant hight above ground

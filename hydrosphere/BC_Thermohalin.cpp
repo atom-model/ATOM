@@ -77,14 +77,13 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 // Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
 // a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
 	Ekman_angle = 45.0 / pi180;
-	Ekman_angle_add = 4.5 / pi180;
 }
 
 
 BC_Thermohalin::~BC_Thermohalin(){}
 
 
-void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & the, Array &h, Array &v, Array &w )
+void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array &h, Array &v, Array &w )
 {
 // initial conditions for v and w velocity components at the sea surface
 	for ( int j = 0; j < jm; j++ )
@@ -382,7 +381,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & the, Array &h, Array &v, Ar
 	double Omega = 7.29e-5;
 	double f = 0.;
 	double K = 10.;
-	double gam_f_K = f * K;
+	double gam_f_K = 0.;
 	double gam_z = 0.;
 	double exp_gam_z = 0.;
 	double sin_gam_z = 0;
@@ -390,27 +389,37 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & the, Array &h, Array &v, Ar
 	double v_g = 0.;
 	double w_g = 0.;
 
-
-	for ( int i = im-2; i >= i_beg; i-- )
+	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int j = 0; j < jm; j++ )
+		f = 2. * Omega * abs ( sin ( the.z[ j ] ) );
+		gam_f_K = sqrt ( abs ( f ) / ( 2. * K ) );
+
+		for ( int i = im-2; i >= i_beg; i-- )
 		{
-			f = Omega * sin ( the.z[ j ] );
-			gam_f_K = f * K;
-			gam_z = gam_f_K * ( double ) (  im - 2 - i );
+//			gam_z = M_PI * ( double ) ( i - i_beg ) / ( double ) ( im - 1 - i_beg ) * gam_f_K;
+			gam_z = M_PI * ( double ) ( i - i_beg ) / ( double ) ( im - 1 - i_beg );
 			exp_gam_z = exp ( - gam_z );
 			sin_gam_z = sin ( gam_z );
-			cos_gam_z = sin ( gam_z );
+			cos_gam_z = cos ( gam_z );
 
 			for ( int k = 0; k < km; k++ )
 			{
-				if ( h.x[ i ][ j ][ k ] != 1. )
+				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
 					v_g = v.x[ i + 1 ][ j ][ k ];
 					w_g = w.x[ i + 1 ][ j ][ k ];
 
-					v.x[ i ][ j ][ k ] = v_g * ( 1. - exp_gam_z * cos_gam_z ) - w_g * exp_gam_z * sin_gam_z;
-					w.x[ i ][ j ][ k ] = v_g * exp_gam_z * sin_gam_z + w_g * exp_gam_z * ( 1. - exp_gam_z * cos_gam_z );
+					if ( j <= j_half )
+					{
+						v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
+						w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
+					}
+					else
+					{
+						sin_gam_z = - sin ( gam_z );
+						v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
+						w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
+					}
 				}
 			}
 		}
@@ -866,7 +875,7 @@ void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Arra
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
 //					c.x[ i ][ j ][ k ] = ca;
-					w.x[ i ][ j ][ k ] = .01 / u_0;					// 1 cm/s
+					w.x[ i ][ j ][ k ] = .1 / u_0;					// 10 cm/s
 				}
 			}
 		}

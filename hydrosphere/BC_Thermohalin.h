@@ -50,7 +50,7 @@ class BC_Thermohalin
 		BC_Thermohalin (int, int, int, int , int , int, int, int, double, double, double, double, double, double, double, double, double,  double, double, double, double, double, double, double, double, double, double, const string &);
 		~BC_Thermohalin();
 
-		void IC_v_w_EkmanSpiral ( Array_1D &, Array &, Array &, Array & );
+		void IC_v_w_EkmanSpiral ( Array_1D &, Array_1D &, Array &, Array &, Array & );
 
 		void IC_v_w_WestEastCoast ( Array &, Array &, Array &, Array &, Array & );
 
