@@ -52,7 +52,9 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 	this -> input_path = input_path;
 
 
-	i_middle = i_beg + 30;							// 0 + 20 = 30 for total depth 1000m, asymmetric with depth for stepsizes of 25m
+	i_middle = i_beg + 36;							// 0 + 36 = 36 for total depth 100m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
+	i_u_0 = i_beg + 20;								// 0 + 20 = 20 for total depth 500m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
+
 	j_half = ( jm - 1 ) / 2;
 	j_half_1 = j_half + 1;
 
@@ -75,15 +77,13 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 // Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
 // a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
 	Ekman_angle = 45.0 / pi180;
-	Ekman_angle_add = 4.5 / pi180;
-
 }
 
 
-BC_Thermohalin::~BC_Thermohalin() {}
+BC_Thermohalin::~BC_Thermohalin(){}
 
 
-void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & the, Array &h, Array &v, Array &w )
+void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array &h, Array &v, Array &w )
 {
 // initial conditions for v and w velocity components at the sea surface
 	for ( int j = 0; j < jm; j++ )
@@ -381,7 +381,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & the, Array &h, Array &v, Ar
 	double Omega = 7.29e-5;
 	double f = 0.;
 	double K = 10.;
-	double gam_f_K = f * K;
+	double gam_f_K = 0.;
 	double gam_z = 0.;
 	double exp_gam_z = 0.;
 	double sin_gam_z = 0;
@@ -389,27 +389,37 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & the, Array &h, Array &v, Ar
 	double v_g = 0.;
 	double w_g = 0.;
 
-
-	for ( int i = im-2; i >= i_beg; i-- )
+	for ( int j = 0; j < jm; j++ )
 	{
-		for ( int j = 0; j < jm; j++ )
+		f = 2. * Omega * abs ( sin ( the.z[ j ] ) );
+		gam_f_K = sqrt ( abs ( f ) / ( 2. * K ) );
+
+		for ( int i = im-2; i >= i_beg; i-- )
 		{
-			f = Omega * sin ( the.z[ j ] );
-			gam_f_K = f * K;
-			gam_z = gam_f_K * ( double ) (  im - 2 - i );
+//			gam_z = M_PI * ( double ) ( i - i_beg ) / ( double ) ( im - 1 - i_beg ) * gam_f_K;
+			gam_z = M_PI * ( double ) ( i - i_beg ) / ( double ) ( im - 1 - i_beg );
 			exp_gam_z = exp ( - gam_z );
 			sin_gam_z = sin ( gam_z );
-			cos_gam_z = sin ( gam_z );
+			cos_gam_z = cos ( gam_z );
 
 			for ( int k = 0; k < km; k++ )
 			{
-				if ( h.x[ i ][ j ][ k ] != 1. )
+				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
 					v_g = v.x[ i + 1 ][ j ][ k ];
 					w_g = w.x[ i + 1 ][ j ][ k ];
 
-					v.x[ i ][ j ][ k ] = v_g * ( 1. - exp_gam_z * cos_gam_z ) - w_g * exp_gam_z * sin_gam_z;
-					w.x[ i ][ j ][ k ] = v_g * exp_gam_z * sin_gam_z + w_g * exp_gam_z * ( 1. - exp_gam_z * cos_gam_z );
+					if ( j <= j_half )
+					{
+						v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
+						w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
+					}
+					else
+					{
+						sin_gam_z = - sin ( gam_z );
+						v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
+						w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
+					}
 				}
 			}
 		}
@@ -432,7 +442,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: east coast
-	k_grad = 10;																			// extension of velocity change
+	k_grad = 5;																			// extension of velocity change
 
 	int l_add = 0;
 
@@ -457,7 +467,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 						u.x[ i ][ j ][ l ] = - ( d_i - d_i_max ) / ( d_i_middle - d_i_max ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
 					}
 
-					for ( int i = i_beg; i <= i_middle; i++ )
+					for ( int i = i_u_0; i <= i_middle; i++ )
 					{
 						d_i = ( double ) i;
 						u.x[ i ][ j ][ l ] = - ( d_i - d_i_beg ) / ( d_i_middle - d_i_beg ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
@@ -465,7 +475,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 					l_add--;
 
 
-					for ( int i = i_beg; i <= i_max; i++ )
+					for ( int i = i_u_0; i <= i_max; i++ )
 					{
 						for ( int l = k; l < ( k + k_grad ); l++ )		// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension
 						{
@@ -503,7 +513,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 						u.x[ i ][ j ][ l ] = + ( d_i - d_i_max ) / ( d_i_middle - d_i_max ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
 					}
 
-					for ( int i = i_beg; i <= i_middle; i++ )
+					for ( int i = i_u_0; i <= i_middle; i++ )
 					{
 						d_i = ( double ) i;
 						u.x[ i ][ j ][ l ] = + ( d_i - d_i_beg ) / ( d_i_middle - d_i_beg ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
@@ -511,7 +521,7 @@ void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array 
 					l_add++;
 
 
-					for ( int i = i_beg; i <= i_max; i++ )
+					for ( int i = i_u_0; i <= i_max; i++ )
 					{
 						for ( int l = k; l > ( k - k_grad ); l-- )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension
 						{
@@ -597,40 +607,39 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
 	t_cretaceous = ( t_cretaceous + t_average + t_0 ) / t_0 - ( ( t_average + t_0 ) / t_0 );    // non-dimensional
 
-	if ( Ma >= 0 )
+	for ( int k = 0; k < km; k++ )
 	{
-		for ( int k = 0; k < km; k++ )
+		for ( int j = 0; j < jm; j++ )
 		{
-			for ( int j = 0; j < jm; j++ )
+			if ( h.x[ im-1 ][ j ][ k ] == 0. )
 			{
-				if ( h.x[ im-1 ][ j ][ k ] == 0. )
+				d_j = ( double ) j;
+				if ( Ma == 0 )			t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
+				else						t.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous; // paleo surface temperature
+
+				t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
+
+				if ( t_Celsius < 4. )
 				{
-					d_j = ( double ) j;
-					if ( Ma == 0 )			t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
-					else						t.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous; // paleo surface temperature
-
-					t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
-
-					if ( t_Celsius < 4. )
-					{
-						t.x[ im -1 ][ j ][ k ] = ta + t_cretaceous;
-						t_Celsius = ( ta + t_cretaceous ) * t_0 - t_0;										// water temperature not below 4°C
-					}
-
-					c.x[ im-1 ][ j ][ k ] = ( ( 350 - t_Celsius ) / 10. + c_cretaceous ) / c_0;	// non-dimensional
-
+					t.x[ im -1 ][ j ][ k ] = ta + t_cretaceous;
+					t_Celsius = ( ta + t_cretaceous ) * t_0 - t_0;										// water temperature not below 4°C
 				}
-				else
-				{
-					t.x[ im-1 ][ j ][ k ] = ta + t_cretaceous;
-					c.x[ im-1 ][ j ][ k ] = ca + c_cretaceous / c_0;
-				}
+
+				if ( Ma == 0 )			c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + c_cretaceous / c_0; // paleo surface temperature
+				else 						c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ];	// non-dimensional
+			}
+			else
+			{
+				t.x[ im-1 ][ j ][ k ] = ta + t_cretaceous;
+				c.x[ im-1 ][ j ][ k ] = ca + c_cretaceous / c_0;
 			}
 		}
 	}
 
 
+
 	double tm_tbeg = 0.;
+	double cm_cbeg = 0.;
 
 // distribution of t and c with increasing depth till i_beg valid for all time slices including the modern world
 	for ( int k = 0; k < km; k++ )
@@ -638,6 +647,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 		for ( int j = 0; j < jm; j++ )
 		{
 			tm_tbeg = ( t.x[ im-1 ][ j ][ k ] - ta ) / ( double ) ( i_max * i_max - i_beg * i_beg );
+			cm_cbeg = ( c.x[ im-1 ][ j ][ k ] - ca ) / ( double ) ( i_max * i_max - i_beg * i_beg );
 			for ( int i = i_beg; i < im-1; i++ )
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
@@ -646,7 +656,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 					t.x[ i ][ j ][ k ] = ta + tm_tbeg * ( double ) ( i * i - i_beg * i_beg );				// parabolic approach
 
 					t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
-					c.x[ i ][ j ][ k ] = ( ( 350 - t_Celsius ) / 10. + c_cretaceous ) / c_0;				// liear function
+					c.x[ i ][ j ][ k ] = ca + cm_cbeg * ( double ) ( i * i - i_beg * i_beg );				// parabolic approach
 
 					if ( t_Celsius < 4. )
 					{
@@ -816,13 +826,11 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalini
 	cout.precision ( 3 );
 	cout.setf ( ios::fixed );
 
-	// reading data from file Name_SurfaceSalinity_File_Read
 	ifstream Name_SurfaceSalinity_File_Read;
-	string path = input_path + Name_SurfaceSalinity_File;
-	Name_SurfaceSalinity_File_Read.open(path);
+	Name_SurfaceSalinity_File_Read.open(Name_SurfaceSalinity_File);
 
 	if (!Name_SurfaceSalinity_File_Read.is_open()) {
-		cout << "could not read " << path << " at " << __FILE__ << " line " << __LINE__ << endl;
+		cerr << "ERROR: could not open SurfaceSalinity_File file at " << Name_SurfaceSalinity_File << "\n";
 		abort();
 	}
 
@@ -835,9 +843,9 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalini
 			Name_SurfaceSalinity_File_Read >> dummy_2;
 			Name_SurfaceSalinity_File_Read >> dummy_3;
 
-			if ( dummy_3 < 0. ) dummy_3 = 0.;
+			if ( dummy_3 < 0. ) dummy_3 = ca;
 
-			c.x[ im-1 ][ j ][ k ] = dummy_3 / 38.8 / 1000.;
+			else 		c.x[ im-1 ][ j ][ k ] = dummy_3 / c_0;
 			j++;
 		}
 		j = 0;
@@ -866,8 +874,8 @@ void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Arra
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					c.x[ i ][ j ][ k ] = ca;
-					w.x[ i ][ j ][ k ] = .01 / u_0;					// 1 cm/s
+//					c.x[ i ][ j ][ k ] = ca;
+					w.x[ i ][ j ][ k ] = .1 / u_0;					// 10 cm/s
 				}
 			}
 		}

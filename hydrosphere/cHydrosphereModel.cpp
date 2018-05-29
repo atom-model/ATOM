@@ -360,10 +360,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 #endif
 
 //	surface salinity from World Ocean Atlas 2009 given as boundary condition
-//	if ( Ma == 0 ) oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
+	if ( Ma == 0 ) oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
 
 // 	initial conditions for u-v-w-velocity components following the Ekman spiral
-	oceanflow.IC_v_w_EkmanSpiral ( the, h, v, w );
+	oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
 
 //	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
 	oceanflow.IC_v_w_WestEastCoast ( h, u, v, w, c );
@@ -645,7 +645,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			minmaxBottom_water.searchMinMax_2D ( str_max_bottom_water, str_min_bottom_water, str_unit_bottom_water, BottomWater, h );
 
 //		composition of results
-			calculate_MSL.run_data ( i_beg, u_0, c_0, h, u, v, w, c, Salt_Balance, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, Salt_total, BottomWater );
+			calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, Salt_total, BottomWater );
 
 //  restoring the velocity component and the temperature for the new time step
 			oldnew.restoreOldNew_3D(1., u, v, w, t, p_dyn, c, un, vn, wn, tn, p_dynn, cn);
@@ -704,13 +704,13 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //	class PostProcess_Hydrosphaere for the printing of results
 	PostProcess_Hydrosphere		write_File ( im, jm, km, input_path, output_path );
 
-//	int j_longal = 75;
-	int j_longal = 90;
+	int j_longal = 75;
+//	int j_longal = 90;
 	write_File.paraview_vtk_longal ( bathymetry_name, j_longal, n, u_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
 //	zonal data along constant longitudes
-//	int k_zonal = 185;
-	int k_zonal = 140;
+	int k_zonal = 185;
+//	int k_zonal = 140;
 	write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, u_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
 //	radial data along constant hight above ground
