@@ -473,11 +473,7 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
             }
             PrintDebug("Before result.solveRungeKutta_3D_Atmosphere");
             //class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
-                    r_water, r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, 
-                    rhs_u, rhs_v, rhs_w, rhs_p, rhs_c, rhs_cloud, rhs_ice, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, 
-                    cloud, ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, 
-                    BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography );
+           result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, r_water, r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography );
 
             PrintDebug("After result.solveRungeKutta_3D_Atmosphere"); 
             //class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
@@ -604,8 +600,7 @@ void cAtmosphereModel::Run2DLoop(int Ma, int n, int nm, int i_max, int pressure_
             residuum_old = min_Residuum_old_2D.out_min (  );
 
             //  class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_2D_Atmosphere(prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, 
-                                                 rhs_v, rhs_w, rhs_p, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
+            result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
 
             //class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
             LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, radiation_3D, Vegetation );
@@ -826,7 +821,7 @@ void cAtmosphereModel::WriteFile(int n, std::string &bathymetry_name, std::strin
 
     //  writing of v-w-data in the v_w_transfer file
     PostProcess_Atmosphere ppa ( im, jm, km, output_path );
-    ppa.Atmosphere_v_w_Transfer ( bathymetry_name, v, w, t, p_dyn );
+    ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn );
     ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
 }
 
