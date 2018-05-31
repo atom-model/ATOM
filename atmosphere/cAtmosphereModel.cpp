@@ -245,24 +245,20 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	double t_cretaceous = 0.;
 	double co2_cretaceous = 0.;
 
-/*
-//	naming a file to read the surface temperature by NASA of the modern world
-	string Name_NASAbasedSurfaceTemperature_File;
-	stringstream ssNameNASAbasedSurfaceTemperature;
-	ssNameNASAbasedSurfaceTemperature << "../data/" << "NASA_based_SurfaceTemperature.xyz";
-	Name_NASAbasedSurfaceTemperature_File = ssNameNASAbasedSurfaceTemperature.str();
-*/
-//	naming a file to read the surface temperature by NASA of the modern world
-	string Name_SurfaceTemperature_File;
-	stringstream ssNameSurfaceTemperature;
-	ssNameSurfaceTemperature << "../data/" << "SurfaceTemperature_NASA.xyz";
-	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
 
-// naming a file to read the surface precipitation by NASA
-	string Name_SurfacePrecipitation_File;
-	stringstream ssNameSurfacePrecipitation;
-	ssNameSurfacePrecipitation << "../data/" << "SurfacePrecipitation_NASA.xyz";
-	Name_SurfacePrecipitation_File = ssNameSurfacePrecipitation.str();
+    //Prepare the temperature and precipitation data file
+    string Name_SurfaceTemperature_File  = temperature_file;
+    string Name_SurfacePrecipitation_File = precipitation_file;
+
+    if(Ma != 0 && use_earthbyte_reconstruction){
+        Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_Atm_Reconstructed_Temperature.xyz";
+        Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Precipitation.xyz";    
+    
+        std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - Ma_step) + " " + 
+                std::to_string(Ma) + " " + output_path + " " + BathymetrySuffix;
+        int ret = system(cmd_str.c_str());
+        std::cout << " reconstruction script returned: " << ret << std::endl; 
+    }
 
 	string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
 	string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
