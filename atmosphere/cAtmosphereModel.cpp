@@ -49,41 +49,34 @@ cAtmosphereModel::cAtmosphereModel() {
 
 }
 
-
-
-
 cAtmosphereModel::~cAtmosphereModel() { }
  
 #include "cAtmosphereDefaults.cpp.inc"
 
+void cAtmosphereModel::LoadConfig ( const char *filename ) 
+{
+    XMLDocument doc;
+    XMLError err = doc.LoadFile ( filename );
 
-void cAtmosphereModel::LoadConfig ( const char *filename ) {
-	XMLDocument doc;
-	XMLError err = doc.LoadFile ( filename );
-
-
-	if (err) {
-		doc.PrintError();
-		throw std::invalid_argument("   couldn't load config file inside cAtmosphereModel");
-	}
-
-
-	XMLElement *atom = doc.FirstChildElement("atom");
-	if (!atom) {
-		return;
-	}
+    if (err) {
+        doc.PrintError();
+        throw std::invalid_argument(std::string("unable to load config file:  ") + filename);
+    }
 
 
-	XMLElement* elem_common = doc.FirstChildElement( "atom" )->FirstChildElement( "common" );
-	if (!elem_common) {
-		return;
-	}
-
-
-	XMLElement* elem_atmosphere = doc.FirstChildElement( "atom" )->FirstChildElement( "atmosphere" );
-	if (!elem_atmosphere) {
-		return;
-	}
+    XMLElement *atom = doc.FirstChildElement("atom"), *elem_common = NULL, *elem_atmosphere = NULL;
+    if (!atom) {
+        throw std::invalid_argument(std::string("Failed to find the 'atom' element in config file: ") + filename);
+    }else{
+        elem_common = atom->FirstChildElement( "common" );
+        if(!elem_common){
+            throw std::invalid_argument(std::string("Failed to find the 'common' element in 'atom' element in config file: ") + filename);
+        }
+        elem_atmosphere = atom->FirstChildElement( "atmosphere" );
+        if (!elem_atmosphere) {
+            throw std::invalid_argument(std::string("Failed to find the 'atmosphere' element in 'atom' element in config file: ") + filename);
+        }
+    }
 
 #include "AtmosphereLoadConfig.cpp.inc"
 
@@ -97,8 +90,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 // maximum number of overall iterations ( n )
 // maximum number of inner velocity loop iterations ( velocity_iter_max )
 // maximum number of outer pressure loop iterations ( pressure_iter_max )
-
-	mkdir(output_path.c_str(), 0777);
 
 	const int im = 41, jm = 181, km = 361, nm = 200;
 
@@ -254,7 +245,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_Atm_Reconstructed_Temperature.xyz";
         Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Precipitation.xyz";    
     
-        std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - Ma_step) + " " + 
+        std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - time_step) + " " + 
                 std::to_string(Ma) + " " + output_path + " " + BathymetrySuffix;
         int ret = system(cmd_str.c_str());
         std::cout << " reconstruction script returned: " << ret << std::endl; 
@@ -331,7 +322,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	}
 	else
 	{
-		Ma_prev = Ma - Ma_step;
+		Ma_prev = Ma - time_step;
 	}
 
 
@@ -885,8 +876,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	}
 
 
-//   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
 //  final remarks
 	cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
 
@@ -898,11 +887,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 
-void cAtmosphereModel::Run() {
-// create the output dir
+void cAtmosphereModel::Run() 
+{
 	mkdir(output_path.c_str(), 0777);
 
-	cout << "Output is being written to " << output_path << "\n";
+	cout << std::endl << "Output is being written to " << output_path << std::endl << std::endl;
 
 	if (verbose) {
 		cout << endl << endl << endl;
@@ -925,46 +914,15 @@ void cAtmosphereModel::Run() {
 		cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
 	}
 
-// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    for(int i = time_start; i <= time_end; i+=time_step)
+    {
+        RunTimeSlice(i);
+    }
 
-// time slices to be run after actualizing
-	int i_time_slice_max = 15;
-	int *time_slice = new int [ i_time_slice_max ];	 // time slices in Ma
-
-	time_slice [ 0 ] = 0;								   // Golonka Bathymetry and Topography
-	time_slice [ 1 ] = 10;
-	time_slice [ 2 ] = 20;
-	time_slice [ 3 ] = 30;
-	time_slice [ 4 ] = 40;
-	time_slice [ 5 ] = 50;
-	time_slice [ 6 ] = 60;
-	time_slice [ 7 ] = 70;
-	time_slice [ 8 ] = 80;
-	time_slice [ 9 ] = 90;
-	time_slice [ 10 ] = 100;
-	time_slice [ 11 ] = 110;
-	time_slice [ 12 ] = 120;
-	time_slice [ 13 ] = 130;
-	time_slice [ 14 ] = 140;
-
-//  choice of the time slice to be computed
-	for (int i_time_slice = 0; i_time_slice < i_time_slice_max; i_time_slice++) {
-		int Ma = time_slice[i_time_slice];
-		cout << "Ma = " << Ma << "\n";
-
-		RunTimeSlice(Ma);
-	}
-//   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-//  final remarks
+    //  final remarks
 	cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
-
-	cout << endl;
 	cout << "***** end of object oriented C++ program for the computation of 3D-atmospheric circulation *****";
 	cout << "\n\n\n\n";
-
-	delete [ ] time_slice;
-
 }
 
 

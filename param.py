@@ -18,7 +18,11 @@ def main():
             ( 'precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
             ( 'temperature_curve_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
             ( 'reconstruction_script_path', '', 'string', '../reconstruction/reconstruct_atom_data.py'),
-            ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False )
+            ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False ),
+        
+            ( 'time_start', 'start time', 'int', 0 ),
+            ( 'time_end', 'end time', 'int', 100 ),
+            ( 'time_step', 'step size between timeslices', 'int', 5 ),
         ],
 
 
@@ -31,8 +35,6 @@ def main():
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
             ( 'CO2', 'CO2 influence on atmospheric thermodynamics', 'double', 1.0 ),
-
-            ( 'Ma_step', 'step size between timeslices', 'int', 10 ),
 
             ( 'epsres', 'accuracy of relative and absolute errors', 'double', 0.00001 ),
 

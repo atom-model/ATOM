@@ -3,7 +3,8 @@
 
 #include "cAtmosphereModel.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
     cAtmosphereModel model;
 
     if ( argc != 2 )
