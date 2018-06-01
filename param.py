@@ -12,7 +12,8 @@ def main():
             ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
-            
+            ('paraview_panorama_vts','flag to control if create paraview panorama', 'bool', True),
+        
             #parameters for data reconstruction
             ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
             ( 'precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
