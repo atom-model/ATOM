@@ -65,7 +65,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn,
             Array &p_dynn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c,
             Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D,
-            Array &Salt_Balance, Array &p_stat, Array &r_water, Array &r_salt_water )
+            Array &Salt_Balance, Array &p_stat, Array &r_water, Array &r_salt_water, Array_2D &Evaporation_Penman, Array_2D &Precipitation )
 {
 // collection of coefficients for phase transformation
 
@@ -522,13 +522,20 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
         d2udphi2 = d2vdphi2 = d2wdphi2 = d2tdphi2 = d2cdphi2 = 0.;
     }
 
-
-	double drodc = .7;												// given in kg/m³
-	double salt_water_ref = r_water.x[ i ][ j ][ k ] + drodc * c.x[ i ][ j ][ k ] * c_0;						// linear approach for salt water based on fresh water
+	double salinity_source = 0.;
+	double salinity_surface = 0.;
+	double drodc = .7;												// gradient given in kg/m³
+	double salt_water_ref = r_water.x[ i ][ j ][ k ] + drodc * c.x[ i ][ j ][ k ] * c_0;						// common linear approach for salt water based on fresh water
 
     double coeff_buoy = L_hyd / ( u_0 * u_0 );													// coefficient for the buoyancy term= 16000.
-//	double coeff_trans = L_hyd / u_0;																	// coefficient for the concentration terms = 4000.
-	double coeff_trans = 0.;																	// coefficient for the concentration terms = 4000.
+	double coeff_salinity = 1.1574e-3 / ( sc * re );												// 1.1574e-3 == mm/d to m/s
+	double omega_salinity = Evaporation_Penman.y[ j ][ k ] - Precipitation.y[ j ][ k ];
+
+//	salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 1 ][ j ][ k ] + 4. * c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * dr ) * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] );		// 2. ord.
+	salinity_surface = salt_water_ref * ( c.x[ im - 1 ][ j ][ k ] - c.x[ im - 2 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] );		// 1. ord.
+
+	if ( i == im - 2 )				salinity_source = - coeff_salinity * omega_salinity * salinity_surface;		// (-) originally, (+) for RHS
+	else 								salinity_source = 0.;
 
     double RS_buoyancy_Momentum = - Buoyancy * g * ( salt_water_ref - r_salt_water.x[ i ][ j ][ k ] ) / salt_water_ref * coeff_buoy;       // buoyancy based on water density 
 
@@ -594,7 +601,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
     rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
             + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc * re )
-            + coeff_trans * ( salt_water_ref - r_salt_water.x[ i ][ j ][ k ] ) / salt_water_ref;
+//            + coeff_salinity * ( salt_water_ref - r_salt_water.x[ i ][ j ][ k ] ) / salt_water_ref;
+            + salinity_source;
 //          - h_c_i * c.x[ i ][ j ][ k ] * k_Force / dthe2;// immersed boundary condition as a negative force addition
 
 

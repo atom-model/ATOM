@@ -47,7 +47,7 @@ class PostProcess_Hydrosphere
 
 		void Hydrosphere_SequelFile_read ( const string &, int &, int &, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void Atmosphere_TransferFile_read ( const string &, Array &, Array &, Array &, Array & );
+		void Atmosphere_TransferFile_read ( const string &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 
 		void OscarFile_u_read ( Array_2D & );
 
@@ -57,7 +57,7 @@ class PostProcess_Hydrosphere
 
 		void paraview_panorama_vts ( const string &, int &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void paraview_vtk_radial ( const string &, int &, int &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+		void paraview_vtk_radial ( const string &, int &, int &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 		void paraview_vtk_longal ( const string &, int &, int &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 

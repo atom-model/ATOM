@@ -174,6 +174,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 	Array_2D BuoyancyForce_2D(jm, km, 0.); // radiation balance at the surface
 
+	Array_2D Evaporation_Penman(jm, km, 0.); // evaporation by Penman in [mm/d]
+	Array_2D Precipitation(jm, km, 0.); // areas of higher precipitation
+
 	Array_2D Oscar_u_v(jm, km, 0.); // measured surface water v velocity component
 	Array_2D Oscar_v_w(jm, km, 0.); // measured surface water w velocity component
 
@@ -296,7 +299,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 //	class PostProcess for data transport, read and write
 	PostProcess_Hydrosphere		read_Transfer ( im, jm, km, input_path, output_path );
-	read_Transfer.Atmosphere_TransferFile_read ( bathymetry_name, v, w, t, p_dyn );
+	read_Transfer.Atmosphere_TransferFile_read ( bathymetry_name, v, w, t, p_dyn, Evaporation_Penman, Precipitation );
 
 //	class PostProcess for data transport, read and write
 //	PostProcess_Hydrosphere		read_Oscar_u ( im, jm, km, input_path, output_path );
@@ -353,9 +356,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 // 	initial conditions for u-v-w-velocity components following the Ekman spiral
 	oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
-
-//	initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
-	oceanflow.IC_v_w_WestEastCoast ( h, u, v, w, c );
 
 //	initial conditions for u, v and w velocity components in the circumpolar current
 	if ( Ma <= 41 ) 	oceanflow.IC_CircumPolar_Current ( h, u, v, w, c );			// Drake passage closed 41 Ma ago
@@ -516,7 +516,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			boundary.RB_phi ( t, u, v, w, p_dyn, c );
 
 //		class RungeKutta for the solution of the differential equations describing the flow properties
-			result.solveRungeKutta_3D_Hydrosphere ( prepare, n, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water );
+			result.solveRungeKutta_3D_Hydrosphere ( prepare, n, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, Evaporation_Penman, Precipitation, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water );
 
 //		class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 			depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );
@@ -706,10 +706,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //	radial data along constant hight above ground
 	int i_radial = 40;
 //	int i_radial = 39;
-	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Oscar_u_v, Oscar_v_w );
+	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Penman, Precipitation, Oscar_u_v, Oscar_v_w );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
+//	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
 //	writing of plot data in the PlotData file
 	PostProcess_Hydrosphere		ppa ( im, jm, km, input_path, output_path );

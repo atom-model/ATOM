@@ -18,7 +18,7 @@
 using namespace std;
 
 Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double co2_0, double sigma, double albedo_equator, double lv, double ls, double cp_l, double L_atm, double dt, double dr, double dthe, double dphi, double r_air, double R_Air, double r_water, double r_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam, double t_pole, double t_cretaceous, double t_average )
-:	f_Haude ( .45 ), f_Penman ( .75 )																				// Haude factor for evapotranspiration 0.3 for low, dense vegetation as raw average value by Kuttler
+:	f_Haude ( .65 ), f_Penman ( 2. )																				// Haude factor for evapotranspiration 0.3 for low, dense vegetation as raw average value by Kuttler
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -165,8 +165,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );
 					r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );				// density of humid air, COSMO version withot cloud and ice water, masses negligible
 
-					e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
-					a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
+					e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 															// water vapour pressure in hPa
 
 					t_denom = t_Celsius + 234.175;
 					E = hp * exp ( 17.0809 * t_Celsius / t_denom );													// saturation vapour pressure in the water phase for t > 0°C in hPa
@@ -175,7 +174,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					sat_deficit = ( E - e );																							// saturation deficit in hPa
 					gamma = p_stat.x[ 0 ][ j ][ k ] * cp_l / ( ep * lv );												// Psychrometer constant in hPa/K
 
-					E_a = .35 * ( 1. + .15 * sqrt ( v.x[ i + 1 ][ j ][ k ] * v.x[ i + 1 ][ j ][ k ] + w.x[ i + 1 ][ j ][ k ] * w.x[ i + 1 ][ j ][ k ] ) * u_0 ) * sat_deficit;	// ventilation-humidity Penmans formula
+					E_a = .35 * ( 1. + .15 * sqrt ( ( v.x[ i + 1 ][ j ][ k ] * v.x[ i + 1 ][ j ][ k ] + w.x[ i + 1 ][ j ][ k ] * w.x[ i + 1 ][ j ][ k ] ) / 2. ) * u_0 * 3.6 ) * sat_deficit;	// ventilation-humidity Penmans formula
 
 
 					if ( h.x[ i ][ j ][ k ] == 1. )  Q_Evaporation.y[ j ][ k ] = 2300.;					// minimum value used for printout
@@ -188,7 +187,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					if ( Evaporation_Haude.y[ j ][ k ] <= 0. ) 		Evaporation_Haude.y[ j ][ k ] = 0.;
 
 					Evaporation_Penman.y[ j ][ k ] = f_Penman * .0346 * ( ( Q_radiation.y[ j ][ k ] + Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );	// .0346 coefficient W/m2 corresponds to mm/d (Kraus)
-					if ( Evaporation_Penman.y[ j ][ k ] <= 0. ) 		Evaporation_Penman.y[ j ][ k ] = 0.;	// .0346 coefficient W/m2 corresponds to mm/d (Kraus)
+					if ( Evaporation_Penman.y[ j ][ k ] <= 0. ) 		Evaporation_Penman.y[ j ][ k ] = 0.;
 
 				}
 
@@ -204,8 +203,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					r_dry = 100. * p_stat.x[ 0 ][ j ][ k ] / ( R_Air * t.x[ 0 ][ j ][ k ] * t_0 );
 					r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );				// density of humid air, COSMO version withot cloud and ice water, masses negligible
 
-					e = c.x[ 0 ][ j ][ k ] * p_stat.x[ 0 ][ j ][ k ] / ep; 													// water vapour pressure in hPa
-					a = 216.6 * e / ( t.x[ 0 ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
+					e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 							// water vapour pressure in Pa
 
 					t_denom = t_Celsius + 234.175;
 					E = hp * exp ( 17.0809 * t_Celsius / t_denom );													// saturation vapour pressure in the water phase for t > 0°C in hPa
@@ -214,7 +212,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					sat_deficit = ( E - e );																							// saturation deficit in hPa/K
 					gamma = p_stat.x[ 0 ][ j ][ k ] * cp_l / ( ep * lv );												// Psychrometer constant in hPa/K
 
-					E_a = .35 * ( 1. + .15 * sqrt ( v.x[ 1 ][ j ][ k ] * v.x[ 1 ][ j ][ k ] + w.x[ 1 ][ j ][ k ] * w.x[ 1 ][ j ][ k ] ) ) * sat_deficit;	// ventilation-humidity for Penman's formula
+					E_a = .35 * ( 1. + .15 * sqrt ( ( v.x[ 1 ][ j ][ k ] * v.x[ 1 ][ j ][ k ] + w.x[ 1 ][ j ][ k ] * w.x[ 1 ][ j ][ k ] ) / 2. ) * u_0 * 3.6 ) * sat_deficit;	// ventilation-humidity Penmans formula
 
 					if ( t_Celsius >= - 2. )  Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) );	// heat of Evaporation of water in [kJ/kg] (Kuttler) => variable lv
 					else                              Q_Evaporation.y[ j ][ k ] = ( 2500.8 - 2.372 * ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) ) + 300.; // heat of Evaporation of ice + 300 [kJ/kg]
@@ -226,8 +224,9 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					Evaporation_Haude.y[ j ][ k ] = f_Haude * sat_deficit;											// simplified formula for Evaporation over day length of 12h by Haude, Häckel
 					if ( Evaporation_Haude.y[ j ][ k ] <= 0. ) 		Evaporation_Haude.y[ j ][ k ] = 0.;
 
-					Evaporation_Penman.y[ j ][ k ] = f_Penman * .0346 * ( ( Q_radiation.y[ j ][ k ] + Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );	// .0346 coefficient W/m2 corresponds to mm/d (Kraus)
-					if ( Evaporation_Penman.y[ j ][ k ] <= 0. ) 		Evaporation_Penman.y[ j ][ k ] = 0.;	// .0346 coefficient W/m2 corresponds to mm/d (Kraus)
+					Evaporation_Penman.y[ j ][ k ] = f_Penman * .0346 * ( ( Q_radiation.y[ j ][ k ] + Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );
+																										// .0346 coefficient W/m2 corresponds to mm/d (Kraus)
+					if ( Evaporation_Penman.y[ j ][ k ] <= 0. ) 		Evaporation_Penman.y[ j ][ k ] = 0.;
 				}
 			}
 
@@ -335,30 +334,31 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
 			for ( int i = 0; i < im; i++ )
 			{
-				e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
-				a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
+				e = 100. * c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 							// water vapour pressure in Pa
+				a = e / ( R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 );												// absolute humidity in kg/m³
 
-				precipitable_water.y[ j ][ k ] += a * L_atm / ( double ) ( im - 1 );					// kg/m³ * m
+				precipitable_water.y[ j ][ k ] += a * L_atm / ( double ) ( im - 1 );	// mass of water in kg/m²
+																															// precipitable_water mass in kg/m² compares to mm hight with water density kg/ ( m² * mm )
 			}
 		}
 	}
 
 
-	double coeff_prec = 86400. * 1000. / u_0;														// see below
+	double coeff_prec = 86400. * 1000. / r_air / 10.;														// see below
 
 // surface values of precipitation and precipitable water
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			Precipitation.y[ j ][ k ] = coeff_prec * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );							// 60 s * 60 min * 24 h = 86400 s == 1 d
-																																											// P_rain and P_snow in kg/ ( m² * s )
-																																											// Precipitation in kg/ ( m² * d ) == mm / d
-																																											// u_0 from a non-dimensionalisation process
-																																											// 1000. from kg to g
+			Precipitation.y[ j ][ k ] = coeff_prec * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );						// 60 s * 60 min * 24 h = 86400 s == 1 d
+																																											// Precipitation, P_rain and P_snow in kg/ ( m² * s )
+																																											// Precipitation in 86400. * kg/ ( m² * d )
+																																											// Precipitation / density_air in 86400. / 1.2 * kg/ ( m² * d ) / ( kg/m³ )
+																																											// Precipitation / density_air in 86400. / 1.2 * 1000. * mm/d
+																																											// division by factor 10 not clear yet
+																																											// kg/ ( m²* s ) == mm/s
 			if ( Precipitation.y[ j ][ k ] <= 0 )			Precipitation.y[ j ][ k ] = 0.;
-
-			precipitable_water.y[ j ][ k ] = precipitable_water.y[ j ][ k ] / 1000.;														// divided by water density ( 1000 kg/m³ ) results in m compares as well to mm ( absolute values identical )
 		}
 	}
 
