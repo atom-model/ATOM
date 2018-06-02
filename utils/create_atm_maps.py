@@ -1,10 +1,17 @@
 #!/usr/bin/python
-import os
+# -*- coding: utf-8 -*-
+import os, sys
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
+
+data_dir = './output'
+topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
+start_time = 0
+end_time = 100
+time_step = 5
 
 output_dir = 'atm_maps'
 #sub_dirs = ['temperature','v_velocity','w_velocity','velocity_mag', 'water_vapour', 'precipitation', 'precipitable_water']
@@ -28,16 +35,16 @@ def create_maps(directory):
     elif  directory == 'topo_simon':
         index = 11
 
-    for time in range(0,55,5):
+    for time in range(start_time, end_time, time_step):
         if index < 10:
-            data = np.genfromtxt('./output/[{}Ma.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
+            data = np.genfromtxt(data_dir + '/[{}Ma_Golonka.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
             for d in data:
                 d[1]=90-d[1]
             x = data[:,0]
             y = data[:,1]
             z = data[:,index]
         elif index == 10:
-            data = np.genfromtxt('../data/Golonka_Smoothed/{}Ma_Golonka.xyz'.format(time))
+            data = np.genfromtxt(topo_dir + '/{}Ma_Golonka.xyz'.format(time))
             x = data[:,0]
             y = data[:,1]
             z = data[:,2]
@@ -89,17 +96,23 @@ def create_maps(directory):
 if  __name__ == "__main__":
     #output_dir = 'atm_maps'
     #v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), precipitation(mm), precipitable water(mm)
-    sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 'precipitation', 'precipitable_water', 'topography', 'topo_simon']
+    sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 'precipitation', 'precipitable_water', 'topography']
     #sub_dirs = ['topo_simon']
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    for d in sub_dirs:
-        if not os.path.exists(output_dir+'/'+d):
-            os.makedirs(output_dir+'/'+d)
-
-        create_maps(d)
-
-
-
+    try:
+        start_time = int(sys.argv[1])
+        end_time  = int(sys.argv[2])
+        time_step = int(sys.argv[3])
+        data_dir = sys.argv[4]
+        #topo_dir = sys.argv[5]
+        for d in sub_dirs:
+            if not os.path.exists(output_dir+'/'+d):
+                os.makedirs(output_dir+'/'+d)
+            create_maps(d)
+    except:
+        print("Usage: ./create_atm_maps.py 0 100 5 ../cli/output") 
+        import traceback
+        traceback.print_exc()
 

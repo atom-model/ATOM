@@ -1,10 +1,16 @@
 #!/usr/bin/python
-import os
+# -*- coding: utf-8 -*-
+import os, sys
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
+
+data_dir = './output'
+start_time = 0
+end_time = 100
+time_step = 5
 
 output_dir = 'hyd_maps'
 #'salinity', 'bottom_water', 'upwelling', 'downwelling
@@ -26,9 +32,9 @@ def create_maps(directory):
         index = 10
 
 
-    for time in range(0,55,5):
+    for time in range(start_time, end_time, time_step):
         if index < 11:
-            data = np.genfromtxt('./output/[{}Ma.xyz]_PlotData_Hyd.xyz'.format(time),skip_header=1)
+            data = np.genfromtxt(data_dir + '/[{}Ma_Golonka.xyz]_PlotData_Hyd.xyz'.format(time),skip_header=1)
             for d in data:
                 d[1]=90-d[1]
             x = data[:,0]
@@ -77,11 +83,22 @@ if  __name__ == "__main__":
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    for d in sub_dirs:
-        if not os.path.exists(output_dir+'/'+d):
-            os.makedirs(output_dir+'/'+d)
+    try:
+        start_time = int(sys.argv[1])
+        end_time  = int(sys.argv[2])
+        time_step = int(sys.argv[3])
+        data_dir = sys.argv[4]
+        for d in sub_dirs:
+            if not os.path.exists(output_dir+'/'+d):
+                os.makedirs(output_dir+'/'+d)
 
-        create_maps(d)
+            create_maps(d)
+    except:
+        print("Usage: ./create_hyd_maps.py 0 100 5")
+        import traceback
+        traceback.print_exc()
+
+
 
 
 
