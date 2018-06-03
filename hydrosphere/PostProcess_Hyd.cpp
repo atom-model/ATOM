@@ -481,7 +481,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &n, double &u_0, double &t_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater, Array_2D &Evaporation_Penman, Array_2D &Precipitation, Array_2D &Oscar_u_v, Array_2D &Oscar_v_w )
+void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &n, double &u_0, double &t_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater, Array_2D &Evaporation_Dalton, Array_2D &Precipitation, Array_2D &Oscar_u_v, Array_2D &Oscar_v_w )
 {
 	double x, y, z, dx, dy;
 
@@ -538,6 +538,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
         for ( int k = 0; k < km; k++ )
         {
             Hydrosphere_vtk_radial_File << t.x[ i_radial ][ j ][ k ] * t_0 - t_0 << endl;
+            Oscar_u_v.y[ j ][ k ] = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
         }
     }
 
@@ -560,8 +561,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     dump_radial_2d("Upwelling", Upwelling, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Downwelling", Downwelling, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("BottomWater", BottomWater, 1., Hydrosphere_vtk_radial_File);
-    dump_radial_2d("Evaporation_Penman", Evaporation_Penman, 1., Hydrosphere_vtk_radial_File);
+    dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Precipitation", Precipitation, 1., Hydrosphere_vtk_radial_File);
+    dump_radial_2d("SalinitySource", Oscar_u_v, 1., Hydrosphere_vtk_radial_File);
 
 //    dump_radial_2d("Oscar_u_v", Oscar_u_v, 1., Hydrosphere_vtk_radial_File);
 //    dump_radial_2d("Oscar_v_w", Oscar_v_w, 1., Hydrosphere_vtk_radial_File);
@@ -668,7 +670,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 
 
 
-void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_Bathymetry_File, Array &v, Array &w, Array &t, Array &p, Array_2D &Evaporation_Penman, Array_2D &Precipitation )
+void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_Bathymetry_File, Array &v, Array &w, Array &t, Array &p, Array_2D &Evaporation_Dalton, Array_2D &Precipitation )
 {
 	ifstream v_w_Transfer_File;
     string Name_v_w_Transfer_File = input_path + "/[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
@@ -691,10 +693,11 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 			v_w_Transfer_File >> w.x[ im-1 ][ j ][ k ];
 			v_w_Transfer_File >> t.x[ im-1 ][ j ][ k ];
 			v_w_Transfer_File >> p.x[ im-1 ][ j ][ k ];
-			v_w_Transfer_File >> Evaporation_Penman.y[ j ][ k ];
+			v_w_Transfer_File >> Evaporation_Dalton.y[ j ][ k ];
 			v_w_Transfer_File >> Precipitation.y[ j ][ k ];
 
 			p.x[ im-1 ][ j ][ k ] = 0.;
+//			if ( Evaporation_Dalton.y[ j ][ k ] >= 10. )		Evaporation_Dalton.y[ j ][ k ] = 10.;
 
 		}
 	}

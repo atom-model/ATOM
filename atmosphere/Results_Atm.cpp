@@ -18,7 +18,7 @@
 using namespace std;
 
 Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double co2_0, double sigma, double albedo_equator, double lv, double ls, double cp_l, double L_atm, double dt, double dr, double dthe, double dphi, double r_air, double R_Air, double r_water, double r_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam, double t_pole, double t_cretaceous, double t_average )
-:	f_Haude ( .65 ), f_Penman ( 2. )																				// Haude factor for evapotranspiration 0.3 for low, dense vegetation as raw average value by Kuttler
+:	f_Penman ( 2. )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -124,7 +124,7 @@ Results_MSL_Atm::~Results_MSL_Atm (){
 
 
 
-void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int RadiationModel, double &t_cretaceous, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &c, Array &cn, Array &co2, Array &co2n, Array &t, Array &tn, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Q_Latent, Array &Q_Sensible, Array &radiation_3D, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &P_rain, Array &P_snow, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &precipitable_water, Array_2D &Q_radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Haude, Array_2D &Vegetation, Array_2D &albedo, Array_2D &co2_total, Array_2D &Precipitation, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
+void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int RadiationModel, double &t_cretaceous, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &c, Array &cn, Array &co2, Array &co2n, Array &t, Array &tn, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Q_Latent, Array &Q_Sensible, Array &radiation_3D, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &P_rain, Array &P_snow, Array &aux_u, Array &aux_v, Array &aux_w, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &precipitable_water, Array_2D &Q_radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Dalton, Array_2D &Vegetation, Array_2D &albedo, Array_2D &co2_total, Array_2D &Precipitation, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
 {
 // determination of temperature and pressure by the law of Clausius-Clapeyron for water vapour concentration
 // reaching saturation of water vapour pressure leads to formation of rain or ice
@@ -141,7 +141,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
 			precipitable_water.y[ j ][ k ] = 0.;									// precipitable water
 			Evaporation_Penman.y[ j ][ k ] = 0.;								// Evaporation by Penman
-			Evaporation_Haude.y[ j ][ k ] = 0.;								// Evaporation by Haude
+			Evaporation_Dalton.y[ j ][ k ] = 0.;								// Evaporation by Dalton
 
 		}
 	}
@@ -183,8 +183,8 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ];		// sensible heat in [W/m2] from energy transport equation
 					Q_bottom.y[ j ][ k ] = - ( Q_radiation.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ] );	// difference understood as heat into the ground
 
-					Evaporation_Haude.y[ j ][ k ] = f_Haude * sat_deficit;											// simplified formula for Evaporation over day length of 12h by Haude, Häckel
-					if ( Evaporation_Haude.y[ j ][ k ] <= 0. ) 		Evaporation_Haude.y[ j ][ k ] = 0.;
+					Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ i + 1 ][ j ][ k ], w.x[ i + 1 ][ j ][ k ] ) * sat_deficit;	// simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/( m² * s )
+					if ( Evaporation_Dalton.y[ j ][ k ] <= 0. ) 		Evaporation_Dalton.y[ j ][ k ] = 0.;
 
 					Evaporation_Penman.y[ j ][ k ] = f_Penman * .0346 * ( ( Q_radiation.y[ j ][ k ] + Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );	// .0346 coefficient W/m2 corresponds to mm/d (Kraus)
 					if ( Evaporation_Penman.y[ j ][ k ] <= 0. ) 		Evaporation_Penman.y[ j ][ k ] = 0.;
@@ -221,8 +221,8 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					Q_sensible.y[ j ][ k ] = Q_Sensible.x[ 0 ][ j ][ k ];			// sensible heat in [W/m2] from energy transport equation
 					Q_bottom.y[ j ][ k ] = - ( Q_radiation.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ] );	// difference understood as heat of the ground
 
-					Evaporation_Haude.y[ j ][ k ] = f_Haude * sat_deficit;											// simplified formula for Evaporation over day length of 12h by Haude, Häckel
-					if ( Evaporation_Haude.y[ j ][ k ] <= 0. ) 		Evaporation_Haude.y[ j ][ k ] = 0.;
+					Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ 0 ][ j ][ k ], w.x[ 0 ][ j ][ k ] ) * sat_deficit;	// simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/( m² * s )
+					if ( Evaporation_Dalton.y[ j ][ k ] <= 0. ) 		Evaporation_Dalton.y[ j ][ k ] = 0.;
 
 					Evaporation_Penman.y[ j ][ k ] = f_Penman * .0346 * ( ( Q_radiation.y[ j ][ k ] + Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );
 																										// .0346 coefficient W/m2 corresponds to mm/d (Kraus)
@@ -296,7 +296,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	precipitablewater_average = 0.;
 	precipitation_average = 0.;
 	Evaporation_Penman_average = 0.;
-	Evaporation_Haude_average = 0.;
+	Evaporation_Dalton_average = 0.;
 	co2_vegetation_average = 0.;
 	temperature_surf_average = 0.;
 	velocity_average = 0.;
@@ -377,7 +377,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 			temperature_surf_average += t.x[ 0 ][ j ][ k ] * t_0 - t_0;
 
 			Evaporation_Penman_average += Evaporation_Penman.y[ j ][ k ];
-			Evaporation_Haude_average += Evaporation_Haude.y[ j ][ k ];
+			Evaporation_Dalton_average += Evaporation_Dalton.y[ j ][ k ];
 
 			co2_vegetation_average += co2_total.y[ j ][ k ];
 		}
@@ -392,7 +392,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	precipitation_NASA_average = GetMean_2D(jm, km, precipitation_NASA) / coeff_mmWS * 86400.;									// 60 s * 60 min * 24 h = 86400 s == 1 d;
 
 	Evaporation_Penman_average = 365. * GetMean_2D (jm, km, Evaporation_Penman);
-	Evaporation_Haude_average = 365. * GetMean_2D (jm, km, Evaporation_Haude);
+	Evaporation_Dalton_average = 365. * GetMean_2D (jm, km, Evaporation_Dalton);
 
 
 
@@ -409,7 +409,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	name_Value_3 = " sensible heat ";
 	name_Value_4 = " bottom heat ";
 	name_Value_5 = " Evaporation Penman ";
-	name_Value_6 = " Evaporation Haude ";
+	name_Value_6 = " Evaporation Dalton ";
 	name_Value_7 = " precipitable water average ";
 	name_Value_8 = " precipitation average per year ";
 	name_Value_9 = " precipitation average per day ";
@@ -417,8 +417,8 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	name_Value_11 = " precipitation NASA average per day ";
 	name_Value_12 = " Evaporation_Penman_average per year ";
 	name_Value_13 = " Evaporation_Penman_average per day ";
-	name_Value_14 = " Evaporation_Haude_average per year ";
-	name_Value_15 = " Evaporation_Haude_average per day ";
+	name_Value_14 = " Evaporation_Dalton_average per year ";
+	name_Value_15 = " Evaporation_Dalton_average per day ";
 	name_Value_16 = " to fill ";
 	name_Value_17 = " to fill ";
 	name_Value_18 = " to fill ";
@@ -524,7 +524,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon<< "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_24 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_24 << setw ( 6 ) << name_unit_mmd << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_16 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_14 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_17 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_15 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_18 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_16 << setw ( 6 ) << name_unit_wm2 << endl;
 
 	Value_5 = Evaporation_Penman.y[ j_loc ][ k_loc ];
-	Value_6 = Evaporation_Haude.y[ j_loc ][ k_loc ];
+	Value_6 = Evaporation_Dalton.y[ j_loc ][ k_loc ];
 
 	cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon << "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_5 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_5 << setw ( 6 ) << name_unit_mmd << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_6 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_6 << setw ( 6 ) << name_unit_mmd << endl << endl;
 
@@ -548,7 +548,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_10 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_10 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_11 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_10 / 365. << setw ( 6 ) << name_unit_mmd << endl;
 
 
-	Value_13 = Evaporation_Haude_average;
+	Value_13 = Evaporation_Dalton_average;
 
 	cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_14 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_13 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_15 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_13 / 365. << setw ( 6 ) << name_unit_mmd << endl;
 
@@ -630,4 +630,13 @@ void Results_MSL_Atm::CalculateNodeWeights(int jm, int km)
 
 
 
+
+
+double Results_MSL_Atm::C_Dalton ( double u_0, double v, double w )
+{
+	double C_max = - .053 * 24.;							// Geiger ( 1961 ) by Kuttler in mm / ( h * hPa ) == 24. * mm / ( d * hPa )
+	double v_max = 10.;											// Geiger ( 1961 ) by Kuttler in m/s
+	double vel_magnitude = sqrt ( v * v + w * w ) * u_0;
+	return sqrt ( C_max * C_max / v_max * vel_magnitude );		// variation of the heat tranfer coefficient in Dalton's evaporation law, parabola
+}
 

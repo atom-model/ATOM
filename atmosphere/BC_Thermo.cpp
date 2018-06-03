@@ -3783,12 +3783,7 @@ double BC_Thermo::out_co2 (  ) const
 int BC_Thermo::GetTropopauseHightAdd ( double t_cret )
 {
 	double d_i_h_round = round ( ( t_cret * t_0 ) / 2.6 );		// adiabatic slope of radial temperature 0.65/100m, stepsize 400m => 2.6/400m
-	int i_h = 0;
-
-	i_h = ( int ) d_i_h_round;
-
-//	cout << "     t_cret = " << t_cret * t_0 << "     d_i_h_round = " << d_i_h_round << "     t_0 = " << t_0 << "     i_h = " << i_h << endl;
-
+	int i_h = ( int ) d_i_h_round;
 	return i_h;
 }
 
@@ -3796,9 +3791,6 @@ int BC_Thermo::GetTropopauseHightAdd ( double t_cret )
 double BC_Thermo::GetPoleTemperature ( int Ma, int Ma_1, int Ma_2, double t_1, double t_2 )
 {
 	t_pole = ( t_2 - t_1 ) / ( Ma_2 - Ma_1 ) * ( double ) ( Ma - Ma_1 ) + t_1;
-
-//	cout << "     t_pole = " << t_pole << "     t_1 = " << t_1 << "     t_2 = " << t_2 << "     Ma_1 = " << Ma_1 << "     Ma_2 = " << Ma_2 << "     Ma = " << Ma << endl;
-
 	return t_pole;
 }
 
