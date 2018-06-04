@@ -299,7 +299,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	BC_Atmosphere							boundary ( im, jm, km, t_tropopause );
 
 //	class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-	RHS_Atmosphere						prepare ( im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, sc_CO2, g, pr, WaterVapour, Buoyancy, CO2, gam, sigma, lamda );
+	RHS_Atmosphere						prepare ( im, jm, km, dt, dr, dthe, dphi, re, sc_WaterVapour, sc_CO2, g, pr, WaterVapour, Buoyancy, CO2, gam, sigma, lamda );
 	RHS_Atmosphere						prepare_2D ( jm, km, dthe, dphi, re );
 
 //	class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations

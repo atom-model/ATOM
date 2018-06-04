@@ -31,7 +31,7 @@ def main():
             ( 'velocity_iter_max_2D', '', 'int',2 ),
             ( 'pressure_iter_max_2D', '', 'int', 10 ),
             ( 'velocity_iter_max', '', 'int', 2 ),
-            ( 'pressure_iter_max', '', 'int', 8 ),
+            ( 'pressure_iter_max', '', 'int', 2 ),
 
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
@@ -71,7 +71,6 @@ def main():
             ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
-            ( 'ec', 'Eckert number: ratio kinetic energy to enthalpy, Ec = u² / cp T', 'double', 0.00082 ),
             ( 'sc_WaterVapour', 'Schmidt number of water vapour, Sc = nue / D', 'double', 0.61 ),
             ( 'sc_CO2', 'Schmidt number of CO2', 'double', 0.96 ),
             ( 'pr', 'Prandtl number of air for laminar flows', 'double', 0.7179 ),
@@ -152,7 +151,6 @@ def main():
 
 #            ( 're', 'Reynolds number', 'double', 1000.0 ),
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 10.0 ),
-            ( 'ec', 'Eckert number', 'double', 5.5e-8 ),
             ( 'sc', 'Schmidt number for salt water', 'double', 1.7329 ),
             ( 'pr', 'Prandtl number for water', 'double', 6.957 ),
             ( 'g', 'gravitational acceleration of the earth', 'double', 9.8066 ),

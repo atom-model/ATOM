@@ -28,7 +28,6 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int jm_, int km_, double dthe_, double dphi_,
     r0(0),
     re(re_), 
     pr(0), 
-    ec(0), 
     sc(0), 
     m_g(0),
     Buoyancy(0)
@@ -37,7 +36,7 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int jm_, int km_, double dthe_, double dphi_,
 
 
 RHS_Hydrosphere::RHS_Hydrosphere ( int im_, int jm_, int km_, double r0_, double dt_, double dr_, double dthe_, double dphi_, 
-        double re_, double ec_, double sc_, double g_, double pr_, double Buoyancy_ ):
+        double re_, double sc_, double g_, double pr_, double Buoyancy_ ):
     im(im_), 
     jm(jm_), 
     km(km_),
@@ -48,7 +47,6 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int im_, int jm_, int km_, double r0_, double
     r0(r0_),
     re(re_), 
     pr(pr_), 
-    ec(ec_), 
     sc(sc_), 
     m_g(g_),
     Buoyancy(Buoyancy_)
@@ -91,7 +89,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     double sinthe = sin( the.z[ j ] );
     double sinthe2 = sinthe * sinthe;
     double costhe = cos( the.z[ j ] );
-    double cotthe = cos( the.z[ j ] ) / sin( the.z[ j ] );
     double rmsinthe = rm * sinthe;
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
@@ -205,13 +202,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             h_c_k = 1.; 
             h_d_k = 1. - h_c_k;
         }
-
-
-	if ( v.x[ i ][ j ][ k ] >= .68 )					v.x[ i ][ j ][ k ] = .68;
-	if ( v.x[ i ][ j ][ k ] <= - .68 )				v.x[ i ][ j ][ k ] = - .68;
-
-	if ( w.x[ i ][ j ][ k ] >= .68 )				w.x[ i ][ j ][ k ] = .68;
-	if ( w.x[ i ][ j ][ k ] <= - .68 )				w.x[ i ][ j ][ k ] = - .68;
 
 
 // corner point averaging around obstacles
@@ -546,8 +536,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
     double RS_buoyancy_Momentum = - Buoyancy * g * ( salt_water_ref - r_salt_water.x[ i ][ j ][ k ] ) / salt_water_ref * coeff_buoy;       // buoyancy based on water density 
 
-    double RS_buoyancy_Energy = ec * RS_buoyancy_Momentum;                  // energy increase by buoyancy approximately zero, Eckert number
-
     BuoyancyForce_3D.x[ i ][ j ][ k ] = RS_buoyancy_Momentum / coeff_buoy; // dimension as pressure in N/m2
 
     Salt_Balance.x[ i ][ j ][ k ] = salt_water_ref - r_salt_water.x[ i ][ j ][ k ];       // difference of salinity compared to average
@@ -577,15 +565,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 //  3D volume iterations
     rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe )
-            - ec * ( - u.x[ i ][ j ][ k ] * dpdr + v.x[ i ][ j ][ k ] / rm * dpdthe + w.x[ i ][ j ][ k ] / rmsinthe * dpdphi )
-            + ( d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2 + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2 ) / ( re * pr )
-            + 2. * ec / re * ( ( dudr * dudr) + pow ( ( dvdthe / rm + h_d_i * u.x[ i ][ j ][ k ] / rm ), 2. )
-            + pow ( ( dwdphi / rmsinthe + h_d_i * u.x[ i ][ j ][ k ] / rm + h_d_j * v.x[ i ][ j ][ k ] * cotthe / rm ), 2. ) )
-            + ec / re * ( pow ( ( dvdr - h_d_j * v.x[ i ][ j ][ k ] / rm + dudthe / rm ), 2. ) 
-            + pow ( ( dudphi / rmsinthe + dwdr - h_d_k * w.x[ i ][ j ][ k ] / rm ), 2. )
-            + pow ( ( dwdthe * sinthe / rm2 - h_d_k * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
-            + RS_buoyancy_Energy;
-//          - h_c_i * t.x[ i ][ j ][ k ] * k_Force / dthe2; // immersed boundary condition as a negative force addition
+            + ( d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2 + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2 ) / ( re * pr );
 
     rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
             + dpdr / salt_water_ref + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe 
@@ -609,7 +589,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
             + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc * re )
             + salinity_evaporation;
-//          - h_c_i * c.x[ i ][ j ][ k ] * k_Force / dthe2;// immersed boundary condition as a negative force addition
 
 
 // for the Poisson equation to solve for the pressure, pressure gradient sbstracted from the RHS
@@ -727,12 +706,6 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Ar
         h_c_k = 1.; 
         h_d_k = 1. - h_c_k;
     }
-
-		if ( v.x[ im-1 ][ j ][ k ] >= .68 )					v.x[ im-1 ][ j ][ k ] = .68;
-		if ( v.x[ im-1 ][ j ][ k ] <= - .68 )				v.x[ im-1 ][ j ][ k ] = - .68;
-
-		if ( w.x[ im-1 ][ j ][ k ] >= .68 )					w.x[ im-1 ][ j ][ k ] = .68;
-		if ( w.x[ im-1 ][ j ][ k ] <= - .68 )				w.x[ im-1 ][ j ][ k ] = - .68;
 
  
 // corner point averaging around obstacles

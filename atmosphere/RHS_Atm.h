@@ -28,7 +28,7 @@ class RHS_Atmosphere
 		int **im_tropopause;
 
 		double zeit, dt, dr, dthe, dphi;
-		double re, pr, ec, sc_WaterVapour, sc_CO2, g, WaterVapour, Buoyancy, CO2, lambda;
+		double re, pr, sc_WaterVapour, sc_CO2, g, WaterVapour, Buoyancy, CO2, lambda;
 		double E_Rain_SL, E_Rain, E_Rain_super, E_Ice;
 		double e_SL, a_SL, p_SL, q_SL, t_tau_SL, t_Celsius_SL, exp_pressure, t_u;
 		double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, dp_hdr, dp_hdthe, dp_hdphi;
@@ -70,7 +70,7 @@ class RHS_Atmosphere
 
 	public:
 		RHS_Atmosphere ( int, int, double, double, double );
-		RHS_Atmosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		RHS_Atmosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~RHS_Atmosphere ();
 
 		void RK_RHS_3D_Atmosphere ( int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D & );
