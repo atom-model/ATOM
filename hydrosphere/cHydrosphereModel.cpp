@@ -437,22 +437,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 				n++;
 			}
 
-// limiting variables increasing due to topography/bathymetry reasons peaks
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			if ( v.x[ im-1 ][ j ][ k ] >= .68 )					v.x[ im-1 ][ j ][ k ] = .68;
-			if ( v.x[ im-1 ][ j ][ k ] <= - .68 )				v.x[ im-1 ][ j ][ k ] = - .68;
-
-			if ( w.x[ im-1 ][ j ][ k ] >= .68 )					w.x[ im-1 ][ j ][ k ] = .68;
-			if ( w.x[ im-1 ][ j ][ k ] <= - .68 )				w.x[ im-1 ][ j ][ k ] = - .68;
-
-			if ( p_dyn.x[ im-1 ][ j ][ k ] >= 50. )			p_dyn.x[ im-1 ][ j ][ k ] = 50.;
-			if ( p_dyn.x[ im-1 ][ j ][ k ] <= - 50. )			p_dyn.x[ im-1 ][ j ][ k ] = - 50.;
-		}
-	}
-
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -640,25 +624,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //  restoring the velocity component and the temperature for the new time step
 			oldnew.restoreOldNew_3D(1., u, v, w, t, p_dyn, c, un, vn, wn, tn, p_dynn, cn);
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of loop: while ( min >= epsres )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-// limiting variables increasing due to topography/bathymetry reasons peaks
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int i = 0; i < im; i++ )
-			{
-				if ( v.x[ i ][ j ][ k ] >= .68 )					v.x[ i ][ j ][ k ] = .68;
-				if ( v.x[ i ][ j ][ k ] <= - .68 )				v.x[ i ][ j ][ k ] = - .68;
-
-				if ( w.x[ i ][ j ][ k ] >= .68 )				w.x[ i ][ j ][ k ] = .68;
-				if ( w.x[ i ][ j ][ k ] <= - .68 )				w.x[ i ][ j ][ k ] = - .68;
-
-				if ( p_dyn.x[ i ][ j ][ k ] >= 50. )				p_dyn.x[ i ][ j ][ k ] = 50.;
-				if ( p_dyn.x[ i ][ j ][ k ] <= - 50. )			p_dyn.x[ i ][ j ][ k ] = - 50.;
-			}
-		}
-	}
 
 			n++;
 		}
