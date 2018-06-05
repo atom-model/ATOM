@@ -133,9 +133,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 	Array_2D temperature_NASA(jm, km, 0.); // surface temperature from NASA
 	Array_2D temp_NASA(jm, km, 0.); // surface temperature from NASA for print function
-	Array_2D temp_NASA_diff(jm, km, 0.); // temperature difference between NASA and ATOM
-	Array_2D temp_pot(jm, km, 0.); // potential surface temperature
-	Array_2D temp_pot_diff(jm, km, 0.); // temperature difference between NASA and ATOM-potential
 
 	Array_2D albedo(jm, km, 0.); // albedo = reflectivity
 	Array_2D epsilon(jm, km, 0.); // epsilon = absorptivity
@@ -770,7 +767,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	radial data along constant hight above ground
 	int i_radial = 0;
 //	int i_radial = 10;
-	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation, Topography, temp_NASA, temp_NASA_diff, temp_pot, temp_pot_diff );
+	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation, Topography, temp_NASA );
 
 //	londitudinal data along constant latitudes
 	int j_longal = 62;			// Mount Everest/Himalaya

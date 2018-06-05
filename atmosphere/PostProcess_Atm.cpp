@@ -26,7 +26,9 @@ PostProcess_Atmosphere::PostProcess_Atmosphere( int im, int jm, int km, string &
     this->output_path = output_path;
 }
 
-PostProcess_Atmosphere::~PostProcess_Atmosphere() {}
+
+
+PostProcess_Atmosphere::~PostProcess_Atmosphere(){}
 
 
 
@@ -264,7 +266,7 @@ void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File
 
 
 
-void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int &Ma, int &i_radial, int &n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &radiation_3D, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Dalton, Array_2D &Q_Evaporation, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Topography, Array_2D &temp_NASA, Array_2D &temp_NASA_diff, Array_2D &temp_pot, Array_2D &temp_pot_diff )
+void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int &Ma, int &i_radial, int &n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &radiation_3D, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Dalton, Array_2D &Q_Evaporation, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Topography, Array_2D &temp_NASA )
 {
     double x, y, z, dx, dy;
 
@@ -323,10 +325,12 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
 				{
 					if ( Ma == 0 )
 					{
-						if ( ( h.x[ i + 1 ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) )		temp_NASA_diff.y[ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
-						if ( h.x[ 0 ][ j ][ k ] == 0. )																temp_NASA_diff.y[ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+						if ( ( h.x[ i + 1 ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) )		aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+						if ( h.x[ 0 ][ j ][ k ] == 0. )																aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
 					}
-					else 																									temp_NASA_diff.y[ j ][ k ] = 0.;
+					else 																									aux_v.x[ i_radial ][ j ][ k ] = 0.;
+
+					aux_w.x[ i_radial ][ j ][ k ] = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
 				}
 				i_mount = 0;
 			}
@@ -354,7 +358,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
 
 
     dump_radial_2d("Temp_NASA", temp_NASA, 1., Atmosphere_vtk_radial_File);
-    dump_radial_2d("Temp_NASA_diff", temp_NASA_diff, 1., Atmosphere_vtk_radial_File);
+    dump_radial("Temp_NASA_diff", aux_v, 1., i_radial, Atmosphere_vtk_radial_File);
 
     dump_radial("Topography", h, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Topography_m", Topography, 1., Atmosphere_vtk_radial_File);
@@ -391,8 +395,9 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
     dump_radial("Q_Sensible", Q_Sensible, 1., i_radial, Atmosphere_vtk_radial_File);
 
     dump_radial_2d("Evaporation_Penman", Evaporation_Penman, 1., Atmosphere_vtk_radial_File);
-    dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Atmosphere_vtk_radial_File); // normally this would be normalized
-    dump_radial_2d("Heat_Evaporation", Q_Evaporation, 1., Atmosphere_vtk_radial_File); // normally this would be normalized
+    dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Atmosphere_vtk_radial_File);
+    dump_radial_2d("Heat_Evaporation", Q_Evaporation, 1., Atmosphere_vtk_radial_File);
+    dump_radial("Evap-Precip", aux_w, 1., i_radial, Atmosphere_vtk_radial_File);
 
     dump_radial_2d("Vegetation", Vegetation, 1., Atmosphere_vtk_radial_File);
 

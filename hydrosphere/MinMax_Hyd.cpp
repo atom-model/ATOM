@@ -192,10 +192,10 @@ void MinMax_Hyd::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 	}
 
 
-	if ( name_maxValue == " max 3D pressure dynamic " )
+	if ( name_maxValue == " max pressure dynamic " )
 	{
-		maxValue = maxValue * .01;									// in hPa
-		minValue = minValue * 01;									// in hPa
+		maxValue = maxValue * 1.e-5;									// in bar
+		minValue = minValue * 1.e-5;									// in bar
 	}
 
 

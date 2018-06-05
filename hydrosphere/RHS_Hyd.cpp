@@ -522,10 +522,12 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 	if ( i == im - 2 )
 	{
-//		salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 1 ][ j ][ k ] + 4. * c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * dr ) * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );		// 2. ord.
-		salinity_surface = salt_water_ref * ( c.x[ im - 1 ][ j ][ k ] - c.x[ im - 2 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );		// 1. ord.
+		salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 1 ][ j ][ k ] + 4. * c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * dr ) * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );		// 2. ord.
+//		salinity_surface = salt_water_ref * ( c.x[ im - 1 ][ j ][ k ] - c.x[ im - 2 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );		// 1. ord.
 
 		salinity_evaporation = + coeff_salinity * salinity_surface;		// (-) originally, (+) for RHS
+
+		if ( h.x[ i ][ j ][ k ] == 1. )	salinity_evaporation = 0.;
 
 		if ( salinity_evaporation >= 20. )	salinity_evaporation = 20.;				// salinity gradient causes values too high at shelf corners
 		if ( salinity_evaporation <= - 20. )	salinity_evaporation = - 20.;			// salinity gradient causes values too high at shelf corners

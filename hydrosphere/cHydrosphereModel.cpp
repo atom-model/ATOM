@@ -177,9 +177,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	Array_2D Evaporation_Dalton(jm, km, 0.); // evaporation by Penman in [mm/d]
 	Array_2D Precipitation(jm, km, 0.); // areas of higher precipitation
 
-	Array_2D Oscar_u_v(jm, km, 0.); // measured surface water v velocity component
-	Array_2D Oscar_v_w(jm, km, 0.); // measured surface water w velocity component
-
 // 3D arrays
 	Array h(im, jm, km, 0.); // bathymetry, depth from sea level
 
@@ -300,20 +297,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //	class PostProcess for data transport, read and write
 	PostProcess_Hydrosphere		read_Transfer ( im, jm, km, input_path, output_path );
 	read_Transfer.Atmosphere_TransferFile_read ( bathymetry_name, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
-
-//	class PostProcess for data transport, read and write
-//	PostProcess_Hydrosphere		read_Oscar_u ( im, jm, km, input_path, output_path );
-//	read_Oscar_u.OscarFile_u_read ( Oscar_u_v );
-
-//	cout << endl << " ***** printout of 2D-field Oscar_u_v ***** " << endl << endl;
-//	Oscar_u_v.printArray_2D( jm, km );
-
-//	class PostProcess for data transport, read and write
-//	PostProcess_Hydrosphere		read_Oscar_v ( im, jm, km, input_path, output_path );
-//	read_Oscar_v.OscarFile_v_read ( Oscar_v_w );
-
-//	cout << endl << " ***** printout of 2D-field Oscar_v_w ***** " << endl << endl;
-//	Oscar_v_w.printArray_2D( jm, km );
 
 
 	cout << "***** time slice for the Oceanic Global Circulation Modell ( OGCM ) is:    Ma = " << Ma << " million years" << endl << endl;
@@ -543,7 +526,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			minmax_w.searchMinMax_3D ( str_max_w, str_min_w, str_unit_w, w, h );
 
 //		searching of maximum and minimum values of pressure
-			string str_max_pressure = " max pressure dynamic ", str_min_pressure = " min pressure dynamic ", str_unit_pressure = "hPa";
+			string str_max_pressure = " max pressure dynamic ", str_min_pressure = " min pressure dynamic ", str_unit_pressure = "bar";
 			MinMax_Hyd		minmaxPressure ( im, jm, km, u_0, c_0, L_hyd );
 			minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, p_dyn, h );
 
@@ -671,7 +654,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //	radial data along constant hight above ground
 	int i_radial = 40;
 //	int i_radial = 39;
-	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, Precipitation, Oscar_u_v, Oscar_v_w );
+	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, Precipitation );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
 //	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
