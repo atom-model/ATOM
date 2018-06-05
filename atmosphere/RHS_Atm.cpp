@@ -33,7 +33,7 @@ RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, doubl
 }
 
 
-RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double ec, double sc_WaterVapour, double sc_CO2, double g, double pr, double WaterVapour, double Buoyancy, double CO2, double gam, double sigma, double lambda )
+RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re, double sc_WaterVapour, double sc_CO2, double g, double pr, double WaterVapour, double Buoyancy, double CO2, double gam, double sigma, double lambda )
 {
 	this-> im = im;
 	this-> jm = jm;
@@ -43,7 +43,6 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
 	this-> dthe = dthe;
 	this-> dphi = dphi;
 	this-> re = re;
-	this-> ec = ec;
 	this-> sc_WaterVapour = sc_WaterVapour;
 	this-> sc_CO2 = sc_CO2;
 	this-> g = g;
@@ -622,16 +621,9 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 // Right Hand Side of the time derivative ot temperature, pressure, water vapour concentration and velocity components
 	rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe )
-			+ ec * ( u.x[ i ][ j ][ k ] * dpdr / r_humid + v.x[ i ][ j ][ k ] / rm * dpdthe / r_humid + w.x[ i ][ j ][ k ] / rmsinthe * dpdphi / r_humid )
 			+ ( d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2 + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2 ) / ( re * pr )
-			+ 2. * ec / re * ( ( dudr * dudr) + pow ( ( dvdthe / rm + h_d_i * u.x[ i ][ j ][ k ] / rm ), 2. )
-			+ pow ( ( dwdphi / rmsinthe + h_d_i * u.x[ i ][ j ][ k ] / rm + h_d_j * v.x[ i ][ j ][ k ] * cotthe / rm ), 2. ) )
-			+ ec / re * ( pow ( ( dvdr - h_d_j * v.x[ i ][ j ][ k ] / rm + dudthe / rm ), 2. )
-			+ pow ( ( dudphi / rmsinthe + dwdr - h_d_k * w.x[ i ][ j ][ k ] / rm ), 2. )
-			+ pow ( ( dwdthe * sinthe / rm2 - h_d_k * w.x[ i ][ j ][ k ] * costhe / rmsinthe + dvdphi / rmsinthe ), 2. ) )
 			+ coeff_energy * ( S_c.x[ i ][ j ][ k ] + S_r.x[ i ][ j ][ k ] )
-			+ coeff_energy * ( S_i.x[ i ][ j ][ k ] + S_s.x[ i ][ j ][ k ] )
-			- h_c_i * t.x[ i ][ j ][ k ] * k_Force / dthe2;
+			+ coeff_energy * ( S_i.x[ i ][ j ][ k ] + S_s.x[ i ][ j ][ k ] );
 
 	rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
 			- dpdr / r_humid + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re

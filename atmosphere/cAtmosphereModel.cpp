@@ -133,9 +133,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 	Array_2D temperature_NASA(jm, km, 0.); // surface temperature from NASA
 	Array_2D temp_NASA(jm, km, 0.); // surface temperature from NASA for print function
-	Array_2D temp_NASA_diff(jm, km, 0.); // temperature difference between NASA and ATOM
-	Array_2D temp_pot(jm, km, 0.); // potential surface temperature
-	Array_2D temp_pot_diff(jm, km, 0.); // temperature difference between NASA and ATOM-potential
 
 	Array_2D albedo(jm, km, 0.); // albedo = reflectivity
 	Array_2D epsilon(jm, km, 0.); // epsilon = absorptivity
@@ -146,7 +143,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	Array_2D Q_sensible(jm, km, 0.); // sensible heat from bottom values by the energy transport equation
 	Array_2D Q_bottom(jm, km, 0.); // difference by Q_radiation - Q_latent - Q_sensible
 
-	Array_2D Evaporation_Haude(jm, km, 0.); // evaporation by Haude in [mm/d]
+	Array_2D Evaporation_Dalton(jm, km, 0.); // evaporation by Dalton in [mm/d]
 	Array_2D Evaporation_Penman(jm, km, 0.); // evaporation by Penman in [mm/d]
 
 	Array_2D co2_total(jm, km, 0.); // areas of higher co2 concentration
@@ -299,7 +296,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	BC_Atmosphere							boundary ( im, jm, km, t_tropopause );
 
 //	class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-	RHS_Atmosphere						prepare ( im, jm, km, dt, dr, dthe, dphi, re, ec, sc_WaterVapour, sc_CO2, g, pr, WaterVapour, Buoyancy, CO2, gam, sigma, lamda );
+	RHS_Atmosphere						prepare ( im, jm, km, dt, dr, dthe, dphi, re, sc_WaterVapour, sc_CO2, g, pr, WaterVapour, Buoyancy, CO2, gam, sigma, lamda );
 	RHS_Atmosphere						prepare_2D ( jm, km, dthe, dphi, re );
 
 //	class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
@@ -684,10 +681,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			minmaxQ_t_Evaporation.searchMinMax_2D ( str_max_heat_t_Evaporation, str_min_heat_t_Evaporation, str_unit_heat_t_Evaporation, Q_Evaporation, h );
 
 
-//	searching of maximum and minimum values of Evaporation by Haude
-			string str_max_t_Evaporation_Haude = " max Evaporation Haude ", str_min_t_Evaporation_Haude = " min Evaporation Haude ", str_unit_t_Evaporation_Haude = "mm/d";
-			MinMax_Atm		minmaxt_Evaporation_Haude ( jm, km, coeff_mmWS );
-			minmaxt_Evaporation_Haude.searchMinMax_2D ( str_max_t_Evaporation_Haude, str_min_t_Evaporation_Haude, str_unit_t_Evaporation_Haude, Evaporation_Haude, h );
+//	searching of maximum and minimum values of Evaporation by Dalton
+			string str_max_t_Evaporation_Dalton = " max Evaporation Dalton ", str_min_t_Evaporation_Dalton = " min Evaporation Dalton ", str_unit_t_Evaporation_Dalton = "mm/d";
+			MinMax_Atm		minmaxt_Evaporation_Dalton ( jm, km, coeff_mmWS );
+			minmaxt_Evaporation_Dalton.searchMinMax_2D ( str_max_t_Evaporation_Dalton, str_min_t_Evaporation_Dalton, str_unit_t_Evaporation_Dalton, Evaporation_Dalton, h );
 
 //	searching of maximum and minimum values of Evaporation by Penman
 			string str_max_t_Evaporation_Penman = " max Evaporation Penman ", str_min_t_Evaporation_Penman = " min Evaporation Penman ", str_unit_t_Evaporation_Penman = "mm/d";
@@ -716,7 +713,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
 //	composition of results
-			calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Haude, Vegetation, albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
+			calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Dalton, Vegetation, albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of loop: while ( min >= epsres )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -770,7 +767,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //	radial data along constant hight above ground
 	int i_radial = 0;
 //	int i_radial = 10;
-	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Haude, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation, Topography, temp_NASA, temp_NASA_diff, temp_pot, temp_pot_diff );
+	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation, Topography, temp_NASA );
 
 //	londitudinal data along constant latitudes
 	int j_longal = 62;			// Mount Everest/Himalaya
@@ -787,7 +784,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //	writing of v-w-data in the v_w_transfer file
 	PostProcess_Atmosphere ppa ( im, jm, km, output_path );
-	ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn );
+	ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
 	ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
 
 	Ma_prev = Ma;
@@ -822,7 +819,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 			Q_sensible.y[ j ][ k ] = 0.;
 			Q_bottom.y[ j ][ k ] = 0.;
 
-			Evaporation_Haude.y[ j ][ k ] = 0.;
+			Evaporation_Dalton.y[ j ][ k ] = 0.;
 			Evaporation_Penman.y[ j ][ k ] = 0.;
 
 			co2_total.y[ j ][ k ] = 0.;

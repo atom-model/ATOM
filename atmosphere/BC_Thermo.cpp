@@ -2964,8 +2964,8 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 			q_Rain  = ep * E_Rain / ( p_h - E_Rain );																// water vapour amount at saturation with water formation in kg/kg
 			q_Ice  = ep * E_Ice / ( p_h - E_Ice );																		// water vapour amount at saturation with ice formation in kg/kg
 
-			e = c.x[ i_mount ][ j ][ k ] * p_stat.x[ i_mount ][ j ][ k ] / ep; 													// water vapour pressure in hPa
-			a = 216.6 * e / ( t.x[ i_mount ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
+			e = .01 * c.x[ i_mount ][ j ][ k ] * p_stat.x[ i_mount ][ j ][ k ] / ep; 							// water vapour pressure in Pa
+			a = e / ( r_water_vapour * t.x[ i_mount ][ j ][ k ] * t_0 );												// absolute humidity in kg/m³
 
 			Q_Latent.x[ i_mount ][ j ][ k ] = - coeff_Lv * a * ( - 3. * c.x[ i_mount ][ j ][ k ] + 4. * c.x[ i_mount + 1 ][ j ][ k ] - c.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );
 			Q_Latent_Ice = - coeff_Ls * a * ( - 3. * ice.x[ i_mount ][ j ][ k ] + 4. * ice.x[ i_mount + 1 ][ j ][ k ] - ice.x[ i_mount + 2 ][ j ][ k ] ) / ( 2. * dr );
@@ -3012,8 +3012,8 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 				q_Rain  = ep * E_Rain / ( p_h - E_Rain );																// water vapour amount at saturation with water formation in kg/kg
 				q_Ice  = ep * E_Ice / ( p_h - E_Ice );																		// water vapour amount at saturation with ice formation in kg/kg
 
-				e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 													// water vapour pressure in hPa
-				a = 216.6 * e / ( t.x[ i ][ j ][ k ] * t_0 );																// absolute humidity in kg/m3
+				e = .01 * c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep; 							// water vapour pressure in Pa
+				a = e / ( r_water_vapour * t.x[ i ][ j ][ k ] * t_0 );												// absolute humidity in kg/m³
 
 				Q_Latent.x[ i ][ j ][ k ] = - coeff_Lv * a * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 				Q_Latent_Ice = - coeff_Ls * a * ( ice.x[ i+1 ][ j ][ k ] - ice.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
@@ -3395,7 +3395,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 				q_Rain  = ep * E_Rain / ( p_h - E_Rain );													// water vapour amount at saturation with water formation in kg/kg
 				q_Ice  = ep * E_Ice / ( p_h - E_Ice );															// water vapour amount at saturation with ice formation in kg/kg
 
-				if ( ( t_u >= t_0 ) && ( c_c_au * cloud.x[ i ][ j ][ k ] > 0. ) )					S_c_au = c_c_au * cloud.x[ i ][ j ][ k ];	// cloud water to rain, cloud droplet collection
+				if ( ( t_u >= t_0 ) && ( c_c_au * cloud.x[ i ][ j ][ k ] > 0. ) )					S_c_au = c_c_au * cloud.x[ i ][ j ][ k ];	// cloud water to rain, cloud droplet collection in kg / ( kg * s )
 				else 																								S_c_au = 0.;
 
 				if ( ( t_u <= t_0 ) && ( c_i_au * ice.x[ i ][ j ][ k ] > 0. ) && ( ice.x[ i ][ j ][ k ] >= q_Ice ) )		S_i_au = c_i_au * ( ice.x[ i ][ j ][ k ] - q_Ice );		// cloud ice to snow, cloud ice crystal aggregation
@@ -3426,7 +3426,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 				else 			S_i_dep = 0.;
 
 
-				S_r.x[ i ][ j ][ k ] = S_c_au;
+				S_r.x[ i ][ j ][ k ] = S_c_au;		// in kg / ( kg * s )
 				S_s.x[ i ][ j ][ k ] = S_i_au;
 
 				if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 1. ) )
@@ -3438,7 +3438,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 				if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )									P_rain.x[ i + 1 ][ j ][ k ] = 0.;
 				if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )									P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
-				P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
+				P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;		// in kg / ( m2 * s )
 				P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
 
 				if ( P_rain.x[ i ][ j ][ k ] < 0. ) 											P_rain.x[ i ][ j ][ k ] = 0.;
@@ -3612,7 +3612,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int Radi
 // rain and snow integration
 						if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )												P_rain.x[ i + 1 ][ j ][ k ] = 0.;
 						if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )												P_snow.x[ i + 1 ][ j ][ k ] = 0.;
-	
+
 						P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
 						P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
 
@@ -3783,12 +3783,7 @@ double BC_Thermo::out_co2 (  ) const
 int BC_Thermo::GetTropopauseHightAdd ( double t_cret )
 {
 	double d_i_h_round = round ( ( t_cret * t_0 ) / 2.6 );		// adiabatic slope of radial temperature 0.65/100m, stepsize 400m => 2.6/400m
-	int i_h = 0;
-
-	i_h = ( int ) d_i_h_round;
-
-//	cout << "     t_cret = " << t_cret * t_0 << "     d_i_h_round = " << d_i_h_round << "     t_0 = " << t_0 << "     i_h = " << i_h << endl;
-
+	int i_h = ( int ) d_i_h_round;
 	return i_h;
 }
 
@@ -3796,9 +3791,6 @@ int BC_Thermo::GetTropopauseHightAdd ( double t_cret )
 double BC_Thermo::GetPoleTemperature ( int Ma, int Ma_1, int Ma_2, double t_1, double t_2 )
 {
 	t_pole = ( t_2 - t_1 ) / ( Ma_2 - Ma_1 ) * ( double ) ( Ma - Ma_1 ) + t_1;
-
-//	cout << "     t_pole = " << t_pole << "     t_1 = " << t_1 << "     t_2 = " << t_2 << "     Ma_1 = " << Ma_1 << "     Ma_2 = " << Ma_2 << "     Ma = " << Ma << endl;
-
 	return t_pole;
 }
 

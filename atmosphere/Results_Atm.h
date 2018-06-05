@@ -32,7 +32,7 @@ class Results_MSL_Atm
 		double sun, albedo_equator, q_T;
 		double e_h, a_h, p_h, q_h, t_dew, t_Celsius, t_Celsius_1, t_denom, Delta, E_a, gamma, g, gam;
 		double i_level, h_level, h_h, sat_deficit, RF_e;
-		double Evaporation_Penman_average, Evaporation_Haude_average;
+		double Evaporation_Penman_average, Evaporation_Dalton_average;
 		double ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, ls, cp_l, r_air, dt, dr;
 		double L_atm, c13, c43;
 		double R_Air;
@@ -80,5 +80,6 @@ class Results_MSL_Atm
 
 		void CalculateNodeWeights(int jm, int km);
 
+		double C_Dalton ( double u_0, double v, double w );
 };
 #endif

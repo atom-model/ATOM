@@ -52,8 +52,6 @@ class BC_Thermohalin
 
 		void IC_v_w_EkmanSpiral ( Array_1D &, Array_1D &, Array &, Array &, Array & );
 
-		void IC_v_w_WestEastCoast ( Array &, Array &, Array &, Array &, Array & );
-
 		void BC_Temperature_Salinity ( Array &, Array &, Array &, Array & );
 
 		void BC_Surface_Temperature_NASA ( const string &, Array & );

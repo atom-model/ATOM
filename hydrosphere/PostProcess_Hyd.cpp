@@ -481,7 +481,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &n, double &u_0, double &t_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater, Array_2D &Oscar_u_v, Array_2D &Oscar_v_w )
+void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &n, double &u_0, double &t_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater, Array_2D &Evaporation_Dalton, Array_2D &Precipitation )
 {
 	double x, y, z, dx, dy;
 
@@ -538,6 +538,8 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
         for ( int k = 0; k < km; k++ )
         {
             Hydrosphere_vtk_radial_File << t.x[ i_radial ][ j ][ k ] * t_0 - t_0 << endl;
+            aux_v.x[ i_radial ][ j ][ k ] = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
+			if ( h.x[ 0 ][ j ][ k ] == 1. )						aux_v.x[ i_radial ][ j ][ k ] = 0.;
         }
     }
 
@@ -560,9 +562,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     dump_radial_2d("Upwelling", Upwelling, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Downwelling", Downwelling, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("BottomWater", BottomWater, 1., Hydrosphere_vtk_radial_File);
-
-//    dump_radial_2d("Oscar_u_v", Oscar_u_v, 1., Hydrosphere_vtk_radial_File);
-//    dump_radial_2d("Oscar_v_w", Oscar_v_w, 1., Hydrosphere_vtk_radial_File);
+    dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Hydrosphere_vtk_radial_File);
+    dump_radial_2d("Precipitation", Precipitation, 1., Hydrosphere_vtk_radial_File);
+    dump_radial("Evap-Precip", aux_v, 1., i_radial, Hydrosphere_vtk_radial_File);
 
 	Hydrosphere_vtk_radial_File <<  "VECTORS v-w-Cell float" << endl;
 
@@ -666,7 +668,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 
 
 
-void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_Bathymetry_File, Array &v, Array &w, Array &t, Array &p )
+void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_Bathymetry_File, Array &v, Array &w, Array &t, Array &p, Array_2D &Evaporation_Dalton, Array_2D &Precipitation )
 {
 	ifstream v_w_Transfer_File;
     string Name_v_w_Transfer_File = input_path + "/[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
@@ -689,81 +691,13 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 			v_w_Transfer_File >> w.x[ im-1 ][ j ][ k ];
 			v_w_Transfer_File >> t.x[ im-1 ][ j ][ k ];
 			v_w_Transfer_File >> p.x[ im-1 ][ j ][ k ];
+			v_w_Transfer_File >> Evaporation_Dalton.y[ j ][ k ];
+			v_w_Transfer_File >> Precipitation.y[ j ][ k ];
 
 			p.x[ im-1 ][ j ][ k ] = 0.;
-
 		}
 	}
 	v_w_Transfer_File.close();
-}
-
-
-
-
-
-void PostProcess_Hydrosphere::OscarFile_u_read ( Array_2D &Oscar_u_v )
-{
-	int dummy_1 = 0;
-	int dummy_2 = 0;
-
-	ifstream v_w_Oscar_File;
-    string Name_v_w_Oscar_File = "../data/Oscar_u.xyz";
-    v_w_Oscar_File.precision(4);
-    v_w_Oscar_File.setf(ios::fixed);
-	v_w_Oscar_File.open(Name_v_w_Oscar_File);
-
-	if (!v_w_Oscar_File.is_open())
-	{
-        cout << "ERROR: transfer file name in hydrosphere: " << Name_v_w_Oscar_File << "\n";
-        cerr << "ERROR: could not open transfer file " << __FILE__ << " at line " << __LINE__ << "\n";
-		abort();
-	}
-
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int   k = 0; k < km; k++ )
-		{
-			v_w_Oscar_File >> dummy_1;
-			v_w_Oscar_File >> dummy_2;
-			v_w_Oscar_File >> Oscar_u_v.y[ j ][ k ];
-		}
-	}
-	v_w_Oscar_File.close();
-}
-
-
-
-
-
-
-void PostProcess_Hydrosphere::OscarFile_v_read ( Array_2D &Oscar_v_w )
-{
-	int dummy_1 = 0;
-	int dummy_2 = 0;
-
-	ifstream v_w_Oscar_File;
-    string Name_v_w_Oscar_File = "../data/Oscar_v.xyz";
-    v_w_Oscar_File.precision(4);
-    v_w_Oscar_File.setf(ios::fixed);
-	v_w_Oscar_File.open(Name_v_w_Oscar_File);
-
-	if (!v_w_Oscar_File.is_open())
-	{
-        cout << "ERROR: transfer file name in hydrosphere: " << Name_v_w_Oscar_File << "\n";
-        cerr << "ERROR: could not open transfer file " << __FILE__ << " at line " << __LINE__ << "\n";
-		abort();
-	}
-
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int   k = 0; k < km; k++ )
-		{
-			v_w_Oscar_File >> dummy_1;
-			v_w_Oscar_File >> dummy_2;
-			v_w_Oscar_File >> Oscar_v_w.y[ j ][ k ];
-		}
-	}
-	v_w_Oscar_File.close();
 }
 
 

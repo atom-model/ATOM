@@ -65,9 +65,8 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 
 // reduction or amplification of flow velocities along coasts
 // for the artificial initial and boundary conditions
-//	u_max = .01 / u_0;				// numerator radial velocity u-max in m/s          u_max = 0.01 m/s
-	u_max = .1 / u_0;				// numerator radial velocity u-max in m/s          u_max = 0.01 m/s
-
+//	u_max = .03 / u_0;				// u_max = 0.03 m/s compares to average of up/downwelling
+	u_max = .0;
 
 // ocean surface velocity is about 3% of the wind velocity at the surface
 	water_wind = .03;
@@ -378,10 +377,6 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
 // surface wind vector driving the Ekman spiral in the Ekman layer
 // northern hemisphere
-	double Omega = 7.29e-5;
-	double f = 0.;
-	double K = 10.;
-	double gam_f_K = 0.;
 	double gam_z = 0.;
 	double exp_gam_z = 0.;
 	double sin_gam_z = 0;
@@ -391,12 +386,8 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
 	for ( int j = 0; j < jm; j++ )
 	{
-		f = 2. * Omega * abs ( sin ( the.z[ j ] ) );
-		gam_f_K = sqrt ( abs ( f ) / ( 2. * K ) );
-
 		for ( int i = im-2; i >= i_beg; i-- )
 		{
-//			gam_z = M_PI * ( double ) ( i - i_beg ) / ( double ) ( im - 1 - i_beg ) * gam_f_K;
 			gam_z = M_PI * ( double ) ( i - i_beg ) / ( double ) ( im - 1 - i_beg );
 			exp_gam_z = exp ( - gam_z );
 			sin_gam_z = sin ( gam_z );
@@ -424,116 +415,6 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 			}
 		}
 	}
-}
-
-
-
-
-
-
-
-void BC_Thermohalin::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w, Array &c )
-{
-// initial conditions for v and w velocity components at the sea surface close to east or west coasts
-// reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
-// w component unchanged
-
-// search for east coasts and associated velocity components to close the circulations
-// transition between coast flows and open sea flows included
-
-// northern hemisphere: east coast
-	k_grad = 5;																			// extension of velocity change
-
-	int l_add = 0;
-
-	double d_k = 0.;
-	double d_l = 0.;
-
-	for ( int j = 0; j < jm; j++ )													// outer loop: latitude
-	{
-		for ( int k = 0; k < km - k_grad; k++ )											// inner loop: longitude
-		{
-			if ( ( h.x[ i_max ][ j ][ k ] == 1. ) && ( h.x[ i_max ][ j ][ k + 1 ] == 0. ) )			//  then water is closest to coast
-			{
-				l_add = 0;
-				for ( int l = k; l < k + k_grad; l++ )								// extension of change, sign change in v-velocity and distribution of u-velocity with depth
-				{
-					d_l = ( double ) ( k_grad + l_add );
-					d_k = ( double ) ( k_grad );
-
-					for ( int i = i_middle; i <= i_max; i++ )
-					{
-						d_i = ( double ) i;
-						u.x[ i ][ j ][ l ] = - ( d_i - d_i_max ) / ( d_i_middle - d_i_max ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
-					}
-
-					for ( int i = i_u_0; i <= i_middle; i++ )
-					{
-						d_i = ( double ) i;
-						u.x[ i ][ j ][ l ] = - ( d_i - d_i_beg ) / ( d_i_middle - d_i_beg ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
-					}
-					l_add--;
-
-
-					for ( int i = i_u_0; i <= i_max; i++ )
-					{
-						for ( int l = k; l < ( k + k_grad ); l++ )		// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension
-						{
-							v.x[ i ][ j ][ l ] = v.x[ i ][ j ][ k + k_grad ] / ( double )( ( k + k_grad ) - k ) * ( double )( l - k ); // extension of v-velocity
-							w.x[ i ][ j ][ l ] = w.x[ i ][ j ][ k + k_grad ] / ( double )( ( k + k_grad ) - k ) * ( double )( l - k ); // extension of v-velocity
-						}
-					}
-				}
-			}
-		}																						// end of longitudinal loop
-	}																							// end of latitudinal loop
-
-
-
-// search for west coasts and associated velocity components to close the circulations
-// transition between coast flows and open sea flows included
-
-// northern hemisphere: west coast
-	for ( int j = 0; j < jm; j++ )													// outer loop: latitude
-	{
-		for ( int k = km - 2; k > k_grad; k-- )											// inner loop: longitude
-		{
-			if ( ( h.x[ i_max ][ j ][ k ] == 1. ) && ( h.x[ i_max ][ j ][ k - 1 ] == 0. ) )			//  then water is closest to coast
-			{
-				l_add = 0;
-
-				for ( int l = k; l > ( k - k_grad ); l-- )						// backward extention of velocity change: nothing changes
-				{
-					d_l = ( double ) ( k_grad - l_add );
-					d_k = ( double ) ( k_grad );
-
-					for ( int i = i_middle; i <= i_max; i++ )
-					{
-						d_i = ( double ) i;
-						u.x[ i ][ j ][ l ] = + ( d_i - d_i_max ) / ( d_i_middle - d_i_max ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
-					}
-
-					for ( int i = i_u_0; i <= i_middle; i++ )
-					{
-						d_i = ( double ) i;
-						u.x[ i ][ j ][ l ] = + ( d_i - d_i_beg ) / ( d_i_middle - d_i_beg ) * u_max * ( d_l * d_l / ( d_k * d_k ) );
-					}
-					l_add++;
-
-
-					for ( int i = i_u_0; i <= i_max; i++ )
-					{
-						for ( int l = k; l > ( k - k_grad ); l-- )			// smoothing algorithm by a linear equation, starting at local longitude until ending at max extension
-						{
-							v.x[ i ][ j ][ l ] = v.x[ i ][ j ][ k - k_grad ] / ( double )( ( k - k_grad ) - k ) * ( double )( l - k ); // extension of v-velocity
-							w.x[ i ][ j ][ l ] = w.x[ i ][ j ][ k - k_grad ] / ( double )( ( k - k_grad ) - k ) * ( double )( l - k ); // extension of v-velocity
-						}
-					}
-				}
-			}
-		}
-	}
-
 }
 
 
