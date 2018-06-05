@@ -695,8 +695,6 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 			v_w_Transfer_File >> Precipitation.y[ j ][ k ];
 
 			p.x[ im-1 ][ j ][ k ] = 0.;
-//			if ( Evaporation_Dalton.y[ j ][ k ] >= 10. )		Evaporation_Dalton.y[ j ][ k ] = 10.;
-
 		}
 	}
 	v_w_Transfer_File.close();
