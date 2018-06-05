@@ -168,7 +168,7 @@ def reconstruct_temperature(time_0,time_1):
         time_0,
         DATA_DIR + '/{0}Ma_Atm_Temperature.xyz'.format(time_0),
         time_1,
-        DATA_DIR + '/{0}Ma_Atm_Reconstructed_Temperature.xyz'.format(time_1))       
+        DATA_DIR + '/{0}Ma_Reconstructed_Temperature.xyz'.format(time_1))       
 
 
 def reconstruct_precipitation(time_0,time_1):
@@ -189,6 +189,25 @@ def reconstruct_precipitation(time_0,time_1):
         time_1,
         DATA_DIR + '/{0}Ma_Reconstructed_Precipitation.xyz'.format(time_1))  
 
+
+def reconstruct_salinity(time_0,time_1):
+    st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Hyd.xyz'.format(time_0, BATHYMETRY_SUFFIX),skip_header=1)
+    data = st[:,[0,1,7]]
+    for d in data:
+        d[1]=90-d[1]
+    ind = np.lexsort((-data[:,1],data[:,0]))
+    #print(data[ind])
+
+    with open(DATA_DIR + '/{0}Ma_Hyd_Salinity.xyz'.format(time_0), 'w') as of:
+        for l in data[ind]:
+            of.write(' '.join(str(item) for item in l) + '\n')
+
+    reconstruct_grid(
+        time_0,
+        DATA_DIR + '/{0}Ma_Hyd_Salinity.xyz'.format(time_0),
+        time_1,
+        DATA_DIR + '/{0}Ma_Reconstructed_Salinity.xyz'.format(time_1))
+
 def main():
     try:
         global DATA_DIR
@@ -197,12 +216,16 @@ def main():
         time_1 = int(sys.argv[2])
         DATA_DIR = sys.argv[3]
         BATHYMETRY_SUFFIX = sys.argv[4]
+        atm_or_hyd = sys.argv[5]
         print(time_0)
         print(time_1)
-        reconstruct_temperature(time_0,time_1)
-        reconstruct_precipitation(time_0,time_1)
+        if atm_or_hyd == 'atm':
+            reconstruct_temperature(time_0,time_1)
+            reconstruct_precipitation(time_0,time_1)
+        else:
+            reconstruct_salinity(time_0,time_1)
     except:
-        print("Usage: python reconstruct_atom_data.py 0 10 ./output Ma_Golonka.xyz") 
+        print("Usage: python reconstruct_atom_data.py 0 10 ./output Ma_Golonka.xyz atm/hyd") 
         import traceback
         traceback.print_exc()
 

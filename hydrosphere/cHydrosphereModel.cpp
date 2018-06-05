@@ -97,30 +97,24 @@ void cHydrosphereModel::LoadConfig(const char *filename) {
 	XMLDocument doc;
 	XMLError err = doc.LoadFile(filename);
 
-
 	if (err) {
 		doc.PrintError();
-		throw std::invalid_argument("   couldn't load config file inside cHydrosphereModel");
+		throw std::invalid_argument(std::string("unable to load config file:  ") + filename);
 	}
 
-
-	XMLElement *atom = doc.FirstChildElement("atom");
-	if (!atom) {
-		return;
-	}
-
-
-	XMLElement* elem_common = doc.FirstChildElement( "atom" )->FirstChildElement( "common" );
-	if (!elem_common) {
-		return;
-	}
-
-
-	XMLElement* elem_hydrosphere = doc.FirstChildElement( "atom" )->FirstChildElement( "hydrosphere" );
-	if (!elem_hydrosphere) {
-		return;
-	}
-
+    XMLElement *atom = doc.FirstChildElement("atom"), *elem_common = NULL, *elem_hydrosphere = NULL;
+    if (!atom) {
+        throw std::invalid_argument(std::string("Failed to find the 'atom' element in config file: ") + filename);
+    }else{
+        elem_common = atom->FirstChildElement( "common" );
+        if(!elem_common){
+            throw std::invalid_argument(std::string("Failed to find the 'common' element in 'atom' element in config file: ") + filename);
+        }
+        elem_hydrosphere = atom->FirstChildElement( "hydrosphere" );
+        if (!elem_hydrosphere) {
+            throw std::invalid_argument(std::string("Failed to find the 'hydrosphere' element in 'atom' element in config file: ") + filename);
+        }
+    }
 
 #include "HydrosphereLoadConfig.cpp.inc"
 }
@@ -251,21 +245,22 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	string Name_v_w_Transfer_File;
 	stringstream ssName_v_w_Transfer_File;
 
-// naming a file to read the surface temperature of the modern world
-	string Name_SurfaceTemperature_File; 
-	stringstream ssNameSurfaceTemperature;
-	ssNameSurfaceTemperature << "../data/" << "SurfaceTemperature_NASA.xyz";
-	Name_SurfaceTemperature_File = ssNameSurfaceTemperature.str();
+    //Prepare the temperature and precipitation data file
+    string Name_SurfaceTemperature_File  = temperature_file;
+    string Name_SurfaceSalinity_File = salinity_file;
 
-// naming a file to read the surface salinity of the modern world
-	string Name_SurfaceSalinity_File; 
-	stringstream ssNameSurfaceSalinity;
-	ssNameSurfaceSalinity << "../data/" << "SurfaceSalinity_NASA.xyz";
-	Name_SurfaceSalinity_File = ssNameSurfaceSalinity.str();
+    if(Ma != 0 && use_earthbyte_reconstruction){
+        Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Temperature.xyz";
+        Name_SurfaceSalinity_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Salinity.xyz";
 
+        std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - time_step) + " " +
+                std::to_string(Ma) + " " + output_path + " " + BathymetrySuffix +" hyd";
+        int ret = system(cmd_str.c_str());
+        std::cout << " reconstruction script returned: " << ret << std::endl;
+    }
 
     string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
-   string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
+    string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
     string input_path = output_path;
 
     cout << "\n   Input is being read from " << input_path << "\n";
@@ -332,11 +327,15 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	BC_Thermohalin		oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, t_pole, input_path );
 
 //	surface temperature from World Ocean Atlas 2009 given as boundary condition
-	if ( Ma == 0 ) oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
-
+	if ( Ma == 0 || use_earthbyte_reconstruction) 
+    {
+        oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
+    }
 //	surface salinity from World Ocean Atlas 2009 given as boundary condition
-	if ( Ma == 0 ) oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
-
+	if ( Ma == 0 || use_earthbyte_reconstruction) 
+    {
+        oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
+    }
 // 	initial conditions for u-v-w-velocity components following the Ekman spiral
 	oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
 
@@ -731,9 +730,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
 
-void cHydrosphereModel::Run() {
-    // create the output dir
-//	output_path = output_path + "-" + std::to_string ( Ma );
+void cHydrosphereModel::Run() 
+{
     mkdir(output_path.c_str(), 0777);
 
     cout << "Output is being written to " << output_path << "\n";
@@ -763,40 +761,14 @@ void cHydrosphereModel::Run() {
 	}
 
 
+    for(int i = time_start; i <= time_end; i+=time_step)
+    {
+        RunTimeSlice(i);
+    }
 
-
-	// time slices to be run after actualizing 
-	int i_time_slice_max = 15;
-	int *time_slice = new int [ i_time_slice_max ]; 	// time slices in Ma
-
-	time_slice [ 0 ] = 0;							// Golonka-Bathymetry
-	time_slice [ 1 ] = 10;
-	time_slice [ 2 ] = 20;
-	time_slice [ 3 ] = 30;
-	time_slice [ 4 ] = 40;
-	time_slice [ 5 ] = 50;
-	time_slice [ 6 ] = 60;
-	time_slice [ 7 ] = 70;
-	time_slice [ 8 ] = 80;
-	time_slice [ 9 ] = 90;
-	time_slice [ 10 ] = 100;
-	time_slice [ 11 ] = 110;
-	time_slice [ 12 ] = 120;
-	time_slice [ 13 ] = 130;
-	time_slice [ 14 ] = 140;
-
-	for (int i_time_slice = 0; i_time_slice < i_time_slice_max; i_time_slice++) {
-		int Ma = time_slice[i_time_slice];
-		RunTimeSlice(Ma);
-	}
-//   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-//  final remarks
+    //  final remarks
     cout << endl << "***** end of the Hydrosphere General Circulation Modell ( OGCM ) *****" << endl << endl;
-
     cout << endl;
     cout << "***** end of object oriented C++ program for the computation of 3D-hydrospheric circulation *****";
     cout << "\n\n\n\n";
-
-	delete [ ] time_slice;
 }
