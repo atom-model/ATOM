@@ -31,7 +31,7 @@ Results_Hyd::Results_Hyd ( int im, int jm, int km )
 // auxiliar 2D Array "aux_v" for the computation of Ekman pumping
 	aux_v = 0L;
 
-	aux_v = new double*[ km ];
+	aux_v = new double*[ jm ];
 
 	for ( int l = 0; l < jm; l++ )
 	{
@@ -51,7 +51,7 @@ Results_Hyd::Results_Hyd ( int im, int jm, int km )
 // auxiliar 2D Array "aux_w" for the computation of Ekman pumping
 	aux_w = 0L;
 
-	aux_w = new double*[ km ];
+	aux_w = new double*[ jm ];
 
 	for ( int l = 0; l < jm; l++ )
 	{
@@ -71,17 +71,17 @@ Results_Hyd::Results_Hyd ( int im, int jm, int km )
 
 Results_Hyd::~Results_Hyd ()
 {
-	for ( int k = 0; k < km; k++ )
+	for ( int j = 0; j < jm; j++ )
 	{
-		delete [  ] aux_v[ k ];
+		delete [  ] aux_v[ j ];
 	}
 
 	delete [  ] aux_v;
 
 
-	for ( int k = 0; k < km; k++ )
+	for ( int j = 0; j < jm; j++ )
 	{
-		delete [  ] aux_w[ k ];
+		delete [  ] aux_w[ j ];
 	}
 
 	delete [  ] aux_w;
