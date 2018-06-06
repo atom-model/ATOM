@@ -86,6 +86,7 @@ void cAtmosphereModel::LoadConfig ( const char *filename )
 
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
+    m_current_time = m_time_list.insert(float(Ma)).first;
 // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
 // maximum number of overall iterations ( n )
 // maximum number of inner velocity loop iterations ( velocity_iter_max )
@@ -312,14 +313,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	int Ma_prev;
 	double t_cretaceous_prev;
 
-	if ( Ma == 0 )
-	{
-		Ma_prev = 0;
+	if( is_first_time_slice() ){
+		Ma_prev = int(round(*get_current_time()));
 		t_cretaceous_prev = 0.;
-	}
-	else
-	{
-		Ma_prev = Ma - time_step;
+	}else{
+		Ma_prev = int(round(*get_previous_time()));
 	}
 
 
@@ -787,12 +785,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
 	ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
 
-	Ma_prev = Ma;
 	t_cretaceous_prev = t_cretaceous;
 
 	if ( NASATemperature == 1 && !use_earthbyte_reconstruction ) 
     {
-        circulation.BC_NASAbasedSurfTempWrite ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
+        circulation.BC_NASAbasedSurfTempWrite ( Ma, t_cretaceous_prev, t, c, cloud, ice );
     }
 
 // reset of results to the initial value
