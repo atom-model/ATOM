@@ -621,10 +621,11 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	double vapour_evaporation = 0.;
 
 	double vapour_surface = 0.;
-	double evap_precip = 0.;
-	double coeff_vapour = 1.1574e-3 * L_atm / u_0;												// 1.1574e-3 == mm/d to m/s, == 4.629
 
-	if ( i == im - 2 )
+	double evap_precip = 0.;
+	double coeff_vapour = 1.1574e-5 * L_atm / u_0;												// 1.1574e-3 == mm/d to m/s, == .01234
+
+	if ( i == 1 )
 	{
 		evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
 

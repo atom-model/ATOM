@@ -517,8 +517,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 	double drodc = .7;												// gradient given in kg/m³
 	double salt_water_ref = r_water.x[ i ][ j ][ k ] + drodc * c.x[ i ][ j ][ k ] * c_0;						// common linear approach for salt water based on fresh water
 
-    double coeff_buoy = L_hyd / ( u_0 * u_0 );													// coefficient for the buoyancy term= 16000.
-	double coeff_salinity = 1.1574e-3 * L_hyd / u_0;												// 1.1574e-3 == mm/d to m/s, == 4.629
+    double coeff_buoy = L_hyd / ( u_0 * u_0 );													// coefficient for the buoyancy term
+	double coeff_salinity = 1.1574e-5 * L_hyd / u_0;											// 1.1574e-5 == mm/d to mmm/s, == .0463
 
 	if ( i == im - 2 )
 	{
