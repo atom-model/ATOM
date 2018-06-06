@@ -183,12 +183,17 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 					Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ];		// sensible heat in [W/m2] from energy transport equation
 					Q_bottom.y[ j ][ k ] = - ( Q_radiation.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ] );	// difference understood as heat into the ground
 
-					Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ i + 1 ][ j ][ k ], w.x[ i + 1 ][ j ][ k ] ) * sat_deficit;	// simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/( m² * s )
+					Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ i + 1 ][ j ][ k ], w.x[ i + 1 ][ j ][ k ] ) * sat_deficit;	// simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/( m² * d )
 					if ( Evaporation_Dalton.y[ j ][ k ] <= 0. ) 		Evaporation_Dalton.y[ j ][ k ] = 0.;
+
+					if ( Evaporation_Dalton.y[ j ][ k ] >= 9. )		Evaporation_Dalton.y[ j ][ k ] = 9.;				// vapour gradient causes values too high at shelf corners
 
 					Evaporation_Penman.y[ j ][ k ] = f_Penman * .0346 * ( ( Q_radiation.y[ j ][ k ] + Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );	// .0346 coefficient W/m2 corresponds to mm/d (Kraus)
 					if ( Evaporation_Penman.y[ j ][ k ] <= 0. ) 		Evaporation_Penman.y[ j ][ k ] = 0.;
 
+					if ( Evaporation_Penman.y[ j ][ k ] >= 9. )		Evaporation_Penman.y[ j ][ k ] = 9.;				// vapour gradient causes values too high at shelf corners
+
+					if ( h.x[ i ][ j ][ k ] == 1. )			Evaporation_Dalton.y[ j ][ k ] = Evaporation_Penman.y[ j ][ k ];
 				}
 
 
