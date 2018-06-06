@@ -86,6 +86,12 @@ void cAtmosphereModel::LoadConfig ( const char *filename )
 
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
+    m_current_time = m_time_list.insert(float(Ma)).first;
+
+    struct stat info;
+    if( stat( output_path.c_str(), &info ) != 0 ){
+        mkdir(output_path.c_str(), 0777);
+    }
 // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
 // maximum number of overall iterations ( n )
 // maximum number of inner velocity loop iterations ( velocity_iter_max )
@@ -242,10 +248,14 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Temperature.xyz";
         Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Precipitation.xyz";    
     
-        std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - time_step) + " " + 
+        if( stat( Name_SurfaceTemperature_File.c_str(), &info ) != 0 || 
+            stat( Name_SurfacePrecipitation_File.c_str(), &info ) != 0 )
+        {
+            std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - time_step) + " " + 
                 std::to_string(Ma) + " " + output_path + " " + BathymetrySuffix + " atm";
-        int ret = system(cmd_str.c_str());
-        std::cout << " reconstruction script returned: " << ret << std::endl; 
+            int ret = system(cmd_str.c_str());
+            std::cout << " reconstruction script returned: " << ret << std::endl;
+        } 
     }
 
 	string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
@@ -312,14 +322,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	int Ma_prev;
 	double t_cretaceous_prev;
 
-	if ( Ma == 0 )
-	{
-		Ma_prev = 0;
+	if( is_first_time_slice() ){
+		Ma_prev = int(round(*get_current_time()));
 		t_cretaceous_prev = 0.;
-	}
-	else
-	{
-		Ma_prev = Ma - time_step;
+	}else{
+		Ma_prev = int(round(*get_previous_time()));
 	}
 
 
@@ -583,7 +590,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 //	searching of maximum and minimum values of water vapour
 			string str_max_water_vapour = " max 3D water vapour ", str_min_water_vapour = " min 3D water vapour ", str_unit_water_vapour = "g/kg";
-			MinMax_Atm		minmaxWaterVapour ( im, jm, km );
+			MinMax_Atm		minmaxWaterVapour ( im, jm, km, u_0 );
 			minmaxWaterVapour.searchMinMax_3D ( str_max_water_vapour, str_min_water_vapour, str_unit_water_vapour, c, h );
 
 //	searching of maximum and minimum values of cloud water
@@ -787,12 +794,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
 	ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
 
-	Ma_prev = Ma;
 	t_cretaceous_prev = t_cretaceous;
 
 	if ( NASATemperature == 1 && !use_earthbyte_reconstruction ) 
     {
-        circulation.BC_NASAbasedSurfTempWrite ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
+        circulation.BC_NASAbasedSurfTempWrite ( Ma, t_cretaceous_prev, t, c, cloud, ice );
     }
 
 // reset of results to the initial value
