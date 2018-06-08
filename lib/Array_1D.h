@@ -24,6 +24,8 @@ public:
 
     Array_1D (int n, double val);
     ~Array_1D ( );
+    
+    Array_1D() : z(NULL){}
 
     void initArray_1D ( int, double );
     void printArray_1D ( int );

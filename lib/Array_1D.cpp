@@ -18,19 +18,8 @@ using namespace std;
 #define MAXSIZE 361
 
 // create an Array_1D with specified size and initial value
-Array_1D::Array_1D(int n, double val) {
-	mm = n;
-	z = new double[MAXSIZE];
-	
-	// arbitrary initialisation of the z-field
-	for ( int l = 0; l < MAXSIZE; l++ )
-	{
-		z[ l ] = 111.;																		// arbitrary initial values
-	}
-
-	for (int l = 0; l < n; l++) {
-		z[l] = val;
-	}
+Array_1D::Array_1D(int n, double val) : z(NULL) {
+    initArray_1D(n, val);
 }
 
 
@@ -40,16 +29,24 @@ Array_1D::~Array_1D ( )
 }
 
 
-
-// TODO can you remove this altogether?
 void Array_1D::initArray_1D( int mm, double cc )
 {
-// initialisation of the z-field
-	assert(mm == this->mm); // FIXME: just until we remove mm throughout
-	for ( int l = 0; l < mm; l++ )
-	{
-		z[ l ] = cc;
-	}
+    if(!z){//when z is null
+        assert(mm <= MAXSIZE);
+
+        this->mm = mm;
+        z = new double[mm];
+	    for ( int i = 0; i < mm; i++ )
+	    {
+		    z[ i ] = cc;
+	    }
+    }else{
+        assert(mm == this->mm);
+        for ( int i = 0; i < mm; i++ )
+        {
+            z[ i ] = cc;
+        }
+    }
 }
 
 

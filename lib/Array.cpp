@@ -20,37 +20,10 @@ using namespace std;
 #define MAXJ 181
 #define MAXK 361
 
-Array::Array(int idim, int jdim, int kdim, double val) {
-    im = idim;
-    jm = jdim;
-    km = kdim;
-
-    assert(im <= MAXI);
-
-    x = new double**[MAXI];
-
-    for ( int i = 0; i < im; i++ )
-    {
-        x[ i ] = new double*[MAXJ];
-
-        for ( int j = 0; j < jm; j++ )
-        {
-            x[ i ][ j ] = new double[MAXK];
-        }
-    }
-
-
-	// initialisation of the x-field
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int k = 0; k < km; k++ )
-            {
-                x[ i ][ j ][ k ] = val;
-            }
-        }
-    }
+Array::Array(int idim, int jdim, int kdim, double val):
+    x(NULL) 
+{
+    initArray(idim, jdim, kdim, val);
 }
 
 Array::~Array ( )
@@ -71,24 +44,51 @@ Array::~Array ( )
     delete [  ] x;
 }
 
+
 void Array::initArray ( int im, int jm, int km, double aa )
 {
-	assert(im == this->im);
-	assert(jm == this->jm);
-	assert(km == this->km);
+    if(x){
+        assert(im == this->im);
+        assert(jm == this->jm);
+        assert(km == this->km);
 
-	// initialisation of the x-field
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
+        for ( int i = 0; i < im; i++ )
         {
-            for ( int k = 0; k < km; k++ )
+            for ( int j = 0; j < jm; j++ )
             {
-                x[ i ][ j ][ k ] = aa;
+                for ( int k = 0; k < km; k++ )
+                {
+                    x[ i ][ j ][ k ] = aa;
+                }
             }
         }
+    }else{
+        assert(im <= MAXI);
+        assert(jm <= MAXJ);
+        assert(km <= MAXK);
+
+        this->im = im;
+        this->jm = jm;
+        this->km = km;
+
+        x = new double**[im];
+
+        for ( int i = 0; i < im; i++ )
+        {
+            x[ i ] = new double*[jm];
+
+            for ( int j = 0; j < jm; j++ )
+            {
+                x[ i ][ j ] = new double[km];
+                for ( int k = 0; k < km; k++ )
+                {
+                    x[ i ][ j ][ k ] = aa;
+                }
+            }
+        }    
     }
 }
+
 
 void Array::printArray ( int im, int jm, int km )
 {

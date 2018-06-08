@@ -26,6 +26,8 @@ public:
     Array_2D(int jdim, int kdim, double val);
     ~Array_2D ( );
 
+    Array_2D(): jm(0), km(0), y(NULL){}
+
     void printArray_2D ( int, int );
     void initArray_2D ( int, int, double );
 };

@@ -13,9 +13,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "Array.h"
-#include "Array_2D.h"
-#include "Array_1D.h"
 #include "BC_Atm.h"
 #include "BC_Bath_Atm.h"
 #include "BC_Thermo.h"
@@ -29,8 +26,6 @@
 #include "MinMax_Atm.h"
 
 #include "Config.h"
-#include "tinyxml2.h"
-#include "PythonStream.h"
 
 using namespace std;
 using namespace tinyxml2;
@@ -40,7 +35,7 @@ cAtmosphereModel::cAtmosphereModel() {
     // cout's streambuf with a class that redirects stdout out to Python.
 
     PythonStream::OverrideCout();
-
+    
     // If Ctrl-C is pressed, quit
     signal(SIGINT, exit);
 
@@ -86,18 +81,18 @@ void cAtmosphereModel::LoadConfig ( const char *filename )
 
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
+    reset_arrays();    
+
     m_current_time = m_time_list.insert(float(Ma)).first;
 
     struct stat info;
     if( stat( output_path.c_str(), &info ) != 0 ){
         mkdir(output_path.c_str(), 0777);
     }
-// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
-// maximum number of overall iterations ( n )
-// maximum number of inner velocity loop iterations ( velocity_iter_max )
-// maximum number of outer pressure loop iterations ( pressure_iter_max )
-
-	const int im = 41, jm = 181, km = 361, nm = 200;
+    // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
+    // maximum number of overall iterations ( n )
+    // maximum number of inner velocity loop iterations ( velocity_iter_max )
+    // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
 	int j_res = 0, k_res = 0;
 
@@ -117,105 +112,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	const double coeff_mmWS = r_air / r_water_vapour;			// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 
 	int *im_tropopause = new int [ jm ];									// location of the tropopause
-
-//  class Array for 1-D, 2-D and 3-D field declarations
-
-// 1D arrays
-	Array_1D rad(im, 1.); // radial coordinate direction
-	Array_1D the(jm, 2.); // lateral coordinate direction
-	Array_1D phi(km, 3.); // longitudinal coordinate direction
-
-// 2D arrays
-	Array_2D Topography(jm, km, 0.); // topography
-	Array_2D value_top(jm, km, 0.); // auxiliar topography
-
-	Array_2D Vegetation(jm, km, 0.); // vegetation via precipitation
-
-	Array_2D Precipitation(jm, km, 0.); // areas of higher precipitation
-	Array_2D precipitable_water(jm, km, 0.); // areas of precipitable water in the air
-	Array_2D precipitation_NASA(jm, km, 0.); // surface precipitation from NASA
-
-	Array_2D radiation_surface(jm, km, 0.); // direct sun radiation, short wave
-
-	Array_2D temperature_NASA(jm, km, 0.); // surface temperature from NASA
-	Array_2D temp_NASA(jm, km, 0.); // surface temperature from NASA for print function
-
-	Array_2D albedo(jm, km, 0.); // albedo = reflectivity
-	Array_2D epsilon(jm, km, 0.); // epsilon = absorptivity
-
-	Array_2D Q_radiation(jm, km, 0.); // heat from the radiation balance in [W/m2]
-	Array_2D Q_Evaporation(jm, km, 0.); // evaporation heat of water by Kuttler
-	Array_2D Q_latent(jm, km, 0.); // latent heat from bottom values by the energy transport equation
-	Array_2D Q_sensible(jm, km, 0.); // sensible heat from bottom values by the energy transport equation
-	Array_2D Q_bottom(jm, km, 0.); // difference by Q_radiation - Q_latent - Q_sensible
-
-	Array_2D Evaporation_Dalton(jm, km, 0.); // evaporation by Dalton in [mm/d]
-	Array_2D Evaporation_Penman(jm, km, 0.); // evaporation by Penman in [mm/d]
-
-	Array_2D co2_total(jm, km, 0.); // areas of higher co2 concentration
-
-// 3D arrays
-	Array h(im, jm, km, 0.); // bathymetry, depth from sea level
-
-	Array t(im, jm, km, ta); // temperature
-	Array u(im, jm, km, ua); // u-component velocity component in r-direction
-	Array v(im, jm, km, va); // v-component velocity component in theta-direction
-	Array w(im, jm, km, wa); // w-component velocity component in phi-direction
-	Array c(im, jm, km, ca); // water vapour
-	Array cloud(im, jm, km, 0.); // cloud water
-	Array ice(im, jm, km, 0.); // cloud ice
-	Array co2(im, jm, km, coa); // CO2
-
-	Array tn(im, jm, km, ta); // temperature new
-	Array un(im, jm, km, ua); // u-velocity component in r-direction new
-	Array vn(im, jm, km, va); // v-velocity component in theta-direction new
-	Array wn(im, jm, km, wa); // w-velocity component in phi-direction new
-	Array cn(im, jm, km, ca); // water vapour new
-	Array cloudn(im, jm, km, 0.); // cloud water new
-	Array icen(im, jm, km, 0.); // cloud ice new
-	Array co2n(im, jm, km, coa); // CO2 new
-
-	Array p_dyn(im, jm, km, pa); // dynamic pressure
-	Array p_dynn(im, jm, km, pa); // dynamic pressure
-	Array p_stat(im, jm, km, pa); // static pressure
-
-	Array rhs_t(im, jm, km, 0.); // auxilliar field RHS temperature
-	Array rhs_u(im, jm, km, 0.); // auxilliar field RHS u-velocity component
-	Array rhs_v(im, jm, km, 0.); // auxilliar field RHS v-velocity component
-	Array rhs_w(im, jm, km, 0.); // auxilliar field RHS w-velocity component
-	Array rhs_c(im, jm, km, 0.); // auxilliar field RHS water vapour
-	Array rhs_cloud(im, jm, km, 0.); // auxilliar field RHS cloud water
-	Array rhs_ice(im, jm, km, 0.); // auxilliar field RHS cloud ice
-	Array rhs_co2(im, jm, km, 0.); // auxilliar field RHS CO2
-
-	Array aux_u(im, jm, km, 0.); // auxilliar field u-velocity component
-	Array aux_v(im, jm, km, 0.); // auxilliar field v-velocity component
-	Array aux_w(im, jm, km, 0.); // auxilliar field w-velocity component
-
-	Array Q_Latent(im, jm, km, 0.); // latent heat
-	Array Q_Sensible(im, jm, km, 0.); // sensible heat
-	Array BuoyancyForce(im, jm, km, 0.); // buoyancy force, Boussinesque approximation
-	Array epsilon_3D(im, jm, km, 0.); // emissivity/ absorptivity
-	Array radiation_3D(im, jm, km, 0.); // radiation
-
-	Array P_rain(im, jm, km, 0.); // rain precipitation mass rate
-	Array P_snow(im, jm, km, 0.); // snow precipitation mass rate
-	Array S_v(im, jm, km, 0.); // water vapour mass rate due to category two ice scheme
-	Array S_c(im, jm, km, 0.); // cloud water mass rate due to category two ice scheme
-	Array S_i(im, jm, km, 0.); // cloud ice mass rate due to category two ice scheme
-	Array S_r(im, jm, km, 0.); // rain mass rate due to category two ice scheme
-	Array S_s(im, jm, km, 0.); // snow mass rate due to category two ice scheme
-	Array S_c_c(im, jm, km, 0.); // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
-
-//	cout << endl << "§§§§§§§§§§§§§§§§§§ after BC_Surface_Temperature_NASA §§§§§§§§§§§§§§§§§§§§§§§§" << endl;
-//	cout << endl << " ***** printout of 3D-field temperature ***** " << endl << endl;
-//	t.printArray( im, jm, km );
-
-//	cout << endl << " ***** printout of 2D-field vegetation ***** " << endl << endl;
-//	Vegetation.printArray_2D( jm, km );
-
-//	cout << endl << " ***** printout of 1D-field radius ***** " << endl << endl;
-//	rad.printArray_1D( im );
 
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
@@ -801,94 +697,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         circulation.BC_NASAbasedSurfTempWrite ( Ma, t_cretaceous_prev, t, c, cloud, ice );
     }
 
-// reset of results to the initial value
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			Vegetation.y[ j ][ k ] = 0.;
-
-			precipitable_water.y[ j ][ k ] = 0.;
-			Precipitation.y[ j ][ k ] = 0.;
-			precipitation_NASA.y[ j ][ k ] = 0.;
-
-			temperature_NASA.y[ j ][ k ] = 0.;
-
-			radiation_surface.y[ j ][ k ] = 0.;
-
-			albedo.y[ j ][ k ] = 0.;
-			epsilon.y[ j ][ k ] = 0.;
-
-			Q_radiation.y[ j ][ k ] = 0.;
-			Q_Evaporation.y[ j ][ k ] = 0.;
-			Q_latent.y[ j ][ k ] = 0.;
-			Q_sensible.y[ j ][ k ] = 0.;
-			Q_bottom.y[ j ][ k ] = 0.;
-
-			Evaporation_Dalton.y[ j ][ k ] = 0.;
-			Evaporation_Penman.y[ j ][ k ] = 0.;
-
-			co2_total.y[ j ][ k ] = 0.;
-
-
-			for ( int i = 0; i < im; i++ )
-			{
-				h.x[ i ][ j ][ k ] = 0.;
-				t.x[ i ][ j ][ k ] = 0.;
-				u.x[ i ][ j ][ k ] = 0.;
-				v.x[ i ][ j ][ k ] = 0.;
-				w.x[ i ][ j ][ k ] = 0.;
-				c.x[ i ][ j ][ k ] = 0.;
-				cloud.x[ i ][ j ][ k ] = 0.;
-				ice.x[ i ][ j ][ k ] = 0.;
-				co2.x[ i ][ j ][ k ] = 0.;
-
-				tn.x[ i ][ j ][ k ] = 0.;
-				un.x[ i ][ j ][ k ] = 0.;
-				vn.x[ i ][ j ][ k ] = 0.;
-				wn.x[ i ][ j ][ k ] = 0.;
-				cn.x[ i ][ j ][ k ] = 0.;
-				cloudn.x[ i ][ j ][ k ] = 0.;
-				icen.x[ i ][ j ][ k ] = 0.;
-				co2n.x[ i ][ j ][ k ] = 0.;
-
-				p_dyn.x[ i ][ j ][ k ] = 0.;
-				p_dynn.x[ i ][ j ][ k ] = 0.;
-				p_stat.x[ i ][ j ][ k ] = 0.;
-
-				P_rain.x[ i ][ j ][ k ] = 0.;
-				P_snow.x[ i ][ j ][ k ] = 0.;
-				S_c_c.x[ i ][ j ][ k ] = 0.;
-				S_v.x[ i ][ j ][ k ] = 0.;
-				S_c.x[ i ][ j ][ k ] = 0.;
-				S_i.x[ i ][ j ][ k ] = 0.;
-				S_r.x[ i ][ j ][ k ] = 0.;
-				S_s.x[ i ][ j ][ k ] = 0.;
-
-				rhs_t.x[ i ][ j ][ k ] = 0.;
-				rhs_u.x[ i ][ j ][ k ] = 0.;
-				rhs_v.x[ i ][ j ][ k ] = 0.;
-				rhs_w.x[ i ][ j ][ k ] = 0.;
-				rhs_c.x[ i ][ j ][ k ] = 0.;
-				rhs_cloud.x[ i ][ j ][ k ] = 0.;
-				rhs_ice.x[ i ][ j ][ k ] = 0.;
-				rhs_co2.x[ i ][ j ][ k ] = 0.;
-
-				aux_u.x[ i ][ j ][ k ] = 0.;
-				aux_v.x[ i ][ j ][ k ] = 0.;
-				aux_w.x[ i ][ j ][ k ] = 0.;
-
-				Q_Latent.x[ i ][ j ][ k ] = 0.;
-				Q_Sensible.x[ i ][ j ][ k ] = 0.;
-				BuoyancyForce.x[ i ][ j ][ k ] = 0.;
-				epsilon_3D.x[ i ][ j ][ k ] = 0.;
-				radiation_3D.x[ i ][ j ][ k ] = 0.;
-			}
-		}
-	}
-
-
-//  final remarks
+    //  final remarks
 	cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
 
 	if ( velocity_iter == velocity_iter_max )   cout << "***** number of time steps      n = " << n << ", end of program reached because of limit of maximum time steps ***** \n\n" << endl;
@@ -938,3 +747,93 @@ void cAtmosphereModel::Run()
 }
 
 
+void cAtmosphereModel::reset_arrays()
+{
+    // reset of arrays to the initial value
+    // 1D arrays
+    rad.initArray_1D(im, 1.); // radial coordinate direction
+    the.initArray_1D(jm, 2.); // lateral coordinate direction
+    phi.initArray_1D(km, 3.); // longitudinal coordinate direction
+
+    // 2D arrays
+    Topography.initArray_2D(jm, km, 0.); // topography
+    value_top.initArray_2D(jm, km, 0.); // auxiliar topography
+
+    Vegetation.initArray_2D(jm, km, 0.); // vegetation via precipitation
+
+    Precipitation.initArray_2D(jm, km, 0.); // areas of higher precipitation
+    precipitable_water.initArray_2D(jm, km, 0.); // areas of precipitable water in the air
+    precipitation_NASA.initArray_2D(jm, km, 0.); // surface precipitation from NASA
+
+    radiation_surface.initArray_2D(jm, km, 0.); // direct sun radiation, short wave
+
+    temperature_NASA.initArray_2D(jm, km, 0.); // surface temperature from NASA
+    temp_NASA.initArray_2D(jm, km, 0.); // surface temperature from NASA for print function
+
+    albedo.initArray_2D(jm, km, 0.); // albedo = reflectivity
+    epsilon.initArray_2D(jm, km, 0.); // epsilon = absorptivity
+
+    Q_radiation.initArray_2D(jm, km, 0.); // heat from the radiation balance in [W/m2]
+    Q_Evaporation.initArray_2D(jm, km, 0.); // evaporation heat of water by Kuttler
+    Q_latent.initArray_2D(jm, km, 0.); // latent heat from bottom values by the energy transport equation
+    Q_sensible.initArray_2D(jm, km, 0.); // sensible heat from bottom values by the energy transport equation
+    Q_bottom.initArray_2D(jm, km, 0.); // difference by Q_Radiation - Q_latent - Q_sensible
+
+    Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Dalton in [mm/d]
+    Evaporation_Penman.initArray_2D(jm, km, 0.); // evaporation by Penman in [mm/d]
+
+    co2_total.initArray_2D(jm, km, 0.); // areas of higher co2 concentration
+
+    // 3D arrays
+    h.initArray(im, jm, km, 0.); // bathymetry, depth from sea level
+
+    t.initArray(im, jm, km, ta); // temperature
+    u.initArray(im, jm, km, ua); // u-component velocity component in r-direction
+    v.initArray(im, jm, km, va); // v-component velocity component in theta-direction
+    w.initArray(im, jm, km, wa); // w-component velocity component in phi-direction
+    c.initArray(im, jm, km, ca); // water vapour
+    cloud.initArray(im, jm, km, 0.); // cloud water
+    ice.initArray(im, jm, km, 0.); // cloud ice
+    co2.initArray(im, jm, km, coa); // CO2
+
+    tn.initArray(im, jm, km, ta); // temperature new
+    un.initArray(im, jm, km, ua); // u-velocity component in r-direction new
+    vn.initArray(im, jm, km, va); // v-velocity component in theta-direction new
+    wn.initArray(im, jm, km, wa); // w-velocity component in phi-direction new
+    cn.initArray(im, jm, km, ca); // water vapour new
+    cloudn.initArray(im, jm, km, 0.); // cloud water new
+    icen.initArray(im, jm, km, 0.); // cloud ice new
+    co2n.initArray(im, jm, km, coa); // CO2 new
+
+    p_dyn.initArray(im, jm, km, pa); // dynamic pressure
+    p_dynn.initArray(im, jm, km, pa); // dynamic pressure
+    p_stat.initArray(im, jm, km, pa); // static pressure
+
+    rhs_t.initArray(im, jm, km, 0.); // auxilliar field RHS temperature
+    rhs_u.initArray(im, jm, km, 0.); // auxilliar field RHS u-velocity component
+    rhs_v.initArray(im, jm, km, 0.); // auxilliar field RHS v-velocity component
+    rhs_w.initArray(im, jm, km, 0.); // auxilliar field RHS w-velocity component
+    rhs_c.initArray(im, jm, km, 0.); // auxilliar field RHS water vapour
+    rhs_cloud.initArray(im, jm, km, 0.); // auxilliar field RHS cloud water
+    rhs_ice.initArray(im, jm, km, 0.); // auxilliar field RHS cloud ice
+    rhs_co2.initArray(im, jm, km, 0.); // auxilliar field RHS CO2
+
+    aux_u.initArray(im, jm, km, 0.); // auxilliar field u-velocity component
+    aux_v.initArray(im, jm, km, 0.); // auxilliar field v-velocity component
+    aux_w.initArray(im, jm, km, 0.); // auxilliar field w-velocity component
+
+    Q_Latent.initArray(im, jm, km, 0.); // latent heat
+    Q_Sensible.initArray(im, jm, km, 0.); // sensible heat
+    BuoyancyForce.initArray(im, jm, km, 0.); // buoyancy force, Boussinesque approximation
+    epsilon_3D.initArray(im, jm, km, 0.); // emissivity/ absorptivity
+    radiation_3D.initArray(im, jm, km, 0.); // radiation
+
+    P_rain.initArray(im, jm, km, 0.); // rain precipitation mass rate
+    P_snow.initArray(im, jm, km, 0.); // snow precipitation mass rate
+    S_v.initArray(im, jm, km, 0.); // water vapour mass rate due to category two ice scheme
+    S_c.initArray(im, jm, km, 0.); // cloud water mass rate due to category two ice scheme
+    S_i.initArray(im, jm, km, 0.); // cloud ice mass rate due to category two ice scheme
+    S_r.initArray(im, jm, km, 0.); // rain mass rate due to category two ice scheme
+    S_s.initArray(im, jm, km, 0.); // snow mass rate due to category two ice scheme
+    S_c_c.initArray(im, jm, km, 0.); // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
+}

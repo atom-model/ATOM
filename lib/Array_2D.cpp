@@ -19,33 +19,8 @@ using namespace std;
 #define MAXK 361
 
 
-Array_2D::Array_2D(int jdim, int kdim, double val) {
-	jm = jdim;
-	km = kdim;
-
-	y = new double*[MAXJ];
-
-	for ( int j = 0; j < MAXJ; j++ )
-	{
-		y[ j ] = new double[MAXK];
-	}
-
-	// arbitrary initialisation of the z-field
-	for ( int j = 0; j < MAXJ; j++ )
-	{
-		for ( int k = 0; k < MAXK; k++ )
-		{
-			y[ j ][ k ] = 222.;
-		}
-	}
-
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			y[ j ][ k ] = val;
-		}
-	}
+Array_2D::Array_2D(int jdim, int kdim, double val) : y(NULL) {
+    initArray_2D(jdim, kdim, val);
 }
 
 Array_2D::~Array_2D ( )
@@ -59,17 +34,34 @@ Array_2D::~Array_2D ( )
 
 void Array_2D::initArray_2D ( int jm, int km, double bb )
 {
-	assert(jm <= MAXJ);
-	assert(km <= MAXK);
+    if(!y){//when y is null
+	    assert(jm <= MAXJ);
+	    assert(km <= MAXK);
 
-	// initialisation of the y-field
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			y[ j ][ k ] = bb;
-		}
-	}
+        this->jm = jm;
+        this->km = km;
+
+        y = new double*[jm];
+
+        for ( int j = 0; j < jm; j++ )
+        {
+            y[ j ] = new double[km];
+            for ( int k = 0; k < km; k++ )
+            {
+                y[ j ][ k ] = bb;
+            }
+        }
+    }else{
+        assert(jm == this->jm);
+        assert(km == this->km);
+        for ( int j = 0; j < jm; j++ )
+        {
+            for ( int k = 0; k < km; k++ )
+            {
+                y[ j ][ k ] = bb;
+            }
+        }
+    }  
 }
 
 void Array_2D::printArray_2D ( int jm, int km )

@@ -10,7 +10,6 @@ using namespace tinyxml2;
 
 class cHydrosphereModel {
 public:
-    const char *filename;
 
     cHydrosphereModel();
     ~cHydrosphereModel();
