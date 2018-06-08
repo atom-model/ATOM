@@ -30,9 +30,6 @@ class MinMax_Atm
 
 		double maxValue, minValue, u_0, coeff_mmWS;
 
-		Array_2D			value ( int, int, double );
-		Array				value_D ( int, int, int, double );
-
 		string name_maxValue, name_minValue, name_unitValue, heading_1, heading_2;
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat_max, deg_lon_max, deg_lat_min, deg_lon_min;
 
@@ -42,9 +39,9 @@ class MinMax_Atm
 		MinMax_Atm ( int, int, int, double );
 		~MinMax_Atm ();
 
-		void searchMinMax_2D ( string &, string &, string &, Array_2D &, Array & );
+		void searchMinMax_2D ( string , string , string , Array_2D &, Array & );
 
-		void searchMinMax_3D ( string &, string &, string &, Array &, Array & );
+		void searchMinMax_3D ( string , string , string , Array &, Array & );
 
 		double out_maxValue (  ) const;
 

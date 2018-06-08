@@ -61,12 +61,16 @@ public:
 private:
     void SetDefaultConfig();
     void reset_arrays();
+    void print_min_max_values();
 
     //time slices list
     std::set<float> m_time_list;
     std::set<float>::const_iterator m_current_time;
 
     static const int im=41, jm=181, km=361, nm=200;
+
+    double coeff_mmWS;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
+    double max_Precipitation;
 
     //  class Array for 1-D, 2-D and 3-D field declarations
     // 1D arrays

@@ -48,7 +48,7 @@ MinMax_Atm::MinMax_Atm ( int im, int jm, int km, double u_0 )
 MinMax_Atm::~MinMax_Atm () {}
 
 
-void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array &val_D, Array &h )
+void MinMax_Atm::searchMinMax_3D ( string name_maxValue, string name_minValue, string name_unitValue, Array &val_D, Array &h )
 {
 // search for minimum and maximum values of the 3-dimensional data sets
 	level = "m";
@@ -248,7 +248,7 @@ void MinMax_Atm::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 
 
 
-void MinMax_Atm::searchMinMax_2D ( string &name_maxValue, string &name_minValue, string &name_unitValue, Array_2D &val, Array &h )
+void MinMax_Atm::searchMinMax_2D ( string name_maxValue, string name_minValue, string name_unitValue, Array_2D &val, Array &h )
 {
 // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
 

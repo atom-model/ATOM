@@ -42,6 +42,9 @@ cAtmosphereModel::cAtmosphereModel() {
     // set default configuration
     SetDefaultConfig();
 
+    coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
+
+
 }
 
 cAtmosphereModel::~cAtmosphereModel() { }
@@ -109,7 +112,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 	const double phi0 = 0.;														// zero meridian in Greenwich
 	const double r0 = 1.;															// earth's radius is r_earth = 6731 km, here it is assumed to be infinity, circumference of the earth 40074 km
 
-	const double coeff_mmWS = r_air / r_water_vapour;			// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 
 	int *im_tropopause = new int [ jm ];									// location of the tropopause
 
@@ -435,181 +437,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //  class element for the initial conditions the latent heat
 			circulation.Latent_Heat ( rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, ice, Q_Latent, Q_Sensible, radiation_3D, Q_radiation, Q_latent, Q_sensible, Q_bottom );
 
-//	searching of maximum and minimum values of temperature
-			string str_max_temperature = " max 3D temperature ", str_min_temperature = " min 3D temperature ", str_unit_temperature = "C";
-			MinMax_Atm		minmaxTemperature ( im, jm, km, u_0 );
-			minmaxTemperature.searchMinMax_3D ( str_max_temperature, str_min_temperature, str_unit_temperature, t, h );
-
-//	searching of maximum and minimum values of u-component
-			string str_max_u = " max 3D u-component ", str_min_u = " min 3D u-component ", str_unit_u = "m/s";
-			MinMax_Atm		minmax_u ( im, jm, km, u_0 );
-			minmax_u.searchMinMax_3D ( str_max_u, str_min_u, str_unit_u, u, h );
-
-//	searching of maximum and minimum values of v-component
-			string str_max_v = " max 3D v-component ", str_min_v = " min 3D v-component ", str_unit_v = "m/s";
-			MinMax_Atm		minmax_v ( im, jm, km, u_0 );
-			minmax_v.searchMinMax_3D ( str_max_v, str_min_v, str_unit_v, v, h );
-
-//	searching of maximum and minimum values of w-component
-			string str_max_w = " max 3D w-component ", str_min_w = " min 3D w-component ", str_unit_w = "m/s";
-			MinMax_Atm		minmax_w ( im, jm, km, u_0 );
-			minmax_w.searchMinMax_3D ( str_max_w, str_min_w, str_unit_w, w, h );
-
-//	searching of maximum and minimum values of dynamic pressure
-			string str_max_pressure = " max 3D pressure dynamic ", str_min_pressure = " min 3D pressure dynamic ", str_unit_pressure = "hPa";
-			MinMax_Atm	minmaxPressure ( im, jm, km, u_0 );
-			minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, p_dyn, h );
-
-//	searching of maximum and minimum values of static pressure
-			string str_max_pressure_stat = " max 3D pressure static ", str_min_pressure_stat = " min 3D pressure static ", str_unit_pressure_stat = "hPa";
-			MinMax_Atm		minmaxPressure_stat ( im, jm, km, u_0 );
-			minmaxPressure_stat.searchMinMax_3D ( str_max_pressure_stat, str_min_pressure_stat, str_unit_pressure_stat, p_stat, h );
-
-			cout << endl << " energies in the three dimensional space: " << endl << endl;
-
-//	searching of maximum and minimum values of radiation_3D
-			string str_max_radiation_3D = " max 3D radiation ", str_min_radiation_3D = " min 3D radiation ", str_unit_radiation_3D = "W/m2";
-			MinMax_Atm		minmaxRadiation ( im, jm, km, u_0 );
-			minmaxRadiation.searchMinMax_3D ( str_max_radiation_3D, str_min_radiation_3D, str_unit_radiation_3D, radiation_3D, h );
-
-//	searching of maximum and minimum values of sensible heat
-			string str_max_Q_Sensible = " max 3D sensible heat ", str_min_Q_Sensible = " min 3D sensible heat ", str_unit_Q_Sensible = "W/m2";
-			MinMax_Atm	minmaxQ_Sensible ( im, jm, km, u_0 );
-			minmaxQ_Sensible.searchMinMax_3D ( str_max_Q_Sensible, str_min_Q_Sensible, str_unit_Q_Sensible, Q_Sensible, h );
-
-//	searching of maximum and minimum values of latency
-			string str_max_latency = " max 3D latent heat ", str_min_latency = " min 3D latent heat ", str_unit_latency = "W/m2";
-			MinMax_Atm		minmaxQ_Latent ( im, jm, km, u_0 );
-			minmaxQ_Latent.searchMinMax_3D ( str_max_latency, str_min_latency, str_unit_latency, Q_Latent, h );
-
-			cout << endl << " greenhouse gases: " << endl << endl;
-
-//	searching of maximum and minimum values of water vapour
-			string str_max_water_vapour = " max 3D water vapour ", str_min_water_vapour = " min 3D water vapour ", str_unit_water_vapour = "g/kg";
-			MinMax_Atm		minmaxWaterVapour ( im, jm, km, u_0 );
-			minmaxWaterVapour.searchMinMax_3D ( str_max_water_vapour, str_min_water_vapour, str_unit_water_vapour, c, h );
-
-//	searching of maximum and minimum values of cloud water
-			string str_max_cloud_water = " max 3D cloud water ", str_min_cloud_water = " min 3D cloud water ", str_unit_cloud_water = "g/kg";
-			MinMax_Atm		minmaxCloudWater ( im, jm, km, u_0 );
-			minmaxCloudWater.searchMinMax_3D ( str_max_cloud_water, str_min_cloud_water, str_unit_cloud_water, cloud, h );
-
-//	searching of maximum and minimum values of cloud ice
-			string str_max_cloud_ice = " max 3D cloud ice ", str_min_cloud_ice = " min 3D cloud ice ", str_unit_cloud_ice = "g/kg";
-			MinMax_Atm		minmaxCloudIce ( im, jm, km, u_0 );
-			minmaxCloudIce.searchMinMax_3D ( str_max_cloud_ice, str_min_cloud_ice, str_unit_cloud_ice, ice, h );
-
-//	searching of maximum and minimum values of rain precipitation
-			string str_max_P_rain = " max 3D rain ", str_min_P_rain = " min 3D rain ", str_unit_P_rain = "g/kg";
-			MinMax_Atm		minmaxPRain ( im, jm, km, u_0 );
-			minmaxPRain.searchMinMax_3D ( str_max_P_rain, str_min_P_rain, str_unit_P_rain, P_rain, h );
-
-//	searching of maximum and minimum values of snow precipitation
-			string str_max_P_snow = " max 3D snow ", str_min_P_snow = " min 3D snow ", str_unit_P_snow = "g/kg";
-			MinMax_Atm		minmaxPSnow ( im, jm, km, u_0 );
-			minmaxPSnow.searchMinMax_3D ( str_max_P_snow, str_min_P_snow, str_unit_P_snow, P_snow, h );
-
-//	searching of maximum and minimum values of co2
-			string str_max_co2 = " max 3D co2 ", str_min_co2 = " min 3D co2 ", str_unit_co2 = "ppm";
-			MinMax_Atm		minmaxCO2 ( im, jm, km, u_0 );
-			minmaxCO2.searchMinMax_3D ( str_max_co2, str_min_co2, str_unit_co2, co2, h );
-
-//	searching of maximum and minimum values of epsilon
-			string str_max_epsilon = " max 3D epsilon ", str_min_epsilon = " min 3D epsilon ", str_unit_epsilon = "%";
-			MinMax_Atm		minmaxEpsilon_3D ( im, jm, km, u_0 );
-			minmaxEpsilon_3D.searchMinMax_3D ( str_max_epsilon, str_min_epsilon, str_unit_epsilon, epsilon_3D, h );
-
-//	searching of maximum and minimum values of buoyancy force
-			string str_max_buoyancy_force = " max 3D buoyancy force ", str_min_buoyancy_force = " min 3D buoyancy force ", str_unit_buoyancy_force = "N";
-			MinMax_Atm		minmaxBuoyancyForce ( im, jm, km, u_0 );
-			minmaxBuoyancyForce.searchMinMax_3D ( str_max_buoyancy_force, str_min_buoyancy_force, str_unit_buoyancy_force, BuoyancyForce, h );
-
-
-
-// 2D-fields
-
-//	searching of maximum and minimum values of co2 total
-			cout << endl << " printout of maximum and minimum values of properties at their locations: latitude, longitude" << endl << " results based on two dimensional considerations of the problem" << endl;
-
-			cout << endl << " co2 distribution row-wise: " << endl << endl;
-
-			string str_max_co2_total = " max co2_total ", str_min_co2_total = " min co2_total ", str_unit_co2_total = " / ";
-			MinMax_Atm	minmaxCO2_total ( jm, km, coeff_mmWS );
-			minmaxCO2_total.searchMinMax_2D ( str_max_co2_total, str_min_co2_total, str_unit_co2_total, co2_total, h );
-//			max_CO2_total = minmaxCO2_total.out_maxValue (  );
-
-			cout << endl << " precipitation: " << endl << endl;
-
-//	searching of maximum and minimum values of precipitation
-			string str_max_precipitation = " max precipitation ", str_min_precipitation = " min precipitation ", str_unit_precipitation = "mm";
-			MinMax_Atm		minmaxPrecipitation ( jm, km, coeff_mmWS );
-			minmaxPrecipitation.searchMinMax_2D ( str_max_precipitation, str_min_precipitation, str_unit_precipitation, Precipitation, h );
-			double max_Precipitation = minmaxPrecipitation.out_maxValue (  );
-
-//	searching of maximum and minimum values of precipitable water
-			string str_max_precipitable_water = " max precipitable water ", str_min_precipitable_water = " min precipitable water ", str_unit_precipitable_water = "mm";
-			MinMax_Atm		minmaxPrecipitable_water ( jm, km, coeff_mmWS );
-			minmaxPrecipitable_water.searchMinMax_2D ( str_max_precipitable_water, str_min_precipitable_water, str_unit_precipitable_water, precipitable_water, h );
-
-			cout << endl << " energies at see level without convection influence: " << endl << endl;
-
-//	searching of maximum and minimum values of radiation
-			string str_max_Q_radiation = " max 2D Q radiation ", str_min_Q_radiation = " min 2D Q radiation ", str_unit_Q_radiation = "W/m2";
-			MinMax_Atm		minmaxQ_radiation ( jm, km, coeff_mmWS );
-			minmaxQ_radiation.searchMinMax_2D ( str_max_Q_radiation, str_min_Q_radiation, str_unit_Q_radiation, Q_radiation, h );
-
-//	searching of maximum and minimum values of latent energy
-			string str_max_Q_latent = " max 2D Q latent ", str_min_Q_latent = " min 2D Q latent ", str_unit_Q_latent = "W/m2";
-			MinMax_Atm		minmaxQ_latent ( jm, km, coeff_mmWS );
-			minmaxQ_latent.searchMinMax_2D ( str_max_Q_latent, str_min_Q_latent, str_unit_Q_latent, Q_latent, h );
-
-//	searching of maximum and minimum values of sensible energy
-			string str_max_Q_sensible = " max 2D Q sensible ", str_min_Q_sensible = " min 2D Q sensible ", str_unit_Q_sensible = "W/m2";
-			MinMax_Atm	minmaxQ_sensible ( jm, km, coeff_mmWS );
-			minmaxQ_sensible.searchMinMax_2D ( str_max_Q_sensible, str_min_Q_sensible, str_unit_Q_sensible, Q_sensible, h );
-
-//	searching of maximum and minimum values of bottom heat
-
-			string str_max_Q_bottom = " max 2D Q bottom ", str_min_Q_bottom = " min 2D Q bottom heat ", str_unit_Q_bottom = "W/m2";
-			MinMax_Atm		minmaxQ_bottom ( jm, km, coeff_mmWS );
-			minmaxQ_bottom.searchMinMax_2D ( str_max_Q_bottom, str_min_Q_bottom, str_unit_Q_bottom, Q_bottom, h );
-
-
-			cout << endl << " secondary data: " << endl << endl;
-
-
-//	searching of maximum and minimum values of Evaporation
-			string str_max_heat_t_Evaporation = " max heat Evaporation ", str_min_heat_t_Evaporation = " min heat Evaporation ", str_unit_heat_t_Evaporation = " kJ/kg";
-			MinMax_Atm		minmaxQ_t_Evaporation ( jm, km, coeff_mmWS );
-			minmaxQ_t_Evaporation.searchMinMax_2D ( str_max_heat_t_Evaporation, str_min_heat_t_Evaporation, str_unit_heat_t_Evaporation, Q_Evaporation, h );
-
-
-//	searching of maximum and minimum values of Evaporation by Dalton
-			string str_max_t_Evaporation_Dalton = " max Evaporation Dalton ", str_min_t_Evaporation_Dalton = " min Evaporation Dalton ", str_unit_t_Evaporation_Dalton = "mm/d";
-			MinMax_Atm		minmaxt_Evaporation_Dalton ( jm, km, coeff_mmWS );
-			minmaxt_Evaporation_Dalton.searchMinMax_2D ( str_max_t_Evaporation_Dalton, str_min_t_Evaporation_Dalton, str_unit_t_Evaporation_Dalton, Evaporation_Dalton, h );
-
-//	searching of maximum and minimum values of Evaporation by Penman
-			string str_max_t_Evaporation_Penman = " max Evaporation Penman ", str_min_t_Evaporation_Penman = " min Evaporation Penman ", str_unit_t_Evaporation_Penman = "mm/d";
-			MinMax_Atm		minmaxt_Evaporation_Penman ( jm, km, coeff_mmWS );
-			minmaxt_Evaporation_Penman.searchMinMax_2D ( str_max_t_Evaporation_Penman, str_min_t_Evaporation_Penman, str_unit_t_Evaporation_Penman, Evaporation_Penman, h );
-
-			cout << endl << " properties of the atmosphere at the surface: " << endl << endl;
-
-//	searching of maximum and minimum values of albedo
-			string str_max_albedo = " max 2D albedo ", str_min_albedo = " min 2D albedo ", str_unit_albedo = "%";
-			MinMax_Atm		minmaxAlbedo ( jm, km, coeff_mmWS );
-			minmaxAlbedo.searchMinMax_2D ( str_max_albedo, str_min_albedo, str_unit_albedo, albedo, h );
-
-//	searching of maximum and minimum values of epsilon
-			string str_max_epsilon_2D = " max 2D epsilon ", str_min_epsilon_2D = " min 2D epsilon ", str_unit_epsilon_2D = "%";
-			MinMax_Atm	minmaxEpsilon ( jm, km, coeff_mmWS );
-			minmaxEpsilon.searchMinMax_2D ( str_max_epsilon_2D, str_min_epsilon_2D, str_unit_epsilon_2D, epsilon, h );
-
-//	searching of maximum and minimum values of topography
-			string str_max_topography = " max 2D topography ", str_min_topography = " min 2D topography ", str_unit_topography = "m";
-			MinMax_Atm	minmaxTopography ( jm, km, coeff_mmWS );
-			minmaxTopography.searchMinMax_2D ( str_max_topography, str_min_topography, str_unit_topography, Topography, h );
+            print_min_max_values();
 
 //	computation of vegetation areas
 			LandArea.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
@@ -836,4 +664,128 @@ void cAtmosphereModel::reset_arrays()
     S_r.initArray(im, jm, km, 0.); // rain mass rate due to category two ice scheme
     S_s.initArray(im, jm, km, 0.); // snow mass rate due to category two ice scheme
     S_c_c.initArray(im, jm, km, 0.); // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
+}
+
+
+
+void cAtmosphereModel::print_min_max_values()
+{
+    MinMax_Atm min_max_3d( im, jm, km, u_0 );
+
+    //  searching of maximum and minimum values of temperature
+    min_max_3d.searchMinMax_3D( " max 3D temperature ", " min 3D temperature ", "C", t, h );
+
+    //  searching of maximum and minimum values of u-component
+    min_max_3d.searchMinMax_3D ( " max 3D u-component ", " min 3D u-component ", "m/s", u, h );
+
+    //  searching of maximum and minimum values of v-component
+    min_max_3d.searchMinMax_3D ( " max 3D v-component ", " min 3D v-component ", "m/s", v, h );
+
+    //  searching of maximum and minimum values of w-component
+    min_max_3d.searchMinMax_3D ( " max 3D w-component ", " min 3D w-component ", "m/s", w, h );
+
+    //  searching of maximum and minimum values of dynamic pressure
+    min_max_3d.searchMinMax_3D ( " max 3D pressure dynamic ", " min 3D pressure dynamic ", "hPa", p_dyn, h );
+
+    //  searching of maximum and minimum values of static pressure
+    min_max_3d.searchMinMax_3D ( " max 3D pressure static ", " min 3D pressure static ", "hPa", p_stat, h );
+
+    cout << endl << " energies in the three dimensional space: " << endl << endl;
+
+    //  searching of maximum and minimum values of radiation_3D
+    min_max_3d.searchMinMax_3D ( " max 3D radiation ",  " min 3D radiation ",  "W/m2", radiation_3D, h );
+
+    //  searching of maximum and minimum values of sensible heat
+    min_max_3d.searchMinMax_3D ( " max 3D sensible heat ", " min 3D sensible heat ", "W/m2", Q_Sensible, h );
+
+    //  searching of maximum and minimum values of latency
+    min_max_3d.searchMinMax_3D ( " max 3D latent heat ", " min 3D latent heat ", "W/m2", Q_Latent, h );
+
+    cout << endl << " greenhouse gases: " << endl << endl;
+
+    //  searching of maximum and minimum values of water vapour
+    min_max_3d.searchMinMax_3D ( " max 3D water vapour ",  " min 3D water vapour ", "g/kg", c, h );
+
+    //  searching of maximum and minimum values of cloud water
+    min_max_3d.searchMinMax_3D ( " max 3D cloud water ", " min 3D cloud water ", "g/kg", cloud, h );
+
+    //  searching of maximum and minimum values of cloud ice
+    min_max_3d.searchMinMax_3D ( " max 3D cloud ice ", " min 3D cloud ice ", "g/kg", ice, h );
+
+    //  searching of maximum and minimum values of rain precipitation
+    min_max_3d.searchMinMax_3D ( " max 3D rain ", " min 3D rain ", "g/kg", P_rain, h );
+
+    //  searching of maximum and minimum values of snow precipitation
+    min_max_3d.searchMinMax_3D (  " max 3D snow ", " min 3D snow ", "g/kg", P_snow, h );
+
+    //  searching of maximum and minimum values of co2
+    min_max_3d.searchMinMax_3D ( " max 3D co2 ", " min 3D co2 ", "ppm", co2, h );
+
+    //  searching of maximum and minimum values of epsilon
+    min_max_3d.searchMinMax_3D ( " max 3D epsilon ",  " min 3D epsilon ", "%", epsilon_3D, h );
+
+    //  searching of maximum and minimum values of buoyancy force
+    min_max_3d.searchMinMax_3D (  " max 3D buoyancy force ", " min 3D buoyancy force ", "N", BuoyancyForce, h );
+
+
+
+    // 2D-fields
+
+    cout << endl << " printout of maximum and minimum values of properties at their locations: latitude, longitude" << endl << 
+        " results based on two dimensional considerations of the problem" << endl;
+
+    cout << endl << " co2 distribution row-wise: " << endl << endl;
+
+    MinMax_Atm  mini_max_2d ( jm, km, coeff_mmWS );
+
+    //  searching of maximum and minimum values of co2 total
+    mini_max_2d.searchMinMax_2D ( " max co2_total ", " min co2_total ", " / ", co2_total, h );
+
+    cout << endl << " precipitation: " << endl << endl;
+
+    //  searching of maximum and minimum values of precipitation
+    mini_max_2d.searchMinMax_2D (  " max precipitation ", " min precipitation ", "mm", Precipitation, h );
+    max_Precipitation = mini_max_2d.out_maxValue (  );
+
+    //  searching of maximum and minimum values of precipitable water
+    mini_max_2d.searchMinMax_2D ( " max precipitable water ", " min precipitable water ", "mm", precipitable_water, h );
+
+    cout << endl << " energies at see level without convection influence: " << endl << endl;
+
+    //  searching of maximum and minimum values of radiation
+    mini_max_2d.searchMinMax_2D ( " max 2D Q radiation ", " min 2D Q radiation ",  "W/m2", Q_radiation, h );
+
+    //  searching of maximum and minimum values of latent energy
+    mini_max_2d.searchMinMax_2D ( " max 2D Q latent ", " min 2D Q latent ", "W/m2", Q_latent, h );
+
+    //  searching of maximum and minimum values of sensible energy
+    mini_max_2d.searchMinMax_2D ( " max 2D Q sensible ", " min 2D Q sensible ", "W/m2", Q_sensible, h );
+
+    //  searching of maximum and minimum values of bottom heat
+    mini_max_2d.searchMinMax_2D ( " max 2D Q bottom ", " min 2D Q bottom heat ", "W/m2", Q_bottom, h );
+
+            cout << endl << " secondary data: " << endl << endl;
+
+    //  searching of maximum and minimum values of Evaporation
+    mini_max_2d.searchMinMax_2D ( " max heat Evaporation ", " min heat Evaporation ", " kJ/kg", Q_Evaporation, h );
+
+
+    //  searching of maximum and minimum values of Evaporation by Dalton
+    mini_max_2d.searchMinMax_2D ( " max Evaporation Dalton ", " min Evaporation Dalton ", "mm/d", Evaporation_Dalton, h );
+
+    //  searching of maximum and minimum values of Evaporation by Penman
+    mini_max_2d.searchMinMax_2D ( " max Evaporation Penman ", " min Evaporation Penman ", "mm/d", Evaporation_Penman, h );
+
+    cout << endl << " properties of the atmosphere at the surface: " << endl << endl;
+
+    //  searching of maximum and minimum values of albedo
+    mini_max_2d.searchMinMax_2D (  " max 2D albedo ", " min 2D albedo ", "%", albedo, h );
+
+    //  searching of maximum and minimum values of epsilon
+    mini_max_2d.searchMinMax_2D ( " max 2D epsilon ", " min 2D epsilon ", "%", epsilon, h );
+
+    //  searching of maximum and minimum values of topography
+            string str_max_topography = " max 2D topography ", str_min_topography = " min 2D topography ", str_unit_topography = "m";
+            MinMax_Atm  minmaxTopography ( jm, km, coeff_mmWS );
+    mini_max_2d.searchMinMax_2D ( " max 2D topography ", " min 2D topography ", "m", Topography, h );
 }
