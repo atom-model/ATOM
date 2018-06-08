@@ -33,8 +33,12 @@ using namespace tinyxml2;
 cAtmosphereModel::cAtmosphereModel() {
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
-
-    PythonStream::OverrideCout();
+    //PythonStream::OverrideCout();
+    if(PythonStream::is_enable())
+    {
+        backup = std::cout.rdbuf();
+        std::cout.rdbuf(&ps);
+    }
     
     // If Ctrl-C is pressed, quit
     signal(SIGINT, exit);
@@ -47,7 +51,12 @@ cAtmosphereModel::cAtmosphereModel() {
 
 }
 
-cAtmosphereModel::~cAtmosphereModel() { }
+cAtmosphereModel::~cAtmosphereModel() {
+    if(PythonStream::is_enable())
+    {    
+        std::cout.rdbuf(backup);
+    }
+}
  
 #include "cAtmosphereDefaults.cpp.inc"
 

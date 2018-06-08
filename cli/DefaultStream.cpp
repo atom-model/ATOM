@@ -2,6 +2,10 @@
 
 #include "PythonStream.h"
 
+bool PythonStream::is_enable(){
+    return false;
+}
+
 void PythonStream::OverrideCout() { }
 
 int PythonStream::sync() {

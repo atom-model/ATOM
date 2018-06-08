@@ -63,6 +63,9 @@ private:
     void reset_arrays();
     void print_min_max_values();
 
+    PythonStream ps;
+    std::streambuf *backup;
+
     //time slices list
     std::set<float> m_time_list;
     std::set<float>::const_iterator m_current_time;
