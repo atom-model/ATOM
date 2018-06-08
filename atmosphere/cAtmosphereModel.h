@@ -76,6 +76,9 @@ private:
     double coeff_mmWS;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     double max_Precipitation;
 
+    static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
+    static const double the0, phi0, r0;
+
     //  class Array for 1-D, 2-D and 3-D field declarations
     // 1D arrays
     Array_1D rad; // radial coordinate direction
