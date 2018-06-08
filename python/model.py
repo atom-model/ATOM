@@ -66,7 +66,7 @@ atm = Model()
 hyd = Model()
 
 atm.load_config_atm ( "config_atm.xml" )
-atm.run_Model_atm ( 140 )
+atm.run_Model_atm ( 0 )
 
 #hyd.load_config_hyd ( "config_hyd.xml" )
 #hyd.run_Model_hyd ( 0 )
