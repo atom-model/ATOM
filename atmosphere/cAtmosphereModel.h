@@ -62,6 +62,7 @@ private:
     void SetDefaultConfig();
     void reset_arrays();
     void print_min_max_values();
+    void write_file(int n, std::string &bathymetry_name, string& filepath, int time);
 
     PythonStream ps;
     std::streambuf *backup;

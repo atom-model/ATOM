@@ -496,41 +496,12 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 	n--;
 
-//	Printout:
-
-//	printout in ParaView files and sequel files
-
-//	class PostProcess_Atmosphaere for the printing of results
-	PostProcess_Atmosphere write_File ( im, jm, km, output_path );
-
-//	writing of data in ParaView files
-//	radial data along constant hight above ground
-	int i_radial = 0;
-//	int i_radial = 10;
-	write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, Precipitation, Topography, temp_NASA );
-
-//	londitudinal data along constant latitudes
-	int j_longal = 62;			// Mount Everest/Himalaya
-	write_File.paraview_vtk_longal ( bathymetry_name, j_longal, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow );
-
-	int k_zonal = 87;			// Mount Everest/Himalaya
-	write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
-
-//	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-	if(paraview_panorama_vts) //This function creates a large file. Use a flag to control if it is wanted.
-    {
-        write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow );
-    }
-
-//	writing of v-w-data in the v_w_transfer file
-	PostProcess_Atmosphere ppa ( im, jm, km, output_path );
-	ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
-	ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
-
-	t_cretaceous_prev = t_cretaceous;
+    //write the ouput files
+    write_file(n, bathymetry_name, output_path, Ma);
 
 	if ( NASATemperature == 1 && !use_earthbyte_reconstruction ) 
     {
+        t_cretaceous_prev = t_cretaceous;
         circulation.BC_NASAbasedSurfTempWrite ( Ma, t_cretaceous_prev, t, c, cloud, ice );
     }
 
@@ -797,4 +768,50 @@ void cAtmosphereModel::print_min_max_values()
             string str_max_topography = " max 2D topography ", str_min_topography = " min 2D topography ", str_unit_topography = "m";
             MinMax_Atm  minmaxTopography ( jm, km, coeff_mmWS );
     mini_max_2d.searchMinMax_2D ( " max 2D topography ", " min 2D topography ", "m", Topography, h );
+}
+
+
+void cAtmosphereModel::write_file(int n, std::string &bathymetry_name, std::string &output_path, int Ma){
+    //  Printout:
+
+    //  printout in ParaView files and sequel files
+
+    //  class PostProcess_Atmosphaere for the printing of results
+    PostProcess_Atmosphere write_File ( im, jm, km, output_path );
+
+    //  writing of data in ParaView files
+    //  radial data along constant hight above ground
+    int i_radial = 0;
+    //  int i_radial = 10;
+    write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
+                                     BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, 
+                                     Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, 
+                                     Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, 
+                                     Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, 
+                                     Precipitation, Topography, temp_NASA );
+
+    //  londitudinal data along constant latitudes
+    int j_longal = 62;          // Mount Everest/Himalaya
+    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
+                                     BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
+                                     Q_Sensible, epsilon_3D, P_rain, P_snow );
+
+    int k_zonal = 87;           // Mount Everest/Himalaya
+    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, r_air, c_0, co2_0, 
+                                    h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, 
+                                    Q_Latent, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, 
+                                    S_s, S_c_c );
+
+    //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
+    if(paraview_panorama_vts) //This function creates a large file. Use a flag to control if it is wanted.
+    {
+        write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, 
+                                           BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
+                                           Q_Sensible, epsilon_3D, P_rain, P_snow );
+    }
+
+    //  writing of v-w-data in the v_w_transfer file
+    PostProcess_Atmosphere ppa ( im, jm, km, output_path );
+    ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
+    ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
 }
