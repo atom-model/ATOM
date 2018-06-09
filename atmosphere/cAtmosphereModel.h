@@ -13,6 +13,15 @@
 #include "tinyxml2.h"
 #include "PythonStream.h"
 
+class BC_Atmosphere;
+class RungeKutta_Atmosphere;
+class BC_Bathymetry_Atmosphere;
+class RHS_Atmosphere;
+class Pressure_Atm;
+class Restore_Atm;
+class Results_MSL_Atm;
+class BC_Thermo;
+
 using namespace std;
 using namespace tinyxml2;
 
@@ -63,6 +72,16 @@ private:
     void reset_arrays();
     void print_min_max_values();
     void write_file(int n, std::string &bathymetry_name, string& filepath, int time);
+
+    void run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
+                      BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D,
+                      Pressure_Atm &startPressure);
+
+    void run_3D_loop(int Ma, int n, int nm, int i_max, int pressure_iter_max_3D, 
+                   int velocity_iter_max_3D, BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
+                   BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
+                   Pressure_Atm &startPressure, Restore_Atm &oldnew, Results_MSL_Atm &calculate_MSL, 
+                   BC_Thermo &circulation);
 
     PythonStream ps;
     std::streambuf *backup;

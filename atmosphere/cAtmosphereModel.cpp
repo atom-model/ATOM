@@ -139,10 +139,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  initial values for the number of computed steps and the time
     int n = 1;
     int velocity_iter = 0;
-    int velocity_iter_2D = 0;
     int pressure_iter = 0;
-    int pressure_iter_2D = 0;
-    int switch_2D = 0;
     double residuum;
     double residuum_old = 0.;
     double t_cretaceous = 0.;
@@ -309,104 +306,13 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     // ***********************************   start of pressure and velocity iterations ***********************************
 
     double emin = epsres * 100.;
-    int pressure_plus_2D = 1;
     int pressure_plus_3D = 1;
 
-    // ::::::::::: :::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::
-    if ( switch_2D != 1 )
-    {
-        // **************   iteration of initial conditions on the surface for the correction of flows close to coasts   **
-        // **************   start of pressure and velocity iterations for the 2D iterational process   ********************
-        // ::::::::::::::   begin of pressure loop_2D : if ( pressure_iter_2D > pressure_iter_max_2D )   ::::::::::::::::::
-        for ( pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++)
-        {
-            // ::::::::   begin of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::
-            for (velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++)
-            {
-
-                cout << endl << endl;
-                cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-                cout << " 2D AGCM iterational process" << endl;
-                cout << " max total iteration number nm = " << nm << endl << endl;
-
-                cout << " present state of the 2D computation " << endl << "  current time slice, number of iterations, maximum \
-                    and current number of velocity iterations, maximum and current number of pressure iterations " << endl \
-                    << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max_2D = " << velocity_iter_max_2D << 
-                    "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " << pressure_iter_max_2D << 
-                    "    pressure_iter_2D = " << pressure_iter_2D << endl;
-
-                //  class BC_Atmosphaere for the geometry of a shell of a sphere
-                boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
-                boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
-
-                //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-                Accuracy_Atm        min_Residuum_old_2D ( im, jm, km, dthe, dphi );
-                min_Residuum_old_2D.residuumQuery_2D ( rad, the, v, w );
-                emin = min_Residuum_old_2D.out_min (  );
-
-                residuum_old = emin;
-
-                //  class RungeKutta for the solution of the differential equations describing the flow properties
-                result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, h, v, w, 
-                                                       p_dyn, vn, wn, p_dynn, aux_v, aux_w );
-
-                //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
-                //  the continents and the ocean ground
-                LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, 
-                                          t_equator, t_pole, 
-                                          t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
-                                          co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
-                                          radiation_3D, Vegetation );
-
-                //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-                Accuracy_Atm        min_Residuum_2D ( im, jm, km, dthe, dphi );
-                min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
-                emin = min_Residuum_2D.out_min (  );
-                j_res = min_Residuum_2D.out_j_res (  );
-                k_res = min_Residuum_2D.out_k_res (  );
-
-                residuum = emin;
-                emin = fabs ( ( residuum - residuum_old ) / residuum_old );
-
-                //  state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
-                Accuracy_Atm        min_Stationary_2D ( n, nm, Ma, im, jm, km, emin, j_res, k_res, velocity_iter_2D, 
-                                                        pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
-                min_Stationary_2D.steadyQuery_2D ( v, vn, w, wn, p_dyn, p_dynn );
-
-                n++;
-            }
-            //  ::::::   end of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::::::::::
-
-
-            //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-            if ( pressure_iter_2D == pressure_plus_2D )
-            {
-                startPressure.computePressure_2D ( r_air, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
-                pressure_plus_2D = pressure_plus_2D + 1;
-            }
-
-
-
-            // limit of the computation in the sense of time steps
-            if ( n > nm )
-            {
-                cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
-                break;
-            }
-        }
-        // :::::::::::::::::::   end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D )   ::::::::::
-        n = 1;
-        switch_2D = 1; // 2D calculations finished
-        emin = epsres * 100.;
-    }
-    // ::::::::   end of 2D loop for initial surface conditions: if ( switch_2D == 0 )   :::::::::::::::::::::::::::::
-
-
+    run_2D_loop(boundary, result, LandArea, prepare_2D, startPressure);
+    
     cout << endl << endl;
 
-
     int velocity_n = 1;
-
 
     // ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::
     for ( pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
@@ -766,58 +672,58 @@ void cAtmosphereModel::print_min_max_values()
 
     cout << endl << " co2 distribution row-wise: " << endl << endl;
 
-    MinMax_Atm  mini_max_2d ( jm, km, coeff_mmWS );
+    MinMax_Atm  min_max_2d ( jm, km, coeff_mmWS );
 
     //  searching of maximum and minimum values of co2 total
-    mini_max_2d.searchMinMax_2D ( " max co2_total ", " min co2_total ", " / ", co2_total, h );
+    min_max_2d.searchMinMax_2D ( " max co2_total ", " min co2_total ", " / ", co2_total, h );
 
     cout << endl << " precipitation: " << endl << endl;
 
     //  searching of maximum and minimum values of precipitation
-    mini_max_2d.searchMinMax_2D (  " max precipitation ", " min precipitation ", "mm", Precipitation, h );
-    max_Precipitation = mini_max_2d.out_maxValue (  );
+    min_max_2d.searchMinMax_2D (  " max precipitation ", " min precipitation ", "mm", Precipitation, h );
+    max_Precipitation = min_max_2d.out_maxValue (  );
 
     //  searching of maximum and minimum values of precipitable water
-    mini_max_2d.searchMinMax_2D ( " max precipitable water ", " min precipitable water ", "mm", precipitable_water, h );
+    min_max_2d.searchMinMax_2D ( " max precipitable water ", " min precipitable water ", "mm", precipitable_water, h );
 
     cout << endl << " energies at see level without convection influence: " << endl << endl;
 
     //  searching of maximum and minimum values of radiation
-    mini_max_2d.searchMinMax_2D ( " max 2D Q radiation ", " min 2D Q radiation ",  "W/m2", Q_radiation, h );
+    min_max_2d.searchMinMax_2D ( " max 2D Q radiation ", " min 2D Q radiation ",  "W/m2", Q_radiation, h );
 
     //  searching of maximum and minimum values of latent energy
-    mini_max_2d.searchMinMax_2D ( " max 2D Q latent ", " min 2D Q latent ", "W/m2", Q_latent, h );
+    min_max_2d.searchMinMax_2D ( " max 2D Q latent ", " min 2D Q latent ", "W/m2", Q_latent, h );
 
     //  searching of maximum and minimum values of sensible energy
-    mini_max_2d.searchMinMax_2D ( " max 2D Q sensible ", " min 2D Q sensible ", "W/m2", Q_sensible, h );
+    min_max_2d.searchMinMax_2D ( " max 2D Q sensible ", " min 2D Q sensible ", "W/m2", Q_sensible, h );
 
     //  searching of maximum and minimum values of bottom heat
-    mini_max_2d.searchMinMax_2D ( " max 2D Q bottom ", " min 2D Q bottom heat ", "W/m2", Q_bottom, h );
+    min_max_2d.searchMinMax_2D ( " max 2D Q bottom ", " min 2D Q bottom heat ", "W/m2", Q_bottom, h );
 
             cout << endl << " secondary data: " << endl << endl;
 
     //  searching of maximum and minimum values of Evaporation
-    mini_max_2d.searchMinMax_2D ( " max heat Evaporation ", " min heat Evaporation ", " kJ/kg", Q_Evaporation, h );
+    min_max_2d.searchMinMax_2D ( " max heat Evaporation ", " min heat Evaporation ", " kJ/kg", Q_Evaporation, h );
 
 
     //  searching of maximum and minimum values of Evaporation by Dalton
-    mini_max_2d.searchMinMax_2D ( " max Evaporation Dalton ", " min Evaporation Dalton ", "mm/d", Evaporation_Dalton, h );
+    min_max_2d.searchMinMax_2D ( " max Evaporation Dalton ", " min Evaporation Dalton ", "mm/d", Evaporation_Dalton, h );
 
     //  searching of maximum and minimum values of Evaporation by Penman
-    mini_max_2d.searchMinMax_2D ( " max Evaporation Penman ", " min Evaporation Penman ", "mm/d", Evaporation_Penman, h );
+    min_max_2d.searchMinMax_2D ( " max Evaporation Penman ", " min Evaporation Penman ", "mm/d", Evaporation_Penman, h );
 
     cout << endl << " properties of the atmosphere at the surface: " << endl << endl;
 
     //  searching of maximum and minimum values of albedo
-    mini_max_2d.searchMinMax_2D (  " max 2D albedo ", " min 2D albedo ", "%", albedo, h );
+    min_max_2d.searchMinMax_2D (  " max 2D albedo ", " min 2D albedo ", "%", albedo, h );
 
     //  searching of maximum and minimum values of epsilon
-    mini_max_2d.searchMinMax_2D ( " max 2D epsilon ", " min 2D epsilon ", "%", epsilon, h );
+    min_max_2d.searchMinMax_2D ( " max 2D epsilon ", " min 2D epsilon ", "%", epsilon, h );
 
     //  searching of maximum and minimum values of topography
             string str_max_topography = " max 2D topography ", str_min_topography = " min 2D topography ", str_unit_topography = "m";
             MinMax_Atm  minmaxTopography ( jm, km, coeff_mmWS );
-    mini_max_2d.searchMinMax_2D ( " max 2D topography ", " min 2D topography ", "m", Topography, h );
+    min_max_2d.searchMinMax_2D ( " max 2D topography ", " min 2D topography ", "m", Topography, h );
 }
 
 
@@ -864,4 +770,112 @@ void cAtmosphereModel::write_file(int n, std::string &bathymetry_name, std::stri
     PostProcess_Atmosphere ppa ( im, jm, km, output_path );
     ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
     ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
+}
+
+void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
+                                    BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D, 
+                                    Pressure_Atm &startPressure){
+    int switch_2D = 0;    
+
+    int n = 1;
+    int velocity_iter_2D = 0;
+    int pressure_iter_2D = 0;
+
+    double emin = epsres * 100.;
+    int pressure_plus_2D = 1;
+
+    double residuum;
+    double residuum_old = 0.;
+
+    int j_res = 0, k_res = 0;
+
+    int Ma = int(round(*get_current_time())); 
+
+    // ::::::::::: :::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::
+    if ( switch_2D != 1 )
+    {
+        // **************   iteration of initial conditions on the surface for the correction of flows close to coasts   **
+        // **************   start of pressure and velocity iterations for the 2D iterational process   ********************
+        // ::::::::::::::   begin of pressure loop_2D : if ( pressure_iter_2D > pressure_iter_max_2D )   ::::::::::::::::::
+        for ( pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++)
+        {
+            // ::::::::   begin of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::
+            for (velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++)
+            {
+
+                cout << endl << endl;
+                cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
+                cout << " 2D AGCM iterational process" << endl;
+                cout << " max total iteration number nm = " << nm << endl << endl;
+
+                cout << " present state of the 2D computation " << endl << "  current time slice, number of iterations, maximum \
+                    and current number of velocity iterations, maximum and current number of pressure iterations " << endl \
+                    << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max_2D = " << velocity_iter_max_2D << 
+                    "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " << pressure_iter_max_2D << 
+                    "    pressure_iter_2D = " << pressure_iter_2D << endl;
+
+                //  class BC_Atmosphaere for the geometry of a shell of a sphere
+                boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
+                boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
+
+                //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
+                Accuracy_Atm        min_Residuum_old_2D ( im, jm, km, dthe, dphi );
+                min_Residuum_old_2D.residuumQuery_2D ( rad, the, v, w );
+                emin = min_Residuum_old_2D.out_min (  );
+
+                residuum_old = emin;
+
+                //  class RungeKutta for the solution of the differential equations describing the flow properties
+                result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, h, v, w, 
+                                                       p_dyn, vn, wn, p_dynn, aux_v, aux_w );
+
+                //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
+                //  the continents and the ocean ground
+                LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, 
+                                          t_equator, t_pole, 
+                                          t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
+                                          co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
+                                          radiation_3D, Vegetation );
+
+                //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
+                Accuracy_Atm        min_Residuum_2D ( im, jm, km, dthe, dphi );
+                min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
+                emin = min_Residuum_2D.out_min (  );
+                j_res = min_Residuum_2D.out_j_res (  );
+                k_res = min_Residuum_2D.out_k_res (  );
+
+                residuum = emin;
+                emin = fabs ( ( residuum - residuum_old ) / residuum_old );
+
+                //  state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
+                Accuracy_Atm        min_Stationary_2D ( n, nm, Ma, im, jm, km, emin, j_res, k_res, velocity_iter_2D, 
+                                                        pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
+                min_Stationary_2D.steadyQuery_2D ( v, vn, w, wn, p_dyn, p_dynn );
+
+                n++;
+            }
+            //  ::::::   end of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::::::::::
+
+
+            //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
+            if ( pressure_iter_2D == pressure_plus_2D )
+            {
+                startPressure.computePressure_2D ( r_air, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
+                pressure_plus_2D = pressure_plus_2D + 1;
+            }
+
+
+
+            // limit of the computation in the sense of time steps
+            if ( n > nm )
+            {
+                cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
+                break;
+            }
+        }
+        // :::::::::::::::::::   end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D )   ::::::::::
+        n = 1;
+        emin = epsres * 100.;
+    }
+    // ::::::::   end of 2D loop for initial surface conditions: if ( switch_2D == 0 )   :::::::::::::::::::::::::::::
 }
