@@ -66,6 +66,8 @@ cAtmosphereModel::cAtmosphereModel() {
     SetDefaultConfig();
 
     coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
+
+    im_tropopause = new int [ jm ];// location of the tropopaus
 }
 
 cAtmosphereModel::~cAtmosphereModel() {
@@ -73,6 +75,8 @@ cAtmosphereModel::~cAtmosphereModel() {
     {    
         std::cout.rdbuf(backup);
     }
+
+    delete [] im_tropopause;
 }
  
 #include "cAtmosphereDefaults.cpp.inc"
@@ -122,10 +126,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     // maximum number of inner velocity loop iterations ( velocity_iter_max )
     // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
-    int j_res = 0, k_res = 0;
-
-    int *im_tropopause = new int [ jm ];// location of the tropopaus
-
     cout.precision ( 6 );
     cout.setf ( ios::fixed );
 
@@ -137,11 +137,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
     //  initial values for the number of computed steps and the time
-    int n = 1;
-    int velocity_iter = 0;
-    int pressure_iter = 0;
-    double residuum;
-    double residuum_old = 0.;
     double t_cretaceous = 0.;
     double co2_cretaceous = 0.;
 
@@ -252,7 +247,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class Restore to restore the iterational values from new to old
     Restore_Atm oldnew( im, jm, km );
 
-
     //  class element calls for the preparation of initial conditions for the flow properties
 
     //  class element for the tropopause location as a parabolic distribution from pole to pole 
@@ -290,7 +284,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){
-        circulation.BC_Radiation_multi_layer ( im_tropopause, t_cretaceous, n, CO2, albedo, epsilon, precipitable_water, 
+        circulation.BC_Radiation_multi_layer ( im_tropopause, t_cretaceous, CO2, albedo, epsilon, precipitable_water, 
                                                radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, 
                                                p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
@@ -306,151 +300,19 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     // ***********************************   start of pressure and velocity iterations ***********************************
 
     double emin = epsres * 100.;
-    int pressure_plus_3D = 1;
 
     run_2D_loop(boundary, result, LandArea, prepare_2D, startPressure);
     
     cout << endl << endl;
 
-    int velocity_n = 1;
-
-    // ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::
-    for ( pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
-    {
-        // ::::::::::::   begin of 3D velocity loop : if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::
-        for ( velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ )
-        {
-            //  query to realize zero divergence of the continuity equation ( div c = 0 )
-            cout << endl << endl;
-            cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-            cout << " 3D AGCM iterational process" << endl;
-            cout << " max total iteration number nm = " << nm << endl << endl;
-
-            cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum  \
-                and current number of velocity iterations, maximum and current number of pressure iterations " << endl << 
-                endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << 
-                "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
-                "    pressure_iter = " << pressure_iter << endl;
-
-            //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-            Accuracy_Atm        min_Residuum_old ( im, jm, km, dr, dthe, dphi );
-            min_Residuum_old.residuumQuery_3D ( rad, the, u, v, w );
-            emin = min_Residuum_old.out_min (  );
-
-            residuum_old = emin;
-
-            //  class BC_Atmosphaere for the geometry of a shell of a sphere
-            boundary.BC_radius ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
-            boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
-            boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
-
-            //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
-            if ( velocity_iter == velocity_n ){
-                circulation.Ice_Water_Saturation_Adjustment ( im_tropopause, n, velocity_iter_max, RadiationModel, h, c, 
-                                                              cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
-            }
-            // class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, r_water, 
-                                                   r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, 
-                                                   the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, 
-                                                   h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, 
-                                                   cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, 
-                                                   Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
-                                                   Evaporation_Dalton, Precipitation );
-
-            //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
-            //  the continents and the ocean ground
-            LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, 
-                                      t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
-                                      co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
-                                      ice, co2, radiation_3D, Vegetation );
-
-            // class element for the surface temperature computation by radiation flux density
-            if ( RadiationModel == 1 ){
-                 circulation.BC_Radiation_multi_layer ( im_tropopause, t_cretaceous, n, CO2, albedo, epsilon, precipitable_water, 
-                                                        radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, 
-                                                        p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
-            }
-            //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-            Accuracy_Atm      min_Residuum ( im, jm, km, dr, dthe, dphi );
-            min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
-            emin = min_Residuum.out_min (  );
-            int i_res = min_Residuum.out_i_res (  );
-            j_res = min_Residuum.out_j_res (  );
-            k_res = min_Residuum.out_k_res (  );
-
-            residuum = emin;
-            emin = fabs ( ( residuum - residuum_old ) / residuum_old );
-
-            //  statements on the convergence und iterational process
-            Accuracy_Atm        min_Stationary ( n, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, velocity_iter, pressure_iter, 
-                                                 velocity_iter_max, pressure_iter_max, L_atm );
-            min_Stationary.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, cloud, cloudn, ice, icen, co2, co2n, p_dyn, p_dynn );
-
-            // 3D_fields
-
-            //  class element for the initial conditions the latent heat
-            circulation.Latent_Heat ( rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, ice, Q_Latent, Q_Sensible, 
-                                      radiation_3D, Q_radiation, Q_latent, Q_sensible, Q_bottom );
-
-            print_min_max_values();
-
-            //  computation of vegetation areas
-            LandArea.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
-
-
-            //  composition of results
-            calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, 
-                                         co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, 
-                                         radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, 
-                                         temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, 
-                                         Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Dalton, Vegetation, 
-                                         albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
-
-
-
-            //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation 
-            //  distribution formed of rain and snow
-            if ( velocity_iter == velocity_n )
-            {
-                circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, 
-                                                      cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
-                velocity_n = velocity_iter + 2;
-            }
-            n++;
-        }
-        //  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::::::::::::
-
-        
-        //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-        if ( pressure_iter == pressure_plus_3D )
-        {
-            startPressure.computePressure_3D ( r_air, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
-            pressure_plus_3D = pressure_plus_3D + 1;
-        }
-
-        //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution 
-        //  formed of rain and snow
-        circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, cloud, ice, 
-                                              P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
-
-
-        //  limit of the computation in the sense of time steps
-        if ( n > nm )
-        {
-            cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
-            break;
-        }
-    }
-    //  :::::   end of pressure loop_3D: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::
-
+    run_3D_loop( boundary, result, LandArea, prepare, startPressure, calculate_MSL, circulation);
 
     cout << endl << endl;
 
     n--;
 
     //write the ouput files
-    write_file(n, bathymetry_name, output_path, Ma);
+    write_file(bathymetry_name, output_path);
 
     if ( NASATemperature == 1 && !use_earthbyte_reconstruction ) 
     {
@@ -460,11 +322,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  final remarks
     cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
-
-    if ( velocity_iter == velocity_iter_max ){
-        cout << "***** number of time steps      n = " << n << ", end of program reached because of limit of \
-                maximum time steps ***** \n\n" << endl;
-    }
     if ( emin <= epsres ){
         cout << "***** steady solution reached! *****" << endl;
     }
@@ -727,7 +584,8 @@ void cAtmosphereModel::print_min_max_values()
 }
 
 
-void cAtmosphereModel::write_file(int n, std::string &bathymetry_name, std::string &output_path, int Ma){
+void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &output_path){
+    int Ma = int(round(*get_current_time()));
     //  Printout:
 
     //  printout in ParaView files and sequel files
@@ -777,7 +635,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                     Pressure_Atm &startPressure){
     int switch_2D = 0;    
 
-    int n = 1;
+    n = 1;
     int velocity_iter_2D = 0;
     int pressure_iter_2D = 0;
 
@@ -878,4 +736,162 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         emin = epsres * 100.;
     }
     // ::::::::   end of 2D loop for initial surface conditions: if ( switch_2D == 0 )   :::::::::::::::::::::::::::::
+}
+
+
+void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
+                                    BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
+                                    Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL,                  
+                                    BC_Thermo &circulation){
+    
+    n = 1;
+
+    double emin = epsres * 100.;
+    int pressure_plus_3D = 1;
+
+    double residuum;
+    double residuum_old = 0.;
+
+    int j_res = 0, k_res = 0;
+
+    int Ma = int(round(*get_current_time()));
+    int velocity_n = 1;
+
+    int velocity_iter = 0;
+    int pressure_iter = 0;
+
+    // ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::
+    for ( pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
+    {
+        // ::::::::::::   begin of 3D velocity loop : if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::
+        for ( velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ )
+        {
+            //  query to realize zero divergence of the continuity equation ( div c = 0 )
+            cout << endl << endl;
+            cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
+            cout << " 3D AGCM iterational process" << endl;
+            cout << " max total iteration number nm = " << nm << endl << endl;
+
+            cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum  \
+                and current number of velocity iterations, maximum and current number of pressure iterations " << endl << 
+                endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << 
+                "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
+                "    pressure_iter = " << pressure_iter << endl;
+
+            //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
+            Accuracy_Atm        min_Residuum_old ( im, jm, km, dr, dthe, dphi );
+            min_Residuum_old.residuumQuery_3D ( rad, the, u, v, w );
+            emin = min_Residuum_old.out_min (  );
+
+            residuum_old = emin;
+
+            //  class BC_Atmosphaere for the geometry of a shell of a sphere
+            boundary.BC_radius ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
+            boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
+            boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
+
+            //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
+            if ( velocity_iter == velocity_n ){
+                circulation.Ice_Water_Saturation_Adjustment ( im_tropopause, n, velocity_iter_max, RadiationModel, h, c, 
+                                                              cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
+            }
+            // class RungeKutta for the solution of the differential equations describing the flow properties
+            result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, r_water, 
+                                                   r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, 
+                                                   the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, 
+                                                   h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, 
+                                                   cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, 
+                                                   Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
+                                                   Evaporation_Dalton, Precipitation );
+
+            //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
+            //  the continents and the ocean ground
+            LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, 
+                                      t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
+                                      co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
+                                      ice, co2, radiation_3D, Vegetation );
+
+            // class element for the surface temperature computation by radiation flux density
+            if ( RadiationModel == 1 ){
+                 circulation.BC_Radiation_multi_layer ( im_tropopause, t_cretaceous, CO2, albedo, epsilon, precipitable_water, 
+                                                        radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, 
+                                                        p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+            }
+            //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
+            Accuracy_Atm      min_Residuum ( im, jm, km, dr, dthe, dphi );
+            min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
+            emin = min_Residuum.out_min (  );
+            int i_res = min_Residuum.out_i_res (  );
+            j_res = min_Residuum.out_j_res (  );
+            k_res = min_Residuum.out_k_res (  );
+
+            residuum = emin;
+            emin = fabs ( ( residuum - residuum_old ) / residuum_old );
+
+            //  statements on the convergence und iterational process
+            Accuracy_Atm        min_Stationary ( n, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, velocity_iter, pressure_iter, 
+                                                 velocity_iter_max, pressure_iter_max, L_atm );
+            min_Stationary.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, cloud, cloudn, ice, icen, co2, co2n, p_dyn, p_dynn );
+
+            // 3D_fields
+
+            //  class element for the initial conditions the latent heat
+            circulation.Latent_Heat ( rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, ice, Q_Latent, Q_Sensible, 
+                                      radiation_3D, Q_radiation, Q_latent, Q_sensible, Q_bottom );
+
+            print_min_max_values();
+
+            //  computation of vegetation areas
+            LandArea.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
+
+
+            //  composition of results
+            calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, 
+                                         co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, 
+                                         radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, 
+                                         temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, 
+                                         Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Dalton, Vegetation, 
+                                         albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
+
+
+
+            //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation 
+            //  distribution formed of rain and snow
+            if ( velocity_iter == velocity_n )
+            {
+                circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, 
+                                                      cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
+                velocity_n = velocity_iter + 2;
+            }
+            n++;
+        }
+        //  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::::::::::::
+
+        
+        //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
+        if ( pressure_iter == pressure_plus_3D )
+        {
+            startPressure.computePressure_3D ( r_air, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+            pressure_plus_3D = pressure_plus_3D + 1;
+        }
+
+        //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution 
+        //  formed of rain and snow
+        circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, cloud, ice, 
+                                              P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
+
+
+        //  limit of the computation in the sense of time steps
+        if ( n > nm )
+        {
+            cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
+            break;
+        }
+    }
+    //  :::::   end of pressure loop_3D: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::
+
+    if ( velocity_iter == velocity_iter_max ){
+        cout << "***** number of time steps      n = " << n << ", end of program reached because of limit of \
+                maximum time steps ***** \n\n" << endl;
+    }
 }

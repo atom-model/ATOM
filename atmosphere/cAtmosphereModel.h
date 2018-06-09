@@ -18,7 +18,6 @@ class RungeKutta_Atmosphere;
 class BC_Bathymetry_Atmosphere;
 class RHS_Atmosphere;
 class Pressure_Atm;
-class Restore_Atm;
 class Results_MSL_Atm;
 class BC_Thermo;
 
@@ -71,17 +70,16 @@ private:
     void SetDefaultConfig();
     void reset_arrays();
     void print_min_max_values();
-    void write_file(int n, std::string &bathymetry_name, string& filepath, int time);
+    void write_file( std::string &bathymetry_name, string& filepath);
 
     void run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                       BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D,
                       Pressure_Atm &startPressure);
 
-    void run_3D_loop(int Ma, int n, int nm, int i_max, int pressure_iter_max_3D, 
-                   int velocity_iter_max_3D, BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
-                   BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
-                   Pressure_Atm &startPressure, Restore_Atm &oldnew, Results_MSL_Atm &calculate_MSL, 
-                   BC_Thermo &circulation);
+    void run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
+                      BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
+                      Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL, 
+                      BC_Thermo &circulation);
 
     PythonStream ps;
     std::streambuf *backup;
@@ -91,6 +89,10 @@ private:
     std::set<float>::const_iterator m_current_time;
 
     static const int im=41, jm=181, km=361, nm=200;
+
+    int n;
+
+    int *im_tropopause;// location of the tropopaus
 
     double coeff_mmWS;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     double max_Precipitation;

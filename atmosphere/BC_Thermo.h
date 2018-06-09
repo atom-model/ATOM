@@ -99,7 +99,7 @@ class BC_Thermo
 
 		void BC_Radiation_2D_layer ( Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_Radiation_multi_layer ( int*, double , int, double, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void BC_Radiation_multi_layer ( int*, double, double, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void BC_WaterVapour ( int *, double &, Array &, Array &, Array & );
 
