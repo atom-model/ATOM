@@ -664,8 +664,8 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 cout << " 2D AGCM iterational process" << endl;
                 cout << " max total iteration number nm = " << nm << endl << endl;
 
-                cout << " present state of the 2D computation " << endl << "  current time slice, number of iterations, maximum \
-                    and current number of velocity iterations, maximum and current number of pressure iterations " << endl \
+                cout << " present state of the 2D computation " << endl << "  current time slice, number of iterations, maximum "
+                    << "and current number of velocity iterations, maximum and current number of pressure iterations " << endl 
                     << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max_2D = " << velocity_iter_max_2D << 
                     "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " << pressure_iter_max_2D << 
                     "    pressure_iter_2D = " << pressure_iter_2D << endl;
@@ -770,8 +770,8 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             cout << " 3D AGCM iterational process" << endl;
             cout << " max total iteration number nm = " << nm << endl << endl;
 
-            cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum  \
-                and current number of velocity iterations, maximum and current number of pressure iterations " << endl << 
+            cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum "
+                << "and current number of velocity iterations, maximum and current number of pressure iterations " << endl << 
                 endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << 
                 "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << pressure_iter << endl;
