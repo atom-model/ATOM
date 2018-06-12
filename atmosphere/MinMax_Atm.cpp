@@ -50,22 +50,22 @@ namespace{
 
 MinMax_Atm::MinMax_Atm ( int jm, int km )
 {
-	this-> im = 0;
+    this-> im = 0;
     this-> jm = jm;
-	this-> km = km;
+    this-> km = km;
 
-	minValue = maxValue = 0.;
-	imax = jmax = kmax = imin = jmin = kmin = 0;
+    minValue = maxValue = 0.;
+    imax = jmax = kmax = imin = jmin = kmin = 0;
 }
 
 MinMax_Atm::MinMax_Atm ( int im, int jm, int km  )
 {
-	this-> im = im;
-	this-> jm = jm;
-	this-> km = km;
+    this-> im = im;
+    this-> jm = jm;
+    this-> km = km;
 
-	minValue = maxValue = 0.;
-	imax = jmax = kmax = imin = jmin = kmin = 0;
+    minValue = maxValue = 0.;
+    imax = jmax = kmax = imin = jmin = kmin = 0;
 }
 
 MinMax_Atm::~MinMax_Atm () {}
@@ -74,54 +74,49 @@ void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, st
                                   Array &value_D, Array &h, double coeff, bool print_heading)
 {
     // search for minimum and maximum values of the 3-dimensional data sets
-	minValue = maxValue = value_D.x[ 0 ][ 0 ][ 0 ];
-	imax = 0;
-	jmax = 0;
-	kmax = 0;
-	imin = 0;
-	jmin = 0;
-	kmin = 0;
+    minValue = maxValue = value_D.x[ 0 ][ 0 ][ 0 ];
+    imax = jmax = kmax = imin = jmin = kmin = 0;
 
-	for ( int j = 0; j < jm; j++ )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int i = 0; i < im; i++ )
-			{
-				if ( value_D.x[ i ][ j ][ k ] > maxValue ) 
-				{
-					maxValue = value_D.x[ i ][ j ][ k ];
-					imax = i;
-					jmax = j;
-					kmax = k;
-				}else if ( value_D.x[ i ][ j ][ k ] < minValue ){
+    for ( int j = 0; j < jm; j++ )
+    {
+        for ( int k = 0; k < km; k++ )
+        {
+            for ( int i = 0; i < im; i++ )
+            {
+                if ( value_D.x[ i ][ j ][ k ] > maxValue ) 
+                {
+                    maxValue = value_D.x[ i ][ j ][ k ];
+                    imax = i;
+                    jmax = j;
+                    kmax = k;
+                }else if ( value_D.x[ i ][ j ][ k ] < minValue ){
                     minValue = value_D.x[ i ][ j ][ k ];
                     imin = i;
                     jmin = j;
                     kmin = k;
                 }
-			}
-		}
-	}
+            }
+        }
+    }
 
-	int imax_level = imax * 400;
-	int imin_level = imin * 400;
+    int imax_level = imax * 400;
+    int imin_level = imin * 400;
 
-    //	maximum latitude and longitude units recalculated
-	HemisphereCoords coords = convert_coords(kmax, jmax);
+    //  maximum latitude and longitude units recalculated
+    HemisphereCoords coords = convert_coords(kmax, jmax);
     int jmax_deg = coords.lat;
     string deg_lat_max = coords.north_or_south;
     int kmax_deg = coords.lon;
     string deg_lon_max = coords.east_or_west;
 
-    //	minimum latitude and longitude units recalculated
-	coords = convert_coords(kmin, jmin);
+    //  minimum latitude and longitude units recalculated
+    coords = convert_coords(kmin, jmin);
     int jmin_deg = coords.lat;
     string deg_lat_min= coords.north_or_south;
     int kmin_deg = coords.lon;
     string deg_lon_min = coords.east_or_west;
 
-	cout.precision ( 6 );
+    cout.precision ( 6 );
 
     if(print_heading){
         cout << endl << heading_1 << endl << heading_2 << endl << endl;
@@ -144,30 +139,27 @@ void MinMax_Atm::searchMinMax_2D ( string name_maxValue, string name_minValue, s
                                    Array_2D &value, Array &h, double coeff )
 {
     // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
-	minValue = maxValue = value.y[ 0 ][ 0 ];
-	jmax = 0;
-	kmax = 0;
-	jmin = 0;
-	kmin = 0;
+    minValue = maxValue = value.y[ 0 ][ 0 ];
+    imax = jmax = kmax = imin = jmin = kmin = 0;  
 
-	for ( int j = 1; j < jm-1; j++ )
-	{
-		for ( int k = 1; k < km-1; k++ )
-		{
-			if ( value.y[ j ][ k ] > maxValue ){
-				maxValue = value.y[ j ][ k ];
-				jmax = j;
-				kmax = k;
-			}else if(value.y[ j ][ k ] < minValue ){
+    for ( int j = 1; j < jm-1; j++ )
+    {
+        for ( int k = 1; k < km-1; k++ )
+        {
+            if ( value.y[ j ][ k ] > maxValue ){
+                maxValue = value.y[ j ][ k ];
+                jmax = j;
+                kmax = k;
+            }else if(value.y[ j ][ k ] < minValue ){
                 minValue = value.y[ j ][ k ];
                 jmin = j;
                 kmin = k;
             }
-		}
-	}
+        }
+    }
 
-	int imax_level = 0;
-	int imin_level = 0;
+    int imax_level = 0;
+    int imin_level = 0;
 
     //  maximum latitude and longitude units recalculated
     HemisphereCoords coords = convert_coords(kmax, jmax);
@@ -183,12 +175,12 @@ void MinMax_Atm::searchMinMax_2D ( string name_maxValue, string name_minValue, s
     int kmin_deg = coords.lon;
     string deg_lon_min = coords.east_or_west;
 
-	cout.precision ( 6 );
+    cout.precision ( 6 );
 
     maxValue = maxValue * coeff;
     minValue = minValue * coeff;
 
-	cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << 
+    cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << 
         resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << 
         name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << 
         setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << 
@@ -200,11 +192,11 @@ void MinMax_Atm::searchMinMax_2D ( string name_maxValue, string name_minValue, s
 
 double MinMax_Atm::out_maxValue (  ) const
 {
-	return maxValue;
+    return maxValue;
 }
 
 double MinMax_Atm::out_minValue (  ) const
 {
-	return minValue;
+    return minValue;
 }
 
