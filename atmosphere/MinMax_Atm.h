@@ -20,32 +20,25 @@
 
 using namespace std;
 
-
-
 class MinMax_Atm
 {
 	private:
 		int im, jm, km, imax, jmax, kmax, imin, jmin, kmin;
-		int imax_level, imin_level, jmax_deg, kmax_deg, jmin_deg, kmin_deg;
 
-		double maxValue, minValue, u_0, coeff_mmWS;
-
-		string name_maxValue, name_minValue, name_unitValue, heading_1, heading_2;
-		string level, deg_north, deg_south, deg_west, deg_east, deg_lat_max, deg_lon_max, deg_lat_min, deg_lon_min;
-
+		double maxValue, minValue;
 
 	public:
-		MinMax_Atm ( int, int, double );
-		MinMax_Atm ( int, int, int, double );
+		MinMax_Atm ( int, int );
+		MinMax_Atm ( int, int, int );
 		~MinMax_Atm ();
 
-		void searchMinMax_2D ( string , string , string , Array_2D &, Array & );
+		void searchMinMax_2D ( string , string , string , Array_2D &, Array &, double coeff=1.0);
 
-		void searchMinMax_3D ( string , string , string , Array &, Array & );
+        void searchMinMax_3D ( string , string , string , Array &, Array &, 
+                               double coeff=1.0, bool print_heading=false );
 
 		double out_maxValue (  ) const;
 
 		double out_minValue (  ) const;
-
 };
 #endif
