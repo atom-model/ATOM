@@ -466,7 +466,9 @@ void cAtmosphereModel::print_min_max_values()
     MinMax_Atm min_max_3d( im, jm, km );
 
     //  searching of maximum and minimum values of temperature
-    min_max_3d.searchMinMax_3D( " max 3D temperature ", " min 3D temperature ", "C", t, h, 273.15, true );
+    min_max_3d.searchMinMax_3D( " max 3D temperature ", " min 3D temperature ", "°C", t, h, 273.15, 
+                                [](double i)->double{return i - 273.15;},
+                                true );
 
     //  searching of maximum and minimum values of u-component
     min_max_3d.searchMinMax_3D ( " max 3D u-component ", " min 3D u-component ", "m/s", u, h, u_0);

@@ -8,7 +8,7 @@
  * class to search min/max values of variables
 */
 
-
+#include <functional>
 #include <iostream>
 #include <cstring>
 
@@ -19,7 +19,9 @@
 #define _MINMAX_
 
 using namespace std;
-
+namespace{
+    std::function< double(double) > default_lambda=[](double i)->double{return i;};
+}
 class MinMax_Atm
 {
     private:
@@ -35,7 +37,9 @@ class MinMax_Atm
         void searchMinMax_2D ( string , string , string , Array_2D &, Array &, double coeff=1.0);
 
         void searchMinMax_3D ( string , string , string , Array &, Array &, 
-                               double coeff=1.0, bool print_heading=false );
+                               double coeff=1.0, 
+                               std::function< double(double) > lambda = default_lambda,
+                               bool print_heading=false );
 
         double out_maxValue (  ) const;
 

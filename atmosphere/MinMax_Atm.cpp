@@ -71,7 +71,9 @@ MinMax_Atm::MinMax_Atm ( int im, int jm, int km  )
 MinMax_Atm::~MinMax_Atm () {}
 
 void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, string name_unitValue, 
-                                  Array &value_D, Array &h, double coeff, bool print_heading)
+                                  Array &value_D, Array &h, double coeff, 
+                                  std::function< double(double) > lambda,
+                                  bool print_heading)
 {
     // search for minimum and maximum values of the 3-dimensional data sets
     minValue = maxValue = value_D.x[ 0 ][ 0 ][ 0 ];
@@ -122,8 +124,8 @@ void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, st
         cout << endl << heading_1 << endl << heading_2 << endl << endl;
     }
 
-    maxValue = maxValue * coeff;
-    minValue = minValue * coeff;
+    maxValue = lambda(maxValue * coeff);
+    minValue = lambda(minValue * coeff);
 
     cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << 
         resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << 
