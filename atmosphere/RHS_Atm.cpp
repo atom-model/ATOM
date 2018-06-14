@@ -92,10 +92,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 	k_Force = 10.;																			// factor for accelleration of convergence processes inside the immersed boundary conditions
 
-	cc = + 1.0;
-
-	h_check_i = h_check_j = h_check_k = 0;
-
+	cc = + 1.;
 
 // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
 // collection of coefficients9
@@ -119,196 +116,99 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 //  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>> 
 // only in positive r-direction above ground 
-	hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+	double topo_step = L_atm / ( double ) ( im-1 );
+	double hight = ( double ) i * topo_step;
+	double topo_diff = fabs ( hight - Topography.y[ j ][ k ] );
 
-	if ( fabs ( hight - Topography.y[ j ][ k ] ) < ( L_atm / ( double ) ( im-1 ) ) && ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ))
+	if ( ( topo_diff < topo_step ) && ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ) )
 	{
-		h_0_i = ( hight - Topography.y[ j ][ k ] ) / Topography.y[ j ][ k ];
-		h_0_0 = ( (  double ) i - ( double ) ( i - 1 ) ) / ( double ) ( im - 1 );
-
-		if ( fabs ( h_0_0 - h_0_i ) < 1. )
-		{
-			h_c_i = cc * ( 1. - fabs ( h_0_0 - h_0_i ) / 1. ); 
-//			h_c_i = 0.; 
-			h_d_i = 1. - h_c_i;
-			h_check_i = 1;
-		}
+		h_0_i = topo_diff / L_atm;
+		h_0_0 = 1. - h_0_i;
+		h_d_i = cc * ( 1. - h_0_0 ); 
 	}
+	else 	h_d_i = 0.; 
 
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive the-direction along northerly boundaries 
-	if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 1. ) )
+
+	if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 1. ) ) || ( ( h.x[ i ][ j - 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) ) )
 	{
-		dist = .75;
-		h_0_j = ( double ) ( j ) + dist;
-		h_0_0 = ( double ) ( j + 1 );
-
-		if ( fabs ( h_0_0 - h_0_j ) < 1. )
-		{
-			h_c_j = cc * ( 1. - fabs ( h_0_0 - h_0_j ) / 1. ); 
-//			h_c_j = 0.; 
-			h_d_j = 1. - h_c_j;
-			h_check_j = 1;
-		}
+		dist = .75 * dthe;
+		h_0_j = dist / dthe;
+		h_0_0 = 1. - h_0_j;
+		h_d_j = cc * ( 1. - h_0_0 ); 
 	}
+	else	h_d_j = 0.; 
 
 
-
-// 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in negative the-direction along southerly boundaries 
-	if ( ( h.x[ i ][ j - 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
+	if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1 ] == 1. ) ) || ( ( h.x[ i ][ j ][ k - 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) ) )
 	{
-		dist = .75;
-		h_0_j = ( double ) ( j - 1 ) + dist;
-		h_0_0 = ( double ) ( j );
-
-		if ( fabs ( h_0_0 - h_0_j ) < 1. )
-		{
-			h_c_j = cc * ( 1. - fabs ( h_0_0 - h_0_j ) / 1. ); 
-//			h_c_j = 0.; 
-			h_d_j = 1. - h_c_j;
-			h_check_j = 1;
-		}
+		dist = .75 * dthe;
+		h_0_j = dist / dthe;
+		h_0_0 = 1. - h_0_j;
+		h_d_j = cc * ( 1. - h_0_0 ); 
 	}
-
-
-// 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in positive phi-direction on westerly boundaries 
-	if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1 ] == 1. ) )
-	{
-		dist = .75;
-		h_0_k = ( double ) ( k ) + dist;
-		h_0_0 = ( double ) ( k + 1 );
-
-		if ( fabs ( h_0_0 - h_0_k ) < 1. )
-		{
-			h_c_k = cc * ( 1. - fabs ( h_0_0 - h_0_k ) / 1. ); 
-//			h_c_k = 0.; 
-			h_d_k = 1. - h_c_k;
-			h_check_k = 1;
-		}
-	}
-
-
-// 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in negative phi-direction along easterly boundaries 
-	if ( ( h.x[ i ][ j ][ k - 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
-	{
-		dist = .75;
-		h_0_k = ( double ) ( k - 1 ) + dist;
-		h_0_0 = ( double ) ( k );
-
-		if ( fabs ( h_0_0 - h_0_k ) < 1. )
-		{
-			h_c_k = cc * ( 1. - fabs ( h_0_0 - h_0_k ) / 1. ); 
-//			h_c_k = 0.; 
-			h_d_k = 1. - h_c_k;
-			h_check_k = 1;
-		}
-	}
-
-
-
-	if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_i != 1 ) )
-	{
-		h_c_i = 0.; 
-		h_d_i = 1. - h_c_i;
-	}
-
-	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_i != 1 ) )
-	{
-		h_c_i = 1.; 
-		h_d_i = 1. - h_c_i;
-	}
-
-
-	if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_j != 1 ) )
-	{
-		h_c_j = 0.; 
-		h_d_j = 1. - h_c_j;
-	}
-
-	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_j != 1 ) )
-	{
-		h_c_j = 1.; 
-		h_d_j = 1. - h_c_j;
-	}
-
-
-	if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_k != 1 ) )
-	{
-		h_c_k = 0.; 
-		h_d_k = 1. - h_c_k;
-	}
-
-	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_k != 1 ) )
-	{
-		h_c_k = 1.; 
-		h_d_k = 1. - h_c_k;
-	}
-
+	else	h_d_j = 0.; 
 
 
 
 // corner point averaging around obstacles
 //	point closest to corner i/j+1/k+1
-		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1  ] == 0. ) ) )
-		{
-			u.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( u.x[ i ][ j + 1 ][ k ] + u.x[ i ][ j ][ k + 1 ] );
-			v.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( v.x[ i ][ j + 1 ][ k ] + v.x[ i ][ j + 1 ][ k + 1 ] );
-			w.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( w.x[ i ][ j + 1 ][ k ] + w.x[ i ][ j + 1 ][ k + 1 ] );
-			t.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( t.x[ i ][ j + 1 ][ k ] + t.x[ i ][ j + 1 ][ k + 1 ] );
-			p_dyn.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( p_dyn.x[ i ][ j + 1 ][ k ] + p_dyn.x[ i ][ j + 1 ][ k + 1 ] );
-			c.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( c.x[ i ][ j + 1 ][ k ] + c.x[ i ][ j + 1 ][ k + 1 ] );
-			cloud.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( cloud.x[ i ][ j + 1 ][ k ] + cloud.x[ i ][ j + 1 ][ k + 1 ] );
-			ice.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( ice.x[ i ][ j + 1 ][ k ] + ice.x[ i ][ j + 1 ][ k + 1 ] );
-			co2.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( co2.x[ i ][ j + 1 ][ k ] + co2.x[ i ][ j + 1 ][ k + 1 ] );
-		}
+	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1  ] == 0. ) ) )
+	{
+		u.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( u.x[ i ][ j + 1 ][ k ] + u.x[ i ][ j ][ k + 1 ] );
+		v.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( v.x[ i ][ j + 1 ][ k ] + v.x[ i ][ j + 1 ][ k + 1 ] );
+		w.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( w.x[ i ][ j + 1 ][ k ] + w.x[ i ][ j + 1 ][ k + 1 ] );
+		t.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( t.x[ i ][ j + 1 ][ k ] + t.x[ i ][ j + 1 ][ k + 1 ] );
+		p_dyn.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( p_dyn.x[ i ][ j + 1 ][ k ] + p_dyn.x[ i ][ j + 1 ][ k + 1 ] );
+		c.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( c.x[ i ][ j + 1 ][ k ] + c.x[ i ][ j + 1 ][ k + 1 ] );
+		cloud.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( cloud.x[ i ][ j + 1 ][ k ] + cloud.x[ i ][ j + 1 ][ k + 1 ] );
+		ice.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( ice.x[ i ][ j + 1 ][ k ] + ice.x[ i ][ j + 1 ][ k + 1 ] );
+		co2.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( co2.x[ i ][ j + 1 ][ k ] + co2.x[ i ][ j + 1 ][ k + 1 ] );
+	}
 
 //	point closest to corner i/j-1/k+1
-		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) ) )
-		{
-			u.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( u.x[ i ][ j ][ k + 1 ] + u.x[ i ][ j - 1 ][ k ] );
-			v.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( v.x[ i ][ j ][ k + 1 ] + v.x[ i ][ j - 1 ][ k ] );
-			w.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( w.x[ i ][ j ][ k + 1 ] + w.x[ i ][ j - 1 ][ k ] );
-			t.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( t.x[ i ][ j ][ k + 1 ] + t.x[ i ][ j - 1 ][ k ] );
-			p_dyn.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( p_dyn.x[ i ][ j ][ k + 1 ] + p_dyn.x[ i ][ j - 1 ][ k ] );
-			c.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( c.x[ i ][ j ][ k + 1 ] + c.x[ i ][ j - 1 ][ k ] );
-			cloud.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( cloud.x[ i ][ j ][ k + 1 ] + cloud.x[ i ][ j - 1 ][ k ] );
-			ice.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( ice.x[ i ][ j ][ k + 1 ] + ice.x[ i ][ j - 1 ][ k ] );
-			co2.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( co2.x[ i ][ j ][ k + 1 ] + co2.x[ i ][ j - 1 ][ k ] );
-		}
+	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) ) )
+	{
+		u.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( u.x[ i ][ j ][ k + 1 ] + u.x[ i ][ j - 1 ][ k ] );
+		v.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( v.x[ i ][ j ][ k + 1 ] + v.x[ i ][ j - 1 ][ k ] );
+		w.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( w.x[ i ][ j ][ k + 1 ] + w.x[ i ][ j - 1 ][ k ] );
+		t.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( t.x[ i ][ j ][ k + 1 ] + t.x[ i ][ j - 1 ][ k ] );
+		p_dyn.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( p_dyn.x[ i ][ j ][ k + 1 ] + p_dyn.x[ i ][ j - 1 ][ k ] );
+		c.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( c.x[ i ][ j ][ k + 1 ] + c.x[ i ][ j - 1 ][ k ] );
+		cloud.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( cloud.x[ i ][ j ][ k + 1 ] + cloud.x[ i ][ j - 1 ][ k ] );
+		ice.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( ice.x[ i ][ j ][ k + 1 ] + ice.x[ i ][ j - 1 ][ k ] );
+		co2.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( co2.x[ i ][ j ][ k + 1 ] + co2.x[ i ][ j - 1 ][ k ] );
+	}
 
 //	point closest to corner i/j/k-1
-		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) ) )
-		{
-			u.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( u.x[ i ][ j + 1 ][ k ] + u.x[ i ][ j ][ k - 1 ] );
-			v.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( v.x[ i ][ j + 1 ][ k ] + v.x[ i ][ j ][ k - 1 ] );
-			w.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( w.x[ i ][ j + 1 ][ k ] + w.x[ i ][ j ][ k - 1 ] );
-			t.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( t.x[ i ][ j + 1 ][ k ] + t.x[ i ][ j ][ k - 1 ] );
-			p_dyn.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( p_dyn.x[ i ][ j + 1 ][ k ] + p_dyn.x[ i ][ j ][ k - 1 ] );
-			c.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( c.x[ i ][ j + 1 ][ k ] + c.x[ i ][ j ][ k - 1 ] );
-			cloud.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( cloud.x[ i ][ j + 1 ][ k ] + cloud.x[ i ][ j ][ k - 1 ] );
-			ice.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( ice.x[ i ][ j + 1 ][ k ] + ice.x[ i ][ j ][ k - 1 ] );
-			co2.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( co2.x[ i ][ j + 1 ][ k ] + co2.x[ i ][ j ][ k - 1 ] );
-		}
+	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) ) )
+	{
+		u.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( u.x[ i ][ j + 1 ][ k ] + u.x[ i ][ j ][ k - 1 ] );
+		v.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( v.x[ i ][ j + 1 ][ k ] + v.x[ i ][ j ][ k - 1 ] );
+		w.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( w.x[ i ][ j + 1 ][ k ] + w.x[ i ][ j ][ k - 1 ] );
+		t.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( t.x[ i ][ j + 1 ][ k ] + t.x[ i ][ j ][ k - 1 ] );
+		p_dyn.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( p_dyn.x[ i ][ j + 1 ][ k ] + p_dyn.x[ i ][ j ][ k - 1 ] );
+		c.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( c.x[ i ][ j + 1 ][ k ] + c.x[ i ][ j ][ k - 1 ] );
+		cloud.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( cloud.x[ i ][ j + 1 ][ k ] + cloud.x[ i ][ j ][ k - 1 ] );
+		ice.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( ice.x[ i ][ j + 1 ][ k ] + ice.x[ i ][ j ][ k - 1 ] );
+		co2.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( co2.x[ i ][ j + 1 ][ k ] + co2.x[ i ][ j ][ k - 1 ] );
+	}
 
 //	point closest to corner i/j+1/k-1
-		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j ][ k - 1 ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) ) )
-		{
-			u.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( u.x[ i ][ j ][ k - 1 ] + u.x[ i ][ j + 1][ k ] );
-			v.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( v.x[ i ][ j ][ k - 1 ] + v.x[ i ][ j + 1][ k ] );
-			w.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( w.x[ i ][ j ][ k - 1 ] + w.x[ i ][ j + 1][ k ] );
-			t.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( t.x[ i ][ j ][ k - 1 ] + t.x[ i ][ j + 1][ k ] );
-			p_dyn.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( p_dyn.x[ i ][ j ][ k - 1 ] + p_dyn.x[ i ][ j + 1][ k ] );
-			c.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( c.x[ i ][ j ][ k - 1 ] + c.x[ i ][ j + 1][ k ] );
-			cloud.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( cloud.x[ i ][ j ][ k - 1 ] + cloud.x[ i ][ j + 1][ k ] );
-			ice.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( ice.x[ i ][ j ][ k - 1 ] + ice.x[ i ][ j + 1][ k ] );
-			co2.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( co2.x[ i ][ j ][ k - 1 ] + co2.x[ i ][ j + 1][ k ] );
-		}
-
-
+	if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j ][ k - 1 ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) ) )
+	{
+		u.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( u.x[ i ][ j ][ k - 1 ] + u.x[ i ][ j + 1][ k ] );
+		v.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( v.x[ i ][ j ][ k - 1 ] + v.x[ i ][ j + 1][ k ] );
+		w.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( w.x[ i ][ j ][ k - 1 ] + w.x[ i ][ j + 1][ k ] );
+		t.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( t.x[ i ][ j ][ k - 1 ] + t.x[ i ][ j + 1][ k ] );
+		p_dyn.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( p_dyn.x[ i ][ j ][ k - 1 ] + p_dyn.x[ i ][ j + 1][ k ] );
+		c.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( c.x[ i ][ j ][ k - 1 ] + c.x[ i ][ j + 1][ k ] );
+		cloud.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( cloud.x[ i ][ j ][ k - 1 ] + cloud.x[ i ][ j + 1][ k ] );
+		ice.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( ice.x[ i ][ j ][ k - 1 ] + ice.x[ i ][ j + 1][ k ] );
+		co2.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( co2.x[ i ][ j ][ k - 1 ] + co2.x[ i ][ j + 1][ k ] );
+	}
 
 
 // 1st order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
@@ -377,9 +277,9 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	{
 		if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
 		{
-			dudr = ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i + 1 ][ j ][ k ] - u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );			// 2. order accurate
+			dudr = h_d_i * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i + 1 ][ j ][ k ] - u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );			// 2. order accurate
 
-			d2udr2 = ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i + 1 ][ j ][ k ] + u.x[ i + 2 ][ j ][ k ] ) / dr2;			// 2. order accurate
+			d2udr2 = h_d_i * ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i + 1 ][ j ][ k ] + u.x[ i + 2 ][ j ][ k ] ) / dr2;			// 2. order accurate
 		}
 	}
 	else
@@ -619,9 +519,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	if ( h.x[ i ][ j ][ k ] == 1. ) 	BuoyancyForce.x[ i ][ j ][ k ] = 0.;
 
 	double vapour_evaporation = 0.;
-
 	double vapour_surface = 0.;
-
 	double evap_precip = 0.;
 	double coeff_vapour = 1.1574e-5 * L_atm / u_0;												// 1.1574e-3 == mm/d to m/s, == .01234
 
@@ -651,19 +549,19 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
 			- dpdr / r_humid + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
 			- RS_buoyancy_Momentum
-			- h_c_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;
+			- h_d_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;
 
 	rhs_v.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dvdr + v.x[ i ][ j ][ k ] * dvdthe / rm + w.x[ i ][ j ][ k ] * dvdphi / rmsinthe ) +
 			- dpdthe / rm / r_humid + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
 			- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_j * v.x[ i ][ j ][ k ] + d2vdphi2 / rm2sinthe2
 			+ 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-			- h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;
+			- h_d_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;
 
 	rhs_w.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dwdr + v.x[ i ][ j ][ k ] * dwdthe / rm + w.x[ i ][ j ][ k ] * dwdphi / rmsinthe ) +
 			- dpdphi / rmsinthe / r_humid + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
 			- ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_k * w.x[ i ][ j ][ k ] + d2wdphi2 / rm2sinthe2
 			+ 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-			- h_c_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;
+			- h_d_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;
 
 	rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
 			+ ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
@@ -703,9 +601,6 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 	cc = + 1.;
 
-	h_check_i = h_check_j = h_check_k = 0;
-
-
 // collection of coefficients
 	dr2 = dr * dr;
 	dthe2 = dthe * dthe;
@@ -724,126 +619,63 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in positive the-direction along northerly boundaries 
-	if ( ( h.x[ 0 ][ j - 1 ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
+// only in positive the-direction along northerly and southerly boundaries 
+	if ( ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 1. ) ) || ( ( h.x[ 0 ][ j - 1 ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) ) )
 	{
-		h_0_j = ( double ) ( j ) * dthe + dthe / 4.;
-
-		if ( fabs ( ( ( double ) ( j + 1 ) * dthe - h_0_j ) ) < dthe )
-		{
-			h_c_j = 0.; 
-			h_d_j = 1. - h_c_j;
-			h_check_j = 1;
-		}
+		dist = .75 * dthe;
+		h_0_j = dist / dthe;
+		h_0_0 = 1. - h_0_j;
+		h_d_j = cc * ( 1. - h_0_0 ); 
 	}
-
+	else	h_d_j = 0.; 
 
 
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in negative the-direction along southerly boundaries 
-	if ( ( h.x[ 0 ][ j + 1 ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
+// only in positive phi-direction on westerly and easterly boundaries 
+	if ( ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 1. ) ) || ( ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) ) )
 	{
-		h_0_j = ( double ) ( j ) * dthe - dthe / 4.;
-
-		if ( fabs ( ( ( double ) ( j - 1 ) * dthe - h_0_j ) ) < dthe )
-		{
-			h_c_j = 0.; 
-			h_d_j = 1. - h_c_j;
-			h_check_j = 1;
-		}
+		dist = .75 * dthe;
+		h_0_j = dist / dthe;
+		h_0_0 = 1. - h_0_j;
+		h_d_j = cc * ( 1. - h_0_0 ); 
 	}
+	else	h_d_j = 0.; 
 
-
-// 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in positive phi-direction on westerly boundaries 
-	if ( ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
-	{
-		h_0_k = ( double ) ( k ) * dphi + dphi / 4.;
-
-		if ( fabs ( ( ( double ) ( k + 1 ) * dphi - h_0_k ) ) < dphi )
-		{
-			h_c_k = 0.; 
-			h_d_k = 1. - h_c_k;
-			h_check_k = 1;
-		}
-	}
-
-
-
-// 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in negative phi-direction along easterly boundaries 
-	if ( ( h.x[ 0 ][ j ][ k + 1 ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
-	{
-		h_0_k = ( double ) ( k ) * dphi - dphi / 4.;
-
-		if ( fabs ( ( ( double ) ( k - 1 ) * dphi - h_0_k ) ) < dphi )
-		{
-			h_c_k = 0.; 
-			h_d_k = 1. - h_c_k;
-			h_check_k = 1;
-		}
-	}
-
-
-	if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h_check_j != 1 ) )
-	{
-		h_c_j = 0.; 
-		h_d_j = 1. - h_c_j;
-		}
-
-	if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h_check_j != 1 ) )
-	{
-		h_c_j = 1.; 
-		h_d_j = 1. - h_c_j;
-	}
-
-
-	if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h_check_k != 1 ) )
-	{
-		h_c_k = 0.; 
-		h_d_k = 1. - h_c_k;
-	}
-
-	if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h_check_k != 1 ) )
-	{
-		h_c_k = 1.; 
-		h_d_k = 1. - h_c_k;
-	}
 
 
 
 // corner point averaging around obstacles
 //	point closest to corner i/j+1/k+1
-		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k + 1  ] == 0. ) ) )
-		{
-			v.x[ 0 ][ j + 1 ][ k + 1 ] = .5 * ( v.x[ 0 ][ j + 1 ][ k ] + v.x[ 0 ][ j + 1 ][ k + 1 ] );
-			w.x[ 0 ][ j + 1 ][ k + 1 ] = .5 * ( w.x[ 0 ][ j + 1 ][ k ] + w.x[ 0 ][ j + 1 ][ k + 1 ] );
-			p_dyn.x[ 0 ][ j + 1 ][ k + 1 ] = .5 * ( p_dyn.x[ 0 ][ j + 1 ][ k ] + p_dyn.x[ 0 ][ j + 1 ][ k + 1 ] );
-		}
+	if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k + 1  ] == 0. ) ) )
+	{
+		v.x[ 0 ][ j + 1 ][ k + 1 ] = .5 * ( v.x[ 0 ][ j + 1 ][ k ] + v.x[ 0 ][ j + 1 ][ k + 1 ] );
+		w.x[ 0 ][ j + 1 ][ k + 1 ] = .5 * ( w.x[ 0 ][ j + 1 ][ k ] + w.x[ 0 ][ j + 1 ][ k + 1 ] );
+		p_dyn.x[ 0 ][ j + 1 ][ k + 1 ] = .5 * ( p_dyn.x[ 0 ][ j + 1 ][ k ] + p_dyn.x[ 0 ][ j + 1 ][ k + 1 ] );
+	}
 
 //	point closest to corner i/j-1/k+1
-		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) ) )
-		{
-			v.x[ 0 ][ j - 1 ][ k + 1 ] = .5 * ( v.x[ 0 ][ j ][ k + 1 ] + v.x[ 0 ][ j - 1 ][ k ] );
-			w.x[ 0 ][ j - 1 ][ k + 1 ] = .5 * ( w.x[ 0 ][ j ][ k + 1 ] + w.x[ 0 ][ j - 1 ][ k ] );
-			p_dyn.x[ 0 ][ j - 1 ][ k + 1 ] = .5 * ( p_dyn.x[ 0 ][ j ][ k + 1 ] + p_dyn.x[ 0 ][ j - 1 ][ k ] );
-		}
+	if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) ) )
+	{
+		v.x[ 0 ][ j - 1 ][ k + 1 ] = .5 * ( v.x[ 0 ][ j ][ k + 1 ] + v.x[ 0 ][ j - 1 ][ k ] );
+		w.x[ 0 ][ j - 1 ][ k + 1 ] = .5 * ( w.x[ 0 ][ j ][ k + 1 ] + w.x[ 0 ][ j - 1 ][ k ] );
+		p_dyn.x[ 0 ][ j - 1 ][ k + 1 ] = .5 * ( p_dyn.x[ 0 ][ j ][ k + 1 ] + p_dyn.x[ 0 ][ j - 1 ][ k ] );
+	}
 
 //	point closest to corner i/j/k-1
-		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j + 1 ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 0. ) ) )
-		{
-			v.x[ 0 ][ j - 1 ][ k - 1 ] = .5 * ( v.x[ 0 ][ j + 1 ][ k ] + v.x[ 0 ][ j ][ k - 1 ] );
-			w.x[ 0 ][ j - 1 ][ k - 1 ] = .5 * ( w.x[ 0 ][ j + 1 ][ k ] + w.x[ 0 ][ j ][ k - 1 ] );
-			p_dyn.x[ 0 ][ j - 1 ][ k - 1 ] = .5 * ( p_dyn.x[ 0 ][ j + 1 ][ k ] + p_dyn.x[ 0 ][ j ][ k - 1 ] );
-		}
+	if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j + 1 ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 0. ) ) )
+	{
+		v.x[ 0 ][ j - 1 ][ k - 1 ] = .5 * ( v.x[ 0 ][ j + 1 ][ k ] + v.x[ 0 ][ j ][ k - 1 ] );
+		w.x[ 0 ][ j - 1 ][ k - 1 ] = .5 * ( w.x[ 0 ][ j + 1 ][ k ] + w.x[ 0 ][ j ][ k - 1 ] );
+		p_dyn.x[ 0 ][ j - 1 ][ k - 1 ] = .5 * ( p_dyn.x[ 0 ][ j + 1 ][ k ] + p_dyn.x[ 0 ][ j ][ k - 1 ] );
+	}
 
 //	point closest to corner i/j+1/k-1
-		if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j ][ k - 1 ] == 0. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) ) )
-		{
-			v.x[ 0 ][ j + 1 ][ k - 1 ] = .5 * ( v.x[ 0 ][ j ][ k - 1 ] + v.x[ 0 ][ j + 1][ k ] );
-			w.x[ 0 ][ j + 1 ][ k - 1 ] = .5 * ( w.x[ 0 ][ j ][ k - 1 ] + w.x[ 0 ][ j + 1][ k ] );
-			p_dyn.x[ 0 ][ j + 1 ][ k - 1 ] = .5 * ( p_dyn.x[ 0 ][ j ][ k - 1 ] + p_dyn.x[ 0 ][ j + 1][ k ] );
-		}
+	if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( ( h.x[ 0 ][ j ][ k - 1 ] == 0. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) ) )
+	{
+		v.x[ 0 ][ j + 1 ][ k - 1 ] = .5 * ( v.x[ 0 ][ j ][ k - 1 ] + v.x[ 0 ][ j + 1][ k ] );
+		w.x[ 0 ][ j + 1 ][ k - 1 ] = .5 * ( w.x[ 0 ][ j ][ k - 1 ] + w.x[ 0 ][ j + 1][ k ] );
+		p_dyn.x[ 0 ][ j + 1 ][ k - 1 ] = .5 * ( p_dyn.x[ 0 ][ j ][ k - 1 ] + p_dyn.x[ 0 ][ j + 1][ k ] );
+	}
 
 
 
@@ -966,12 +798,12 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 	rhs_v.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dvdthe / rm + w.x[ 0 ][ j ][ k ] * dvdphi / rmsinthe ) +
 				- dpdthe / rm / r_air - ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
 				- ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[ 0 ][ j ][ k ] + d2vdphi2 / rm2sinthe2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-				- h_c_j * v.x[ 0 ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
+				- h_d_j * v.x[ 0 ][ j ][ k ] * k_Force / dthe2;					// immersed boundary condition as a negative force addition
 
 	rhs_w.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dwdthe / rm +  w.x[ 0 ][ j ][ k ] * dwdphi / rmsinthe ) +
 				- dpdphi / rmsinthe / r_air + ( d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
 				- ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[ 0 ][ j ][ k ] + d2wdphi2 / rm2sinthe2 + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-				- h_c_k * w.x[ 0 ][ j ][ k ] * k_Force / dphi2;					// immersed boundary condition as a negative force addition
+				- h_d_k * w.x[ 0 ][ j ][ k ] * k_Force / dphi2;					// immersed boundary condition as a negative force addition
 
 
 	aux_v.x[ 0 ][ j ][ k ] = rhs_v.x[ 0 ][ j ][ k ] + dpdthe / rm / r_air;
