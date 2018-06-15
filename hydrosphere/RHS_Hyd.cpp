@@ -63,16 +63,13 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn,
             Array &p_dynn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c,
             Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D,
-            Array &Salt_Balance, Array &p_stat, Array &r_water, Array &r_salt_water, Array_2D &Evaporation_Dalton, Array_2D &Precipitation )
+            Array &Salt_Balance, Array &p_stat, Array &r_water, Array &r_salt_water, Array_2D &Evaporation_Dalton,
+            Array_2D &Precipitation, Array_2D &value_top, Array_2D &Bathymetry )
 {
 // collection of coefficients for phase transformation
 
     double k_Force = 10.;// factor for accelleration of convergence processes inside the immersed boundary conditions
-
     double cc = 1.;
-
-    int h_check_i = 0, h_check_j = 0, h_check_k = 0;
-
 
 // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
 
@@ -93,115 +90,45 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
 
-    double h_c_i=0, h_d_i=0, h_0_j=0, h_c_j=0, h_d_j=0, h_0_k=0, h_c_k=0, h_d_k=0;
+    double dist =0, h_0_i=0, h_0_0=0, h_d_i=0, h_0_j=0, h_d_j=0, h_d_k=0;
 
-//  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>>
+
+//  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>> 
 // only in positive r-direction above ground 
-    if ( ( h.x[ i - 1 ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
-    {
-        double h_0_i = ( double ) ( i ) * dr - dr / 4.;
+	double topo_step = L_hyd / ( double ) ( im-1 );
+	double hight = ( double ) i * topo_step;
+	double topo_diff = fabs ( hight - Bathymetry.y[ j ][ k ] );
 
-        if ( fabs ( ( ( double ) ( i + 1 ) * dr - h_0_i ) ) < dr )
-        {
-            h_c_i = cc * ( 1. - fabs ( ( ( double ) ( i + 1 ) * dr - h_0_i ) ) / dr ); 
-            h_d_i = 1. - h_c_i;
-            h_check_i = 1;
-        }
-    }
+	if ( ( topo_diff < topo_step ) && ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ) )
+	{
+		h_0_i = topo_diff / L_hyd;
+		h_0_0 = 1. - h_0_i;
+		h_d_i = cc * ( 1. - h_0_0 ); 
+	}
+	else 	h_d_i = 0.; 
+
 
 // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in positive the-direction along northerly boundaries 
-    if ( ( h.x[ i ][ j - 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
-    {
-        h_0_j = ( double ) ( j ) * dthe + dthe / 4.;
+// only in positive the-direction along northerly and southerly boundaries 
 
-        if ( fabs ( ( ( double ) ( j + 1 ) * dthe - h_0_j ) ) < dthe )
-        {
-            h_c_j = cc * ( 1. - fabs ( ( ( double ) ( j + 1 ) * dthe - h_0_j ) ) / dthe ); 
-            h_d_j = 1. - h_c_j;
-            h_check_j = 1;
-        }
-    }
-
-// 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in negative the-direction along southerly boundaries 
-    if ( ( h.x[ i ][ j +1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
-    {
-        h_0_j = ( double ) ( j ) * dthe - dthe / 4.;
-
-        if ( fabs ( ( ( double ) ( j - 1 ) * dthe - h_0_j ) ) < dthe )
-        {
-            h_c_j = cc * ( 1. - fabs ( ( ( double ) ( j - 1 ) * dthe - h_0_j ) ) / dthe ); 
-            h_d_j = 1. - h_c_j;
-            h_check_j = 1;
-        }
-    }
-
-// 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in positive phi-direction on westerly boundaries 
-    if ( ( h.x[ i ][ j ][ k - 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
-    {
-        h_0_k = ( double ) ( k ) * dphi + dphi / 4.;
-
-        if ( fabs ( ( ( double ) ( k + 1 ) * dphi - h_0_k ) ) < dphi )
-        {
-            h_c_k = cc * ( 1. - fabs ( ( ( double ) ( k + 1 ) * dphi - h_0_k ) ) / dphi ); 
-            h_d_k = 1. - h_c_k;
-            h_check_k = 1;
-        }
-    }
-
-// 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in negative phi-direction along easterly boundaries 
-    if ( ( h.x[ i ][ j ][ k + 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) )
-    {
-        h_0_k = ( double ) ( k ) * dphi - dphi / 4.;
-
-        if ( fabs ( ( ( double ) ( k - 1 ) * dphi - h_0_k ) ) < dphi )
-        {
-            h_c_k = cc * ( 1. - fabs ( ( ( double ) ( k - 1 ) * dphi - h_0_k ) ) / dphi ); 
-            h_d_k = 1. - h_c_k;
-            h_check_k = 1;
-        }
-    }
-
-        if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_i != 1 ) )
-        {
-            h_c_i = 0.; 
-            h_d_i = 1. - h_c_i;
-        }
-
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_i != 1 ) )
-        {
-            h_c_i = 1.; 
-            h_d_i = 1. - h_c_i;
-        }
+	if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 1. ) ) || ( ( h.x[ i ][ j - 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) ) )
+	{
+		dist = .75 * dthe;
+		h_0_j = dist / dthe;
+		h_0_0 = 1. - h_0_j;
+		h_d_j = cc * ( 1. - h_0_0 ); 
+	}
+	else	h_d_j = 0.; 
 
 
-        if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_j != 1 ) )
-        {
-            h_c_j = 0.; 
-            h_d_j = 1. - h_c_j;
-        }
-
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_j != 1 ) )
-        {
-            h_c_j = 1.; 
-            h_d_j = 1. - h_c_j;
-        }
-
-
-        if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h_check_k != 1 ) )
-        {
-            h_c_k = 0.; 
-            h_d_k = 1. - h_c_k;
-        }
-
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h_check_k != 1 ) )
-        {
-            h_c_k = 1.; 
-            h_d_k = 1. - h_c_k;
-        }
+	if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1 ] == 1. ) ) || ( ( h.x[ i ][ j ][ k - 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) ) )
+	{
+		dist = .75 * dthe;
+		h_0_j = dist / dthe;
+		h_0_0 = 1. - h_0_j;
+		h_d_j = cc * ( 1. - h_0_0 ); 
+	}
+	else	h_d_j = 0.; 
 
 
 // corner point averaging around obstacles
@@ -304,10 +231,10 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     {
         if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
         {
-            dudr = ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i + 1 ][ j ][ k ] - u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
+            dudr = h_d_i * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i + 1 ][ j ][ k ] - u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
             // 2. order accurate
 
-            d2udr2 = ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i + 1 ][ j ][ k ] + u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );           
+            d2udr2 = h_d_i * ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i + 1 ][ j ][ k ] + u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );           
             // 2. order accurate
         }
     }
@@ -534,7 +461,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 	}
 	else 								salinity_evaporation = 0.;
 
-//	salinity_evaporation = 0.;
 
     double RS_buoyancy_Momentum = - Buoyancy * g * ( salt_water_ref - r_salt_water.x[ i ][ j ][ k ] ) / salt_water_ref * coeff_buoy;       // buoyancy based on water density 
 
@@ -573,20 +499,20 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             + dpdr / salt_water_ref + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 + 4. * dudr / rm + dudthe * costhe 
             / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
             + RS_buoyancy_Momentum
-            - h_c_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;// immersed boundary condition as a negative force addition
+            - h_d_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;// immersed boundary condition as a negative force addition
 
     rhs_v.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dvdr + v.x[ i ][ j ][ k ] * dvdthe / rm + w.x[ i ][ j ][ k ] * dvdphi / rmsinthe )
             - dpdthe / rm / salt_water_ref + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
             - ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[ i ][ j ][ k ] + d2vdphi2 / rm2sinthe2
             + 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-            - h_c_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;// immersed boundary condition as a negative force addition
+            - h_d_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;// immersed boundary condition as a negative force addition
 
     rhs_w.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dwdr + v.x[ i ][ j ][ k ] * dwdthe / rm + w.x[ i ][ j ][ k ] 
             * dwdphi / rmsinthe )
             - dpdphi / rmsinthe / salt_water_ref + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
             - ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[ i ][ j ][ k ] + d2wdphi2 / rm2sinthe2
             + 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-            - h_c_k * w.x[ i ][ j ][ k ] * k_Force / dphi2; // immersed boundary condition as a negative force addition
+            - h_d_k * w.x[ i ][ j ][ k ] * k_Force / dphi2; // immersed boundary condition as a negative force addition
 
     rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe )
             + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc * re )
@@ -609,8 +535,7 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Ar
 //  2D surface iterations
     im = 41;
     double k_Force = 10.;// factor for accelleration of convergence processes inside the immersed boundary conditions
-
-    int h_check_j = 0, h_check_k = 0;
+    double cc = 1.;
 
 // collection of coefficients
     double dthe2 = dthe * dthe;
@@ -627,87 +552,34 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Ar
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
 
-    double h_0_j=0, h_c_j=0, h_d_j=0, h_0_k=0, h_c_k=0, h_d_k=0;
+    double dist =0, h_0_0=0, h_0_j=0, h_d_j=0, h_d_k=0;
+
 
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in positive the-direction along northerly boundaries 
-    if ( ( h.x[ im-1 ][ j - 1 ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k ] == 0. ) )
-    {
-        h_0_j = ( double ) ( j ) * dthe + dthe / 4.;
+// only in positive the-direction along northerly and southerly boundaries 
+	if ( ( ( h.x[ im-1 ][ j ][ k ] == im-1. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 1. ) ) || ( ( h.x[ im-1 ][ j - 1 ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k ] == 0. ) ) )
+	{
+		dist = .75 * dthe;
+		h_0_j = dist / dthe;
+		h_0_0 = 1. - h_0_j;
+		h_d_j = cc * ( 1. - h_0_0 ); 
+	}
+	else	h_d_j = 0.; 
 
-        if ( fabs ( ( ( double ) ( j + 1 ) * dthe - h_0_j ) ) < dthe )
-        {
-            h_c_j = 0.; 
-            h_d_j = 1. - h_c_j;
-            h_check_j = 1;
-        }
-    }
 
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in negative the-direction along southerly boundaries 
-    if ( ( h.x[ im-1 ][ j + 1 ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k ] == 0. ) )
-    {
-        h_0_j = ( double ) ( j ) * dthe - dthe / 4.;
+// only in positive phi-direction on westerly and easterly boundaries 
+	if ( ( ( h.x[ im-1 ][ j ][ k ] == im-1. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 1. ) ) || ( ( h.x[ im-1 ][ j ][ k - 1 ] == 1. ) && ( h.x[ im-1 ][ j ][ k ] == 0. ) ) )
+	{
+		dist = .75 * dthe;
+		h_0_j = dist / dthe;
+		h_0_0 = 1. - h_0_j;
+		h_d_j = cc * ( 1. - h_0_0 ); 
+	}
+	else	h_d_j = 0.; 
 
-        if ( fabs ( ( ( double ) ( j - 1 ) * dthe - h_0_j ) ) < dthe )
-        {
-            h_c_j = 0.; 
-            h_d_j = 1. - h_c_j;
-            h_check_j = 1;
-        }
-    }
 
-// 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in positive phi-direction on westerly boundaries 
-    if ( ( h.x[ im-1 ][ j ][ k - 1 ] == 1. ) && ( h.x[ im-1 ][ j ][ k ] == 0. ) )
-    {
-        h_0_k = ( double ) ( k ) * dphi + dphi / 4.;
 
-        if ( fabs ( ( ( double ) ( k + 1 ) * dphi - h_0_k ) ) < dphi )
-        {
-            h_c_k = 0.; 
-            h_d_k = 1. - h_c_k;
-            h_check_k = 1;
-        }
-    }
-
-// 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// only in negative phi-direction along easterly boundaries 
-    if ( ( h.x[ im-1 ][ j ][ k + 1 ] == 1. ) && ( h.x[ im-1 ][ j ][ k ] == 0. ) )
-    {
-        h_0_k = ( double ) ( k ) * dphi - dphi / 4.;
-
-        if ( fabs ( ( ( double ) ( k - 1 ) * dphi - h_0_k ) ) < dphi )
-        {
-            h_c_k = 0.; 
-            h_d_k = 1. - h_c_k;
-            h_check_k = 1;
-        }
-    }
-
-    if ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h_check_j != 1 ) )
-    {
-        h_c_j = 0.; 
-        h_d_j = 1. - h_c_j;
-        }
-
-    if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h_check_j != 1 ) )
-    {
-        h_c_j = 1.; 
-        h_d_j = 1. - h_c_j;
-    }
-
-    if ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h_check_k != 1 ) )
-    {
-        h_c_k = 0.; 
-        h_d_k = 1. - h_c_k;
-    }
-
-    if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h_check_k != 1 ) )
-    {
-        h_c_k = 1.; 
-        h_d_k = 1. - h_c_k;
-    }
 
  
 // corner point averaging around obstacles
@@ -882,13 +754,13 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Ar
                 - dpdthe / rm / r_0_water - ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
                 - ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[ im-1 ][ j ][ k ] + d2vdphi2 / rm2sinthe2 
                 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-                - h_c_j * v.x[ im-1 ][ j ][ k ] * k_Force / dthe2;// immersed boundary condition as a negative force addition
+                - h_d_j * v.x[ im-1 ][ j ][ k ] * k_Force / dthe2;// immersed boundary condition as a negative force addition
 
     rhs_w.x[ im-1 ][ j ][ k ] = - ( v.x[ im-1 ][ j ][ k ] * dwdthe / rm +  w.x[ im-1 ][ j ][ k ] * dwdphi / rmsinthe ) +
                 - dpdphi / rmsinthe / r_0_water + ( d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
                 - ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[ im-1 ][ j ][ k ] + d2wdphi2 / rm2sinthe2 
                 + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-                - h_c_k * w.x[ im-1 ][ j ][ k ] * k_Force / dphi2;// immersed boundary condition as a negative force addition
+                - h_d_k * w.x[ im-1 ][ j ][ k ] * k_Force / dphi2;// immersed boundary condition as a negative force addition
 
     aux_v.x[ im-1 ][ j ][ k ] = rhs_v.x[ im-1 ][ j ][ k ] + dpdthe / rm / r_0_water;
     aux_w.x[ im-1 ][ j ][ k ] = rhs_w.x[ im-1 ][ j ][ k ] + dpdphi / rmsinthe / r_0_water;
