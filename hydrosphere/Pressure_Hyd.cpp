@@ -281,7 +281,9 @@ void Pressure_Hyd::computePressure_3D ( double r_0_water, double pa, Array_1D &r
 															+ ( p_dyn.x[ i ][ j ][ k+1 ] + p_dyn.x[ i ][ j ][ k-1 ] ) * num3 
 															+ r_0_water * ( drhs_udr + drhs_vdthe + drhs_wdphi ) ) / denom;
 
-						if ( h.x[ i ][ j ][ k ] == 1. )				p_dynn.x[ i ][ j ][ k ] = .0;
+						if ( h.x[ i ][ j ][ k ] == 1. )							p_dynn.x[ i ][ j ][ k ] = .0;
+						if ( p_dynn.x[ i ][ j ][ k ] >= 3000. )				p_dynn.x[ i ][ j ][ k ] = 3000.;				// dynamic pressure causes values too high at shelf corners
+						if ( p_dynn.x[ i ][ j ][ k ] <= - 3000. )			p_dynn.x[ i ][ j ][ k ] = - 3000.;				// dynamic pressure causes values too high at shelf corners
 				}
 			}
 		}
@@ -428,7 +430,9 @@ void Pressure_Hyd::computePressure_2D ( double r_0_water, Array_1D &rad, Array_1
 													+ ( p_dyn.x[ im-1 ][ j ][ k+1 ] + p_dyn.x[ im-1 ][ j ][ k-1 ] ) * num3 
 													+ r_0_water * ( drhs_vdthe + drhs_wdphi ) ) / denom;
 
-				if ( h.x[ im-1 ][ j ][ k ] == 1. )				p_dynn.x[ im-1 ][ j ][ k ] = .0;
+				if ( h.x[ im-1 ][ j ][ k ] == 1. )							p_dynn.x[ im-1 ][ j ][ k ] = .0;
+				if ( p_dynn.x[ im-1 ][ j ][ k ] >= 3000. )				p_dynn.x[ im-1 ][ j ][ k ] = 3000.;				// dynamic pressure causes values too high at shelf corners
+				if ( p_dynn.x[ im-1 ][ j ][ k ] <= - 3000. )			p_dynn.x[ im-1 ][ j ][ k ] = - 3000.;				// dynamic pressure causes values too high at shelf corners
 			}
 		}
 

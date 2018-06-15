@@ -277,7 +277,9 @@ void Pressure_Atm::computePressure_3D ( double r_air, Array_1D &rad, Array_1D &t
 															+ ( p_dyn.x[ i ][ j ][ k+1 ] + p_dyn.x[ i ][ j ][ k-1 ] ) * num3 
 															+ r_air * ( drhs_udr + drhs_vdthe + drhs_wdphi ) ) / denom;
 
-						if ( h.x[ i ][ j ][ k ] == 1. )				p_dynn.x[ i ][ j ][ k ] = .0;
+						if ( h.x[ i ][ j ][ k ] == 1. )						p_dynn.x[ i ][ j ][ k ] = .0;
+						if ( p_dynn.x[ i ][ j ][ k ] >= .1 )				p_dynn.x[ i ][ j ][ k ] = .1;				// dynamic pressure causes values too high at shelf corners
+						if ( p_dynn.x[ i ][ j ][ k ] <= - .1 )				p_dynn.x[ i ][ j ][ k ] = - .1;				// dynamic pressure causes values too high at shelf corners
 				}
 			}
 		}
@@ -322,7 +324,7 @@ void Pressure_Atm::computePressure_3D ( double r_air, Array_1D &rad, Array_1D &t
 				for ( int i = 0; i < im; i++ )
 				{
 					p_dyn.x[ i ][ j ][ k ] = p_dynn.x[ i ][ j ][ k ];
-					if ( h.x[ i ][ j ][ k ] == 1. )				p_dyn.x[ i ][ j ][ k ] = p_dynn.x[ i ][ j ][ k ] = .0;
+					if ( h.x[ i ][ j ][ k ] == 1. )						p_dyn.x[ i ][ j ][ k ] = p_dynn.x[ i ][ j ][ k ] = .0;
 				}
 			}
 		}
@@ -418,7 +420,9 @@ void Pressure_Atm::computePressure_2D ( double r_air, Array_1D &rad, Array_1D &t
 													+ ( p_dyn.x[ 0 ][ j ][ k+1 ] + p_dyn.x[ 0 ][ j ][ k-1 ] ) * num3 
 													+ r_air * ( drhs_vdthe + drhs_wdphi ) ) / denom;
 
-				if ( h.x[ 0 ][ j ][ k ] == 1. )				p_dynn.x[ 0 ][ j ][ k ] = .0;
+				if ( h.x[ 0 ][ j ][ k ] == 1. )						p_dynn.x[ 0 ][ j ][ k ] = .0;
+				if ( p_dynn.x[ 0 ][ j ][ k ] >= .1 )				p_dynn.x[ 0 ][ j ][ k ] = .1;				// dynamic pressure causes values too high at shelf corners
+				if ( p_dynn.x[ 0 ][ j ][ k ] <= - .1 )			p_dynn.x[ 0 ][ j ][ k ] = - .1;				// dynamic pressure causes values too high at shelf corners
 			}
 		}
 
@@ -446,7 +450,7 @@ void Pressure_Atm::computePressure_2D ( double r_air, Array_1D &rad, Array_1D &t
 			{
 				p_dyn.x[ 0 ][ j ][ k ] = p_dynn.x[ 0 ][ j ][ k ];
 
-				if ( h.x[ 0 ][ j ][ k ] == 1. )					p_dyn.x[ 0 ][ j ][ k ] = p_dynn.x[ 0 ][ j ][ k ] = .0;
+				if ( h.x[ 0 ][ j ][ k ] == 1. )						p_dyn.x[ 0 ][ j ][ k ] = p_dynn.x[ 0 ][ j ][ k ] = .0;
 			}
 		}
 	}

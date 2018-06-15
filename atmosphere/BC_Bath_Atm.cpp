@@ -71,12 +71,13 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 			}
 			 else
 			{
+				Topography.y[ j ][ k ] = dummy_3;
 				i_h = round ( dummy_3 / ( L_atm / ( double) ( im - 1 ) ) );
 				hight = ( int ) i_h;
 
 				for ( int i = 0; i <= hight; i++ )
 				{
-					h.x[ i ][ j ][ k ] = Topography.y[ j ][ k ] = 1.;
+					h.x[ i ][ j ][ k ] = 1.;
 				}
 			}
 		}
@@ -85,7 +86,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 	Name_Bathymetry_File_Read.close();
 
 // rewriting bathymetrical data from -180° _ 0° _ +180° coordinate system to 0°- 360°
-
 	l = 0;
 
 	for ( int k = 180; k < km; k++ )
@@ -100,7 +100,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface ( string &Name_Bathymetry_File
 		}
 		l++;
 	}
-
 
 	l = l - 1;
 
