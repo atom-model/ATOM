@@ -158,6 +158,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	Array_1D phi(km, 3.); // longitudinal coordinate direction
 
 // 2D arrays
+	Array_2D Bathymetry(jm, km, 0.); // Bathymetry in m
+	Array_2D value_top(jm, km, 0.); // auxiliar field for bathymetzry
+
 	Array_2D Upwelling(jm, km, 0.); // upwelling
 	Array_2D Downwelling(jm, km, 0.); // downwelling
 	Array_2D BottomWater(jm, km, 0.); // 2D bottom water summed up in a vertical column
@@ -302,7 +305,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	BC_Bathymetry_Hydrosphere		depth ( im, jm, km );
 
 // 	class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-	depth.BC_SeaGround(bathymetry_path, bathymetry_name, L_hyd, h, aux_w);
+	depth.BC_SeaGround(bathymetry_path, bathymetry_name, L_hyd, h, aux_w, value_top, Bathymetry);
 
 // class BC_Hydrosphere for the boundary conditions for the variables at the spherical shell surfaces and the meridional interface
 	BC_Hydrosphere		boundary ( im, jm, km );
@@ -482,10 +485,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			boundary.RB_phi ( t, u, v, w, p_dyn, c );
 
 //		class RungeKutta for the solution of the differential equations describing the flow properties
-			result.solveRungeKutta_3D_Hydrosphere ( prepare, n, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, Evaporation_Dalton, Precipitation, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water );
+			result.solveRungeKutta_3D_Hydrosphere ( prepare, n, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, Evaporation_Dalton, Precipitation, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water, value_top, Bathymetry );
 
 //		class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-			depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );
+			depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, value_top, Bathymetry );
 
 //		new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
 			Accuracy_Hyd		min_Residuum ( im, jm, km, dr, dthe, dphi );
@@ -600,6 +603,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			MinMax_Hyd		minmaxBottom_water ( jm, km, c_0 );
 			minmaxBottom_water.searchMinMax_2D ( str_max_bottom_water, str_min_bottom_water, str_unit_bottom_water, BottomWater, h );
 
+//	searching of maximum and minimum values of the bathymetry
+			string str_max_bathymetry = " max bathymetry ", str_min_bathymetry = " min bathymetry ", str_unit_bathymetry = "m";
+			MinMax_Hyd		minmaxBathymetry ( jm, km, c_0 );
+			minmaxBathymetry.searchMinMax_2D ( str_max_bathymetry, str_min_bathymetry, str_unit_bathymetry, Bathymetry, h );
+
+
 //		composition of results
 			calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, Salt_total, BottomWater );
 
@@ -653,10 +662,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //	radial data along constant hight above ground
 	int i_radial = 40;
 //	int i_radial = 39;
-	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, Precipitation );
+	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, Precipitation, Bathymetry );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-//	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
+	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
 //	writing of plot data in the PlotData file
 	PostProcess_Hydrosphere		ppa ( im, jm, km, input_path, output_path );
@@ -668,6 +677,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
+			Bathymetry.y[ j ][ k ] = 0.;
+
 			Upwelling.y[ j ][ k ] = 0.;
 			Downwelling.y[ j ][ k ] = 0.;
 			BottomWater.y[ j ][ k ] = 0.;
