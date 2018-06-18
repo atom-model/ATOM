@@ -16,7 +16,7 @@ from sphere_tools import sampleOnSphere
 ROTATION_DIR = os.path.dirname(os.path.realpath(__file__)) + '/data'
 BUFFER_DEGREES = 15.
 DATA_DIR = './output'
-BATHYMETRY_SUFFIX = 'Ma_Golonka.xyz'
+BATHYMETRY_SUFFIX = 'Ma_Simon.xyz'
 
 def reconstruct_grid(
         time_of_existing_grid, 
@@ -27,7 +27,7 @@ def reconstruct_grid(
         buffer_degrees = BUFFER_DEGREES):
 
     rotation_model=pygplates.RotationModel(
-        rotation_dir+'/Rotations/Matthews_etal_GPC_2016_410-0Ma_GK07_PMAG_anchor_0.rot' )
+        rotation_dir+'/Rotations/Global_EarthByte_230-0Ma_GK07_AREPS.rot' )
     static_polygon_features = pygplates.FeatureCollection(
         rotation_dir+'/ContinentalPolygons/Matthews_etal_GPC_2016_ContinentalPolygons.gpmlz' )
 

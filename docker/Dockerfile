@@ -1,7 +1,7 @@
 # Pull base image.
 FROM phusion/baseimage
 
-MAINTAINER Ian Howson
+MAINTAINER Michael Chin
 
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
