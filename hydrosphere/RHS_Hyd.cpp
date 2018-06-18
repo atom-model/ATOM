@@ -25,7 +25,6 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int jm_, int km_, double dthe_, double dphi_,
     dr(0), 
     dthe(dthe_), 
     dphi(dphi_), 
-    r0(0),
     re(re_), 
     pr(0), 
     sc(0), 
@@ -35,7 +34,7 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int jm_, int km_, double dthe_, double dphi_,
 }
 
 
-RHS_Hydrosphere::RHS_Hydrosphere ( int im_, int jm_, int km_, double r0_, double dt_, double dr_, double dthe_, double dphi_, 
+RHS_Hydrosphere::RHS_Hydrosphere ( int im_, int jm_, int km_, double dt_, double dr_, double dthe_, double dphi_, 
         double re_, double sc_, double g_, double pr_, double Buoyancy_ ):
     im(im_), 
     jm(jm_), 
@@ -44,7 +43,6 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int im_, int jm_, int km_, double r0_, double
     dr(dr_), 
     dthe(dthe_),
     dphi(dphi_),
-    r0(r0_),
     re(re_), 
     pr(pr_), 
     sc(sc_), 
@@ -79,7 +77,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     double dphi2 = dphi * dphi;
 
 // collection of coefficients
-    double rm = rad.z[ i ] / r0;
+    double rm = rad.z[ i ];
     double rm2 = rm * rm;
 
 // collection of coefficients
@@ -101,7 +99,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 	if ( ( topo_diff < topo_step ) && ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ) )
 	{
-		h_0_i = topo_diff / L_hyd;
+		h_0_i = topo_diff / L_hyd;															// hat distribution function
+//		h_0_i = cc * ( .5 * ( acos ( topo_diff * 3.14 / L_hyd ) + 1. ) ); 	// cosine distribution function, better results for benchmark case
 		h_0_0 = 1. - h_0_i;
 		h_d_i = cc * ( 1. - h_0_0 ); 
 	}

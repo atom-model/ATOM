@@ -14,6 +14,7 @@
 #include "Array.h"
 #include "Array_1D.h"
 #include "Array_2D.h"
+#include "BC_Thermohalin.h"
 
 #ifndef _PRESSURE_
 #define _PRESSURE_
@@ -36,8 +37,8 @@ class Pressure_Hyd
 		Pressure_Hyd ( int, int, int, double, double, double );
 		~Pressure_Hyd ();
 
-		void computePressure_3D ( double, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_3D ( BC_Thermohalin &oceanflow, double, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void computePressure_2D ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_2D ( BC_Thermohalin &oceanflow, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };
 #endif

@@ -3753,6 +3753,69 @@ void BC_Thermo::IC_Temperature_WestEastCoast ( Array &h, Array &t )
 
 
 
+
+
+void BC_Thermo::Value_Limitation_Atm ( Array &h, Array &u, Array &v, Array &w, Array &p_dyn, Array &t, Array &c, Array &cloud, Array &ice, Array &co2 )
+{
+// class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				if ( u.x[ i ][ j ][ k ] >= .106 )				u.x[ i ][ j ][ k ] = .106;
+				if ( u.x[ i ][ j ][ k ] <= - .106 )				u.x[ i ][ j ][ k ] = - .106;
+
+				if ( v.x[ i ][ j ][ k ] >= .125 )				v.x[ i ][ j ][ k ] = .125;
+				if ( v.x[ i ][ j ][ k ] <= - .125 )				v.x[ i ][ j ][ k ] = - .125;
+
+				if ( w.x[ i ][ j ][ k ] >= 3.5 )				w.x[ i ][ j ][ k ] = 3.5;
+				if ( w.x[ i ][ j ][ k ] <= - .469 )				w.x[ i ][ j ][ k ] = - .469;
+
+				if ( t.x[ i ][ j ][ k ] >= 1.147 )				t.x[ i ][ j ][ k ] = 1.147;
+				if ( t.x[ i ][ j ][ k ] <= - .78 )				t.x[ i ][ j ][ k ] = - .78;
+
+				if ( c.x[ i ][ j ][ k ] >= .02 )					c.x[ i ][ j ][ k ] = .02;
+				if ( c.x[ i ][ j ][ k ] < 0. )						c.x[ i ][ j ][ k ] = 0.;
+
+				if ( cloud.x[ i ][ j ][ k ] >= .006 )		cloud.x[ i ][ j ][ k ] = .006;
+				if ( cloud.x[ i ][ j ][ k ] < 0. )				cloud.x[ i ][ j ][ k ] = 0.;
+
+				if ( ice.x[ i ][ j ][ k ] >= .0025 )			ice.x[ i ][ j ][ k ] = .0025;
+				if ( ice.x[ i ][ j ][ k ] < 0. )					ice.x[ i ][ j ][ k ] = 0.;
+
+				if ( co2.x[ i ][ j ][ k ] >= 5.36 )				co2.x[ i ][ j ][ k ] = 5.36;
+				if ( co2.x[ i ][ j ][ k ] <= - 3.57 )			co2.x[ i ][ j ][ k ] = - 3.57;
+			}
+		}
+	}
+}
+
+
+
+void BC_Thermo::Pressure_Limitation_Atm ( Array &p_dyn, Array &p_dynn )
+{
+// class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				if ( p_dyn.x[ i ][ j ][ k ] >= .25 )			p_dyn.x[ i ][ j ][ k ] = .25;
+				if ( p_dyn.x[ i ][ j ][ k ] <= - .25 )			p_dyn.x[ i ][ j ][ k ] = - .25;
+
+				p_dynn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j ][ k ];
+			}
+		}
+	}
+}
+
+
+
+
+
 double BC_Thermo::exp_func ( double &T_K, const double &co_1, const double &co_2 )
 {
 	return exp ( co_1 * ( T_K - 273.15 ) / ( T_K - co_2 ) );						// temperature in °K

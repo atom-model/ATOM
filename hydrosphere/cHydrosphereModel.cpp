@@ -311,7 +311,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	BC_Hydrosphere		boundary ( im, jm, km );
 
 // class RHS_Hydrosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-	RHS_Hydrosphere		prepare ( im, jm, km, r0, dt, dr, dthe, dphi, re, sc, g, pr, Buoyancy );
+	RHS_Hydrosphere		prepare ( im, jm, km, dt, dr, dthe, dphi, re, sc, g, pr, Buoyancy );
 	RHS_Hydrosphere		prepare_2D ( jm, km, dthe, dphi, re );
 
 // class RungeKutta_Hydrosphere for the explicit solution of the Navier-Stokes equations
@@ -400,6 +400,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 				residuum_old = emin;
 
+				oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
+
 //		class RungeKutta for the solution of the differential equations describing the flow properties
 				result.solveRungeKutta_2D_Hydrosphere ( prepare_2D, n, r_0_water, rad, the, phi, rhs_v, rhs_w, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
 
@@ -428,7 +430,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
 		if ( pressure_iter_2D == pressure_plus_2D )
 		{
-			startPressure.computePressure_2D ( r_0_water, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
+			startPressure.computePressure_2D ( oceanflow, r_0_water, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
 			pressure_plus_2D = pressure_plus_2D + 1;
 		}
 
@@ -483,6 +485,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			boundary.RB_radius ( ca, ta, pa, dr, rad, t, u, v, w, p_dyn, c );
 			boundary.RB_theta ( ca, ta, pa, t, u, v, w, p_dyn, c );
 			boundary.RB_phi ( t, u, v, w, p_dyn, c );
+
+			oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
 //		class RungeKutta for the solution of the differential equations describing the flow properties
 			result.solveRungeKutta_3D_Hydrosphere ( prepare, n, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, Evaporation_Dalton, Precipitation, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water, value_top, Bathymetry );
@@ -624,7 +628,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
 		if ( pressure_iter == pressure_plus_3D )
 		{
-			startPressure.computePressure_3D ( r_0_water, pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+			startPressure.computePressure_3D ( oceanflow, r_0_water, pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
 			pressure_plus_3D = pressure_plus_3D + 1;
 		}
 

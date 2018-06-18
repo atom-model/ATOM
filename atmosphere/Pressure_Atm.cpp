@@ -36,7 +36,7 @@ Pressure_Atm::Pressure_Atm ( int im, int jm, int km, double dr, double dthe, dou
 Pressure_Atm::~Pressure_Atm (){}
 
 
-void Pressure_Atm::computePressure_3D ( double r_air, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &aux_u, Array &aux_v, Array &aux_w )
+void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double r_air, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &aux_u, Array &aux_v, Array &aux_w )
 {
 // boundary conditions for the r-direction, loop index i
 	for ( int j = 0; j < jm; j++ )
@@ -278,8 +278,8 @@ void Pressure_Atm::computePressure_3D ( double r_air, Array_1D &rad, Array_1D &t
 															+ r_air * ( drhs_udr + drhs_vdthe + drhs_wdphi ) ) / denom;
 
 						if ( h.x[ i ][ j ][ k ] == 1. )						p_dynn.x[ i ][ j ][ k ] = .0;
-						if ( p_dynn.x[ i ][ j ][ k ] >= .1 )				p_dynn.x[ i ][ j ][ k ] = .1;				// dynamic pressure causes values too high at shelf corners
-						if ( p_dynn.x[ i ][ j ][ k ] <= - .1 )				p_dynn.x[ i ][ j ][ k ] = - .1;				// dynamic pressure causes values too high at shelf corners
+//						if ( p_dynn.x[ i ][ j ][ k ] >= .1 )				p_dynn.x[ i ][ j ][ k ] = .1;				// dynamic pressure causes values too high at shelf corners
+//						if ( p_dynn.x[ i ][ j ][ k ] <= - .1 )			p_dynn.x[ i ][ j ][ k ] = - .1;				// dynamic pressure causes values too high at shelf corners
 				}
 			}
 		}
@@ -329,6 +329,7 @@ void Pressure_Atm::computePressure_3D ( double r_air, Array_1D &rad, Array_1D &t
 			}
 		}
 	}
+	circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }
 
 
@@ -338,7 +339,7 @@ void Pressure_Atm::computePressure_3D ( double r_air, Array_1D &rad, Array_1D &t
 
 
 
-void Pressure_Atm::computePressure_2D ( double r_air, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
+void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 // boundary conditions for the the-direction, loop index j
@@ -421,8 +422,8 @@ void Pressure_Atm::computePressure_2D ( double r_air, Array_1D &rad, Array_1D &t
 													+ r_air * ( drhs_vdthe + drhs_wdphi ) ) / denom;
 
 				if ( h.x[ 0 ][ j ][ k ] == 1. )						p_dynn.x[ 0 ][ j ][ k ] = .0;
-				if ( p_dynn.x[ 0 ][ j ][ k ] >= .1 )				p_dynn.x[ 0 ][ j ][ k ] = .1;				// dynamic pressure causes values too high at shelf corners
-				if ( p_dynn.x[ 0 ][ j ][ k ] <= - .1 )			p_dynn.x[ 0 ][ j ][ k ] = - .1;				// dynamic pressure causes values too high at shelf corners
+//				if ( p_dynn.x[ 0 ][ j ][ k ] >= .1 )				p_dynn.x[ 0 ][ j ][ k ] = .1;				// dynamic pressure causes values too high at shelf corners
+//				if ( p_dynn.x[ 0 ][ j ][ k ] <= - .1 )			p_dynn.x[ 0 ][ j ][ k ] = - .1;				// dynamic pressure causes values too high at shelf corners
 			}
 		}
 
@@ -454,4 +455,5 @@ void Pressure_Atm::computePressure_2D ( double r_air, Array_1D &rad, Array_1D &t
 			}
 		}
 	}
+	circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }

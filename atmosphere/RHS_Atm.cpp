@@ -90,8 +90,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	c43 = 4. / 3.;
 	c13 = 1. / 3.;
 
-	k_Force = 10.;																			// factor for accelleration of convergence processes inside the immersed boundary conditions
-
+	k_Force = 10.;																	// factor for accelleration of convergence processes inside the immersed boundary conditions
 	cc = + 1.;
 
 // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
@@ -113,7 +112,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	rm2sinthe = rm2 * sinthe;
 	rm2sinthe2 = rm2 * sinthe2;
 
-
 //  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>> 
 // only in positive r-direction above ground 
 	double topo_step = L_atm / ( double ) ( im-1 );
@@ -122,8 +120,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 	if ( ( topo_diff < topo_step ) && ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ) )
 	{
-		h_0_i = topo_diff / L_atm;
-		h_0_0 = 1. - h_0_i;
+		h_0_i = topo_diff / L_atm;															// hat distribution function
+//		h_0_i = cc * ( .5 * ( acos ( topo_diff * 3.14 / L_atm ) + 1. ) ); 	// cosine distribution function, better results for benchmark case
 		h_d_i = cc * ( 1. - h_0_0 ); 
 	}
 	else 	h_d_i = 0.; 
@@ -598,7 +596,6 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 {
 //  2D surface iterations
 	k_Force = 10.;																			// factor for accelleration of convergence processes inside the immersed boundary conditions
-
 	cc = + 1.;
 
 // collection of coefficients
@@ -808,5 +805,4 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 	aux_v.x[ 0 ][ j ][ k ] = rhs_v.x[ 0 ][ j ][ k ] + dpdthe / rm / r_air;
 	aux_w.x[ 0 ][ j ][ k ] = rhs_w.x[ 0 ][ j ][ k ] + dpdphi / rmsinthe / r_air;
- 
 }

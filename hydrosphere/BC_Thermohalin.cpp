@@ -763,3 +763,61 @@ void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Arra
 	}
 
 }
+
+
+
+
+
+
+
+
+void BC_Thermohalin::Value_Limitation_Hyd ( Array &h, Array &u, Array &v, Array &w, Array &p_dyn, Array &t, Array &c )
+{
+// class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				if ( u.x[ i ][ j ][ k ] >= 11.11 )				u.x[ i ][ j ][ k ] = 11.11;
+				if ( u.x[ i ][ j ][ k ] <= - 11.11 )				u.x[ i ][ j ][ k ] = - 11.11;
+
+				if ( v.x[ i ][ j ][ k ] >= .552 )				v.x[ i ][ j ][ k ] = .552;
+				if ( v.x[ i ][ j ][ k ] <= - .552 )				v.x[ i ][ j ][ k ] = - .552;
+
+				if ( w.x[ i ][ j ][ k ] >= .552 )				w.x[ i ][ j ][ k ] = .552;
+				if ( w.x[ i ][ j ][ k ] <= - .552 )				w.x[ i ][ j ][ k ] = - .552;
+
+				if ( t.x[ i ][ j ][ k ] >= 1.147 )				t.x[ i ][ j ][ k ] = 1.147;
+				if ( t.x[ i ][ j ][ k ] <= - 1.01464 )				t.x[ i ][ j ][ k ] = - 1.01464;
+
+				if ( c.x[ i ][ j ][ k ] >= 1.4 )					c.x[ i ][ j ][ k ] = 1.4;
+				if ( c.x[ i ][ j ][ k ] < .43 )						c.x[ i ][ j ][ k ] = .43;
+			}
+		}
+	}
+}
+
+
+
+void BC_Thermohalin::Pressure_Limitation_Hyd ( Array &p_dyn, Array &p_dynn )
+{
+// class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			for ( int i = 0; i < im; i++ )
+			{
+				if ( p_dyn.x[ i ][ j ][ k ] >= 4000. )			p_dyn.x[ i ][ j ][ k ] = 4000.;
+				if ( p_dyn.x[ i ][ j ][ k ] <= - 4000. )			p_dyn.x[ i ][ j ][ k ] = - 4000.;
+
+				p_dynn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j ][ k ];
+			}
+		}
+	}
+}
+
+
+

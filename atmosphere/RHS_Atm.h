@@ -12,6 +12,7 @@
 #include "Array.h"
 #include "Array_1D.h"
 #include "Array_2D.h"
+#include "BC_Thermo.h"
 
 #ifndef _RHS_ATMOSPHERE_
 #define _RHS_ATMOSPHERE_

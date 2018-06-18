@@ -106,18 +106,11 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
 				w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] + dt * ( kw1 + 2. * kw2 + 2. * kw3 + kw4 ) / 6.;
 				c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] + dt * ( kc1 + 2. * kc2 + 2. * kc3 + kc4 ) / 6.;
 
-				if ( v.x[ i ][ j ][ k ] >= .68 )					v.x[ i ][ j ][ k ] = .68;
-				if ( v.x[ i ][ j ][ k ] <= - .68 )				v.x[ i ][ j ][ k ] = - .68;
-
-				if ( w.x[ i ][ j ][ k ] >= .68 )				w.x[ i ][ j ][ k ] = .68;
-				if ( w.x[ i ][ j ][ k ] <= - .68 )				w.x[ i ][ j ][ k ] = - .68;
-
 				tn.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k ];
 				un.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ];
 				vn.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ];
 				wn.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ];
 				cn.x[ i ][ j ][ k ] =  c.x[ i ][ j ][ k ];
-
 			}
 		}
 	}
@@ -179,16 +172,8 @@ void RungeKutta_Hydrosphere::solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &p
 			v.x[ im-1 ][ j ][ k ] = vn.x[ im-1 ][ j ][ k ] + dt * ( kv1 + 2. * kv2 + 2. * kv3 + kv4 ) / 6.;
 			w.x[ im-1 ][ j ][ k ] = wn.x[ im-1 ][ j ][ k ] + dt * ( kw1 + 2. * kw2 + 2. * kw3 + kw4 ) / 6.;
 
-			if ( v.x[ im-1 ][ j ][ k ] >= .68 )					v.x[ im-1 ][ j ][ k ] = .68;
-			if ( v.x[ im-1 ][ j ][ k ] <= - .68 )				v.x[ im-1 ][ j ][ k ] = - .68;
-
-			if ( w.x[ im-1 ][ j ][ k ] >= .68 )					w.x[ im-1 ][ j ][ k ] = .68;
-			if ( w.x[ im-1 ][ j ][ k ] <= - .68 )				w.x[ im-1 ][ j ][ k ] = - .68;
-
 			vn.x[ im-1 ][ j ][ k ] = v.x[ im-1 ][ j ][ k ];
 			wn.x[ im-1 ][ j ][ k ] = w.x[ im-1 ][ j ][ k ];
-
-
 		}
 	}
 }

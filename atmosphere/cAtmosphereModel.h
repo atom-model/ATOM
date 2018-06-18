@@ -74,7 +74,7 @@ private:
 
     void run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                       BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D,
-                      Pressure_Atm &startPressure);
+                      Pressure_Atm &startPressure, BC_Thermo &circulation);
 
     void run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                       BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
