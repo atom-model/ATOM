@@ -125,6 +125,10 @@ class BC_Thermo
 
 		void IC_Temperature_WestEastCoast ( Array &, Array & );
 
+		void Value_Limitation_Atm ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+
+		void Pressure_Limitation_Atm ( Array &, Array & );
+
 		double exp_func ( double &, const double &, const double & );
 
 		double cloud_ice ( const double &, int, const int & );

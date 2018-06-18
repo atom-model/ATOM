@@ -14,6 +14,7 @@
 #include "Array.h"
 #include "Array_1D.h"
 #include "Array_2D.h"
+#include "BC_Thermo.h"
 
 #ifndef _PRESSURE_
 #define _PRESSURE_
@@ -36,8 +37,8 @@ class Pressure_Atm
 		Pressure_Atm ( int, int, int, double, double, double );
 		~Pressure_Atm ();
 
-		void computePressure_3D ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_3D ( BC_Thermo &circulation, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void computePressure_2D ( double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_2D ( BC_Thermo &circulation, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };
 #endif

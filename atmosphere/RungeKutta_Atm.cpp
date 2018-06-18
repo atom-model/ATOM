@@ -220,8 +220,6 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
 
 			vn.x[ 0 ][ j ][ k ] = v.x[ 0 ][ j ][ k ];
 			wn.x[ 0 ][ j ][ k ] = w.x[ 0 ][ j ][ k ];
-
-
 		}
 	}
 }

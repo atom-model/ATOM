@@ -40,7 +40,7 @@ Pressure_Hyd::~Pressure_Hyd (){}
 
 
 
-void Pressure_Hyd::computePressure_3D ( double r_0_water, double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &aux_u, Array &aux_v, Array &aux_w )
+void Pressure_Hyd::computePressure_3D ( BC_Thermohalin &oceanflow, double r_0_water, double pa, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &aux_u, Array &aux_v, Array &aux_w )
 {
 // boundary conditions for the r-direction, loop index i
 	for ( int j = 0; j < jm; j++ )
@@ -281,7 +281,7 @@ void Pressure_Hyd::computePressure_3D ( double r_0_water, double pa, Array_1D &r
 															+ ( p_dyn.x[ i ][ j ][ k+1 ] + p_dyn.x[ i ][ j ][ k-1 ] ) * num3 
 															+ r_0_water * ( drhs_udr + drhs_vdthe + drhs_wdphi ) ) / denom;
 
-						if ( h.x[ i ][ j ][ k ] == 1. )				p_dynn.x[ i ][ j ][ k ] = .0;
+						if ( h.x[ i ][ j ][ k ] == 1. )							p_dynn.x[ i ][ j ][ k ] = .0;
 				}
 			}
 		}
@@ -331,6 +331,7 @@ void Pressure_Hyd::computePressure_3D ( double r_0_water, double pa, Array_1D &r
 			}
 		}
 	}
+	oceanflow.Pressure_Limitation_Hyd ( p_dyn, p_dynn );
 }
 
 
@@ -341,7 +342,7 @@ void Pressure_Hyd::computePressure_3D ( double r_0_water, double pa, Array_1D &r
 
 
 
-void Pressure_Hyd::computePressure_2D ( double r_0_water, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
+void Pressure_Hyd::computePressure_2D ( BC_Thermohalin &oceanflow, double r_0_water, Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 
@@ -428,7 +429,7 @@ void Pressure_Hyd::computePressure_2D ( double r_0_water, Array_1D &rad, Array_1
 													+ ( p_dyn.x[ im-1 ][ j ][ k+1 ] + p_dyn.x[ im-1 ][ j ][ k-1 ] ) * num3 
 													+ r_0_water * ( drhs_vdthe + drhs_wdphi ) ) / denom;
 
-				if ( h.x[ im-1 ][ j ][ k ] == 1. )				p_dynn.x[ im-1 ][ j ][ k ] = .0;
+				if ( h.x[ im-1 ][ j ][ k ] == 1. )							p_dynn.x[ im-1 ][ j ][ k ] = .0;
 			}
 		}
 
@@ -450,4 +451,5 @@ void Pressure_Hyd::computePressure_2D ( double r_0_water, Array_1D &rad, Array_1
 			p_dynn.x[ im-1 ][ j ][ 0 ] = p_dynn.x[ im-1 ][ j ][ km-1 ] = ( p_dynn.x[ im-1 ][ j ][ 0 ] + p_dynn.x[ im-1 ][ j ][ km-1 ] ) / 2.;
 		}
 	}
+	oceanflow.Pressure_Limitation_Hyd ( p_dyn, p_dynn );
 }

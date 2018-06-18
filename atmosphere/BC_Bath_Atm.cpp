@@ -59,7 +59,7 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &Name_Bathymetry_File,
                 int i_h = int(round ( height / ( L_atm / ( double) ( im - 1 ) ) ));
 
                 for ( int i = 0; i <= i_h; i++ ){
-                    h.x[ i ][ j ][ k ] = Topography.y[ j ][ k ] = 1.;
+                    h.x[ i ][ j ][ k ] = 1.;
                 }
             }
         }
@@ -110,7 +110,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &Name_Bathymetry_File,
             }
         }
     }
-
 }
 
 void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, double g, double hp, double ep, double r_air, 

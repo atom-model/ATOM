@@ -23,7 +23,7 @@ def main():
             ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False ),
         
             ( 'time_start', 'start time', 'int', 0 ),
-            ( 'time_end', 'end time', 'int', 100 ),
+            ( 'time_end', 'end time', 'int', 5 ),
             ( 'time_step', 'step size between timeslices', 'int', 5 ),
         ],
 
@@ -42,7 +42,6 @@ def main():
 
             ( 'sun', 'while no variable sun position wanted', 'int', 0 ),
             ( 'NASATemperature', 'surface temperature given by NASA', 'int', 1 ),
-#            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 0 ),
             ( 'RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1 ),
 
             ( 'declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0 ),
@@ -53,13 +52,10 @@ def main():
             ( 'Ma_max_half', 'half of time scale', 'int', 150 ),
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
-#           ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 22 steps = 8800 m', 'int', 22 ),
             ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 24 steps = 9600 m', 'int', 24 ),
             ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 30 ),
 
-#            ( 'rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 300. ),
             ( 'rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 230. ),
-#            ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 10. ),
             ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 40. ),
 
             ( 'sigma', 'Stefan-Boltzmann constant W/( m²*K4 )', 'double', 5.670280e-8 ),
@@ -91,7 +87,6 @@ def main():
             ( 'r_co2', 'density of CO2 in kg/m³ at 25°C', 'double', 0.0019767 ),
             ( 'gam', 'constant slope of temperature    gam = 0.65 K/100 m', 'double', 0.65 ),
 
-#            ( 'u_0', 'maximum value of velocity in 15 m/s compares to 54 km/h', 'double', 15.0 ),
             ( 'u_0', 'annual mean of surface wind velocity in m/s, 8 m/s compare to 28.8 km/h', 'double', 8.0 ),
             ( 'p_0', 'pressure at sea level in hPa', 'double', 1013.25 ),
             ( 't_0', 'temperature in K compare to 0°C', 'double', 273.15 ),
@@ -111,18 +106,11 @@ def main():
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
             ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
-#            ( 't_equator', 'temperature t_0 = 1.11 compares to 26.0° C compares to 299.15 K', 'double', 1.095 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.945 compares to -15.0°C compares to 258.15 K', 'double', 0.945 ),
-#            ( 't_pole', 'temperature at the poles t_pole = 0.981 compares to -5.0°C compares to 253.15 K', 'double', 0.981 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
-#            ( 't_tropopause', 'temperature in the tropopause, t = 0.780 compares to -60°C compares to 213.15 K', 'double', 0.780 ),
-#            ( 't_tropopause', 'temperature in the tropopause, t = 0.791 compares to -57°C compares to 216.15 K', 'double', 0.791 ),
-#            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.007322 ),
             ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
 
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.0001 ),
-#            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.5 ),
-#            ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.55 ),
             ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.58 ),
             ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.64 ),
 
@@ -142,15 +130,12 @@ def main():
             ( 'velocity_iter_max_2D', '', 'int', 2 ),
             ( 'pressure_iter_max_2D', '', 'int', 10 ),
             ( 'velocity_iter_max', '', 'int', 2 ),
-            ( 'pressure_iter_max', '', 'int', 8 ),
+            ( 'pressure_iter_max', '', 'int', 2 ),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 
-#            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 6000 m compares to 40 steps times 150 m', 'double', 6000.0 ),
-#            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 2000 m compares to 40 steps times 50 m', 'double', 2000.0 ),
             ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 1000 m compares to 40 steps times 25 m', 'double', 1000.0 ),
 
-#            ( 're', 'Reynolds number', 'double', 1000.0 ),
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 10.0 ),
             ( 'sc', 'Schmidt number for salt water', 'double', 1.7329 ),
             ( 'pr', 'Prandtl number for water', 'double', 6.957 ),

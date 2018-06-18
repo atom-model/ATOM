@@ -62,5 +62,9 @@ class BC_Thermohalin
 
 		void IC_CircumPolar_Current ( Array &, Array &, Array &, Array &, Array & );
 
+		void Value_Limitation_Hyd ( Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+
+		void Pressure_Limitation_Hyd ( Array &, Array & );
+
 };
 #endif

@@ -301,7 +301,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     double emin = epsres * 100.;
 
-    run_2D_loop(boundary, result, LandArea, prepare_2D, startPressure);
+    run_2D_loop(boundary, result, LandArea, prepare_2D, startPressure, circulation);
     
     cout << endl << endl;
 
@@ -480,7 +480,7 @@ void cAtmosphereModel::print_min_max_values()
     min_max_3d.searchMinMax_3D ( " max 3D w-component ", " min 3D w-component ", "m/s", w, h, u_0 );
 
     //  searching of maximum and minimum values of dynamic pressure
-    min_max_3d.searchMinMax_3D ( " max 3D pressure dynamic ", " min 3D pressure dynamic ", "hPa", p_dyn, h, 0.01 );
+    min_max_3d.searchMinMax_3D ( " max 3D pressure dynamic ", " min 3D pressure dynamic ", "hPa", p_dyn, h, 0.768 ); // 0.768 = 0.01 * r_air *u_0*u_0 in hPa
 
     //  searching of maximum and minimum values of static pressure
     min_max_3d.searchMinMax_3D ( " max 3D pressure static ", " min 3D pressure static ", "hPa", p_stat, h );
@@ -632,7 +632,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
 
 void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                                     BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D, 
-                                    Pressure_Atm &startPressure){
+                                    Pressure_Atm &startPressure, BC_Thermo &circulation){
     int switch_2D = 0;    
 
     n = 1;
@@ -683,6 +683,8 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
                 residuum_old = emin;
 
+				circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
+
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
                 result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, h, v, w, 
                                                        p_dyn, vn, wn, p_dynn, aux_v, aux_w );
@@ -718,7 +720,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
             if ( pressure_iter_2D == pressure_plus_2D )
             {
-                startPressure.computePressure_2D ( r_air, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
+                startPressure.computePressure_2D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
                 pressure_plus_2D = pressure_plus_2D + 1;
             }
 
@@ -795,6 +797,9 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 circulation.Ice_Water_Saturation_Adjustment ( im_tropopause, n, velocity_iter_max, RadiationModel, h, c, 
                                                               cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
             }
+
+			circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
+
             // class RungeKutta for the solution of the differential equations describing the flow properties
             result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, r_water, 
                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, 
@@ -871,7 +876,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
         if ( pressure_iter == pressure_plus_3D )
         {
-            startPressure.computePressure_3D ( r_air, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+            startPressure.computePressure_3D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
             pressure_plus_3D = pressure_plus_3D + 1;
         }
 
