@@ -27,7 +27,7 @@ def reconstruct_grid(
         buffer_degrees = BUFFER_DEGREES):
 
     rotation_model=pygplates.RotationModel(
-        rotation_dir+'/Rotations/Matthews_etal_GPC_2016_410-0Ma_GK07_PMAG_anchor_0.rot' )
+        rotation_dir+'/Rotations/Global_EarthByte_230-0Ma_GK07_AREPS.rot' )
     static_polygon_features = pygplates.FeatureCollection(
         rotation_dir+'/ContinentalPolygons/Matthews_etal_GPC_2016_ContinentalPolygons.gpmlz' )
 

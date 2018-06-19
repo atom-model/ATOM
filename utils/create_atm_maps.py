@@ -9,6 +9,7 @@ import numpy as np
 
 data_dir = './output'
 topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
+topo_suffix = 'Ma_Simon'
 start_time = 0
 end_time = 100
 time_step = 5
@@ -37,14 +38,14 @@ def create_maps(directory):
 
     for time in range(start_time, end_time, time_step):
         if index < 10:
-            data = np.genfromtxt(data_dir + '/[{}Ma_Golonka.xyz]_PlotData_Atm.xyz'.format(time),skip_header=1)
+            data = np.genfromtxt(data_dir + '/[{0}{1}.xyz]_PlotData_Atm.xyz'.format(time,topo_suffix),skip_header=1)
             for d in data:
                 d[1]=90-d[1]
             x = data[:,0]
             y = data[:,1]
             z = data[:,index]
         elif index == 10:
-            data = np.genfromtxt(topo_dir + '/{}Ma_Golonka.xyz'.format(time))
+            data = np.genfromtxt(topo_dir + '/{0}{1}.xyz'.format(time, topo_suffix))
             x = data[:,0]
             y = data[:,1]
             z = data[:,2]
@@ -106,13 +107,14 @@ if  __name__ == "__main__":
         end_time  = int(sys.argv[2])
         time_step = int(sys.argv[3])
         data_dir = sys.argv[4]
-        #topo_dir = sys.argv[5]
+        topo_suffix = sys.argv[5]
+        #topo_dir = sys.argv[6]
         for d in sub_dirs:
             if not os.path.exists(output_dir+'/'+d):
                 os.makedirs(output_dir+'/'+d)
             create_maps(d)
     except:
-        print("Usage: ./create_atm_maps.py 0 100 5 ../cli/output") 
+        print("Usage: ./create_atm_maps.py 0 100 5 ../cli/output Ma_Golonka") 
         import traceback
         traceback.print_exc()
 

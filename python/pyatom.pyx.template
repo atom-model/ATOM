@@ -33,6 +33,7 @@ class Model:
         self.atmosphere.run_time_slice ( self.time_slice )
 
     def run_hyd ( self, t_s, output_path, cfg_xml ):
+        self.time_slice = t_s
         self.input_path = output_path
         self.output_path = output_path
         self.config_xml = cfg_xml
