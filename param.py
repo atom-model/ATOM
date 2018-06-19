@@ -20,7 +20,7 @@ def main():
             ( 'salinity_file', '', 'string', '../data/SurfaceSalinity_NASA.xyz'),
             ( 'temperature_curve_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
             ( 'reconstruction_script_path', '', 'string', '../reconstruction/reconstruct_atom_data.py'),
-            ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False ),
+            ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True ),
         
             ( 'time_start', 'start time', 'int', 0 ),
             ( 'time_end', 'end time', 'int', 5 ),
@@ -83,7 +83,6 @@ def main():
             ( 'ls', 'specific latent vaporisation heat ( sublimation heat ) in J/kg', 'double', 2.83e6 ),
             ( 'cp_l', 'specific heat capacity of dry air at constant pressure and 20°C in J/( kg K )', 'double', 1005. ),
             ( 'lamda', 'heat transfer coefficient of air in W/m² K )', 'double', 0.0262 ),
-            ( 'r_water', 'density of water in kg/m³ at 20°C', 'double', 1000.0 ),
             ( 'r_co2', 'density of CO2 in kg/m³ at 25°C', 'double', 0.0019767 ),
             ( 'gam', 'constant slope of temperature    gam = 0.65 K/100 m', 'double', 0.65 ),
 

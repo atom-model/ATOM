@@ -628,7 +628,8 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water, Array 
 				t_Celsius_1 = t.x[ i ][ j ][ k ] * t_0 - t_0;
 				t_Celsius_0 = t.x[ i + 1 ][ j ][ k ] * t_0 - t_0;
 
-				p_stat.x[ i ][ j ][ k ] = r_0_water * g * d_i * ( L_hyd / ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;				// hydrostatic pressure in bar
+//				p_stat.x[ i ][ j ][ k ] = r_0_water * g * d_i * ( L_hyd / ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;				// hydrostatic pressure in bar
+				p_stat.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] * g * d_i * ( L_hyd / ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;				// hydrostatic pressure in bar
 				r_water.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] / ( 1. + beta_water * ( t_Celsius_1 - t_Celsius_0 ) ) / ( 1. - ( p_stat.x[ i ][ j ][ k ] - p_stat.x[ i+1 ][ j ][ k ] ) / E_water * 1e5 );				// given in kg/m³
 
 				p_km  = ( double ) ( im - 1 - i ) * ( L_hyd / ( double ) ( im-1 ) ) / 1000.;

@@ -36,7 +36,7 @@ class Results_MSL_Atm
 		double ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, ls, cp_l, r_air, dt, dr;
 		double L_atm, c13, c43;
 		double R_Air;
-		double r_water, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average, co2_vegetation_average;
+		double r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average, co2_vegetation_average;
 		double coeff_mmWS, coeff_lv, coeff_ls, coeff_Diffusion_latent, coeff_Diffusion_sensibel, f_Haude, f_Penman, co2_vegetation, co2_ocean, co2_land;
 		double r_humid, r_dry, lat_av_loc, sen_av_loc;
 		double Value_1, Value_2, Value_3, Value_4, Value_5, Value_6, Value_7, Value_8, Value_9, Value_10, Value_12, Value_13;
@@ -66,7 +66,7 @@ class Results_MSL_Atm
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading, heading_Dresden, heading_Sydney, heading_Pacific;
 
 	public:
-		Results_MSL_Atm ( int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double ); 
+		Results_MSL_Atm ( int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double ); 
 
 
 		~Results_MSL_Atm (  );
