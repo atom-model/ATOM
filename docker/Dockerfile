@@ -8,7 +8,7 @@ CMD ["/sbin/my_init"]
 
 RUN apt-get update -y
 
-RUN apt-get install -y git python-pip cython clang libnetcdf-dev python-mpltoolkits.basemap python-numpy python-scipy python-h5py
+RUN apt-get install -y git python-pip gcc
 
 RUN pip install -U setuptools
 RUN pip install -U pip
@@ -39,13 +39,26 @@ RUN rm pygplates-ubuntu-xenial_1.5_1_amd64.deb
 
 Env PYTHONPATH ${PYTHONPATH}:/usr/lib:/usr/lib/pygplates/revision12/
 
+# install all the python and ipython notebook requirements
+RUN apt-get install -y gcc python-pip
+RUN pip install --upgrade pip
+RUN pip install numpy scipy matplotlib jupyter pandas sympy nose
+RUN pip install ipyparallel pyproj pyshp Pillow
+RUN pip install cython
+
+RUN wget https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
+RUN tar -vxf v1.1.0.tar.gz
+RUN cd basemap-1.1.0/ && python setup.py install
+RUN rm -rf basemap-1.1.0/ v1.1.0.tar.gz
+
+
 WORKDIR /build
 RUN git clone https://github.com/atom-model/ATOM.git -b Roger --single-branch
 WORKDIR /build/ATOM
 RUN make
 RUN pip install -e /build/ATOM/python
 
-RUN atp-get install gmt
+RUN apt-get install -y gmt python-tk
 
 RUN mkdir /workspace && \
     mkdir /workspace/volume
