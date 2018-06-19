@@ -16,7 +16,7 @@ from sphere_tools import sampleOnSphere
 ROTATION_DIR = os.path.dirname(os.path.realpath(__file__)) + '/data'
 BUFFER_DEGREES = 15.
 DATA_DIR = './output'
-BATHYMETRY_SUFFIX = 'Ma_Simon.xyz'
+BATHYMETRY_SUFFIX = 'Ma_Golonka.xyz'
 
 def reconstruct_grid(
         time_of_existing_grid, 
