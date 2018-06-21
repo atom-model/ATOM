@@ -60,8 +60,7 @@ RUN pip install -e /build/ATOM/python
 
 RUN apt-get install -y gmt python-tk
 
-RUN mkdir /workspace && \
-    mkdir /workspace/volume
+RUN mkdir /workspace
 
 # Copy test files to workspace
 RUN cp -av /build/ATOM/examples/* /workspace/
@@ -71,14 +70,18 @@ RUN cp /build/ATOM/benchmark/config_hyd.xml /workspace/
 RUN cp /build/ATOM/benchmark/pyatom.so /workspace/
 
 # setup space for working in
-VOLUME /workspace/volume
+#VOLUME /workspace/volume
 
 RUN mkdir /etc/service/notebook
 ADD notebook.sh /etc/service/notebook/run
 RUN chmod +x /etc/service/notebook/run
 RUN chmod a+x /build/ATOM/docker/notebook.sh
 
+RUN /etc/service/notebook/run &
+
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+WORKDIR /build/ATOM/benchmark
 
 EXPOSE 8888
