@@ -468,10 +468,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
 			cout << " 3D AGCM iterational process" << endl;
 			cout << " max total iteration number nm = " << nm << endl << endl;
-
-//  surface pressure computed by surface temperature with gas equation
-			oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
-
 			cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations " << endl << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << "    pressure_iter = " << pressure_iter << endl;
 
 //		old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
@@ -486,6 +482,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			boundary.RB_theta ( ca, ta, pa, t, u, v, w, p_dyn, c );
 			boundary.RB_phi ( t, u, v, w, p_dyn, c );
 
+// surface pressure computed by surface temperature with gas equation
+			oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
+
+// limiting the increase of flow properties around geometrical peaks and corners
 			oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
 //		class RungeKutta for the solution of the differential equations describing the flow properties

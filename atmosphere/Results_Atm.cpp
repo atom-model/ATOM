@@ -17,7 +17,7 @@
 
 using namespace std;
 
-Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double co2_0, double sigma, double albedo_equator, double lv, double ls, double cp_l, double L_atm, double dt, double dr, double dthe, double dphi, double r_air, double R_Air, double r_water, double r_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam, double t_pole, double t_cretaceous, double t_average )
+Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double co2_0, double sigma, double albedo_equator, double lv, double ls, double cp_l, double L_atm, double dt, double dr, double dthe, double dphi, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam, double t_pole, double t_cretaceous, double t_average )
 :	f_Penman ( 2. )
 {
 	this-> im = im;
@@ -47,7 +47,6 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, do
 	this-> R_Air = R_Air;
 	this-> R_WaterVapour = R_WaterVapour;
 	this-> r_water_vapour = r_water_vapour;
-	this-> r_water = r_water;
 	this-> co2_vegetation = co2_vegetation;
 	this-> co2_ocean = co2_ocean;
 	this-> co2_land = co2_land;
