@@ -1,10 +1,6 @@
-# Pull base image.
-FROM phusion/baseimage
+FROM ubuntu:16.04
 
 MAINTAINER Michael Chin
-
-# Use baseimage-docker's init system.
-CMD ["/sbin/my_init"]
 
 RUN apt-get update -y
 
@@ -64,20 +60,12 @@ RUN mkdir /workspace
 
 # Copy test files to workspace
 RUN cp -av /build/ATOM/examples/* /workspace/
-RUN cp -r  /build/ATOM/reconstruction /workspace/
-RUN cp /build/ATOM/benchmark/config_atm.xml /workspace/
-RUN cp /build/ATOM/benchmark/config_hyd.xml /workspace/
-RUN cp /build/ATOM/benchmark/pyatom.so /workspace/
 
 # setup space for working in
 #VOLUME /workspace/volume
 
-RUN mkdir /etc/service/notebook
-ADD notebook.sh /etc/service/notebook/run
-RUN chmod +x /etc/service/notebook/run
 RUN chmod a+x /build/ATOM/docker/notebook.sh
-
-RUN /etc/service/notebook/run &
+CMD /build/ATOM/docker/notebook.sh
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
