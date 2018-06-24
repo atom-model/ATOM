@@ -50,13 +50,16 @@ void Pressure_Hyd::computePressure_3D ( BC_Thermohalin &oceanflow, double r_0_wa
 			rhs_u.x[ 0 ][ j ][ k ] = 0.;				// Dirichlet
 			rhs_u.x[ im-1 ][ j ][ k ] = 0.;		// Dirichlet
 
-			rhs_v.x[ 0 ][ j ][ k ] = c43 * rhs_v.x[ 1 ][ j ][ k ] - c13 * rhs_v.x[ 2 ][ j ][ k ];									// von Neumann
+//			rhs_v.x[ 0 ][ j ][ k ] = c43 * rhs_v.x[ 1 ][ j ][ k ] - c13 * rhs_v.x[ 2 ][ j ][ k ];									// von Neumann
+			rhs_v.x[ 0 ][ j ][ k ] = 0.;
 			rhs_v.x[ im-1 ][ j ][ k ] = c43 * rhs_v.x[ im-2 ][ j ][ k ] - c13 * rhs_v.x[ im-3 ][ j ][ k ];		// Neumann
 
-			rhs_w.x[ 0 ][ j ][ k ] = c43 * rhs_w.x[ 1 ][ j ][ k ] - c13 * rhs_w.x[ 2 ][ j ][ k ];									// von Neumann
+//			rhs_w.x[ 0 ][ j ][ k ] = c43 * rhs_w.x[ 1 ][ j ][ k ] - c13 * rhs_w.x[ 2 ][ j ][ k ];									// von Neumann
+			rhs_w.x[ 0 ][ j ][ k ] = 0.;
 			rhs_w.x[ im-1 ][ j ][ k ] = c43 * rhs_w.x[ im-2 ][ j ][ k ] - c13 * rhs_w.x[ im-3 ][ j ][ k ];		// Neumann
 
-			p_dyn.x[ 0 ][ j ][ k ] = p_dyn.x[ 3 ][ j ][ k ] - 3. * p_dyn.x[ 2 ][ j ][ k ] + 3. * p_dyn.x[ 1 ][ j ][ k ];		// extrapolation
+//			p_dyn.x[ 0 ][ j ][ k ] = p_dyn.x[ 3 ][ j ][ k ] - 3. * p_dyn.x[ 2 ][ j ][ k ] + 3. * p_dyn.x[ 1 ][ j ][ k ];		// extrapolation
+			p_dyn.x[ 0 ][ j ][ k ] = 0.;
 			p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 3. * p_dyn.x[ im-2 ][ j ][ k ];		// extrapolation
 		}
 	}
@@ -111,10 +114,12 @@ void Pressure_Hyd::computePressure_3D ( BC_Thermohalin &oceanflow, double r_0_wa
 			aux_u.x[ 0 ][ j ][ k ] = 0.;									// von Neumann
 			aux_u.x[ im-1 ][ j ][ k ] = 0.;		// Neumann
 
-			aux_v.x[ 0 ][ j ][ k ] = c43 * aux_v.x[ 1 ][ j ][ k ] - c13 * aux_v.x[ 2 ][ j ][ k ];									// von Neumann
+//			aux_v.x[ 0 ][ j ][ k ] = c43 * aux_v.x[ 1 ][ j ][ k ] - c13 * aux_v.x[ 2 ][ j ][ k ];									// von Neumann
+			aux_v.x[ 0 ][ j ][ k ] = 0.;
 			aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-2 ][ j ][ k ] - c13 * aux_v.x[ im-3 ][ j ][ k ];		// Neumann
 
-			aux_w.x[ 0 ][ j ][ k ] = c43 * aux_w.x[ 1 ][ j ][ k ] - c13 * aux_w.x[ 2 ][ j ][ k ];									// von Neumann
+//			aux_w.x[ 0 ][ j ][ k ] = c43 * aux_w.x[ 1 ][ j ][ k ] - c13 * aux_w.x[ 2 ][ j ][ k ];									// von Neumann
+			aux_w.x[ 0 ][ j ][ k ] = 0.;
 			aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-2 ][ j ][ k ] - c13 * aux_w.x[ im-3 ][ j ][ k ];		// Neumann
 		}
 	}
@@ -292,7 +297,8 @@ void Pressure_Hyd::computePressure_3D ( BC_Thermohalin &oceanflow, double r_0_wa
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				p_dynn.x[ 0 ][ j ][ k ] = p_dynn.x[ 3 ][ j ][ k ] - 3. * p_dynn.x[ 2 ][ j ][ k ] + 3. * p_dynn.x[ 1 ][ j ][ k ];		// extrapolation
+//				p_dynn.x[ 0 ][ j ][ k ] = p_dynn.x[ 3 ][ j ][ k ] - 3. * p_dynn.x[ 2 ][ j ][ k ] + 3. * p_dynn.x[ 1 ][ j ][ k ];		// extrapolation
+				p_dynn.x[ 0 ][ j ][ k ] = 0.;
 				p_dynn.x[ im-1 ][ j ][ k ] = c43 * p_dynn.x[ im-2 ][ j ][ k ] - c13 * p_dynn.x[ im-3 ][ j ][ k ];		// Neumann
 			}
 		}

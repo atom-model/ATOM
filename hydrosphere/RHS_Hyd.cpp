@@ -442,13 +442,12 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 	double salinity_surface = 0.;
 	double drodc = .7;												// gradient given in kg/m³
 	double salt_water_ref = r_water.x[ i ][ j ][ k ] + drodc * c.x[ i ][ j ][ k ] * c_0;						// common linear approach for salt water based on fresh water
-
-    double coeff_buoy = L_hyd / ( u_0 * u_0 );													// coefficient for the buoyancy term
+    double coeff_buoy = r_0_water * u_0 * u_0 / L_hyd;													// coefficient for the buoyancy term == .0625
 	double coeff_salinity = 1.1574e-5 * L_hyd / u_0;											// 1.1574e-5 == mm/d to mm/s, == .0463
 
 	if ( i == im - 2 )
 	{
-		salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 1 ][ j ][ k ] + 4. * c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * dr ) * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );		// 2. ord.
+		salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 1 ][ j ][ k ] + 4. * c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * dr ) * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );		// 2. ord. * 
 //		salinity_surface = salt_water_ref * ( c.x[ im - 1 ][ j ][ k ] - c.x[ im - 2 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );		// 1. ord.
 
 		salinity_evaporation = + coeff_salinity * salinity_surface;		// (-) originally, (+) for RHS
@@ -461,10 +460,9 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 	else 								salinity_evaporation = 0.;
 
 
-//    double RS_buoyancy_Momentum = - Buoyancy * g * ( salt_water_ref - r_salt_water.x[ i ][ j ][ k ] ) / salt_water_ref * coeff_buoy;       // buoyancy based on water density 
-    double RS_buoyancy_Momentum = - Buoyancy * g * ( r_salt_water.x[ i ][ j ][ k ] - r_water.x[ i ][ j ][ k ] ) / r_salt_water.x[ i ][ j ][ k ] * coeff_buoy;       // buoyancy based on water density 
+    double RS_buoyancy_Momentum = Buoyancy * g * ( r_salt_water.x[ i ][ j ][ k ] - salt_water_ref ) / salt_water_ref;       // buoyancy based on water density 
 
-    BuoyancyForce_3D.x[ i ][ j ][ k ] = RS_buoyancy_Momentum / coeff_buoy; // dimension as pressure in N/m2
+    BuoyancyForce_3D.x[ i ][ j ][ k ] = RS_buoyancy_Momentum * coeff_buoy * 1000.;			// dimension as pressure in kN/m2
 
     Salt_Balance.x[ i ][ j ][ k ] = salt_water_ref - r_salt_water.x[ i ][ j ][ k ];       // difference of salinity compared to average
 
@@ -483,9 +481,10 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     {
         Salt_Balance.x[ i ][ j ][ k ] = 0.;
         Salt_Finger.x[ i ][ j ][ k ] = 0.;
+        Salt_Diffusion.x[ i ][ j ][ k ] = 0.;
         BuoyancyForce_3D.x[ i ][ j ][ k ] = 0.;
-        r_water.x[ i ][ j ][ k ] = 1000.;
-        r_salt_water.x[ i ][ j ][ k ] = 1000.;
+        r_water.x[ i ][ j ][ k ] = 1007.;
+        r_salt_water.x[ i ][ j ][ k ] = 1032.;
     }
 
 

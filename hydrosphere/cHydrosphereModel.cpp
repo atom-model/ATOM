@@ -466,7 +466,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //	query to realize zero divergence of the continuity equation ( div c = 0 )
 			cout << endl << endl;
 			cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-			cout << " 3D AGCM iterational process" << endl;
+			cout << " 3D OGCM iterational process" << endl;
 			cout << " max total iteration number nm = " << nm << endl << endl;
 			cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations " << endl << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << "    pressure_iter = " << pressure_iter << endl;
 
@@ -517,7 +517,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			minmaxTemperature.searchMinMax_3D ( str_max_temperature, str_min_temperature, str_unit_temperature, t, h );
 
 //	searching of maximum and minimum values of u-component
-			string str_max_u = " max 3D u-component ", str_min_u = " min 3D u-component ", str_unit_u = "m/s";
+			string str_max_u = " max 3D u-component ", str_min_u = " min 3D u-component ", str_unit_u = "mm/s";
 			MinMax_Hyd		minmax_u ( im, jm, km, u_0, c_0, L_hyd );
 			minmax_u.searchMinMax_3D ( str_max_u, str_min_u, str_unit_u, u, h );
 
@@ -532,7 +532,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			minmax_w.searchMinMax_3D ( str_max_w, str_min_w, str_unit_w, w, h );
 
 //		searching of maximum and minimum values of pressure
-			string str_max_pressure = " max pressure dynamic ", str_min_pressure = " min pressure dynamic ", str_unit_pressure = "bar";
+			string str_max_pressure = " max pressure dynamic ", str_min_pressure = " min pressure dynamic ", str_unit_pressure = "hPa";
 			MinMax_Hyd		minmaxPressure ( im, jm, km, u_0, c_0, L_hyd );
 			minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, p_dyn, h );
 
@@ -564,7 +564,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			minmaxSaltDiffusion.searchMinMax_3D ( str_max_salt_diffusion, str_min_salt_diffusion, str_unit_salt_diffusion, Salt_Diffusion, h );
 
 //	searching of maximum and minimum values of buoyancy force
-			string str_max_BuoyancyForce_3D = " max buoyancy force ", str_min_BuoyancyForce_3D = " min buoyancy force ", str_unit_BuoyancyForce_3D = "N";
+			string str_max_BuoyancyForce_3D = " max buoyancy force ", str_min_BuoyancyForce_3D = " min buoyancy force ", str_unit_BuoyancyForce_3D = "kN/m2";
 			MinMax_Hyd		minmaxBuoyancyForce_3D ( im, jm, km, u_0, c_0, L_hyd );
 			minmaxBuoyancyForce_3D.searchMinMax_3D ( str_max_BuoyancyForce_3D, str_min_BuoyancyForce_3D, str_unit_BuoyancyForce_3D, BuoyancyForce_3D, h );
 

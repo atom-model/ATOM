@@ -334,11 +334,11 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 	Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
 
     dump_array("Topography", h, 1.0, Hydrosphere_panorama_vts_File);
-    dump_array("u-velocity", u, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("u-velocity", u, 1000.0, Hydrosphere_panorama_vts_File);
     dump_array("v-velocity", v, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("w-velocity", w, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("Temperature", t, 1.0, Hydrosphere_panorama_vts_File);
-    dump_array("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-5, Hydrosphere_panorama_vts_File);
+    dump_array("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, Hydrosphere_panorama_vts_File);
     dump_array("PressureStatic", p_stat, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("Salinity", c, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("DensityWater", r_water, 1.0, Hydrosphere_panorama_vts_File);
@@ -446,11 +446,11 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 	Hydrosphere_vtk_longal_File <<  "POINT_DATA " << i_max * k_max << endl;
 
     dump_longal("Topography", h, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("u-Component", u, 1., j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("u-Component", u, 1000., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("v-Component", v, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("w-Component", w, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("Temperature", t, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-5, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("PressureStatic", p_stat, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("Salinity", c, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("DensityWater", r_water, 1., j_longal, Hydrosphere_vtk_longal_File);
@@ -544,10 +544,10 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     dump_radial("Topography", h, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial_2d("Bathymetry_m", Bathymetry, 1., Hydrosphere_vtk_radial_File);
 
-    dump_radial("u-Component", u, 1., i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("u-Component", u, 1000., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("v-Component", v, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("w-Component", w, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-5, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("PressureStatic", p_stat, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("Salinity", c, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("DensityWater", r_water, 1., i_radial, Hydrosphere_vtk_radial_File);
@@ -633,11 +633,11 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 
     dump_zonal("Topography", h, 1., k_zonal, Hydrosphere_vtk_zonal_File);
 
-    dump_zonal("u-Component", u, 1., k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("u-Component", u, 1000., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("v-Component", v, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("w-Component", w, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("Temperature", t, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-5, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("PressureStatic", p_stat, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("Salinity", c, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("DensityWater", r_water, 1., k_zonal, Hydrosphere_vtk_zonal_File);

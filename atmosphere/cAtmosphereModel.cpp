@@ -520,7 +520,7 @@ void cAtmosphereModel::print_min_max_values()
     min_max_3d.searchMinMax_3D ( " max 3D epsilon ",  " min 3D epsilon ", "%", epsilon_3D, h );
 
     //  searching of maximum and minimum values of buoyancy force
-    min_max_3d.searchMinMax_3D (  " max 3D buoyancy force ", " min 3D buoyancy force ", "N", BuoyancyForce, h );
+    min_max_3d.searchMinMax_3D (  " max 3D buoyancy force ", " min 3D buoyancy force ", "kN/m2", BuoyancyForce, h );
 
 
 

@@ -173,19 +173,19 @@ void MinMax_Hyd::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 		minValue = minValue * 273.15 - 273.15;
 	}
 
-	if ( name_maxValue == " max 3D u_component " )
+	if ( name_maxValue == " max 3D u-component " )
+	{
+		maxValue = maxValue * u_0 * 1000.;						// in mm/s
+		minValue = minValue * u_0 * 1000.;							// in mm/s
+	}
+
+	if ( name_maxValue == " max 3D v-component " )
 	{
 		maxValue = maxValue * u_0;
 		minValue = minValue * u_0;
 	}
 
-	if ( name_maxValue == " max 3D v_component " )
-	{
-		maxValue = maxValue * u_0;
-		minValue = minValue * u_0;
-	}
-
-	if ( name_maxValue == " max 3D w_component " )
+	if ( name_maxValue == " max 3D w-component " )
 	{
 		maxValue = maxValue * u_0;
 		minValue = minValue * u_0;
@@ -194,8 +194,8 @@ void MinMax_Hyd::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 
 	if ( name_maxValue == " max pressure dynamic " )
 	{
-		maxValue = maxValue * 1.e-5;									// in bar
-		minValue = minValue * 1.e-5;									// in bar
+		maxValue = maxValue * 1.e-3;									// in hPa
+		minValue = minValue * 1.e-3;									// in hPa
 	}
 
 

@@ -82,11 +82,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	cout.precision ( 8 );
 	cout.setf ( ios::fixed );
 
-// collection of coefficients for phase transformation
-	coeff_energy = L_atm / ( cp_l * t_0 * u_0 );					// coefficient for the source terms = .00389
-	coeff_buoy = L_atm / ( u_0 * u_0 );								// coefficient for bouancy term = 71.11
-	coeff_trans = L_atm / u_0;												// coefficient for the concentration terms = 1066.67
-
 	c43 = 4. / 3.;
 	c13 = 1. / 3.;
 
@@ -507,19 +502,23 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 	p_h = pow ( ( ( t.x[ 0 ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) / ( t.x[ 0 ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_SL;
 	r_dry = 100. * p_h / ( R_Air * t_u );
 
+// collection of coefficients
+	double coeff_energy = L_atm / ( cp_l * t_0 * u_0 );							// coefficient for the source terms = .00729
+	double coeff_buoy = r_air * u_0 * u_0 / L_atm;								// coefficient for bouancy term = 0.00482
+	double coeff_trans = L_atm / u_0;													// coefficient for the concentration terms = 2000.
+	double vapour_evaporation = 0.;
+	double vapour_surface = 0.;
+	double evap_precip = 0.;
+	double coeff_vapour = 1.1574e-5 * L_atm / u_0;								// 1.1574e-3 == mm/d to m/s, == .01234
+
 
 // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
 	r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
 
-	RS_buoyancy_Momentum = Buoyancy * ( r_humid - r_dry ) / r_humid * g * coeff_buoy; 								// any humid air is less dense than dry air
+	RS_buoyancy_Momentum = Buoyancy * ( r_humid - r_dry ) / r_humid * g; 								// any humid air is less dense than dry air
 
-	BuoyancyForce.x[ i ][ j ][ k ] = - RS_buoyancy_Momentum / coeff_buoy;											// dimension as pressure in N/m2
+	BuoyancyForce.x[ i ][ j ][ k ] = - RS_buoyancy_Momentum * coeff_buoy * 1000.;											// dimension as pressure in kN/m2
 	if ( h.x[ i ][ j ][ k ] == 1. ) 	BuoyancyForce.x[ i ][ j ][ k ] = 0.;
-
-	double vapour_evaporation = 0.;
-	double vapour_surface = 0.;
-	double evap_precip = 0.;
-	double coeff_vapour = 1.1574e-5 * L_atm / u_0;												// 1.1574e-3 == mm/d to m/s, == .01234
 
 	if ( i == 1 )
 	{
@@ -531,7 +530,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
  		vapour_surface = r_humid * ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 3 ][ j ][ k ] ) / ( 2. * dr ) * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;		// 2. ord.
 //		vapour_surface = r_humid * ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;		// 1. ord.
 
-		vapour_evaporation = + coeff_vapour * vapour_surface;		// (-) originally, (+) for RHS
+		vapour_evaporation = + coeff_vapour * vapour_surface;
 
 		if ( h.x[ i ][ j ][ k ] == 1. )	vapour_evaporation = 0.;
 	}
