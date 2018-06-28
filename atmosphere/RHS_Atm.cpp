@@ -137,12 +137,12 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 	if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1 ] == 1. ) ) || ( ( h.x[ i ][ j ][ k - 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) ) )
 	{
-		dist = .75 * dthe;
-		h_0_j = dist / dthe;
-		h_0_0 = 1. - h_0_j;
-		h_d_j = cc * ( 1. - h_0_0 ); 
+		dist = .75 * dphi;
+		h_0_k = dist / dphi;
+		h_0_0 = 1. - h_0_k;
+		h_d_k = cc * ( 1. - h_0_0 ); 
 	}
-	else	h_d_j = 0.; 
+	else	h_d_k = 0.; 
 
 
 
@@ -630,12 +630,12 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 // only in positive phi-direction on westerly and easterly boundaries 
 	if ( ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 1. ) ) || ( ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) ) )
 	{
-		dist = .75 * dthe;
-		h_0_j = dist / dthe;
-		h_0_0 = 1. - h_0_j;
-		h_d_j = cc * ( 1. - h_0_0 ); 
+		dist = .75 * dphi;
+		h_0_k = dist / dphi;
+		h_0_0 = 1. - h_0_k;
+		h_d_k = cc * ( 1. - h_0_0 ); 
 	}
-	else	h_d_j = 0.; 
+	else	h_d_k = 0.; 
 
 
 
