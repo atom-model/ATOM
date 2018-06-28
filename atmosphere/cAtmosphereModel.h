@@ -100,6 +100,8 @@ private:
     static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
     static const double the0, phi0, r0;
 
+    double emin;
+
     //  class Array for 1-D, 2-D and 3-D field declarations
     // 1D arrays
     Array_1D rad; // radial coordinate direction

@@ -68,6 +68,8 @@ cAtmosphereModel::cAtmosphereModel() {
     coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 
     im_tropopause = new int [ jm ];// location of the tropopaus
+
+    emin = epsres * 100.;
 }
 
 cAtmosphereModel::~cAtmosphereModel() {
@@ -298,8 +300,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
     // ***********************************   start of pressure and velocity iterations ***********************************
-
-    double emin = epsres * 100.;
 
     run_2D_loop(boundary, result, LandArea, prepare_2D, startPressure, circulation);
     
@@ -639,11 +639,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
     int velocity_iter_2D = 0;
     int pressure_iter_2D = 0;
 
-    double emin = epsres * 100.;
     int pressure_plus_2D = 1;
-
-    double residuum;
-    double residuum_old = 0.;
 
     int j_res = 0, k_res = 0;
 
@@ -675,20 +671,18 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 //  class BC_Atmosphaere for the geometry of a shell of a sphere
                 boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
                 boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
-
+                
                 //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
                 Accuracy_Atm        min_Residuum_old_2D ( im, jm, km, dthe, dphi );
                 min_Residuum_old_2D.residuumQuery_2D ( rad, the, v, w );
-                emin = min_Residuum_old_2D.out_min (  );
-
-                residuum_old = emin;
+                double residuum_old = min_Residuum_old_2D.out_min (  );
 
 				circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
                 result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, h, v, w, 
                                                        p_dyn, vn, wn, p_dynn, aux_v, aux_w );
-
+                
                 //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
                 //  the continents and the ocean ground
                 LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, 
@@ -696,17 +690,15 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                           t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
                                           co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
                                           radiation_3D, Vegetation );
-
                 //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
                 Accuracy_Atm        min_Residuum_2D ( im, jm, km, dthe, dphi );
                 min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
-                emin = min_Residuum_2D.out_min (  );
+                double residuum = min_Residuum_2D.out_min (  );
                 j_res = min_Residuum_2D.out_j_res (  );
                 k_res = min_Residuum_2D.out_k_res (  );
 
-                residuum = emin;
                 emin = fabs ( ( residuum - residuum_old ) / residuum_old );
-
+                
                 //  state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
                 Accuracy_Atm        min_Stationary_2D ( n, nm, Ma, im, jm, km, emin, j_res, k_res, velocity_iter_2D, 
                                                         pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
@@ -734,8 +726,6 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             }
         }
         // :::::::::::::::::::   end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D )   ::::::::::
-        n = 1;
-        emin = epsres * 100.;
     }
     // ::::::::   end of 2D loop for initial surface conditions: if ( switch_2D == 0 )   :::::::::::::::::::::::::::::
 }
@@ -747,12 +737,8 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                     BC_Thermo &circulation){
     
     n = 1;
-
-    double emin = epsres * 100.;
+    emin = epsres * 100.;
     int pressure_plus_3D = 1;
-
-    double residuum;
-    double residuum_old = 0.;
 
     int j_res = 0, k_res = 0;
 
@@ -783,9 +769,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm        min_Residuum_old ( im, jm, km, dr, dthe, dphi );
             min_Residuum_old.residuumQuery_3D ( rad, the, u, v, w );
-            emin = min_Residuum_old.out_min (  );
-
-            residuum_old = emin;
+            double residuum_old = min_Residuum_old.out_min (  );
 
             //  class BC_Atmosphaere for the geometry of a shell of a sphere
             boundary.BC_radius ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
@@ -825,12 +809,11 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm      min_Residuum ( im, jm, km, dr, dthe, dphi );
             min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
-            emin = min_Residuum.out_min (  );
+            double residuum = min_Residuum.out_min (  );
             int i_res = min_Residuum.out_i_res (  );
             j_res = min_Residuum.out_j_res (  );
             k_res = min_Residuum.out_k_res (  );
 
-            residuum = emin;
             emin = fabs ( ( residuum - residuum_old ) / residuum_old );
 
             //  statements on the convergence und iterational process
