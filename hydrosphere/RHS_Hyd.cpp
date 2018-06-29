@@ -88,7 +88,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
 
-    double dist =0, h_0_i=0, h_0_0=0, h_d_i=0, h_0_j=0, h_d_j=0, h_d_k=0;
+    double dist =0, h_0_i=0, h_0_0=0, h_d_i=0, h_0_j=0, h_d_j=0, h_0_k=0, h_d_k=0;
 
 
 //  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>> 
@@ -122,12 +122,12 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 	if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1 ] == 1. ) ) || ( ( h.x[ i ][ j ][ k - 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) ) )
 	{
-		dist = .75 * dthe;
-		h_0_j = dist / dthe;
-		h_0_0 = 1. - h_0_j;
-		h_d_j = cc * ( 1. - h_0_0 ); 
+		dist = .75 * dphi;
+		h_0_k = dist / dphi;
+		h_0_0 = 1. - h_0_k;
+		h_d_k = cc * ( 1. - h_0_0 ); 
 	}
-	else	h_d_j = 0.; 
+	else	h_d_k = 0.; 
 
 
 // corner point averaging around obstacles
