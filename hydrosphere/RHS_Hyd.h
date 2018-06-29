@@ -20,19 +20,19 @@ using namespace std;
 
 class RHS_Hydrosphere
 {
-	private:
-		int im, jm, km;
-		
+    private:
+        int im, jm, km;
+        
         double dt, dr, dthe, dphi;
-		double re, pr, sc, m_g;
-		
-		double Buoyancy;
+        double re, pr, sc, m_g;
+        
+        double Buoyancy;
 
-	public:
+    public:
         RHS_Hydrosphere ( int jm, int km, double dthe, double dphi, double re );
 
-	    RHS_Hydrosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re,
-	    double sc, double g, double pr, double buoyancy );
+        RHS_Hydrosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, double re,
+                          double sc, double g, double pr, double buoyancy );
 
         ~RHS_Hydrosphere ();
 
