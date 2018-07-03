@@ -32,3 +32,4 @@ Roger_dev.geany
 .gitignore
 *.history
 *.swp
+*.swo
