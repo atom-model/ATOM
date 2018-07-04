@@ -359,7 +359,13 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     co2_cretaceous = circulation.out_co2 (  );
 
     // class element for the surface temperature computation by radiation flux density
-    if ( RadiationModel == 1 ){ 
+    if ( RadiationModel == 1 ){
+        std::cout << "first multi layer" << std::endl;
+        std::cout << "temperature: " << (t.min()-1)*t_0 << "  "<<GetMeanTemperature() <<"  "<<(t.max()-1)*t_0<<std::endl; 
+        std::cout << "water vapour " << c.min() << "  " << c.mean() << "  " << c.max() << std::endl;
+        std::cout << "p_stat " << p_stat.min() << "  " << p_stat.mean() << "  " << p_stat.max() << std::endl;
+        std::cout << "cloud " << cloud.min() << "  " << cloud.mean() << "  " << cloud.max() << std::endl;
+        std::cout << "ice " << ice.min() << "  " << ice.mean() << "  " << ice.max() << std::endl;
         circulation.BC_Radiation_multi_layer(albedo, Ik, p_stat,t, c, h.to_Int3DArray(), 
                                              epsilon_3D, radiation_3D, cloud, ice );
     }
@@ -393,16 +399,17 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
               startPressure, oldnew, calculate_MSL,
               circulation);
 
+   /* 
     double tmp_1 = GetMeanTemperatureFromCurve(Ma);
     double tmp_2 = GetMeanTemperature();
     double diff = tmp_2 - tmp_1;
     for(int j=0;j<jm;j++){
         for(int k=0; k<km; k++){
             t.x[0][j][k] -= diff/t_0;
-            if(t.x[0][j][k]>35.0/t_0+1) t.x[0][j][k]=35.0/t_0+1;
+            if(t.x[0][j][k]>40.0/t_0+1) t.x[0][j][k]=40.0/t_0+1;
         }
     }
-    
+    */
     cout << endl << endl;
 
     if ( NASATemperature == 1 && !use_earthbyte_reconstruction){ 
@@ -548,6 +555,14 @@ void cAtmosphereModel::Run3DLoop(int Ma, int n, int nm, int i_max, int pressure_
 
         //class element for the surface temperature computation by radiation flux density
         if( RadiationModel == 1 ){
+
+        std::cout << "second multi layer" << std::endl;
+        std::cout << "temperature: " << (t.min()-1)*t_0 << "  "<<GetMeanTemperature() <<"  "<<(t.max()-1)*t_0<<std::endl; 
+        std::cout << "water vapour " << c.min() << "  " << c.mean() << "  " << c.max() << std::endl;
+        std::cout << "p_stat " << p_stat.min() << "  " << p_stat.mean() << "  " << p_stat.max() << std::endl;
+        std::cout << "cloud " << cloud.min() << "  " << cloud.mean() << "  " << cloud.max() << std::endl;
+        std::cout << "ice " << ice.min() << "  " << ice.mean() << "  " << ice.max() << std::endl;
+        
             circulation.BC_Radiation_multi_layer(albedo, Ik, p_stat, t, c,
                                                  h.to_Int3DArray(), epsilon_3D, radiation_3D,
                                                  cloud, ice );
