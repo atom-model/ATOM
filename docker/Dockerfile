@@ -66,8 +66,10 @@ VOLUME /workspace/volume
 
 RUN chmod a+x /build/ATOM/docker/notebook.sh
 
-ENTRYPOINT ["/build/ATOM/docker/notebook.sh", " && "]
-CMD tail -f /var/log/notebook.log 
+#ADD notebook.sh /workspace/
+#RUN chmod a+x /workspace/notebook.sh
+#ENTRYPOINT ["/workspace/notebook.sh"]
+CMD ["/build/ATOM/docker/notebook.sh"] 
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
