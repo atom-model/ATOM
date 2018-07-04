@@ -50,9 +50,9 @@ RUN rm -rf basemap-1.1.0/ v1.1.0.tar.gz
 RUN apt-get install -y gmt python-tk
 
 WORKDIR /build
+ARG CACHE_DATE=2016-01-01
 RUN git clone https://github.com/atom-model/ATOM.git -b Roger --single-branch
 WORKDIR /build/ATOM
-RUN git pull
 RUN make
 RUN pip install -e /build/ATOM/python
 
