@@ -47,14 +47,14 @@ RUN tar -vxf v1.1.0.tar.gz
 RUN cd basemap-1.1.0/ && python setup.py install
 RUN rm -rf basemap-1.1.0/ v1.1.0.tar.gz
 
+RUN apt-get install -y gmt python-tk
 
 WORKDIR /build
 RUN git clone https://github.com/atom-model/ATOM.git -b Roger --single-branch
 WORKDIR /build/ATOM
+RUN git pull
 RUN make
 RUN pip install -e /build/ATOM/python
-
-RUN apt-get install -y gmt python-tk
 
 RUN mkdir /workspace
 
@@ -62,10 +62,12 @@ RUN mkdir /workspace
 RUN cp -av /build/ATOM/examples/* /workspace/
 
 # setup space for working in
-#VOLUME /workspace/volume
+VOLUME /workspace/volume
 
 RUN chmod a+x /build/ATOM/docker/notebook.sh
-CMD /build/ATOM/docker/notebook.sh
+
+ENTRYPOINT ["/build/ATOM/docker/notebook.sh", " && "]
+CMD tail -f /var/log/notebook.log 
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

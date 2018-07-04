@@ -146,6 +146,20 @@ def reconstruct_grid(
                 l=list(data[361*(90-y)+x-180])
                 l[0]+=360
                 new_data.append(l)
+
+    #adjust the reconstructed data
+    input_data = np.genfromtxt(ascii_grid_file)
+    input_min = np.nanmin(input_data[:,2])
+    input_max = np.nanmax(input_data[:,2])
+
+    for line in new_data:
+        if line[2] > input_max:
+            line[2] = input_max
+        elif line[2] < input_min:
+            line[2] = input_min
+    
+    #print new_data
+    #print np.nanmin(np.array(new_data)[:,2]), np.nanmax(np.array(new_data)[:,2]) 
     
     os.system('rm '+ new_ascii_grid_file)       
     write_xyz_file(new_ascii_grid_file, new_data)
