@@ -641,8 +641,6 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
     int pressure_plus_2D = 1;
 
-    int j_res = 0, k_res = 0;
-
     int Ma = int(round(*get_current_time())); 
 
     // ::::::::::: :::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::
@@ -673,9 +671,8 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
                 
                 //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-                Accuracy_Atm        min_Residuum_old_2D ( im, jm, km, dthe, dphi );
-                min_Residuum_old_2D.residuumQuery_2D ( rad, the, v, w );
-                double residuum_old = min_Residuum_old_2D.out_min (  );
+                Accuracy_Atm        min_Residuum_2D ( im, jm, km, dthe, dphi );
+                double residuum_old = min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
 
 				circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
@@ -691,17 +688,12 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                           co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
                                           radiation_3D, Vegetation );
                 //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-                Accuracy_Atm        min_Residuum_2D ( im, jm, km, dthe, dphi );
-                min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
-                double residuum = min_Residuum_2D.out_min (  );
-                j_res = min_Residuum_2D.out_j_res (  );
-                k_res = min_Residuum_2D.out_k_res (  );
+                double residuum = min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
 
                 emin = fabs ( ( residuum - residuum_old ) / residuum_old );
                 
                 //  state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
-                Accuracy_Atm        min_Stationary_2D ( n, nm, Ma, im, jm, km, emin, j_res, k_res );
-                min_Stationary_2D.steadyQuery_2D ( v, vn, w, wn, p_dyn, p_dynn );
+                min_Residuum_2D.steadyQuery_2D ( v, vn, w, wn, p_dyn, p_dynn );
 
                 n++;
             }
@@ -739,8 +731,6 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
     emin = epsres * 100.;
     int pressure_plus_3D = 1;
 
-    int j_res = 0, k_res = 0;
-
     int Ma = int(round(*get_current_time()));
     int velocity_n = 1;
 
@@ -766,9 +756,8 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 "    pressure_iter = " << pressure_iter << endl;
 
             //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-            Accuracy_Atm        min_Residuum_old ( im, jm, km, dr, dthe, dphi );
-            min_Residuum_old.residuumQuery_3D ( rad, the, u, v, w );
-            double residuum_old = min_Residuum_old.out_min (  );
+            Accuracy_Atm        min_Residuum ( im, jm, km, dr, dthe, dphi );
+            double residuum_old = min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
 
             //  class BC_Atmosphaere for the geometry of a shell of a sphere
             boundary.BC_radius ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
@@ -806,18 +795,12 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                         p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
             }
             //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-            Accuracy_Atm      min_Residuum ( im, jm, km, dr, dthe, dphi );
-            min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
-            double residuum = min_Residuum.out_min (  );
-            int i_res = min_Residuum.out_i_res (  );
-            j_res = min_Residuum.out_j_res (  );
-            k_res = min_Residuum.out_k_res (  );
+            double residuum = min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
 
             emin = fabs ( ( residuum - residuum_old ) / residuum_old );
 
             //  statements on the convergence und iterational process
-            Accuracy_Atm        min_Stationary ( n, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, L_atm );
-            min_Stationary.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, cloud, cloudn, ice, icen, co2, co2n, p_dyn, p_dynn );
+            min_Residuum.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, cloud, cloudn, ice, icen, co2, co2n, p_dyn, p_dynn, L_atm);
 
             // 3D_fields
 
