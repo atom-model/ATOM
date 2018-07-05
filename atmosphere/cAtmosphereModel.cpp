@@ -700,8 +700,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 emin = fabs ( ( residuum - residuum_old ) / residuum_old );
                 
                 //  state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
-                Accuracy_Atm        min_Stationary_2D ( n, nm, Ma, im, jm, km, emin, j_res, k_res, velocity_iter_2D, 
-                                                        pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
+                Accuracy_Atm        min_Stationary_2D ( n, nm, Ma, im, jm, km, emin, j_res, k_res );
                 min_Stationary_2D.steadyQuery_2D ( v, vn, w, wn, p_dyn, p_dynn );
 
                 n++;
@@ -817,8 +816,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             emin = fabs ( ( residuum - residuum_old ) / residuum_old );
 
             //  statements on the convergence und iterational process
-            Accuracy_Atm        min_Stationary ( n, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, velocity_iter, pressure_iter, 
-                                                 velocity_iter_max, pressure_iter_max, L_atm );
+            Accuracy_Atm        min_Stationary ( n, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, L_atm );
             min_Stationary.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, cloud, cloudn, ice, icen, co2, co2n, p_dyn, p_dynn );
 
             // 3D_fields

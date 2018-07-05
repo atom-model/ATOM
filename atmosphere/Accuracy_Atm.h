@@ -42,8 +42,8 @@ class Accuracy_Atm
 	public:
 		Accuracy_Atm ( int, int, int, double, double );
 		Accuracy_Atm ( int, int, int, double, double, double );
-		Accuracy_Atm ( int, int, int, int, int, int, double, int, int, int, int, int, int );
-		Accuracy_Atm ( int, int, int, int, int, int, double, int, int, int, int, int, int, int, double );
+        Accuracy_Atm ( int n, int nm, int Ma, int im, int jm, int km, double min, int j_res, int k_res );
+        Accuracy_Atm ( int n, int nm, int Ma, int im, int jm, int km, double min, int i_res, int j_res, int k_res, double L_atm );
 
 		~Accuracy_Atm ();
 
@@ -53,6 +53,9 @@ class Accuracy_Atm
 
 		double steadyQuery_2D ( Array &, Array &, Array &, Array &, Array &, Array & );
 		double steadyQuery_3D ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+
+        void print(const string& name, double value, int j, int k) const;        
+        void print(const string& name, double value, int i, int j, int k) const;
 
 		double out_min (  ) const;
 		int out_i_res (  ) const;
