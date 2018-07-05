@@ -2,13 +2,13 @@
 
 ATOM (Atmospheric and Ocean Model) is a fast climate model.
 
-## Getting started
+## Run ATOM inside the Docker container
 
-The easiest way to get started is with the Docker container.
+The ATOM depends on pygplates, gmt, matplotlib and other libraries. It is quite a hassle to install all the dependencies in your computer. The easiest way to get started is with the gplates/atom Docker container which GPlates development team have prepared for the users. 
 
-If you're not familiar with Docker, start by downloading and installing [Docker](https://www.docker.com/community-edition). 
+First, you need to install Docker and be familiar yourself with the basic Docker operations. [Docker download](https://www.docker.com/community-edition) 
 
-Run "docker pull gplates/atom" to get the ATOM Docker container from Docker Hub.
+Run "docker pull gplates/atom" or use [Kitematic](https://kitematic.com/) to download the container from Docker Hub.
 
 Run "docker run -it --rm -p 18888:8888 gplates/atom" to start the Docker container in interactive mode.
 
@@ -25,6 +25,18 @@ Run "docker ps" to check your container id.
 Alternatively, you can use the "-v" flag in "docker run" command line to mount a volume, for example "-v dir_in_your_host:dir_in_container".
 
 If you run "docker run -it --rm -p 18888:8888 gplates/atom /bin/bash", the Jupyter Notebook will not be started. You need to run /build/ATOM/docker/notebook.sh manually. 
+
+### Run Python script
+
+You can write Python scripts to manipulate and run the model. See `benchmark/run.py` for an example.
+
+Go into bechmark directory and run:
+
+        python run.py
+
+You will then have output in the `output/` directory to analyse.
+
+You can run "utils/create_atm_maps.py" to create and save maps in the directory ./atm_maps.
 
 ## Repo contents
 
