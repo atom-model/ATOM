@@ -33,3 +33,7 @@ Roger_dev.geany
 *.history
 *.swp
 *.swo
+*config_atm.xml
+*config_hyd.xml
+*/atm_maps/*
+*/hyd_maps/*

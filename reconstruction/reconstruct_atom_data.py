@@ -117,13 +117,13 @@ def reconstruct_grid(
 
     # create a gmt grid that fills gaps using surface 
     # (but gaps are filled by interpolation from neighbouring continents as well as oceans)
-    os.system(gmt_cmd+' surface buffer_tmp.xyz -Ggmt_surface_fill_the_gap.nc -Rd -I%0.8f -T0.1' % 1.)
+    os.system(gmt_cmd+' surface buffer_tmp.xyz -Ggmt_surface_fill_the_gap.nc -Rd -I%0.8f -T0.8' % 1.)
 
     # create a seperate gmt grids for reconstructed land (with nan's in oceans) and oceans (using
     # surface to fill gaps everwhere). Then blend together with continents taking precedence
     # BUT: gaps within continent will look funny due to filling from oceans (e.g. within Himalayas)
     os.system(gmt_cmd+' xyz2grd buffer_land_tmp.xyz -Gbuffer_land_tmp.nc -Rd -I%0.8f' % 1.)
-    os.system(gmt_cmd+' surface buffer_ocean_tmp.xyz -Gfill_ocean_tmp.nc -Rd -I%0.8f -T0.1' % 1.)
+    os.system(gmt_cmd+' surface buffer_ocean_tmp.xyz -Gfill_ocean_tmp.nc -Rd -I%0.8f -T0.8' % 1.)
     os.system(gmt_cmd+' grdblend buffer_land_tmp.nc fill_ocean_tmp.nc -Ggmt_grdblend_clobber.nc -Cf -Rd -I%0.8f' % 1.)
     #os.system('/opt/gmt5/bin/gmt grdmath buffer_land_tmp.nc fill_ocean_tmp.nc OR = gmt_grdblend_clobber.nc')
     os.system(gmt_cmd+' grdfilter %s -G%s -Fg%0.2f -D4 -Vl' % (
