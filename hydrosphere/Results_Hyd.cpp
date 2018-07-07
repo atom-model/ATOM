@@ -26,7 +26,7 @@ Results_Hyd::Results_Hyd ( int im, int jm, int km )
 	c43 = 4./3.;
 	c13 = 1./3.;
 
-
+// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 // auxiliar 2D Array "aux_v" for the computation of Ekman pumping
 	aux_v = 0L;
