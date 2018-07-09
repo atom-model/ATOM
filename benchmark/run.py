@@ -15,9 +15,9 @@ import create_atm_maps, create_hyd_maps
 model = Model()
 
 start_time = 0
-end_time = 30
+end_time = 6
 time_step = 5
-times = range(start_time, end_time, time_step)
+times = range(start_time, end_time+1, time_step)
 
 atom_output_dir = './output'
 
@@ -34,13 +34,19 @@ for t in range(len(times)):
 try:
     topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
     topo_suffix = 'Ma_Golonka'
-    map_output_dir = './atm_maps'
+    atm_map_output_dir = './atm_maps'
+    hyd_map_output_dir = './hyd_maps'
 
     # v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), 
     # precipitation(mm), precipitable water(mm)
-    sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 'precipitation', 'precipitable_water', 'topography']
+    atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 'precipitation', 'precipitable_water', 'topography']
 
-    create_atm_maps.create_all_maps(sub_dirs, start_time, end_time, time_step, map_output_dir, 
+    create_atm_maps.create_all_maps(atm_sub_dirs, start_time, end_time, time_step, atm_map_output_dir, 
+            atom_output_dir, topo_dir, topo_suffix)
+
+    hyd_sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 'upwelling', 'downwelling']
+    
+    create_hyd_maps.create_all_maps(hyd_sub_dirs, start_time, end_time, time_step, hyd_map_output_dir,
             atom_output_dir, topo_dir, topo_suffix)
 except:
     import traceback

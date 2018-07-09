@@ -1,20 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import os, sys
+import os, sys, shutil
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
-data_dir = './output'
-start_time = 0
-end_time = 100
-time_step = 5
-
-output_dir = 'hyd_maps'
-#'salinity', 'bottom_water', 'upwelling', 'downwelling
-def create_maps(directory):
+def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
     index = 6
     if directory == 'temperature':
         index = 6
@@ -77,28 +70,70 @@ def create_maps(directory):
         #plt.show()
         plt.close()
 
-if  __name__ == "__main__":
-    sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 'upwelling', 'downwelling']
+def create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
+    answer = ""
+    if os.path.exists(output_dir):
+        while True:
+            answer = raw_input("Do you want to delete the existing output folder {} [Y/N]? ".format(
+                os.path.abspath(output_dir))).lower()
+            if answer in ["y", "n"]:
+                break
 
-    if not os.path.exists(output_dir):
+        if answer == "y":
+            shutil.rmtree(output_dir)
+            print("Delete the existing " + os.path.abspath(output_dir))
+            os.makedirs(output_dir)
+            print("Create a new " + os.path.abspath(output_dir))
+    else:
         os.makedirs(output_dir)
+        print("Create " + os.path.abspath(output_dir))
+
+    print('')
+
+    try:
+        for d in sub_dirs:
+            if not os.path.exists(output_dir+'/'+d):
+                os.makedirs(output_dir+'/'+d)
+            create_maps(d, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
+    except:
+        import traceback
+        traceback.print_exc()
+
+    print("The data being used to create the maps are in " + os.path.abspath(data_dir))
+    print("The paleo-topography dir is: " + os.path.abspath(topo_dir))
+    print("The paleo-topography file suffix is: " + topo_suffix)
+    print("The start time is: " + str(start_time) )
+    print("The end time is: " + str(end_time) )
+    print("The time step is: " + str(time_step) )
+    print("The output dir is: " + os.path.abspath(output_dir) )
+    print("Creating hyd maps complete!")
+
+
+if  __name__ == "__main__":
+
+    data_dir = '../benchmark/output'
+    topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
+    topo_suffix = 'Ma_Golonka'
+    start_time = 0
+    end_time = 100
+    time_step = 5
+    output_dir = './hyd_maps'
+
+    sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 'upwelling', 'downwelling']
 
     try:
         start_time = int(sys.argv[1])
         end_time  = int(sys.argv[2])
         time_step = int(sys.argv[3])
         data_dir = sys.argv[4]
-        for d in sub_dirs:
-            if not os.path.exists(output_dir+'/'+d):
-                os.makedirs(output_dir+'/'+d)
-
-            create_maps(d)
+        topo_suffix = sys.argv[5]
+        #topo_dir = sys.argv[6]
     except:
-        print("Usage: ./create_hyd_maps.py 0 100 5")
-        import traceback
-        traceback.print_exc()
+        pass
 
+    create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
 
+    print("Use './create_hyd_maps.py 0 100 5 ../cli/output Ma_Golonka' to override the default settings")
 
 
 

@@ -121,7 +121,7 @@ def create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_
     print("The end time is: " + str(end_time) )
     print("The time step is: " + str(time_step) )
     print("The output dir is: " + os.path.abspath(output_dir) )
-    print("Use './create_atm_maps.py 0 100 5 ../cli/output Ma_Golonka' to override the default settings")
+    print("Creating atm maps complete!")
 
 if  __name__ == "__main__":
 
@@ -148,3 +148,5 @@ if  __name__ == "__main__":
         pass
 
     create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
+
+    print("Use './create_atm_maps.py 0 100 5 ../cli/output Ma_Golonka' to override the default settings")
