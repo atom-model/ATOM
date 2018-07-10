@@ -30,7 +30,16 @@ public:
     cAtmosphereModel();
     ~cAtmosphereModel();
 
-    // FUNCTIONS
+    cAtmosphereModel(const cAtmosphereModel&) =delete;
+    cAtmosphereModel& operator=(const cAtmosphereModel&) =delete;
+
+    static cAtmosphereModel* get_model(){
+        if(!m_model){
+            m_model = new cAtmosphereModel();
+        }
+        return m_model;
+    }
+
     void LoadConfig(const char *filename);
     void Run();
     void RunTimeSlice(int time_slice);
@@ -66,6 +75,12 @@ public:
 
     #include "AtmosphereParams.h.inc"
 
+     float get_mean_temperature_from_curve(float time) const;
+
+    int* get_tropopause() const{
+        return im_tropopause;
+    }
+
 private:
     void SetDefaultConfig();
     void reset_arrays();
@@ -80,6 +95,11 @@ private:
                       BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
                       Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL, 
                       BC_Thermo &circulation);
+
+    void load_temperature_curve();
+    std::map<float,float> m_temperature_curve;
+
+    static cAtmosphereModel* m_model;
 
     PythonStream ps;
     std::streambuf *backup;

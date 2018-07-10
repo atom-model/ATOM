@@ -30,6 +30,8 @@
 using namespace std;
 using namespace tinyxml2;
 
+cAtmosphereModel* cAtmosphereModel::m_model = NULL;
+
 const double cAtmosphereModel::pi180 = 180./ M_PI;      // pi180 = 57.3
 
 const double cAtmosphereModel::the_degree = 1.;         // compares to 1° step size laterally
@@ -70,6 +72,10 @@ cAtmosphereModel::cAtmosphereModel() {
     im_tropopause = new int [ jm ];// location of the tropopaus
 
     emin = epsres * 100.;
+    
+    m_model = this;
+
+    load_temperature_curve();
 }
 
 cAtmosphereModel::~cAtmosphereModel() {
@@ -79,6 +85,7 @@ cAtmosphereModel::~cAtmosphereModel() {
     }
 
     delete [] im_tropopause;
+    m_model = NULL;
 }
  
 #include "cAtmosphereDefaults.cpp.inc"
@@ -265,7 +272,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
-    circulation.BC_Temperature ( im_tropopause, t_cretaceous, t_cretaceous_prev, temperature_NASA, h, t, p_dyn, p_stat );
+    circulation.BC_Temperature ( temperature_NASA, h, t, p_dyn, p_stat );
     //  t_cretaceous = circulation.out_t_cretaceous (  );
 
     //  class element for the correction of the temperature initial distribution around coasts
@@ -863,4 +870,53 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         cout << "***** number of time steps      n = " << n << ", end of program reached because of limit of \
                 maximum time steps ***** \n\n" << endl;
     }
+}
+
+
+/*
+*
+*/
+void cAtmosphereModel::load_temperature_curve()
+{
+    std::string line;
+    std::ifstream f(temperature_curve_file);
+    
+    if (!f.is_open()){
+        std::cout << "error while opening file: "<< temperature_curve_file << std::endl;
+    }
+
+    float time=0.,temperature=0;
+    while(getline(f, line)) {
+        std::stringstream(line) >> time >> temperature;
+        m_temperature_curve.insert(std::pair<float,float>(time, temperature));
+        //std::cout << time <<"  " <<temperature<< std::endl;
+    }
+}
+
+/*
+*
+*/
+float cAtmosphereModel::get_mean_temperature_from_curve(float time) const
+{
+    if(time<m_temperature_curve.begin()->first || time>(--m_temperature_curve.end())->first){
+        std::cout << "Input time out of range: " <<time<< std::endl;    
+        return NAN;
+    }
+    if(m_temperature_curve.size()<2){
+        std::cout << "No enough data in m_temperature_curve  map" << std::endl;
+        return NAN;
+    }
+    map<float, float >::const_iterator upper=m_temperature_curve.begin(), bottom=++m_temperature_curve.begin(); 
+    for(map<float, float >::const_iterator it = m_temperature_curve.begin();
+            it != m_temperature_curve.end(); ++it)
+    {
+        if(time < it->first){
+            bottom = it;
+            break;
+        }else{
+            upper = it;
+        }
+    }
+    //std::cout << upper->first << " " << bottom->first << std::endl;
+    return upper->second + (time - upper->first) / (bottom->first - upper->first) * (bottom->second - upper->second);
 }

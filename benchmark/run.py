@@ -15,7 +15,7 @@ import create_atm_maps, create_hyd_maps
 model = Model()
 
 start_time = 0
-end_time = 6
+end_time = 76
 time_step = 5
 times = range(start_time, end_time+1, time_step)
 

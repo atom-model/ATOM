@@ -150,7 +150,7 @@ def reconstruct_grid(
     #adjust the reconstructed data
     input_data = np.genfromtxt(ascii_grid_file)
     input_min = np.nanmin(input_data[:,2])
-    input_max = np.nanmax(input_data[:,2])
+    input_max = max(np.nanmax(input_data[:,2]), 40.0)
 
     for line in new_data:
         if line[2] > input_max:
