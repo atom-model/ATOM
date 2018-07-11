@@ -111,10 +111,6 @@ class BC_Thermo
 
 		void BC_CO2 ( int *, double, Array_2D &, Array &, Array &, Array &, Array & );
 
-		void BC_NASAbasedSurfTempRead ( int &, double &, Array &, Array &, Array &, Array & );
-
-		void BC_NASAbasedSurfTempWrite ( int &, double &, Array &, Array &, Array &, Array & );
-
 		void BC_Surface_Temperature_NASA ( const string &, Array_2D &, Array & );
 
 		void BC_Surface_Precipitation_NASA ( const string &, Array_2D & );

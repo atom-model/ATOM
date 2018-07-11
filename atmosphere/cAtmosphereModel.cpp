@@ -265,9 +265,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
     circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 
-    //  class element for the surface temperature based on NASA temperature for progressing timeslices
-    //  if ( ( Ma > 0 ) && ( NASATemperature == 1 ) ) circulation.BC_NASAbasedSurfTempRead ( Ma_prev, t_cretaceous_prev, t, c, cloud, ice );
-
     //  class element for the surface precipitation from NASA for comparison
     circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
@@ -324,7 +321,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     if ( NASATemperature == 1 && !use_earthbyte_reconstruction ) 
     {
         t_cretaceous_prev = t_cretaceous;
-        circulation.BC_NASAbasedSurfTempWrite ( Ma, t_cretaceous_prev, t, c, cloud, ice );
     }
 
     //  final remarks
