@@ -38,7 +38,6 @@ class BC_Thermo
 		int *im_tropopause, **i_topography;
 
 		double d_k_half, d_k_max; 
-		double dummy_1, dummy_2, dummy_3;
 		double ca, ua_00, ua_30, ua_60, ua_90;
 		double va_Hadley_Tropopause, va_Hadley_Tropopause_15, va_Ferrel_Tropopause, va_Ferrel_Tropopause_45, va_Polar_Tropopause, va_Polar_Tropopause_75, va_Hadley_SL, va_Hadley_SL_15, va_Ferrel_SL, va_Ferrel_SL_45, va_Polar_SL, va_Polar_SL_75;
 		double wa_Ferrel_Tropopause, wa_Polar_Tropopause, wa_Ferrel_SL, wa_Polar_SL;
@@ -46,7 +45,7 @@ class BC_Thermo
 		double wa_equator_Tropopause, wa_equator_SL, va_equator_Tropopause, va_equator_SL, trop_co2_eff;
 		double d_i, d_i_max, d_i_half, d_j, d_j_half, d_j_max, d_k, pi180, d_j_w, d_j_infl;
 		double d_j_5n, d_j_15n, d_j_45n, d_j_75n, d_j_30n, d_j_5s, d_j_15s, d_j_45s, d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
-		double t_cretaceous, t_cretaceous_prev, t_cretaceous_add, t_cretaceous_eff, t_cretaceous_max, t_360;
+		double t_cretaceous, t_cretaceous_add, t_cretaceous_eff, t_cretaceous_max, t_360;
 		double j_par_f, j_pol_f, e, a, j_d, t_dd, k_par_f, k_pol_f;
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
 		double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
@@ -81,13 +80,13 @@ class BC_Thermo
 
  
  
-		string time_slice_comment, time_slice_number, time_slice_unit, output_path;
+		string time_slice_comment, time_slice_number, time_slice_unit;
 		string temperature_comment, temperature_gain, temperature_modern, temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
 		string co_comment, co_gain, co_modern, co_av, co_unit, co_cretaceous_str, co_average_cret, co_average_str;
 
 
 	public:
-		BC_Thermo ( string &, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+		BC_Thermo (int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
 		~BC_Thermo();
 
 
@@ -109,7 +108,7 @@ class BC_Thermo
 
 		void Two_Category_Ice_Scheme ( int, int, int, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void BC_CO2 ( int *, double, Array_2D &, Array &, Array &, Array &, Array & );
+        void BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 );
 
 		void BC_Surface_Temperature_NASA ( const string &, Array_2D &, Array & );
 
@@ -132,8 +131,6 @@ class BC_Thermo
 		double out_t_cretaceous (  ) const;
 
 		double out_Ma_prev (  ) const;
-
-		double out_t_cretaceous_prev (  ) const;
 
 		double out_t_cret_cor (  ) const;
 

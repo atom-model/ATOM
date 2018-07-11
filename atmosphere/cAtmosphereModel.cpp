@@ -232,11 +232,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
     int Ma_prev;
-    double t_cretaceous_prev;
 
     if( is_first_time_slice() ){
         Ma_prev = int(round(*get_current_time()));
-        t_cretaceous_prev = 0.;
     }else{
         Ma_prev = int(round(*get_previous_time()));
     }
@@ -244,12 +242,12 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo  circulation ( output_path, im, jm, km, tropopause_equator, tropopause_pole, RadiationModel, NASATemperature, 
+    BC_Thermo  circulation ( im, jm, km, tropopause_equator, tropopause_pole, RadiationModel, NASATemperature, 
                              sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_prev, Ma_max, Ma_max_half, dt, dr, 
                              dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, 
                              r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, 
                              co2_factor, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_equator, 
-                             co2_pole, t_cretaceous, t_cretaceous_prev, t_cretaceous_max, t_land, t_tropopause, t_equator, 
+                             co2_pole, t_cretaceous, t_cretaceous_max, t_land, t_tropopause, t_equator, 
                              t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, 
                              rad_equator, rad_pole );
 
@@ -285,7 +283,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_WaterVapour ( im_tropopause, t_cretaceous, h, t, c );
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-    circulation.BC_CO2 ( im_tropopause, t_cretaceous, Vegetation, h, t, p_dyn, co2 );
+    circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
     //  co2_cretaceous = circulation.out_co2 (  );
 
     // class element for the surface temperature computation by radiation flux density
@@ -317,11 +315,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //write the ouput files
     write_file(bathymetry_name, output_path);
-
-    if ( NASATemperature == 1 && !use_earthbyte_reconstruction ) 
-    {
-        t_cretaceous_prev = t_cretaceous;
-    }
 
     //  final remarks
     cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;

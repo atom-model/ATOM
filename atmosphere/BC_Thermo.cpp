@@ -25,9 +25,8 @@ using namespace std;
 
 
 
-BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int tropopause_equator, int tropopause_pole, int RadiationModel, int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_prev, int Ma_max, int Ma_max_half, double dt, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double lv, double ls, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double co2_factor, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_equator, double co2_pole, double t_cretaceous, double t_cretaceous_prev, double t_cretaceous_max, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double rad_equator, double rad_pole )
+BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropopause_pole, int RadiationModel, int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_prev, int Ma_max, int Ma_max_half, double dt, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double lv, double ls, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double co2_factor, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_equator, double co2_pole, double t_cretaceous, double t_cretaceous_max, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double rad_equator, double rad_pole )
 {
-    this ->output_path = output_path;
     this -> im = im;
     this -> jm = jm;
     this -> km = km;
@@ -83,7 +82,6 @@ BC_Thermo::BC_Thermo ( string &output_path, int im, int jm, int km, int tropopau
     this-> Ma_max = Ma_max;
     this-> t_cretaceous_max = t_cretaceous_max;
     this-> t_cretaceous = t_cretaceous;
-    this-> t_cretaceous_prev = t_cretaceous_prev;
     this-> t_land = t_land;
     this-> t_tropopause = t_tropopause;
     this-> t_equator = t_equator;
@@ -858,30 +856,27 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, double &t_cretaceous, Array
 }
 
 
-
-
-
-
-
-
-
-void BC_Thermo::BC_CO2 ( int *im_tropopause, double t_cretaceous, Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 )
+void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 )
 {
-// initial and boundary conditions of CO2 content on water and land surfaces
-// parabolic CO2 content distribution from pole to pole accepted
+    // initial and boundary conditions of CO2 content on water and land surfaces
+    // parabolic CO2 content distribution from pole to pole accepted
 
     j_half = j_max / 2;
 
-// temperature-distribution by Ruddiman approximated by a parabola
-    t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / ( double ) Ma_max ) );   // in °C
-    t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / ( double ) Ma_max + Ma );   // in °C
-    if ( Ma == 0 )  t_cretaceous = t_cretaceous_prev = 0.;
+    cAtmosphereModel* model = cAtmosphereModel::get_model();
+    int* im_tropopause = model->get_tropopause();
+    double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) - 
+        model->get_mean_temperature_from_curve(0);
 
-// CO2-distribution by Ruddiman approximated by a parabola
+    // temperature-distribution by Ruddiman approximated by a parabola
+    //t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / ( double ) Ma_max ) );   // in °C
+    //t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / ( double ) Ma_max + Ma );   // in °C
+    //if ( Ma == 0 )  t_cretaceous = t_cretaceous_prev = 0.;
+
+    // CO2-distribution by Ruddiman approximated by a parabola
     co2_cretaceous = 3.2886 * pow ( ( t_cretaceous + t_average ), 2 ) - 32.8859 * ( t_cretaceous + t_average ) + 102.2148;  // in ppm
     co2_average = 3.2886 * pow ( t_average, 2 ) - 32.8859 * t_average + 102.2148;  // in ppm
     co2_cretaceous = co2_cretaceous - co2_average;
-
 
     t_cretaceous = t_cretaceous / t_0;
 
@@ -895,7 +890,13 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, double t_cretaceous, Array_2D &Vege
     co_average_cret = " co2 cretaceous";
     co_unit =  "ppm ";
 
-    cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << co_comment << resetiosflags ( ios::left ) << setw ( 12 ) << co_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << co2_cretaceous << setw ( 5 ) << co_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co_modern << resetiosflags ( ios::left ) << setw ( 13 ) << co_average_str  << " = "  << setw ( 7 )  << setfill ( ' ' ) << co2_average << setw ( 5 ) << co_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co_cretaceous_str << resetiosflags ( ios::left ) << setw ( 13 ) << co_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << co2_average + co2_cretaceous << setw ( 5 ) << co_unit << endl;
+    cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << co_comment << resetiosflags ( ios::left ) 
+        << setw ( 12 ) << co_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << co2_cretaceous << setw ( 5 ) << co_unit << 
+        endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co_modern << resetiosflags ( ios::left ) 
+        << setw ( 13 ) << co_average_str  << " = "  << setw ( 7 )  << setfill ( ' ' ) << co2_average << setw ( 5 ) << co_unit 
+        << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co_cretaceous_str << 
+        resetiosflags ( ios::left ) << setw ( 13 ) << co_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << 
+        co2_average + co2_cretaceous << setw ( 5 ) << co_unit << endl;
     cout << endl;
 
     d_i_max = ( double ) i_max;
@@ -911,7 +912,7 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, double t_cretaceous, Array_2D &Vege
 
     co2_eff = co2_pole - co2_equator;
 
-// CO2-content as initial solution
+    // CO2-content as initial solution
     for ( int k = 0; k < km; k++ )
     {
         for ( int j = 0; j < jm; j++ )
@@ -921,23 +922,23 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, double t_cretaceous, Array_2D &Vege
             if ( h.x[ i_mount ][ j ][ k ] == 0. ) 
             {
                 d_j = ( double ) j;
-                co2.x[ i_mount ][ j ][ k ] = co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_ocean; // non-dimensional
+                co2.x[ i_mount ][ j ][ k ] = co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+                    co2_pole + co2_cretaceous + co2_ocean; // non-dimensional
             }
             if ( h.x[ i_mount ][ j ][ k ] == 1. ) 
             {
                 d_j = ( double ) j;
-                co2.x[ i_mount ][ j ][ k ] = co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + co2_pole + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ];  // parabolic distribution from pole to pole
+                co2.x[ i_mount ][ j ][ k ] = co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+                    co2_pole + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ];  // parabolic distribution from pole to pole
             }
         }
     }
 
-
-
-// co2 distribution decreasing approaching tropopause, above no co2
+    // co2 distribution decreasing approaching tropopause, above no co2
     for ( int j = 0; j < jm; j++ )
     {
-//      i_trop = im_tropopause[ j ];
-        i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
+        // i_trop = im_tropopause[ j ];
+        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous );
         d_i_max = ( double ) i_trop;
 
         for ( int k = 0; k < km; k++ )
@@ -949,26 +950,21 @@ void BC_Thermo::BC_CO2 ( int *im_tropopause, double t_cretaceous, Array_2D &Vege
                 if ( i <= i_trop )
                 {
                     d_i = ( double ) i;
-                    co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ] - ( co2_tropopause - co2.x[ i_mount ][ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );
-                                                                                                                                                                        // radial distribution approximated by a parabola
+                    co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ] - ( co2_tropopause - co2.x[ i_mount ][ j ][ k ] ) * 
+                        ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );// radial distribution approximated by a parabola
                 }
-//              else        co2.x[ i ][ j ][ k ] = co2.x[ i_trop ][ j ][ k ];
+                //else        co2.x[ i ][ j ][ k ] = co2.x[ i_trop ][ j ][ k ];
                 else        co2.x[ i ][ j ][ k ] = co2_tropopause;
             }
             for ( int i = i_trop - 1; i >= 0; i-- )
             {
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )             co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ];
+                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) ){
+                    co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ];
+                }
             }
         }
     }
 }
-
-
-
-
-
-
-
 
 
 void BC_Thermo::TropopauseLocation ( int *im_tropopause )
@@ -2742,8 +2738,7 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
     cout.precision ( 3 );
     cout.setf ( ios::fixed );
 
-    ifstream Name_SurfaceTemperature_File_Read;
-    Name_SurfaceTemperature_File_Read.open(Name_SurfaceTemperature_File);
+    ifstream Name_SurfaceTemperature_File_Read(Name_SurfaceTemperature_File);
 
     if (!Name_SurfaceTemperature_File_Read.is_open()) {
         cerr << "ERROR: could not open SurfaceTemperature_File file at " << Name_SurfaceTemperature_File << "\n";
@@ -2755,16 +2750,16 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
     j = 0;
     k = 0;
 
-
     while ( ( k < km ) && !Name_SurfaceTemperature_File_Read.eof() )
     {
         while ( j < jm )
         {
-            Name_SurfaceTemperature_File_Read >> dummy_1;
-            Name_SurfaceTemperature_File_Read >> dummy_2;
-            Name_SurfaceTemperature_File_Read >> dummy_3;
+            double lat, lon, temperature;
+            Name_SurfaceTemperature_File_Read >> lat;
+            Name_SurfaceTemperature_File_Read >> lon;
+            Name_SurfaceTemperature_File_Read >> temperature;
 
-            t.x[ 0 ][ j ][ k ] = temperature_NASA.y[ j ][ k ] = ( dummy_3 + t_0 ) / t_0;
+            t.x[ 0 ][ j ][ k ] = temperature_NASA.y[ j ][ k ] = ( temperature + t_0 ) / t_0;
 
             j++;
         }
@@ -2772,26 +2767,22 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
     k++;
     }
 
-// correction of surface temperature around 180°E
+    // correction of surface temperature around 180°E
     for ( int j = 0; j < jm; j++ )
     {
         t.x[ 0 ][ j ][ k_half ] = ( t.x[ 0 ][ j ][ k_half + 1 ] + t.x[ 0 ][ j ][ k_half - 1 ] ) / 2.;
         temperature_NASA.y[ j ][ k_half ] = ( temperature_NASA.y[ j ][ k_half + 1 ] + temperature_NASA.y[ j ][ k_half - 1 ] ) / 2.;
     }
-
-    Name_SurfaceTemperature_File_Read.close();
-
 }
 
 
 void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecipitation_File, Array_2D &precipitation_NASA )
 {
-// initial conditions for the Name_SurfacePrecipitation_File at the sea surface
+    // initial conditions for the Name_SurfacePrecipitation_File at the sea surface
     cout.precision ( 3 );
     cout.setf ( ios::fixed );
 
-    ifstream Name_SurfacePrecipitation_File_Read;
-    Name_SurfacePrecipitation_File_Read.open(Name_SurfacePrecipitation_File);
+    ifstream Name_SurfacePrecipitation_File_Read(Name_SurfacePrecipitation_File);
 
     if (!Name_SurfacePrecipitation_File_Read.is_open()) {
         cerr << "ERROR: could not open SurfacePrecipitation_File file at " << Name_SurfacePrecipitation_File << "\n";
@@ -2801,22 +2792,21 @@ void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecip
     j = 0;
     k = 0;
 
-
     while ( ( k < km ) && !Name_SurfacePrecipitation_File_Read.eof() )
     {
         while ( j < jm )
         {
-            Name_SurfacePrecipitation_File_Read >> dummy_1;
-            Name_SurfacePrecipitation_File_Read >> dummy_2;
-            Name_SurfacePrecipitation_File_Read >> dummy_3;
+            double lat, lon, precipitation;
+            Name_SurfacePrecipitation_File_Read >> lat;
+            Name_SurfacePrecipitation_File_Read >> lon;
+            Name_SurfacePrecipitation_File_Read >> precipitation;
 
-            precipitation_NASA.y[ j ][ k ] = dummy_3;
+            precipitation_NASA.y[ j ][ k ] = precipitation;
             j++;
         }
     j = 0;
     k++;
     }
-    Name_SurfacePrecipitation_File_Read.close();
 }
 
 
@@ -3769,11 +3759,6 @@ double BC_Thermo::exp_func ( double &T_K, const double &co_1, const double &co_2
 double BC_Thermo::out_t_cretaceous (  ) const
 {
     return t_cretaceous;
-}
-
-double BC_Thermo::out_t_cretaceous_prev (  ) const
-{
-    return t_cretaceous_prev;
 }
 
 double BC_Thermo::out_Ma_prev (  ) const
