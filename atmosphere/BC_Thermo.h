@@ -68,7 +68,7 @@ class BC_Thermo
 		double t_equator, t_tropopause, t_eff, t_pole, t_eff_tropo, t_tropopause_pole, c_equator, c_tropopause, coeff_mmWS;
 		double co2_tropopause, co2_eff, co2_coeff, co_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous, co2_factor;
 		double *AA, **CC, CCC, DDD;
-		double *jm_temp_asym, *alfa, *beta, *temp_tropopause;
+		double *jm_temp_asym, *alfa, *beta;
 
 		double S_c_c, S_au, S_nuc, S_ac, S_rim, S_shed, S_ev, S_dep, S_i_dep, S_melt, S_if_frz, S_cf_frz, S_r_frz, S_c_frz, S_c_au, S_i_au, S_d_au, S_agg, S_i_cri, S_r_cri, S_s_dep, S_i_melt, S_s_melt;
 		double S_v, S_c, S_i, S_r, S_s, P_rain_n, P_snow_n, P_rain_n_o, P_snow_n_o;

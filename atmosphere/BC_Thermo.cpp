@@ -122,17 +122,6 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropop
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
 
-// array "temp_tropopause" for a variable temperature distribution along the tropopause
-    temp_tropopause = 0L;
-
-    temp_tropopause = new double[ jm ];
-
-    for ( int l = 0; l < jm; l++ )
-    {
-        temp_tropopause[ l ] = 0;
-    }
-
-
 // array "jm_temp_asym" for configuring data due to latitude dependent tropopause
     jm_temp_asym = 0L;
 
@@ -748,18 +737,14 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
     t_eff_tropo = t_tropopause_pole - t_tropopause;
 
-    for ( int j = 0; j < jm; j++ )
-    {
-            d_j = ( double ) j;
-            temp_tropopause[ j ] =  t_eff_tropo * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                t_tropopause_pole + t_cretaceous_add;
-    }
-
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ )
     {
         i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_trop;
+
+        double temp_tropopause =  t_eff_tropo * ( j * j / ( d_j_half * d_j_half ) - 2. * j / d_j_half ) +
+                t_tropopause_pole + t_cretaceous_add;        
 
         for ( int k = 0; k < km; k++ )
         {
@@ -770,10 +755,10 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                 if ( i <= i_trop )
                 {
                     d_i = ( double ) i;
-                    t.x[ i ][ j ][ k ] = ( temp_tropopause[ j ] - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + 
+                    t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + 
                         t.x[ i_mount ][ j ][ k ];// linear temperature decay up to tropopause, privat approximation
                 }else{        
-                    t.x[ i ][ j ][ k ] = temp_tropopause[ j ];
+                    t.x[ i ][ j ][ k ] = temp_tropopause;
                 }
             }
 
