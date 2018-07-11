@@ -81,6 +81,8 @@ public:
         return im_tropopause;
     }
 
+    float calculate_mean_temperature(const Array& t);
+
 private:
     void SetDefaultConfig();
     void reset_arrays();
@@ -98,6 +100,13 @@ private:
 
     void load_temperature_curve();
     std::map<float,float> m_temperature_curve;
+
+    void calculate_node_weights();
+    float calculate_mean_temperature(){
+        return calculate_mean_temperature(t);
+    }
+
+    void restrain_temperature();
 
     static cAtmosphereModel* m_model;
 
@@ -121,6 +130,9 @@ private:
     static const double the0, phi0, r0;
 
     double emin;
+
+    bool is_node_weights_initialised;
+    std::vector<std::vector<double> > m_node_weights;
 
     //  class Array for 1-D, 2-D and 3-D field declarations
     // 1D arrays

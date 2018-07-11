@@ -51,7 +51,9 @@ const double cAtmosphereModel::phi0 = 0.;             // zero meridian in Greenw
 //earth's radius is r_earth = 6731 km, here it is assumed to be infinity, circumference of the earth 40074 km 
 const double cAtmosphereModel::r0 = 1.; 
 
-cAtmosphereModel::cAtmosphereModel() {
+cAtmosphereModel::cAtmosphereModel() :
+    is_node_weights_initialised(false) 
+{
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
     //PythonStream::OverrideCout();
@@ -312,6 +314,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     cout << endl << endl;
 
     n--;
+
+    restrain_temperature();
 
     //write the ouput files
     write_file(bathymetry_name, output_path);
@@ -908,4 +912,59 @@ float cAtmosphereModel::get_mean_temperature_from_curve(float time) const
     }
     //std::cout << upper->first << " " << bottom->first << std::endl;
     return upper->second + (time - upper->first) / (bottom->first - upper->first) * (bottom->second - upper->second);
+}
+
+/*
+*
+*/
+float cAtmosphereModel::calculate_mean_temperature(const Array& temp) 
+{
+    if(!is_node_weights_initialised){
+        calculate_node_weights();
+        is_node_weights_initialised = true;
+    }
+    double ret=0., weight=0.;
+    for(int j=0; j<jm; j++){
+        for(int k=0; k<km; k++){
+            //std::cout << (t.x[0][j][k]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
+            ret += temp.x[0][j][k] * m_node_weights[j][k];
+            weight += m_node_weights[j][k];
+        }
+    }
+    return (ret/weight-1)*t_0;
+}
+
+/*
+*
+*/
+void cAtmosphereModel::calculate_node_weights()
+{
+    //use cosine of latitude as weights for now
+    //longitudes: 0-360(km) latitudes: 90-(-90)(jm)
+    double weight = 0.;
+    m_node_weights.clear();
+    for(int i=0; i<jm; i++){
+        if(i<=90){
+            weight = cos((90-i) * M_PI / 180.0 );
+        }else{
+            weight = cos((i-90) * M_PI / 180.0 );
+        }
+        m_node_weights.push_back(std::vector<double>());
+        m_node_weights[i].resize(km, weight);
+    }
+    return;
+}
+
+/*
+*
+*/
+void cAtmosphereModel::restrain_temperature(){
+    double tmp_1 = get_mean_temperature_from_curve(*get_current_time());
+    double tmp_2 = calculate_mean_temperature();
+    double diff = tmp_2 - tmp_1;
+    for(int j=0;j<jm;j++){
+        for(int k=0; k<km; k++){
+            t.x[0][j][k] -= diff/t_0;
+        }
+    }
 }
