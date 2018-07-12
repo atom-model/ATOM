@@ -12,6 +12,10 @@ from reconstruct_atom_data import *
 from pyatom import Model
 import create_atm_maps, create_hyd_maps
 
+simon = False
+if len(sys.argv) >= 2 and sys.argv[1] == "simon":
+    simon = True
+
 model = Model()
 
 start_time = 0
@@ -23,8 +27,12 @@ atom_output_dir = './output'
 
 for t in range(len(times)):
     time = times[t]
-    model.run_atm( time, atom_output_dir, './config_atm.xml' )
-    model.run_hyd( time, atom_output_dir, './config_hyd.xml' )
+    if not simon:
+        model.run_atm( time, atom_output_dir, './config_atm.xml' )
+        model.run_hyd( time, atom_output_dir, './config_hyd.xml' )
+    else:
+        model.run_atm( time, atom_output_dir, './config_simon_atm.xml' )
+        model.run_hyd( time, atom_output_dir, './config_simon_hyd.xml' )
     #if False:
     if t<len(times)-1:
         reconstruct_temperature(time,times[t+1]) 
@@ -32,8 +40,12 @@ for t in range(len(times)):
         reconstruct_salinity(time,times[t+1])
 
 try:
-    topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
-    topo_suffix = 'Ma_Golonka'
+    if not simon:
+        topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
+        topo_suffix = 'Ma_Golonka'
+    else:
+        topo_dir = '../data/topo_grids/'
+        topo_suffix = 'Ma_Simon'
     atm_map_output_dir = './atm_maps'
     hyd_map_output_dir = './hyd_maps'
 

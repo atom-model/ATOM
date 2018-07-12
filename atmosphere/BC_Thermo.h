@@ -107,10 +107,10 @@ class BC_Thermo
 
 		void BC_CloudWaterIce ( Array &, Array &, Array &, Array & );
 
-        void Ice_Water_Saturation_Adjustment ( int n, int RadiationModel, Array &h, Array &c, Array &cn, Array &cloud,
+        void Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn, Array &cloud,
             Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c );
 
-        void Two_Category_Ice_Scheme ( int n, int RadiationModel, Array &h, Array &c, Array &t, Array &p_stat, 
+        void Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p_stat, 
             Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, 
             Array &S_s, Array &S_c_c );
 

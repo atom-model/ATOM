@@ -770,7 +770,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
             if ( velocity_iter == velocity_n ){
-                circulation.Ice_Water_Saturation_Adjustment ( n, RadiationModel, h, c, 
+                circulation.Ice_Water_Saturation_Adjustment ( h, c, 
                                                               cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
             }
 
@@ -830,9 +830,9 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation 
             //  distribution formed of rain and snow
-            if ( velocity_iter == velocity_n )
+            if ( velocity_iter == velocity_n && n >= 2 )
             {
-                circulation.Two_Category_Ice_Scheme ( n, RadiationModel, h, c, t, p_stat, 
+                circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, 
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
                 velocity_n = velocity_iter + 2;
             }
@@ -850,9 +850,10 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
         //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution 
         //  formed of rain and snow
-        circulation.Two_Category_Ice_Scheme ( n, RadiationModel, h, c, t, p_stat, cloud, ice, 
+        if(n >= 2){
+            circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, cloud, ice, 
                                               P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
-
+        }
 
         //  limit of the computation in the sense of time steps
         if ( n > nm )

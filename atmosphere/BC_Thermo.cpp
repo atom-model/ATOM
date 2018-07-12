@@ -2984,7 +2984,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
     }
 }
 
-void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int RadiationModel, Array &h, Array &c, Array &cn, Array &cloud, 
+void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn, Array &cloud, 
         Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c )
 {
     cout.precision ( 6 );
@@ -3234,7 +3234,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int RadiationModel, Arr
 
 
 
-void BC_Thermo::Two_Category_Ice_Scheme ( int n, int RadiationModel, Array &h, Array &c, Array &t, Array &p_stat, 
+void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p_stat, 
         Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, 
         Array &S_s, Array &S_c_c )
 {
@@ -3403,7 +3403,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( int n, int RadiationModel, Array &h, A
     }
 
 
-    if ( n >= 2 )
+    if ( true )
     {
         iter_prec = 0;
         while ( iter_prec <= 5 )                                                            // iter_prec may be varied
