@@ -96,28 +96,32 @@ void cAtmosphereModel::LoadConfig ( const char *filename )
 {
     XMLDocument doc;
     XMLError err = doc.LoadFile ( filename );
-
-    if (err) {
-        doc.PrintError();
-        throw std::invalid_argument(std::string("unable to load config file:  ") + filename);
-    }
-
-    XMLElement *atom = doc.FirstChildElement("atom"), *elem_common = NULL, *elem_atmosphere = NULL;
-    if (!atom) {
-        throw std::invalid_argument(std::string("Failed to find the 'atom' element in config file: ") + filename);
-    }else{
-        elem_common = atom->FirstChildElement( "common" );
-        if(!elem_common){
-            throw std::invalid_argument(std::string("Failed to find the 'common' element in 'atom' element in config file: ") + filename);
+    try{
+        if (err) {
+            doc.PrintError();
+            throw std::invalid_argument(std::string("unable to load config file:  ") + filename);
         }
-        elem_atmosphere = atom->FirstChildElement( "atmosphere" );
-        if (!elem_atmosphere) {
-            throw std::invalid_argument(std::string("Failed to find the 'atmosphere' element in 'atom' element in config file: ") + filename);
+
+        XMLElement *atom = doc.FirstChildElement("atom"), *elem_common = NULL, *elem_atmosphere = NULL;
+        if (!atom) {
+            throw std::invalid_argument(std::string("Failed to find the 'atom' element in config file: ") + filename);
+        }else{
+            elem_common = atom->FirstChildElement( "common" );
+            if(!elem_common){
+                throw std::invalid_argument(std::string("Failed to find the 'common' element in 'atom' element in config file: ") + filename);
+            }
+            elem_atmosphere = atom->FirstChildElement( "atmosphere" );
+            if (!elem_atmosphere) {
+                throw std::invalid_argument(std::string("Failed to find the 'atmosphere' element in 'atom' element in config file: ") + filename);
+            }
         }
+
+        #include "AtmosphereLoadConfig.cpp.inc"
+
+    }catch(const std::exception &exc){
+        std::cerr << exc.what() << std::endl;
+        abort();
     }
-
-#include "AtmosphereLoadConfig.cpp.inc"
-
 }
 
 
@@ -282,7 +286,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-    circulation.BC_WaterVapour ( im_tropopause, t_cretaceous, h, t, c );
+    circulation.BC_WaterVapour ( h, t, c );
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
@@ -766,7 +770,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
             if ( velocity_iter == velocity_n ){
-                circulation.Ice_Water_Saturation_Adjustment ( im_tropopause, n, velocity_iter_max, RadiationModel, h, c, 
+                circulation.Ice_Water_Saturation_Adjustment ( n, RadiationModel, h, c, 
                                                               cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
             }
 
@@ -828,7 +832,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             //  distribution formed of rain and snow
             if ( velocity_iter == velocity_n )
             {
-                circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, 
+                circulation.Two_Category_Ice_Scheme ( n, RadiationModel, h, c, t, p_stat, 
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
                 velocity_n = velocity_iter + 2;
             }
@@ -846,7 +850,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
         //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution 
         //  formed of rain and snow
-        circulation.Two_Category_Ice_Scheme ( n, velocity_iter_max, RadiationModel, t_cretaceous, h, c, t, p_stat, cloud, ice, 
+        circulation.Two_Category_Ice_Scheme ( n, RadiationModel, h, c, t, p_stat, cloud, ice, 
                                               P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
 

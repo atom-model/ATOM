@@ -19,7 +19,10 @@ int main(int argc, char **argv)
         std::cout << std::endl;
         exit ( 1 );
 	}
-    
-    model.LoadConfig(argv[1]);
-    model.Run();
+    try{    
+        model.LoadConfig(argv[1]);
+        model.Run();
+    }catch(const std::exception &exc){
+        std::cerr << exc.what() << std::endl;
+    }
 }

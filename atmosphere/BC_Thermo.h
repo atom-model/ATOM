@@ -103,13 +103,16 @@ class BC_Thermo
             Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud,
             Array &ice, Array &co2 );
 
-		void BC_WaterVapour ( int *, double &, Array &, Array &, Array & );
+        void BC_WaterVapour ( Array &h, Array &t, Array &c );
 
 		void BC_CloudWaterIce ( Array &, Array &, Array &, Array & );
 
-		void Ice_Water_Saturation_Adjustment ( int *, int, int, int, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void Ice_Water_Saturation_Adjustment ( int n, int RadiationModel, Array &h, Array &c, Array &cn, Array &cloud,
+            Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c );
 
-		void Two_Category_Ice_Scheme ( int, int, int, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void Two_Category_Ice_Scheme ( int n, int RadiationModel, Array &h, Array &c, Array &t, Array &p_stat, 
+            Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, 
+            Array &S_s, Array &S_c_c );
 
         void BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 );
 

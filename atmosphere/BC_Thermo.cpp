@@ -798,14 +798,14 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 }
 
 
-void BC_Thermo::BC_WaterVapour ( int *im_tropopause, double &t_cretaceous, Array &h, Array &t, Array &c )
+void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c )
 {
-// initial and boundary conditions of water vapour on water and land surfaces
-// parabolic water vapour distribution from pole to pole accepted
+    // initial and boundary conditions of water vapour on water and land surfaces
+    // parabolic water vapour distribution from pole to pole accepted
 
-// maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
-// minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
-// value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
+    // maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
+    // minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
+    // value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
 
     i_max = im - 1;
     d_i_max = ( double ) i_max;
@@ -813,7 +813,12 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, double &t_cretaceous, Array
     d_j_half = ( double ) j_half;
     d_j_max = ( double ) j_max;
 
-// water vapour contents computed by Clausius-Clapeyron-formula
+    cAtmosphereModel* model = cAtmosphereModel::get_model();
+    int* im_tropopause = model->get_tropopause();
+    double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
+        model->get_mean_temperature_from_curve(0);
+
+    // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ )
     {
         for ( int j = 0; j < jm; j++ )
@@ -822,21 +827,23 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, double &t_cretaceous, Array
 
             if ( h.x[ 0 ][ j ][ k ]  == 0. ) 
             {
-                c.x[ i_mount ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01 ); // saturation of relative water vapour in kg/kg
-                c.x[ i_mount ][ j ][ k ] = c_ocean * c.x[ i_mount ][ j ][ k ];                                                      // relativ water vapour contents on ocean surface reduced by factor
+                c.x[ i_mount ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
+                    ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) *
+                     .01 ); // saturation of relative water vapour in kg/kg
+                c.x[ i_mount ][ j ][ k ] = c_ocean * c.x[ i_mount ][ j ][ k ];// relativ water vapour contents on ocean surface reduced by factor
             }
 
             if ( h.x[ 0 ][ j ][ k ] == 1. ) 
             {
-                c.x[ i_mount ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01 );
-                c.x[ i_mount ][ j ][ k ] = c_land * c.x[ i_mount ][ j ][ k ];                                                           // relativ water vapour contents on land reduced by factor
+                c.x[ i_mount ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
+                    ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * 
+                    .01 );
+                c.x[ i_mount ][ j ][ k ] = c_land * c.x[ i_mount ][ j ][ k ];// relativ water vapour contents on land reduced by factor
             }
         }
     }
 
-
-
-// water vapour distribution decreasing approaching tropopause
+    // water vapour distribution decreasing approaching tropopause
     for ( int j = 0; j < jm; j++ )
     {
         i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
@@ -852,16 +859,20 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, double &t_cretaceous, Array
                 {
                     d_i = ( double ) i;
 
-                    c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ] - ( c_tropopause - c.x[ i_mount ][ j ][ k ] ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );       // radial parabolic decrease
+                    c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ] - ( c_tropopause - c.x[ i_mount ][ j ][ k ] ) * 
+                        ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );       // radial parabolic decrease
+                }else{
+                    c.x[ i ][ j ][ k ] = c.x[ i_trop ][ j ][ k ];
                 }
-                else        c.x[ i ][ j ][ k ] = c.x[ i_trop ][ j ][ k ];
-            }                                                                                                                           // end i
+            } // end i
             for ( int i = i_trop - 1; i >= 0; i-- )
             {
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )             c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];
+                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) ){
+                    c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];
+                }
             }
-        }                                                                                                                               // end j
-    }                                                                                                                                   // end k
+        }// end k
+    }// end j
 }
 
 
@@ -2973,13 +2984,8 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
     }
 }
 
-
-
-
-
-
-
-void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int velocity_iter_max, int RadiationModel, Array &h, Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c )
+void BC_Thermo::Ice_Water_Saturation_Adjustment ( int n, int RadiationModel, Array &h, Array &c, Array &cn, Array &cloud, 
+        Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c )
 {
     cout.precision ( 6 );
 // Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
@@ -2990,6 +2996,12 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
     t_00 = 236.15;
     t_Celsius_1 = t_1 - t_0;                                                                                        // -20 °C
     t_Celsius_2 = t_00 - t_0;                                                                                       // -37 °C
+
+    cAtmosphereModel* model = cAtmosphereModel::get_model();
+    int* im_tropopause = model->get_tropopause();
+
+    double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
+        model->get_mean_temperature_from_curve(0);
 
 // setting water vapour, cloud water and cloud ice into the proper thermodynamic ratio based on the local temperatures
 // starting from a guessed parabolic temperature and water vapour distribution in north/south direction
@@ -3222,11 +3234,13 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
 
 
 
-void BC_Thermo::Two_Category_Ice_Scheme ( int n, int velocity_iter_max, int RadiationModel, double t_cretaceous, Array &h, Array &c, Array &t, Array &p_stat, Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
+void BC_Thermo::Two_Category_Ice_Scheme ( int n, int RadiationModel, Array &h, Array &c, Array &t, Array &p_stat, 
+        Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, 
+        Array &S_s, Array &S_c_c )
 {
-//  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
+    //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
 
-// constant coefficients for the transport of cloud water and cloud ice amount vice versa, rain and snow in the parameterization procedures
+    // constant coefficients for the transport of cloud water and cloud ice amount vice versa, rain and snow in the parameterization procedures
     a_if = .66;
     c_ac = .24;
     c_rim = 18.6;
