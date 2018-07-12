@@ -122,16 +122,6 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropop
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
 
-// array "jm_temp_asym" for configuring data due to latitude dependent tropopause
-    jm_temp_asym = 0L;
-
-    jm_temp_asym = new double[ jm ];
-
-    for ( int l = 0; l < jm; l++ )
-    {
-        jm_temp_asym[ l ] = 0;
-    }
-
 
 // array "alfa" for Thomas algorithm
     alfa = 0L;
@@ -202,6 +192,23 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropop
         }
     }
 
+    i_half = ( im -1 ) / 2;
+    i_max = im - 1;
+
+    d_i_half = ( double ) i_half ;
+    d_i_max = ( double ) i_max;
+
+    j_half = ( jm -1 ) / 2;  // position of the sun at 0°S
+    j_max = jm - 1;
+
+    d_j_half = ( double ) j_half;
+    d_j_max = ( double ) j_max;
+
+    k_half = ( km -1 ) / 2;  // position of the sun at 0° oder 180° ( Greenwich )
+    k_max = km - 1;
+
+    d_k_half = ( double ) k_half;
+    d_k_max = ( double ) k_max;
 }
 
 
@@ -222,49 +229,51 @@ BC_Thermo::~BC_Thermo()
 
     delete [  ] i_topography;
 
-    delete [  ] jm_temp_asym;
     delete [  ] alfa;
     delete [  ] beta;
     delete [  ] AA;
 }
 
 
-
-
-
-
-
-void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceous, double CO2, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, Array_2D &radiation_surface, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice, Array &co2 )
+void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, 
+    Array_2D &radiation_surface, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, 
+    Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, 
+    Array &ice, Array &co2 )
 {
-// class element for the computation of the radiation and the temperature distribution
-// computation of the local temperature based on short and long wave radiation
-// multi layer radiation model
+    // class element for the computation of the radiation and the temperature distribution
+    // computation of the local temperature based on short and long wave radiation
+    // multi layer radiation model
+
+    cAtmosphereModel* model = cAtmosphereModel::get_model();
+    int* im_tropopause = model->get_tropopause();
+    double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
+        model->get_mean_temperature_from_curve(0);
 
     cout.precision ( 4 );
     cout.setf ( ios::fixed );
 
     pi180 = 180./M_PI;
 
-    j_half = ( jm -1 ) / 2;                                                                 // position of the sun at 0°S
+    j_half = ( jm -1 ) / 2;  // position of the sun at 0°S
     j_max = jm - 1;
 
     d_j_half = ( double ) j_half;
     d_j_max = ( double ) j_max;
 
-    k_half = ( km -1 ) / 2;                                                             // position of the sun at 0° oder 180° ( Greenwich )
+    k_half = ( km -1 ) / 2;  // position of the sun at 0° oder 180° ( Greenwich )
     k_max = km - 1;
 
     d_k_half = ( double ) k_half;
     d_k_max = ( double ) k_max;
 
-    j_sun = 0;                                                                                  // equatorial sun location
+    j_sun = 0;                // equatorial sun location
 
     rad_eff = rad_pole - rad_equator;
 
     albedo_co2_eff = albedo_pole - albedo_equator;
 
 
-// land surface in a 2D field
+    // land surface in a 2D field
     for ( int j = 0; j < jm; j++ )
     {
         for ( int k = 0; k < km; k++ )
@@ -284,41 +293,45 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
         }
     }
 
-
-
-// effective temperature, albedo and emissivity/absorptivity for the two layer model
+    // effective temperature, albedo and emissivity/absorptivity for the two layer model
     for ( int j = 0; j < jm; j++ )
     {
         for ( int k = 0; k < km; k++ )
         {
             d_j = ( double ) j;
-            if ( h.x[ 0 ][ j ][ k ]  == 0. )    albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + albedo_pole;
-
-            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 1 ][ j ][ k ] == 0. ) )     albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + albedo_pole;
-
+            if ( h.x[ 0 ][ j ][ k ]  == 0. ){    
+                albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+                    albedo_pole;
+            }
+            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 1 ][ j ][ k ] == 0. ) ){
+                albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+                    albedo_pole;
+            }
             for ( int i = 1; i < im-1; i++ )
             {
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i+1 ][ j ][ k ] == 0. ) )   albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + albedo_pole;
+                if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i+1 ][ j ][ k ] == 0. ) ){   
+                    albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+                        albedo_pole;
+                }
             }
-
-            radiation_surface.y[ j ][ k ] = rad_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + rad_pole;             // in W/m², assumption of parabolic surface radiation at zero level
+    
+            // in W/m², assumption of parabolic surface radiation at zero level
+            radiation_surface.y[ j ][ k ] = rad_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + rad_pole;
         }
     }
 
-
-
-
-// absorption/emissivity computation
-    epsilon_eff_max = .594;                                                         // constant  given by Häckel ( F. Baur and H. Philips, 1934 )
-                                                                                                        // constant value stands for other non-condensable gases than water vapour in the equation for epsilon
+    // absorption/emissivity computation
+    epsilon_eff_max = .594; // constant  given by Häckel ( F. Baur and H. Philips, 1934 )
+    // constant value stands for other non-condensable gases than water vapour in the equation for epsilon
     epsilon_eff_2D = epsilon_pole - epsilon_equator;
 
     for ( int j = 0; j < jm; j++ )
     {
-        i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
+        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0);
 
         d_j = ( double ) j;
-        epsilon_eff_max = epsilon_eff_2D * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + epsilon_pole;        // on zero level, lateral parabolic distribution
+        // on zero level, lateral parabolic distribution
+        epsilon_eff_max = epsilon_eff_2D * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + epsilon_pole;
 
         for ( int k = 0; k < km; k++ )
         {
@@ -327,20 +340,28 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
 
             for ( int i = 0; i <= i_trop; i++ )
             {
-                if ( c.x[ i ][ j ][ k ] <= 0. )                                         c.x[ i ][ j ][ k ] = 0.;
-                if ( cloud.x[ i ][ j ][ k ] <= 0. )                                 cloud.x[ i ][ j ][ k ] = 0.;
-                if ( ice.x[ i ][ j ][ k ] <= 0. )                                       ice.x[ i ][ j ][ k ] = 0.;
+                if ( c.x[ i ][ j ][ k ] < 0. )      c.x[ i ][ j ][ k ] = 0.;
+                if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
+                if ( ice.x[ i ][ j ][ k ] < 0. )    ice.x[ i ][ j ][ k ] = 0.;
 
-                e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep; // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
+                // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
+                e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep;
 
                 d_i = ( double ) i;
 
-                epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );  // radial parabolic distribution, start on zero level
-                if ( CO2 == 1. )            co2_coeff = co2_factor * ( co2_equator / co2_tropopause );                  // influence of co2 in the atmosphere, co2_coeff = 1. means no influence
-                else                            co2_coeff = 1.;
+                epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) * ( d_i / d_i_max * 
+                    ( d_i / d_i_max - 2. ) );  // radial parabolic distribution, start on zero level
+                
+                if ( CO2 == 1. ){
+                    co2_coeff = co2_factor * ( co2_equator / co2_tropopause );// influence of co2 in the atmosphere, co2_coeff = 1. means no influence
+                }
+                else{
+                    co2_coeff = 1.;
+                }
 
-                epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );                                     // dependency given by Häckel ( F. Baur and H. Philips, 1934 )
-                radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
+                epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );// dependency given by Häckel ( F. Baur and H. Philips, 1934 )
+                radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
+                    pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
 
                 epsilon.y[ j ][ k ] = epsilon_3D.x[ i ][ j ][ k ];
             }
@@ -349,69 +370,79 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
             for ( int i = i_trop - 1; i >= 0; i-- )
             {
                 i_mount = i_topography[ j ][ k ];
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )             epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_mount ][ j ][ k ];
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )             radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_mount ][ j ][ k ];
+                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) ){
+                    epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_mount ][ j ][ k ];
+                }
+                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) ){ 
+                    radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_mount ][ j ][ k ];
+                }    
             }
 
             for ( int i = i_trop + 1; i < im; i++ )
             {
                 epsilon_3D.x[ i ][ j ][ k ] = 0.;
-                radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
+                radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * 
+                    t_0, 4. );
             }
         }
     }
 
-//  cout << endl << "                                              nach epsilon" << endl;
+    //  cout << endl << "                                              nach epsilon" << endl;
 
-//  iteration procedure for the computation of the temperature based on the multi-layer radiation model
-// temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
+    //  iteration procedure for the computation of the temperature based on the multi-layer radiation model
+    // temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
     iter_rad = 0;
-    while ( iter_rad <= 5 )                                                             // iter_rad may be varied
+    while ( iter_rad <= 5 ) // iter_rad may be varied
     {
         iter_rad = iter_rad + 1;
 
-// coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
+        // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
         for ( int j = 0; j < jm; j++ )
         {
-            i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
+            i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
 
             for ( int k = 0; k < km; k++ )
             {
                 i_mount = i_topography[ j ][ k ];
 
-                radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+                radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
+                    pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
-                radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );        // back radiation absorbed from the first water vapour layer out of 40
+                radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * 
+                    pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );        // back radiation absorbed from the first water vapour layer out of 40
  
-                atmospheric_window = .1007 * radiation_surface.y[ j ][ k ];                                                                             // radiation loss through the atmospheric window
-                rad_surf_diff = radiation_back + radiation_surface.y[ j ][ k ] - atmospheric_window;                                            // radiation leaving the surface
+                atmospheric_window = .1007 * radiation_surface.y[ j ][ k ]; // radiation loss through the atmospheric window
+                rad_surf_diff = radiation_back + radiation_surface.y[ j ][ k ] - atmospheric_window; // radiation leaving the surface
 
-                fac_rad = ( double ) i_mount * .07 + 1.;                                                            // linear increase with hight, best choice for Ma>0
-                rad_surf_diff = fac_rad * rad_surf_diff;        // compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity for higher back radiation
+                fac_rad = ( double ) i_mount * .07 + 1.;  // linear increase with hight, best choice for Ma>0
+                rad_surf_diff = fac_rad * rad_surf_diff;  // compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity for higher back radiation
 
-                AA[ i_mount ] = rad_surf_diff / radiation_3D.x[ i_trop ][ j ][ k ];                                     // non-dimensional surface radiation
-                CC[ i_mount ][ i_mount ] = 0.;                                                                                          // no absorption of radiation on the surface by water vapour
+                AA[ i_mount ] = rad_surf_diff / radiation_3D.x[ i_trop ][ j ][ k ];// non-dimensional surface radiation
+                CC[ i_mount ][ i_mount ] = 0.; // no absorption of radiation on the surface by water vapour
 
-                radiation_3D.x[ i_mount ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_mount ][ j ][ k ] ) * sigma * pow ( t.x[ i_mount ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ i_trop ][ j ][ k ]; // radiation leaving the surface
+                radiation_3D.x[ i_mount ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_mount ][ j ][ k ] ) * sigma * 
+                    pow ( t.x[ i_mount ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ i_trop ][ j ][ k ]; // radiation leaving the surface
 
                 for ( int i = i_mount + 1; i <= i_trop; i++ )
                 {
-                    AA[ i ] = AA[ i - 1 ] * ( 1. - epsilon_3D.x[ i ][ j ][ k ] );                                                   // transmitted radiation from each layer
-                    CC[ i ][ i ]= epsilon_3D.x[ i ][ j ][ k ] * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ i_trop ][ j ][ k ]; // absorbed radiation in each layer
-                    radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ i_trop ][ j ][ k ]; // radiation leaving each layer
+                    AA[ i ] = AA[ i - 1 ] * ( 1. - epsilon_3D.x[ i ][ j ][ k ] ); // transmitted radiation from each layer
+                    CC[ i ][ i ]= epsilon_3D.x[ i ][ j ][ k ] * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. ) / 
+                        radiation_3D.x[ i_trop ][ j ][ k ]; // absorbed radiation in each layer
+                    radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
+                        pow ( t.x[ i ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ i_trop ][ j ][ k ]; // radiation leaving each layer
 
                     for ( int l = i_mount + 1; l <= i_trop; l++ )
                     {
-                        CC[ i ][ l ]= CC[ i ][ l - 1 ] * ( 1. - epsilon_3D.x[ l ][ j ][ k ] );                              // additional transmitted radiation from layer to layer in radial direction
+                        CC[ i ][ l ]= CC[ i ][ l - 1 ] * ( 1. - epsilon_3D.x[ l ][ j ][ k ] );// additional transmitted radiation from layer to layer in radial direction
                     }
                 }
 
 
-// Thomas algorithm to solve the tridiogonal equation system for the solution of the radiation with a recurrence formula
-// additionally embedded in an iterational process
+                // Thomas algorithm to solve the tridiogonal equation system for the solution of the radiation with a recurrence formula
+                // additionally embedded in an iterational process
                 for ( int i = i_mount; i < i_trop; i++ )
                 {
-// values at the surface
+                    // values at the surface
                     if ( i == i_mount )
                     {
                         aa = 0.;
@@ -476,14 +507,16 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
                     }
                 }
 
-                radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+                radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
+                    pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
-// recurrence formula for the radiation and temperature
+                // recurrence formula for the radiation and temperature
                 for ( int i = i_trop - 1; i >= i_mount; i-- )
                 {
-// above assumed tropopause constant temperature t_tropopause
-                    radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];                            // Thomas algorithm, recurrence formula
-                    t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, ( 1. / 4. ) ) / t_0 );    // averaging of temperature values to smooth the iterations
+                    // above assumed tropopause constant temperature t_tropopause
+                    radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];// Thomas algorithm, recurrence formula
+                    t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, 
+                        ( 1. / 4. ) ) / t_0 );    // averaging of temperature values to smooth the iterations
                 }
 
                 for ( int i = i_trop - 1; i >= 0; i-- )
@@ -491,17 +524,14 @@ void BC_Thermo::BC_Radiation_multi_layer ( int *im_tropopause, double t_cretaceo
                     if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )
                     {
                         t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
-                        radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
+                        radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
+                            pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
                     }
                 }
             }
         }
     }
 }
-
-
-
-
 
 
 void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, Array &p_dyn, Array &p_stat )
@@ -597,12 +627,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
             }
         }
 
-        // transfer of zonal constant temperature into aa 1D-temperature field
-        for ( int j = 0; j < jm; j++ )
-        {
-            jm_temp_asym[ j ] = t.x[ 0 ][ j ][ 20 ];
-        }
-
         // longitudinally variable temperature distribution from west to east in parabolic form
         // communicates the impression of local sun radiation on the southern hemisphere
         k_par = sun_position_lon;  // position of the sun at constant longitude
@@ -612,15 +636,16 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
         for ( int j = 0; j < jm; j++ )
         {
+            double jm_temp_asym = t.x[ 0 ][ j ][ 20 ];//transfer of zonal constant temperature into aa 1D-temperature field
             for ( int k = 0; k < km; k++ )
             {
                 k_par_f = ( double ) k_par;
                 k_pol_f = ( double ) k_pol;
                 d_k = ( double ) k;
 
-                aa = ( jm_temp_asym[ j ] - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * ( k_par_f - k_pol_f ) );
+                aa = ( jm_temp_asym - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * ( k_par_f - k_pol_f ) );
                 bb = - 2. * aa * k_par_f;
-                cc = jm_temp_asym[ j ] + aa * k_par_f * k_par_f;
+                cc = jm_temp_asym + aa * k_par_f * k_par_f;
 
                 t.x[ 0 ][ j ][ k ] = aa * d_k * d_k + bb * d_k + cc;
             }
@@ -740,7 +765,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ )
     {
-        i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous / t_0 );
+        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_trop;
 
         double temp_tropopause =  t_eff_tropo * ( j * j / ( d_j_half * d_j_half ) - 2. * j / d_j_half ) +
@@ -788,7 +813,6 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, double &t_cretaceous, Array
     d_j_half = ( double ) j_half;
     d_j_max = ( double ) j_max;
 
-
 // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ )
     {
@@ -815,7 +839,7 @@ void BC_Thermo::BC_WaterVapour ( int *im_tropopause, double &t_cretaceous, Array
 // water vapour distribution decreasing approaching tropopause
     for ( int j = 0; j < jm; j++ )
     {
-        i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
+        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_trop;
 
         for ( int k = 0; k < km; k++ )
@@ -960,15 +984,13 @@ void BC_Thermo::TropopauseLocation ( int *im_tropopause )
     j_half = ( jm -1 ) / 2;
 
 //  j_infl = 45;                                                        // fixed value due to the cubic function for the location of the tropopause
-    j_infl = 43;                                                        // flattens the equator peak
-
+    j_infl = 43;
+                                                        // flattens the equator peak
     d_j_half = ( double ) j_half;
 
     d_j_infl = 3. * ( double ) j_infl;
 
     trop_co2_eff = ( double ) ( tropopause_pole - tropopause_equator );
-
-
 
 // no stripes in longitudinal direction
 // computation of the tropopause from pole to pole, constant approach
@@ -2978,7 +3000,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( int *im_tropopause, int n, int
             for ( int i = 0; i < im; i++ )
             {
 //              i_trop = im_tropopause[ j ];
-                i_trop = im_tropopause[ j ] + BC_Thermo::GetTropopauseHightAdd ( t_cretaceous );
+                i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
 
                 t_u = t.x[ i ][ j ][ k ] * t_0;                                                                     // in K
 
