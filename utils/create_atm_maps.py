@@ -26,7 +26,7 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
     elif  directory == 'topo_simon':
         index = 11
 
-    for time in range(start_time, end_time, time_step):
+    for time in range(start_time, end_time + 1, time_step):
         if index < 10:
             data = np.genfromtxt(data_dir + '/[{0}{1}.xyz]_PlotData_Atm.xyz'.format(time,topo_suffix),skip_header=1)
             for d in data:
