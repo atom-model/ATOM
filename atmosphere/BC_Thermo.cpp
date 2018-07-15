@@ -20,10 +20,10 @@
 #include "Array.h"
 #include "Array_2D.h"
 #include "cAtmosphereModel.h"
+#include "Utils.h"
 
 using namespace std;
-
-
+using namespace AtomUtils;
 
 BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropopause_pole, int RadiationModel, int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_prev, int Ma_max, int Ma_max_half, double dt, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double lv, double ls, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double co2_factor, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_equator, double co2_pole, double t_cretaceous, double t_cretaceous_max, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double rad_equator, double rad_pole )
 {
@@ -244,6 +244,14 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
     // computation of the local temperature based on short and long wave radiation
     // multi layer radiation model
 
+    logger() << "enter BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl;
+
+    logger() << "co2 max: " << co2.max() << "  ice max: " << ice.max() << "  cloud max: " << cloud.max() << "  p_stat max: "
+    << p_stat.max() <<"  water vapour max: " << c.max() << std::endl;
+
+    logger() << "co2 min: " << co2.min() << "  ice min: " << ice.min() << "  cloud min: " << cloud.min() << "  p_stat min: "
+    << p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
+
     cAtmosphereModel* model = cAtmosphereModel::get_model();
     int* im_tropopause = model->get_tropopause();
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
@@ -346,7 +354,7 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
 
                 // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
                 e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep;
-
+                
                 d_i = ( double ) i;
 
                 epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) * ( d_i / d_i_max * 
@@ -362,7 +370,6 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
                 epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );// dependency given by Häckel ( F. Baur and H. Philips, 1934 )
                 radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
                     pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
-
                 epsilon.y[ j ][ k ] = epsilon_3D.x[ i ][ j ][ k ];
             }
 
@@ -394,6 +401,9 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
     iter_rad = 0;
     while ( iter_rad <= 5 ) // iter_rad may be varied
     {
+        logger() << "max radiation_3D: " << radiation_3D.max() << "  epsilon_3D max: " << epsilon_3D.max() << std::endl;
+        logger() << "min radiation_3D: " << radiation_3D.min() << "  epsilon_3D min: " << epsilon_3D.min() << std::endl;
+        
         iter_rad = iter_rad + 1;
 
         // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
@@ -510,6 +520,9 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
                 radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
                     pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
 
+                t.x[ i_trop ][ j ][ k ] = .5 * ( t.x[ i_trop ][ j ][ k ] + pow ( radiation_3D.x[ i_trop ][ j ][ k ] / sigma,
+                        ( 1. / 4. ) ) / t_0 ); 
+
                 // recurrence formula for the radiation and temperature
                 for ( int i = i_trop - 1; i >= i_mount; i-- )
                 {
@@ -531,6 +544,7 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
             }
         }
     }
+    logger() << "exit BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl;
 }
 
 
@@ -542,6 +556,8 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     // temperature at tropopause t_min = 0.77 compares to -62° C compares to 211 K
     // temperature at tropopause t_min = 0.89 compares to -30° C compares to 243 K
     // temperature difference from equator to pole   18°C compares to  t_delta = 0.0659  compares to  18 K
+
+    logger() << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
 
     cAtmosphereModel* model = cAtmosphereModel::get_model();
     int* im_tropopause = model->get_tropopause();
@@ -795,9 +811,11 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
             }
         }
     }
+
+    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
 }
 
-
+    
 void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c )
 {
     // initial and boundary conditions of water vapour on water and land surfaces
@@ -817,7 +835,7 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c )
     int* im_tropopause = model->get_tropopause();
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
         model->get_mean_temperature_from_curve(0);
-
+    
     // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ )
     {
@@ -887,7 +905,7 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
     int* im_tropopause = model->get_tropopause();
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) - 
         model->get_mean_temperature_from_curve(0);
-
+    
     // temperature-distribution by Ruddiman approximated by a parabola
     //t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / ( double ) Ma_max ) );   // in °C
     //t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / ( double ) Ma_max + Ma );   // in °C
@@ -3003,8 +3021,8 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
         model->get_mean_temperature_from_curve(0);
 
-// setting water vapour, cloud water and cloud ice into the proper thermodynamic ratio based on the local temperatures
-// starting from a guessed parabolic temperature and water vapour distribution in north/south direction
+    // setting water vapour, cloud water and cloud ice into the proper thermodynamic ratio based on the local temperatures
+    // starting from a guessed parabolic temperature and water vapour distribution in north/south direction
     for ( int k = 0; k < km; k++ )
     {
         for ( int j = 0; j < jm; j++ )

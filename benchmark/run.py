@@ -27,7 +27,7 @@ else:
    hyd_model.load_config( './config_simon_hyd.xml' )
 
 start_time = 0
-end_time = 10
+end_time = 50
 time_step = 5
 times = range(start_time, end_time+1, time_step)
 

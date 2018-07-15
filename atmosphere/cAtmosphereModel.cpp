@@ -24,11 +24,13 @@
 #include "Restore_Atm.h"
 #include "Results_Atm.h"
 #include "MinMax_Atm.h"
+#include "Utils.h"
 
 #include "Config.h"
 
 using namespace std;
 using namespace tinyxml2;
+using namespace AtomUtils;
 
 cAtmosphereModel* cAtmosphereModel::m_model = NULL;
 
@@ -88,6 +90,7 @@ cAtmosphereModel::~cAtmosphereModel() {
 
     delete [] im_tropopause;
     m_model = NULL;
+    logger().close();
 }
  
 #include "cAtmosphereDefaults.cpp.inc"
@@ -128,6 +131,8 @@ void cAtmosphereModel::LoadConfig ( const char *filename )
 
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
+    logger() << "RunTimeSlice: " << Ma << " Ma"<<std::endl;
+
     reset_arrays();    
 
     m_current_time = m_time_list.insert(float(Ma)).first;
@@ -202,7 +207,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         cout << "***** original program name:  " << __FILE__ << endl;
         cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
     }
-
 
     //  initialization of the bathymetry/topography
 
@@ -970,6 +974,10 @@ void cAtmosphereModel::restrain_temperature(){
     for(int j=0;j<jm;j++){
         for(int k=0; k<km; k++){
             t.x[0][j][k] -= diff/t_0;
+            if(t.x[0][j][k] > (1+40/t_0)){
+                t.x[0][j][k] = 1 + 40/t_0;//don't allow temperature to exceed 40 degrees.
+                //logger() << "temperature is restraint " << (t.x[0][j][k] - 1)*t_0 << std::endl;
+            }
         }
     }
 }

@@ -1,7 +1,12 @@
 #include <Utils.h>
 
 using namespace AtomUtils;
-    
+
+std::ofstream& AtomUtils::logger(){
+    static std::ofstream logger("atom_log.txt", std::ofstream::out);
+    return logger;
+}
+
 HemisphereCoords AtomUtils::convert_coords(double lon, double lat){
     HemisphereCoords ret;
     if ( lat > 90 ){

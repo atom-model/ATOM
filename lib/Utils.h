@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 namespace AtomUtils{
     using namespace std;
@@ -8,4 +9,6 @@ namespace AtomUtils{
     }; 
 
     HemisphereCoords convert_coords(double lon, double lat);
+
+    std::ofstream& logger();
 }

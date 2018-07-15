@@ -669,8 +669,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, Precipitation, Bathymetry );
 
 //	3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-	write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
-
+	if(paraview_panorama_vts){
+        write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
+            u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
+    }
 //	writing of plot data in the PlotData file
 	PostProcess_Hydrosphere		ppa ( im, jm, km, input_path, output_path );
 	ppa.Hydrosphere_PlotData ( bathymetry_name, u_0, h, v, w, t, c, BottomWater, Upwelling, Downwelling );
