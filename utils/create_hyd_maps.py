@@ -27,7 +27,7 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
 
     for time in range(start_time, end_time + 1, time_step):
         if index < 11:
-            data = np.genfromtxt(data_dir + '/[{}Ma_Golonka.xyz]_PlotData_Hyd.xyz'.format(time),skip_header=1)
+            data = np.genfromtxt(data_dir + '/[{0}{1}.xyz]_PlotData_Hyd.xyz'.format(time, topo_suffix),skip_header=1)
             for d in data:
                 d[1]=90-d[1]
             x = data[:,0]

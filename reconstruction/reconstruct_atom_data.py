@@ -166,8 +166,8 @@ def reconstruct_grid(
     print "Reconstruction done!"
    
 
-def reconstruct_temperature(time_0,time_1):
-    st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, BATHYMETRY_SUFFIX),skip_header=1)
+def reconstruct_temperature(time_0, time_1, suffix):
+    st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, suffix),skip_header=1)
     data = st[:,[0,1,6]]
     for d in data:
         d[1]=90-d[1]
@@ -185,8 +185,8 @@ def reconstruct_temperature(time_0,time_1):
         DATA_DIR + '/{0}Ma_Reconstructed_Temperature.xyz'.format(time_1))       
 
 
-def reconstruct_precipitation(time_0,time_1):
-    st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, BATHYMETRY_SUFFIX),skip_header=1)
+def reconstruct_precipitation(time_0, time_1, suffix):
+    st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, suffix),skip_header=1)
     data = st[:,[0,1,8]]
     for d in data:
         d[1]=90-d[1]
@@ -204,8 +204,8 @@ def reconstruct_precipitation(time_0,time_1):
         DATA_DIR + '/{0}Ma_Reconstructed_Precipitation.xyz'.format(time_1))  
 
 
-def reconstruct_salinity(time_0,time_1):
-    st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Hyd.xyz'.format(time_0, BATHYMETRY_SUFFIX),skip_header=1)
+def reconstruct_salinity(time_0, time_1, suffix):
+    st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Hyd.xyz'.format(time_0, suffix),skip_header=1)
     data = st[:,[0,1,7]]
     for d in data:
         d[1]=90-d[1]
@@ -234,10 +234,10 @@ def main():
         print(time_0)
         print(time_1)
         if atm_or_hyd == 'atm':
-            reconstruct_temperature(time_0,time_1)
-            reconstruct_precipitation(time_0,time_1)
+            reconstruct_temperature(time_0, time_1, BATHYMETRY_SUFFIX)
+            reconstruct_precipitation(time_0, time_1, BATHYMETRY_SUFFIX)
         else:
-            reconstruct_salinity(time_0,time_1)
+            reconstruct_salinity(time_0, time_1, BATHYMETRY_SUFFIX)
     except:
         print("Usage: python reconstruct_atom_data.py 0 10 ./output Ma_Golonka.xyz atm/hyd") 
         import traceback

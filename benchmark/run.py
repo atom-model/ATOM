@@ -33,15 +33,20 @@ times = range(start_time, end_time+1, time_step)
 
 atom_output_dir = atm_model.output_path
 
+if not simon:
+    BATHYMETRY_SUFFIX = 'Ma_Golonka.xyz'
+else:
+    BATHYMETRY_SUFFIX = 'Ma_Simon.xyz'
+
 for t in range(len(times)):
     time = times[t]
     atm_model.run_time_slice(time)
     hyd_model.run_time_slice(time)
     #if False:
     if t<len(times)-1:
-        reconstruct_temperature(time,times[t+1]) 
-        reconstruct_precipitation(time,times[t+1])
-        reconstruct_salinity(time,times[t+1])
+        reconstruct_temperature(time,times[t+1], BATHYMETRY_SUFFIX) 
+        reconstruct_precipitation(time,times[t+1], BATHYMETRY_SUFFIX)
+        reconstruct_salinity(time,times[t+1], BATHYMETRY_SUFFIX)
 
 try:
     if not simon:
