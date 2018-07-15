@@ -75,13 +75,16 @@ public:
 
     #include "AtmosphereParams.h.inc"
 
-     float get_mean_temperature_from_curve(float time) const;
+    float get_mean_temperature_from_curve(float time) const;
 
     int* get_tropopause() const{
         return im_tropopause;
     }
 
     float calculate_mean_temperature(const Array& t);
+
+    static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
+    static const double the0, phi0, r0;
 
 private:
     void SetDefaultConfig();
@@ -125,9 +128,6 @@ private:
 
     double coeff_mmWS;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     double max_Precipitation;
-
-    static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
-    static const double the0, phi0, r0;
 
     double emin;
 

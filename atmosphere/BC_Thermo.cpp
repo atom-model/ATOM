@@ -25,75 +25,70 @@
 using namespace std;
 using namespace AtomUtils;
 
-BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h, int tropopause_equator, int tropopause_pole, int RadiationModel, 
-    int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, 
-    double dt, double dr, double dthe, double dphi, double g, double ep, double hp, 
-    double u_0, double p_0, double t_0, double c_0, double sigma, double lv, double ls, double cp_l, double L_atm, 
-    double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, 
-    double co2_vegetation, double co2_ocean, double co2_land, double co2_factor, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_equator, double co2_pole, double t_cretaceous, double t_cretaceous_max, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double rad_equator, double rad_pole ):
+BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h) : 
         im(im),
         jm(jm),
         km(km),
         h(h),
         i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0)))
 {
-    this -> tropopause_equator = tropopause_equator;
-    this -> tropopause_pole = tropopause_pole;
-    this-> L_atm = L_atm;
-    this-> dt = dt;
-    this-> dr = dr;
-    this-> dthe = dthe;
-    this-> dphi = dphi;
-    this-> RadiationModel = RadiationModel;
-    this-> NASATemperature = NASATemperature;
-    this-> sun = sun;
-    this-> g = g;
-    this-> ep = ep;
-    this-> hp = hp;
-    this-> u_0 = u_0;
-    this-> p_0 = p_0;
-    this-> t_0 = t_0;
-    this-> c_0 = c_0;
-    this-> co2_0 = co2_0;
-    this-> sigma = sigma;
-    this-> albedo_equator = albedo_equator;
-    this-> albedo_pole = albedo_pole;
-    this-> gam = gam;
-    this-> lv = lv;
-    this-> ls = ls;
-    this-> cp_l = cp_l;
-    this-> r_air = r_air;
-    this-> R_Air = R_Air;
-    this-> r_water_vapour = r_water_vapour;
-    this-> R_WaterVapour = R_WaterVapour;
-    this-> co2_cretaceous = co2_cretaceous;
-    this-> co2_vegetation = co2_vegetation;
-    this-> co2_ocean = co2_ocean;
-    this-> co2_land = co2_land;
-    this-> co2_factor = co2_factor;
-    this-> rad_equator = rad_equator;
-    this-> rad_pole = rad_pole;
-    this-> epsilon_pole = epsilon_pole;
-    this-> epsilon_tropopause = epsilon_tropopause;
-    this-> epsilon_equator = epsilon_equator;
-    this-> c_tropopause = c_tropopause;
-    this-> co2_tropopause = co2_tropopause;
-    this-> c_ocean = c_ocean;
-    this-> c_land = c_land;
-    this-> t_average = t_average;
-    this-> co2_average = co2_average;
-    this-> co2_pole = co2_pole;
-    this-> co2_equator = co2_equator;
-    this-> t_cretaceous_max = t_cretaceous_max;
-    this-> t_cretaceous = t_cretaceous;
-    this-> t_land = t_land;
-    this-> t_tropopause = t_tropopause;
-    this-> t_equator = t_equator;
-    this-> t_pole = t_pole;
-    this-> declination = declination;
-    this-> sun_position_lat = sun_position_lat;
-    this-> sun_position_lon = sun_position_lon;
-
+    cAtmosphereModel* model = cAtmosphereModel::get_model();
+    this -> tropopause_equator = model->tropopause_equator;
+    this -> tropopause_pole = model->tropopause_pole;
+    this-> L_atm = model->L_atm;
+    this-> dt = model->dt;
+    this-> dr = model->dr;
+    this-> dthe = model->dthe;
+    this-> dphi = model->dphi;
+    this-> RadiationModel = model->RadiationModel;
+    this-> NASATemperature = model->NASATemperature;
+    this-> sun = model->sun;
+    this-> g =  model->g;
+    this-> ep =  model->ep;
+    this-> hp =  model->hp;
+    this-> u_0 =  model->u_0;
+    this-> p_0 =  model->p_0;
+    this-> t_0 =  model->t_0;
+    this-> c_0 =  model->c_0;
+    this-> co2_0 =  model->co2_0;
+    this-> sigma =  model->sigma;
+    this-> albedo_equator =  model->albedo_equator;
+    this-> albedo_pole =  model->albedo_pole;
+    this-> gam =  model->gam;
+    this-> lv =  model->lv;
+    this-> ls =  model->ls;
+    this-> cp_l =  model->cp_l;
+    this-> r_air =  model->r_air;
+    this-> R_Air =  model->R_Air;
+    this-> r_water_vapour =  model->r_water_vapour;
+    this-> R_WaterVapour =  model->R_WaterVapour;
+    this-> co2_cretaceous =  model->co2_cretaceous;
+    this-> co2_vegetation =  model->co2_vegetation;
+    this-> co2_ocean =  model->co2_ocean;
+    this-> co2_land =  model->co2_land;
+    this-> co2_factor =  model->co2_factor;
+    this-> rad_equator =  model->rad_equator;
+    this-> rad_pole =  model->rad_pole;
+    this-> epsilon_pole =  model->epsilon_pole;
+    this-> epsilon_tropopause =  model->epsilon_tropopause;
+    this-> epsilon_equator =  model->epsilon_equator;
+    this-> c_tropopause =  model->c_tropopause;
+    this-> co2_tropopause =  model->co2_tropopause;
+    this-> c_ocean =  model->c_ocean;
+    this-> c_land =  model->c_land;
+    this-> t_average =  model->t_average;
+    this-> co2_average =  model->co2_average;
+    this-> co2_pole =  model->co2_pole;
+    this-> co2_equator =  model->co2_equator;
+    this-> t_cretaceous_max =  model->t_cretaceous_max;
+    this-> t_cretaceous =  model->t_cretaceous;
+    this-> t_land =  model->t_land;
+    this-> t_tropopause =  model->t_tropopause;
+    this-> t_equator =  model->t_equator;
+    this-> t_pole =  model->t_pole;
+    this-> declination =  model->declination;
+    this-> sun_position_lat =  model->sun_position_lat;
+    this-> sun_position_lon =  model->sun_position_lon;
 
     coeff_mmWS = r_air / r_water_vapour;                                    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     coeff_lv = lv / ( cp_l * t_0 );                                                     // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]

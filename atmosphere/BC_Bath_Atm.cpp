@@ -116,7 +116,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                                                 double R_Air, double t_0, double t_land, double t_cretaceous, double t_equator,     
                                                 double t_pole, double t_tropopause, double c_land, double c_tropopause, 
                                                 double co2_0, double co2_equator, double co2_pole, double co2_tropopause, 
-                                                double co2_cretaceous, double pa, double gam, double sigma, Array &h, Array &u, 
+                                                double pa, double gam, double sigma, Array &h, Array &u, 
                                                 Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, 
                                                 Array &co2, Array &radiation_3D, Array_2D &Vegetation )
 {

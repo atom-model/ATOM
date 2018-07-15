@@ -90,15 +90,9 @@ class BC_Thermo
 
 
 	public:
-		BC_Thermo (int im, int jm, int km, Array& h, int tropopause_equator, int tropopause_pole, int RadiationModel,
-    int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon,
-    double dt, double dr, double dthe, double dphi, double g, double ep, double hp,
-    double u_0, double p_0, double t_0, double c_0, double sigma, double lv, double ls, double cp_l, double L_atm,
-    double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous,
-    double co2_vegetation, double co2_ocean, double co2_land, double co2_factor, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_equator, double co2_pole, double t_cretaceous, double t_cretaceous_max, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double rad_equator, double rad_pole );
+		BC_Thermo (int im, int jm, int km, Array& h);
 
         ~BC_Thermo();
-
 
 		void IC_CellStructure ( int *, Array &, Array &, Array &, Array & );
 

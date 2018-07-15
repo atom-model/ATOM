@@ -158,8 +158,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  initial values for the number of computed steps and the time
     double t_cretaceous = 0.;
-    double co2_cretaceous = 0.;
-
 
     //Prepare the temperature and precipitation data file
     string Name_SurfaceTemperature_File  = temperature_file;
@@ -241,14 +239,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
 
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo  circulation ( im, jm, km, h, tropopause_equator, tropopause_pole, RadiationModel, NASATemperature, 
-                             sun, declination, sun_position_lat, sun_position_lon, dt, dr, 
-                             dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, 
-                             r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, 
-                             co2_factor, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_equator, 
-                             co2_pole, t_cretaceous, t_cretaceous_max, t_land, t_tropopause, t_equator, 
-                             t_pole, gam, epsilon_equator, epsilon_pole, epsilon_tropopause, albedo_equator, albedo_pole, 
-                             rad_equator, rad_pole );
+    BC_Thermo  circulation ( im, jm, km, h ); 
 
     //  class Restore to restore the iterational values from new to old
     Restore_Atm oldnew( im, jm, km );
@@ -283,7 +274,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
-    //  co2_cretaceous = circulation.out_co2 (  );
 
     // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){
@@ -682,7 +672,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, 
                                           t_equator, t_pole, 
                                           t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
-                                          co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
+                                          pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
                                           radiation_3D, Vegetation );
                 //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
                 double residuum = min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
@@ -782,7 +772,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             //  the continents and the ocean ground
             LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, 
                                       t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
-                                      co2_tropopause, co2_cretaceous, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
+                                      co2_tropopause, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
                                       ice, co2, radiation_3D, Vegetation );
 
             // class element for the surface temperature computation by radiation flux density
