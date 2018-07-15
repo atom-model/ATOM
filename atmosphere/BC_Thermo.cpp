@@ -90,6 +90,8 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h) :
     this-> sun_position_lat =  model->sun_position_lat;
     this-> sun_position_lon =  model->sun_position_lon;
 
+    im_tropopause = model->get_tropopause();
+
     coeff_mmWS = r_air / r_water_vapour;                                    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     coeff_lv = lv / ( cp_l * t_0 );                                                     // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
     coeff_ls = ls / ( cp_l * t_0 );                                                     // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_ls = 10.3091 in [ / ]
@@ -239,7 +241,6 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
     << p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
 
     cAtmosphereModel* model = cAtmosphereModel::get_model();
-    int* im_tropopause = model->get_tropopause();
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
         model->get_mean_temperature_from_curve(0);
 
@@ -525,7 +526,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     logger() << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
 
     cAtmosphereModel* model = cAtmosphereModel::get_model();
-    int* im_tropopause = model->get_tropopause();
     int Ma = int(round(*model->get_current_time()));
     double t_cretaceous = 0., t_cretaceous_prev = 0.;
 
@@ -797,7 +797,6 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c )
     d_j_max = ( double ) j_max;
 
     cAtmosphereModel* model = cAtmosphereModel::get_model();
-    int* im_tropopause = model->get_tropopause();
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
         model->get_mean_temperature_from_curve(0);
     
@@ -867,7 +866,6 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
     j_half = j_max / 2;
 
     cAtmosphereModel* model = cAtmosphereModel::get_model();
-    int* im_tropopause = model->get_tropopause();
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) - 
         model->get_mean_temperature_from_curve(0);
     
@@ -970,7 +968,7 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
 }
 
 
-void BC_Thermo::TropopauseLocation ( int *im_tropopause )
+void BC_Thermo::TropopauseLocation()
 {
 // parabolic tropopause location distribution from pole to pole assumed
     j_max = jm - 1;
@@ -1024,12 +1022,7 @@ void BC_Thermo::TropopauseLocation ( int *im_tropopause )
 */
 }
 
-
-
-
-
-
-void BC_Thermo::IC_CellStructure ( int *im_tropopause, Array &h, Array &u, Array &v, Array &w )
+void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w )
 {
 // boundary condition for the velocity components in the circulation cells
 
@@ -2981,8 +2974,6 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
     t_Celsius_2 = t_00 - t_0;                                                                                       // -37 °C
 
     cAtmosphereModel* model = cAtmosphereModel::get_model();
-    int* im_tropopause = model->get_tropopause();
-
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
         model->get_mean_temperature_from_curve(0);
 

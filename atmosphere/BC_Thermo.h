@@ -37,8 +37,8 @@ class BC_Thermo
 		int j_r, k_r, j_sun;
 		int RadiationModel, sun_position_lat, sun_position_lon, declination, NASATemperature;
 		int iter_prec; 
-		int *im_tropopause;
-
+		
+        int *im_tropopause;
         std::vector<std::vector<int> > i_topography;
 
 		double d_k_half, d_k_max; 
@@ -94,11 +94,11 @@ class BC_Thermo
 
         ~BC_Thermo();
 
-		void IC_CellStructure ( int *, Array &, Array &, Array &, Array & );
+		void IC_CellStructure ( Array &, Array &, Array &, Array & );
 
         void BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, Array &p_dyn, Array &p_stat );
 
-		void TropopauseLocation ( int * );
+		void TropopauseLocation ();
 
 		void BC_Radiation_2D_layer ( Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array & );
 

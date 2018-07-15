@@ -247,7 +247,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class element calls for the preparation of initial conditions for the flow properties
 
     //  class element for the tropopause location as a parabolic distribution from pole to pole 
-    circulation.TropopauseLocation ( im_tropopause );
+    circulation.TropopauseLocation ();
 
     //  class element for the surface temperature from NASA for comparison
     //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
@@ -282,7 +282,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
                                                p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
     //  class element for the initial conditions for u-v-w-velocity components
-    circulation.IC_CellStructure ( im_tropopause, h, u, v, w );
+    circulation.IC_CellStructure ( h, u, v, w );
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
     //  oldnew.restoreOldNew_3D(.9, u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n);
