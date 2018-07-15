@@ -240,20 +240,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class Pressure for the subsequent computation of the pressure by a separate Euler equation
     Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
 
-
-    int Ma_prev;
-
-    if( is_first_time_slice() ){
-        Ma_prev = int(round(*get_current_time()));
-    }else{
-        Ma_prev = int(round(*get_previous_time()));
-    }
-
-
-
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo  circulation ( im, jm, km, tropopause_equator, tropopause_pole, RadiationModel, NASATemperature, 
-                             sun, declination, sun_position_lat, sun_position_lon, Ma, Ma_prev, Ma_max, Ma_max_half, dt, dr, 
+    BC_Thermo  circulation ( im, jm, km, h, tropopause_equator, tropopause_pole, RadiationModel, NASATemperature, 
+                             sun, declination, sun_position_lat, sun_position_lon, dt, dr, 
                              dthe, dphi, g, ep, hp, u_0, p_0, t_0, c_0, sigma, lv, ls, cp_l, L_atm, r_air, R_Air, 
                              r_water_vapour, R_WaterVapour, co2_0, co2_cretaceous, co2_vegetation, co2_ocean, co2_land, 
                              co2_factor, c_tropopause, co2_tropopause, c_ocean, c_land, t_average, co2_average, co2_equator, 

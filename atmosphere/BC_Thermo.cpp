@@ -25,11 +25,18 @@
 using namespace std;
 using namespace AtomUtils;
 
-BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropopause_pole, int RadiationModel, int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, int Ma, int Ma_prev, int Ma_max, int Ma_max_half, double dt, double dr, double dthe, double dphi, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double sigma, double lv, double ls, double cp_l, double L_atm, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, double co2_vegetation, double co2_ocean, double co2_land, double co2_factor, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_equator, double co2_pole, double t_cretaceous, double t_cretaceous_max, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double rad_equator, double rad_pole )
+BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h, int tropopause_equator, int tropopause_pole, int RadiationModel, 
+    int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon, 
+    double dt, double dr, double dthe, double dphi, double g, double ep, double hp, 
+    double u_0, double p_0, double t_0, double c_0, double sigma, double lv, double ls, double cp_l, double L_atm, 
+    double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous, 
+    double co2_vegetation, double co2_ocean, double co2_land, double co2_factor, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_equator, double co2_pole, double t_cretaceous, double t_cretaceous_max, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double rad_equator, double rad_pole ):
+        im(im),
+        jm(jm),
+        km(km),
+        h(h),
+        i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0)))
 {
-    this -> im = im;
-    this -> jm = jm;
-    this -> km = km;
     this -> tropopause_equator = tropopause_equator;
     this -> tropopause_pole = tropopause_pole;
     this-> L_atm = L_atm;
@@ -77,9 +84,6 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropop
     this-> co2_average = co2_average;
     this-> co2_pole = co2_pole;
     this-> co2_equator = co2_equator;
-    this-> Ma = Ma;
-    this-> Ma_prev = Ma_prev;
-    this-> Ma_max = Ma_max;
     this-> t_cretaceous_max = t_cretaceous_max;
     this-> t_cretaceous = t_cretaceous;
     this-> t_land = t_land;
@@ -89,7 +93,6 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropop
     this-> declination = declination;
     this-> sun_position_lat = sun_position_lat;
     this-> sun_position_lon = sun_position_lon;
-    this-> Ma_max_half = Ma_max_half;
 
 
     coeff_mmWS = r_air / r_water_vapour;                                    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
@@ -117,11 +120,8 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropop
 
     dt_dim = L_atm / u_0 * dt;                                                      // dimensional time step of system in s
 
-
-
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
-
 
 // array "alfa" for Thomas algorithm
     alfa = 0L;
@@ -173,22 +173,20 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, int tropopause_equator, int tropop
         }
     }
 
-// Array "i_topography" integer field for mapping the topography
-    i_topography = 0L;
-
-    i_topography = new int*[ jm ];
-
-    for ( int l = 0; l < jm; l++ )
+    // Array "i_topography" integer field for mapping the topography
+    // land surface in a 2D field
+    for ( int j = 0; j < jm; j++ )
     {
-        i_topography[ l ] = new int[ km ];
-    }
-
-// default values
-    for ( int l = 0; l < jm; l++ )
-    {
-        for ( int n = 0; n < km; n++ )
+        for ( int k = 0; k < km; k++ )
         {
-            i_topography[ l ][ n ] = 0.;
+            for ( int i = im-2; i >= 0; i-- )
+            {
+                if ( h.x[ i ][ j ][ k ] == 1. )
+                {
+                    i_topography[ j ][ k ] = i;
+                    break;
+                }
+            }
         }
     }
 
@@ -221,13 +219,6 @@ BC_Thermo::~BC_Thermo()
     }
 
     delete [  ] CC;
-
-    for ( int i = 0; i < im; i++ )
-    {
-        delete [  ] i_topography[ i ];
-    }
-
-    delete [  ] i_topography;
 
     delete [  ] alfa;
     delete [  ] beta;
@@ -279,27 +270,6 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
     rad_eff = rad_pole - rad_equator;
 
     albedo_co2_eff = albedo_pole - albedo_equator;
-
-
-    // land surface in a 2D field
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            for ( int i = im-2; i >= 0; i-- )
-            {
-                if ( h.x[ i ][ j ][ k ] == 1. )
-                {
-                    i_topography[ j ][ k ] = i;
-                    break;
-                }
-                    if ( h.x[ 0 ][ j ][ k ] == 0. )
-                {
-                    i_topography[ j ][ k ] = 0;
-                }
-            }
-        }
-    }
 
     // effective temperature, albedo and emissivity/absorptivity for the two layer model
     for ( int j = 0; j < jm; j++ )
@@ -3798,11 +3768,6 @@ double BC_Thermo::exp_func ( double &T_K, const double &co_1, const double &co_2
 double BC_Thermo::out_t_cretaceous (  ) const
 {
     return t_cretaceous;
-}
-
-double BC_Thermo::out_Ma_prev (  ) const
-{
-    return Ma_prev;
 }
 
 double BC_Thermo::out_co2 (  ) const

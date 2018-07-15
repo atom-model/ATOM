@@ -10,6 +10,7 @@
 
 
 #include <iostream>
+#include <vector>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -24,10 +25,11 @@ class BC_Thermo
 {
 	private:
 		int i, j, k, im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator, tropopause_pole, im_1, i_land, iter_rad, i_trop, i_mount;
-		int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
+		Array& h;
+        int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
 		int j_had_n_end, j_had_s_end, k_w, k_w_end, k_e;
 		int j_n, j_s, j_infl, j_eq;
-		int sun, Ma, Ma_prev, Ma_max, Ma_max_half;
+		int sun;
 		int j_par, j_pol, k_par, k_pol;
 		int k_a, k_b, flip, j_grad, k_grad, k_grad_init, i_middle;
 		int j_water, k_water, j_sequel, k_sequel;
@@ -35,7 +37,9 @@ class BC_Thermo
 		int j_r, k_r, j_sun;
 		int RadiationModel, sun_position_lat, sun_position_lon, declination, NASATemperature;
 		int iter_prec; 
-		int *im_tropopause, **i_topography;
+		int *im_tropopause;
+
+        std::vector<std::vector<int> > i_topography;
 
 		double d_k_half, d_k_max; 
 		double ca, ua_00, ua_30, ua_60, ua_90;
@@ -86,8 +90,14 @@ class BC_Thermo
 
 
 	public:
-		BC_Thermo (int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
-		~BC_Thermo();
+		BC_Thermo (int im, int jm, int km, Array& h, int tropopause_equator, int tropopause_pole, int RadiationModel,
+    int NASATemperature, int sun, int declination, int sun_position_lat, int sun_position_lon,
+    double dt, double dr, double dthe, double dphi, double g, double ep, double hp,
+    double u_0, double p_0, double t_0, double c_0, double sigma, double lv, double ls, double cp_l, double L_atm,
+    double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_0, double co2_cretaceous,
+    double co2_vegetation, double co2_ocean, double co2_land, double co2_factor, double c_tropopause, double co2_tropopause, double c_ocean, double c_land, double t_average, double co2_average, double co2_equator, double co2_pole, double t_cretaceous, double t_cretaceous_max, double t_land, double t_tropopause, double t_equator, double t_pole, double gam, double epsilon_equator, double epsilon_pole, double epsilon_tropopause, double albedo_equator, double albedo_pole, double rad_equator, double rad_pole );
+
+        ~BC_Thermo();
 
 
 		void IC_CellStructure ( int *, Array &, Array &, Array &, Array & );
@@ -135,8 +145,6 @@ class BC_Thermo
 		double cloud_ice ( const double &, int, const int & );
 
 		double out_t_cretaceous (  ) const;
-
-		double out_Ma_prev (  ) const;
 
 		double out_t_cret_cor (  ) const;
 
