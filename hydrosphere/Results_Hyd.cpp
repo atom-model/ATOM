@@ -209,39 +209,6 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
 	}
 
 
-//	ideal age		corresponds to deep currents
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int i = 0; i <= i_beg; i++ )
-			{
-				if ( h.x[ i ][ j ][ k ] == 0. )
-				{
-					BottomWater.y[ j ][ k ] += sqrt ( ( u.x[ i ][ j ][ k ] * u.x[ i ][ j ][ k ] + v.x[ i ][ j ][ k ] * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] * w.x[ i ][ j ][ k ] ) / 3. ) * u_0;
-					if ( BottomWater.y[ j ][ k ] >= .1 )			BottomWater.y[ j ][ k ] = .1;
-				}
-			}
-		}
-	}
-
-		for ( int j = 0; j <= 3; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
-			{
-				BottomWater.y[ j ][ k ] = .0;
-			}
-		}
-
-		for ( int j = jm - 3; j < jm; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
-			{
-				BottomWater.y[ j ][ k ] = .0;
-			}
-		}
-
-
 // boundaries of buoyancy force
 
 	for ( int k = 0; k < km; k++ )
