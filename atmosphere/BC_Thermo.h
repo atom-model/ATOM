@@ -24,7 +24,7 @@ using namespace std;
 class BC_Thermo
 {
 	private:
-		int i, j, k, im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator, tropopause_pole, im_1, i_land, iter_rad, i_trop, i_mount;
+		int i, j, k, im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator, tropopause_pole, im_1, i_land, i_trop, i_mount;
 		Array& h;
         int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
 		int j_had_n_end, j_had_s_end, k_w, k_w_end, k_e;
@@ -71,8 +71,7 @@ class BC_Thermo
 		double q_v_b, q_c_b, q_i_b, q_v_hyp, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
 		double t_equator, t_tropopause, t_eff, t_pole, t_eff_tropo, t_tropopause_pole, c_equator, c_tropopause, coeff_mmWS;
 		double co2_tropopause, co2_eff, co2_coeff, co_pol, co2_vegetation, co2_ocean, co2_land, co2_cretaceous, co2_factor;
-		double *AA, **CC, CCC, DDD;
-		double *jm_temp_asym, *alfa, *beta;
+		double *jm_temp_asym;
 
 		double S_c_c, S_au, S_nuc, S_ac, S_rim, S_shed, S_ev, S_dep, S_i_dep, S_melt, S_if_frz, S_cf_frz, S_r_frz, S_c_frz, S_c_au, S_i_au, S_d_au, S_agg, S_i_cri, S_r_cri, S_s_dep, S_i_melt, S_s_melt;
 		double S_v, S_c, S_i, S_r, S_s, P_rain_n, P_snow_n, P_rain_n_o, P_snow_n_o;

@@ -92,83 +92,35 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h) :
 
     im_tropopause = model->get_tropopause();
 
-    coeff_mmWS = r_air / r_water_vapour;                                    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
-    coeff_lv = lv / ( cp_l * t_0 );                                                     // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
-    coeff_ls = ls / ( cp_l * t_0 );                                                     // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_ls = 10.3091 in [ / ]
+    coeff_mmWS = r_air / r_water_vapour;// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
+    // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
+    coeff_lv = lv / ( cp_l * t_0 );
+    // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_ls = 10.3091 in [ / ]
+    coeff_ls = ls / ( cp_l * t_0 );
 
     c43 = 4./3.;
     c13 = 1./3.;
 
     pi180 = 180./M_PI;
 
+    // fall velocity for water droplets of 0.1 mm compares to 0.012 m/s
+    // fall velocity for water droplets of 0.01 mm compares to 0.8 m/s
+    // fall velocity for water droplets of 0.3 mm compares to 2.4 m/s
+    // fall velocity for water droplets of 1.0 mm compares to 6.3 m/s
+    // fall velocity for water droplets of 5.0 mm compares to 14.1 m/s
+    
+    dt_rain_dim = 250.;// dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
 
+    // fall velocity for snow flakes of 1.0 mm compares to 0.9 m/s
+    // fall velocity for snow flakes of 2.0 mm compares to 1.2 m/s
+    // fall velocity for snow flakes of 4.0 mm compares to 1.4 m/s
+    
+    dt_snow_dim = 417.;// dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
 
-                                                                                                    // fall velocity for water droplets of 0.1 mm compares to 0.012 m/s
-                                                                                                    // fall velocity for water droplets of 0.01 mm compares to 0.8 m/s
-                                                                                                    // fall velocity for water droplets of 0.3 mm compares to 2.4 m/s
-                                                                                                    // fall velocity for water droplets of 1.0 mm compares to 6.3 m/s
-                                                                                                    // fall velocity for water droplets of 5.0 mm compares to 14.1 m/s
-    dt_rain_dim = 250.;                                                             // dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
-
-                                                                                                    // fall velocity for snow flakes of 1.0 mm compares to 0.9 m/s
-                                                                                                    // fall velocity for snow flakes of 2.0 mm compares to 1.2 m/s
-                                                                                                    // fall velocity for snow flakes of 4.0 mm compares to 1.4 m/s
-    dt_snow_dim = 417.;                                                             // dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
-
-    dt_dim = L_atm / u_0 * dt;                                                      // dimensional time step of system in s
+    dt_dim = L_atm / u_0 * dt;// dimensional time step of system in s
 
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
-
-// array "alfa" for Thomas algorithm
-    alfa = 0L;
-
-    alfa = new double[ im ];
-
-    for ( int l = 0; l < im; l++ )
-    {
-        alfa[ l ] = 0.;
-    }
-
-
-// array "beta" for Thomas algorithm
-    beta = 0L;
-
-    beta = new double[ im ];
-
-    for ( int l = 0; l < im; l++ )
-    {
-        beta[ l ] = 0.;
-    }
-
-// array "AA" for the multi-layer radiation computation
-    AA = 0L;
-
-    AA = new double[ im ];
-
-    for ( int l = 0; l < im; l++ )
-    {
-        AA[ l ] = 0.;
-    }
-
-// Array "CC" for the multi-layer radiation computation
-    CC = 0L;
-
-    CC = new double*[ im ];
-
-    for ( int l = 0; l < im; l++ )
-    {
-        CC[ l ] = new double[ im ];
-    }
-
-// default values
-    for ( int l = 0; l < im; l++ )
-    {
-        for ( int n = 0; n < im; n++ )
-        {
-            CC[ l ][ n ] = 0.;
-        }
-    }
 
     // Array "i_topography" integer field for mapping the topography
     // land surface in a 2D field
@@ -206,20 +158,8 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h) :
     d_k_max = ( double ) k_max;
 }
 
-
-
 BC_Thermo::~BC_Thermo()
 {
-    for ( int i = 0; i < im; i++ )
-    {
-        delete [  ] CC[ i ];
-    }
-
-    delete [  ] CC;
-
-    delete [  ] alfa;
-    delete [  ] beta;
-    delete [  ] AA;
 }
 
 
@@ -234,11 +174,11 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
 
     logger() << "enter BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl;
 
-    logger() << "co2 max: " << co2.max() << "  ice max: " << ice.max() << "  cloud max: " << cloud.max() << "  p_stat max: "
-    << p_stat.max() <<"  water vapour max: " << c.max() << std::endl;
+    //logger() << "co2 max: " << co2.max() << "  ice max: " << ice.max() << "  cloud max: " << cloud.max() << "  p_stat max: "
+    //<< p_stat.max() <<"  water vapour max: " << c.max() << std::endl;
 
-    logger() << "co2 min: " << co2.min() << "  ice min: " << ice.min() << "  cloud min: " << cloud.min() << "  p_stat min: "
-    << p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
+    //logger() << "co2 min: " << co2.min() << "  ice min: " << ice.min() << "  cloud min: " << cloud.min() << "  p_stat min: "
+    //<< p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
 
     cAtmosphereModel* model = cAtmosphereModel::get_model();
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
@@ -267,30 +207,21 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
 
     albedo_co2_eff = albedo_pole - albedo_equator;
 
+    double j_max_half = ( jm -1 ) / 2;
     // effective temperature, albedo and emissivity/absorptivity for the two layer model
     for ( int j = 0; j < jm; j++ )
     {
         for ( int k = 0; k < km; k++ )
         {
-            d_j = ( double ) j;
-            if ( h.x[ 0 ][ j ][ k ]  == 0. ){    
-                albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                    albedo_pole;
-            }
-            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 1 ][ j ][ k ] == 0. ) ){
-                albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                    albedo_pole;
-            }
-            for ( int i = 1; i < im-1; i++ )
-            {
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i+1 ][ j ][ k ] == 0. ) ){   
-                    albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+            for ( int i = 0; i < im-1; i++ ){
+                if ( is_ocean_surface(h, i, j, k) || is_land_surface(h, i, j, k) ){    
+                    albedo.y[ j ][ k ] = albedo_co2_eff * ( j * j / ( j_max_half * j_max_half ) - 2. * j / j_max_half ) + 
                         albedo_pole;
                 }
             }
-    
             // in W/m², assumption of parabolic surface radiation at zero level
-            radiation_surface.y[ j ][ k ] = rad_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + rad_pole;
+            radiation_surface.y[ j ][ k ] = rad_eff * ( j * j / ( j_max_half * j_max_half ) - 2. * j / j_max_half ) + 
+                rad_pole;
         }
     }
 
@@ -362,16 +293,20 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
 
     //  cout << endl << "                                              nach epsilon" << endl;
 
-    //  iteration procedure for the computation of the temperature based on the multi-layer radiation model
+    // iteration procedure for the computation of the temperature based on the multi-layer radiation model
     // temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
-    iter_rad = 0;
-    while ( iter_rad <= 5 ) // iter_rad may be varied
+    
+    std::vector<double> alfa(im, 0);
+    std::vector<double> beta(im, 0);
+    std::vector<double> AA(im, 0);
+    std::vector<std::vector<double> > CC(im, std::vector<double>(im, 0));
+    double CCC = 0, DDD = 0;
+    
+    for( int iter_rad = 0;  iter_rad <= 5; iter_rad++ ) // iter_rad may be varied
     {
-        logger() << "max radiation_3D: " << radiation_3D.max() << "  epsilon_3D max: " << epsilon_3D.max() << std::endl;
-        logger() << "min radiation_3D: " << radiation_3D.min() << "  epsilon_3D min: " << epsilon_3D.min() << std::endl;
+        //logger() << "max radiation_3D: " << radiation_3D.max() << "  epsilon_3D max: " << epsilon_3D.max() << std::endl;
+        //logger() << "min radiation_3D: " << radiation_3D.min() << "  epsilon_3D min: " << epsilon_3D.min() << std::endl;
         
-        iter_rad = iter_rad + 1;
-
         // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
         for ( int j = 0; j < jm; j++ )
         {
