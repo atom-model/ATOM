@@ -174,11 +174,11 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
 
     logger() << "enter BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl;
 
-    logger() << "co2 max: " << co2.max() << "  ice max: " << ice.max() << "  cloud max: " << cloud.max() << "  p_stat max: "
-    << p_stat.max() <<"  water vapour max: " << c.max() << std::endl;
+    //logger() << "co2 max: " << co2.max() << "  ice max: " << ice.max() << "  cloud max: " << cloud.max() << "  p_stat max: "
+    //<< p_stat.max() <<"  water vapour max: " << c.max() << std::endl;
 
-    logger() << "co2 min: " << co2.min() << "  ice min: " << ice.min() << "  cloud min: " << cloud.min() << "  p_stat min: "
-    << p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
+    //logger() << "co2 min: " << co2.min() << "  ice min: " << ice.min() << "  cloud min: " << cloud.min() << "  p_stat min: "
+    //<< p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
 
     cAtmosphereModel* model = cAtmosphereModel::get_model();
     double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
@@ -207,30 +207,21 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
 
     albedo_co2_eff = albedo_pole - albedo_equator;
 
+    double j_max_half = ( jm -1 ) / 2;
     // effective temperature, albedo and emissivity/absorptivity for the two layer model
     for ( int j = 0; j < jm; j++ )
     {
         for ( int k = 0; k < km; k++ )
         {
-            d_j = ( double ) j;
-            if ( h.x[ 0 ][ j ][ k ]  == 0. ){    
-                albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                    albedo_pole;
-            }
-            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 1 ][ j ][ k ] == 0. ) ){
-                albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                    albedo_pole;
-            }
-            for ( int i = 1; i < im-1; i++ )
-            {
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i+1 ][ j ][ k ] == 0. ) ){   
-                    albedo.y[ j ][ k ] = albedo_co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+            for ( int i = 0; i < im-1; i++ ){
+                if ( is_ocean_surface(h, i, j, k) || is_land_surface(h, i, j, k) ){    
+                    albedo.y[ j ][ k ] = albedo_co2_eff * ( j * j / ( j_max_half * j_max_half ) - 2. * j / j_max_half ) + 
                         albedo_pole;
                 }
             }
-    
             // in W/m², assumption of parabolic surface radiation at zero level
-            radiation_surface.y[ j ][ k ] = rad_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + rad_pole;
+            radiation_surface.y[ j ][ k ] = rad_eff * ( j * j / ( j_max_half * j_max_half ) - 2. * j / j_max_half ) + 
+                rad_pole;
         }
     }
 
