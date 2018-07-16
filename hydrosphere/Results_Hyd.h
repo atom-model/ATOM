@@ -28,10 +28,11 @@ class Results_Hyd
 		double ozean_land, dr, dthe, dphi;
 		double Value_1, Value_2, Value_3, Value_4, Value_5, Value_6;
 		double c43, c13;
-		double **aux_v, **aux_w;
+		double **aux_v, **aux_w, *aux_grad_v, *aux_grad_w;
 
 		string name_Value_1, name_Value_2, name_Value_3, name_Value_4, name_Value_5, name_Value_6, name_unit_ms, name_unit_psu;
 		string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading;
+
 
 	public:
 		Results_Hyd ( int, int, int );
@@ -42,7 +43,6 @@ class Results_Hyd
 
 		void land_oceanFraction ( Array & );
 
-//		void show_data ( double, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
-
+		double simpson ( int &, double &, double * );
 };
 #endif

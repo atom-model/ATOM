@@ -26,6 +26,27 @@ Results_Hyd::Results_Hyd ( int im, int jm, int km )
 	c43 = 4./3.;
 	c13 = 1./3.;
 
+// array "aux_grad_v" for for the computation of Ekman pumping
+    aux_grad_v = 0L;
+
+    aux_grad_v = new double[ im ];
+
+    for ( int l = 0; l < im; l++ )
+    {
+        aux_grad_v[ l ] = 0.;
+    }
+
+// array "aux_grad_w" for for the computation of Ekman pumping
+    aux_grad_w = 0L;
+
+    aux_grad_w = new double[ im ];
+
+    for ( int l = 0; l < im; l++ )
+    {
+        aux_grad_w[ l ] = 0.;
+    }
+
+
 // auxiliar 2D Array "aux_v" for the computation of Ekman pumping
 	aux_v = 0L;
 
@@ -107,51 +128,83 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
 		}
 	}
 
-
-
-	double i_Ekman_layer = 50.;									// assumed Ekman-layer depth of 50m
+	double i_Ekman_layer = 500.;									// assumed Ekman-layer depth of 500m
 	double coeff = i_Ekman_layer / L_hyd;
+	double rmsinthe = 0.;
+
 	int i_Ekman = ( im - 1 ) * ( 1. - coeff );
+    int j_half = ( jm -1 ) / 2;
+	int i_max = im - 1;
+	int i_diff = i_max - i_Ekman;
+
 
 //	Ekman pumping, upwelling, downwelling
 	for ( int k = 0; k < km; k++ )
 	{
 		for ( int j = 0; j < jm; j++ )
 		{
-			for ( int i = im-2; i >= i_Ekman; i-- )
+			for ( int i = i_Ekman; i < im-1; i++ )
 			{
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
-					aux_v[ j ][ k ] = aux_v[ j ][ k ] + ( v.x[ i ][ j ][ k ] + v.x[ i + 1 ][ j ][ k ] ) * .5 * dr;
-					aux_w[ j ][ k ] = aux_w[ j ][ k ] + ( w.x[ i ][ j ][ k ] + w.x[ i + 1 ][ j ][ k ] ) * .5 * dr;
+					aux_grad_v[ i ] = v.x[ i ][ j ][ k ];
+					aux_grad_w[ i ] = w.x[ i ][ j ][ k ];
 				}
 				else
 				{
 					aux_v[ j ][ k ] = 0.;
 					aux_w[ j ][ k ] = 0.;
+
+					aux_grad_v[ i ] = 0.;
+					aux_grad_w[ i ] = 0.;
 				}
 			}
+			if ( i_diff % 2 == 0 )
+			{
+				aux_v[ j ][ k ] = simpson ( i_diff, dr, aux_grad_v );
+				aux_w[ j ][ k ] = simpson ( i_diff, dr, aux_grad_w );
+			}
+			else cout << "       i_diff    must be an even number to use the Simpson integration method" << endl;
 		}
 	}
 
 
-	double rmsinthe = 0.;
-
 	for ( int k = 1; k < km-1; k++ )
 	{
-		for ( int j = 1; j < jm-1; j++ )
+		for ( int j = 1; j < j_half-1; j++ )
 		{
 			rmsinthe = rad.z[ im-1 ] * sin( the.z[ j ] );
 
 			BottomWater.y[ j ][ k ] = ( aux_v[ j + 1 ][ k ] - aux_v[ j - 1 ][ k ] ) / ( 2. * rad.z[ im-1 ] * dthe )
 													+ ( aux_w[ j ][ k + 1 ] - aux_w[ j ][ k + 1 ] ) / ( 2. * rmsinthe * dphi );
 			BottomWater.y[ j ][ k ] = BottomWater.y[ j ][ k ] * u_0;
+		}
 
+		for ( int j = j_half+2; j < jm-1; j++ )
+		{
+			rmsinthe = rad.z[ im-1 ] * sin( the.z[ j ] );
+
+			BottomWater.y[ j ][ k ] = ( aux_v[ j + 1 ][ k ] - aux_v[ j - 1 ][ k ] ) / ( 2. * rad.z[ im-1 ] * dthe )
+													+ ( aux_w[ j ][ k + 1 ] - aux_w[ j ][ k + 1 ] ) / ( 2. * rmsinthe * dphi );
+			BottomWater.y[ j ][ k ] = BottomWater.y[ j ][ k ] * u_0;
+		}
+
+		for ( int j = 1; j < jm-1; j++ )
+		{
 			if ( BottomWater.y[ j ][ k ] >= 0. )		 Upwelling.y[ j ][ k ] = BottomWater.y[ j ][ k ];
 			else														Upwelling.y[ j ][ k ] = 0.;
 
 			if ( BottomWater.y[ j ][ k ] < 0. )		 Downwelling.y[ j ][ k ] = BottomWater.y[ j ][ k ];
 			else														Downwelling.y[ j ][ k ] = 0.;
+		}
+	}
+
+
+	for ( int k = 0; k < km; k++ )
+	{
+		for ( int j = 0; j < jm; j++ )
+		{
+			Downwelling.y[ j ][ k ] = fabs ( Downwelling.y[ j ][ k ] );
 		}
 	}
 
@@ -197,14 +250,6 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
 					Salt_total.y[ j ][ k ] += c.x[ i ][ j ][ k ] * c_0;
 				}
 			}
-		}
-	}
-
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			Downwelling.y[ j ][ k ] = fabs ( Downwelling.y[ j ][ k ] );
 		}
 	}
 
@@ -368,5 +413,20 @@ void Results_Hyd::land_oceanFraction ( Array &h )
 	cout << endl;
 	cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      total number of points at constant hight " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_point_max << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      number of points on the ocean surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_ocean << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      number of points on the land surface " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_land << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      ocean/land ratio " << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << ozean_land << endl << endl;
 	cout << endl;
+}
+
+
+
+
+double Results_Hyd::simpson ( int & n, double &dstep, double *value )
+{
+	double sum_even = 0, sum_odd = 0;
+// summation of all sums
+	for (int i = 1; i < n; i+=2) { sum_odd += 4 * value[ i ]; }
+	for (int i = 2; i < n; i+=2) { sum_even += 2 * value[ i ]; }
+
+// counting of integral
+	double ret = dstep / 3 * (value[ 0 ] + sum_odd + sum_even + value[ n ]);
+    return ret;                        // Simpson integration
 }
 
