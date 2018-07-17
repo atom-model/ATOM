@@ -213,13 +213,11 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
         {
             for ( int i = 0; i < im-1; i++ ){
                 if ( is_ocean_surface(h, i, j, k) || is_land_surface(h, i, j, k) ){    
-                    albedo.y[ j ][ k ] = albedo_co2_eff * ( j * j / ( j_max_half * j_max_half ) - 2. * j / j_max_half ) + 
-                        albedo_pole;
+                    albedo.y[ j ][ k ] = albedo_co2_eff * parabola( j / j_max_half ) + albedo_pole;
                 }
             }
             // in W/m², assumption of parabolic surface radiation at zero level
-            radiation_surface.y[ j ][ k ] = rad_eff * ( j * j / ( j_max_half * j_max_half ) - 2. * j / j_max_half ) + 
-                rad_pole;
+            radiation_surface.y[ j ][ k ] = rad_eff * parabola( j / j_max_half ) + rad_pole;
         }
     }
 
@@ -232,9 +230,8 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
     {
         i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0);
 
-        d_j = ( double ) j;
         // on zero level, lateral parabolic distribution
-        epsilon_eff_max = epsilon_eff_2D * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + epsilon_pole;
+        epsilon_eff_max = epsilon_eff_2D * parabola( j / j_max_half ) + epsilon_pole;
 
         for ( int k = 0; k < km; k++ )
         {
@@ -252,8 +249,8 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
                 
                 d_i = ( double ) i;
 
-                epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) * ( d_i / d_i_max * 
-                    ( d_i / d_i_max - 2. ) );  // radial parabolic distribution, start on zero level
+                // radial parabolic distribution, start on zero level
+                epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) * parabola( (double)i / (im -1) );
                 
                 if ( fabs(m_model->CO2 - 1) < std::numeric_limits<double>::epsilon() ){
                     // influence of co2 in the atmosphere, co2_coeff = 1. means no influence
@@ -263,24 +260,22 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
                 }
 
                 // dependency given by Häckel ( F. Baur and H. Philips, 1934 )
-                epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );
-                radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
-                    pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
-                epsilon.y[ j ][ k ] = epsilon_3D.x[ i ][ j ][ k ];
-            }
-
-
-            for ( int i = i_trop - 1; i >= 0; i-- )
-            {
-                i_mount = i_topography[ j ][ k ];
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) ){
-                    epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_mount ][ j ][ k ];
+                if( i >= i_mount ){ //start from the mountain top
+                    epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );
+                    radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
+                        pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
                 }
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) ){ 
-                    radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_mount ][ j ][ k ];
-                }    
+            }
+            epsilon.y[ j ][ k ] = epsilon_3D.x[ i_trop ][ j ][ k ];
+
+            //inside mountains
+            for ( int i = i_mount - 1; i >= 0; i-- )
+            {
+                epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_mount ][ j ][ k ];
+                radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_mount ][ j ][ k ];
             }
 
+            //above troposphere
             for ( int i = i_trop + 1; i < im; i++ )
             {
                 epsilon_3D.x[ i ][ j ][ k ] = 0.;
@@ -294,12 +289,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
 
     // iteration procedure for the computation of the temperature based on the multi-layer radiation model
     // temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
-    
-    std::vector<double> alfa(im, 0);
-    std::vector<double> beta(im, 0);
-    std::vector<double> AA(im, 0);
-    std::vector<std::vector<double> > CC(im, std::vector<double>(im, 0));
-    double CCC = 0, DDD = 0;
     
     for( int iter_rad = 0;  iter_rad <= 5; iter_rad++ ) // iter_rad may be varied
     {
@@ -315,17 +304,27 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
             {
                 i_mount = i_topography[ j ][ k ];
 
-                radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
-                    pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+                std::vector<double> alfa(im, 0);
+                std::vector<double> beta(im, 0);
+                std::vector<double> AA(im, 0);
+                std::vector<std::vector<double> > CC(im, std::vector<double>(im, 0));
+                double CCC = 0, DDD = 0;
 
+                // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+                radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
+                    pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); 
+
+                // back radiation absorbed from the first water vapour layer out of 40
                 radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * 
-                    pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );        // back radiation absorbed from the first water vapour layer out of 40
+                    pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );
  
                 atmospheric_window = .1007 * radiation_surface.y[ j ][ k ]; // radiation loss through the atmospheric window
                 rad_surf_diff = radiation_back + radiation_surface.y[ j ][ k ] - atmospheric_window; // radiation leaving the surface
 
                 fac_rad = ( double ) i_mount * .07 + 1.;  // linear increase with hight, best choice for Ma>0
-                rad_surf_diff = fac_rad * rad_surf_diff;  // compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity for higher back radiation
+                // compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity 
+                //for higher back radiation
+                rad_surf_diff = fac_rad * rad_surf_diff;
 
                 AA[ i_mount ] = rad_surf_diff / radiation_3D.x[ i_trop ][ j ][ k ];// non-dimensional surface radiation
                 CC[ i_mount ][ i_mount ] = 0.; // no absorption of radiation on the surface by water vapour
@@ -336,14 +335,15 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
                 for ( int i = i_mount + 1; i <= i_trop; i++ )
                 {
                     AA[ i ] = AA[ i - 1 ] * ( 1. - epsilon_3D.x[ i ][ j ][ k ] ); // transmitted radiation from each layer
-                    CC[ i ][ i ]= epsilon_3D.x[ i ][ j ][ k ] * sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. ) / 
-                        radiation_3D.x[ i_trop ][ j ][ k ]; // absorbed radiation in each layer
-                    radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
-                        pow ( t.x[ i ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ i_trop ][ j ][ k ]; // radiation leaving each layer
+                    
+                    double tmp = sigma * pow ( t.x[ i ][ j ][ k ] * t_0, 4. ) / radiation_3D.x[ i_trop ][ j ][ k ];
+                    CC[ i ][ i ]= epsilon_3D.x[ i ][ j ][ k ] * tmp; // absorbed radiation in each layer
+                    radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * tmp; // radiation leaving each layer
 
                     for ( int l = i_mount + 1; l <= i_trop; l++ )
                     {
-                        CC[ i ][ l ]= CC[ i ][ l - 1 ] * ( 1. - epsilon_3D.x[ l ][ j ][ k ] );// additional transmitted radiation from layer to layer in radial direction
+                        // additional transmitted radiation from layer to layer in radial direction
+                        CC[ i ][ l ] = CC[ i ][ l - 1 ] * ( 1. - epsilon_3D.x[ l ][ j ][ k ] );
                     }
                 }
 
@@ -355,40 +355,14 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
                     // values at the surface
                     if ( i == i_mount )
                     {
-                        aa = 0.;
-                        bb = - radiation_3D.x[ i_mount ][ j ][ k ];
-                        cc = radiation_3D.x[ i_mount + 1 ][ j ][ k ];
-                        dd = - AA[ i_mount ];
-                        CCC = 0.;
-                        DDD = 0.;
-                        alfa[ i ] = 0.;
-                        beta[ i ] = 0.;
+                        bb = - radiation_3D.x[ i ][ j ][ k ];
+                        cc = radiation_3D.x[ i + 1 ][ j ][ k ];
+                        dd = - AA[ i ];
+                        alfa[ i ] = cc / bb;
+                        beta[ i ] = dd / bb;
                     }
-
-                    if ( i == i_mount + 1 )
+                    else
                     {
-                        aa = radiation_3D.x[ i_mount ][ j ][ k ];
-                        bb = - 2. * radiation_3D.x[ i_mount + 1 ][ j ][ k ];
-                        cc = radiation_3D.x[ i_mount + 2 ][ j ][ k ];
-                        dd = - AA[ i_mount ] + AA[ i_mount + 1 ];
-                        CCC = 0.;
-                        DDD = 0.;
-                    }
-
-                    if ( i == i_mount + 2 )
-                    {
-                        CCC = CC[ i_mount + 1 ][ i_mount + 2 ];
-                        aa = radiation_3D.x[ i_mount + 1 ][ j ][ k ];
-                        bb = - 2. * radiation_3D.x[ i_mount + 2 ][ j ][ k ];
-                        cc = radiation_3D.x[ i_mount + 3 ][ j ][ k ];
-                        dd = - AA[ i_mount + 1 ] + AA[ i_mount + 2 ] + CCC;
-                    }
-
-                    if ( i > i_mount + 2 )
-                    {
-                        CCC = 0.;
-                        DDD = 0.;
-
                         for ( int l = i_mount + 1; l <= i - 1; l++ )
                         {
                             CCC = CCC + CC[ l ][ i ];
@@ -403,22 +377,14 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
                         bb = - 2. * radiation_3D.x[ i ][ j ][ k ];
                         cc = radiation_3D.x[ i + 1 ][ j ][ k ];
                         dd = - AA[ i - 1 ] + AA[ i ] + CCC - DDD;
-                    }
-
-                    if ( i > i_mount )
-                    {
                         alfa[ i ] = cc / ( bb - aa * alfa[ i - 1 ] );
                         beta[ i ] = ( dd - aa * beta[ i - 1 ] ) / ( bb - aa * alfa[ i - 1 ] );
                     }
-                    else
-                    {
-                        alfa[ i ] = cc / bb;
-                        beta[ i ] = dd / bb;
-                    }
                 }
 
+                // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
                 radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
-                    pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
+                    pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. );
 
                 t.x[ i_trop ][ j ][ k ] = .5 * ( t.x[ i_trop ][ j ][ k ] + pow ( radiation_3D.x[ i_trop ][ j ][ k ] / sigma,
                         ( 1. / 4. ) ) / t_0 ); 
@@ -427,19 +393,18 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
                 for ( int i = i_trop - 1; i >= i_mount; i-- )
                 {
                     // above assumed tropopause constant temperature t_tropopause
-                    radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];// Thomas algorithm, recurrence formula
+                    // Thomas algorithm, recurrence formula
+                    radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];
+
                     t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, 
                         ( 1. / 4. ) ) / t_0 );    // averaging of temperature values to smooth the iterations
                 }
 
-                for ( int i = i_trop - 1; i >= 0; i-- )
+                for ( int i = 0; i < i_mount; i++ )
                 {
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) )
-                    {
-                        t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
-                        radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
-                            pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
-                    }
+                    t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
+                    radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
+                        pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
                 }
             }
         }

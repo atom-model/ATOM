@@ -24,4 +24,8 @@ namespace AtomUtils{
     inline bool is_land_surface(const Array& h, int i, int j, int k){
         return is_land(h, i, j, k) && !is_land(h, i+1, j, k);
     }
+
+    inline double parabola(double x){
+        return x*x - 2*x;
+    }
 }
