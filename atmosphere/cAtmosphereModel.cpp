@@ -277,8 +277,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){
-        circulation.BC_Radiation_multi_layer ( CO2, albedo, epsilon, precipitable_water, 
-                                               radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, 
+        circulation.BC_Radiation_multi_layer ( albedo, epsilon, radiation_surface,  
                                                p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
     //  class element for the initial conditions for u-v-w-velocity components
@@ -777,8 +776,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             // class element for the surface temperature computation by radiation flux density
             if ( RadiationModel == 1 ){
-                 circulation.BC_Radiation_multi_layer ( CO2, albedo, epsilon, precipitable_water, 
-                                                        radiation_surface, Q_radiation, Q_latent, Q_sensible, Q_bottom, co2_total, 
+                 circulation.BC_Radiation_multi_layer ( albedo, epsilon, radiation_surface, 
                                                         p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
             }
             //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )

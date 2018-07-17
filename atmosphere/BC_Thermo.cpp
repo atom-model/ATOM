@@ -33,6 +33,7 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h) :
         i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0)))
 {
     cAtmosphereModel* model = cAtmosphereModel::get_model();
+    m_model = model;
     this -> tropopause_equator = model->tropopause_equator;
     this -> tropopause_pole = model->tropopause_pole;
     this-> L_atm = model->L_atm;
@@ -163,10 +164,8 @@ BC_Thermo::~BC_Thermo()
 }
 
 
-void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D &epsilon, Array_2D &precipitable_water, 
-    Array_2D &radiation_surface, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Q_bottom, 
-    Array_2D & co2_total, Array &p_stat, Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, 
-    Array &ice, Array &co2 )
+void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, Array_2D &radiation_surface, Array &p_stat, 
+    Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud, Array &ice, Array &co2 )
 {
     // class element for the computation of the radiation and the temperature distribution
     // computation of the local temperature based on short and long wave radiation
@@ -180,9 +179,8 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
     //logger() << "co2 min: " << co2.min() << "  ice min: " << ice.min() << "  cloud min: " << cloud.min() << "  p_stat min: "
     //<< p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
 
-    cAtmosphereModel* model = cAtmosphereModel::get_model();
-    double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
-        model->get_mean_temperature_from_curve(0);
+    double t_cretaceous = m_model->get_mean_temperature_from_curve(*m_model->get_current_time()) -
+        m_model->get_mean_temperature_from_curve(0);
 
     cout.precision ( 4 );
     cout.setf ( ios::fixed );
@@ -257,14 +255,15 @@ void BC_Thermo::BC_Radiation_multi_layer (double CO2, Array_2D &albedo, Array_2D
                 epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) * ( d_i / d_i_max * 
                     ( d_i / d_i_max - 2. ) );  // radial parabolic distribution, start on zero level
                 
-                if ( CO2 == 1. ){
-                    co2_coeff = co2_factor * ( co2_equator / co2_tropopause );// influence of co2 in the atmosphere, co2_coeff = 1. means no influence
-                }
-                else{
+                if ( fabs(m_model->CO2 - 1) < std::numeric_limits<double>::epsilon() ){
+                    // influence of co2 in the atmosphere, co2_coeff = 1. means no influence
+                    co2_coeff = co2_factor * ( co2_equator / co2_tropopause );
+                }else{
                     co2_coeff = 1.;
                 }
 
-                epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );// dependency given by Häckel ( F. Baur and H. Philips, 1934 )
+                // dependency given by Häckel ( F. Baur and H. Philips, 1934 )
+                epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );
                 radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
                     pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
                 epsilon.y[ j ][ k ] = epsilon_3D.x[ i ][ j ][ k ];
