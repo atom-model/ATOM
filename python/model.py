@@ -62,11 +62,10 @@ class Model ( object ):
 
 
 
-atm = Model()
-hyd = Model()
+model = Model()
 
-atm.load_config_atm ( "config_atm.xml" )
-atm.run_Model_atm ( 0 )
+model.load_config_atm ( "config_atm.xml" )
+model.run_Model_atm ( 0 )
 
-#hyd.load_config_hyd ( "config_hyd.xml" )
-#hyd.run_Model_hyd ( 0 )
+#model.load_config_hyd ( "config_hyd.xml" )
+#model.run_Model_hyd ( 0 )
