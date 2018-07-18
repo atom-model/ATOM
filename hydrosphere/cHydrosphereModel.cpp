@@ -69,9 +69,6 @@ using namespace tinyxml2;
 // for c = 1.0000 compares to a salinity of 34.6 psu
 // for c = 1.0983 compares to a salinity of 38.0 psu
 
-
-
-
 cHydrosphereModel::cHydrosphereModel() {
 // Python and Notebooks can't capture stdout from this module. We override
 // cout's streambuf with a class that redirects stdout out to Python.
@@ -84,43 +81,42 @@ cHydrosphereModel::cHydrosphereModel() {
 	SetDefaultConfig();
 }
 
-
-
-
 cHydrosphereModel::~cHydrosphereModel() { }
 
 #include "cHydrosphereDefaults.cpp.inc"
 
-
-
 void cHydrosphereModel::LoadConfig(const char *filename) {
 	XMLDocument doc;
 	XMLError err = doc.LoadFile(filename);
+    try{
+	    if (err) {
+		    doc.PrintError();
+		    throw std::invalid_argument(std::string("unable to load config file:  ") + filename);
+	    }
 
-	if (err) {
-		doc.PrintError();
-		throw std::invalid_argument(std::string("unable to load config file:  ") + filename);
-	}
+        XMLElement *atom = doc.FirstChildElement("atom"), *elem_common = NULL, *elem_hydrosphere = NULL;
+        if (!atom) {
+            throw std::invalid_argument(std::string("Failed to find the 'atom' element in config file: ") + filename);
+        }else{
+            elem_common = atom->FirstChildElement( "common" );
+            if(!elem_common){
+                throw std::invalid_argument(std::string("Failed to find the 'common' element in 'atom' element in config file: ") + 
+                    filename);
+            }
+            elem_hydrosphere = atom->FirstChildElement( "hydrosphere" );
+            if (!elem_hydrosphere) {
+                throw std::invalid_argument(std::string("Failed to find the 'hydrosphere' element in 'atom' element in config file: ") + 
+                    filename);
+            }
+        }
 
-    XMLElement *atom = doc.FirstChildElement("atom"), *elem_common = NULL, *elem_hydrosphere = NULL;
-    if (!atom) {
-        throw std::invalid_argument(std::string("Failed to find the 'atom' element in config file: ") + filename);
-    }else{
-        elem_common = atom->FirstChildElement( "common" );
-        if(!elem_common){
-            throw std::invalid_argument(std::string("Failed to find the 'common' element in 'atom' element in config file: ") + filename);
-        }
-        elem_hydrosphere = atom->FirstChildElement( "hydrosphere" );
-        if (!elem_hydrosphere) {
-            throw std::invalid_argument(std::string("Failed to find the 'hydrosphere' element in 'atom' element in config file: ") + filename);
-        }
+        #include "HydrosphereLoadConfig.cpp.inc"
+
+    }catch(const std::exception &exc){
+        std::cerr << exc.what() << std::endl;
+        abort();
     }
-
-#include "HydrosphereLoadConfig.cpp.inc"
 }
-
-
-
 
 void cHydrosphereModel::RunTimeSlice(int Ma)
 {
@@ -332,7 +328,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //	surface temperature from World Ocean Atlas 2009 given as boundary condition
 	if ( Ma == 0 || use_earthbyte_reconstruction) 
     {
-        oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
+        //oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
     }
 //	surface salinity from World Ocean Atlas 2009 given as boundary condition
 	if ( Ma == 0 || use_earthbyte_reconstruction) 

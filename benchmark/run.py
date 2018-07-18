@@ -51,21 +51,23 @@ for t in range(len(times)):
 try:
     if not simon:
         topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
-        topo_suffix = 'Ma_Golonka'
+        topo_suffix = 'Golonka'
     else:
         topo_dir = '../data/topo_grids/'
-        topo_suffix = 'Ma_Simon'
+        topo_suffix = 'Simon'
     atm_map_output_dir = './atm_maps'
     hyd_map_output_dir = './hyd_maps'
 
     # v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), 
     # precipitation(mm), precipitable water(mm)
-    atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 'precipitation', 'precipitable_water', 'topography']
+    atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 'precipitation', 
+                'precipitable_water', 'topography', 'velocity']
 
     create_atm_maps.create_all_maps(atm_sub_dirs, start_time, end_time, time_step, atm_map_output_dir, 
             atom_output_dir, topo_dir, topo_suffix)
 
-    hyd_sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 'upwelling', 'downwelling']
+    hyd_sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 
+            'upwelling', 'downwelling', 'velocity']
     
     create_hyd_maps.create_all_maps(hyd_sub_dirs, start_time, end_time, time_step, hyd_map_output_dir,
             atom_output_dir, topo_dir, topo_suffix)
