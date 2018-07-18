@@ -13,8 +13,10 @@
 #include <cstring>
 #include <iomanip>
 #include "Results_Hyd.h"
+#include "Utils.h"
 
 using namespace std;
+using namespace AtomUtils;
 
 
 Results_Hyd::Results_Hyd ( int im, int jm, int km )
@@ -163,6 +165,10 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
 			{
 				aux_v[ j ][ k ] = simpson ( i_diff, dr, aux_grad_v );
 				aux_w[ j ][ k ] = simpson ( i_diff, dr, aux_grad_w );
+//				aux_v[ j ][ k ] = trapezoidal ( i_diff, dr, aux_grad_v );
+//				aux_w[ j ][ k ] = trapezoidal ( i_diff, dr, aux_grad_w );
+//				aux_v[ j ][ k ] = rectangular ( i_diff, dr, aux_grad_v );
+//				aux_w[ j ][ k ] = rectangular ( i_diff, dr, aux_grad_w );
 			}
 			else cout << "       i_diff = i_max - i_Ekman    must be an even number to use the Simpson integration method" << endl;
 		}
@@ -391,7 +397,6 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
 void Results_Hyd::land_oceanFraction ( Array &h )
 {
 // calculation of the ratio ocean to land, also addition and substraction of CO2 of land, ocean and vegetation
-
 	h_point_max =  ( jm - 1 ) * ( km - 1 );
 
 	h_land = 0;
@@ -415,20 +420,4 @@ void Results_Hyd::land_oceanFraction ( Array &h )
 	cout << endl;
 }
 
-
-
-double Results_Hyd::simpson ( int & n, double &dstep, double *value )
-{
-	double sum_even = 0, sum_odd = 0;
-
-	if ( n % 2 == 0 )
-	{
-		for (int i = 1; i < n; i+=2) { sum_odd += 4 * value[ i ]; }
-		for (int i = 2; i < n; i+=2) { sum_even += 2 * value[ i ]; }
-	}
-	else cout << "       n    must be an even number to use the Simpson integration method" << endl;
-
-	double ret = dstep / 3 * (value[ 0 ] + sum_odd + sum_even + value[ n ]);
-    return ret;                        // Simpson integration
-}
 

@@ -818,8 +818,8 @@ void BC_Thermohalin::Pressure_Limitation_Hyd ( Array &p_dyn, Array &p_dynn )
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-//				if ( p_dyn.x[ i ][ j ][ k ] >= 4000. )			p_dyn.x[ i ][ j ][ k ] = 4000.;
-//				if ( p_dyn.x[ i ][ j ][ k ] <= - 4000. )			p_dyn.x[ i ][ j ][ k ] = - 4000.;
+				if ( p_dyn.x[ i ][ j ][ k ] >= .1 )			p_dyn.x[ i ][ j ][ k ] = .1;
+				if ( p_dyn.x[ i ][ j ][ k ] <= - .1 )			p_dyn.x[ i ][ j ][ k ] = - .1;
 
 				p_dynn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j ][ k ];
 			}

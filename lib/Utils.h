@@ -28,4 +28,26 @@ namespace AtomUtils{
     inline double parabola(double x){
         return x*x - 2*x;
     }
+
+    inline double simpson(int & n, double &dstep, double *value){
+        double sum_even=0, sum_odd=0;
+        if (n % 2 == 0){
+            for (int i = 1; i < n; i+=2){sum_odd += 4*value[i];}
+            for (int i = 2; i < n; i+=2){sum_even += 2*value[i];}
+        }
+        else cout << "       n    must be an even number to use the Simpson integration method" << endl;
+        return dstep/3 * (value[0] + sum_odd + sum_even + value[n]);             // Simpson Rule integration
+    }
+
+    inline double trapezoidal ( int & n, double &dstep, double *value ){
+        double sum=0;
+        for (int i = 1; i < n; i++){sum += 2*value[i];}
+		return dstep/2 * (value[0] + sum + value[n]);                 // Trapezoidal Rule integration
+	}
+
+    inline double rectangular ( int & n, double &dstep, double *value ){
+        double sum = 0;
+        for (int i = 0; i <= n; i++){sum += value[i];}
+        return dstep * sum;                // Rectangular Rule integration
+	}
 }
