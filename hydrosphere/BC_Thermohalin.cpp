@@ -448,6 +448,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 	t_cretaceous = t_cretaceous_coeff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
 	if ( Ma == 0 ) 	t_cretaceous = 0.;
 
+    t_cretaceous = 0.;
 
 	cout.precision ( 3 );
 
@@ -474,6 +475,8 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 	c_cretaceous = c_cretaceous - c_average;
 	if ( Ma == 0 ) 	c_cretaceous = 0.;
 
+    c_cretaceous = 0.;
+
 	salinity_comment = "      salinity increase at cretaceous times: ";
 	salinity_gain = " c increase";
 	salinity_modern = "      mean salinity at modern times: ";
@@ -495,8 +498,9 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 			if ( h.x[ im-1 ][ j ][ k ] == 0. )
 			{
 				d_j = ( double ) j;
-				if ( Ma == 0 )			t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
-				else						t.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous; // paleo surface temperature
+                t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
+				//if ( Ma == 0 )			t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
+				//else						t.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous; // paleo surface temperature
 
 				t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
 
