@@ -52,11 +52,9 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 	this -> input_path = input_path;
 
 
-	i_middle = i_beg + 36;							// 0 + 36 = 36 for total depth 100m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
-	i_u_0 = i_beg + 20;								// 0 + 20 = 20 for total depth 500m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
+	int i_middle = i_beg + 36;							// 0 + 36 = 36 for total depth 100m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
 
 	j_half = ( jm - 1 ) / 2;
-	j_half_1 = j_half + 1;
 
 	d_i_beg = ( double ) i_beg;
 	d_i_middle = ( double ) i_middle;
@@ -84,6 +82,11 @@ BC_Thermohalin::~BC_Thermohalin(){}
 
 void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array &h, Array &v, Array &w )
 {
+	int j_30 = 30;
+	int j_60 = 60;
+	int j_90 = 90;
+	int j_120 = 120;
+	int j_150 = 150;
 // initial conditions for v and w velocity components at the sea surface
 	for ( int j = 0; j < jm; j++ )
 	{
@@ -99,7 +102,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
 
 // north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° )
-	for ( int j = 0; j < 31; j++ )
+	for ( int j = 0; j < j_30; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
@@ -145,7 +148,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
 
 // north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° )
-	for ( int j = 31; j < 60; j++ )
+	for ( int j = j_30; j < j_60; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
@@ -192,7 +195,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
 
 // north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° )
-	for ( int j = 60; j < 91; j++ )
+	for ( int j = j_60; j < j_90; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
@@ -238,7 +241,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
 
 // south equatorial Hadley cell ( from j=90 till j=120 compares to 0° till 30° )
-	for ( int j = 91; j < 122; j++ )
+	for ( int j = j_90; j < j_120; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
@@ -284,7 +287,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
 
 // south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° )
-	for ( int j = 121; j < 151; j++ )
+	for ( int j = j_120; j < j_150; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{
@@ -330,7 +333,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
 
 // south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° )
-	for ( int j = 151; j < jm; j++ )
+	for ( int j = j_150; j < jm; j++ )
 	{
 		for ( int k = 0; k < km; k++ )
 		{

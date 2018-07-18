@@ -164,7 +164,7 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
 				aux_v[ j ][ k ] = simpson ( i_diff, dr, aux_grad_v );
 				aux_w[ j ][ k ] = simpson ( i_diff, dr, aux_grad_w );
 			}
-			else cout << "       i_diff    must be an even number to use the Simpson integration method" << endl;
+			else cout << "       i_diff = i_max - i_Ekman    must be an even number to use the Simpson integration method" << endl;
 		}
 	}
 
@@ -318,7 +318,7 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
 
 
 
-	cout.precision ( 2 );
+	cout.precision ( 4 );
 
 // printout of surface data at one predefinded location
 
@@ -417,15 +417,17 @@ void Results_Hyd::land_oceanFraction ( Array &h )
 
 
 
-
 double Results_Hyd::simpson ( int & n, double &dstep, double *value )
 {
 	double sum_even = 0, sum_odd = 0;
-// summation of all sums
-	for (int i = 1; i < n; i+=2) { sum_odd += 4 * value[ i ]; }
-	for (int i = 2; i < n; i+=2) { sum_even += 2 * value[ i ]; }
 
-// counting of integral
+	if ( n % 2 == 0 )
+	{
+		for (int i = 1; i < n; i+=2) { sum_odd += 4 * value[ i ]; }
+		for (int i = 2; i < n; i+=2) { sum_even += 2 * value[ i ]; }
+	}
+	else cout << "       n    must be an even number to use the Simpson integration method" << endl;
+
 	double ret = dstep / 3 * (value[ 0 ] + sum_odd + sum_even + value[ n ]);
     return ret;                        // Simpson integration
 }
