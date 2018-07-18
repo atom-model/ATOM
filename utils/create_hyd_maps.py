@@ -7,32 +7,35 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
+from draw_vectors import draw_velocity
+
+map_cfg = {
+    'temperature': (6, -60, 40),
+    'v_velocity': (3, -0.05, 0.05),
+    'w_velocity': (4, -0.03, 0.1),
+    'salinity': (7, 34, 39),
+    'bottom_water': (8, 0, 7),
+    'upwelling': (9, 0, 0.01),
+    'downwelling': (10, 0, 0.01)
+}
+
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
-    index = 6
-    if directory == 'temperature':
-        index = 6
-    elif directory == 'v_velocity':
-        index = 3
-    elif directory == 'w_velocity':
-        index = 4
-    elif directory == 'salinity':
-        index = 7
-    elif directory == 'bottom_water':
-        index = 8
-    elif directory == 'upwelling':
-        index = 9
-    elif directory == 'downwelling':
-        index = 10
-
-
     for time in range(start_time, end_time + 1, time_step):
-        if index < 11:
-            data = np.genfromtxt(data_dir + '/[{0}{1}.xyz]_PlotData_Hyd.xyz'.format(time, topo_suffix),skip_header=1)
-            for d in data:
-                d[1]=90-d[1]
-            x = data[:,0]
-            y = data[:,1]
-            z = data[:,index]
+        if 'velocity' == directory:
+            draw_velocity(time, output_dir + "/velocity/", data_dir, topo_suffix, 'Hyd')
+            continue
+
+        if directory not in map_cfg:
+            print('unrecognized component: ' + directory)
+            return
+
+        data = np.genfromtxt(data_dir + '/[{0}Ma_{1}.xyz]_PlotData_Hyd.xyz'.format(time, topo_suffix), skip_header=1)
+        index = map_cfg[directory][0]
+        for d in data:
+            d[1]=90-d[1]
+        x = data[:,0]
+        y = data[:,1]
+        z = data[:,index]
 
         topo = data[:,2]
 
@@ -45,14 +48,8 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         x, z = m.shiftdata(xx, datain = z, lon_0=0)
 
         xi, yi = m(x, y)
-        v_min=None
-        v_max=None
-        if index == 6: #tempetature
-            v_min = -60
-            v_max = 35
-        elif index == 8:
-            v_min = 0
-            v_max = 7
+        v_min = map_cfg[directory][1]
+        v_max = map_cfg[directory][2]
 
         cs = m.scatter(xi, yi, marker='.', c=z, alpha=0.5, lw=0, vmin=v_min, vmax=v_max)
 
@@ -64,9 +61,9 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         #m.drawcoastlines()   
 
         cbar = m.colorbar(cs, location='bottom', pad="10%")
-        plt.title("{0}Ma {1}".format(time,directory))
-        plt.savefig(output_dir+'/'+directory+'/{0}Ma_{1}.png'.format(time, directory), bbox_inches='tight')
-        print '{0}Ma_{1}.png has been saved!'.format(time, directory)
+        plt.title("{0}Ma {1}".format(time, directory))
+        plt.savefig(output_dir+'/'+directory+'/{0}_Ma_{1}.png'.format(time, directory), bbox_inches='tight')
+        print(output_dir + '/' + directory + '/{0}_Ma_{1}.png has been saved!'.format(time, directory))
         #plt.show()
         plt.close()
 
@@ -113,13 +110,14 @@ if  __name__ == "__main__":
 
     data_dir = '../benchmark/output'
     topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
-    topo_suffix = 'Ma_Golonka'
+    topo_suffix = 'Golonka'
     start_time = 0
-    end_time = 100
+    end_time = 10
     time_step = 5
     output_dir = './hyd_maps'
 
-    sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 'upwelling', 'downwelling']
+    sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 
+        'upwelling', 'downwelling', 'velocity']
 
     try:
         start_time = int(sys.argv[1])
@@ -127,9 +125,10 @@ if  __name__ == "__main__":
         time_step = int(sys.argv[3])
         data_dir = sys.argv[4]
         topo_suffix = sys.argv[5]
-        #topo_dir = sys.argv[6]
+        topo_dir = sys.argv[6]
     except:
-        pass
+        print("Usage: python " + sys.argv[0] + 
+            ' 0 10 5 ../benchmark/output Golonka ../data/Paleotopography_bathymetry/Golonka_rev210/')
 
     create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
 
