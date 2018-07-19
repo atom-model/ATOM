@@ -40,6 +40,7 @@ def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     #vy=np.sin(data[:,3])*np.sin(data[:,4])
     vx=-data[:,3]
     vy=data[:,4]
+    magitude = data[:,5]
     topo = data[:,2]
 
     plt.figure(figsize=(15, 8))
@@ -51,6 +52,7 @@ def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     x, z = m.shiftdata(xx, datain = z, lon_0=0)
     x, vx = m.shiftdata(xx, datain = vx, lon_0=0)
     x, vy = m.shiftdata(xx, datain = vy, lon_0=0)
+    x, magitude = m.shiftdata(xx, datain = magitude, lon_0=0)
 
     xi, yi = m(x, y)
     #cs = m.scatter(xi, yi, marker='.', c=z, alpha=0.5, lw=0)
@@ -58,7 +60,7 @@ def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     #m.quiver(xi[::39],yi[::39],vx[::39],vy[::39])
     #vx = fix_wrong_lats(vx)
     #vy = fix_wrong_lats(vy)
-    m.quiver(down_sample(xi),down_sample(yi),down_sample(vy),down_sample(vx),width=0.001,
+    cs = m.quiver(down_sample(xi), down_sample(yi), down_sample(vy), down_sample(vx), down_sample(magitude), width=0.001,
              headlength=7,headwidth=5,pivot='tip')
     #m.scatter(down_sample(xi),down_sample(yi),marker='.',color='r')
     
@@ -69,7 +71,7 @@ def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     m.drawmeridians(np.arange(-180., 180., 45.), labels=[0,0,0,1], fontsize=10)
     #m.drawcoastlines()   
 
-    #cbar = m.colorbar(cs, location='bottom', pad="10%")
+    cbar = m.colorbar(cs, location='bottom', pad="10%")
     plt.title("{}Ma Velocity".format(time))
     plt.savefig(output_dir + '/{}Ma_velocity.png'.format(time), bbox_inches='tight')
     print(output_dir + '/{}Ma_velocity.png has been saved!'.format(time))
