@@ -339,7 +339,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
 
 //	initial conditions for u, v and w velocity components in the circumpolar current
-	if ( Ma <= 41 ) 	oceanflow.IC_CircumPolar_Current ( h, u, v, w, c );			// Drake passage closed 41 Ma ago
+//	if ( Ma <= 41 ) 	oceanflow.IC_CircumPolar_Current ( h, u, v, w, c );			// Drake passage closed 41 Ma ago
 
 //	salinity distribution as initial condition in 3 dimensions
 	oceanflow.BC_Temperature_Salinity ( h, t, c, p_dyn );

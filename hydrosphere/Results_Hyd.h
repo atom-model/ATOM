@@ -42,7 +42,5 @@ class Results_Hyd
 		void run_data ( int, double, double, double, double, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
 		void land_oceanFraction ( Array & );
-
-		double simpson ( int &, double &, double * );
 };
 #endif

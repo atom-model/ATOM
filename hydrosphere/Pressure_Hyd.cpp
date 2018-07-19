@@ -444,8 +444,8 @@ void Pressure_Hyd::computePressure_2D ( BC_Thermohalin &oceanflow, double r_0_wa
 		for ( int k = 0; k < km; k++ )
 		{
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
-			p_dynn.x[ im-1 ][ 0 ][ k ] = 0.;
-			p_dynn.x[ im-1 ][ jm-1 ][ k ] = 0.;
+			p_dynn.x[ im-1 ][ 0 ][ k ] = c43 * p_dynn.x[ im-1 ][ 1 ][ k ] - c13 * p_dynn.x[ im-1 ][ 2 ][ k ];
+			p_dynn.x[ im-1 ][ jm-1 ][ k ] = c43 * p_dynn.x[ im-1 ][ jm-2 ][ k ] - c13 * p_dynn.x[ im-1 ][ jm-3 ][ k ];
 		}
 
 // boundary conditions for the phi-direction, loop index k
