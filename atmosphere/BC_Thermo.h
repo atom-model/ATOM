@@ -137,15 +137,7 @@ class BC_Thermo
 
 		void Pressure_Limitation_Atm ( Array &, Array & );
 
-		double exp_func ( double &, const double &, const double & );
-
-		double cloud_ice ( const double &, int, const int & );
-
-		double out_t_cretaceous (  ) const;
-
 		double out_t_cret_cor (  ) const;
-
-		double out_co2 (  ) const;
 
 		int GetTropopauseHightAdd ( double );
 

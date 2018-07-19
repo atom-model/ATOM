@@ -3601,36 +3601,13 @@ void BC_Thermo::Pressure_Limitation_Atm ( Array &p_dyn, Array &p_dynn )
 
 
 
-
-
-double BC_Thermo::exp_func ( double &T_K, const double &co_1, const double &co_2 )
-{
-    return exp ( co_1 * ( T_K - 273.15 ) / ( T_K - co_2 ) );                        // temperature in °K
+int BC_Thermo::GetTropopauseHightAdd(double t_cret){
+    double d_i_h_round = round((t_cret * t_0) / 2.6);      // adiabatic slope of radial temperature 0.65/100m, stepsize 400m => 2.6/400m
+    return ( int ) d_i_h_round;
 }
 
 
-double BC_Thermo::out_t_cretaceous (  ) const
-{
-    return t_cretaceous;
-}
-
-double BC_Thermo::out_co2 (  ) const
-{
-    return co2_cretaceous;
-}
-
-
-int BC_Thermo::GetTropopauseHightAdd ( double t_cret )
-{
-    double d_i_h_round = round ( ( t_cret * t_0 ) / 2.6 );      // adiabatic slope of radial temperature 0.65/100m, stepsize 400m => 2.6/400m
-    int i_h = ( int ) d_i_h_round;
-    return i_h;
-}
-
-
-double BC_Thermo::GetPoleTemperature ( int Ma, int Ma_1, int Ma_2, double t_1, double t_2 )
-{
-    t_pole = ( t_2 - t_1 ) / ( Ma_2 - Ma_1 ) * ( double ) ( Ma - Ma_1 ) + t_1;
-    return t_pole;
+double BC_Thermo::GetPoleTemperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
+    return (t_2 - t_1) / (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
 }
 
