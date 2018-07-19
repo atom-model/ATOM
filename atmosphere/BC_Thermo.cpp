@@ -25,15 +25,14 @@
 using namespace std;
 using namespace AtomUtils;
 
-BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h) : 
+BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h) : 
+        m_model(model),
         im(im),
         jm(jm),
         km(km),
         h(h),
         i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0)))
 {
-    cAtmosphereModel* model = cAtmosphereModel::get_model();
-    m_model = model;
     this -> tropopause_equator = model->tropopause_equator;
     this -> tropopause_pole = model->tropopause_pole;
     this-> L_atm = model->L_atm;
@@ -81,8 +80,6 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h) :
     this-> co2_average =  model->co2_average;
     this-> co2_pole =  model->co2_pole;
     this-> co2_equator =  model->co2_equator;
-    this-> t_cretaceous_max =  model->t_cretaceous_max;
-    this-> t_cretaceous =  model->t_cretaceous;
     this-> t_land =  model->t_land;
     this-> t_tropopause =  model->t_tropopause;
     this-> t_equator =  model->t_equator;
@@ -92,6 +89,11 @@ BC_Thermo::BC_Thermo (int im, int jm, int km, Array& h) :
     this-> sun_position_lon =  model->sun_position_lon;
 
     im_tropopause = model->get_tropopause();
+
+    Ma = int(round(*m_model->get_current_time()));
+
+    t_cretaceous = m_model->get_mean_temperature_from_curve(Ma) -
+        m_model->get_mean_temperature_from_curve(0);
 
     coeff_mmWS = r_air / r_water_vapour;// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
@@ -178,9 +180,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
 
     //logger() << "co2 min: " << co2.min() << "  ice min: " << ice.min() << "  cloud min: " << cloud.min() << "  p_stat min: "
     //<< p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
-
-    double t_cretaceous = m_model->get_mean_temperature_from_curve(*m_model->get_current_time()) -
-        m_model->get_mean_temperature_from_curve(0);
 
     cout.precision ( 4 );
     cout.setf ( ios::fixed );
@@ -424,14 +423,12 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
     logger() << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
 
-    cAtmosphereModel* model = cAtmosphereModel::get_model();
-    int Ma = int(round(*model->get_current_time()));
-    double t_cretaceous = 0., t_cretaceous_prev = 0.;
+    double t_cretaceous_add = 0; 
 
-    if(!model->is_first_time_slice()){
-        double t_0Ma = model->get_mean_temperature_from_curve(0);
-        t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) - t_0Ma;
-        t_cretaceous_prev =  model->get_mean_temperature_from_curve(*model->get_previous_time()) - t_0Ma;
+    if(!m_model->is_first_time_slice()){
+        t_cretaceous_add = m_model->get_mean_temperature_from_curve(Ma) -  
+            m_model->get_mean_temperature_from_curve(*m_model->get_previous_time());
+        t_cretaceous_add /= t_0; 
     }
     
     // temperature-distribution by Ruddiman approximated by a parabola
@@ -466,8 +463,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
         temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << 
         temperature_unit << endl;
 
-    double t_cretaceous_add = (t_cretaceous - t_cretaceous_prev) / t_0; // non-dimensional
-
     // temperatur distribution at aa prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
     // sun_position_lon = 180, position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
@@ -482,7 +477,8 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
         j_par_f = ( double ) j_par;
         j_pol_f = ( double ) j_pol;
 
-        aa = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) - ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * ( j_par_f - j_pol_f ) );
+        aa = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) - ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * 
+            ( j_par_f - j_pol_f ) );
         bb = - 2. * aa * j_par_f;
         cc = t_equator + aa * j_par_f * j_par_f;
         j_d = sqrt ( ( cc - t_pole ) / aa );
@@ -498,11 +494,11 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                 d_j = ( double ) j;
                 if ( d_j <= j_d )
                 {
-                    t.x[ 0 ][ j ][ k ] = dd * d_j + e + t_cretaceous;
+                    t.x[ 0 ][ j ][ k ] = dd * d_j + e + t_cretaceous_add;
                 }
                 if ( d_j > j_d )
                 {
-                    t.x[ 0 ][ j ][ k ] = aa * d_j * d_j + bb * d_j + cc + t_cretaceous;
+                    t.x[ 0 ][ j ][ k ] = aa * d_j * d_j + bb * d_j + cc + t_cretaceous_add;
                 }
             }
         }
@@ -512,7 +508,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
         k_par = sun_position_lon;  // position of the sun at constant longitude
         k_pol = km - 1;
 
-        t_360 = (  t_0 + 5. ) / t_0;
+        double t_360 = (  t_0 + 5. ) / t_0;
 
         for ( int j = 0; j < jm; j++ )
         {
@@ -523,7 +519,8 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                 k_pol_f = ( double ) k_pol;
                 d_k = ( double ) k;
 
-                aa = ( jm_temp_asym - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * ( k_par_f - k_pol_f ) );
+                aa = ( jm_temp_asym - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * 
+                    ( k_par_f - k_pol_f ) );
                 bb = - 2. * aa * k_par_f;
                 cc = jm_temp_asym + aa * k_par_f * k_par_f;
 
@@ -531,7 +528,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
             }
         }
     }// temperatur distribution at aa prescribed sun position
-
 
     // pole temperature adjustment, combination of linear time dependent functions 
     int Ma_1_1 = 0;
@@ -544,7 +540,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     double t_1 = 0.;
     double t_2 = 0.;
     double t_pole_diff = 0.;
-    double t_pole_add = 0.;
     double t_pole_Ma0 = t_pole;
 
     if ( RadiationModel == 1 )
@@ -598,42 +593,24 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                             t_pole + t_cretaceous_add + t_land;  // parabolic temperature distribution
                     }
                 }
-
-                if ( NASATemperature == 1 )// if ( NASATemperature == 1 ) surface temperature is NASA based
+                else // if ( NASATemperature == 1 ) surface temperature is NASA based
                 {
-                    if ( Ma == 0 )
-                    {
-                        t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ] + t_cretaceous_add;
-                        if ( h.x[ 0 ][ j ][ k ] != 0. ){
-                            t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                                t_pole + t_cretaceous_add;
+                    if ( is_land(h, 0, j, k) ){// on land
+                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( j / d_j_half ) + t_pole;
+                        if(Ma != 0){
+                            t.x[ i_mount ][ j ][ k ] += t_cretaceous_add + t_land;
                         }
                     }
-                    else
-                    {
-                        if ( ( j >= 0 ) && ( j <= ( jm -1 ) / 2 ) ){
-                            t_pole_add = t_pole_diff * ( 1. -  j / d_j_half );
+                    else //ocean
+                    {   
+                        t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];
+                        if(Ma != 0){
+                            t.x[ i_mount ][ j ][ k ] += t_pole_diff * abs( 1. -  j / d_j_half );
                         }
-
-                        if ( ( j > ( jm -1 ) / 2 ) && ( j < jm ) ){
-                            t_pole_add = t_pole_diff * ( j - ( jm -1 ) / 2) / (( jm -1 ) / 2);
-                        }
-
-                        //t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add + t_pole_add;
-                        //t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_cretaceous_add + t_pole_add;
-                        t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_pole_add;
-                        //t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_pole_add;
-                        //t.x[ i_mount ][ j ][ k ] = t.x[ 0 ][ j ][ k ] + t_cretaceous_add;
-
                     }
-
-                    if ( (  h.x[ 0 ][ j ][ k ] == 1. ) && ( Ma != 0 ) ){     
-                        t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                            t_pole + t_cretaceous_add + t_land;  // parabolic temperature distribution
-                    }
-                }
-            }
-        }
+                }//if ( NASATemperature == 1 )
+            }//for j
+        }//for k
     }//if ( RadiationModel == 1 )
 
     // zonal temperature along tropopause
@@ -646,32 +623,28 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     for ( int j = 0; j < jm; j++ )
     {
         i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
-        d_i_max = ( double ) i_trop;
 
-        double temp_tropopause =  t_eff_tropo * ( j * j / ( d_j_half * d_j_half ) - 2. * j / d_j_half ) +
+        double temp_tropopause =  t_eff_tropo * parabola( j / d_j_half ) +
                 t_tropopause_pole + t_cretaceous_add;        
 
         for ( int k = 0; k < km; k++ )
         {
             i_mount = i_topography[ j ][ k ];
 
-            for ( int i = 1; i <= im - 1; i++ )
+            for ( int i = 1; i < im; i++ )
             {
                 if ( i <= i_trop )
                 {
-                    d_i = ( double ) i;
-                    t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ i_mount ][ j ][ k ] ) / d_i_max * d_i + 
+                    t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ i_mount ][ j ][ k ] ) * ( (double)i / i_trop) + 
                         t.x[ i_mount ][ j ][ k ];// linear temperature decay up to tropopause, privat approximation
                 }else{        
                     t.x[ i ][ j ][ k ] = temp_tropopause;
                 }
             }
 
-            for ( int i = i_trop - 1; i >= 0; i-- )
+            for ( int i = 0; i < i_mount; i++ )
             {
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) != ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ) ){
-                    t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
-                }
+                t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
             }
         }
     }
@@ -695,10 +668,6 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c )
     d_j_half = ( double ) j_half;
     d_j_max = ( double ) j_max;
 
-    cAtmosphereModel* model = cAtmosphereModel::get_model();
-    double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
-        model->get_mean_temperature_from_curve(0);
-    
     // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ )
     {
@@ -764,10 +733,6 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
 
     j_half = j_max / 2;
 
-    cAtmosphereModel* model = cAtmosphereModel::get_model();
-    double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) - 
-        model->get_mean_temperature_from_curve(0);
-    
     // temperature-distribution by Ruddiman approximated by a parabola
     //t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / ( double ) Ma_max ) );   // in °C
     //t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / ( double ) Ma_max + Ma );   // in °C
@@ -777,8 +742,6 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
     co2_cretaceous = 3.2886 * pow ( ( t_cretaceous + t_average ), 2 ) - 32.8859 * ( t_cretaceous + t_average ) + 102.2148;  // in ppm
     co2_average = 3.2886 * pow ( t_average, 2 ) - 32.8859 * t_average + 102.2148;  // in ppm
     co2_cretaceous = co2_cretaceous - co2_average;
-
-    t_cretaceous = t_cretaceous / t_0;
 
     cout.precision ( 3 );
 
@@ -838,7 +801,7 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
     for ( int j = 0; j < jm; j++ )
     {
         // i_trop = im_tropopause[ j ];
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous );
+        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_trop;
 
         for ( int k = 0; k < km; k++ )
@@ -2871,10 +2834,6 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
     t_00 = 236.15;
     t_Celsius_1 = t_1 - t_0;                                                                                        // -20 °C
     t_Celsius_2 = t_00 - t_0;                                                                                       // -37 °C
-
-    cAtmosphereModel* model = cAtmosphereModel::get_model();
-    double t_cretaceous = model->get_mean_temperature_from_curve(*model->get_current_time()) -
-        model->get_mean_temperature_from_curve(0);
 
     // setting water vapour, cloud water and cloud ice into the proper thermodynamic ratio based on the local temperatures
     // starting from a guessed parabolic temperature and water vapour distribution in north/south direction

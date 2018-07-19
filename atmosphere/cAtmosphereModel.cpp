@@ -239,7 +239,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
 
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo  circulation ( im, jm, km, h ); 
+    BC_Thermo  circulation (this, im, jm, km, h ); 
 
     //  class Restore to restore the iterational values from new to old
     Restore_Atm oldnew( im, jm, km );

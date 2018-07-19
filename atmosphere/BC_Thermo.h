@@ -28,6 +28,8 @@ class BC_Thermo
 	private:
         cAtmosphereModel* m_model;
 
+        int Ma;
+
 		int i, j, k, im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator, tropopause_pole, im_1, i_land, i_trop, i_mount;
 		Array& h;
         int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s, j_had_n, j_had_s, j_had_v_n, j_had_v_s;
@@ -53,7 +55,7 @@ class BC_Thermo
 		double wa_equator_Tropopause, wa_equator_SL, va_equator_Tropopause, va_equator_SL, trop_co2_eff;
 		double d_i, d_i_max, d_i_half, d_j, d_j_half, d_j_max, d_k, pi180, d_j_w, d_j_infl;
 		double d_j_5n, d_j_15n, d_j_45n, d_j_75n, d_j_30n, d_j_5s, d_j_15s, d_j_45s, d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
-		double t_cretaceous, t_cretaceous_add, t_cretaceous_eff, t_cretaceous_max, t_360;
+		double t_cretaceous, t_cretaceous_eff;
 		double j_par_f, j_pol_f, e, a, j_d, t_dd, k_par_f, k_pol_f;
 		double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
 		double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average;
@@ -93,7 +95,7 @@ class BC_Thermo
 
 
 	public:
-		BC_Thermo (int im, int jm, int km, Array& h);
+		BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h);
 
         ~BC_Thermo();
 
