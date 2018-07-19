@@ -764,7 +764,7 @@ void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Arra
 				if ( h.x[ i ][ j ][ k ] == 0. )
 				{
 //					c.x[ i ][ j ][ k ] = ca;
-					w.x[ i ][ j ][ k ] = .1 / u_0;					// 10 cm/s
+					w.x[ i ][ j ][ k ] = .01 / u_0;					// 1 cm/s
 				}
 			}
 		}
