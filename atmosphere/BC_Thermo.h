@@ -137,8 +137,6 @@ class BC_Thermo
 
 		void Pressure_Limitation_Atm ( Array &, Array & );
 
-		double out_t_cret_cor (  ) const;
-
 		int GetTropopauseHightAdd ( double );
 
 		double GetPoleTemperature ( int, int, int, double, double );

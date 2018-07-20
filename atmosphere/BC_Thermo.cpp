@@ -275,7 +275,8 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
             }
 
             //above troposphere
-            for ( int i = i_trop + 1; i < im; i++ )
+//            for ( int i = i_trop + 1; i < im; i++ )
+            for ( int i = i_trop; i < im; i++ )
             {
                 epsilon_3D.x[ i ][ j ][ k ] = 0.;
                 radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * 
@@ -284,12 +285,10 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
         }
     }
 
-    //  cout << endl << "                                              nach epsilon" << endl;
-
     // iteration procedure for the computation of the temperature based on the multi-layer radiation model
     // temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
     
-    for( int iter_rad = 0;  iter_rad <= 5; iter_rad++ ) // iter_rad may be varied
+    for( int iter_rad = 1;  iter_rad <= 4; iter_rad++ ) // iter_rad may be varied
     {
         //logger() << "max radiation_3D: " << radiation_3D.max() << "  epsilon_3D max: " << epsilon_3D.max() << std::endl;
         //logger() << "min radiation_3D: " << radiation_3D.min() << "  epsilon_3D min: " << epsilon_3D.min() << std::endl;
@@ -385,8 +384,8 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
                 radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
                     pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. );
 
-                t.x[ i_trop ][ j ][ k ] = .5 * ( t.x[ i_trop ][ j ][ k ] + pow ( radiation_3D.x[ i_trop ][ j ][ k ] / sigma,
-                        ( 1. / 4. ) ) / t_0 ); 
+//                t.x[ i_trop ][ j ][ k ] = .5 * ( t.x[ i_trop ][ j ][ k ] + pow ( radiation_3D.x[ i_trop ][ j ][ k ] / sigma,
+//                        ( 1. / 4. ) ) / t_0 ); 
 
                 // recurrence formula for the radiation and temperature
                 for ( int i = i_trop - 1; i >= i_mount; i-- )
@@ -644,12 +643,12 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
             for ( int i = 0; i < i_mount; i++ )
             {
-                t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
+                t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];		// inside mountains
             }
         }
     }
 
-    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
+    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl << std::endl;
 }
 
     
