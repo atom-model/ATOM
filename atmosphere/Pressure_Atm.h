@@ -37,7 +37,7 @@ class Pressure_Atm
 		Pressure_Atm ( int, int, int, double, double, double );
 		~Pressure_Atm ();
 
-		void computePressure_3D ( BC_Thermo &circulation, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_3D ( BC_Thermo &circulation, double, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void computePressure_2D ( BC_Thermo &circulation, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };

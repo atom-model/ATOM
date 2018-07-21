@@ -831,7 +831,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
         if ( pressure_iter == pressure_plus_3D )
         {
-            startPressure.computePressure_3D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+            startPressure.computePressure_3D ( circulation, u_0, r_air, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
             pressure_plus_3D = pressure_plus_3D + 1;
         }
 
