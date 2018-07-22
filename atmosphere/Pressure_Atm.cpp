@@ -234,12 +234,12 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
 
 
 // explicit pressure computation based on the Poisson equation
-					p_dynn.x[ i ][ j ][ k ] = ( ( p_dyn.x[ i+1 ][ j ][ k ] + p_dyn.x[ i-1 ][ j ][ k ] ) * num1
-														+ ( p_dyn.x[ i ][ j+1 ][ k ] + p_dyn.x[ i ][ j-1 ][ k ] ) * num2
-														+ ( p_dyn.x[ i ][ j ][ k+1 ] + p_dyn.x[ i ][ j ][ k-1 ] ) * num3 
+					p_dyn.x[ i ][ j ][ k ] = ( ( p_dynn.x[ i+1 ][ j ][ k ] + p_dynn.x[ i-1 ][ j ][ k ] ) * num1
+														+ ( p_dynn.x[ i ][ j+1 ][ k ] + p_dynn.x[ i ][ j-1 ][ k ] ) * num2
+														+ ( p_dynn.x[ i ][ j ][ k+1 ] + p_dynn.x[ i ][ j ][ k-1 ] ) * num3 
 														- r_air * ( drhs_udr + drhs_vdthe + drhs_wdphi ) ) / denom;
 
-					if ( h.x[ i ][ j ][ k ] == 1. )						p_dynn.x[ i ][ j ][ k ] = .0;
+					if ( h.x[ i ][ j ][ k ] == 1. )						p_dyn.x[ i ][ j ][ k ] = .0;
 				}
 			}
 		}
@@ -250,8 +250,8 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
 		{
 			for ( int k = 0; k < km; k++ )
 			{
-				p_dynn.x[ 0 ][ j ][ k ] = p_dynn.x[ 3 ][ j ][ k ] - 3. * p_dynn.x[ 2 ][ j ][ k ] + 3. * p_dynn.x[ 1 ][ j ][ k ];		// extrapolation
-				p_dynn.x[ im-1 ][ j ][ k ] = c43 * p_dynn.x[ im-2 ][ j ][ k ] - c13 * p_dynn.x[ im-3 ][ j ][ k ];		// Neumann
+				p_dyn.x[ 0 ][ j ][ k ] = p_dyn.x[ 3 ][ j ][ k ] - 3. * p_dyn.x[ 2 ][ j ][ k ] + 3. * p_dyn.x[ 1 ][ j ][ k ];		// extrapolation
+				p_dyn.x[ im-1 ][ j ][ k ] = c43 * p_dyn.x[ im-2 ][ j ][ k ] - c13 * p_dyn.x[ im-3 ][ j ][ k ];		// Neumann
 			}
 		}
 
@@ -261,9 +261,9 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
 			for ( int j = 0; j < jm; j++ )
 			{
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
-				p_dynn.x[ i ][ j ][ 0 ] = c43 * p_dynn.x[ i ][ j ][ 1 ] - c13 * p_dynn.x[ i ][ j ][ 2 ];
-				p_dynn.x[ i ][ j ][ km-1 ] = c43 * p_dynn.x[ i ][ j ][ km-2 ] - c13 * p_dynn.x[ i ][ j ][ km-3 ];
-				p_dynn.x[ i ][ j ][ 0 ] = p_dynn.x[ i ][ j ][ km-1 ] = ( p_dynn.x[ i ][ j ][ 0 ] + p_dynn.x[ i ][ j ][ km-1 ] ) / 2.;
+				p_dyn.x[ i ][ j ][ 0 ] = c43 * p_dyn.x[ i ][ j ][ 1 ] - c13 * p_dyn.x[ i ][ j ][ 2 ];
+				p_dyn.x[ i ][ j ][ km-1 ] = c43 * p_dyn.x[ i ][ j ][ km-2 ] - c13 * p_dyn.x[ i ][ j ][ km-3 ];
+				p_dyn.x[ i ][ j ][ 0 ] = p_dyn.x[ i ][ j ][ km-1 ] = ( p_dyn.x[ i ][ j ][ 0 ] + p_dyn.x[ i ][ j ][ km-1 ] ) / 2.;
 			}
 		}
 
@@ -272,20 +272,8 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
 			for ( int i = 0; i < im; i++ )
 			{
 	// zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
-				p_dynn.x[ i ][ 0 ][ k ] = c43 * p_dynn.x[ i ][ 1 ][ k ] - c13 * p_dynn.x[ i ][ 2 ][ k ];
-				p_dynn.x[ i ][ jm-1 ][ k ] = c43 * p_dynn.x[ i ][ jm-2 ][ k ] - c13 * p_dynn.x[ i ][ jm-3 ][ k ];
-			}
-		}
-
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
-			{
-				for ( int i = 0; i < im; i++ )
-				{
-					p_dyn.x[ i ][ j ][ k ] = p_dynn.x[ i ][ j ][ k ];
-					if ( h.x[ i ][ j ][ k ] == 1. )						p_dyn.x[ i ][ j ][ k ] = p_dynn.x[ i ][ j ][ k ] = .0;
-				}
+				p_dyn.x[ i ][ 0 ][ k ] = c43 * p_dyn.x[ i ][ 1 ][ k ] - c13 * p_dyn.x[ i ][ 2 ][ k ];
+				p_dyn.x[ i ][ jm-1 ][ k ] = c43 * p_dyn.x[ i ][ jm-2 ][ k ] - c13 * p_dyn.x[ i ][ jm-3 ][ k ];
 			}
 		}
 	}
@@ -409,11 +397,11 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air, Ar
 				if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) )
 							drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k ] - aux_w.x[ 0 ][ j ][ k - 1 ] ) / ( dphi * rmsinthe );					// 1. order accurate
 
-				p_dynn.x[ 0 ][ j ][ k ] = ( ( p_dyn.x[ 0 ][ j+1 ][ k ] + p_dyn.x[ 0 ][ j-1 ][ k ] ) * num2
-													+ ( p_dyn.x[ 0 ][ j ][ k+1 ] + p_dyn.x[ 0 ][ j ][ k-1 ] ) * num3 
+				p_dyn.x[ 0 ][ j ][ k ] = ( ( p_dynn.x[ 0 ][ j+1 ][ k ] + p_dynn.x[ 0 ][ j-1 ][ k ] ) * num2
+													+ ( p_dynn.x[ 0 ][ j ][ k+1 ] + p_dynn.x[ 0 ][ j ][ k-1 ] ) * num3 
 													- r_air * ( drhs_vdthe + drhs_wdphi ) ) / denom;
 
-				if ( h.x[ 0 ][ j ][ k ] == 1. )						p_dynn.x[ 0 ][ j ][ k ] = .0;
+				if ( h.x[ 0 ][ j ][ k ] == 1. )						p_dyn.x[ 0 ][ j ][ k ] = .0;
 			}
 		}
 
@@ -422,27 +410,17 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air, Ar
 		for ( int k = 0; k < km; k++ )
 		{
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
-			p_dynn.x[ 0 ][ 0 ][ k ] = 0.;
-			p_dynn.x[ 0 ][ jm-1 ][ k ] = 0.;
+			p_dyn.x[ 0 ][ 0 ][ k ] = 0.;
+			p_dyn.x[ 0 ][ jm-1 ][ k ] = 0.;
 		}
 
 // boundary conditions for the phi-direction, loop index k
 		for ( int j = 1; j < jm - 1; j++ )
 		{
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
-			p_dynn.x[ 0 ][ j ][ 0 ] = c43 * p_dynn.x[ 0 ][ j ][ 1 ] - c13 * p_dynn.x[ 0 ][ j ][ 2 ];
-			p_dynn.x[ 0 ][ j ][ km-1 ] = c43 * p_dynn.x[ 0 ][ j ][ km-2 ] - c13 * p_dynn.x[ 0 ][ j ][ km-3 ];
-			p_dynn.x[ 0 ][ j ][ 0 ] = p_dynn.x[ 0 ][ j ][ km-1 ] = ( p_dynn.x[ 0 ][ j ][ 0 ] + p_dynn.x[ 0 ][ j ][ km-1 ] ) / 2.;
-		}
-
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
-			{
-				p_dyn.x[ 0 ][ j ][ k ] = p_dynn.x[ 0 ][ j ][ k ];
-
-				if ( h.x[ 0 ][ j ][ k ] == 1. )						p_dyn.x[ 0 ][ j ][ k ] = p_dynn.x[ 0 ][ j ][ k ] = .0;
-			}
+			p_dyn.x[ 0 ][ j ][ 0 ] = c43 * p_dyn.x[ 0 ][ j ][ 1 ] - c13 * p_dyn.x[ 0 ][ j ][ 2 ];
+			p_dyn.x[ 0 ][ j ][ km-1 ] = c43 * p_dyn.x[ 0 ][ j ][ km-2 ] - c13 * p_dyn.x[ 0 ][ j ][ km-3 ];
+			p_dyn.x[ 0 ][ j ][ 0 ] = p_dyn.x[ 0 ][ j ][ km-1 ] = ( p_dyn.x[ 0 ][ j ][ 0 ] + p_dyn.x[ 0 ][ j ][ km-1 ] ) / 2.;
 		}
 	}
 //	circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );

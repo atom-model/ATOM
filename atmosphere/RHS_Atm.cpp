@@ -72,9 +72,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
                                             double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, 
                                             Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, 
                                             Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, 
-                                            Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, 
-                                            Array &cn, Array &cloudn, Array &icen, Array &co2n, Array &rhs_t,
-                                            Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, 
+                                            Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, 
                                             Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &aux_u, 
                                             Array &aux_v, Array &aux_w, Array &Q_Latent, Array &BuoyancyForce,
                                             Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, 
@@ -612,8 +610,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
 void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u_0, double p_0, double L_atm,
                                             Array_1D &rad, Array_1D &the, Array &h, Array &v, Array &w, 
-                                            Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &rhs_v, 
-                                            Array &rhs_w, Array &aux_v, Array &aux_w )
+                                            Array &p_dyn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
 {
     //  2D surface iterations
     double k_Force = 10.;// factor for accelleration of convergence processes inside the immersed boundary conditions
