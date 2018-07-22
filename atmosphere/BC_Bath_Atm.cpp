@@ -16,8 +16,10 @@
 #include <sstream>
 
 #include "BC_Bath_Atm.h"
+#include "Utils.h"
 
 using namespace std;
+using namespace AtomUtils;
 
 BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int NASATemperature, int im, int jm, int km, double co2_vegetation, 
                                                      double co2_land, double co2_ocean ):
@@ -44,27 +46,44 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &Name_Bathymetry_File,
     // reading data from file Name_Bathymetry_File_Read
     ifstream Name_Bathymetry_File_Read(Name_Bathymetry_File);
     if ( ! Name_Bathymetry_File_Read.is_open()) {
-        throw( string("ERROR: could not open Name_Bathymetry_File file at ") + Name_Bathymetry_File + "\n");
+        std::cerr << "ERROR: could not open Name_Bathymetry_File file: " <<  Name_Bathymetry_File << std::endl;
+        abort();
     }
 
-    double lon, lat, height=0.;
-
-    for (int j = 0; j < jm && !Name_Bathymetry_File_Read.eof(); j++) {
-        for (int k = 0; k < km; k++) {
+    double lon, lat, height;
+    int j, k;
+    for (j = 0; j < jm && !Name_Bathymetry_File_Read.eof(); j++) {
+        for (k = 0; k < km && !Name_Bathymetry_File_Read.eof(); k++) {
+            height = -999;
             Name_Bathymetry_File_Read >> lon >> lat >> height;
 
-            if ( height < 0. ){
+            if ( height < 0. )
+            {
                 h.x[ 0 ][ j ][ k ] = Topography.y[ j ][ k ] = 0.;
-            }else{
-                int i_h = int(round ( height / ( L_atm / ( double) ( im - 1 ) ) ));
-
+            }
+            else
+            {
+                int i_h = int(floor( height / L_atm * ( im - 1 ) ) );
+                Topography.y[ j ][ k ] = height;
                 for ( int i = 0; i <= i_h; i++ ){
                     h.x[ i ][ j ][ k ] = 1.;
                 }
             }
+
+            if(Name_Bathymetry_File_Read.fail()){
+                Name_Bathymetry_File_Read.clear();
+                std::string tmp;
+                std::getline(Name_Bathymetry_File_Read, tmp);
+                logger() << "bad data in topography at: " << lon << " " << lat << " " << tmp << std::endl;
+            }
+            //logger() << lon << " " << lat << " " << h.x[ 0 ][ j ][ k ] << std::endl;            
         }
     }
 
+    if(j != jm || k != km ){
+        std::cerr << "wrong topography file size! aborting..."<<std::endl;
+        abort();
+    }
 
     // rewriting bathymetrical data from -180° _ 0° _ +180° coordinate system to 0°- 360°
 
