@@ -2,6 +2,8 @@
 #include <fstream>
 #include <limits>
 
+#include "Array.h"
+
 namespace AtomUtils{
     using namespace std;
     struct HemisphereCoords{
