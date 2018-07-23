@@ -298,9 +298,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     cout << endl << endl;
 
-//      oldnew.restoreOldNew_3D(.9, u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n);
-//      oldnew.restoreOldNew_2D(.9, v, w, p_dyn, p_dynn, vn, wn);
-
     n--;
 
     restrain_temperature();
@@ -692,7 +689,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
             if ( pressure_iter_2D == pressure_plus_2D )
             {
-                startPressure.computePressure_2D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
+                startPressure.computePressure_2D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
                 pressure_plus_2D = pressure_plus_2D + 1;
             }
 
@@ -830,7 +827,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
         if ( pressure_iter == pressure_plus_3D )
         {
-            startPressure.computePressure_3D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
+            startPressure.computePressure_3D ( circulation, u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
             pressure_plus_3D = pressure_plus_3D + 1;
         }
 

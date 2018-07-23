@@ -407,7 +407,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
             }
         }
     }
-    logger() << "exit BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl;
+    logger() << "exit BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl << std::endl;
 }
 
 
@@ -2826,6 +2826,9 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
 {
     cout.precision ( 6 );
 // Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
+    logger() << "enter Ice_Water_Saturation_Adjustment: water vapour max: " << c.max()*c_0 << std::endl;
+    logger() << "enter Ice_Water_Saturation_Adjustment: cloud water max: " << cloud.max()*c_0 << std::endl;
+    logger() << "enter Ice_Water_Saturation_Adjustment: cloud ice max: " << ice.max()*c_0 << std::endl;
 
 // constant coefficients for the adjustment of cloud water and cloud ice amount vice versa
 
@@ -3058,6 +3061,9 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
         }
     }
 */
+    logger() << "exit Ice_Water_Saturation_Adjustment: water vapour max: " << c.max()*c_0 << std::endl;
+    logger() << "exit Ice_Water_Saturation_Adjustment: cloud water max: " << cloud.max()*c_0 << std::endl;
+    logger() << "exit Ice_Water_Saturation_Adjustment: cloud ice max: " << ice.max()*c_0 << std::endl << std::endl;
 }
 
 

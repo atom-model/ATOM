@@ -25,20 +25,17 @@ class Pressure_Atm
 {
 	private:
 		int im, jm, km;
-		int iter_prec, switch_pres;
-		int ii, iii;
 
-		double dr, dthe, dphi, dr2, dthe2, dphi2;
-		double rm, rm2, sinthe, sinthe2, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2, rm2dthe2;
-		double drhs_udr, drhs_vdthe, drhs_wdphi;
-		double denom, num1, num2, num3, c43, c13;
+		double dr, dthe, dphi, c43, c13;
 
 	public:
 		Pressure_Atm ( int, int, int, double, double, double );
 		~Pressure_Atm ();
 
-		void computePressure_3D ( BC_Thermo &circulation, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_3D ( BC_Thermo &circulation, double u_0, double r_air, Array_1D &rad, Array_1D &the,
+                                                       Array &p_dyn, Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w );
 
-		void computePressure_2D ( BC_Thermo &circulation, double, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void computePressure_2D ( BC_Thermo &circulation, double r_air, Array_1D &rad, Array_1D &the,
+                                                       Array &p_dyn, Array &p_dynn, Array &h, Array &aux_v, Array &aux_w );
 };
 #endif
