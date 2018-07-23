@@ -38,8 +38,9 @@ Pressure_Atm::Pressure_Atm ( int im, int jm, int km, double dr, double dthe, dou
 Pressure_Atm::~Pressure_Atm (){}
 
 
-void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, double r_air, Array_1D &rad, Array_1D &the,
-                                                                       Array &p_dyn, Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w )
+void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, double r_air,
+                                                                       Array_1D &rad, Array_1D &the, Array &p_dyn,
+                                                                       Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w )
 {
 // boundary conditions for the r-direction, loop index i
 
@@ -152,8 +153,10 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
                     }
                     else
                     {
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) )    aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j + 1 ][ k ];
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )      aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j - 1 ][ k ];
+                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) )
+                            aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j + 1 ][ k ];
+                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )
+                            aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j - 1 ][ k ];
                     }
 
                     if ( ( k >= 2 ) && ( k <= km - 3 ) )
@@ -170,8 +173,10 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
                     }
                     else
                     {
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) )    aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k + 1 ];
-                        if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) )      aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k - 1 ];
+                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) )
+                            aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k + 1 ];
+                        if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) )
+                            aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k - 1 ];
                     }
 
 
@@ -182,9 +187,9 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
                     if ( i <= im - 3 )
                     {
                         if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
-                                    drhs_udr = ( - 3. * aux_u.x[ i ][ j ][ k ] + 4. * aux_u.x[ i + 1 ][ j ][ k ] - aux_u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
+                                drhs_udr = ( - 3. * aux_u.x[ i ][ j ][ k ] + 4. * aux_u.x[ i + 1 ][ j ][ k ] - aux_u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
                     }
-                    else         drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i ][ j ][ k ] ) / dr;
+                    else     drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i ][ j ][ k ] ) / dr;
 
 // gradients of RHS terms at mountain sides 2.order accurate in the-direction
                     drhs_vdthe = ( aux_v.x[ i ][ j+1 ][ k ] - aux_v.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe * rm );
@@ -280,8 +285,9 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
 
 
 
-void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air, Array_1D &rad, Array_1D &the,
-                                                                       Array &p_dyn, Array &p_dynn, Array &h, Array &aux_v, Array &aux_w )
+void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air,
+                                                                       Array_1D &rad, Array_1D &the, Array &p_dyn,
+                                                                       Array &p_dynn, Array &h, Array &aux_v, Array &aux_w )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 // boundary conditions for the the-direction, loop index j
@@ -348,8 +354,10 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air, Ar
                 }
                 else
                 {
-                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) )      aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j + 1 ][ k ];
-                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) )        aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j - 1 ][ k ];
+                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) )
+                        aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j + 1 ][ k ];
+                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) )
+                        aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j - 1 ][ k ];
                 }
 
                 if ( ( k >= 2 ) && ( k <= km - 3 ) )
@@ -366,8 +374,10 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air, Ar
                 }
                 else
                 {
-                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) )      aux_w.x[ 0 ][ j ][ k ] = aux_w.x[ 0 ][ j ][ k + 1 ];
-                    if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) )        aux_w.x[ 0 ][ j ][ k ] = aux_w.x[ 0 ][ j ][ k - 1 ];
+                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) )
+                        aux_w.x[ 0 ][ j ][ k ] = aux_w.x[ 0 ][ j ][ k + 1 ];
+                    if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) )
+                        aux_w.x[ 0 ][ j ][ k ] = aux_w.x[ 0 ][ j ][ k - 1 ];
                 }
 
 
