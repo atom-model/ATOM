@@ -23,19 +23,19 @@ using namespace std;
 
 class Pressure_Atm
 {
-	private:
-		int im, jm, km;
+    private:
+        int im, jm, km;
 
-		double dr, dthe, dphi, c43, c13;
+        double dr, dthe, dphi, c43, c13;
 
-	public:
-		Pressure_Atm ( int, int, int, double, double, double );
-		~Pressure_Atm ();
+    public:
+        Pressure_Atm ( int, int, int, double, double, double );
+        ~Pressure_Atm ();
 
-		void computePressure_3D ( BC_Thermo &circulation, double u_0, double r_air, Array_1D &rad, Array_1D &the,
+        void computePressure_3D ( BC_Thermo &circulation, double u_0, double r_air, Array_1D &rad, Array_1D &the,
                                                        Array &p_dyn, Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w );
 
-		void computePressure_2D ( BC_Thermo &circulation, double r_air, Array_1D &rad, Array_1D &the,
+        void computePressure_2D ( BC_Thermo &circulation, double r_air, Array_1D &rad, Array_1D &the,
                                                        Array &p_dyn, Array &p_dynn, Array &h, Array &aux_v, Array &aux_w );
 };
 #endif

@@ -26,53 +26,53 @@ target = $(addprefix $(TARGET_DIR)/,$(COPY_FILE))
 all: atm hyd python $(target)
 
 libatom.a: $(PARAM_OUTPUTS) $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
-	ar rcs libatom.a $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
+    ar rcs libatom.a $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
 
 atm: libatom.a $(ATM_CLI_OBJ)
-	$(CXX) $(CFLAGS) $(ATM_CLI_OBJ) -L. -latom $(LDFLAGS) -o cli/atm
+    $(CXX) $(CFLAGS) $(ATM_CLI_OBJ) -L. -latom $(LDFLAGS) -o cli/atm
 
 hyd: libatom.a $(HYD_CLI_OBJ)
-	$(CXX) $(CFLAGS) $(HYD_CLI_OBJ) -L. -latom $(LDFLAGS) -o cli/hyd
+    $(CXX) $(CFLAGS) $(HYD_CLI_OBJ) -L. -latom $(LDFLAGS) -o cli/hyd
 
 $(PARAM_OUTPUTS): param.py
 # explicitly clean dependent files
-	rm -f atmosphere/cAtmosphereModel.o hydrosphere/cHydrosphereModel.o
-	python param.py
+    rm -f atmosphere/cAtmosphereModel.o hydrosphere/cHydrosphereModel.o
+    python param.py
 
 
 analyze:
-	analyze-build make
+    analyze-build make
 
 python: libatom.a python/pyatom.so
 
 python/pyatom.so: python/pyatom.pyx python/atom.pxd libatom.a
-	cd python && python setup.py build_ext --inplace
+    cd python && python setup.py build_ext --inplace
 
 # copy pyatom.so from python dir to benchmark dir
 $(TARGET_DIR)/pyatom.so: python/pyatom.so
-	cp $< $@
+    cp $< $@
 
 
 lib/%.o: lib/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+    $(CXX) $(CFLAGS) -c $< -o $@
 
 cli/%.o: cli/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+    $(CXX) $(CFLAGS) -c $< -o $@
 
 atmosphere/%.o: atmosphere/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+    $(CXX) $(CFLAGS) -c $< -o $@
 
 hydrosphere/%.o: hydrosphere/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+    $(CXX) $(CFLAGS) -c $< -o $@
 
 tinyxml2/%.o: tinyxml2/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+    $(CXX) $(CFLAGS) -c $< -o $@
 
 %.o: %.cpp
-	$(CXX) $(CFLAGS) -c $<
+    $(CXX) $(CFLAGS) -c $<
 
 .PHONY: clean
 clean:
-	\rm -vf $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ) $(ATM_CLI_OBJ) $(HYD_CLI_OBJ) $(PARAM_OUTPUTS) atm hyd libatom.a
-	\rm -vf python/*.so python/*.o python/pyatom.cpp
-	\rm -rf python/build/
+    \rm -vf $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ) $(ATM_CLI_OBJ) $(HYD_CLI_OBJ) $(PARAM_OUTPUTS) atm hyd libatom.a
+    \rm -vf python/*.so python/*.o python/pyatom.cpp
+    \rm -rf python/build/

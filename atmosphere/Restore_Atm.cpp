@@ -16,9 +16,9 @@ using namespace std;
 
 Restore_Atm::Restore_Atm ( int im, int jm, int km )
 {
-	this-> im = im;
-	this-> jm = jm;
-	this-> km = km;
+    this-> im = im;
+    this-> jm = jm;
+    this-> km = km;
 }
 
 
@@ -29,24 +29,24 @@ void Restore_Atm::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w,
 {
 
 // Restore_Atm from old to new values
-	for ( int i = 0; i < im; i++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			for ( int k = 0; k < km; k++ )
-			{
-				tn.x[ i ][ j ][ k ] = coeff * t.x[ i ][ j ][ k ];
-				un.x[ i ][ j ][ k ] = coeff * u.x[ i ][ j ][ k ];
-				vn.x[ i ][ j ][ k ] = coeff * v.x[ i ][ j ][ k ];
-				wn.x[ i ][ j ][ k ] = coeff * w.x[ i ][ j ][ k ];
-				cn.x[ i ][ j ][ k ] = coeff * c.x[ i ][ j ][ k ];
-				cloudn.x[ i ][ j ][ k ] = coeff * cloud.x[ i ][ j ][ k ];
-				icen.x[ i ][ j ][ k ] = coeff * ice.x[ i ][ j ][ k ];
-				co2n.x[ i ][ j ][ k ] = coeff * co2.x[ i ][ j ][ k ];
-				p_dynn.x[ i ][ j ][ k ] = coeff * p_dyn.x[ i ][ j ][ k ];
-			}
-		}
-	}
+    for ( int i = 0; i < im; i++ )
+    {
+        for ( int j = 0; j < jm; j++ )
+        {
+            for ( int k = 0; k < km; k++ )
+            {
+                tn.x[ i ][ j ][ k ] = coeff * t.x[ i ][ j ][ k ];
+                un.x[ i ][ j ][ k ] = coeff * u.x[ i ][ j ][ k ];
+                vn.x[ i ][ j ][ k ] = coeff * v.x[ i ][ j ][ k ];
+                wn.x[ i ][ j ][ k ] = coeff * w.x[ i ][ j ][ k ];
+                cn.x[ i ][ j ][ k ] = coeff * c.x[ i ][ j ][ k ];
+                cloudn.x[ i ][ j ][ k ] = coeff * cloud.x[ i ][ j ][ k ];
+                icen.x[ i ][ j ][ k ] = coeff * ice.x[ i ][ j ][ k ];
+                co2n.x[ i ][ j ][ k ] = coeff * co2.x[ i ][ j ][ k ];
+                p_dynn.x[ i ][ j ][ k ] = coeff * p_dyn.x[ i ][ j ][ k ];
+            }
+        }
+    }
 }
 
 
@@ -55,13 +55,13 @@ void Restore_Atm::restoreOldNew_3D ( double coeff, Array &u, Array &v, Array &w,
 void Restore_Atm::restoreOldNew_2D ( double coeff, Array &v, Array &w, Array &p_dyn, Array &p_dynn, Array &vn, Array &wn )
 {
 // Restore_Atm of velocity components and temperature at sea surface for the next time step
-			for ( int j = 0; j < jm; j++ )
-			{
-				for ( int k = 0; k < km; k++ )
-				{
-					vn.x[ 0 ][ j ][ k ] = coeff * v.x[ 0 ][ j ][ k ];
-					wn.x[ 0 ][ j ][ k ] = coeff * w.x[ 0 ][ j ][ k ];
-					p_dynn.x[ 0 ][ j ][ k ] = coeff * p_dyn.x[ 0 ][ j ][ k ];
-				}
-			}
+            for ( int j = 0; j < jm; j++ )
+            {
+                for ( int k = 0; k < km; k++ )
+                {
+                    vn.x[ 0 ][ j ][ k ] = coeff * v.x[ 0 ][ j ][ k ];
+                    wn.x[ 0 ][ j ][ k ] = coeff * w.x[ 0 ][ j ][ k ];
+                    p_dynn.x[ 0 ][ j ][ k ] = coeff * p_dyn.x[ 0 ][ j ][ k ];
+                }
+            }
 }

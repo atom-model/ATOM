@@ -643,7 +643,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
             for ( int i = 0; i < i_mount; i++ )
             {
-                t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];		// inside mountains
+                t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];        // inside mountains
             }
         }
     }

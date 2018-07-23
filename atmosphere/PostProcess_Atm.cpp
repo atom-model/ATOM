@@ -128,7 +128,7 @@ void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_F
 
     for ( int j = 0; j < jm; j++ ) {
         for ( int k = 0; k < km; k++ ) {
-            v_w_Transfer_File << v.x[ 0 ][ j ][ k ] * u_0 << " " << w.x[ 0 ][ j ][ k ] * u_0 << " " << t.x[ 0 ][ j ][ k ] << " " << p_dyn.x[ 0 ][ j ][ k ] << " " << Evaporation_Dalton.y[ j ][ k ] << " " << Precipitation.y[ j ][ k ] << endl;	// dimensional v and w values
+            v_w_Transfer_File << v.x[ 0 ][ j ][ k ] * u_0 << " " << w.x[ 0 ][ j ][ k ] * u_0 << " " << t.x[ 0 ][ j ][ k ] << " " << p_dyn.x[ 0 ][ j ][ k ] << " " << Evaporation_Dalton.y[ j ][ k ] << " " << Precipitation.y[ j ][ k ] << endl;    // dimensional v and w values
         }
     }
     v_w_Transfer_File.close();
@@ -310,31 +310,31 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
     }
 
 
-	i_mount = 0;
+    i_mount = 0;
 
-	if ( Ma == 0 )
-	{
-		for ( int k = 0; k < km; k++ )
-		{
-			for ( int j = 0; j < jm; j++ )
-			{
-				temp_NASA.y[ j ][ k ] = temperature_NASA.y[ j ][ k ] * t_0 - t_0;
+    if ( Ma == 0 )
+    {
+        for ( int k = 0; k < km; k++ )
+        {
+            for ( int j = 0; j < jm; j++ )
+            {
+                temp_NASA.y[ j ][ k ] = temperature_NASA.y[ j ][ k ] * t_0 - t_0;
 
-				for ( int i = im-2; i >= 0; i-- )
-				{
-					if ( Ma == 0 )
-					{
-						if ( ( h.x[ i + 1 ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) )		aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
-						if ( h.x[ 0 ][ j ][ k ] == 0. )																aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
-					}
-					else 																									aux_v.x[ i_radial ][ j ][ k ] = 0.;
+                for ( int i = im-2; i >= 0; i-- )
+                {
+                    if ( Ma == 0 )
+                    {
+                        if ( ( h.x[ i + 1 ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) )        aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+                        if ( h.x[ 0 ][ j ][ k ] == 0. )                                                                aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+                    }
+                    else                                                                                                     aux_v.x[ i_radial ][ j ][ k ] = 0.;
 
-					aux_w.x[ i_radial ][ j ][ k ] = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
-				}
-				i_mount = 0;
-			}
-		}
-	}
+                    aux_w.x[ i_radial ][ j ][ k ] = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
+                }
+                i_mount = 0;
+            }
+        }
+    }
 
 
     Atmosphere_vtk_radial_File <<  "POINT_DATA " << jm * km << endl;
@@ -486,29 +486,29 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
         {
             aux_w.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] + cloud.x[ i ][ j ][ k_zonal ] + ice.x[ i ][ j ][ k_zonal ];
 
-			t_u = t.x[ i ][ j ][ k_zonal ] * t_0;																	// in K
-			T = t_u;																					// in K
+            t_u = t.x[ i ][ j ][ k_zonal ] * t_0;                                                                    // in K
+            T = t_u;                                                                                    // in K
 
-			p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k_zonal ] * t_0 );							// given in hPa
+            p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k_zonal ] * t_0 );                            // given in hPa
 
-			if ( i != 0 ) 			p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
-			else 					p_h = p_SL;
+            if ( i != 0 )             p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+            else                     p_h = p_SL;
 
-			r_dry = p_h / ( R_Air * t_u );
+            r_dry = p_h / ( R_Air * t_u );
 
-			E_Rain = hp * exp_func ( T, 17.2694, 35.86 );										// saturation water vapour pressure for the water phase at t > 0°C in hPa
-			E_Ice = hp * exp_func ( T, 21.8746, 7.66 );											// saturation water vapour pressure for the ice phase in hPa
+            E_Rain = hp * exp_func ( T, 17.2694, 35.86 );                                        // saturation water vapour pressure for the water phase at t > 0°C in hPa
+            E_Ice = hp * exp_func ( T, 21.8746, 7.66 );                                            // saturation water vapour pressure for the ice phase in hPa
 
-			q_Rain = ep * E_Rain / ( p_h - E_Rain );											// water vapour amount at saturation with water formation in kg/kg
-			q_Ice = ep * E_Ice / ( p_h - E_Ice );												// water vapour amount at saturation with ice formation in kg/kg
+            q_Rain = ep * E_Rain / ( p_h - E_Rain );                                            // water vapour amount at saturation with water formation in kg/kg
+            q_Ice = ep * E_Ice / ( p_h - E_Ice );                                                // water vapour amount at saturation with ice formation in kg/kg
 
-			aux_u.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] / q_Rain;
+            aux_u.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] / q_Rain;
 
-			if ( T <= t_0 )
-			{
-				aux_v.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] / q_Ice;
-			}
-			else 		aux_v.x[ i ][ j ][ k_zonal ] = 0.;
+            if ( T <= t_0 )
+            {
+                aux_v.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] / q_Ice;
+            }
+            else         aux_v.x[ i ][ j ][ k_zonal ] = 0.;
         }
     }
 
@@ -672,13 +672,13 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
 
     PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " << "w-velocity(m/s)" << ", " << "velocity-mag(m/s)" << ", " << "temperature(Celsius)" << ", " << "water_vapour(g/kg)" << ", " << "precipitation(mm)" << ", " <<  "precipitable water(mm)" << endl;
 
-	double vel_mag;
+    double vel_mag;
 
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			vel_mag = sqrt ( pow ( v.x[ 0 ][ j ][ k ] * u_0, 2 ) + pow ( w.x[ 0 ][ j ][ k ] * u_0, 2 ) );
+    for ( int k = 0; k < km; k++ )
+    {
+        for ( int j = 0; j < jm; j++ )
+        {
+            vel_mag = sqrt ( pow ( v.x[ 0 ][ j ][ k ] * u_0, 2 ) + pow ( w.x[ 0 ][ j ][ k ] * u_0, 2 ) );
             PlotData_File << k << " " << j << " " << h.x[ 0 ][ j ][ k ] << " " << v.x[ 0 ][ j ][ k ] * u_0 << " " << w.x[ 0 ][ j ][ k ] * u_0 << " " << vel_mag << " " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << " " << c.x[ 0 ][ j ][ k ] * 1000. << " " << Precipitation.y[ j ][ k ] << " " << precipitable_water.y[ j ][ k ] << " " <<  endl;
         }
     }
@@ -689,6 +689,6 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
 
 double PostProcess_Atmosphere::exp_func ( double &T_K, const double &co_1, const double &co_2 )
 {
-	return exp ( co_1 * ( T_K - 273.15 ) / ( T_K - co_2 ) );						// temperature in °K
+    return exp ( co_1 * ( T_K - 273.15 ) / ( T_K - co_2 ) );                        // temperature in °K
 }
 

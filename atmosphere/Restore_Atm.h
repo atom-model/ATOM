@@ -20,17 +20,17 @@ using namespace std;
 
 class Restore_Atm
 {
-	private:
-		int im, jm, km;
-		// double coeff;
+    private:
+        int im, jm, km;
+        // double coeff;
 
-	public:
-		Restore_Atm ( int, int, int );
-		~Restore_Atm ();
+    public:
+        Restore_Atm ( int, int, int );
+        ~Restore_Atm ();
 
-		void restoreOldNew_3D ( double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void restoreOldNew_3D ( double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void restoreOldNew_2D ( double, Array &, Array &, Array &, Array &, Array &, Array & );
+        void restoreOldNew_2D ( double, Array &, Array &, Array &, Array &, Array &, Array & );
 };
 #endif
 
