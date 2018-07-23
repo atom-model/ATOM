@@ -39,8 +39,8 @@ Pressure_Atm::~Pressure_Atm (){}
 
 
 void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, double r_air,
-                                                                       Array_1D &rad, Array_1D &the, Array &p_dyn,
-                                                                       Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w )
+                                 Array_1D &rad, Array_1D &the, Array &p_dyn,
+                                 Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w )
 {
 // boundary conditions for the r-direction, loop index i
 
@@ -286,8 +286,8 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
 
 
 void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air,
-                                                                       Array_1D &rad, Array_1D &the, Array &p_dyn,
-                                                                       Array &p_dynn, Array &h, Array &aux_v, Array &aux_w )
+                                 Array_1D &rad, Array_1D &the, Array &p_dyn,
+                                 Array &p_dynn, Array &h, Array &aux_v, Array &aux_w )
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 // boundary conditions for the the-direction, loop index j
