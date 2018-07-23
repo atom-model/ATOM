@@ -15,7 +15,8 @@
 using namespace std;
 
 
-RungeKutta_Atmosphere::RungeKutta_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi )
+RungeKutta_Atmosphere::RungeKutta_Atmosphere ( int im, int jm, int km, double dt,
+                                                            double dr, double dthe, double dphi )
 {
     this -> im = im;
     this -> jm = jm;

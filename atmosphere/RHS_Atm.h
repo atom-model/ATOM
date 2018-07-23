@@ -30,7 +30,8 @@ class RHS_Atmosphere
 
     public:
         RHS_Atmosphere ( int, int, double, double, double );
-        RHS_Atmosphere ( int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double );
+        RHS_Atmosphere ( int, int, int, double, double, double, double, double, double,
+                                       double, double, double, double, double, double, double, double, double );
         ~RHS_Atmosphere ();
 
         void RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep,
