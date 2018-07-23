@@ -92,9 +92,9 @@ void Array::initArray ( int im, int jm, int km, double aa )
 
 void Array::printArray ( int im, int jm, int km )
 {
-	assert(im == this->im);
-	assert(jm == this->jm);
-	assert(km == this->km);
+    assert(im == this->im);
+    assert(jm == this->jm);
+    assert(km == this->km);
 
     cout.precision ( 3 );
     cout.setf ( ios::fixed );

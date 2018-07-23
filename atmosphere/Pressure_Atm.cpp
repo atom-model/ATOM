@@ -50,14 +50,14 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
     {
         for ( int k = 0; k < km; k++ )
         {
-            aux_u.x[ 0 ][ j ][ k ] = 0.;                                    // von Neumann
-            aux_u.x[ im-1 ][ j ][ k ] = 0.;        // Neumann
+            aux_u.x[ 0 ][ j ][ k ] = 0.;
+            aux_u.x[ im-1 ][ j ][ k ] = 0.;
 
-            aux_v.x[ 0 ][ j ][ k ] = c43 * aux_v.x[ 1 ][ j ][ k ] - c13 * aux_v.x[ 2 ][ j ][ k ];                                    // von Neumann
-            aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-2 ][ j ][ k ] - c13 * aux_v.x[ im-3 ][ j ][ k ];        // Neumann
+            aux_v.x[ 0 ][ j ][ k ] = c43 * aux_v.x[ 1 ][ j ][ k ] - c13 * aux_v.x[ 2 ][ j ][ k ];
+            aux_v.x[ im-1 ][ j ][ k ] = c43 * aux_v.x[ im-2 ][ j ][ k ] - c13 * aux_v.x[ im-3 ][ j ][ k ];
 
-            aux_w.x[ 0 ][ j ][ k ] = c43 * aux_w.x[ 1 ][ j ][ k ] - c13 * aux_w.x[ 2 ][ j ][ k ];                                    // von Neumann
-            aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-2 ][ j ][ k ] - c13 * aux_w.x[ im-3 ][ j ][ k ];        // Neumann
+            aux_w.x[ 0 ][ j ][ k ] = c43 * aux_w.x[ 1 ][ j ][ k ] - c13 * aux_w.x[ 2 ][ j ][ k ];
+            aux_w.x[ im-1 ][ j ][ k ] = c43 * aux_w.x[ im-2 ][ j ][ k ] - c13 * aux_w.x[ im-3 ][ j ][ k ];
         }
     }
 
@@ -116,7 +116,7 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
     double drhs_vdthe = 0;
     double drhs_wdphi = 0;
 
-    while ( iter_prec <= 20 )                                                                // iter_prec may be varied
+    while ( iter_prec <= 20 )       // iter_prec may be varied
     {
         iter_prec = iter_prec + 1;
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
@@ -152,8 +152,8 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
                     }
                     else
                     {
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) )            aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j + 1 ][ k ];
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )                aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j - 1 ][ k ];
+                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) )    aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j + 1 ][ k ];
+                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )      aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j - 1 ][ k ];
                     }
 
                     if ( ( k >= 2 ) && ( k <= km - 3 ) )
@@ -170,8 +170,8 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
                     }
                     else
                     {
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) )            aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k + 1 ];
-                        if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) )                aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k - 1 ];
+                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) )    aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k + 1 ];
+                        if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) )      aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k - 1 ];
                     }
 
 
@@ -182,56 +182,44 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
                     if ( i <= im - 3 )
                     {
                         if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
-                                    drhs_udr = ( - 3. * aux_u.x[ i ][ j ][ k ] + 4. * aux_u.x[ i + 1 ][ j ][ k ] - aux_u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );            // 2. order accurate
+                                    drhs_udr = ( - 3. * aux_u.x[ i ][ j ][ k ] + 4. * aux_u.x[ i + 1 ][ j ][ k ] - aux_u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
                     }
                     else         drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i ][ j ][ k ] ) / dr;
 
 // gradients of RHS terms at mountain sides 2.order accurate in the-direction
                     drhs_vdthe = ( aux_v.x[ i ][ j+1 ][ k ] - aux_v.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe * rm );
 
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) )
-                                drhs_vdthe = ( aux_v.x[ i ][ j + 1 ][ k ] - aux_v.x[ i ][ j ][ k ] ) / ( dthe * rm );                    // 1. order accurate
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )
-                                    drhs_vdthe = ( aux_v.x[ i ][ j ][ k ] - aux_v.x[ i ][ j - 1 ][ k ] ) / ( dthe * rm );                    // 1. order accurate
-
                     if ( ( j >= 2 ) && ( j <= jm - 3 ) )
                     {
                         if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j + 2 ][ k ] == 0. ) ) )
                         {
-                            drhs_vdthe = ( - 3. * aux_v.x[ i ][ j ][ k ] + 4. * aux_v.x[ i ][ j + 1 ][ k ] - aux_v.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe * rm );                    // 2. order accurate
+                            drhs_vdthe = ( - 3. * aux_v.x[ i ][ j ][ k ] + 4. * aux_v.x[ i ][ j + 1 ][ k ] - aux_v.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe * rm );
                         }
-                        else             drhs_vdthe = ( aux_v.x[ i ][ j + 1 ][ k ] - aux_v.x[ i ][ j ][ k ] ) / ( rm * dthe );                    // 1. order accurate
+                        else             drhs_vdthe = ( aux_v.x[ i ][ j + 1 ][ k ] - aux_v.x[ i ][ j ][ k ] ) / ( rm * dthe );
 
                         if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) && ( h.x[ i ][ j - 2 ][ k ] == 0. ) )
                         {
-                            drhs_vdthe = ( - 3. * aux_v.x[ i ][ j ][ k ] + 4. * aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe * rm );                    // 2. order accurate
+                            drhs_vdthe = ( - 3. * aux_v.x[ i ][ j ][ k ] + 4. * aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe * rm );
                         }
-//                        else            drhs_vdthe = ( aux_v.x[ i ][ j ][ k ] - aux_v.x[ i ][ j - 1 ][ k ] ) / ( rm * dthe );                    // 1. order accurate
-                        else            drhs_vdthe = ( aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j ][ k ] ) / ( rm * dthe );                    // 1. order accurate
+                        else            drhs_vdthe = ( aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j ][ k ] ) / ( rm * dthe );
                     }
 
 // gradients of RHS terms at mountain sides 2.order accurate in phi-direction
                     drhs_wdphi = ( aux_w.x[ i ][ j ][ k+1 ] - aux_w.x[ i ][ j ][ k-1 ] ) / ( 2. * rmsinthe * dphi );
 
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) )
-                                drhs_wdphi = ( aux_w.x[ i ][ j ][ k + 1 ] - aux_w.x[ i ][ j ][ k ] ) / ( rmsinthe * dphi );                    // 1. order accurate
-                    if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) )
-                                drhs_wdphi = ( aux_w.x[ i ][ j ][ k ] - aux_w.x[ i ][ j ][ k - 1 ] ) / ( rmsinthe * dphi );                    // 1. order accurate
-
                     if ( ( k >= 2 ) && ( k <= km - 3 ) )
                     {
                         if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) )
                         {
-                            drhs_wdphi = ( - 3. * aux_w.x[ i ][ j ][ k ] + 4. * aux_w.x[ i ][ j ][ k + 1 ] - aux_w.x[ i ][ j ][ k + 2 ] ) / ( 2. * rmsinthe * dphi );                    // 2. order accurate
+                            drhs_wdphi = ( - 3. * aux_w.x[ i ][ j ][ k ] + 4. * aux_w.x[ i ][ j ][ k + 1 ] - aux_w.x[ i ][ j ][ k + 2 ] ) / ( 2. * rmsinthe * dphi );
                         }
-                        else             drhs_wdphi = ( aux_w.x[ i ][ j ][ k + 1 ] - aux_w.x[ i ][ j ][ k ] ) / ( rmsinthe * dphi );                    // 1. order accurate
+                        else             drhs_wdphi = ( aux_w.x[ i ][ j ][ k + 1 ] - aux_w.x[ i ][ j ][ k ] ) / ( rmsinthe * dphi );
 
                         if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) )
                         {
-                            drhs_wdphi = ( - 3. * aux_w.x[ i ][ j ][ k ] + 4. * aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k - 2 ] ) / ( 2. * rmsinthe * dphi );                    // 2. order accurate
+                            drhs_wdphi = ( - 3. * aux_w.x[ i ][ j ][ k ] + 4. * aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k - 2 ] ) / ( 2. * rmsinthe * dphi );
                         }
-//                        else            drhs_wdphi = ( aux_w.x[ i ][ j ][ k ] - aux_w.x[ i ][ j ][ k - 1 ] ) / ( rmsinthe * dphi );                    // 1. order accurate
-                        else            drhs_wdphi = ( aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k ] ) / ( rmsinthe * dphi );                    // 1. order accurate
+                        else            drhs_wdphi = ( aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k ] ) / ( rmsinthe * dphi );
                     }
 
 
@@ -252,7 +240,7 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
         {
             for ( int k = 0; k < km; k++ )
             {
-                p_dyn.x[ 0 ][ j ][ k ] = p_dyn.x[ 3 ][ j ][ k ] - 3. * p_dyn.x[ 2 ][ j ][ k ] + 3. * p_dyn.x[ 1 ][ j ][ k ];        // extrapolation
+                p_dyn.x[ 0 ][ j ][ k ] = p_dyn.x[ 3 ][ j ][ k ] - 3. * p_dyn.x[ 2 ][ j ][ k ] + 3. * p_dyn.x[ 1 ][ j ][ k ];  // extrapolation
                 p_dyn.x[ im-1 ][ j ][ k ] = c43 * p_dyn.x[ im-2 ][ j ][ k ] - c13 * p_dyn.x[ im-3 ][ j ][ k ];        // Neumann
             }
         }
@@ -328,7 +316,7 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air, Ar
     double drhs_vdthe = 0;
     double drhs_wdphi = 0;
 
-    while ( iter_prec <= 20 )                                                                // iter_prec may be varied
+    while ( iter_prec <= 20 )             // iter_prec may be varied
     {
         iter_prec = iter_prec + 1;
 
@@ -360,8 +348,8 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air, Ar
                 }
                 else
                 {
-                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) )            aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j + 1 ][ k ];
-                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) )            aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j - 1 ][ k ];
+                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) )      aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j + 1 ][ k ];
+                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) )        aux_v.x[ 0 ][ j ][ k ] = aux_v.x[ 0 ][ j - 1 ][ k ];
                 }
 
                 if ( ( k >= 2 ) && ( k <= km - 3 ) )
@@ -378,26 +366,27 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double r_air, Ar
                 }
                 else
                 {
-                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) )            aux_w.x[ 0 ][ j ][ k ] = aux_w.x[ 0 ][ j ][ k + 1 ];
-                    if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) )            aux_w.x[ 0 ][ j ][ k ] = aux_w.x[ 0 ][ j ][ k - 1 ];
+                    if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) )      aux_w.x[ 0 ][ j ][ k ] = aux_w.x[ 0 ][ j ][ k + 1 ];
+                    if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) )        aux_w.x[ 0 ][ j ][ k ] = aux_w.x[ 0 ][ j ][ k - 1 ];
                 }
 
 
 // gradients of RHS terms at mountain sides 2.order accurate in the-direction
-                drhs_vdthe = ( aux_v.x[ 0 ][ j+1 ][ k ] - aux_v.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe * rm );                    // 2. order accurate
+                drhs_vdthe = ( aux_v.x[ 0 ][ j+1 ][ k ] - aux_v.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe * rm );
 
                 if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 0. ) )
-                            drhs_vdthe = ( aux_v.x[ 0 ][ j + 1 ][ k ] - aux_v.x[ 0 ][ j ][ k ] ) / ( dthe * rm );                    // 1. order accurate
+                            drhs_vdthe = ( aux_v.x[ 0 ][ j + 1 ][ k ] - aux_v.x[ 0 ][ j ][ k ] ) / ( dthe * rm );
                 if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 0. ) )
-                            drhs_vdthe = ( aux_v.x[ 0 ][ j ][ k ] - aux_v.x[ 0 ][ j - 1 ][ k ] ) / ( dthe * rm );                    // 1. order accurate
+                            drhs_vdthe = ( aux_v.x[ 0 ][ j - 1 ][ k ] - aux_v.x[ 0 ][ j ][ k ] ) / ( dthe * rm );
 
 // gradients of RHS terms at mountain sides 2.order accurate in phi-direction
-                drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k+1 ] - aux_w.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi * rmsinthe );                    // 2. order accurate
+                drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k+1 ] - aux_w.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi * rmsinthe );
 
                 if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 0. ) )
-                            drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k + 1 ] - aux_w.x[ 0 ][ j ][ k ] ) / ( dphi * rmsinthe );                    // 1. order accurate
+                            drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k + 1 ] - aux_w.x[ 0 ][ j ][ k ] ) / ( dphi * rmsinthe );
                 if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) )
-                            drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k ] - aux_w.x[ 0 ][ j ][ k - 1 ] ) / ( dphi * rmsinthe );                    // 1. order accurate
+                            drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k - 1 ] - aux_w.x[ 0 ][ j ][ k ] ) / ( dphi * rmsinthe );
+
 
                 p_dyn.x[ 0 ][ j ][ k ] = ( ( p_dynn.x[ 0 ][ j+1 ][ k ] + p_dynn.x[ 0 ][ j-1 ][ k ] ) * num2
                                                     + ( p_dynn.x[ 0 ][ j ][ k+1 ] + p_dynn.x[ 0 ][ j ][ k-1 ] ) * num3 
