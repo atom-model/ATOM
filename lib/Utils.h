@@ -2,6 +2,8 @@
 #include <fstream>
 #include <limits>
 
+#include "Array.h"
+
 namespace AtomUtils{
     using namespace std;
     struct HemisphereCoords{
@@ -28,6 +30,9 @@ namespace AtomUtils{
     inline double parabola(double x){
         return x*x - 2*x;
     }
+
+    //change data coordinate system from -180° _ 0° _ +180° to 0°- 360°
+    void move_data(double* data, int len);
 
     inline double simpson(int & n, double &dstep, double *value){
         double sum_even=0, sum_odd=0;
