@@ -14,6 +14,7 @@
 #include <cstring>
 #include <iomanip>
 #include <sstream>
+#include <algorithm> 
 
 #include "BC_Bath_Atm.h"
 #include "Utils.h"
@@ -34,8 +35,16 @@ BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int NASATemperature, int im
 
 BC_Bathymetry_Atmosphere::~BC_Bathymetry_Atmosphere(){}
 
-void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &Name_Bathymetry_File, double L_atm, Array_2D &Topography, 
-                                                    Array_2D &value_top, Array &h, Array &aux_w )
+//change bathymetrical data coordinate system from -180° _ 0° _ +180° to 0°- 360°
+void move_data(double* data, int len)
+{
+    for(int i=0; i<len/2; i++){
+        std::iter_swap(data+i, data+len/2+i);
+    }
+    data[len-1] = data[0];
+}
+
+void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename, double L_atm, Array_2D &Topography, Array &h )
 {
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
@@ -44,18 +53,18 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &Name_Bathymetry_File,
     h.initArray(im, jm, km, 0.);
 
     // reading data from file Name_Bathymetry_File_Read
-    ifstream Name_Bathymetry_File_Read(Name_Bathymetry_File);
-    if ( ! Name_Bathymetry_File_Read.is_open()) {
-        std::cerr << "ERROR: could not open Name_Bathymetry_File file: " <<  Name_Bathymetry_File << std::endl;
+    ifstream ifile(topo_filename);
+    if ( ! ifile.is_open()) {
+        std::cerr << "ERROR: could not open Name_Bathymetry_File file: " <<  topo_filename << std::endl;
         abort();
     }
 
     double lon, lat, height;
     int j, k;
-    for (j = 0; j < jm && !Name_Bathymetry_File_Read.eof(); j++) {
-        for (k = 0; k < km && !Name_Bathymetry_File_Read.eof(); k++) {
-            height = -999;
-            Name_Bathymetry_File_Read >> lon >> lat >> height;
+    for (j = 0; j < jm && !ifile.eof(); j++) {
+        for (k = 0; k < km && !ifile.eof(); k++) {
+            height = -999; // in case the height is NaN
+            ifile >> lon >> lat >> height;
 
             if ( height < 0. )
             {
@@ -70,10 +79,11 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &Name_Bathymetry_File,
                 }
             }
 
-            if(Name_Bathymetry_File_Read.fail()){
-                Name_Bathymetry_File_Read.clear();
+            if(ifile.fail())
+            {
+                ifile.clear();
                 std::string tmp;
-                std::getline(Name_Bathymetry_File_Read, tmp);
+                std::getline(ifile, tmp);
                 logger() << "bad data in topography at: " << lon << " " << lat << " " << tmp << std::endl;
             }
             //logger() << lon << " " << lat << " " << h.x[ 0 ][ j ][ k ] << std::endl;            
@@ -86,47 +96,12 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &Name_Bathymetry_File,
     }
 
     // rewriting bathymetrical data from -180° _ 0° _ +180° coordinate system to 0°- 360°
-
-    int l = 0;
-
-    for ( int k = 180; k < km; k++ )
+    for ( int j = 0; j < jm; j++ )
     {
-        for ( int j = 0; j < jm; j++ )
+        move_data(Topography.y[ j ], km);
+        for ( int i = 0; i < im; i++ )
         {
-            value_top.y[ j ][ l ] = Topography.y[ j ][ k ];
-            for ( int i = 0; i < im; i++ )
-            {
-                aux_w.x[ i ][ j ][ l ] = h.x[ i ][ j ][ k ];
-            }
-        }
-        l++;
-    }
-
-    l = l - 1;
-
-    for ( int k = 0; k < 181; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            value_top.y[ j ][ l ] = Topography.y[ j ][ k ];
-            for ( int i = 0; i < im; i++ )
-            {
-                aux_w.x[ i ][ j ][ l ] = h.x[ i ][ j ][ k ];
-            }
-        }
-        l++;
-    }
-
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            Topography.y[ j ][ k ] = value_top.y[ j ][ k ];
-            for ( int i = 0; i < im; i++ )
-            {
-                h.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k ];
-                aux_w.x[ i ][ j ][ k ] = 0.;
-            }
+            move_data(h.x[ i ][ j ], km);
         }
     }
 }

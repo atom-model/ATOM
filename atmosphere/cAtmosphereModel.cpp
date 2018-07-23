@@ -212,7 +212,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     BC_Bathymetry_Atmosphere LandArea ( NASATemperature, im, jm, km, co2_vegetation, co2_land, co2_ocean );
 
     //  topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-    LandArea.BC_MountainSurface ( bathymetry_filepath, L_atm, Topography, value_top, h, aux_w );
+    LandArea.BC_MountainSurface ( bathymetry_filepath, L_atm, Topography, h );
 
     //  class element for the computation of the ratio ocean to land areas, also supply and removal of CO2 on land, ocean and by vegetation
     LandArea.land_oceanFraction ( h );
@@ -366,7 +366,6 @@ void cAtmosphereModel::reset_arrays()
 
     // 2D arrays
     Topography.initArray_2D(jm, km, 0.); // topography
-    value_top.initArray_2D(jm, km, 0.); // auxiliar topography
 
     Vegetation.initArray_2D(jm, km, 0.); // vegetation via precipitation
 

@@ -46,7 +46,7 @@ class BC_Bathymetry_Atmosphere
         BC_Bathymetry_Atmosphere ( int, int, int, int, double, double, double );
         ~BC_Bathymetry_Atmosphere();
 
-        void BC_MountainSurface ( string &, double, Array_2D &, Array_2D &, Array &, Array & );
+        void BC_MountainSurface( string &topo_filename, double L_atm, Array_2D &Topography, Array &h );
 
         void BC_IceShield ( int, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 
