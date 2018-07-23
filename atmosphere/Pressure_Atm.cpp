@@ -204,11 +204,10 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
 
                         if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) && ( h.x[ i ][ j - 2 ][ k ] == 0. ) )
                         {
-//                            drhs_vdthe = ( - 3. * aux_v.x[ i ][ j ][ k ] + 4. * aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe * rm );                    // 2. order accurate
-                            drhs_vdthe = - ( - 3. * aux_v.x[ i ][ j ][ k ] + 4. * aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe * rm );                    // 2. order accurate
+                            drhs_vdthe = ( - 3. * aux_v.x[ i ][ j ][ k ] + 4. * aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe * rm );                    // 2. order accurate
                         }
 //                        else            drhs_vdthe = ( aux_v.x[ i ][ j ][ k ] - aux_v.x[ i ][ j - 1 ][ k ] ) / ( rm * dthe );                    // 1. order accurate
-                        else            drhs_vdthe = - ( aux_v.x[ i ][ j ][ k ] - aux_v.x[ i ][ j - 1 ][ k ] ) / ( rm * dthe );                    // 1. order accurate
+                        else            drhs_vdthe = ( aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j ][ k ] ) / ( rm * dthe );                    // 1. order accurate
                     }
 
 // gradients of RHS terms at mountain sides 2.order accurate in phi-direction
@@ -229,11 +228,10 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
 
                         if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) )
                         {
-//                            drhs_wdphi = ( - 3. * aux_w.x[ i ][ j ][ k ] + 4. * aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k - 2 ] ) / ( 2. * rmsinthe * dphi );                    // 2. order accurate
-                            drhs_wdphi = - ( - 3. * aux_w.x[ i ][ j ][ k ] + 4. * aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k - 2 ] ) / ( 2. * rmsinthe * dphi );                    // 2. order accurate
+                            drhs_wdphi = ( - 3. * aux_w.x[ i ][ j ][ k ] + 4. * aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k - 2 ] ) / ( 2. * rmsinthe * dphi );                    // 2. order accurate
                         }
 //                        else            drhs_wdphi = ( aux_w.x[ i ][ j ][ k ] - aux_w.x[ i ][ j ][ k - 1 ] ) / ( rmsinthe * dphi );                    // 1. order accurate
-                        else            drhs_wdphi = - ( aux_w.x[ i ][ j ][ k ] - aux_w.x[ i ][ j ][ k - 1 ] ) / ( rmsinthe * dphi );                    // 1. order accurate
+                        else            drhs_wdphi = ( aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k ] ) / ( rmsinthe * dphi );                    // 1. order accurate
                     }
 
 
