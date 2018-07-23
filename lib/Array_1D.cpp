@@ -25,7 +25,7 @@ Array_1D::Array_1D(int n, double val) : z(NULL) {
 
 Array_1D::~Array_1D ( )
 {
-	delete [  ] z;
+    delete [  ] z;
 }
 
 
@@ -36,10 +36,10 @@ void Array_1D::initArray_1D( int mm, double cc )
 
         this->mm = mm;
         z = new double[mm];
-	    for ( int i = 0; i < mm; i++ )
-	    {
-		    z[ i ] = cc;
-	    }
+        for ( int i = 0; i < mm; i++ )
+        {
+            z[ i ] = cc;
+        }
     }else{
         assert(mm == this->mm);
         for ( int i = 0; i < mm; i++ )
@@ -53,35 +53,35 @@ void Array_1D::initArray_1D( int mm, double cc )
 
 void Array_1D::Coordinates ( int mm, double z0, double dz )
 {
-	assert(mm == this->mm); // FIXME: just until we remove mm throughout
+    assert(mm == this->mm); // FIXME: just until we remove mm throughout
 
-	z[ 0 ] = z0;
+    z[ 0 ] = z0;
 
-	for ( int l = 1; l < mm; l++ )
-	{
-		z[ l ] = z[ l - 1 ] + dz;
-	}
+    for ( int l = 1; l < mm; l++ )
+    {
+        z[ l ] = z[ l - 1 ] + dz;
+    }
 
 }
 
 void Array_1D::printArray_1D( int mm )
 {
-	assert(mm == this->mm); // FIXME: just until we remove mm throughout
+    assert(mm == this->mm); // FIXME: just until we remove mm throughout
 
-	cout.precision ( 6 );
-	cout.setf ( ios::fixed );
+    cout.precision ( 6 );
+    cout.setf ( ios::fixed );
 
-	cout << endl;
-	cout << " coordinate-direction " << endl;
-	cout << endl;
+    cout << endl;
+    cout << " coordinate-direction " << endl;
+    cout << endl;
 
-	for ( int i = 0; i < mm; i++ )
-	{
-		cout.width ( 6 );
-		cout.fill( ' ' );
+    for ( int i = 0; i < mm; i++ )
+    {
+        cout.width ( 6 );
+        cout.fill( ' ' );
 
-//		cout << z[ i ] << " (" << &z[ i ] << ")" << " ";
-		cout << z[ i ] << " ";
-	}
-	cout << endl;
+//        cout << z[ i ] << " (" << &z[ i ] << ")" << " ";
+        cout << z[ i ] << " ";
+    }
+    cout << endl;
 }
