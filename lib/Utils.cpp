@@ -26,3 +26,13 @@ HemisphereCoords AtomUtils::convert_coords(double lon, double lat){
     }
     return ret;
 }
+
+//change data coordinate system from -180° _ 0° _ +180° to 0°- 360°
+void AtomUtils::move_data(double* data, int len)
+{
+    for(int i=0; i<len/2; i++){
+        std::iter_swap(data+i, data+len/2+i);
+    }
+    data[len-1] = data[0];
+}
+

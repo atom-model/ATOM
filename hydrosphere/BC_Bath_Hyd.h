@@ -7,8 +7,6 @@
  *
  * class to read and prepare the bathymetric and topografic data
 */
-
-
 #include <iostream>
 
 #include "Array.h"
@@ -19,23 +17,19 @@
 
 using namespace std;
 
-
-
 class BC_Bathymetry_Hydrosphere
 {
 	private:
-		int i, j, k, im, jm, km, i_boden, l;
-
-		double dummy_1, dummy_2, dummy_3;
+		int im, jm, km;
 
 	public:
 
-		BC_Bathymetry_Hydrosphere ( int, int, int );
+		BC_Bathymetry_Hydrosphere ( int im, int jm, int km );
 		~BC_Bathymetry_Hydrosphere();
 
-		void BC_SeaGround (const string &, const string &, double, Array &, Array &, Array_2D &, Array_2D & );
+        void BC_SeaGround(const string &bathymetry_file, double L_hyd, Array &h, Array_2D &Bathymetry);
 
-		void BC_SolidGround ( double, double, double, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
-
+        void BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t, Array &u, Array &v, 
+            Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn);
 };
 #endif
