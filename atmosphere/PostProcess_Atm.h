@@ -24,7 +24,7 @@ class PostProcess_Atmosphere {
 private:
     int im, jm, km, i_mount;
 
-	double t_u, T, p_SL, p_h, hp, ep, R_Air, r_dry, g, L_atm, E_Rain, E_Ice, q_Rain, q_Ice;
+    double t_u, T, p_SL, p_h, hp, ep, R_Air, r_dry, g, L_atm, E_Rain, E_Ice, q_Rain, q_Ice;
 
     string output_path;
 
@@ -52,6 +52,6 @@ public:
 
     void Atmosphere_PlotData ( string &, double, double, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 
-	double exp_func ( double &, const double &, const double & );
+    double exp_func ( double &, const double &, const double & );
 };
 #endif

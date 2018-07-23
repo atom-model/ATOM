@@ -12,7 +12,7 @@ def main():
             ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
-            ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', False),
+            ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', True),
         
             #parameters for data reconstruction
             ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
@@ -32,7 +32,7 @@ def main():
             ( 'velocity_iter_max_2D', '', 'int',2 ),
             ( 'pressure_iter_max_2D', '', 'int', 10 ),
             ( 'velocity_iter_max', '', 'int', 2 ),
-            ( 'pressure_iter_max', '', 'int', 2 ),
+            ( 'pressure_iter_max', '', 'int', 20 ),
 
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),

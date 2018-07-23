@@ -658,7 +658,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 Accuracy_Atm        min_Residuum_2D ( im, jm, km, dthe, dphi );
                 double residuum_old = min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
 
-				circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
+                circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
                 result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, h, v, w, 
@@ -756,7 +756,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                               cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
             }
 
-			circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
+            circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
             // class RungeKutta for the solution of the differential equations describing the flow properties
             result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
