@@ -34,9 +34,9 @@
 #include "RungeKutta_Hyd.h"
 #include "PostProcess_Hyd.h"
 #include "Pressure_Hyd.h"
-#include "Restore_Hyd.h"
 #include "MinMax_Hyd.h"
 #include "Results_Hyd.h"
+#include "Utils.h"
 
 #include "Config.h"
 #include "tinyxml2.h"
@@ -44,6 +44,7 @@
 
 using namespace std;
 using namespace tinyxml2;
+using namespace AtomUtils;
 
 // Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
 // for 6 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005 
@@ -69,7 +70,12 @@ using namespace tinyxml2;
 // for c = 1.0000 compares to a salinity of 34.6 psu
 // for c = 1.0983 compares to a salinity of 38.0 psu
 
-cHydrosphereModel::cHydrosphereModel() {
+cHydrosphereModel::cHydrosphereModel()//code for future, do not delete:
+    //old_arrays_3d {&t,  &u,  &v,  &w,  &c,  &p_dyn },
+    //new_arrays_3d {&tn, &un, &vn, &wn, &cn, &p_dynn},
+    //old_arrays_2d {&v,  &w,  &p_dyn },
+    //new_arrays_2d {&vn, &wn, &p_dynn}
+{
 // Python and Notebooks can't capture stdout from this module. We override
 // cout's streambuf with a class that redirects stdout out to Python.
 	PythonStream::OverrideCout();
@@ -120,10 +126,10 @@ void cHydrosphereModel::LoadConfig(const char *filename) {
 
 void cHydrosphereModel::RunTimeSlice(int Ma)
 {
-// maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km ), 
-// maximum number of overall iterations ( n ),
-// maximum number of inner velocity loop iterations ( velocity_iter_max ),
-// maximum number of outer pressure loop iterations ( pressure_iter_max )
+    // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km ), 
+    // maximum number of overall iterations ( n ),
+    // maximum number of inner velocity loop iterations ( velocity_iter_max ),
+    // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
 
     mkdir(output_path.c_str(), 0777);
@@ -206,6 +212,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	Array r_water(im, jm, km, 0.); // water density as function of pressure
 	Array r_salt_water(im, jm, km, 0.); // salt water density as function of pressure and temperature
 	Array BuoyancyForce_3D(im, jm, km, 0.); // 3D buoyancy force
+
+    std::vector<Array*> 
+        old_arrays_3d {&t,  &u,  &v,  &w,  &c,  &p_dyn },
+        new_arrays_3d {&tn, &un, &vn, &wn, &cn, &p_dynn},
+        old_arrays_2d {&v,  &w,  &p_dyn },
+        new_arrays_2d {&vn, &wn, &p_dynn};
 
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
@@ -347,13 +359,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //  surface pressure computed by surface temperature with gas equation
 	oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
 
-
-//	class Restore to restore the iterational values from new to old
-	Restore_Hyd								oldnew( im, jm, km );
-
-//	storing of velocity components, pressure and temperature for iteration start
-	oldnew.restoreOldNew_3D(.9, u, v, w, t, p_dyn, c, un, vn, wn, tn, p_dynn, cn);
-	oldnew.restoreOldNew_2D(.9, v, w, p_dyn, p_dynn, vn, wn);
+    //	storing of velocity components, pressure and temperature for iteration start
+	restoreOldNew(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
+    restoreOldNew(jm, km, .9, old_arrays_2d, new_arrays_2d);
 
 // computation of the ratio ocean to land areas
 	calculate_MSL.land_oceanFraction ( h );
@@ -415,7 +423,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 				Accuracy_Hyd		min_Stationary_2D ( n, nm, Ma, im, jm, km, emin, j_res, k_res, velocity_iter_2D, pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
 				min_Stationary_2D.steadyQuery_2D ( h, v, vn, w, wn, p_dyn, p_dynn );
 
-				oldnew.restoreOldNew_2D(1., v, w, p_dyn, p_dynn, vn, wn);
+                restoreOldNew(jm, km, .9, old_arrays_2d, new_arrays_2d);
 
 				n++;
 			}
@@ -609,11 +617,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			minmaxBathymetry.searchMinMax_2D ( str_max_bathymetry, str_min_bathymetry, str_unit_bathymetry, Bathymetry, h );
 
 
-//		composition of results
+            //		composition of results
 			calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, Salt_total, BottomWater );
 
-//  restoring the velocity component and the temperature for the new time step
-			oldnew.restoreOldNew_3D(1., u, v, w, t, p_dyn, c, un, vn, wn, tn, p_dynn, cn);
+            //  restoring the velocity component and the temperature for the new time step
+			restoreOldNew(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
+
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of loop: while ( min >= epsres )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 			n++;

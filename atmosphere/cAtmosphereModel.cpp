@@ -21,7 +21,6 @@
 #include "RungeKutta_Atm.h"
 #include "PostProcess_Atm.h"
 #include "Pressure_Atm.h"
-#include "Restore_Atm.h"
 #include "Results_Atm.h"
 #include "MinMax_Atm.h"
 #include "Utils.h"
@@ -54,7 +53,11 @@ const double cAtmosphereModel::phi0 = 0.;             // zero meridian in Greenw
 const double cAtmosphereModel::r0 = 1.; 
 
 cAtmosphereModel::cAtmosphereModel() :
-    is_node_weights_initialised(false) 
+    is_node_weights_initialised(false), 
+    old_arrays_3d {&u,  &v,  &w,  &t,  &p_dyn,  &c,  &cloud,  &ice,  &co2 },
+    new_arrays_3d {&un, &vn, &wn, &tn, &p_dynn, &cn, &cloudn, &icen, &co2n},
+    old_arrays_2d {&v,  &w,  &p_dyn }, 
+    new_arrays_2d {&vn, &wn, &p_dynn}
 {
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
@@ -241,9 +244,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
     BC_Thermo  circulation (this, im, jm, km, h ); 
 
-    //  class Restore to restore the iterational values from new to old
-    Restore_Atm oldnew( im, jm, km );
-
     //  class element calls for the preparation of initial conditions for the flow properties
 
     //  class element for the tropopause location as a parabolic distribution from pole to pole 
@@ -283,18 +283,18 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.IC_CellStructure ( h, u, v, w );
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
-      oldnew.restoreOldNew_3D(.9, u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n);
-      oldnew.restoreOldNew_2D(.9, v, w, p_dyn, p_dynn, vn, wn);
+    restoreOldNew(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
+    restoreOldNew(jm, km, .9, old_arrays_2d, new_arrays_2d);
 
 
 
     // ***********************************   start of pressure and velocity iterations ***********************************
 
-    run_2D_loop(boundary, result, LandArea, prepare_2D, startPressure, circulation, oldnew);
+    run_2D_loop(boundary, result, LandArea, prepare_2D, startPressure, circulation);
     
     cout << endl << endl;
 
-    run_3D_loop( boundary, result, LandArea, prepare, startPressure, calculate_MSL, circulation, oldnew);
+    run_3D_loop( boundary, result, LandArea, prepare, startPressure, calculate_MSL, circulation);
 
     cout << endl << endl;
 
@@ -616,7 +616,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
 
 void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                                     BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D, 
-                                    Pressure_Atm &startPressure, BC_Thermo &circulation, Restore_Atm &oldnew){
+                                    Pressure_Atm &startPressure, BC_Thermo &circulation){
     int switch_2D = 0;    
 
     n = 1;
@@ -679,7 +679,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 //  state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
                 min_Residuum_2D.steadyQuery_2D ( v, vn, w, wn, p_dyn, p_dynn );
 
-                oldnew.restoreOldNew_2D(1., v, w, p_dyn, p_dynn, vn, wn);
+                restoreOldNew(jm, km, 1., old_arrays_2d, new_arrays_2d);
 
                 n++;
             }
@@ -711,7 +711,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                                     BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
                                     Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL,                  
-                                    BC_Thermo &circulation, Restore_Atm &oldnew){
+                                    BC_Thermo &circulation){
     
     n = 1;
     emin = epsres * 100.;
@@ -818,7 +818,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 velocity_n = velocity_iter + 2;
             }
 
-            oldnew.restoreOldNew_3D(1., u, v, w, t, p_dyn, c, cloud, ice, co2, un, vn, wn, tn, p_dynn, cn, cloudn, icen, co2n);
+            restoreOldNew(im, jm, km, 1., old_arrays_2d, new_arrays_2d);
             n++;
         }
         //  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::::::::::::

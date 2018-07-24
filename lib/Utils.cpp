@@ -36,3 +36,35 @@ void AtomUtils::move_data(double* data, int len)
     data[len-1] = data[0];
 }
 
+//the size of arrays must be the same with the size of new_arrays
+//the values in the new_arrays will be assigned to coeff * old_values
+//the funciton needs a better name 
+void AtomUtils::restoreOldNew( int im, int jm, int km, double coeff, std::vector<Array*>& arrays, 
+                               std::vector<Array*>& new_arrays)
+{
+    assert(arrays.size() == new_arrays.size());
+
+    for ( int i = 0; i < im; i++ )
+    {
+        restoreOldNew( jm, km, coeff, arrays, new_arrays, i);
+    }
+}
+
+
+void AtomUtils::restoreOldNew( int jm, int km, double coeff, std::vector<Array*>& arrays, 
+                               std::vector<Array*>& new_arrays, int i)
+{
+    assert(arrays.size() == new_arrays.size());
+
+    for ( int j = 0; j < jm; j++ )
+    {
+        for ( int k = 0; k < km; k++ )
+        {
+            for(std::size_t n=0; n<arrays.size(); n++)
+            {
+                new_arrays[n]->x[ i ][ j ][ k ] = coeff * arrays[n]->x[ i ][ j ][ k ];
+            }
+        }
+    }
+}
+

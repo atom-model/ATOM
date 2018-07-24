@@ -34,6 +34,12 @@ namespace AtomUtils{
     //change data coordinate system from -180° _ 0° _ +180° to 0°- 360°
     void move_data(double* data, int len);
 
+    void restoreOldNew(int im, int jm, int km, double coeff, std::vector<Array*>& arrays, 
+                        std::vector<Array*>& new_arrays);
+
+    void restoreOldNew( int jm, int km, double coeff, std::vector<Array*>& arrays, 
+                        std::vector<Array*>& new_arrays, int i = 0);
+
     inline double simpson(int & n, double &dstep, double *value){
         double sum_even=0, sum_odd=0;
         if (n % 2 == 0){

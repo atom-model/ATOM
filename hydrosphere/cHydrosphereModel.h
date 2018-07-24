@@ -2,7 +2,9 @@
 #define CHYDROSPHEREMODEL_H
 
 #include <string>
+#include <vector>
 
+#include "Array.h"
 #include "tinyxml2.h"
 
 using namespace std;
@@ -23,6 +25,9 @@ public:
 
 private:
     void SetDefaultConfig();
+
+    //code for future, do not delete
+    //std::vector<Array*> old_arrays_3d, new_arrays_3d, old_arrays_2d, new_arrays_2d;
 };
 
 #endif
