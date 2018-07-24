@@ -2772,7 +2772,6 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
         sinthe = sin( the.z[ j ] );
         sinthe2 = sinthe * sinthe;
         costhe = cos( the.z[ j ] );
-        cotthe = cos( the.z[ j ] ) / sin( the.z[ j ] );
         rmsinthe = rm * sinthe;
         rm2sinthe = rm2 * sinthe;
         rm2sinthe2 = rm2 * sinthe2;

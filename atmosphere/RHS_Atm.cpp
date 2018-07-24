@@ -100,7 +100,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     double sinthe = sin( the.z[ j ] );
     double sinthe2 = sinthe * sinthe;
     double costhe = cos( the.z[ j ] );
-    //double cotthe = cos( the.z[ j ] ) / sin( the.z[ j ] );
     double rmsinthe = rm * sinthe;
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
@@ -110,13 +109,14 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     double topo_step = L_atm / ( double ) ( im-1 );
     double hight = ( double ) i * topo_step;
     double topo_diff = fabs ( hight - Topography.y[ j ][ k ] );
+    double h_0_i = topo_diff / topo_step;  // hat distribution function
+//    double h_0_i = cc * ( .5 * ( acos ( topo_diff * 3.14 / L_atm ) + 1. ) );   // cosine distribution function, better results for benchmark case
 
     double h_d_i = 0, h_0_0 = 0;
 
     if ( ( topo_diff < topo_step ) && ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ) )
     {
-        //h_0_i = topo_diff / L_atm;  // hat distribution function
-//      h_0_i = cc * ( .5 * ( acos ( topo_diff * 3.14 / L_atm ) + 1. ) );   // cosine distribution function, better results for benchmark case
+        h_0_0 = 1. - h_0_i;
         h_d_i = cc * ( 1. - h_0_0 ); 
     }else{
         h_d_i = 0.;
@@ -127,23 +127,23 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
     double dist = 0, h_0_j = 0, h_d_j = 0;
 
-    if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 1. ) ) || 
-         ( ( h.x[ i ][ j - 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) ) )
+    if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j - 1 ][ k ] == 1. ) ) || 
+          ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 1. ) ) )
     {
-        dist = .75 * dthe;
+        dist = .5 * dthe;
         h_0_j = dist / dthe;
         h_0_0 = 1. - h_0_j;
         h_d_j = cc * ( 1. - h_0_0 ); 
-    }else{    
+    }else{
         h_d_j = 0.;
-    } 
+    }
 
     double h_0_k = 0, h_d_k = 0;     
 
-    if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1 ] == 1. ) ) || 
-         ( ( h.x[ i ][ j ][ k - 1 ] == 1. ) && ( h.x[ i ][ j ][ k ] == 0. ) ) )
+    if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) ) || 
+          ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1 ] == 1. ) ) )
     {
-        dist = .75 * dphi;
+        dist = .5 * dphi;
         h_0_k = dist / dphi;
         h_0_0 = 1. - h_0_k;
         h_d_k = cc * ( 1. - h_0_0 ); 
@@ -340,7 +340,6 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
     cc = + 1.;
 
     // collection of coefficients
-    //double dr2 = dr * dr;
     double dthe2 = dthe * dthe;
     double dphi2 = dphi * dphi;
 
@@ -359,13 +358,13 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
     // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // only in positive the-direction along northerly and southerly boundaries 
     if ( ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 1. ) ) || 
-         ( ( h.x[ 0 ][ j - 1 ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) ) )
+          ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 1. ) ) )
     {
-        dist = .75 * dthe;
+        dist = .5 * dthe;
         h_0_j = dist / dthe;
         h_0_0 = 1. - h_0_j;
         h_d_j = cc * ( 1. - h_0_0 ); 
-    }else{    
+    }else{
         h_d_j = 0.; 
     }
 
@@ -373,9 +372,9 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
     // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // only in positive phi-direction on westerly and easterly boundaries 
     if ( ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 1. ) ) || 
-         ( ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) && ( h.x[ 0 ][ j ][ k ] == 0. ) ) )
+          ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) ) )
     {
-        dist = .75 * dphi;
+        dist = .5 * dphi;
         h_0_k = dist / dphi;
         h_0_0 = 1. - h_0_k;
         h_d_k = cc * ( 1. - h_0_0 ); 
