@@ -62,7 +62,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             Array &p_dynn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c,
             Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D,
             Array &Salt_Balance, Array &p_stat, Array &r_water, Array &r_salt_water, Array_2D &Evaporation_Dalton,
-            Array_2D &Precipitation, Array_2D &value_top, Array_2D &Bathymetry )
+            Array_2D &Precipitation, Array_2D &Bathymetry )
 {
 // collection of coefficients for phase transformation
 

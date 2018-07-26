@@ -70,11 +70,11 @@ using namespace AtomUtils;
 // for c = 1.0000 compares to a salinity of 34.6 psu
 // for c = 1.0983 compares to a salinity of 38.0 psu
 
-cHydrosphereModel::cHydrosphereModel()//code for future, do not delete:
-    //old_arrays_3d {&t,  &u,  &v,  &w,  &c,  &p_dyn },
-    //new_arrays_3d {&tn, &un, &vn, &wn, &cn, &p_dynn},
-    //old_arrays_2d {&v,  &w,  &p_dyn },
-    //new_arrays_2d {&vn, &wn, &p_dynn}
+cHydrosphereModel::cHydrosphereModel() :
+    old_arrays_3d {&t,  &u,  &v,  &w,  &c,  &p_dyn },
+    new_arrays_3d {&tn, &un, &vn, &wn, &cn, &p_dynn},
+    old_arrays_2d {&v,  &w,  &p_dyn },
+    new_arrays_2d {&vn, &wn, &p_dynn}
 {
 // Python and Notebooks can't capture stdout from this module. We override
 // cout's streambuf with a class that redirects stdout out to Python.
@@ -92,8 +92,8 @@ cHydrosphereModel::~cHydrosphereModel() { }
 #include "cHydrosphereDefaults.cpp.inc"
 
 void cHydrosphereModel::LoadConfig(const char *filename) {
-	XMLDocument doc;
-	XMLError err = doc.LoadFile(filename);
+    XMLDocument doc;
+    XMLError err = doc.LoadFile(filename);
     try{
 	    if (err) {
 		    doc.PrintError();
@@ -131,99 +131,33 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     // maximum number of inner velocity loop iterations ( velocity_iter_max ),
     // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
+    reset_arrays();
 
     mkdir(output_path.c_str(), 0777);
 
-	const int im = 41, jm = 181, km = 361, nm = 200;
-
 	int j_res = 0.0, k_res = 0.0;
 
-	int Ma_max = 300;																	// parabolic temperature distribution 300 Ma back
-	int Ma_max_half = 150;															// half of time scale
+	int Ma_max = 300;	// parabolic temperature distribution 300 Ma back
+	int Ma_max_half = 150;	// half of time scale
 
-	constexpr double pi180 = 180./ M_PI;								// pi180 = 57.3
-	constexpr double the_degree = 1.;										// compares to 1° step size laterally
-	constexpr double phi_degree = 1.;										// compares to 1° step size longitudinally
+	constexpr double pi180 = 180./ M_PI;  // pi180 = 57.3
+	constexpr double the_degree = 1.;   // compares to 1° step size laterally
+	constexpr double phi_degree = 1.;  // compares to 1° step size longitudinally
 
-	double dthe = the_degree / pi180;										// dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
-	double dphi = phi_degree / pi180;										// dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
-	double dr = 0.025;																	// 0.025 x 40 = 1.0 compares to 16 km : 40 = 150 m for 1 radial step
-	double dt = 0.00001;																// time step satisfies the CFL condition
+	double dthe = the_degree / pi180; // dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
+	double dphi = phi_degree / pi180; // dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
+	double dr = 0.025;	// 0.025 x 40 = 1.0 compares to 16 km : 40 = 150 m for 1 radial step
+	double dt = 0.00001; // time step satisfies the CFL condition
 
-	const double the0 = 0.;														// North Pole
-	const double phi0 = 0.;														// zero meridian in Greenwich
-	const double r0 = 1.;															// earth's radius is r_earth = 6731 km, here it is assumed to be infinity, circumference of the earth 40074 km
-
-// 1D arrays
-	Array_1D rad(im, 1.); // radial coordinate direction
-	Array_1D the(jm, 2.); // lateral coordinate direction
-	Array_1D phi(km, 3.); // longitudinal coordinate direction
-
-// 2D arrays
-	Array_2D Bathymetry(jm, km, 0.); // Bathymetry in m
-	Array_2D value_top(jm, km, 0.); // auxiliar field for bathymetzry
-
-	Array_2D Upwelling(jm, km, 0.); // upwelling
-	Array_2D Downwelling(jm, km, 0.); // downwelling
-	Array_2D BottomWater(jm, km, 0.); // 2D bottom water summed up in a vertical column
-
-	Array_2D SaltFinger(jm, km, 0.);											// salt bulge of higher density
-	Array_2D SaltDiffusion(jm, km, 0.);										// salt bulge of lower density
-	Array_2D Salt_total(jm, km, 0.);											// rate of salt summed up in a vertical column
-
-	Array_2D BuoyancyForce_2D(jm, km, 0.); // radiation balance at the surface
-
-	Array_2D Evaporation_Dalton(jm, km, 0.); // evaporation by Penman in [mm/d]
-	Array_2D Precipitation(jm, km, 0.); // areas of higher precipitation
-
-// 3D arrays
-	Array h(im, jm, km, 0.); // bathymetry, depth from sea level
-
-	Array t(im, jm, km, ta); // temperature
-	Array u(im, jm, km, ua); // u-component velocity component in r-direction
-	Array v(im, jm, km, va); // v-component velocity component in theta-direction
-	Array w(im, jm, km, wa); // w-component velocity component in phi-direction
-	Array c(im, jm, km, ca); // water vapour
-
-	Array tn(im, jm, km, ta); // temperature new
-	Array un(im, jm, km, ua); // u-velocity component in r-direction new
-	Array vn(im, jm, km, va); // v-velocity component in theta-direction new
-	Array wn(im, jm, km, wa); // w-velocity component in phi-direction new
-	Array cn(im, jm, km, ca); // water vapour new
-
-	Array p_dyn(im, jm, km, pa); // dynamic pressure
-	Array p_dynn(im, jm, km, pa); // dynamic pressure new
-	Array p_stat(im, jm, km, pa); // static pressure
-
-	Array rhs_t(im, jm, km, 0.); // auxilliar field RHS temperature
-	Array rhs_u(im, jm, km, 0.); // auxilliar field RHS u-velocity component
-	Array rhs_v(im, jm, km, 0.); // auxilliar field RHS v-velocity component
-	Array rhs_w(im, jm, km, 0.); // auxilliar field RHS w-velocity component
-	Array rhs_c(im, jm, km, 0.); // auxilliar field RHS water vapour
-
-	Array aux_u(im, jm, km, 0.); // auxilliar field u-velocity component
-	Array aux_v(im, jm, km, 0.); // auxilliar field v-velocity component
-	Array aux_w(im, jm, km, 0.); // auxilliar field w-velocity component
-
-	Array Salt_Finger(im, jm, km, 0.); // salt bulge of higher density
-	Array Salt_Diffusion(im, jm, km, 0.); // salt bulge of lowerer density and temperature
-	Array Salt_Balance(im, jm, km, 0.); // +/- salt balance
-
-	Array r_water(im, jm, km, 0.); // water density as function of pressure
-	Array r_salt_water(im, jm, km, 0.); // salt water density as function of pressure and temperature
-	Array BuoyancyForce_3D(im, jm, km, 0.); // 3D buoyancy force
-
-    std::vector<Array*> 
-        old_arrays_3d {&t,  &u,  &v,  &w,  &c,  &p_dyn },
-        new_arrays_3d {&tn, &un, &vn, &wn, &cn, &p_dynn},
-        old_arrays_2d {&v,  &w,  &p_dyn },
-        new_arrays_2d {&vn, &wn, &p_dynn};
+	const double the0 = 0.;	// North Pole
+	const double phi0 = 0.; // zero meridian in Greenwich
+	const double r0 = 1.;// earth's radius is r_earth = 6731 km, here it is assumed to be infinity, circumference of the earth 40074 km
 
 	cout.precision ( 6 );
 	cout.setf ( ios::fixed );
 
-//	Coordinate system in form of a spherical shell
-//	rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
+    //	Coordinate system in form of a spherical shell
+    //	rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
 	rad.Coordinates ( im, r0, dr );
 	the.Coordinates ( jm, the0, dthe );
 	phi.Coordinates ( km, phi0, dphi );
@@ -493,7 +427,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 			oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
 //		class RungeKutta for the solution of the differential equations describing the flow properties
-			result.solveRungeKutta_3D_Hydrosphere ( prepare, n, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, Evaporation_Dalton, Precipitation, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water, value_top, Bathymetry );
+			result.solveRungeKutta_3D_Hydrosphere ( prepare, n, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, rad, the, phi, Evaporation_Dalton, Precipitation, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water, Bathymetry );
 
 //		class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
 			depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );
@@ -682,62 +616,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 	PostProcess_Hydrosphere		ppa ( im, jm, km, input_path, output_path );
 	ppa.Hydrosphere_PlotData ( bathymetry_name, u_0, h, v, w, t, c, BottomWater, Upwelling, Downwelling );
 
-
-// reset of results to the initial value
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			Bathymetry.y[ j ][ k ] = 0.;
-
-			Upwelling.y[ j ][ k ] = 0.;
-			Downwelling.y[ j ][ k ] = 0.;
-			BottomWater.y[ j ][ k ] = 0.;
-
-			BuoyancyForce_2D.y[ j ][ k ] = 0.;
-
-			SaltFinger.y[ j ][ k ] = 0.;
-			SaltDiffusion.y[ j ][ k ] = 0.;
-			Salt_total.y[ j ][ k ] = 0.;
-
-			for ( int i = 0; i < im; i++ )
-			{
-				h.x[ i ][ j ][ k ] = 0.;
-
-				c.x[ i ][ j ][ k ] = 0.;
-				u.x[ i ][ j ][ k ] = 0.;
-				v.x[ i ][ j ][ k ] = 0.;
-				w.x[ i ][ j ][ k ] = 0.;
-
-				un.x[ i ][ j ][ k ] = 0.;
-				vn.x[ i ][ j ][ k ] = 0.;
-				wn.x[ i ][ j ][ k ] = 0.;
-				cn.x[ i ][ j ][ k ] = 0.;
-
-				p_dyn.x[ i ][ j ][ k ] = 0.;
-				p_stat.x[ i ][ j ][ k ] = 0.;
-				r_water.x[ i ][ j ][ k ] = 0.;
-				r_salt_water.x[ i ][ j ][ k ] = 0.;
-
-				rhs_t.x[ i ][ j ][ k ] = 0.;
-				rhs_u.x[ i ][ j ][ k ] = 0.;
-				rhs_v.x[ i ][ j ][ k ] = 0.;
-				rhs_w.x[ i ][ j ][ k ] = 0.;
-				rhs_c.x[ i ][ j ][ k ] = 0.;
-
-				aux_u.x[ i ][ j ][ k ] = 0.;
-				aux_v.x[ i ][ j ][ k ] = 0.;
-				aux_w.x[ i ][ j ][ k ] = 0.;
-
-				Salt_Finger.x[ i ][ j ][ k ] = 0.;
-				Salt_Diffusion.x[ i ][ j ][ k ] = 0.;
-				Salt_Balance.x[ i ][ j ][ k ] = 0.;
-
-				BuoyancyForce_3D.x[ i ][ j ][ k ] = 0.;
-			}
-		}
-	}
-
 	//   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of time slice loop: if ( i_time_slice >= i_time_slice_max )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 	//  final remarks
@@ -749,8 +627,66 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 }
 
 
+void cHydrosphereModel::reset_arrays()
+{
+    // 1D arrays
+    rad.initArray_1D(im, 1.); // radial coordinate direction
+    the.initArray_1D(jm, 2.); // lateral coordinate direction
+    phi.initArray_1D(km, 3.); // longitudinal coordinate direction
 
+    // 2D arrays
+    Bathymetry.initArray_2D(jm, km, 0.); // Bathymetry in m
 
+    Upwelling.initArray_2D(jm, km, 0.); // upwelling
+    Downwelling.initArray_2D(jm, km, 0.); // downwelling
+    BottomWater.initArray_2D(jm, km, 0.); // 2D bottom water summed up in a vertical column
+
+    SaltFinger.initArray_2D(jm, km, 0.);      // salt bulge of higher density
+    SaltDiffusion.initArray_2D(jm, km, 0.);   // salt bulge of lower density
+    Salt_total.initArray_2D(jm, km, 0.);     // rate of salt summed up in a vertical column
+
+    BuoyancyForce_2D.initArray_2D(jm, km, 0.); // radiation balance at the surface
+
+    Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Penman in [mm/d]
+    Precipitation.initArray_2D(jm, km, 0.); // areas of higher precipitation
+
+    // 3D arrays
+    h.initArray(im, jm, km, 0.); // bathymetry, depth from sea level
+
+    t.initArray(im, jm, km, ta); // temperature
+    u.initArray(im, jm, km, ua); // u-component velocity component in r-direction
+    v.initArray(im, jm, km, va); // v-component velocity component in theta-direction
+    w.initArray(im, jm, km, wa); // w-component velocity component in phi-direction
+    c.initArray(im, jm, km, ca); // water vapour
+
+    tn.initArray(im, jm, km, ta); // temperature new
+    un.initArray(im, jm, km, ua); // u-velocity component in r-direction new
+    vn.initArray(im, jm, km, va); // v-velocity component in theta-direction new
+    wn.initArray(im, jm, km, wa); // w-velocity component in phi-direction new
+    cn.initArray(im, jm, km, ca); // water vapour new
+
+    p_dyn.initArray(im, jm, km, pa); // dynamic pressure
+    p_dynn.initArray(im, jm, km, pa); // dynamic pressure new
+    p_stat.initArray(im, jm, km, pa); // static pressure
+
+    rhs_t.initArray(im, jm, km, 0.); // auxilliar field RHS temperature
+    rhs_u.initArray(im, jm, km, 0.); // auxilliar field RHS u-velocity component
+    rhs_v.initArray(im, jm, km, 0.); // auxilliar field RHS v-velocity component
+    rhs_w.initArray(im, jm, km, 0.); // auxilliar field RHS w-velocity component
+    rhs_c.initArray(im, jm, km, 0.); // auxilliar field RHS water vapour
+
+    aux_u.initArray(im, jm, km, 0.); // auxilliar field u-velocity component
+    aux_v.initArray(im, jm, km, 0.); // auxilliar field v-velocity component
+    aux_w.initArray(im, jm, km, 0.); // auxilliar field w-velocity component
+
+    Salt_Finger.initArray(im, jm, km, 0.); // salt bulge of higher density
+    Salt_Diffusion.initArray(im, jm, km, 0.); // salt bulge of lowerer density and temperature
+    Salt_Balance.initArray(im, jm, km, 0.); // +/- salt balance
+
+    r_water.initArray(im, jm, km, 0.); // water density as function of pressure
+    r_salt_water.initArray(im, jm, km, 0.); // salt water density as function of pressure and temperature
+    BuoyancyForce_3D.initArray(im, jm, km, 0.); // 3D buoyancy force
+}
 
 void cHydrosphereModel::Run() 
 {
