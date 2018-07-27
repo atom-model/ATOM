@@ -620,10 +620,6 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
     int switch_2D = 0;    
 
     n = 1;
-    int velocity_iter_2D = 0;
-    int pressure_iter_2D = 0;
-
-    int pressure_plus_2D = 1;
 
     int Ma = int(round(*get_current_time())); 
 
@@ -633,10 +629,10 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         // **************   iteration of initial conditions on the surface for the correction of flows close to coasts   **
         // **************   start of pressure and velocity iterations for the 2D iterational process   ********************
         // ::::::::::::::   begin of pressure loop_2D : if ( pressure_iter_2D > pressure_iter_max_2D )   ::::::::::::::::::
-        for ( pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++)
+        for ( int pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++)
         {
             // ::::::::   begin of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::
-            for (velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++)
+            for ( int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++)
             {
 
                 cout << endl << endl;
@@ -687,11 +683,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
 
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-            if ( pressure_iter_2D == pressure_plus_2D )
-            {
-                startPressure.computePressure_2D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
-                pressure_plus_2D = pressure_plus_2D + 1;
-            }
+            startPressure.computePressure_2D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
 
 
 
@@ -715,19 +707,14 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
     
     n = 1;
     emin = epsres * 100.;
-    int pressure_plus_3D = 1;
 
     int Ma = int(round(*get_current_time()));
-    int velocity_n = 1;
-
-    int velocity_iter = 0;
-    int pressure_iter = 0;
 
     // ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::
-    for ( pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
+    for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
         // ::::::::::::   begin of 3D velocity loop : if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::
-        for ( velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ )
+        for ( int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ )
         {
             //  query to realize zero divergence of the continuity equation ( div c = 0 )
             cout << endl << endl;
@@ -751,7 +738,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
 
             //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
-            if ( velocity_iter == velocity_n ){
+            if ( velocity_iter % 2 == 0 ){
                 circulation.Ice_Water_Saturation_Adjustment ( h, c, 
                                                               cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
             }
@@ -811,11 +798,10 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation 
             //  distribution formed of rain and snow
-            if ( velocity_iter == velocity_n && n >= 2 )
+            if ( velocity_iter % 2 == 0)
             {
                 circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, 
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
-                velocity_n = velocity_iter + 2;
             }
 
             restoreOldNew(im, jm, km, 1., old_arrays_2d, new_arrays_2d);
@@ -825,11 +811,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
         
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-        if ( pressure_iter == pressure_plus_3D )
-        {
-            startPressure.computePressure_3D ( circulation, u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
-            pressure_plus_3D = pressure_plus_3D + 1;
-        }
+        startPressure.computePressure_3D ( circulation, u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
 
         //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution 
         //  formed of rain and snow
@@ -846,11 +828,6 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         }
     }
     //  :::::   end of pressure loop_3D: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::
-
-    if ( velocity_iter == velocity_iter_max ){
-        cout << "***** number of time steps      n = " << n << ", end of program reached because of limit of \
-                maximum time steps ***** \n\n" << endl;
-    }
 }
 
 

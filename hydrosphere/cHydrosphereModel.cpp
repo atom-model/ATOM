@@ -304,8 +304,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 // ******************************************   start of pressure and velocity iterations ************************************************************************
 
 	double emin = epsres * 100.;
-	int pressure_plus_2D = 1;
-	int pressure_plus_3D = 1;
 
 //	goto Printout;
 // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -365,12 +363,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-//  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-		if ( pressure_iter_2D == pressure_plus_2D )
-		{
-			startPressure.computePressure_2D ( oceanflow, r_0_water, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
-			pressure_plus_2D = pressure_plus_2D + 1;
-		}
+            //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
+            startPressure.computePressure_2D ( oceanflow, r_0_water, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
 
 
 //		limit of the computation in the sense of time steps
@@ -564,15 +558,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //  ::::::::::::::::::::::::::::::::::::::::::::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-//	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-		if ( pressure_iter == pressure_plus_3D )
-		{
-			startPressure.computePressure_3D ( oceanflow, r_0_water, pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, aux_u, aux_v, aux_w );
-			pressure_plus_3D = pressure_plus_3D + 1;
-		}
+        //	pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
+        startPressure.computePressure_3D ( oceanflow, r_0_water, pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, 
+                                           aux_u, aux_v, aux_w );
 
 
-//	limit of the computation in the sense of time steps
+        //	limit of the computation in the sense of time steps
 		if ( n > nm )
 		{
 			cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
