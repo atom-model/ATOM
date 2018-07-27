@@ -23,7 +23,6 @@ RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, doubl
     dr(0),
     dthe(dthe),
     dphi(dphi),
-    cc(0.),
     re(re),
     sc_WaterVapour(0),
     sc_CO2(0),
@@ -48,7 +47,6 @@ RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, d
     dr(dr),
     dthe(dthe),
     dphi(dphi),
-    cc(0.), 
     re(re),
     sc_WaterVapour(sc_WaterVapour),
     sc_CO2(sc_CO2),
@@ -83,8 +81,9 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
 
-    double k_Force = 10.;// factor for accelleration of convergence processes inside the immersed boundary conditions
-    cc = + 1.;
+    double k_Force = 1.;// factor for acceleration of convergence processes inside the immersed boundary conditions
+    double cc = 1.;
+    double dist_coeff = 1.;
 
     // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
     // collection of coefficients9
@@ -108,19 +107,22 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     // only in positive r-direction above ground 
     double topo_step = L_atm / ( double ) ( im-1 );
     double hight = ( double ) i * topo_step;
-    double topo_diff = fabs ( hight - Topography.y[ j ][ k ] );
+    double topo_diff = hight - Topography.y[ j ][ k ];
     double h_0_i = topo_diff / topo_step;  // hat distribution function
 //    double h_0_i = cc * ( .5 * ( acos ( topo_diff * 3.14 / L_atm ) + 1. ) );   // cosine distribution function, better results for benchmark case
 
     double h_d_i = 0, h_0_0 = 0;
 
-    if ( ( topo_diff < topo_step ) && ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ) )
+    if ( ( topo_diff < topo_step ) && ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ) ) )
     {
         h_0_0 = 1. - h_0_i;
         h_d_i = cc * ( 1. - h_0_0 ); 
-    }else{
-        h_d_i = 0.;
-    } 
+    }
+    if ( ( topo_diff == topo_step ) || ( h.x[ i ][ j ][ k ] == 0. ) )
+    {
+		h_0_i = 1.;
+        h_d_i = cc * ( 1. - h_0_i ); 
+    }
 
     // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // only in positive the-direction along northerly boundaries 
@@ -130,12 +132,12 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j - 1 ][ k ] == 1. ) ) || 
           ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 1. ) ) )
     {
-        dist = .5 * dthe;
+        dist = dist_coeff * dthe;
         h_0_j = dist / dthe;
-        h_0_0 = 1. - h_0_j;
-        h_d_j = cc * ( 1. - h_0_0 ); 
+        h_d_j = cc * ( 1. - h_0_j ); 
     }else{
-        h_d_j = 0.;
+        h_0_j = 0.;
+        h_d_j = cc * ( 1. - h_0_j ); 
     }
 
     double h_0_k = 0, h_d_k = 0;     
@@ -143,12 +145,12 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) ) || 
           ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1 ] == 1. ) ) )
     {
-        dist = .5 * dphi;
+        dist = dist_coeff * dphi;
         h_0_k = dist / dphi;
-        h_0_0 = 1. - h_0_k;
-        h_d_k = cc * ( 1. - h_0_0 ); 
+        h_d_k = cc * ( 1. - h_0_k ); 
     }else{
-        h_d_k = 0.; 
+        h_0_k = 0.; 
+        h_d_j = cc * ( 1. - h_0_k ); 
     }
 
 
@@ -234,7 +236,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
     double r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
 
-    double RS_buoyancy_Momentum = Buoyancy * ( r_humid - r_dry ) / r_humid * g; // any humid air is less dense than dry air
+    double RS_buoyancy_Momentum = Buoyancy * ( r_humid - r_dry ) / r_dry * g; // any humid air is less dense than dry air
 
     BuoyancyForce.x[ i ][ j ][ k ] = - RS_buoyancy_Momentum * coeff_buoy * 1000.;// dimension as pressure in kN/m2
 
@@ -271,54 +273,59 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
             + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe ) + ( d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2
             + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2 ) / ( re * pr )
             + coeff_energy * ( S_c.x[ i ][ j ][ k ] + S_r.x[ i ][ j ][ k ] )
-            + coeff_energy * ( S_i.x[ i ][ j ][ k ] + S_s.x[ i ][ j ][ k ] );
+            + coeff_energy * ( S_i.x[ i ][ j ][ k ] + S_s.x[ i ][ j ][ k ] )
+            - h_0_i * t.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm 
             + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
-            - dpdr / r_humid + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2
+            - h_d_i * dpdr / r_air + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2
             + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
             - RS_buoyancy_Momentum
-            - h_d_i * u.x[ i ][ j ][ k ] * k_Force / dthe2;
+            - h_0_i * u.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_v.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dvdr + v.x[ i ][ j ][ k ] * dvdthe / rm
             + w.x[ i ][ j ][ k ] * dvdphi / rmsinthe ) +
-            - dpdthe / rm / r_humid + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
+            - h_d_j * dpdthe / rm / r_air + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
             - ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_j * v.x[ i ][ j ][ k ] + d2vdphi2 / rm2sinthe2
             + 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-            - h_d_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;
+            - h_0_j * v.x[ i ][ j ][ k ] * k_Force / dthe2;
 
     rhs_w.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dwdr + v.x[ i ][ j ][ k ] * dwdthe / rm
            + w.x[ i ][ j ][ k ] * dwdphi / rmsinthe ) +
-            - dpdphi / rmsinthe / r_humid + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2
+            - h_d_k * dpdphi / rmsinthe / r_air + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2
             + dwdthe / rm2sinthe  * costhe - ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_k * w.x[ i ][ j ][ k ]
             + d2wdphi2 / rm2sinthe2 + 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-            - h_d_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;
+            - h_0_k * w.x[ i ][ j ][ k ] * k_Force / dphi2;
 
     rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm
             + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe ) + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2
             + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
             + S_v.x[ i ][ j ][ k ] * coeff_trans
-            + vapour_evaporation;
+            + vapour_evaporation
+            - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_cloud.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dclouddr + v.x[ i ][ j ][ k ] * dclouddthe / rm
             + w.x[ i ][ j ][ k ] * dclouddphi / rmsinthe ) + ( d2clouddr2 + dclouddr * 2. / rm + d2clouddthe2 / rm2
             + dclouddthe * costhe / rm2sinthe + d2clouddphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-            + S_c.x[ i ][ j ][ k ] * coeff_trans;
+            + S_c.x[ i ][ j ][ k ] * coeff_trans
+            - h_0_i * cloud.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_ice.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dicedr + v.x[ i ][ j ][ k ] * dicedthe / rm
             + w.x[ i ][ j ][ k ] * dicedphi / rmsinthe ) + ( d2icedr2 + dicedr * 2. / rm + d2icedthe2 / rm2
             + dicedthe * costhe / rm2sinthe + d2icedphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-            + S_i.x[ i ][ j ][ k ] * coeff_trans;
+            + S_i.x[ i ][ j ][ k ] * coeff_trans
+            - h_0_i * ice.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_co2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcodr + v.x[ i ][ j ][ k ] * dcodthe / rm
             + w.x[ i ][ j ][ k ] * dcodphi / rmsinthe ) + ( d2codr2 + dcodr * 2. / rm + d2codthe2 / rm2
-            + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re );
+            + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
+            - h_0_i * co2.x[ i ][ j ][ k ] * k_Force / dr2;
 
 
     // for the Poisson equation to solve for the pressure, pressure gradient substracted from the above RHS
-    aux_u.x[ i ][ j ][ k ] = rhs_u.x[ i ][ j ][ k ] + dpdr / r_humid;
-    aux_v.x[ i ][ j ][ k ] = rhs_v.x[ i ][ j ][ k ] + dpdthe / rm / r_humid;
-    aux_w.x[ i ][ j ][ k ] = rhs_w.x[ i ][ j ][ k ] + dpdphi / rmsinthe / r_humid;
+    aux_u.x[ i ][ j ][ k ] = rhs_u.x[ i ][ j ][ k ] + h_d_i * dpdr / r_air;
+    aux_v.x[ i ][ j ][ k ] = rhs_v.x[ i ][ j ][ k ] + h_d_j * dpdthe / rm / r_air;
+    aux_w.x[ i ][ j ][ k ] = rhs_w.x[ i ][ j ][ k ] + h_d_k * dpdphi / rmsinthe / r_air;
 
     if ( h.x[ i ][ j ][ k ] == 1. ){
         aux_u.x[ i ][ j ][ k ] = aux_v.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k ] = 0.;
@@ -336,8 +343,9 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
                                             Array &p_dyn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
 {
     //  2D surface iterations
-    double k_Force = 10.;// factor for accelleration of convergence processes inside the immersed boundary conditions
-    cc = + 1.;
+    double k_Force = 1.;// factor for acceleration of convergence processes inside the immersed boundary conditions
+    double cc = 1.;
+    double dist_coeff = 1.;
 
     // collection of coefficients
     double dthe2 = dthe * dthe;
@@ -354,18 +362,18 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
 
-    double dist = 0, h_0_j = 0, h_0_0 = 0, h_d_j = 0;
+    double dist = 0, h_0_j = 0, h_d_j = 0;
     // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     // only in positive the-direction along northerly and southerly boundaries 
     if ( ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 1. ) ) || 
           ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 1. ) ) )
     {
-        dist = .5 * dthe;
+        dist = dist_coeff * dthe;
         h_0_j = dist / dthe;
-        h_0_0 = 1. - h_0_j;
-        h_d_j = cc * ( 1. - h_0_0 ); 
+        h_d_j = cc * ( 1. - h_0_j ); 
     }else{
-        h_d_j = 0.; 
+        h_0_j = 0.; 
+        h_d_j = cc * ( 1. - h_0_j ); 
     }
 
     double h_0_k = 0, h_d_k = 0;
@@ -374,12 +382,12 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
     if ( ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 1. ) ) || 
           ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) ) )
     {
-        dist = .5 * dphi;
+        dist = dist_coeff * dphi;
         h_0_k = dist / dphi;
-        h_0_0 = 1. - h_0_k;
-        h_d_k = cc * ( 1. - h_0_0 ); 
+        h_d_k = cc * ( 1. - h_0_k ); 
     }else{
-        h_d_k = 0.; 
+        h_0_k = 0.; 
+        h_d_k = cc * ( 1. - h_0_k ); 
     }
 
 
@@ -399,18 +407,18 @@ void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u
 
 
     rhs_v.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dvdthe / rm + w.x[ 0 ][ j ][ k ] * dvdphi / rmsinthe ) +
-                - dpdthe / rm / r_air - ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
+                - h_d_j * dpdthe / rm / r_air - ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
                 - ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[ 0 ][ j ][ k ]
                 + d2vdphi2 / rm2sinthe2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-                - h_d_j * v.x[ 0 ][ j ][ k ] * k_Force / dthe2;
+                - h_0_j * v.x[ 0 ][ j ][ k ] * k_Force / dthe2;
 
     rhs_w.x[ 0 ][ j ][ k ] = - ( v.x[ 0 ][ j ][ k ] * dwdthe / rm +  w.x[ 0 ][ j ][ k ] * dwdphi / rmsinthe ) +
-                - dpdphi / rmsinthe / r_air + ( d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
+                - h_d_k * dpdphi / rmsinthe / r_air + ( d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
                 - ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[ 0 ][ j ][ k ]
                 + d2wdphi2 / rm2sinthe2 + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-                - h_d_k * w.x[ 0 ][ j ][ k ] * k_Force / dphi2;
+                - h_0_k * w.x[ 0 ][ j ][ k ] * k_Force / dphi2;
 
 
-    aux_v.x[ 0 ][ j ][ k ] = rhs_v.x[ 0 ][ j ][ k ] + dpdthe / rm / r_air;
-    aux_w.x[ 0 ][ j ][ k ] = rhs_w.x[ 0 ][ j ][ k ] + dpdphi / rmsinthe / r_air;
+    aux_v.x[ 0 ][ j ][ k ] = rhs_v.x[ 0 ][ j ][ k ] + h_d_j * dpdthe / rm / r_air;
+    aux_w.x[ 0 ][ j ][ k ] = rhs_w.x[ 0 ][ j ][ k ] + h_d_k * dpdphi / rmsinthe / r_air;
 }

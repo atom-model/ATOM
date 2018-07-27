@@ -25,7 +25,7 @@ class RHS_Atmosphere
     private:
         int im, jm, km;
 
-        double dt, dr, dthe, dphi, cc;
+        double dt, dr, dthe, dphi;
         double re, sc_WaterVapour, sc_CO2, g, pr, gam, WaterVapour, Buoyancy, CO2, sigma;
 
     public:
