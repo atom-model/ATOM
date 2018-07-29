@@ -53,6 +53,7 @@ const double cAtmosphereModel::phi0 = 0.;             // zero meridian in Greenw
 const double cAtmosphereModel::r0 = 1.; 
 
 cAtmosphereModel::cAtmosphereModel() :
+    im_tropopause(NULL),
     is_node_weights_initialised(false), 
     old_arrays_3d {&u,  &v,  &w,  &t,  &p_dyn,  &c,  &cloud,  &ice,  &co2 },
     new_arrays_3d {&un, &vn, &wn, &tn, &p_dynn, &cn, &cloudn, &icen, &co2n},
@@ -92,6 +93,7 @@ cAtmosphereModel::~cAtmosphereModel() {
     }
 
     delete [] im_tropopause;
+    im_tropopause = NULL;
     m_model = NULL;
     logger().close();
 }
@@ -180,8 +182,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         } 
     }
 
-    string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
-    string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
+    bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
+    bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
 
     cout << "\n   Output is being written to " << output_path << "\n";
     cout << "   Ma = " << Ma << "\n";
@@ -298,12 +300,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     cout << endl << endl;
 
-    n--;
-
     restrain_temperature();
 
     //write the ouput files
-    write_file(bathymetry_name, output_path);
+    write_file(bathymetry_name, output_path, true);
 
     //  final remarks
     cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
@@ -568,7 +568,7 @@ void cAtmosphereModel::print_min_max_values()
 }
 
 
-void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &output_path){
+void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &output_path, bool is_final_result){
     int Ma = int(round(*get_current_time()));
     //  Printout:
 
@@ -581,7 +581,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
     //  radial data along constant hight above ground
     int i_radial = 0;
     //  int i_radial = 10;
-    write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
+    write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
                                      BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, 
                                      Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, 
                                      Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, 
@@ -590,12 +590,13 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
 
     //  londitudinal data along constant latitudes
     int j_longal = 62;          // Mount Everest/Himalaya
-    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
+    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
                                      BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
                                      Q_Sensible, epsilon_3D, P_rain, P_snow );
 
     int k_zonal = 87;           // Mount Everest/Himalaya
-    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, r_air, c_0, co2_0, 
+    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, iter_cnt-1, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, 
+                                    r_air, c_0, co2_0, 
                                     h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, 
                                     Q_Latent, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, 
                                     S_s, S_c_c );
@@ -603,7 +604,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
     if(paraview_panorama_vts) //This function creates a large file. Use a flag to control if it is wanted.
     {
-        write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, 
+        write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, 
                                            BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
                                            Q_Sensible, epsilon_3D, P_rain, P_snow );
     }
@@ -611,16 +612,15 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
     //  writing of v-w-data in the v_w_transfer file
     PostProcess_Atmosphere ppa ( im, jm, km, output_path );
     ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
-    ppa.Atmosphere_PlotData ( bathymetry_name, u_0, t_0, h, v, w, t, c, Precipitation, precipitable_water );
+    ppa.Atmosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, t_0, h, v, w, t, c, 
+                              Precipitation, precipitable_water );
 }
 
 void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                                     BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D, 
                                     Pressure_Atm &startPressure, BC_Thermo &circulation){
     int switch_2D = 0;    
-
-    n = 1;
-
+    iter_cnt = 1;
     int Ma = int(round(*get_current_time())); 
 
     // ::::::::::: :::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::
@@ -642,8 +642,8 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
                 cout << " present state of the 2D computation " << endl << "  current time slice, number of iterations, maximum "
                     << "and current number of velocity iterations, maximum and current number of pressure iterations " << endl 
-                    << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max_2D = " << velocity_iter_max_2D << 
-                    "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " << pressure_iter_max_2D << 
+                    << endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max_2D = " << velocity_iter_max_2D
+                    << "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " << pressure_iter_max_2D << 
                     "    pressure_iter_2D = " << pressure_iter_2D << endl;
 
                 //  class BC_Atmosphaere for the geometry of a shell of a sphere
@@ -657,8 +657,8 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
-                result.solveRungeKutta_2D_Atmosphere ( prepare_2D, n, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, h, v, w, 
-                                                       p_dyn, vn, wn, p_dynn, aux_v, aux_w );
+                result.solveRungeKutta_2D_Atmosphere ( prepare_2D, iter_cnt, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, 
+                                                       h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
                 
                 //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
                 //  the continents and the ocean ground
@@ -677,7 +677,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
                 restoreOldNew(jm, km, 1., old_arrays_2d, new_arrays_2d);
 
-                n++;
+                iter_cnt++;
             }
             //  ::::::   end of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::::::::::
 
@@ -685,10 +685,8 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
             startPressure.computePressure_2D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
 
-
-
             // limit of the computation in the sense of time steps
-            if ( n > nm )
+            if ( iter_cnt > nm )
             {
                 cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
                 break;
@@ -705,7 +703,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                     Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL,                  
                                     BC_Thermo &circulation){
     
-    n = 1;
+    iter_cnt = 1;
     emin = epsres * 100.;
 
     int Ma = int(round(*get_current_time()));
@@ -724,7 +722,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum "
                 << "and current number of velocity iterations, maximum and current number of pressure iterations " << endl << 
-                endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << 
+                endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max = " << velocity_iter_max << 
                 "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << pressure_iter << endl;
 
@@ -739,14 +737,13 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
             if ( velocity_iter % 2 == 0 ){
-                circulation.Ice_Water_Saturation_Adjustment ( h, c, 
-                                                              cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
+                circulation.Ice_Water_Saturation_Adjustment ( h, c, cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
             }
 
             circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
             // class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_3D_Atmosphere ( prepare, n, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
+            result.solveRungeKutta_3D_Atmosphere ( prepare, iter_cnt, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, 
                                                    the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, 
                                                    h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, 
@@ -772,7 +769,8 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             emin = fabs ( ( residuum - residuum_old ) / residuum_old );
 
             //  statements on the convergence und iterational process
-            min_Residuum.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, cloud, cloudn, ice, icen, co2, co2n, p_dyn, p_dynn, L_atm);
+            min_Residuum.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, cloud, cloudn, ice, icen, co2, co2n, p_dyn, 
+                                          p_dynn, L_atm);
 
             // 3D_fields
 
@@ -787,14 +785,12 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
 
             //  composition of results
-            calculate_MSL.run_MSL_data ( n, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, 
+            calculate_MSL.run_MSL_data ( iter_cnt, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, 
                                          co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, 
                                          radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, 
                                          temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, 
                                          Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Dalton, Vegetation, 
                                          albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
-
-
 
             //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation 
             //  distribution formed of rain and snow
@@ -805,7 +801,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             }
 
             restoreOldNew(im, jm, km, 1., old_arrays_2d, new_arrays_2d);
-            n++;
+            iter_cnt++;
         }
         //  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::::::::::::
 
@@ -815,13 +811,17 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
         //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution 
         //  formed of rain and snow
-        if(n >= 2){
+        if(iter_cnt >= 2){
             circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, cloud, ice, 
                                               P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
         }
 
+        if( pressure_iter % checkpoint == 0 ){
+            write_file(bathymetry_name, output_path);
+        }
+
         //  limit of the computation in the sense of time steps
-        if ( n > nm )
+        if ( iter_cnt > nm )
         {
             cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
             break;

@@ -29,7 +29,7 @@ class PostProcess_Hydrosphere
 
 		double max_p_dyn;
 
-		string input_path, output_path;
+		string output_path;
 
 		void dump_radial(const string &desc, Array &a, double multiplier, int i, ofstream &f);
 		void dump_longal(const string &desc, Array &a, double multiplier, int j, ofstream &f);
@@ -39,13 +39,13 @@ class PostProcess_Hydrosphere
 
 
 	public:
-		PostProcess_Hydrosphere (int, int, int, const string &input_path, const string &output_path);
+		PostProcess_Hydrosphere (int im, int jm, int km, const string &output_path);
 		~PostProcess_Hydrosphere();
 
 
-		void Hydrosphere_SequelFile_write ( const string &, int &, int &, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void Hydrosphere_SequelFile_write ( const string &, int, int, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void Hydrosphere_SequelFile_read ( const string &, int &, int &, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void Hydrosphere_SequelFile_read ( const string &, int, int, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
 		void Atmosphere_TransferFile_read ( const string &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 
@@ -53,17 +53,17 @@ class PostProcess_Hydrosphere
 
 		void OscarFile_v_read ( Array_2D & );
 
-		void paraview_vts ( const string &, int &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void paraview_vts ( const string &, int, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void paraview_panorama_vts ( const string &, int &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void paraview_panorama_vts ( const string &, int, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void paraview_vtk_radial ( const string &, int &, int &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+		void paraview_vtk_radial ( const string &, int, int, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
-		void paraview_vtk_longal ( const string &, int &, int &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void paraview_vtk_longal ( const string &, int, int, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void paraview_vtk_zonal ( const string &, int &, int &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+		void paraview_vtk_zonal ( const string &, int, int, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-		void Hydrosphere_PlotData ( const string &, double &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
+		void Hydrosphere_PlotData ( const string &, int iter_cnt, double &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
 
 };
 #endif

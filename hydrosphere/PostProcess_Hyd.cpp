@@ -19,20 +19,15 @@
 
 using namespace std;
 
-
-
-PostProcess_Hydrosphere::PostProcess_Hydrosphere(int im, int jm, int km, const string &input_path, const string &output_path)
+PostProcess_Hydrosphere::PostProcess_Hydrosphere(int im, int jm, int km, const string &output_path)
 {
 	this->im = im;
 	this->jm = jm;
 	this->km = km;
-
-	this->input_path = output_path;
 	this->output_path = output_path;
 }
 
 PostProcess_Hydrosphere::~PostProcess_Hydrosphere() {}
-
 
 void PostProcess_Hydrosphere::dump_array(const string &name, Array &a, double multiplier, ofstream &f)
 {
@@ -125,7 +120,7 @@ void PostProcess_Hydrosphere::dump_longal(const string &desc, Array &a, double m
 
 
 
-void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File, int &n, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &p, Array &u, Array &v, Array &w, Array &c, Array &fup, Array &fvp, Array &fwp, Array &fcp, Array &fpp, Array &ftp, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Buoyancy_Force, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File, int n, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &p, Array &u, Array &v, Array &w, Array &c, Array &fup, Array &fvp, Array &fwp, Array &fcp, Array &fpp, Array &ftp, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, sinthe, sinphi, costhe, cosphi;
 
@@ -290,7 +285,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
 
 
 
-void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathymetry_File, int &n, double &u_0, double &r_0_water, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathymetry_File, int n, double &u_0, double &r_0_water, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, dx, dy, dz;
 
@@ -396,7 +391,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetry_File, int &j_longal, int &n, double &u_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetry_File, int j_longal, int n, double &u_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, dx, dz;
 
@@ -479,7 +474,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int &i_radial, int &n, double &u_0, double &t_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater, Array_2D &Evaporation_Dalton, Array_2D &Precipitation, Array_2D &Bathymetry )
+void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File, int i_radial, int n, double &u_0, double &t_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion, Array_2D &BuoyancyForce, Array_2D &BottomWater, Array_2D &Evaporation_Dalton, Array_2D &Precipitation, Array_2D &Bathymetry )
 {
 	double x, y, z, dx, dy;
 
@@ -580,7 +575,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 
 
 
-void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int &k_zonal, int &n, double &u_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
+void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File, int k_zonal, int n, double &u_0, double &r_0_water, Array &h, Array &p_dyn, Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &u, Array &v, Array &w, Array &c, Array &Salt_Finger, Array &Salt_Diffusion, Array &Buoyancy_Force, Array &Salt_Balance )
 {
 	double x, y, z, dx, dy;
 
@@ -667,7 +662,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_Bathymetry_File, Array &v, Array &w, Array &t, Array &p, Array_2D &Evaporation_Dalton, Array_2D &Precipitation )
 {
 	ifstream v_w_Transfer_File;
-    string Name_v_w_Transfer_File = input_path + "/[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
+    string Name_v_w_Transfer_File = output_path + "/[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
     v_w_Transfer_File.precision(4);
     v_w_Transfer_File.setf(ios::fixed);
 	v_w_Transfer_File.open(Name_v_w_Transfer_File);
@@ -700,12 +695,13 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 
 
 
-void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymetry_File, double &u_0, Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &BottomWater, Array_2D & Upwelling, Array_2D & Downwelling )
+void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymetry_File, int iter_cnt, double &u_0, Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &BottomWater, Array_2D & Upwelling, Array_2D & Downwelling )
 {
 	ofstream PlotData_File;
 	PlotData_File.precision ( 4 );
 	PlotData_File.setf ( ios::fixed );
-	string path = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Hyd.xyz";
+	string path = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Hyd"+
+        (iter_cnt > 0 ? "_"+to_string(iter_cnt) : "")+".xyz";
 	PlotData_File.open (path);
 
 	if (!PlotData_File.is_open())

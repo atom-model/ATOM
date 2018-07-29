@@ -90,7 +90,7 @@ private:
     void SetDefaultConfig();
     void reset_arrays();
     void print_min_max_values();
-    void write_file( std::string &bathymetry_name, string& filepath);
+    void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
 
     void run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
                       BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D,
@@ -122,7 +122,9 @@ private:
 
     static const int im=41, jm=181, km=361, nm=200;
 
-    int n;
+    int iter_cnt; // iteration count
+
+    string bathymetry_name, bathymetry_filepath;
 
     int *im_tropopause;// location of the tropopaus
 

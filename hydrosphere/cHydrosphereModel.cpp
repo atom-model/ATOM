@@ -172,7 +172,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     //  rad.printArray_1D( im );
 
     //  initial values for the number of computed steps and the time
-    int n = 1;
     int switch_2D = 0;
     double residuum;
     double residuum_old = 0.;
@@ -230,7 +229,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
     //  class PostProcess for data transport, read and write
-    PostProcess_Hydrosphere     read_Transfer ( im, jm, km, input_path, output_path );
+    PostProcess_Hydrosphere     read_Transfer ( im, jm, km, output_path );
     read_Transfer.Atmosphere_TransferFile_read ( bathymetry_name, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
 
 
@@ -255,7 +254,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     RHS_Hydrosphere     prepare_2D ( jm, km, dthe, dphi, re );
 
     // class RungeKutta_Hydrosphere for the explicit solution of the Navier-Stokes equations
-    RungeKutta_Hydrosphere      result ( n, im, jm, km, dt );
+    RungeKutta_Hydrosphere      result ( im, jm, km, dt );
 
     // class Pressure for the subsequent computation of the pressure by a separat Euler equation
     Pressure_Hyd        startPressure ( im, jm, km, dr, dthe, dphi );
@@ -303,7 +302,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     /*******************************************   start of pressure and velocity iterations ******************************/
 
     double emin = epsres * 100.;
-
+    iter_cnt = 1;
+    
     // ::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::::
     if ( switch_2D != 1 )
     {
@@ -322,7 +322,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
                 cout << " present state of the 2D computation " << endl << "  current time slice, number of iterations, \
                     maximum and current number of velocity iterations, maximum and current number of pressure iterations " 
-                    << endl << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max_2D = " << 
+                    << endl << endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max_2D = " << 
                     velocity_iter_max_2D << "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " 
                     << pressure_iter_max_2D << "    pressure_iter_2D = " << pressure_iter_2D << endl;
 
@@ -340,7 +340,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                 oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
                 // class RungeKutta for the solution of the differential equations describing the flow properties
-                result.solveRungeKutta_2D_Hydrosphere ( prepare_2D, n, r_0_water, rad, the, phi, rhs_v, rhs_w, h, v, w, 
+                result.solveRungeKutta_2D_Hydrosphere ( prepare_2D, iter_cnt, r_0_water, rad, the, phi, rhs_v, rhs_w, h, v, w, 
                     p_dyn, vn, wn, p_dynn, aux_v, aux_w );
 
                 // new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
@@ -354,13 +354,13 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                 emin = fabs ( ( residuum - residuum_old ) / residuum_old );
 
                 //state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
-                Accuracy_Hyd        min_Stationary_2D ( n, nm, Ma, im, jm, km, emin, j_res, k_res, velocity_iter_2D, 
+                Accuracy_Hyd        min_Stationary_2D ( iter_cnt, nm, Ma, im, jm, km, emin, j_res, k_res, velocity_iter_2D, 
                                         pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
                 min_Stationary_2D.steadyQuery_2D ( h, v, vn, w, wn, p_dyn, p_dynn );
 
                 restoreOldNew(jm, km, .9, old_arrays_2d, new_arrays_2d);
 
-                n++;
+                iter_cnt++;
             }
             //  :::::::::::::   end of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::
 
@@ -368,21 +368,20 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
             startPressure.computePressure_2D ( oceanflow, r_0_water, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
 
-
             // limit of the computation in the sense of time steps
-            if ( n > nm )
+            if ( iter_cnt > nm )
             {
                 cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
                 break;
             }
         } //end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D ) 
-        n = 1;
+        iter_cnt = 1;
         switch_2D = 1;                      // 2D calculations finished
         emin = epsres * 100.;
     }// end of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::::::::
 
     cout << endl << endl;
-
+    
     // ::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::::::::::
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
@@ -395,7 +394,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             cout << " max total iteration number nm = " << nm << endl << endl;
             cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum \
                 and current number of velocity iterations, maximum and current number of pressure iterations " << endl 
-                << endl << " Ma = " << Ma << "     n = " << n << "    velocity_iter_max = " << velocity_iter_max << 
+                << endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max = " << velocity_iter_max << 
                 "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << pressure_iter << endl;
 
@@ -418,7 +417,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
             // class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_3D_Hydrosphere ( prepare, n, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, 
+            result.solveRungeKutta_3D_Hydrosphere ( prepare, iter_cnt, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, 
                 rad, the, phi, Evaporation_Dalton, Precipitation, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, 
                 p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, 
                 Salt_Balance, p_stat, r_water, r_salt_water, Bathymetry );
@@ -439,7 +438,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             emin = fabs ( ( residuum - residuum_old ) / residuum_old );
 
             // statements on the convergence und iterational process
-            Accuracy_Hyd        min_Stationary ( n, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, velocity_iter, 
+            Accuracy_Hyd        min_Stationary ( iter_cnt, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, velocity_iter, 
                                     pressure_iter, velocity_iter_max, pressure_iter_max, L_hyd );
             min_Stationary.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, p_dyn, p_dynn );
 
@@ -555,7 +554,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             //  restoring the velocity component and the temperature for the new time step
             restoreOldNew(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
 
-            n++;
+            iter_cnt++;
         }
         //  ::::::  end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::
 
@@ -564,9 +563,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
         startPressure.computePressure_3D ( oceanflow, r_0_water, pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, 
                                            aux_u, aux_v, aux_w );
 
+        if( pressure_iter % checkpoint == 0 ){
+            write_file(bathymetry_name, output_path);
+        }
 
         //  limit of the computation in the sense of time steps
-        if ( n > nm )
+        if ( iter_cnt > nm )
         {
             cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
             break;
@@ -575,39 +577,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
-    n--;
-
-    //  printout in ParaView and plot files
-    //  class PostProcess_Hydrosphaere for the printing of results
-    PostProcess_Hydrosphere     write_File ( im, jm, km, input_path, output_path );
-
-    int j_longal = 75;
-    //  int j_longal = 90;
-    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, n, u_0, r_0_water, h, p_dyn, p_stat, r_water, 
-        r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
-
-    //  zonal data along constant longitudes
-    int k_zonal = 185;
-    //  int k_zonal = 140;
-    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, n, u_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, 
-            t, u, v, w, c, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
-
-    //  radial data along constant hight above ground
-    int i_radial = 40;
-    //  int i_radial = 39;
-    write_File.paraview_vtk_radial ( bathymetry_name, i_radial, n, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, 
-        r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, 
-        Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, 
-        Precipitation, Bathymetry );
-
-    //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-    if(paraview_panorama_vts){
-        write_File.paraview_panorama_vts ( bathymetry_name, n, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
-            u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
-    }
-    //  writing of plot data in the PlotData file
-    PostProcess_Hydrosphere     ppa ( im, jm, km, input_path, output_path );
-    ppa.Hydrosphere_PlotData ( bathymetry_name, u_0, h, v, w, t, c, BottomWater, Upwelling, Downwelling );
+    write_file(bathymetry_name, output_path, true);
 
     //  final remarks
     cout << endl << "***** end of the Hydrosphere General Circulation Modell ( OGCM ) *****" << endl << endl;
@@ -718,4 +688,40 @@ void cHydrosphereModel::Run()
     cout << endl;
     cout << "***** end of object oriented C++ program for the computation of 3D-hydrospheric circulation *****";
     cout << "\n\n\n\n";
+}
+
+void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepath, bool is_final_result)
+{
+    //  printout in ParaView and plot files
+    //  class PostProcess_Hydrosphaere for the printing of results
+    PostProcess_Hydrosphere     write_File ( im, jm, km, filepath );
+
+    int j_longal = 75;
+    //  int j_longal = 90;
+    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, iter_cnt-1, u_0, r_0_water, h, p_dyn, p_stat, r_water, 
+        r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
+
+    //  zonal data along constant longitudes
+    int k_zonal = 185;
+    //  int k_zonal = 140;
+    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, iter_cnt-1, u_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, 
+            t, u, v, w, c, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
+
+    //  radial data along constant hight above ground
+    int i_radial = 40;
+    //  int i_radial = 39;
+    write_File.paraview_vtk_radial ( bathymetry_name, i_radial, iter_cnt-1, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, 
+        r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, 
+        Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, 
+        Precipitation, Bathymetry );
+
+    //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
+    if(paraview_panorama_vts){
+        write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
+            u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
+    }
+    //  writing of plot data in the PlotData file
+    PostProcess_Hydrosphere     ppa ( im, jm, km, output_path );
+    ppa.Hydrosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, h, v, w, t, c, BottomWater, Upwelling, Downwelling );
+
 }

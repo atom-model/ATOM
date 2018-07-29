@@ -140,7 +140,7 @@ void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_F
 
 
 
-void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File, int &n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow )
+void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow )
 {
     double x, y, z, dx, dy, dz;
 
@@ -260,12 +260,7 @@ void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File
     Atmosphere_panorama_vts_File.close();
 }
 
-
-
-
-
-
-void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int &Ma, int &i_radial, int &n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &radiation_3D, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Dalton, Array_2D &Q_Evaporation, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Topography, Array_2D &temp_NASA )
+void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int Ma, int i_radial, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &radiation_3D, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Dalton, Array_2D &Q_Evaporation, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Topography, Array_2D &temp_NASA )
 {
     double x, y, z, dx, dy;
 
@@ -414,12 +409,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
     Atmosphere_vtk_radial_File.close();
 }
 
-
-
-
-
-
-void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, int &k_zonal, int &n, double &hp, double &ep, double &R_Air, double &g, double &L_atm, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &radiation_3D, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
+void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, int k_zonal, int n, double &hp, double &ep, double &R_Air, double &g, double &L_atm, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &radiation_3D, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
 {
     double x, y, z, dx, dy;
 
@@ -548,13 +538,7 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
     Atmosphere_vtk_zonal_File.close();
 }
 
-
-
-
-
-
-
-void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, int &j_longal, int &n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow )
+void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, int j_longal, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow )
 {
     double x, y, z, dx, dz;
 
@@ -656,9 +640,10 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
 
 
 
-void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File, double u_0, double t_0, Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water )
+void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File, int iter_cnt, double u_0, double t_0, Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water )
 {
-    string Name_PlotData_File = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Atm.xyz";
+    string Name_PlotData_File = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Atm"+
+        (iter_cnt > 0 ? "_"+to_string(iter_cnt) : "") + ".xyz";
     ofstream PlotData_File;
     PlotData_File.precision(4);
     PlotData_File.setf(ios::fixed);

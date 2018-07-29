@@ -15,9 +15,8 @@
 using namespace std;
 
 
-RungeKutta_Hydrosphere::RungeKutta_Hydrosphere ( int n, int im, int jm, int km, double dt )
+RungeKutta_Hydrosphere::RungeKutta_Hydrosphere ( int im, int jm, int km, double dt )
 {
-	this -> n = n;
 	this -> im = im;
 	this -> jm = jm;
 	this -> km = km;

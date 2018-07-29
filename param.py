@@ -29,10 +29,11 @@ def main():
 
 
         'atmosphere': [
-            ( 'velocity_iter_max_2D', '', 'int',2 ),
-            ( 'pressure_iter_max_2D', '', 'int', 10 ),
-            ( 'velocity_iter_max', '', 'int', 2 ),
-            ( 'pressure_iter_max', '', 'int', 2 ),
+            ( 'velocity_iter_max_2D', 'the number of velocity iterations', 'int',2 ),
+            ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
+            ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 40),
 
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
@@ -126,10 +127,11 @@ def main():
 
         'hydrosphere': [
             ( 'input_path', 'directory where Atmosphere output can be read (must end in /)', 'string', 'output' ),
-            ( 'velocity_iter_max_2D', '', 'int', 2 ),
-            ( 'pressure_iter_max_2D', '', 'int', 10 ),
-            ( 'velocity_iter_max', '', 'int', 2 ),
-            ( 'pressure_iter_max', '', 'int', 2 ),
+            ( 'velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2 ),
+            ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
+            ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 40),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 
