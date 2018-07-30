@@ -120,7 +120,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     }
     if ( ( topo_diff == topo_step ) || ( h.x[ i ][ j ][ k ] == 0. ) )
     {
-		h_0_i = 1.;
+        h_0_i = 1.;
         h_d_i = cc * ( 1. - h_0_i ); 
     }
 
