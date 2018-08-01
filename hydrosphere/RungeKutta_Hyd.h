@@ -20,25 +20,14 @@ using namespace std;
 
 class RungeKutta_Hydrosphere
 {
-<<<<<<< Updated upstream
 	private:
 		int im, jm, km;
-=======
-    private:
-        int n, im, jm, km;
->>>>>>> Stashed changes
 
         double dt, kt1, ku1, kv1, kw1, kc1, kp1, kt2, ku2, kv2, kw2, kc2, kp2, kt3, ku3, kv3, kw3, kc3, kp3, kt4, ku4, kv4, kw4, kc4, kp4;
 
-<<<<<<< Updated upstream
 	public:
 		RungeKutta_Hydrosphere ( int, int, int, double );
 		~RungeKutta_Hydrosphere ();
-=======
-    public:
-        RungeKutta_Hydrosphere ( int, int, int, int, double );
-        ~RungeKutta_Hydrosphere ();
->>>>>>> Stashed changes
 
         void solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &, int &, double, double, double, double, double, double, double, double, double, double, Array_1D &, Array_1D &, Array_1D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D & );
 
