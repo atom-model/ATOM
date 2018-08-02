@@ -51,7 +51,7 @@ class RHS_Atmosphere
 
 
         void RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u_0, double p_0, double L_atm,
-                                            Array_1D &rad, Array_1D &the, Array &h, Array &v, Array &w,
+                                            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w,
                                             Array &p_dyn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w );
 };
 #endif
