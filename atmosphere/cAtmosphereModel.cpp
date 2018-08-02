@@ -58,7 +58,9 @@ cAtmosphereModel::cAtmosphereModel() :
     old_arrays_3d {&u,  &v,  &w,  &t,  &p_dyn,  &c,  &cloud,  &ice,  &co2 },
     new_arrays_3d {&un, &vn, &wn, &tn, &p_dynn, &cn, &cloudn, &icen, &co2n},
     old_arrays_2d {&v,  &w,  &p_dyn }, 
-    new_arrays_2d {&vn, &wn, &p_dynn}
+    new_arrays_2d {&vn, &wn, &p_dynn},
+    residuum_2d(1, jm, km),
+    residuum_3d(im, jm, km)
 {
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
@@ -614,6 +616,13 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
     ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
     ppa.Atmosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, t_0, h, v, w, t, c, 
                               Precipitation, precipitable_water );
+
+    if(debug){
+        ppa.save(output_path+"/residuum_"+std::to_string(iter_cnt-1)+".dat", 
+                std::vector<std::string>{"residuum"},
+                std::vector<Vector3D<>* >{&residuum_3d},
+                1);
+    }
 }
 
 void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
@@ -652,7 +661,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 
                 //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
                 Accuracy_Atm        min_Residuum_2D ( im, jm, km, dthe, dphi );
-                double residuum_old = min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
+                double residuum_old = std::get<0>(min_Residuum_2D.residuumQuery_2D ( rad, the, v, w , residuum_2d));
 
                 circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
@@ -668,7 +677,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                           pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
                                           radiation_3D, Vegetation );
                 //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-                double residuum = min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
+                double residuum = std::get<0>(min_Residuum_2D.residuumQuery_2D ( rad, the, v, w, residuum_2d ));
 
                 emin = fabs ( ( residuum - residuum_old ) / residuum_old );
                 
@@ -728,8 +737,10 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             Accuracy_Atm        min_Residuum ( im, jm, km, dr, dthe, dphi );
-            double residuum_old = min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
-
+            double residuum_old = std::get<0>(min_Residuum.residuumQuery_3D ( rad, the, u, v, w, residuum_3d ));
+            
+            //logger() <<  residuum_3d(1, 30, 150) << " residuum_mchin" <<Ma<<std::endl;
+            
             //  class BC_Atmosphaere for the geometry of a shell of a sphere
             boundary.BC_radius ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
             boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
@@ -764,7 +775,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                         p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
             }
             //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-            double residuum = min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
+            double residuum = std::get<0>(min_Residuum.residuumQuery_3D ( rad, the, u, v, w, residuum_3d ));
 
             emin = fabs ( ( residuum - residuum_old ) / residuum_old );
 
@@ -815,6 +826,8 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, cloud, ice, 
                                               P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
         }
+
+        //logger() <<  fabs ( p_dyn.x[ 20 ][ 30 ][ 150 ] - p_dynn.x[ 20 ][ 30 ][ 150 ] ) << " pressure_mchin" <<Ma<<std::endl;
 
         if( pressure_iter % checkpoint == 0 ){
             write_file(bathymetry_name, output_path);

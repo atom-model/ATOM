@@ -53,5 +53,8 @@ public:
     void Atmosphere_PlotData ( string &, int iter_cnt, double, double, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 
     double exp_func ( double &, const double &, const double & );
+
+    void save( const string &filename, const std::vector<string> &field_names,
+               const std::vector<Vector3D<>* > &data, unsigned layer=0 );
 };
 #endif

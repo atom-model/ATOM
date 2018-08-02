@@ -16,29 +16,10 @@
 #include <vector>
 #include <cmath>
 #include <cassert>
+#include <numeric>
+#include <tuple>
 
 using namespace std;
-
-class Int3DArray{
-    private:
-        int im, jm, km;
-
-    public:
-        std::vector<std::vector<std::vector<int> > > x;
-
-    Int3DArray(int idim, int jdim, int kdim, double val){
-        im=idim; jm=jdim; km=kdim;
-        x.resize(idim);
-        for(int i=0; i<idim; i++){
-            x[i].resize(jdim);
-            for(int j=0; j<jdim; j++){
-                 x[i][j].resize(kdim, val);
-            }
-        }
-    }
-
-    ~Int3DArray ( ){}
-};
 
 class Array
 {
@@ -92,18 +73,6 @@ public:
                 }
             }
         }
-    }
-
-    Int3DArray to_Int3DArray(){
-        Int3DArray a(im,jm,km,0);
-        for(int i=0; i<im; i++){
-            for(int j=0; j<jm; j++){
-                for(int k=0; k<km; k++){
-                    a.x[i][j][k]=int(round(x[i][j][k]));
-                }
-            }
-        }
-        return a;
     }
 
     double max() const{
@@ -203,5 +172,75 @@ inline Array operator* (double coeff, const Array &a){
     }
     return ret;
 }
+
+template <typename T = double>
+class Vector3D {
+public:
+    Vector3D(size_t i, size_t j, size_t k, const T& t = T()) :
+        m_i(i), m_j(j), m_k(k), m_data((!i?1:i)*j*k, t)
+    {}
+
+    //https://en.cppreference.com/w/cpp/language/operators
+    //To provide multidimensional array access semantics, e.g. to implement a 3D array access a[i][j][k] = x;, 
+    //operator[] has to return a reference to a 2D plane, which has to have its own operator[] which returns 
+    //a reference to a 1D row, which has to have operator[] which returns a reference to the element. 
+    //To avoid this complexity, some libraries opt for overloading operator() instead, 
+    //so that 3D access expressions have the Fortran-like syntax a(i, j, k) = x;
+    T& operator()(size_t i, size_t j, size_t k) {
+        return m_data[i*m_j*m_k + j*m_k + k];
+    }
+
+    const T& operator()(size_t i, size_t j, size_t k) const {
+        return m_data[i*m_j*m_k + j*m_k + k];
+    }
+
+    T mean() const{
+        return std::accumulate(m_data.begin(), m_data.end(), 0.0) / m_data.size();
+    }
+
+    std::tuple<T, int, int, int>
+    max() const
+    {
+        std::tuple<T, unsigned, unsigned, unsigned> ret(m_data[0], 0, 0, 0);
+        for(std::size_t i=0; i<m_i; i++){
+            for(std::size_t j=0; j<m_j; j++){
+                for(std::size_t k=0; k<m_k; k++){
+                    if(std::get<0>(ret) < m_data[i*m_j*m_k + j*m_k + k])
+                    {
+                        std::get<0>(ret) = m_data[i*m_j*m_k + j*m_k + k];
+                        std::get<1>(ret) = i;
+                        std::get<2>(ret) = j;
+                        std::get<3>(ret) = k;
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
+    std::tuple<T, int, int, int>
+    min() const
+    {
+        std::tuple<T, unsigned, unsigned, unsigned> ret(m_data[0], 0, 0, 0);
+        for(std::size_t i=0; i<m_i; i++){
+            for(std::size_t j=0; j<m_j; j++){
+                for(std::size_t k=0; k<m_k; k++){
+                    if(std::get<0>(ret) > m_data[i*m_j*m_k + j*m_k + k])
+                    {
+                        std::get<0>(ret) = m_data[i*m_j*m_k + j*m_k + k];
+                        std::get<1>(ret) = i;
+                        std::get<2>(ret) = j;
+                        std::get<3>(ret) = k;
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
+private:
+    size_t m_i, m_j, m_k;
+    std::vector<T> m_data;
+};
 
 #endif

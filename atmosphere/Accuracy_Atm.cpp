@@ -18,6 +18,7 @@
 #include "Utils.h"
 
 using namespace std;
+using namespace AtomUtils;
 
 Accuracy_Atm::Accuracy_Atm( int im, int jm, int km, double dthe, double dphi ):
     im(im),
@@ -50,11 +51,10 @@ Accuracy_Atm::Accuracy_Atm( int im, int jm, int km, double dr, double dthe, doub
 
 Accuracy_Atm::~Accuracy_Atm () {}
 
-double Accuracy_Atm::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Array &w )
+std::tuple<double, int, int> 
+Accuracy_Atm::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Array &w, Vector3D<> &residuum_2d )
 {
     // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-    double residuum = 0.;
-
     for ( int j = 1; j < jm-1; j++ )
     {
         double sinthe = sin( the.z[ j ] );
@@ -63,9 +63,11 @@ double Accuracy_Atm::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, 
 
         for ( int k = 1; k < km-1; k++ )
         {
-                double dvdthe = ( v.x[ 0 ][ j+1 ][ k ] - v.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
-                double dwdphi = ( w.x[ 0 ][ j ][ k+1 ] - w.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi );
-                residuum = dvdthe / rad.z[ 0 ] + costhe / rmsinthe * v.x[ 0 ][ j ][ k ] + dwdphi / rmsinthe;
+            double dvdthe = ( v.x[ 0 ][ j+1 ][ k ] - v.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
+            double dwdphi = ( w.x[ 0 ][ j ][ k+1 ] - w.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi );
+            double &residuum = residuum_2d(0,j,k) = 
+                dvdthe / rad.z[ 0 ] + costhe / rmsinthe * v.x[ 0 ][ j ][ k ] + dwdphi / rmsinthe;
+                
             if ( fabs ( residuum ) > min )
             {
                 min = residuum;
@@ -74,15 +76,15 @@ double Accuracy_Atm::residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, 
             }
         }
     }
-    return min;
+    return std::make_tuple(min, j_res, k_res);
 }
 
-double Accuracy_Atm::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w )
+std::tuple<double, int, int, int>
+Accuracy_Atm::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w, 
+                                        Vector3D<> &residuum_3d )
 {
     assert(is_3d_flag);
     // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-    double residuum = 0.;
-
     for ( int i = 1; i < im-1; i++ )
     {
         for ( int j = 1; j < jm-1; j++ )
@@ -97,8 +99,9 @@ double Accuracy_Atm::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, 
                 double dvdthe = ( v.x[ i ][ j+1 ][ k ] - v.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
                 double dwdphi = ( w.x[ i ][ j ][ k+1 ] - w.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
 
-                residuum = dudr + 2. * u.x[ i ][ j ][ k ] / rad.z[ i ] + dvdthe / rad.z[ i ]
+                double &residuum = residuum_3d(i,j,k) = dudr + 2. * u.x[ i ][ j ][ k ] / rad.z[ i ] + dvdthe / rad.z[ i ]
                             + costhe / rmsinthe * v.x[ i ][ j ][ k ] + dwdphi / rmsinthe;
+                //logger() << residuum_3d(i,j,k) << "  " << residuum << "  residuum" << std::endl;
                 if ( fabs ( residuum ) > min )
                 {
                     min = residuum;
@@ -109,7 +112,7 @@ double Accuracy_Atm::residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, 
             }
         }
     }
-    return min;
+    return std::tuple<double, int, int, int>(min, i_res, j_res, k_res);
 }
 
 void Accuracy_Atm::steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &p_dynn )

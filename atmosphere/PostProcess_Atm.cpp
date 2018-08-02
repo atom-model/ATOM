@@ -26,12 +26,7 @@ PostProcess_Atmosphere::PostProcess_Atmosphere( int im, int jm, int km, string &
     this->output_path = output_path;
 }
 
-
-
 PostProcess_Atmosphere::~PostProcess_Atmosphere(){}
-
-
-
 
 void PostProcess_Atmosphere::dump_array( const string &name, Array &a, double multiplier, ofstream &f )
 {
@@ -50,9 +45,6 @@ void PostProcess_Atmosphere::dump_array( const string &name, Array &a, double mu
     f << "    </DataArray>\n";
 }
 
-
-
-
 void PostProcess_Atmosphere::dump_radial( const string &desc, Array &a, double multiplier, int i, ofstream &f )
 {
     f << "SCALARS " << desc << " float " << 1 << endl;
@@ -64,8 +56,6 @@ void PostProcess_Atmosphere::dump_radial( const string &desc, Array &a, double m
         }
     }
 }
-
-
 
 void PostProcess_Atmosphere::dump_radial_2d( const string &desc, Array_2D &a, double multiplier, ofstream &f )
 {
@@ -79,9 +69,6 @@ void PostProcess_Atmosphere::dump_radial_2d( const string &desc, Array_2D &a, do
     }
 }
 
-
-
-
 void PostProcess_Atmosphere::dump_zonal( const string &desc, Array &a, double multiplier, int k, ofstream &f )
 {
     f <<  "SCALARS " << desc << " float " << 1 << endl;
@@ -94,9 +81,6 @@ void PostProcess_Atmosphere::dump_zonal( const string &desc, Array &a, double mu
     }
 }
 
-
-
-
 void PostProcess_Atmosphere::dump_longal( const string &desc, Array &a, double multiplier, int j, ofstream &f )
 {
     f << "SCALARS " << desc << " float " << 1 << endl;
@@ -108,9 +92,6 @@ void PostProcess_Atmosphere::dump_longal( const string &desc, Array &a, double m
         }
     }
 }
-
-
-
 
 void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_File, double u_0, Array &v, Array &w, Array &t, Array &p_dyn, Array_2D &Evaporation_Dalton, Array_2D &Precipitation )
 {
@@ -133,12 +114,6 @@ void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_F
     }
     v_w_Transfer_File.close();
 }
-
-
-
-
-
-
 
 void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow )
 {
@@ -637,9 +612,6 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
     Atmosphere_vtk_longal_File.close();
 }
 
-
-
-
 void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File, int iter_cnt, double u_0, double t_0, Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water )
 {
     string Name_PlotData_File = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Atm"+
@@ -670,6 +642,39 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
     PlotData_File.close();
 }
 
+void PostProcess_Atmosphere::save(  const string &filename, const std::vector<string> &field_names, 
+                                    const std::vector<Vector3D<>* > &data, unsigned layer )
+{
+    assert(field_names.size() == data.size());
+    ofstream ofs(filename);
+
+    if (!ofs.is_open())
+    {
+        cerr << "ERROR: unable to open file " << filename << "\n";
+        abort();
+    }
+
+    for(std::size_t i = 0; i < field_names.size(); i++)
+    {
+        ofs << "lons(deg)" << " ";
+        ofs << "lats(deg)" << " ";
+        ofs << field_names[i] << " ";
+    }
+    ofs << std::endl;
+
+    for ( int k = 0; k < km; k++ )
+    {
+        for ( int j = 0; j < jm; j++ )
+        {
+            ofs << k << " " << j << " ";
+            for(std::size_t i = 0; i < data.size(); i++)
+            {   
+                ofs << (*data[i])(layer,j,k) << " ";
+            }
+            ofs << std::endl;
+        }
+    }
+}
 
 
 double PostProcess_Atmosphere::exp_func ( double &T_K, const double &co_1, const double &co_2 )

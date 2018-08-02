@@ -13,6 +13,7 @@ def main():
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
             ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', False),
+            ( 'debug','flag to control if the program is running in debug mode', 'bool', True),
         
             #parameters for data reconstruction
             ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),

@@ -7,6 +7,7 @@
  *
  * class to surveil the accuracy of the iterations
 */
+#include <tuple>
 
 #include "Array.h"
 #include "Array_1D.h"
@@ -30,8 +31,10 @@ class Accuracy_Atm
 
         ~Accuracy_Atm ();
 
-        double residuumQuery_2D ( Array_1D &rad, Array_1D &the, Array &v, Array &w );
-        double residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w );
+        std::tuple<double, int, int> residuumQuery_2D ( 
+            Array_1D &rad, Array_1D &the, Array &v, Array &w, Vector3D<> & residuum_2d );
+        std::tuple<double, int, int, int> 
+            residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w, Vector3D<> & residuum_3d );
         
         void steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &p_dynn );
         void steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn,

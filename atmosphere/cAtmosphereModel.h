@@ -227,6 +227,8 @@ private:
     Array S_s; // snow mass rate due to category two ice scheme
     Array S_c_c; // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
 
+    Vector3D<> residuum_2d, residuum_3d; 
+
 };
 
 #endif
