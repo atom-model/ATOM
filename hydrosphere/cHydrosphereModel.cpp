@@ -288,7 +288,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     //  surface pressure computed by surface temperature with gas equation
     oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
-
+/*
       cout << endl << " ***** printout of 3D-field v-component ***** " << endl << endl;
       v.printArray( im, jm, km );
 
@@ -300,7 +300,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
       cout << endl << " ***** printout of 3D-field wn-component ***** " << endl << endl;
       w.printArray( im, jm, km );
-
+*/
     //  storing of velocity components, pressure and temperature for iteration start
     restoreOldNew(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
     restoreOldNew(jm, km, .9, old_arrays_2d, new_arrays_2d);
@@ -347,7 +347,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                 residuum_old = emin;
 
                 oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
-
+/*
       cout << endl << " ***** vor RK  printout of 3D-field v-component ***** " << endl << endl;
       v.printArray( im, jm, km );
 
@@ -359,7 +359,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
       cout << endl << " ***** vor RK  printout of 3D-field wn-component ***** " << endl << endl;
       w.printArray( im, jm, km );
-
+*/
         logger() << "enter cHydrosphereModel: v-velocity max: " << v.max() << std::endl;
         logger() << "enter cHydrosphereModel: w-velocity max: " << w.max() << std::endl << std::endl;
 
@@ -369,7 +369,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
         logger() << "end cHydrosphereModel: v-velocity max: " << v.max() << std::endl;
         logger() << "end cHydrosphereModel: w-velocity max: " << w.max() << std::endl << std::endl;
-
+/*
       cout << endl << " ***** nach RK  printout of 3D-field v-component ***** " << endl << endl;
       v.printArray( im, jm, km );
 
@@ -381,7 +381,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
       cout << endl << " ***** nach RK  printout of 3D-field wn-component ***** " << endl << endl;
       w.printArray( im, jm, km );
-
+*/
                 // new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
                 Accuracy_Hyd        min_Residuum_2D ( im, jm, km, dthe, dphi );
                 min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
