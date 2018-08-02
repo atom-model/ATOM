@@ -22,10 +22,10 @@ class RHS_Hydrosphere
 {
     private:
         int im, jm, km;
-        
+
         double dt, dr, dthe, dphi;
         double re, pr, sc, m_g;
-        
+
         double Buoyancy;
 
     public:
@@ -36,18 +36,17 @@ class RHS_Hydrosphere
 
         ~RHS_Hydrosphere ();
 
-        void RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd, double g, double cp_w, double u_0, double t_0, 
-            double c_0, 
-            double r_0_water, double ta, double pa, double ca, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, 
-            Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, 
-            Array &p_dynn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, 
-            Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D, 
-            Array &Salt_Balance, Array &p_stat, Array &ro_water, Array &ro_salt_water, Array_2D &Evaporation_Penman,
+        void RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd, double g, double cp_w,
+            double u_0, double t_0, double c_0, double r_0_water, double ta, double pa, double ca,
+            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w,
+            Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn,
+            Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &aux_u, Array &aux_v,
+            Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D, Array &Salt_Balance,
+            Array &p_stat, Array &ro_water, Array &ro_salt_water, Array_2D &Evaporation_Penman,
             Array_2D &Precipitation, Array_2D &Bathymetry );
 
-        void RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w, 
-            Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &rhs_v, Array &rhs_w, Array &aux_v, 
-            Array &aux_w );
-
+        void RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Array_1D &rad, Array_1D &the, Array_1D &phi,
+            Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &rhs_v, Array &rhs_w,
+            Array &aux_v, Array &aux_w );
 };
 #endif

@@ -262,9 +262,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     // class Results_MSL_Hyd to compute and show results on the mean sea level, MSL
     Results_Hyd     calculate_MSL ( im, jm, km );
 
-    // class File_NetCDF to write results in the format of a netCDF-file
-    // File_NetCDF_Hyd      printoutNetCDF ( im, jm, km );
-
     // class BC_Thermohalin for the initial and boundary conditions of the flow properties
     BC_Thermohalin      oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, 
                                     ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, 
@@ -291,6 +288,18 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     //  surface pressure computed by surface temperature with gas equation
     oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
+
+      cout << endl << " ***** printout of 3D-field v-component ***** " << endl << endl;
+      v.printArray( im, jm, km );
+
+      cout << endl << " ***** printout of 3D-field w-component ***** " << endl << endl;
+      w.printArray( im, jm, km );
+
+      cout << endl << " ***** printout of 3D-field vn-component ***** " << endl << endl;
+      v.printArray( im, jm, km );
+
+      cout << endl << " ***** printout of 3D-field wn-component ***** " << endl << endl;
+      w.printArray( im, jm, km );
 
     //  storing of velocity components, pressure and temperature for iteration start
     restoreOldNew(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
@@ -339,9 +348,39 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
                 oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
+      cout << endl << " ***** vor RK  printout of 3D-field v-component ***** " << endl << endl;
+      v.printArray( im, jm, km );
+
+      cout << endl << " ***** vor RK  printout of 3D-field w-component ***** " << endl << endl;
+      w.printArray( im, jm, km );
+
+      cout << endl << " ***** vor RK  printout of 3D-field vn-component ***** " << endl << endl;
+      v.printArray( im, jm, km );
+
+      cout << endl << " ***** vor RK  printout of 3D-field wn-component ***** " << endl << endl;
+      w.printArray( im, jm, km );
+
+        logger() << "enter cHydrosphereModel: v-velocity max: " << v.max() << std::endl;
+        logger() << "enter cHydrosphereModel: w-velocity max: " << w.max() << std::endl << std::endl;
+
                 // class RungeKutta for the solution of the differential equations describing the flow properties
                 result.solveRungeKutta_2D_Hydrosphere ( prepare_2D, iter_cnt, r_0_water, rad, the, phi, rhs_v, rhs_w, h, v, w, 
                     p_dyn, vn, wn, p_dynn, aux_v, aux_w );
+
+        logger() << "end cHydrosphereModel: v-velocity max: " << v.max() << std::endl;
+        logger() << "end cHydrosphereModel: w-velocity max: " << w.max() << std::endl << std::endl;
+
+      cout << endl << " ***** nach RK  printout of 3D-field v-component ***** " << endl << endl;
+      v.printArray( im, jm, km );
+
+      cout << endl << " ***** nach RK  printout of 3D-field w-component ***** " << endl << endl;
+      w.printArray( im, jm, km );
+
+      cout << endl << " ***** nach RK  printout of 3D-field vn-component ***** " << endl << endl;
+      v.printArray( im, jm, km );
+
+      cout << endl << " ***** nach RK  printout of 3D-field wn-component ***** " << endl << endl;
+      w.printArray( im, jm, km );
 
                 // new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
                 Accuracy_Hyd        min_Residuum_2D ( im, jm, km, dthe, dphi );
@@ -358,7 +397,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                                         pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
                 min_Stationary_2D.steadyQuery_2D ( h, v, vn, w, wn, p_dyn, p_dynn );
 
-                restoreOldNew(jm, km, .9, old_arrays_2d, new_arrays_2d);
+                restoreOldNew(jm, km, 1., old_arrays_2d, new_arrays_2d);
 
                 iter_cnt++;
             }
@@ -366,7 +405,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-            startPressure.computePressure_2D ( oceanflow, r_0_water, rad, the, p_dyn, p_dynn, h, rhs_v, rhs_w, aux_v, aux_w );
+            startPressure.computePressure_2D ( oceanflow, u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
 
             // limit of the computation in the sense of time steps
             if ( iter_cnt > nm )
@@ -552,7 +591,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                     Salt_total, BottomWater );
 
             //  restoring the velocity component and the temperature for the new time step
-            restoreOldNew(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
+            restoreOldNew(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
 
             iter_cnt++;
         }
@@ -560,7 +599,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-        startPressure.computePressure_3D ( oceanflow, r_0_water, pa, rad, the, p_dyn, p_dynn, h, rhs_u, rhs_v, rhs_w, 
+        startPressure.computePressure_3D ( oceanflow, r_0_water, pa, rad, the, p_dyn, p_dynn, h, 
                                            aux_u, aux_v, aux_w );
 
         if( pressure_iter % checkpoint == 0 ){

@@ -12,8 +12,10 @@
 #include <cmath>
 
 #include "RHS_Hyd.h"
+#include "Utils.h"
 
 using namespace std;
+using namespace AtomUtils;
 
 
 
@@ -56,9 +58,9 @@ RHS_Hydrosphere::~RHS_Hydrosphere() {}
 
 
 void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd, double g, double cp_w, double u_0, 
-            double t_0, double c_0,
-            double r_0_water, double ta, double pa, double ca, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h,
-            Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn,
+            double t_0, double c_0, double r_0_water, double ta, double pa, double ca,
+            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w,
+            Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn,
             Array &p_dynn, Array &cn, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c,
             Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D,
             Array &Salt_Balance, Array &p_stat, Array &r_water, Array &r_salt_water, Array_2D &Evaporation_Dalton,
@@ -92,9 +94,9 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 //  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>> 
 // only in positive r-direction above ground 
-	double topo_step = L_hyd / ( double ) ( im-1 );
-	double hight = ( double ) i * topo_step;
-	double topo_diff = fabs ( hight - Bathymetry.y[ j ][ k ] );
+    double topo_step = L_hyd / ( double ) ( im-1 );
+    double hight = ( double ) i * topo_step;
+    double topo_diff = fabs ( hight - Bathymetry.y[ j ][ k ] );
     double h_0_i = topo_diff / topo_step;  // hat distribution function
 //    double h_0_i = cc * ( .5 * ( acos ( topo_diff * 3.14 / L_atm ) + 1. ) );   // cosine distribution function, better results for benchmark case
 
@@ -107,7 +109,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     }
     if ( ( topo_diff == topo_step ) || ( h.x[ i ][ j ][ k ] == 0. ) )
     {
-		h_0_i = 1.;
+        h_0_i = 1.;
         h_d_i = cc * ( 1. - h_0_i ); 
     }
 
@@ -191,31 +193,31 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     double d2cdphi2 = h_d_k * ( c.x[ i ][ j ][ k+1 ] - 2. * c.x[ i ][ j ][ k ] + c.x[ i ][ j ][ k-1 ] ) / dphi2;
 
 
-	double salinity_evaporation = 0.;
-	double salinity_surface = 0.;
-	double drodc = .7;												// gradient given in kg/m³
-	double salt_water_ref = r_water.x[ i ][ j ][ k ] + drodc * c.x[ i ][ j ][ k ] * c_0;						// common linear approach for salt water based on fresh water
-    double coeff_buoy = r_0_water * u_0 * u_0 / L_hyd;													// coefficient for the buoyancy term == .0625
-	double coeff_salinity = 1.1574e-5 * L_hyd / u_0;											// 1.1574e-5 == mm/d to mm/s, == .0463
+    double salinity_evaporation = 0.;
+    double salinity_surface = 0.;
+    double drodc = .7;                                                // gradient given in kg/m³
+    double salt_water_ref = r_water.x[ i ][ j ][ k ] + drodc * c.x[ i ][ j ][ k ] * c_0;                        // common linear approach for salt water based on fresh water
+    double coeff_buoy = r_0_water * u_0 * u_0 / L_hyd;                                                    // coefficient for the buoyancy term == .0625
+    double coeff_salinity = 1.1574e-5 * L_hyd / u_0;                                            // 1.1574e-5 == mm/d to mm/s, == .0463
 
-	if ( i == im - 2 )
-	{
-		salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 1 ][ j ][ k ] + 4. * c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * dr ) * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );		// 2. ord. * 
-//		salinity_surface = salt_water_ref * ( c.x[ im - 1 ][ j ][ k ] - c.x[ im - 2 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );		// 1. ord.
+    if ( i == im - 2 )
+    {
+        salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 1 ][ j ][ k ] + 4. * c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * dr ) * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );        // 2. ord. * 
+//        salinity_surface = salt_water_ref * ( c.x[ im - 1 ][ j ][ k ] - c.x[ im - 2 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );        // 1. ord.
 
-		salinity_evaporation = + coeff_salinity * salinity_surface;		// (-) originally, (+) for RHS
+        salinity_evaporation = + coeff_salinity * salinity_surface;        // (-) originally, (+) for RHS
 
-		if ( h.x[ i ][ j ][ k ] == 1. )	salinity_evaporation = 0.;
+        if ( h.x[ i ][ j ][ k ] == 1. )    salinity_evaporation = 0.;
 
-		if ( salinity_evaporation >= 20. )	salinity_evaporation = 20.;				// salinity gradient causes values too high at shelf corners
-		if ( salinity_evaporation <= - 20. )	salinity_evaporation = - 20.;			// salinity gradient causes values too high at shelf corners
-	}
-	else 								salinity_evaporation = 0.;
+        if ( salinity_evaporation >= 20. )    salinity_evaporation = 20.;                // salinity gradient causes values too high at shelf corners
+        if ( salinity_evaporation <= - 20. )    salinity_evaporation = - 20.;            // salinity gradient causes values too high at shelf corners
+    }
+    else                                 salinity_evaporation = 0.;
 
 
     double RS_buoyancy_Momentum = Buoyancy * g * ( r_salt_water.x[ i ][ j ][ k ] - salt_water_ref ) / salt_water_ref;       // buoyancy based on water density 
 
-    BuoyancyForce_3D.x[ i ][ j ][ k ] = RS_buoyancy_Momentum * coeff_buoy * 1000.;			// dimension as pressure in kN/m2
+    BuoyancyForce_3D.x[ i ][ j ][ k ] = RS_buoyancy_Momentum * coeff_buoy * 1000.;            // dimension as pressure in kN/m2
 
     Salt_Balance.x[ i ][ j ][ k ] = salt_water_ref - r_salt_water.x[ i ][ j ][ k ];       // difference of salinity compared to average
 
@@ -277,15 +279,34 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     aux_u.x[ i ][ j ][ k ] = rhs_u.x[ i ][ j ][ k ] + h_d_i * dpdr / salt_water_ref;
     aux_v.x[ i ][ j ][ k ] = rhs_v.x[ i ][ j ][ k ] + h_d_j * dpdthe / rm / salt_water_ref;
     aux_w.x[ i ][ j ][ k ] = rhs_w.x[ i ][ j ][ k ] + h_d_k * dpdphi / rmsinthe / salt_water_ref;
+
+    if ( h.x[ i ][ j ][ k ] == 1. ){
+        aux_u.x[ i ][ j ][ k ] = aux_v.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k ] = 0.;
+    }
 }
 
 
 
 
 
-void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v,
-            Array &w, Array &p_dyn, Array &vn, Array &wn, Array &p_dynn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
+void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
+            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w, Array &p_dyn,
+            Array &vn, Array &wn, Array &p_dynn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
 {
+    /********************* logger **********************/
+
+    if ( ( j == 90 ) && ( k == 180 ) )
+    {
+//        logger() << "enter RK_RHS_2D_Hydrosphere: r_0_water: " << r_0_water << std::endl;
+ //       logger() << "enter RK_RHS_2D_Hydrosphere: h max: " << h.max() << std::endl;
+        logger() << "enter RK_RHS_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "enter RK_RHS_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "enter RK_RHS_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
+        logger() << "enter RK_RHS_2D_Hydrosphere: p_dynn max: " << p_dynn.max() << std::endl;
+        logger() << "enter RK_RHS_2D_Hydrosphere: vn-velocity max: " << vn.max() << std::endl;
+        logger() << "enter RK_RHS_2D_Hydrosphere: wn-velocity max: " << wn.max() << std::endl << std::endl;
+    }
+
 //  2D surface iterations
     im = 41;
     double k_Force = 1.;// factor for accelleration of convergence processes inside the immersed boundary conditions
@@ -310,8 +331,8 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Ar
     double dist = 0, h_0_j = 0, h_d_j = 0;
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive the-direction along northerly and southerly boundaries 
-    if ( ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j + 1 ][ k ] == 1. ) ) || 
-          ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j - 1 ][ k ] == 1. ) ) )
+    if ( ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 1. ) ) || 
+          ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 1. ) ) )
     {
         dist = dist_coeff * dthe;
         h_0_j = dist / dthe;
@@ -325,8 +346,8 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Ar
     double h_0_k = 0, h_d_k = 0;
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive phi-direction on westerly and easterly boundaries 
-    if ( ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k + 1 ] == 1. ) ) || 
-          ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k - 1 ] == 1. ) ) )
+    if ( ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 1. ) ) || 
+          ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 1. ) ) )
     {
         dist = dist_coeff * dphi;
         h_0_k = dist / dphi;
@@ -345,7 +366,7 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Ar
     double dwdphi = h_d_k * ( w.x[ im-1 ][ j ][ k+1 ] - w.x[ im-1 ][ j ][ k-1 ] ) / ( 2. * dphi );
     double dpdphi = h_d_k * ( p_dyn.x[ im-1 ][ j ][ k+1 ] - p_dyn.x[ im-1 ][ j ][ k-1 ] ) / ( 2. * dphi );
 
-    double d2vdthe2 = h_d_j *  ( v.x[ im-1 ][ j+1 ][ k ] - 2. * v.x[ im-1 ][ j ][ k ] + v.x[ im-1 ][ j-1 ][ k ] ) / dthe2;
+    double d2vdthe2 = h_d_j * ( v.x[ im-1 ][ j+1 ][ k ] - 2. * v.x[ im-1 ][ j ][ k ] + v.x[ im-1 ][ j-1 ][ k ] ) / dthe2;
     double d2wdthe2 = h_d_j * ( w.x[ im-1 ][ j+1 ][ k ] - 2. * w.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j-1 ][ k ] ) / dthe2;
 
     double d2vdphi2 = h_d_k * ( v.x[ im-1 ][ j ][ k+1 ] - 2. * v.x[ im-1 ][ j ][ k ] + v.x[ im-1 ][ j ][ k-1 ] ) / dphi2;
@@ -366,10 +387,31 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water, Ar
 
     aux_v.x[ im-1 ][ j ][ k ] = rhs_v.x[ im-1 ][ j ][ k ] + h_d_j * dpdthe / rm / r_0_water;
     aux_w.x[ im-1 ][ j ][ k ] = rhs_w.x[ im-1 ][ j ][ k ] + h_d_k * dpdphi / rmsinthe / r_0_water;
- 
 
-    if ( h.x[ im-1 ][ j ][ k ] == 1. )                  aux_v.x[ im-1 ][ j ][ k ] = aux_w.x[ im-1 ][ j ][ k ] = 0.;
-    if ( h.x[ im-1 ][ j ][ k ] == 1. )                  v.x[ im-1 ][ j ][ k ] = w.x[ im-1 ][ j ][ k ] = 0.;
+    if ( ( j == 90 ) && ( k == 180 ) )
+    {
+/*
+        logger() << "end RK_RHS_2D_Hydrosphere: h_d_j: " << h_d_j << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: h_0_j: " << h_0_j << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: h_d_k: " << h_d_k << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: h_0_k: " << h_0_k << std::endl << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: rm: " << rm << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: sinthe: " << sinthe << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: costhe: " << costhe << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: dvdthe: " << dvdthe << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: dwdthe: " << dwdthe << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: dpdthe: " << dpdthe << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: dvdphi: " << dvdphi << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: dwdphi: " << dwdphi << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: dpdphi: " << dpdphi << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: aux_v max: " << aux_v.max() << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: aux_w max: " << aux_w.max() << std::endl;
+*/
+        logger() << "end RK_RHS_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "end RK_RHS_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
+    }
+
 }
 
 
