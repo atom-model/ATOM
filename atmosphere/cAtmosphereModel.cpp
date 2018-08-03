@@ -666,7 +666,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
-                result.solveRungeKutta_2D_Atmosphere ( prepare_2D, iter_cnt, r_air, u_0, p_0, L_atm, rad, the, rhs_v, rhs_w, 
+                result.solveRungeKutta_2D_Atmosphere ( prepare_2D, iter_cnt, r_air, u_0, p_0, L_atm, rad, the, phi, rhs_v, rhs_w, 
                                                        h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
                 
                 //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 

@@ -168,7 +168,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
 
 void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prepare_2D,
                                                             int &n, double r_air, double u_0, double p_0, double L_atm,
-                                                            Array_1D &rad, Array_1D &the, Array &rhs_v, Array &rhs_w,
+                                                            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &rhs_v, Array &rhs_w,
                                                             Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn,
                                                             Array &p_dynn, Array &aux_v, Array &aux_w )
 {
@@ -185,7 +185,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
         for ( int k = 1; k < km-1; k++ )
         {
 // Runge-Kutta 4. order for k1 step ( dt )
-            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the,
+            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the, phi,
                                 h, v, w, p_dyn, rhs_v, rhs_w, aux_v, aux_w );
 
             kv1 = rhs_v.x[ 0 ][ j ][ k ];
@@ -195,7 +195,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
             w.x[ 0 ][ j ][ k ] = wn.x[ 0 ][ j ][ k ] + kw1 * .5 * dt;
 
     // Runge-Kutta 4. order for k2 step ( dt )
-            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the,
+            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the, phi,
                                 h, v, w, p_dyn, rhs_v, rhs_w, aux_v, aux_w );
 
             kv2 = rhs_v.x[ 0 ][ j ][ k ];
@@ -205,7 +205,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
             w.x[ 0 ][ j ][ k ] = wn.x[ 0 ][ j ][ k ] + kw2 * .5 * dt;
 
         // Runge-Kutta 4. order for k3 step ( dt )
-            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the,
+            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the, phi,
                                 h, v, w, p_dyn, rhs_v, rhs_w, aux_v, aux_w );
 
             kv3 = rhs_v.x[ 0 ][ j ][ k ];
@@ -215,7 +215,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
             w.x[ 0 ][ j ][ k ] = wn.x[ 0 ][ j ][ k ] + kw3 * dt;
 
         // Runge-Kutta 4. order for k4 step ( dt )
-            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the,
+            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the, phi,
                                 h, v, w, p_dyn,  rhs_v, rhs_w, aux_v, aux_w );
 
             kv4 = rhs_v.x[ 0 ][ j ][ k ];

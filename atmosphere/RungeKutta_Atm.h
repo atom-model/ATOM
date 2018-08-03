@@ -43,7 +43,7 @@ class RungeKutta_Atmosphere
                  Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
 
         void solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &, int &,
-                double, double, double, double, Array_1D &, Array_1D &,
+                double, double, double, double, Array_1D &, Array_1D &, Array_1D &,
                 Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };
 #endif
