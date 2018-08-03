@@ -163,12 +163,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
         u.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( u.x[ i ][ j + 1 ][ k ] + u.x[ i ][ j ][ k + 1 ] );
         v.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( v.x[ i ][ j + 1 ][ k ] + v.x[ i ][ j + 1 ][ k + 1 ] );
         w.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( w.x[ i ][ j + 1 ][ k ] + w.x[ i ][ j + 1 ][ k + 1 ] );
-        t.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( t.x[ i ][ j + 1 ][ k ] + t.x[ i ][ j + 1 ][ k + 1 ] );
-        p_dyn.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( p_dyn.x[ i ][ j + 1 ][ k ] + p_dyn.x[ i ][ j + 1 ][ k + 1 ] );
         c.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( c.x[ i ][ j + 1 ][ k ] + c.x[ i ][ j + 1 ][ k + 1 ] );
-        cloud.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( cloud.x[ i ][ j + 1 ][ k ] + cloud.x[ i ][ j + 1 ][ k + 1 ] );
-        ice.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( ice.x[ i ][ j + 1 ][ k ] + ice.x[ i ][ j + 1 ][ k + 1 ] );
-        co2.x[ i ][ j + 1 ][ k + 1 ] = .5 * ( co2.x[ i ][ j + 1 ][ k ] + co2.x[ i ][ j + 1 ][ k + 1 ] );
     }
 
     //  point closest to corner i/j-1/k+1
@@ -178,13 +173,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
         u.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( u.x[ i ][ j ][ k + 1 ] + u.x[ i ][ j - 1 ][ k ] );
         v.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( v.x[ i ][ j ][ k + 1 ] + v.x[ i ][ j - 1 ][ k ] );
         w.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( w.x[ i ][ j ][ k + 1 ] + w.x[ i ][ j - 1 ][ k ] );
-        t.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( t.x[ i ][ j ][ k + 1 ] + t.x[ i ][ j - 1 ][ k ] );
-        p_dyn.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( p_dyn.x[ i ][ j ][ k + 1 ] + p_dyn.x[ i ][ j - 1 ][ k ] );
         c.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( c.x[ i ][ j ][ k + 1 ] + c.x[ i ][ j - 1 ][ k ] );
-        cloud.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( cloud.x[ i ][ j ][ k + 1 ] + cloud.x[ i ][ j - 1 ][ k ] );
-        ice.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( ice.x[ i ][ j ][ k + 1 ] + ice.x[ i ][ j - 1 ][ k ] );
-        co2.x[ i ][ j - 1 ][ k + 1 ] = .5 * ( co2.x[ i ][ j ][ k + 1 ] + co2.x[ i ][ j - 1 ][ k ] );
-    }
+  }
 
     //  point closest to corner i/j/k-1
     if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) ) )
@@ -192,12 +182,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
         u.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( u.x[ i ][ j + 1 ][ k ] + u.x[ i ][ j ][ k - 1 ] );
         v.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( v.x[ i ][ j + 1 ][ k ] + v.x[ i ][ j ][ k - 1 ] );
         w.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( w.x[ i ][ j + 1 ][ k ] + w.x[ i ][ j ][ k - 1 ] );
-        t.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( t.x[ i ][ j + 1 ][ k ] + t.x[ i ][ j ][ k - 1 ] );
-        p_dyn.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( p_dyn.x[ i ][ j + 1 ][ k ] + p_dyn.x[ i ][ j ][ k - 1 ] );
-        c.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( c.x[ i ][ j + 1 ][ k ] + c.x[ i ][ j ][ k - 1 ] );
-        cloud.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( cloud.x[ i ][ j + 1 ][ k ] + cloud.x[ i ][ j ][ k - 1 ] );
-        ice.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( ice.x[ i ][ j + 1 ][ k ] + ice.x[ i ][ j ][ k - 1 ] );
-        co2.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( co2.x[ i ][ j + 1 ][ k ] + co2.x[ i ][ j ][ k - 1 ] );
+       c.x[ i ][ j - 1 ][ k - 1 ] = .5 * ( c.x[ i ][ j + 1 ][ k ] + c.x[ i ][ j ][ k - 1 ] );
     }
 
     //  point closest to corner i/j+1/k-1
@@ -206,12 +191,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
         u.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( u.x[ i ][ j ][ k - 1 ] + u.x[ i ][ j + 1][ k ] );
         v.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( v.x[ i ][ j ][ k - 1 ] + v.x[ i ][ j + 1][ k ] );
         w.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( w.x[ i ][ j ][ k - 1 ] + w.x[ i ][ j + 1][ k ] );
-        t.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( t.x[ i ][ j ][ k - 1 ] + t.x[ i ][ j + 1][ k ] );
-        p_dyn.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( p_dyn.x[ i ][ j ][ k - 1 ] + p_dyn.x[ i ][ j + 1][ k ] );
-        c.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( c.x[ i ][ j ][ k - 1 ] + c.x[ i ][ j + 1][ k ] );
-        cloud.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( cloud.x[ i ][ j ][ k - 1 ] + cloud.x[ i ][ j + 1][ k ] );
-        ice.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( ice.x[ i ][ j ][ k - 1 ] + ice.x[ i ][ j + 1][ k ] );
-        co2.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( co2.x[ i ][ j ][ k - 1 ] + co2.x[ i ][ j + 1][ k ] );
+       c.x[ i ][ j + 1 ][ k - 1 ] = .5 * ( c.x[ i ][ j ][ k - 1 ] + c.x[ i ][ j + 1][ k ] );
     }
 
 
