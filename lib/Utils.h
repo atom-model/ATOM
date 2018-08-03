@@ -40,6 +40,9 @@ namespace AtomUtils{
     void restoreOldNew( int jm, int km, double coeff, std::vector<Array*>& arrays, 
                         std::vector<Array*>& new_arrays, int i = 0);
 
+    std::tuple<double, int, int, int>
+    max_diff(int i, int j, int k, const Array &a1, const Array &a2);
+
     inline double simpson(int & n, double &dstep, double *value){
         double sum_even=0, sum_odd=0;
         if (n % 2 == 0){

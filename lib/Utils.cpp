@@ -68,3 +68,27 @@ void AtomUtils::restoreOldNew( int jm, int km, double coeff, std::vector<Array*>
     }
 }
 
+
+std::tuple<double, int, int, int>
+AtomUtils::max_diff(int im, int jm, int km, const Array &a1, const Array &a2)
+{
+    std::tuple<double, int, int, int> ret;
+    for ( int i = 0; i < im; i++ )
+    {
+        for ( int j = 0; j < jm; j++ )
+        {
+            for ( int k = 0; k < km; k++ )
+            {
+                double tmp = fabs ( a1.x[ i ][ j ][ k ] - a2.x[ i ][ j ][ k ] );
+                if ( tmp > std::get<0>(ret) )
+                {
+                    std::get<0>(ret) = tmp;
+                    std::get<1>(ret) = i;
+                    std::get<2>(ret) = j;
+                    std::get<3>(ret) = k;
+                }
+            }
+        }
+    }
+    return ret;
+}
