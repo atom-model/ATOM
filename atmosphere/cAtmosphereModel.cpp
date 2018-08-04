@@ -692,7 +692,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
 
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-            startPressure.computePressure_2D ( circulation, r_air, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
+            startPressure.computePressure_2D ( circulation, u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
 
             // limit of the computation in the sense of time steps
             if ( iter_cnt > nm )
@@ -811,7 +811,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
             }
 
-            restoreOldNew(im, jm, km, 1., old_arrays_2d, new_arrays_2d);
+            restoreOldNew(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
             iter_cnt++;
         }
         //  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::::::::::::
