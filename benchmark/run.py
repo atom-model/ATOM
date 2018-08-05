@@ -26,9 +26,10 @@ else:
    atm_model.load_config( './config_simon_atm.xml' )
    hyd_model.load_config( './config_simon_hyd.xml' )
 
-start_time = 0
-end_time = 50
-time_step = 5
+start_time = atm_model.time_start
+end_time = atm_model.time_end
+time_step = atm_model.time_step
+print('{0}  {1}  {2}'.format(start_time,end_time, time_step))
 times = range(start_time, end_time+1, time_step)
 
 atom_output_dir = atm_model.output_path
