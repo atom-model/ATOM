@@ -302,8 +302,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
       w.printArray( im, jm, km );
 */
     //  storing of velocity components, pressure and temperature for iteration start
-    restoreOldNew(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
-    restoreOldNew(jm, km, .9, old_arrays_2d, new_arrays_2d);
+    move_data_to_new_arrays(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
+    move_data_to_new_arrays(jm, km, .9, old_arrays_2d, new_arrays_2d, im-1);
 
     // computation of the ratio ocean to land areas
     calculate_MSL.land_oceanFraction ( h );
@@ -397,7 +397,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                                         pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
                 min_Stationary_2D.steadyQuery_2D ( h, v, vn, w, wn, p_dyn, p_dynn );
 
-                restoreOldNew(jm, km, 1., old_arrays_2d, new_arrays_2d);
+                move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d, im-1);
 
                 iter_cnt++;
             }
@@ -591,7 +591,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                     Salt_total, BottomWater );
 
             //  restoring the velocity component and the temperature for the new time step
-            restoreOldNew(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+            move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
 
             iter_cnt++;
         }

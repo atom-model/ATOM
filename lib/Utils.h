@@ -34,10 +34,10 @@ namespace AtomUtils{
     //change data coordinate system from -180° _ 0° _ +180° to 0°- 360°
     void move_data(double* data, int len);
 
-    void restoreOldNew(int im, int jm, int km, double coeff, std::vector<Array*>& arrays, 
+    void move_data_to_new_arrays(int im, int jm, int km, double coeff, std::vector<Array*>& arrays, 
                         std::vector<Array*>& new_arrays);
 
-    void restoreOldNew( int jm, int km, double coeff, std::vector<Array*>& arrays, 
+    void move_data_to_new_arrays( int jm, int km, double coeff, std::vector<Array*>& arrays, 
                         std::vector<Array*>& new_arrays, int i = 0);
 
     std::tuple<double, int, int, int>

@@ -287,8 +287,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.IC_CellStructure ( h, u, v, w );
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
-    restoreOldNew(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
-    restoreOldNew(jm, km, .9, old_arrays_2d, new_arrays_2d);
+    move_data_to_new_arrays(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
+    move_data_to_new_arrays(jm, km, .9, old_arrays_2d, new_arrays_2d);
 
 
 
@@ -684,7 +684,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 //  state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
                 min_Residuum_2D.steadyQuery_2D ( v, vn, w, wn, p_dyn, p_dynn );
 
-                restoreOldNew(jm, km, 1., old_arrays_2d, new_arrays_2d);
+                move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d);
 
                 iter_cnt++;
             }
@@ -811,7 +811,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
             }
 
-            restoreOldNew(im, jm, km, 1., old_arrays_2d, new_arrays_2d);
+            move_data_to_new_arrays(im, jm, km, 1., old_arrays_2d, new_arrays_2d);
             iter_cnt++;
         }
         //  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::::::::::::
