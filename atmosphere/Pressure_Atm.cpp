@@ -39,13 +39,12 @@ Pressure_Atm::~Pressure_Atm (){}
 
 
 void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, double r_air,
-                                 Array_1D &rad, Array_1D &the, Array &p_dyn,
-                                 Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w )
+                        Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h,
+                        Array &aux_u, Array &aux_v, Array &aux_w )
 {
 // boundary conditions for the r-direction, loop index i
 
-    logger() << "enter Pressure_Atm::computePressure_3D: dp_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
-    logger() << "enter Pressure_Atm::computePressure_3D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_air *.01 << std::endl << std::endl;
+    logger() << "enter Pressure_Atm::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
 
 // boundary conditions for the r-direction, loop index i
     for ( int j = 0; j < jm; j++ )
@@ -279,20 +278,8 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
         }
     }
 
-/*
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int k = 0; k < km; k++ )
-            {
-                p_dynn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-1 ][ j ][ k ];
-             }
-        }
-    }
-*/
+
     logger() << "exit Pressure_Atm::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
-    logger() << "exit Pressure_Atm::computePressure_3D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_air *.01 << std::endl << std::endl;
 
 //    circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }
@@ -308,9 +295,7 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double u_0, doub
                                  Array_1D &rad, Array_1D &the, Array &p_dyn,
                                  Array &p_dynn, Array &h, Array &aux_v, Array &aux_w )
 {
-
-    logger() << "enter computePressure_2D: dp_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
-    logger() << "enter computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_air *.01 << std::endl << std::endl;
+    logger() << "enter computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
 
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
 // boundary conditions for the the-direction, loop index j
@@ -438,7 +423,6 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double u_0, doub
 
 
     logger() << "exit computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
-    logger() << "exit computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_air *.01 << std::endl << std::endl;
 
 //    circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }

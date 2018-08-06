@@ -101,7 +101,7 @@ class BC_Thermo
 
         void IC_CellStructure ( Array &, Array &, Array &, Array & );
 
-        void BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, Array &p_dyn, Array &p_stat );
+        void BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, Array &tn, Array &p_dyn, Array &p_stat );
 
         void TropopauseLocation ();
 

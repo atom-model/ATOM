@@ -261,7 +261,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
-    circulation.BC_Temperature ( temperature_NASA, h, t, p_dyn, p_stat );
+    circulation.BC_Temperature ( temperature_NASA, h, t, tn, p_dyn, p_stat );
 
     //  class element for the correction of the temperature initial distribution around coasts
     if ( ( NASATemperature == 1 ) && ( Ma > 0 ) && !use_earthbyte_reconstruction) 
@@ -287,8 +287,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.IC_CellStructure ( h, u, v, w );
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
-    move_data_to_new_arrays(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
-    move_data_to_new_arrays(jm, km, .9, old_arrays_2d, new_arrays_2d);
+    move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+    move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d);
 
 
 
@@ -665,9 +665,17 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
                 circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
+        logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
+
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
                 result.solveRungeKutta_2D_Atmosphere ( prepare_2D, iter_cnt, r_air, u_0, p_0, L_atm, rad, the, phi, rhs_v, rhs_w, 
                                                        h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
+
+        logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
                 
                 //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
                 //  the continents and the ocean ground
@@ -717,6 +725,8 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
     int Ma = int(round(*get_current_time()));
 
+    move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+
     // ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
@@ -753,6 +763,12 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
+
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
+
             // class RungeKutta for the solution of the differential equations describing the flow properties
             result.solveRungeKutta_3D_Atmosphere ( prepare, iter_cnt, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, 
@@ -761,6 +777,12 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                    cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, 
                                                    Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
                                                    Evaporation_Dalton, Precipitation );
+
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
+
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
 
             //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
             //  the continents and the ocean ground

@@ -175,11 +175,11 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
 
     logger() << "enter BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl;
 
-    //logger() << "co2 max: " << co2.max() << "  ice max: " << ice.max() << "  cloud max: " << cloud.max() << "  p_stat max: "
-    //<< p_stat.max() <<"  water vapour max: " << c.max() << std::endl;
+    logger() << "co2 max: " << co2.max() << "  ice max: " << ice.max() << "  cloud max: " << cloud.max() << "  p_stat max: "
+    << p_stat.max() <<"  water vapour max: " << c.max() << std::endl;
 
-    //logger() << "co2 min: " << co2.min() << "  ice min: " << ice.min() << "  cloud min: " << cloud.min() << "  p_stat min: "
-    //<< p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
+    logger() << "co2 min: " << co2.min() << "  ice min: " << ice.min() << "  cloud min: " << cloud.min() << "  p_stat min: "
+    << p_stat.max() <<"  water vapour min: " << c.min() << std::endl;
 
     cout.precision ( 4 );
     cout.setf ( ios::fixed );
@@ -264,6 +264,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
                     radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
                         pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
                 }
+                if ( epsilon_3D.x[ i ][ j ][ k ] > 1. )  epsilon_3D.x[ i ][ j ][ k ] = 1.;
             }
             epsilon.y[ j ][ k ] = epsilon_3D.x[ i_trop ][ j ][ k ];
 
@@ -275,24 +276,29 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
             }
 
             //above troposphere
-//            for ( int i = i_trop + 1; i < im; i++ )
             for ( int i = i_trop; i < im; i++ )
             {
-                epsilon_3D.x[ i ][ j ][ k ] = 0.;
+                epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_trop ][ j ][ k ];
+                t.x[ i ][ j ][ k ] = t.x[ i_trop ][ j ][ k ];
                 radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * pow ( t.x[ i ][ j ][ k ] * 
                     t_0, 4. );
             }
         }
     }
 
+    logger() << "enter loop ****** BC_Radiation_multi_layer: temperature max: "
+                  << (t.max() - 1)*t_0 << " ****** radiation max: " << radiation_3D.max() << std::endl << std::endl;
+
+
+
     // iteration procedure for the computation of the temperature based on the multi-layer radiation model
     // temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
-    
+
     for( int iter_rad = 1;  iter_rad <= 4; iter_rad++ ) // iter_rad may be varied
     {
-        //logger() << "max radiation_3D: " << radiation_3D.max() << "  epsilon_3D max: " << epsilon_3D.max() << std::endl;
-        //logger() << "min radiation_3D: " << radiation_3D.min() << "  epsilon_3D min: " << epsilon_3D.min() << std::endl;
-        
+        logger() << std::endl << "max radiation_3D: " << radiation_3D.max() << "  epsilon_3D max: " << epsilon_3D.max() << std::endl;
+        logger() << "min radiation_3D: " << radiation_3D.min() << "  epsilon_3D min: " << epsilon_3D.min() << std::endl << std::endl;
+
         // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
         for ( int j = 0; j < jm; j++ )
         {
@@ -394,11 +400,11 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
                     // Thomas algorithm, recurrence formula
                     radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];
 
-                    t.x[ i ][ j ][ k ] = .5 * ( t.x[ i ][ j ][ k ] + pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, 
+                    t.x[ i ][ j ][ k ] = .5 * ( t.x[ i + 1 ][ j ][ k ] + pow ( radiation_3D.x[ i ][ j ][ k ] / sigma, 
                         ( 1. / 4. ) ) / t_0 );    // averaging of temperature values to smooth the iterations
                 }
 
-                for ( int i = 0; i < i_mount; i++ )
+                for ( int i = 0; i < i_mount; i++ ) // inside mountains
                 {
                     t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ];
                     radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
@@ -407,11 +413,14 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
             }
         }
     }
+
+    logger() << std::endl << "max radiation_3D: " << radiation_3D.max() << "  epsilon_3D max: " << epsilon_3D.max() << std::endl;
+    logger() << "min radiation_3D: " << radiation_3D.min() << "  epsilon_3D min: " << epsilon_3D.min() << std::endl << std::endl;
     logger() << "exit BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl << std::endl;
 }
 
 
-void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, Array &p_dyn, Array &p_stat )
+void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, Array &tn, Array &p_dyn, Array &p_stat )
 {
     // boundary condition of  temperature on land 
     // parabolic distribution from pole to pole accepted
@@ -420,7 +429,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     // temperature at tropopause t_min = 0.89 compares to -30° C compares to 243 K
     // temperature difference from equator to pole   18°C compares to  t_delta = 0.0659  compares to  18 K
 
-    logger() << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
+    logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
 
     double t_cretaceous_add = 0; 
 
@@ -539,7 +548,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     double t_1 = 0.;
     double t_2 = 0.;
     double t_pole_diff = 0.;
-    double t_pole_Ma0 = t_pole;
+    double t_pole_Ma0 = t_pole; // pole temperature in modern times
 
     if ( RadiationModel == 1 )
     {
@@ -547,30 +556,28 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
         {
             t_1 = t_pole;
             t_2 = ( 10. + t_0 ) / t_0;
-            t_pole = GetPoleTemperature ( Ma, Ma_1_1, Ma_2_1, t_1, t_2 );
+            t_pole = GetPoleTemperature ( Ma, Ma_1_1, Ma_2_1, t_1, t_2 ); // pole temperature for hothouse climates 
         }
 
         if ( ( Ma > Ma_1_2 ) && ( Ma <= Ma_2_2 ) )
         {
             t_1 = ( 10. + t_0 ) / t_0;
             t_2 = ( 23. + t_0 ) / t_0;
-            t_pole = GetPoleTemperature ( Ma, Ma_1_2, Ma_2_2, t_1, t_2 );
+            t_pole = GetPoleTemperature ( Ma, Ma_1_2, Ma_2_2, t_1, t_2 ); // pole temperature for hothouse climates 
         }
 
         if ( ( Ma > Ma_1_3 ) && ( Ma <= Ma_2_3 ) )
         {
             t_1 = ( 23. + t_0 ) / t_0;
             t_2 = ( 16. + t_0 ) / t_0;
-            t_pole = GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 );
+            t_pole = GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 ); // pole temperature for hothouse climates 
         }
 
-        //t_pole = t_pole + t_cretaceous_add;
-        t_pole = t_pole_Ma0 + t_cretaceous_add;
-        //t_eff = t_pole - t_equator;
         t_eff = t_pole - ( t_equator + t_cretaceous_add );
-        t_pole_diff = t_pole - t_pole_Ma0;
+        t_pole_diff = t_pole - t_pole_Ma0; // increase of pole temperature compared to modern times
 
-        //  cout << "   t_pole_Ma0 = " << t_pole_Ma0 << "   t_equator = " << t_equator << "   t_pole = " << t_pole << "   t_eff = " << t_eff << "   t_pole_diff = " << t_pole_diff << endl;
+        //  cout << "   t_pole_Ma0 = " << t_pole_Ma0 << "   t_equator = " << t_equator
+        //<< "   t_pole = " << t_pole << "   t_eff = " << t_eff << "   t_pole_diff = " << t_pole_diff << endl;
 
         for ( int k = 0; k < km; k++ )
         {
@@ -648,10 +655,29 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
         }
     }
 
+
+    for ( int j = 0; j < jm; j++ )
+    {
+        for ( int k = 0; k < km; k++ )
+        {
+            for ( int i = 0; i < im; i++ )
+            {
+                 tn.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k ];
+			 }
+		 }
+	 }
+
     logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl << std::endl;
 }
 
-    
+
+
+
+
+
+
+
+
 void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c )
 {
     // initial and boundary conditions of water vapour on water and land surfaces
@@ -3612,6 +3638,6 @@ int BC_Thermo::GetTropopauseHightAdd(double t_cret){
 
 
 double BC_Thermo::GetPoleTemperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
-    return (t_2 - t_1) / (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
+    return (t_2 - t_1) / (double) (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
 }
 

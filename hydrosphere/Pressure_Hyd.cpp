@@ -48,7 +48,7 @@ void Pressure_Hyd::computePressure_3D ( BC_Thermohalin &oceanflow, double u_0, d
 // boundary conditions for the r-direction, loop index i
 
     logger() << "enter Pressure_Hyd::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_0_water *.01 << std::endl;
-    logger() << "enter Pressure_Hyd::computePressure_3D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
+//    logger() << "enter Pressure_Hyd::computePressure_3D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
 
 // boundary conditions for the r-direction, loop index i
     for ( int j = 0; j < jm; j++ )
@@ -241,7 +241,7 @@ void Pressure_Hyd::computePressure_3D ( BC_Thermohalin &oceanflow, double u_0, d
 
 
     logger() << "exit Pressure_Hyd::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_0_water *.01 << std::endl;
-    logger() << "exit Pressure_Hyd::computePressure_3D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
+//    logger() << "exit Pressure_Hyd::computePressure_3D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
 
 //    oceanflow.Pressure_Limitation_Hyd ( p_dyn, p_dynn );
 }
@@ -256,7 +256,7 @@ void Pressure_Hyd::computePressure_2D ( BC_Thermohalin &oceanflow, double u_0, d
 {
 // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
     logger() << "enter computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_0_water *.01 << std::endl;
-    logger() << "enter computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
+//    logger() << "enter computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
 
 // boundary conditions for the the-direction, loop index j
     for ( int k = 0; k < km; k++ )
@@ -385,5 +385,5 @@ void Pressure_Hyd::computePressure_2D ( BC_Thermohalin &oceanflow, double u_0, d
 
 //    oceanflow.Pressure_Limitation_Hyd ( p_dyn, p_dynn );
     logger() << "exit computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_0_water *.01 << std::endl;
-    logger() << "exit computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
+//    logger() << "exit computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
 }
