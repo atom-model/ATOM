@@ -436,8 +436,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm +
                                         w.x[ i ][ j ][ k ] * dtdphi / rmsinthe ) + ( d2tdr2 + dtdr *
                                         2. / rm + d2tdthe2 / rm2 + dtdthe * costhe / rm2sinthe +
-                                        d2tdphi2 / rm2sinthe2 ) / ( re * pr ) -
-                                        h_0_i * t.x[ i ][ j ][ k ] * k_Force / dr2;
+                                        d2tdphi2 / rm2sinthe2 ) / ( re * pr );
+//                                        - h_0_i * t.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm +
                                          w.x[ i ][ j ][ k ] * dudphi / rmsinthe ) + h_d_i * dpdr / salt_water_ref +
@@ -463,8 +463,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm +
                                         w.x[ i ][ j ][ k ] * dcdphi / rmsinthe ) + ( d2cdr2 + dcdr * 2. / rm +
                                         d2cdthe2 / rm2 + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc * re ) +
-                                        salinity_evaporation -
-                                        h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
+                                        salinity_evaporation;
+//                                         - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
 
 
 // for the Poisson equation to solve for the pressure, pressure gradient sbstracted from the RHS
