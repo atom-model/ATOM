@@ -23,7 +23,7 @@ TARGET_DIR = benchmark
 
 target = $(addprefix $(TARGET_DIR)/,$(COPY_FILE))
 
-all: atm hyd python $(target)
+all: atm hyd test python $(target)
 
 libatom.a: $(PARAM_OUTPUTS) $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
 	ar rcs libatom.a $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
@@ -39,6 +39,9 @@ $(PARAM_OUTPUTS): param.py
 	rm -f atmosphere/cAtmosphereModel.o hydrosphere/cHydrosphereModel.o
 	python param.py
 
+
+test: atm hyd python test/main.o
+	$(CXX) $(CFLAGS) test/main.o cli/DefaultStream.o -L. -latom $(LDFLAGS) -o test/run
 
 analyze:
 	analyze-build make
@@ -57,6 +60,9 @@ lib/%.o: lib/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 cli/%.o: cli/%.cpp
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+test/%.o: test/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 atmosphere/%.o: atmosphere/%.cpp
