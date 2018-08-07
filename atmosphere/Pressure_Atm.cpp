@@ -135,48 +135,6 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
 // determining RHS values around mountain surface
             for ( int k = 1; k < km-1; k++ )
             {
-                if ( ( j >= 2 ) && ( j <= jm - 3 ) )
-                {
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j + 2 ][ k ] == 0. ) ) )
-                    {
-                        aux_v.x[ i ][ j ][ k ] = c43 * aux_v.x[ i ][ j + 1 ][ k ] - c13 * aux_v.x[ i ][ j + 2 ][ k ];
-                    }
-
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) && ( h.x[ i ][ j - 2 ][ k ] == 0. ) )
-                    {
-                        aux_v.x[ i ][ j ][ k ] = c43 * aux_v.x[ i ][ j - 1 ][ k ] - c13 * aux_v.x[ i ][ j - 2 ][ k ];
-                    }
-                }
-                else
-                {
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) )
-                        aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j + 1 ][ k ];
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )
-                        aux_v.x[ i ][ j ][ k ] = aux_v.x[ i ][ j - 1 ][ k ];
-                }
-
-                if ( ( k >= 2 ) && ( k <= km - 3 ) )
-                {
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) )
-                    {
-                        aux_w.x[ i ][ j ][ k ] = c43 * aux_w.x[ i ][ j ][ k + 1 ] - c13 * aux_w.x[ i ][ j ][ k + 2 ];
-                    }
-
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) )
-                    {
-                        aux_w.x[ i ][ j ][ k ] = c43 * aux_w.x[ i ][ j ][ k - 1 ] - c13 * aux_w.x[ i ][ j ][ k - 2 ];
-                    }
-                }
-                else
-                {
-                    if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) )
-                        aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k + 1 ];
-                    if ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) )
-                        aux_w.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k - 1 ];
-                }
-
-
-
 // determining RHS-derivatives around mountain surfaces
                 drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 
@@ -198,16 +156,9 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
                 if ( ( j >= 2 ) && ( j <= jm - 3 ) )
                 {
                     if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j + 2 ][ k ] == 0. ) ) )
-                    {
                         drhs_vdthe = ( - 3. * aux_v.x[ i ][ j ][ k ] + 4. * aux_v.x[ i ][ j + 1 ][ k ] - aux_v.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe * rm );
-                    }
-                    else             drhs_vdthe = ( aux_v.x[ i ][ j + 1 ][ k ] - aux_v.x[ i ][ j ][ k ] ) / ( rm * dthe );
-
                     if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) && ( h.x[ i ][ j - 2 ][ k ] == 0. ) )
-                    {
                         drhs_vdthe = ( - 3. * aux_v.x[ i ][ j ][ k ] + 4. * aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe * rm );
-                    }
-                    else            drhs_vdthe = ( aux_v.x[ i ][ j - 1 ][ k ] - aux_v.x[ i ][ j ][ k ] ) / ( rm * dthe );
                 }
 
 // gradients of RHS terms at mountain sides 2.order accurate in phi-direction
@@ -221,18 +172,10 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
                 if ( ( k >= 2 ) && ( k <= km - 3 ) )
                 {
                     if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) )
-                    {
                         drhs_wdphi = ( - 3. * aux_w.x[ i ][ j ][ k ] + 4. * aux_w.x[ i ][ j ][ k + 1 ] - aux_w.x[ i ][ j ][ k + 2 ] ) / ( 2. * rmsinthe * dphi );
-                    }
-                    else             drhs_wdphi = ( aux_w.x[ i ][ j ][ k + 1 ] - aux_w.x[ i ][ j ][ k ] ) / ( rmsinthe * dphi );
-
                     if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) )
-                    {
                         drhs_wdphi = ( - 3. * aux_w.x[ i ][ j ][ k ] + 4. * aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k - 2 ] ) / ( 2. * rmsinthe * dphi );
-                    }
-                    else            drhs_wdphi = ( aux_w.x[ i ][ j ][ k - 1 ] - aux_w.x[ i ][ j ][ k ] ) / ( rmsinthe * dphi );
                 }
-
 
 // explicit pressure computation based on the Poisson equation
                 p_dyn.x[ i ][ j ][ k ] = ( ( p_dynn.x[ i+1 ][ j ][ k ] + p_dynn.x[ i-1 ][ j ][ k ] ) * num1
@@ -381,12 +324,12 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double u_0, doub
                                                      aux_w.x[ 0 ][ j ][ k+2 ] ) / ( 2. * rmsinthe * dphi );
             }
 
-            if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k-1 ] == 1. ) )
+            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k-1 ] == 0. ) )
                         drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k-1 ] - aux_w.x[ 0 ][ j ][ k ] ) / ( dphi * rmsinthe );
 
             if ( k >= 2 )
             {
-                if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( h.x[ 0 ][ j ][ k-1 ] == 1. ) && ( h.x[ 0 ][ j ][ k-2 ] == 1. ) )
+                if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k-1 ] == 0. ) && ( h.x[ 0 ][ j ][ k-2 ] == 0. ) )
                             drhs_wdphi = ( - 3. * aux_w.x[ 0 ][ j ][ k ] + 4. * aux_w.x[ 0 ][ j ][ k-1 ] -
                                                      aux_w.x[ 0 ][ j ][ k-2 ] ) / ( 2. * rmsinthe * dphi );
             }
