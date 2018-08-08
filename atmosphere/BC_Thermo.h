@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <vector>
+#include <map>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -141,5 +142,6 @@ class BC_Thermo
 
         double GetPoleTemperature ( int, int, int, double, double );
 
+        double GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map);
 };
 #endif

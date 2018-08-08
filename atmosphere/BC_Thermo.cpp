@@ -538,46 +538,24 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     }// temperatur distribution at aa prescribed sun position
 
     // pole temperature adjustment, combination of linear time dependent functions 
-    int Ma_1_1 = 0;
-    int Ma_2_1 = 45;
-    int Ma_1_2 = 45;
-    int Ma_2_2 = 93;
-    int Ma_1_3 = 93;
-    int Ma_2_3 = 140;
-
-    double t_1 = 0.;
-    double t_2 = 0.;
     double t_pole_diff = 0.;
-    double t_pole_Ma0 = t_pole; // pole temperature in modern times
+    double t_pole_ma = t_pole;
+
+    std::map<int, double> pole_temp_map{
+        {0,   t_pole},
+        {45,  ( 10. + t_0 ) / t_0},
+        {93,  ( 23. + t_0 ) / t_0},
+        {140, ( 16. + t_0 ) / t_0}
+    };
 
     if ( RadiationModel == 1 )
     {
-        if ( Ma <= Ma_2_1 )
-        {
-            t_1 = t_pole;
-            t_2 = ( 10. + t_0 ) / t_0;
-            t_pole = GetPoleTemperature ( Ma, Ma_1_1, Ma_2_1, t_1, t_2 ); // pole temperature for hothouse climates 
-        }
+        t_pole_ma = GetPoleTemperature(Ma, pole_temp_map);// pole temperature for hothouse climates 
+ 
+        t_eff = t_pole_ma - ( t_equator + t_cretaceous_add );
+        t_pole_diff = t_pole_ma - t_pole; // increase of pole temperature compared to modern times
 
-        if ( ( Ma > Ma_1_2 ) && ( Ma <= Ma_2_2 ) )
-        {
-            t_1 = ( 10. + t_0 ) / t_0;
-            t_2 = ( 23. + t_0 ) / t_0;
-            t_pole = GetPoleTemperature ( Ma, Ma_1_2, Ma_2_2, t_1, t_2 ); // pole temperature for hothouse climates 
-        }
-
-        if ( ( Ma > Ma_1_3 ) && ( Ma <= Ma_2_3 ) )
-        {
-            t_1 = ( 23. + t_0 ) / t_0;
-            t_2 = ( 16. + t_0 ) / t_0;
-            t_pole = GetPoleTemperature ( Ma, Ma_1_3, Ma_2_3, t_1, t_2 ); // pole temperature for hothouse climates 
-        }
-
-        t_eff = t_pole - ( t_equator + t_cretaceous_add );
-        t_pole_diff = t_pole - t_pole_Ma0; // increase of pole temperature compared to modern times
-
-        //  cout << "   t_pole_Ma0 = " << t_pole_Ma0 << "   t_equator = " << t_equator
-        //<< "   t_pole = " << t_pole << "   t_eff = " << t_eff << "   t_pole_diff = " << t_pole_diff << endl;
+        logger() << "t_pole_ma: " << t_pole_ma << "  " << Ma <<std::endl;
 
         for ( int k = 0; k < km; k++ )
         {
@@ -592,17 +570,17 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                 if ( NASATemperature == 0 )// if ( NASATemperature == 0 ) parabolic surface temperature is used
                 {
                     t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                        t_pole + t_cretaceous_add;
+                        t_pole_ma + t_cretaceous_add;
                     
                     if ( h.x[ i_mount ][ j ][ k ] == 1. ){
                        t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                            t_pole + t_cretaceous_add + t_land;  // parabolic temperature distribution
+                            t_pole_ma + t_cretaceous_add + t_land;  // parabolic temperature distribution
                     }
                 }
                 else // if ( NASATemperature == 1 ) surface temperature is NASA based
                 {
                     if ( is_land(h, 0, j, k) ){// on land
-                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( j / d_j_half ) + t_pole;
+                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( j / d_j_half ) + t_pole_ma;
                         if(Ma != 0){
                             t.x[ i_mount ][ j ][ k ] += t_cretaceous_add + t_land;
                         }
@@ -3632,12 +3610,31 @@ void BC_Thermo::Pressure_Limitation_Atm ( Array &p_dyn, Array &p_dynn )
 
 
 int BC_Thermo::GetTropopauseHightAdd(double t_cret){
-    double d_i_h_round = round((t_cret * t_0) / 2.6);      // adiabatic slope of radial temperature 0.65/100m, stepsize 400m => 2.6/400m
+    double d_i_h_round = round((t_cret * t_0) / 2.6);// adiabatic slope of radial temperature 0.65/100m, stepsize 400m => 2.6/400m
     return ( int ) d_i_h_round;
 }
 
 
 double BC_Thermo::GetPoleTemperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
     return (t_2 - t_1) / (double) (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
+}
+
+double BC_Thermo::GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map){
+    assert(pole_temp_map.size()>1);
+    std::pair<int, double> up = *pole_temp_map.begin(), bottom = *++pole_temp_map.begin();
+    if(Ma <= pole_temp_map.begin()->first || Ma > (--pole_temp_map.end())->first){
+        return t_pole; // when Ma out of boundary
+    }
+
+    for( const auto& pair : pole_temp_map )
+    {
+        if(pair.first>=Ma){
+            bottom = pair;
+            break;
+        }else{
+            up = pair;
+        }
+    }
+    return GetPoleTemperature(Ma, up.first, bottom.first, up.second, bottom.second);
 }
 
