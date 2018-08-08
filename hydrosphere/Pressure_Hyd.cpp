@@ -149,59 +149,43 @@ void Pressure_Hyd::computePressure_3D ( BC_Thermohalin &oceanflow, double u_0, d
                 }
                 else     drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i ][ j ][ k ] ) / dr;
 
-
-
 // gradients of RHS terms at mountain sides 2.order accurate in the-direction
-            drhs_vdthe = ( aux_v.x[ im-1 ][ j+1 ][ k ] - aux_v.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe * rm );
+                drhs_vdthe = ( aux_v.x[ im-1 ][ j+1 ][ k ] - aux_v.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe * rm );
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) )
-                        drhs_vdthe = ( aux_v.x[ im-1 ][ j + 1 ][ k ] - aux_v.x[ im-1 ][ j ][ k ] ) / ( dthe * rm );
+                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) )
+                            drhs_vdthe = ( aux_v.x[ im-1 ][ j + 1 ][ k ] - aux_v.x[ im-1 ][ j ][ k ] ) / ( dthe * rm );
+                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) )
+                            drhs_vdthe = ( aux_v.x[ im-1 ][ j - 1 ][ k ] - aux_v.x[ im-1 ][ j ][ k ] ) / ( dthe * rm );
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j + 2 ][ k ] == 0. ) )
-                        drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j + 1 ][ k ] - aux_v.x[ im-1 ][ j + 2 ][ k ] ) / ( 2. * dthe * rm );
-
-
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j - 2 ][ k ] == 0. ) )
-                        drhs_vdthe = ( aux_v.x[ im-1 ][ j - 1 ][ k ] - aux_v.x[ im-1 ][ j ][ k ] ) / ( dthe * rm );
-
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) )
-                        drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j - 1 ][ k ] - aux_v.x[ im-1 ][ j - 2 ][ k ] ) / ( 2. * dthe * rm );
-
-
-            if ( j == 1 )  drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j + 1 ][ k ] - aux_v.x[ im-1 ][ j + 2 ][ k ] ) / ( 2. * dthe * rm );
-
-            if ( j == jm - 2 )  drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j - 1 ][ k ] - aux_v.x[ im-1 ][ j - 2 ][ k ] ) / ( 2. * dthe * rm );
-
+                if ( ( j >= 2 ) && ( j <= jm - 3 ) )
+                {
+                    if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j + 2 ][ k ] == 0. ) )
+                            drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j + 1 ][ k ] - aux_v.x[ im-1 ][ j + 2 ][ k ] ) / ( 2. * dthe * rm );
+                    if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j - 2 ][ k ] == 0. ) )
+                            drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j - 1 ][ k ] - aux_v.x[ im-1 ][ j - 2 ][ k ] ) / ( 2. * dthe * rm );
+                }
 
 // gradients of RHS terms at mountain sides 2.order accurate in phi-direction
-            drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k+1 ] - aux_w.x[ im-1 ][ j ][ k-1 ] ) / ( 2. * dphi * rmsinthe );
+                drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k+1 ] - aux_w.x[ im-1 ][ j ][ k-1 ] ) / ( 2. * dphi * rmsinthe );
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) )
-                        drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k + 1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
+                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) )
+                            drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k + 1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
+                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 0. ) )
+                            drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k - 1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k + 2 ] == 0. ) )
-                        drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k + 1 ] - aux_w.x[ im-1 ][ j ][ k + 2 ] ) / ( 2. * rmsinthe * dphi );
-
-
-            if ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 1. ) )
-                        drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k - 1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
-
-            if ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 1. ) && ( h.x[ im-1 ][ j ][ k - 2 ] == 1. ) )
-                        drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k - 1 ] - aux_w.x[ im-1 ][ j ][ k - 2 ] ) / ( 2. * rmsinthe * dphi );
-
-
-            if ( k == 2 )  drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k + 1 ] - aux_w.x[ im-1 ][ j ][ k + 2 ] ) / ( 2. * rmsinthe * dphi );
-
-            if ( k == km - 2 )  drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k - 1 ] - aux_w.x[ im-1 ][ j ][ k - 2 ] ) / ( 2. * rmsinthe * dphi );
-
+                if ( ( k >= 2 ) && ( k <= km - 3 ) )
+                {
+                    if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k + 2 ] == 0. ) )
+                                drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k + 1 ] - aux_w.x[ im-1 ][ j ][ k + 2 ] ) / ( 2. * rmsinthe * dphi );
+                    if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k - 2 ] == 0. ) )
+                                drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k - 1 ] - aux_w.x[ im-1 ][ j ][ k - 2 ] ) / ( 2. * rmsinthe * dphi );
+                }
 
 // explicit pressure computation based on the Poisson equation
                 p_dyn.x[ i ][ j ][ k ] = ( ( p_dynn.x[ i+1 ][ j ][ k ] + p_dynn.x[ i-1 ][ j ][ k ] ) * num1
                                                     + ( p_dynn.x[ i ][ j+1 ][ k ] + p_dynn.x[ i ][ j-1 ][ k ] ) * num2
                                                     + ( p_dynn.x[ i ][ j ][ k+1 ] + p_dynn.x[ i ][ j ][ k-1 ] ) * num3 
                                                     - r_0_water * ( drhs_udr + drhs_vdthe + drhs_wdphi ) ) / denom;
-
-                if ( h.x[ i ][ j ][ k ] == 1. )                        p_dyn.x[ i ][ j ][ k ] = .0;
             }
         }
     }
@@ -310,24 +294,23 @@ void Pressure_Hyd::computePressure_2D ( BC_Thermohalin &oceanflow, double u_0, d
             if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j+1 ][ k ] == 0. ) )
                         drhs_vdthe = ( aux_v.x[ im-1 ][ j+1 ][ k ] - aux_v.x[ im-1 ][ j ][ k ] ) / ( dthe * rm );
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j+1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j+2 ][ k ] == 0. ) )
+            if ( j < jm-2 )
+            {
+                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j+1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j+2 ][ k ] == 0. ) )
                         drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j+1 ][ k ] -
                         aux_v.x[ im-1 ][ j+2 ][ k ] ) / ( 2. * dthe * rm );
-
-
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j-1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j-2 ][ k ] == 0. ) )
-                        drhs_vdthe = ( aux_v.x[ im-1 ][ j - 1 ][ k ] - aux_v.x[ im-1 ][ j ][ k ] ) / ( dthe * rm );
+            }
 
             if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j-1 ][ k ] == 0. ) )
                         drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j-1 ][ k ] -
                         aux_v.x[ im-1 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
 
-
-            if ( j == 1 )  drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j+1 ][ k ] -
-                                                        aux_v.x[ im-1 ][ j+2 ][ k ] ) / ( 2. * dthe * rm );
-
-            if ( j == jm-2 )  drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j-1 ][ k ] -
-                                                        aux_v.x[ im-1 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+            if ( j >= 2 )
+            {
+            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j-1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j-2 ][ k ] == 0. ) )
+                        drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j-1 ][ k ] -
+                        aux_v.x[ im-1 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+            }
 
 
 // gradients of RHS terms at mountain sides 2.order accurate in phi-direction
@@ -336,31 +319,27 @@ void Pressure_Hyd::computePressure_2D ( BC_Thermohalin &oceanflow, double u_0, d
             if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k+1 ] == 0. ) )
                         drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k+1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k+1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k+2 ] == 0. ) )
-                        drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k+1 ] -
-                                                 aux_w.x[ im-1 ][ j ][ k+2 ] ) / ( 2. * rmsinthe * dphi );
+            if ( k < km-2 )
+            {
+                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k+1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k+2 ] == 0. ) )
+                            drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k+1 ] -
+                                                     aux_w.x[ im-1 ][ j ][ k+2 ] ) / ( 2. * rmsinthe * dphi );
+            }
 
-
-            if ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k-1 ] == 1. ) )
+            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k-1 ] == 0. ) )
                         drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k-1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k-1 ] == 1. ) && ( h.x[ im-1 ][ j ][ k-2 ] == 1. ) )
-                        drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k-1 ] -
-                                                 aux_w.x[ im-1 ][ j ][ k-2 ] ) / ( 2. * rmsinthe * dphi );
-
-
-            if ( k == 2 )  drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k+1 ] -
-                                                             aux_w.x[ im-1 ][ j ][ k+2 ] ) / ( 2. * rmsinthe * dphi );
-
-            if ( k == km-2 )  drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k-1 ] -
-                                                                 aux_w.x[ im-1 ][ j ][ k-2 ] ) / ( 2. * rmsinthe * dphi );
+            if ( k >= 2 )
+            {
+                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k-1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k-2 ] == 0. ) )
+                            drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k-1 ] -
+                                                     aux_w.x[ im-1 ][ j ][ k-2 ] ) / ( 2. * rmsinthe * dphi );
+            }
 
 
             p_dyn.x[ im-1 ][ j ][ k ] = ( ( p_dynn.x[ im-1 ][ j+1 ][ k ] + p_dynn.x[ im-1 ][ j-1 ][ k ] ) * num2
                                                 + ( p_dynn.x[ im-1 ][ j ][ k+1 ] + p_dynn.x[ im-1 ][ j ][ k-1 ] ) * num3 
                                                 - r_0_water * ( drhs_vdthe + drhs_wdphi ) ) / denom;
-
-            if ( h.x[ im-1 ][ j ][ k ] == 1. )                        p_dyn.x[ im-1 ][ j ][ k ] = .0;
         }
     }
 

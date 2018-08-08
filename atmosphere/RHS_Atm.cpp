@@ -469,8 +469,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
             + w.x[ i ][ j ][ k ] * dtdphi / rmsinthe ) + ( d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2
             + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2 ) / ( re * pr )
             + coeff_energy * ( S_c.x[ i ][ j ][ k ] + S_r.x[ i ][ j ][ k ] )
-            + coeff_energy * ( S_i.x[ i ][ j ][ k ] + S_s.x[ i ][ j ][ k ] )
-            - h_0_i * t.x[ i ][ j ][ k ] * k_Force / dr2;
+            + coeff_energy * ( S_i.x[ i ][ j ][ k ] + S_s.x[ i ][ j ][ k ] );
+//            - h_0_i * t.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm 
             + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
@@ -497,25 +497,25 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
             + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe ) + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2
             + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
             + S_v.x[ i ][ j ][ k ] * coeff_trans
-            + vapour_evaporation
-            - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
+            + vapour_evaporation;
+//            - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_cloud.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dclouddr + v.x[ i ][ j ][ k ] * dclouddthe / rm
             + w.x[ i ][ j ][ k ] * dclouddphi / rmsinthe ) + ( d2clouddr2 + dclouddr * 2. / rm + d2clouddthe2 / rm2
             + dclouddthe * costhe / rm2sinthe + d2clouddphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-            + S_c.x[ i ][ j ][ k ] * coeff_trans
-            - h_0_i * cloud.x[ i ][ j ][ k ] * k_Force / dr2;
+            + S_c.x[ i ][ j ][ k ] * coeff_trans;
+//            - h_0_i * cloud.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_ice.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dicedr + v.x[ i ][ j ][ k ] * dicedthe / rm
             + w.x[ i ][ j ][ k ] * dicedphi / rmsinthe ) + ( d2icedr2 + dicedr * 2. / rm + d2icedthe2 / rm2
             + dicedthe * costhe / rm2sinthe + d2icedphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-            + S_i.x[ i ][ j ][ k ] * coeff_trans
-            - h_0_i * ice.x[ i ][ j ][ k ] * k_Force / dr2;
+            + S_i.x[ i ][ j ][ k ] * coeff_trans;
+//            - h_0_i * ice.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_co2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcodr + v.x[ i ][ j ][ k ] * dcodthe / rm
             + w.x[ i ][ j ][ k ] * dcodphi / rmsinthe ) + ( d2codr2 + dcodr * 2. / rm + d2codthe2 / rm2
-            + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
-            - h_0_i * co2.x[ i ][ j ][ k ] * k_Force / dr2;
+            + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re );
+//            - h_0_i * co2.x[ i ][ j ][ k ] * k_Force / dr2;
 
 
     // for the Poisson equation to solve for the pressure, pressure gradient substracted from the above RHS
