@@ -286,56 +286,63 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double u_0, doub
 
         for ( int k = 1; k < km-1; k++ )
         {
-            if ( is_land(h, 0, j, k ) ){
-                p_dyn.x[ 0 ][ j ][ k ] = .0;
-                continue;
-            }
             // gradients of RHS terms at mountain sides 2.order accurate in the-direction
             drhs_vdthe = ( aux_v.x[ 0 ][ j+1 ][ k ] - aux_v.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe * rm );
 
-            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j+1 ][ k ] == 0. ) )
-                        drhs_vdthe = ( aux_v.x[ 0 ][ j+1 ][ k ] - aux_v.x[ 0 ][ j ][ k ] ) / ( dthe * rm );
-
-            if ( j < jm-2 )
+            if ( is_land( h, 0, j, k ) && is_water( h, 0, j+1, k) )
             {
-                if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j+1 ][ k ] == 0. ) && ( h.x[ 0 ][ j+2 ][ k ] == 0. ) )
-                        drhs_vdthe = ( - 3. * aux_v.x[ 0 ][ j ][ k ] + 4. * aux_v.x[ 0 ][ j+1 ][ k ] -
-                        aux_v.x[ 0 ][ j+2 ][ k ] ) / ( 2. * dthe * rm );
+                if ( j < jm-2 && is_water( h, 0, j+2, k) )
+                {
+                    drhs_vdthe = ( - 3. * aux_v.x[ 0 ][ j ][ k ] + 4. * aux_v.x[ 0 ][ j+1 ][ k ] -
+                           aux_v.x[ 0 ][ j+2 ][ k ] ) / ( 2. * dthe * rm );
+                }
+                else
+                {
+                    drhs_vdthe = ( aux_v.x[ 0 ][ j+1 ][ k ] - aux_v.x[ 0 ][ j ][ k ] ) / ( dthe * rm );
+                }
             }
 
-            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j-1 ][ k ] == 0. ) )
-                        drhs_vdthe = ( - 3. * aux_v.x[ 0 ][ j ][ k ] + 4. * aux_v.x[ 0 ][ j-1 ][ k ] -
-                        aux_v.x[ 0 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
-
-            if ( j >= 2 )
+            if ( is_land( h, 0, j, k ) && is_water( h, 0,  j-1,  k) )
             {
-            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j-1 ][ k ] == 0. ) && ( h.x[ 0 ][ j-2 ][ k ] == 0. ) )
-                        drhs_vdthe = ( - 3. * aux_v.x[ 0 ][ j ][ k ] + 4. * aux_v.x[ 0 ][ j-1 ][ k ] -
-                        aux_v.x[ 0 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+                if ( j > 1 && is_water( h, 0, j-2,  k) )
+                {
+                    drhs_vdthe = ( - 3. * aux_v.x[ 0 ][ j ][ k ] + 4. * aux_v.x[ 0 ][ j-1 ][ k ] -
+                            aux_v.x[ 0 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+                }
+                else
+                {
+                    drhs_vdthe = ( - 3. * aux_v.x[ 0 ][ j ][ k ] + 4. * aux_v.x[ 0 ][ j-1 ][ k ] -
+                            aux_v.x[ 0 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+                }
             }
-
 
             // gradients of RHS terms at mountain sides 2.order accurate in phi-direction
             drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k+1 ] - aux_w.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi * rmsinthe );
 
-            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k+1 ] == 0. ) )
-                        drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k+1 ] - aux_w.x[ 0 ][ j ][ k ] ) / ( dphi * rmsinthe );
-
-            if ( k < km-2 )
+            if ( is_land( h, 0,  j, k ) && is_water( h, 0, j, k+1) )
             {
-                if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k+1 ] == 0. ) && ( h.x[ 0 ][ j ][ k+2 ] == 0. ) )
-                            drhs_wdphi = ( - 3. * aux_w.x[ 0 ][ j ][ k ] + 4. * aux_w.x[ 0 ][ j ][ k+1 ] -
-                                                     aux_w.x[ 0 ][ j ][ k+2 ] ) / ( 2. * rmsinthe * dphi );
+                if ( k < km-2 && is_water(h, 0, j, k+2 ))
+                {
+                    drhs_wdphi = ( - 3. * aux_w.x[ 0 ][ j ][ k ] + 4. * aux_w.x[ 0 ][ j ][ k+1 ] -
+                            aux_w.x[ 0 ][ j ][ k+2 ] ) / ( 2. * rmsinthe * dphi );
+                }
+                else
+                {
+                    drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k+1 ] - aux_w.x[ 0 ][ j ][ k ] ) / ( dphi * rmsinthe );
+                }
             }
 
-            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k-1 ] == 0. ) )
-                        drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k-1 ] - aux_w.x[ 0 ][ j ][ k ] ) / ( dphi * rmsinthe );
-
-            if ( k >= 2 )
+            if ( is_land( h, 0, j,  k ) && is_water( h, 0, j, k-1 ) )
             {
-                if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( h.x[ 0 ][ j ][ k-1 ] == 0. ) && ( h.x[ 0 ][ j ][ k-2 ] == 0. ) )
-                            drhs_wdphi = ( - 3. * aux_w.x[ 0 ][ j ][ k ] + 4. * aux_w.x[ 0 ][ j ][ k-1 ] -
-                                                     aux_w.x[ 0 ][ j ][ k-2 ] ) / ( 2. * rmsinthe * dphi );
+                if ( k >= 2 && is_water( h, 0, j, k-2 ) )
+                {
+                    drhs_wdphi = ( - 3. * aux_w.x[ 0 ][ j ][ k ] + 4. * aux_w.x[ 0 ][ j ][ k-1 ] -
+                            aux_w.x[ 0 ][ j ][ k-2 ] ) / ( 2. * rmsinthe * dphi );
+                }
+                else
+                {
+                    drhs_wdphi = ( aux_w.x[ 0 ][ j ][ k-1 ] - aux_w.x[ 0 ][ j ][ k ] ) / ( dphi * rmsinthe );
+                }
             }
 
             p_dyn.x[ 0 ][ j ][ k ] = ( ( p_dynn.x[ 0 ][ j+1 ][ k ] + p_dynn.x[ 0 ][ j-1 ][ k ] ) * num2
@@ -343,7 +350,6 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double u_0, doub
                                                 - r_air * ( drhs_vdthe + drhs_wdphi ) ) / denom;
         }
     }
-
 
     // boundary conditions for the the-direction, loop index j
     for ( int k = 0; k < km; k++ )
