@@ -397,7 +397,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-            startPressure.computePressure_2D ( oceanflow, u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
+            startPressure.computePressure_2D ( u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
 
             // limit of the computation in the sense of time steps
             if ( iter_cnt > nm )
@@ -605,7 +605,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-        startPressure.computePressure_3D ( oceanflow, u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
+        startPressure.computePressure_3D ( u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
 
         if( pressure_iter % checkpoint == 0 ){
             write_file(bathymetry_name, output_path);

@@ -41,7 +41,7 @@ Pressure_Hyd::~Pressure_Hyd (){}
 
 
 
-void Pressure_Hyd::computePressure_3D ( BC_Thermohalin &oceanflow, double u_0, double r_0_water,
+void Pressure_Hyd::computePressure_3D ( double u_0, double r_0_water,
                                  Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn,
                                  Array &h, Array &aux_u, Array &aux_v, Array &aux_w )
 {
@@ -223,42 +223,35 @@ void Pressure_Hyd::computePressure_3D ( BC_Thermohalin &oceanflow, double u_0, d
         }
     }
 
-
     logger() << "exit Pressure_Hyd::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_0_water *.01 << std::endl;
 //    logger() << "exit Pressure_Hyd::computePressure_3D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
-
-//    oceanflow.Pressure_Limitation_Hyd ( p_dyn, p_dynn );
 }
 
 
-
-
-
-void Pressure_Hyd::computePressure_2D ( BC_Thermohalin &oceanflow, double u_0, double r_0_water,
+void Pressure_Hyd::computePressure_2D ( double u_0, double r_0_water,
                                  Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn,
                                  Array &h, Array &aux_v, Array &aux_w )
 {
-// Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
+    // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
     logger() << "enter computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_0_water *.01 << std::endl;
-//    logger() << "enter computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
+    //logger() << "enter computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
 
-// boundary conditions for the the-direction, loop index j
+    // boundary conditions for the the-direction, loop index j
     for ( int k = 0; k < km; k++ )
     {
-// zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
+        // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
         aux_v.x[ im-1 ][ 0 ][ k ] = c43 * aux_v.x[ im-1 ][ 1 ][ k ] - c13 * aux_v.x[ im-1 ][ 2 ][ k ];
         aux_v.x[ im-1 ][ jm-1 ][ k ] = c43 * aux_v.x[ im-1 ][ jm-2 ][ k ] - c13 * aux_v.x[ im-1 ][ jm-3 ][ k ];
     }
 
-// boundary conditions for the phi-direction, loop index k
+    // boundary conditions for the phi-direction, loop index k
     for ( int j = 0; j < jm; j++ )
     {
-// zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
+    // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
         aux_v.x[ im-1 ][ j ][ 0 ] = c43 * aux_v.x[ im-1 ][ j ][ 1 ] - c13 * aux_v.x[ im-1 ][ j ][ 2 ];
         aux_v.x[ im-1 ][ j ][ km-1 ] = c43 * aux_v.x[ im-1 ][ j ][ km-2 ] - c13 * aux_v.x[ im-1 ][ j ][ km-3 ];
         aux_v.x[ im-1 ][ j ][ 0 ] = aux_v.x[ im-1 ][ j ][ km-1 ] = ( aux_v.x[ im-1 ][ j ][ 0 ] + aux_v.x[ im-1 ][ j ][ km-1 ] ) / 2.;
     }
-
 
     double rm= 0;
     double rm2= 0;
@@ -288,54 +281,64 @@ void Pressure_Hyd::computePressure_2D ( BC_Thermohalin &oceanflow, double u_0, d
 
         for ( int k = 1; k < km-1; k++ )
         {
-// gradients of RHS terms at mountain sides 2.order accurate in the-direction
+            // gradients of RHS terms at mountain sides 2.order accurate in the-direction
             drhs_vdthe = ( aux_v.x[ im-1 ][ j+1 ][ k ] - aux_v.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe * rm );
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j+1 ][ k ] == 0. ) )
-                        drhs_vdthe = ( aux_v.x[ im-1 ][ j+1 ][ k ] - aux_v.x[ im-1 ][ j ][ k ] ) / ( dthe * rm );
-
-            if ( j < jm-2 )
+            if ( is_land( h, im-1, j, k ) && is_water( h, im-1,  j+1, k ) )
             {
-                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j+1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j+2 ][ k ] == 0. ) )
-                        drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j+1 ][ k ] -
-                        aux_v.x[ im-1 ][ j+2 ][ k ] ) / ( 2. * dthe * rm );
+                if ( j < jm-2 && is_water(h, im-1, j+2, k ) )
+                {
+                    drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j+1 ][ k ] -
+                            aux_v.x[ im-1 ][ j+2 ][ k ] ) / ( 2. * dthe * rm );
+                }
+                else
+                {
+                    drhs_vdthe = ( aux_v.x[ im-1 ][ j+1 ][ k ] - aux_v.x[ im-1 ][ j ][ k ] ) / ( dthe * rm );
+                }
             }
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j-1 ][ k ] == 0. ) )
-                        drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j-1 ][ k ] -
-                        aux_v.x[ im-1 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
-
-            if ( j >= 2 )
+            if ( is_land( h, im-1, j, k ) && is_water( h, im-1, j-1, k ) )
             {
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j-1 ][ k ] == 0. ) && ( h.x[ im-1 ][ j-2 ][ k ] == 0. ) )
-                        drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j-1 ][ k ] -
-                        aux_v.x[ im-1 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+                if ( j > 1  && is_water( h, im-1, j-2, k ) )
+                {
+                    drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j-1 ][ k ] -
+                            aux_v.x[ im-1 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+                }
+                else
+                {
+                    drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j-1 ][ k ] -
+                            aux_v.x[ im-1 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+                }
             }
 
-
-// gradients of RHS terms at mountain sides 2.order accurate in phi-direction
+            // gradients of RHS terms at mountain sides 2.order accurate in phi-direction
             drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k+1 ] - aux_w.x[ im-1 ][ j ][ k-1 ] ) / ( 2. * dphi * rmsinthe );
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k+1 ] == 0. ) )
-                        drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k+1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
-
-            if ( k < km-2 )
+            if ( is_land( h, im-1, j, k ) && is_water( h, im-1, j, k+1 ) )
             {
-                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k+1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k+2 ] == 0. ) )
-                            drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k+1 ] -
-                                                     aux_w.x[ im-1 ][ j ][ k+2 ] ) / ( 2. * rmsinthe * dphi );
+                if ( k < km-2 && is_water( h, im-1, j, k+2 ) )
+                {
+                    drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k+1 ] -
+                            aux_w.x[ im-1 ][ j ][ k+2 ] ) / ( 2. * rmsinthe * dphi );
+                }
+                else
+                {
+                    drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k+1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
+                }
             }
 
-            if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k-1 ] == 0. ) )
-                        drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k-1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
-
-            if ( k >= 2 )
+            if ( is_land( h, im-1, j, k ) && is_water( h, im-1, j, k-1 ) )
             {
-                if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k-1 ] == 0. ) && ( h.x[ im-1 ][ j ][ k-2 ] == 0. ) )
-                            drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k-1 ] -
-                                                     aux_w.x[ im-1 ][ j ][ k-2 ] ) / ( 2. * rmsinthe * dphi );
+                if ( k > 1 && is_water( h, im-1, j, k-2 ) )
+                {
+                    drhs_wdphi = ( - 3. * aux_w.x[ im-1 ][ j ][ k ] + 4. * aux_w.x[ im-1 ][ j ][ k-1 ] -
+                            aux_w.x[ im-1 ][ j ][ k-2 ] ) / ( 2. * rmsinthe * dphi );
+                }
+                else
+                {
+                    drhs_wdphi = ( aux_w.x[ im-1 ][ j ][ k-1 ] - aux_w.x[ im-1 ][ j ][ k ] ) / ( dphi * rmsinthe );
+                }
             }
-
 
             p_dyn.x[ im-1 ][ j ][ k ] = ( ( p_dynn.x[ im-1 ][ j+1 ][ k ] + p_dynn.x[ im-1 ][ j-1 ][ k ] ) * num2
                                                 + ( p_dynn.x[ im-1 ][ j ][ k+1 ] + p_dynn.x[ im-1 ][ j ][ k-1 ] ) * num3 
@@ -343,26 +346,23 @@ void Pressure_Hyd::computePressure_2D ( BC_Thermohalin &oceanflow, double u_0, d
         }
     }
 
-
-// boundary conditions for the the-direction, loop index j
+    // boundary conditions for the the-direction, loop index j
     for ( int k = 0; k < km; k++ )
     {
-// zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
+        // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
         p_dyn.x[ im-1 ][ im-1 ][ k ] = 0.;
         p_dyn.x[ 0 ][ jm-1 ][ k ] = 0.;
     }
 
-// boundary conditions for the phi-direction, loop index k
+    // boundary conditions for the phi-direction, loop index k
     for ( int j = 1; j < jm - 1; j++ )
     {
-// zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
+        // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
         p_dyn.x[ im-1 ][ j ][ 0 ] = c43 * p_dyn.x[ im-1 ][ j ][ 1 ] - c13 * p_dyn.x[ im-1 ][ j ][ 2 ];
         p_dyn.x[ im-1 ][ j ][ km-1 ] = c43 * p_dyn.x[ im-1 ][ j ][ km-2 ] - c13 * p_dyn.x[ im-1 ][ j ][ km-3 ];
         p_dyn.x[ im-1 ][ j ][ 0 ] = p_dyn.x[ im-1 ][ j ][ km-1 ] = ( p_dyn.x[ im-1 ][ j ][ 0 ] + p_dyn.x[ im-1 ][ j ][ km-1 ] ) / 2.;
     }
 
-
-//    oceanflow.Pressure_Limitation_Hyd ( p_dyn, p_dynn );
     logger() << "exit computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_0_water *.01 << std::endl;
-//    logger() << "exit computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
+    //logger() << "exit computePressure_2D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
 }

@@ -38,7 +38,7 @@ Pressure_Atm::Pressure_Atm ( int im, int jm, int km, double dr, double dthe, dou
 Pressure_Atm::~Pressure_Atm (){}
 
 
-void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, double r_air,
+void Pressure_Atm::computePressure_3D ( double u_0, double r_air,
                         Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h,
                         Array &aux_u, Array &aux_v, Array &aux_w )
 {
@@ -221,20 +221,11 @@ void Pressure_Atm::computePressure_3D ( BC_Thermo &circulation, double u_0, doub
         }
     }
 
-
     logger() << "exit Pressure_Atm::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
-
-//    circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }
 
 
-
-
-
-
-
-
-void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double u_0, double r_air,
+void Pressure_Atm::computePressure_2D ( double u_0, double r_air,
                                  Array_1D &rad, Array_1D &the, Array &p_dyn,
                                  Array &p_dynn, Array &h, Array &aux_v, Array &aux_w )
 {
@@ -368,8 +359,5 @@ void Pressure_Atm::computePressure_2D ( BC_Thermo &circulation, double u_0, doub
         p_dyn.x[ 0 ][ j ][ 0 ] = p_dyn.x[ 0 ][ j ][ km-1 ] = ( p_dyn.x[ 0 ][ j ][ 0 ] + p_dyn.x[ 0 ][ j ][ km-1 ] ) / 2.;
     }
 
-
     logger() << "exit computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
-
-    //    circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }
