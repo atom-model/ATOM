@@ -306,8 +306,7 @@ void Pressure_Hyd::computePressure_2D ( double u_0, double r_0_water,
                 }
                 else
                 {
-                    drhs_vdthe = ( - 3. * aux_v.x[ im-1 ][ j ][ k ] + 4. * aux_v.x[ im-1 ][ j-1 ][ k ] -
-                            aux_v.x[ im-1 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+                    drhs_vdthe = ( aux_v.x[ im-1 ][ j-1 ][ k ] - aux_v.x[ im-1 ][ j ][ k ] ) / ( dthe * rm );
                 }
             }
 
