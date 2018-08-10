@@ -538,7 +538,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     }// temperatur distribution at aa prescribed sun position
 
     // pole temperature adjustment, combination of linear time dependent functions 
-    double t_pole_diff = 0.;
     double t_pole_ma = t_pole;
 
     std::map<int, double> pole_temp_map{
@@ -553,7 +552,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
         t_pole_ma = GetPoleTemperature(Ma, pole_temp_map);// pole temperature for hothouse climates 
  
         t_eff = t_pole_ma - ( t_equator + t_cretaceous_add );
-        t_pole_diff = t_pole_ma - t_pole; // increase of pole temperature compared to modern times
 
         logger() << "t_pole_ma: " << t_pole_ma << "  " << Ma <<std::endl;
 
@@ -580,16 +578,16 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                 else // if ( NASATemperature == 1 ) surface temperature is NASA based
                 {
                     if ( is_land(h, 0, j, k) ){// on land
-                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( j / d_j_half ) + t_pole_ma;
+                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( j / d_j_half ) + t_pole_ma + t_land;
                         if(Ma != 0){
-                            t.x[ i_mount ][ j ][ k ] += t_cretaceous_add + t_land;
+                            t.x[ i_mount ][ j ][ k ] += t_cretaceous_add;
                         }
                     }
                     else //ocean
                     {   
                         t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];
                         if(Ma != 0){
-                            t.x[ i_mount ][ j ][ k ] += t_pole_diff * abs( 1. -  j / d_j_half );
+                            t.x[ i_mount ][ j ][ k ] += t_cretaceous_add;
                         }
                     }
                 }//if ( NASATemperature == 1 )
