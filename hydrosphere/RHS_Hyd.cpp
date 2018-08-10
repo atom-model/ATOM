@@ -489,8 +489,6 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
 
     if ( ( j == 90 ) && ( k == 180 ) )
     {
-//        logger() << "enter RK_RHS_2D_Hydrosphere: r_0_water: " << r_0_water << std::endl;
- //       logger() << "enter RK_RHS_2D_Hydrosphere: h max: " << h.max() << std::endl;
         logger() << "enter RK_RHS_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "enter RK_RHS_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "enter RK_RHS_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;

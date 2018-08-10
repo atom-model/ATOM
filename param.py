@@ -33,8 +33,8 @@ def main():
             ( 'velocity_iter_max_2D', 'the number of velocity iterations', 'int',2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
-            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 40),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 4 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
@@ -98,7 +98,7 @@ def main():
             ( 'va', 'initial velocity component in theta-direction', 'double', 0.0 ),
             ( 'wa', 'initial velocity component in phi-direction', 'double', 0.0 ),
             ( 'pa', 'initial value for the pressure field', 'double', 0.0 ),
-            ( 'ca', 'value 0.04 stands for the maximum value of 40 g/kg water vapour', 'double', 0.0 ),
+            ( 'ca', 'value 1. stands for the value of 35 g/kg water vapour', 'double', 1.0 ),
             ( 'ta', 'initial value for the temperature field, 1.0 compares to 0° C compares to 273.15 K', 'double', 1.0 ),
             ( 'coa', 'initial value of co2 = 1.0 compares to 280 ppm in pre-industrial times', 'double', 1.0 ),
 
@@ -132,7 +132,7 @@ def main():
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
             ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 40),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 

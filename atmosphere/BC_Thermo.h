@@ -96,7 +96,7 @@ class BC_Thermo
 
 
     public:
-        BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h);
+        BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double co2_0, Array& h);
 
         ~BC_Thermo();
 
@@ -135,6 +135,8 @@ class BC_Thermo
         void IC_Temperature_WestEastCoast ( Array &, Array & );
 
         void Value_Limitation_Atm ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+
+        void Cloud_Limitation_Atm ( Array &h, Array &t, Array &c, Array &cloud, Array &ice );
 
         void Pressure_Limitation_Atm ( Array &, Array & );
 

@@ -44,7 +44,7 @@ void Pressure_Atm::computePressure_3D ( double u_0, double r_air,
 {
 // boundary conditions for the r-direction, loop index i
 
-    logger() << "enter Pressure_Atm::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
+    logger() << "enter $$$$$$$$$$$$$$$$$ Pressure_Atm::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
 
 // boundary conditions for the r-direction, loop index i
     for ( int j = 0; j < jm; j++ )
@@ -221,7 +221,10 @@ void Pressure_Atm::computePressure_3D ( double u_0, double r_air,
         }
     }
 
-    logger() << "exit Pressure_Atm::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
+
+    logger() << "exit $$$$$$$$$$$$$$$ Pressure_Atm::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl << std::endl;
+
+//    circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }
 
 
@@ -229,7 +232,7 @@ void Pressure_Atm::computePressure_2D ( double u_0, double r_air,
                                  Array_1D &rad, Array_1D &the, Array &p_dyn,
                                  Array &p_dynn, Array &h, Array &aux_v, Array &aux_w )
 {
-    logger() << "enter computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
+    logger() << "enter &&&&&&&&&&&& computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
 
     // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
     // boundary conditions for the the-direction, loop index j
@@ -359,5 +362,7 @@ void Pressure_Atm::computePressure_2D ( double u_0, double r_air,
         p_dyn.x[ 0 ][ j ][ 0 ] = p_dyn.x[ 0 ][ j ][ km-1 ] = ( p_dyn.x[ 0 ][ j ][ 0 ] + p_dyn.x[ 0 ][ j ][ km-1 ] ) / 2.;
     }
 
-    logger() << "exit computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
+    logger() << "exit &&&&&&&&&&&&&&& computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl << std::endl;
+
+    //    circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }
