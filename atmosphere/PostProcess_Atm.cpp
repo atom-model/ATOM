@@ -15,8 +15,10 @@
 #include <iomanip>
 
 #include "PostProcess_Atm.h"
+#include "Utils.h"
 
 using namespace std;
+using namespace AtomUtils;
 
 PostProcess_Atmosphere::PostProcess_Atmosphere( int im, int jm, int km, string &output_path )
 {
@@ -294,8 +296,8 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
                 {
                     if ( Ma == 0 )
                     {
-                        if ( ( h.x[ i + 1 ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k ] == 1. ) )        aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
-                        if ( h.x[ 0 ][ j ][ k ] == 0. )                                                                aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+                        if ( ( is_air ( h, i+1, j, k ) ) && ( is_land ( h, i, j, k ) ) )        aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+                        if ( is_air ( h, 0, j, k ) )                                                                aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
                     }
                     else                                                                                                     aux_v.x[ i_radial ][ j ][ k ] = 0.;
 

@@ -57,7 +57,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename,
         for (k = 0; k < km && !ifile.eof(); k++) {
             height = -999; // in case the height is NaN
             ifile >> lon >> lat >> height;
-
             if ( height < 0. ){
                 h.x[ 0 ][ j ][ k ] = Topography.y[ j ][ k ] = 0.;
             }else{
@@ -67,7 +66,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename,
                     h.x[ i ][ j ][ k ] = 1.;
                 }
             }
-
             if(ifile.fail()){
                 ifile.clear();
                 std::string tmp;
@@ -77,7 +75,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename,
             //logger() << lon << " " << lat << " " << h.x[ 0 ][ j ][ k ] << std::endl;            
         }
     }
-
     if(j != jm || k != km ){
         std::cerr << "wrong topography file size! aborting..."<<std::endl;
         abort();
@@ -92,6 +89,8 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename,
     }
 }
 
+
+
 void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, double g, double hp, double ep, double r_air, 
                                                 double R_Air, double t_0, double c_0, double t_land, double t_cretaceous, double t_equator,     
                                                 double t_pole, double t_tropopause, double c_land, double c_tropopause, 
@@ -103,7 +102,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
             for ( int i = im-2; i >= 0; i-- ){
-                if ( h.x[ i ][ j ][ k ] == 1. ){
+                if ( is_land ( h, i, j, k ) ){
                     u.x[ i ][ j ][ k ] = 0.;
                     v.x[ i ][ j ][ k ] = 0.;
                     w.x[ i ][ j ][ k ] = 0.;
@@ -113,10 +112,8 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                     ice.x[ i ][ j ][ k ] = 0.;
                     co2.x[ i ][ j ][ k ] = 1.;
                     p_dyn.x[ i ][ j ][ k ] = 0.;
-
-
                     if ( i < im - 1 ){
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ){
+                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i+1, j, k ) ) ){
                             t.x[ i ][ j ][ k ] = t.x[ i + 1 ][ j ][ k ];
                             p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i + 1 ][ j ][ k ];
 //                            c.x[ i ][ j ][ k ] = c.x[ i + 1 ][ j ][ k ];
@@ -125,9 +122,8 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                             co2.x[ i ][ j ][ k ] = co2.x[ i + 1 ][ j ][ k ];
                         }
                     }
-
                     if ( ( j >= 0 ) && ( j <= jm - 2 ) ){
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) ){
+                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j+1, k ) ) ){
                             t.x[ i ][ j ][ k ] = t.x[ i ][ j + 1 ][ k ];
                             p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j + 1 ][ k ];
 //                            c.x[ i ][ j ][ k ] = c.x[ i ][ j + 1 ][ k ];
@@ -137,7 +133,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                         }
                     }
                    if ( ( j >= 1 ) && ( j <= jm - 1 ) ){
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) ){
+                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j-1, k ) ) ){
                             t.x[ i ][ j ][ k ] = t.x[ i ][ j - 1 ][ k ];
                             p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j - 1 ][ k ];
 //                            c.x[ i ][ j ][ k ] = c.x[ i ][ j - 1 ][ k ];
@@ -147,7 +143,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                         }
                     }
                     if ( ( k >= 0 ) && ( k <= km - 2 ) ){
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) ){
+                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k+1 ) ) ){
                             t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k + 1 ];
                             p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j ][ k + 1 ];
 //                            c.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k + 1 ];
@@ -157,7 +153,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                         }
                     }
                     if ( ( k >= 1 ) && ( k <= km - 1 ) ){
-                        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) ){
+                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k-1 ) ) ){
                             t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k - 1 ];
                             p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j ][ k - 1 ];
 //                            c.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k - 1 ];
@@ -170,7 +166,6 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
             } // k
         } // j
     } // h.x
-
 }
 
 
@@ -181,18 +176,15 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
 
 
 
-void BC_Bathymetry_Atmosphere::vegetationDistribution ( double max_Precipitation, Array_2D &Precipitation, Array_2D &Vegetation, 
-                                                        Array &t, Array &h )
-{
+void BC_Bathymetry_Atmosphere::vegetationDistribution ( double max_Precipitation,
+                                                        Array_2D &Precipitation, Array_2D &Vegetation, 
+                                                        Array &t, Array &h ){
     // description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            if ( ( h.x[ 0 ][ j ][ k ] == 1. ) && ( t.x[ 0 ][ j ][ k ] >= 1. ) ){ 
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( ( is_land ( h, 0, j, k ) ) && ( t.x[ 0 ][ j ][ k ] >= 1. ) ){ 
                 Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation; // actual vegetation areas
-            }
-            else{
+            }else{
                  Vegetation.y[ j ][ k ] = 0.;
             }
             if ( max_Precipitation <= 0. ){ 
@@ -202,23 +194,17 @@ void BC_Bathymetry_Atmosphere::vegetationDistribution ( double max_Precipitation
     }
 }
 
-void BC_Bathymetry_Atmosphere::land_oceanFraction ( Array &h )
-{
+void BC_Bathymetry_Atmosphere::land_oceanFraction ( Array &h ){
     // calculation of the ratio ocean to land, also addition and subtraction of CO2 of land, ocean and vegetation
     h_point_max =  ( jm - 1 ) * ( km - 1 );
-
     h_land = 0;
-
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            if ( h.x[ 0 ][ j ][ k ] == 1. )     h_land = h_land + h.x[ 0 ][ j ][ k ];
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_land ( h, 0, j, k ) )     h_land = h_land + h.x[ 0 ][ j ][ k ];
         }
     }
 
     h_ocean = h_point_max - h_land;
-
     ozean_land = ( double ) h_ocean / ( double ) h_land;
 
     cout.precision ( 3 );
