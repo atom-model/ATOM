@@ -39,7 +39,7 @@ class BC_Thermo
         int sun;
         int j_par, j_pol, k_par, k_pol;
         int k_a, k_b, flip, j_grad, k_grad, k_grad_init, i_middle;
-        int j_water, k_water, j_sequel, k_sequel;
+        int j_air, k_air, j_sequel, k_sequel;
         int n_smooth;
         int j_r, k_r, j_sun;
         int RadiationModel, sun_position_lat, sun_position_lon, declination, NASATemperature;

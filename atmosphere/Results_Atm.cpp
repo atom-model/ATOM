@@ -14,8 +14,10 @@
 #include <algorithm>
 
 #include "Results_Atm.h"
+#include "Utils.h"
 
 using namespace std;
+using namespace AtomUtils;
 
 Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep, double hp, double u_0, double p_0, double t_0, double c_0, double co2_0, double sigma, double albedo_equator, double lv, double ls, double cp_l, double L_atm, double dt, double dr, double dthe, double dphi, double r_air, double R_Air, double r_water_vapour, double R_WaterVapour, double co2_vegetation, double co2_ocean, double co2_land, double gam, double t_pole, double t_cretaceous, double t_average )
 :    f_Penman ( 2. )
@@ -153,7 +155,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
             for ( int i = 0; i < im; i++ )
             {
 // on the boundary between land and air searching for the top of mountains
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
+                if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i+1, j, k ) ) )
                 {
                     if ( i == 0 )     p_stat.x[ 0 ][ j ][ k ] = ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01; // given in hPa
                     else     p_stat.x[ i ][ j ][ k ] = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_stat.x[ 0 ][ j ][ k ];    // given in hPa
@@ -176,7 +178,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                     E_a = .35 * ( 1. + .15 * sqrt ( ( v.x[ i + 1 ][ j ][ k ] * v.x[ i + 1 ][ j ][ k ] + w.x[ i + 1 ][ j ][ k ] * w.x[ i + 1 ][ j ][ k ] ) / 2. ) * u_0 * 3.6 ) * sat_deficit;    // ventilation-humidity Penmans formula
 
 
-                    if ( h.x[ i ][ j ][ k ] == 1. )  Q_Evaporation.y[ j ][ k ] = 2300.;                    // minimum value used for printout
+                    if ( is_land ( h, i, j, k ) )  Q_Evaporation.y[ j ][ k ] = 2300.;                    // minimum value used for printout
 
                     Q_latent.y[ j ][ k ] = Q_Latent.x[ i ][ j ][ k ];                    // latente heat in [W/m2] from energy transport equation
                     Q_sensible.y[ j ][ k ] = Q_Sensible.x[ i ][ j ][ k ];        // sensible heat in [W/m2] from energy transport equation
@@ -192,13 +194,13 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
                     if ( Evaporation_Penman.y[ j ][ k ] >= 9. )        Evaporation_Penman.y[ j ][ k ] = 9.;                // vapour gradient causes values too high at shelf corners
 
-                    if ( h.x[ i ][ j ][ k ] == 1. )            Evaporation_Dalton.y[ j ][ k ] = Evaporation_Penman.y[ j ][ k ];
+                    if ( is_land ( h, i, j, k ) )            Evaporation_Dalton.y[ j ][ k ] = Evaporation_Penman.y[ j ][ k ];
                 }
 
 
 
 // only on the sea surface
-                if ( ( i == 0 ) && ( h.x[ 0 ][ j ][ k ] == 0. ) )
+                if ( ( i == 0 ) && ( is_air ( h, 0, j, k ) ) )
                 {
                     if ( i == 0 )     p_stat.x[ 0 ][ j ][ k ] = ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;        // given in hPa
 
@@ -246,7 +248,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
         {
             BuoyancyForce.x[ 0 ][ j ][ k ] = c43 * BuoyancyForce.x[ 1 ][ j ][ k ] - c13 * BuoyancyForce.x[ 2 ][ j ][ k ];
             BuoyancyForce.x[ im-1 ][ j ][ k ] = c43 * BuoyancyForce.x[ im-2 ][ j ][ k ] - c13 * BuoyancyForce.x[ im-3 ][ j ][ k ];
-            if ( h.x[ 0 ][ j ][ k ] == 1. )     BuoyancyForce.x[ 0 ][ j ][ k ] = 0.;
+            if ( is_land ( h, 0, j, k ) )     BuoyancyForce.x[ 0 ][ j ][ k ] = 0.;
         }
     }
 
@@ -257,7 +259,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
         {
             BuoyancyForce.x[ i ][ 0 ][ k ] = c43 * BuoyancyForce.x[ i ][ 1 ][ k ] - c13 * BuoyancyForce.x[ i ][ 2 ][ k ];
             BuoyancyForce.x[ i ][ jm-1 ][ k ] = c43 * BuoyancyForce.x[ i ][ jm-2 ][ k ] - c13 * BuoyancyForce.x[ i ][ jm-3 ][ k ];
-            if ( h.x[ i ][ 0 ][ k ] == 1. )     BuoyancyForce.x[ i ][ 0 ][ k ] = 0.;
+//            if ( h.x[ i ][ 0 ][ k ] == 1. )     BuoyancyForce.x[ i ][ 0 ][ k ] = 0.;
         }
     }
 
@@ -269,7 +271,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
             BuoyancyForce.x[ i ][ j ][ 0 ] = c43 * BuoyancyForce.x[ i ][ j ][ 1 ] - c13 * BuoyancyForce.x[ i ][ j ][ 2 ];
             BuoyancyForce.x[ i ][ j ][ km-1 ] = c43 * BuoyancyForce.x[ i ][ j ][ km-2 ] - c13 * BuoyancyForce.x[ i ][ j ][ km-3 ];
             BuoyancyForce.x[ i ][ j ][ 0 ] = BuoyancyForce.x[ i ][ j ][ km-1 ] = ( BuoyancyForce.x[ i ][ j ][ 0 ] + BuoyancyForce.x[ i ][ j ][ km-1 ] ) / 2.;
-            if ( h.x[ i ][ j ][ 0 ] == 1. )     BuoyancyForce.x[ i ][ j ][ 0 ] = 0.;
+//            if ( h.x[ i ][ j ][ 0 ] == 1. )     BuoyancyForce.x[ i ][ j ][ 0 ] = 0.;
         }
     }
 
