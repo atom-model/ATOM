@@ -305,8 +305,7 @@ void Pressure_Atm::computePressure_2D ( double u_0, double r_air,
                 }
                 else
                 {
-                    drhs_vdthe = ( - 3. * aux_v.x[ 0 ][ j ][ k ] + 4. * aux_v.x[ 0 ][ j-1 ][ k ] -
-                            aux_v.x[ 0 ][ j-2 ][ k ] ) / ( 2. * dthe * rm );
+                    drhs_vdthe = ( aux_v.x[ 0 ][ j-1 ][ k ] - aux_v.x[ 0 ][ j ][ k ] ) / ( dthe * rm );
                 }
             }
 
