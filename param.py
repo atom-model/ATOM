@@ -111,7 +111,7 @@ def main():
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
             ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
 
-            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.0001 ),
+            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
             ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.58 ),
             ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.64 ),
 

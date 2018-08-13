@@ -205,8 +205,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
                     albedo.y[ j ][ k ] = albedo_co2_eff * parabola( j / j_max_half ) + albedo_pole;
                 }
             }
-            // in W/m², assumption of parabolic surface radiation at zero level
-//            radiation_surface.y[ j ][ k ] = rad_eff * parabola( j / j_max_half ) + rad_pole;
         }
     }
 
@@ -259,7 +257,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
             }
             epsilon.y[ j ][ k ] = epsilon_3D.x[ i_trop ][ j ][ k ];
 
-            //inside mountains
+            // inside mountains
             for ( int i = i_mount - 1; i >= 0; i-- ){
                 epsilon_3D.x[ i ][ j ][ k ] = epsilon_3D.x[ i_mount ][ j ][ k ];
                 radiation_3D.x[ i ][ j ][ k ] = radiation_3D.x[ i_mount ][ j ][ k ];
@@ -284,7 +282,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
     // iteration procedure for the computation of the temperature based on the multi-layer radiation model
     // temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
 
-    for( int iter_rad = 1;  iter_rad <= 4; iter_rad++ ){ // iter_rad may be varied
+    for ( int iter_rad = 1;  iter_rad <= 4; iter_rad++ ){ // iter_rad may be varied
         logger() << std::endl << "enter ****** max radiation_3D: " << radiation_3D.max()
         << "  epsilon_3D max: " << epsilon_3D.max() << "  temperature max: " << (t.max() - 1)*t_0 << std::endl;
         logger() << "enter ****** min radiation_3D: " << radiation_3D.min()
@@ -362,19 +360,12 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
                 }
 
                 // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
-//                    t.x[ i_trop ][ j ][ k ] = t_tropopause;
+                    t.x[ i_trop ][ j ][ k ] = t_tropopause;
                     radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
                         pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. );
-//                    t.x[ im-1 ][ j ][ k ] = t_tropopause;
-//                    radiation_3D.x[ im-1 ][ j ][ k ] = ( 1. - epsilon_3D.x[ im-1 ][ j ][ k ] ) * sigma * 
-//                        pow ( t.x[ im-1 ][ j ][ k ] * t_0, 4. );
-
-//                t.x[ i_trop ][ j ][ k ] = .5 * ( t.x[ i_trop ][ j ][ k ] + pow ( radiation_3D.x[ i_trop ][ j ][ k ] / sigma,
-//                        ( 1. / 4. ) ) / t_0 ); 
 
                 // recurrence formula for the radiation and temperature
                 for ( int i = i_trop - 1; i >= i_mount; i-- ){
-//                for ( int i = im - 2; i >= i_mount; i-- ){
                     // above assumed tropopause constant temperature t_tropopause
                     // Thomas algorithm, recurrence formula
                     radiation_3D.x[ i ][ j ][ k ] = - alfa[ i ] * radiation_3D.x[ i + 1 ][ j ][ k ] + beta[ i ];
@@ -389,14 +380,12 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
                                                                       pow ( t_0, 4. );
                      }
                 }
-/*
+
                 for ( int i = i_trop; i < im; i++ ){ // above tropopause
-//                    t.x[ i ][ j ][ k ] = t.x[ i_trop ][ j ][ k ];
                     t.x[ i_trop ][ j ][ k ] = t_tropopause;
                     radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
                         pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
                 }
-*/
             }
         }
 
@@ -538,24 +527,26 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
 
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
-                i_mount = i_topography[ j ][ k ];
+                i_mount = i_topography[ j ][ k ];  // data along the topography
                 d_j = ( double ) j;
                 double d_j_half = ( jm -1 ) / 2.0;
 
-                if ( NASATemperature == 0 ){// if ( NASATemperature == 0 ) parabolic surface temperature is used
+                if ( NASATemperature == 0 ){  // if ( NASATemperature == 0 ) parabolic surface temperature is used
                     t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
                         t_pole_ma + t_cretaceous_add;
                     if ( is_land ( h, i_mount, j, k ) ){
                        t.x[ i_mount ][ j ][ k ] = t_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
                             t_pole_ma + t_cretaceous_add + t_land;  // parabolic temperature distribution
                     }
-                }else{ // if ( NASATemperature == 1 ) surface temperature is NASA based
-                    if ( is_land(h, 0, j, k) ){// on land
-                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( j / d_j_half ) + t_pole_ma + t_land;
+                }else{  // if ( NASATemperature == 1 ) surface temperature is NASA based
+                    if ( is_land(h, i_mount, j, k) ){  // on land
+//                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( j / d_j_half ) + t_pole_ma + t_land;
+                        t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];
                         if(Ma != 0){
                             t.x[ i_mount ][ j ][ k ] += t_cretaceous_add + t_land;
+                            t.x[ i_mount ][ j ][ k ] += t_pole_diff * abs( 1. -  j / d_j_half );
                         }
-                    }else{ //ocean
+                    }else{  //ocean
                         t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];
                         if(Ma != 0){
                             t.x[ i_mount ][ j ][ k ] += t_pole_diff * abs( 1. -  j / d_j_half );
@@ -581,11 +572,10 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
 
         for ( int k = 0; k < km; k++ ){
             i_mount = i_topography[ j ][ k ];
-
             for ( int i = 1; i < im; i++ ){
                 if ( i <= i_trop ){
                     t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ i_mount ][ j ][ k ] ) * ( (double)i / i_trop) + 
-                        t.x[ i_mount ][ j ][ k ];// linear temperature decay up to tropopause, privat approximation
+                        t.x[ i_mount ][ j ][ k ];// linear temperature decay up to tropopause, privat  approximation
                 }else{ // above tropopause
                     t.x[ i ][ j ][ k ] = temp_tropopause;
                 }
@@ -595,13 +585,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
             }
         }
     }
-    for ( int j = 0; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = 0; i < im; i++ ){
-                tn.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k ];
-			 }
-		 }
-	 }
 
     logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl << std::endl;
 }
@@ -671,6 +654,11 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c ){
         }// end k
     }// end j
 }
+
+
+
+
+
 
 
 void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 ){
@@ -2429,11 +2417,13 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
                 i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
                 t_u = t.x[ i ][ j ][ k ] * t_0; // in K
                 t_Celsius = t_u - t_0; // in C
+
                 p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
                 hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
                 if ( i != 0 )           p_h = pow ( ( ( t.x[ 0 ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) /
                                                       ( t.x[ 0 ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_SL;
                 else                     p_h = p_SL;
+
                 r_dry = 100. * p_h / ( R_Air * t_u );
 //              r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );
 //                             density of humid air, COSMO version withot cloud and ice water, masses negligible
@@ -2446,22 +2436,24 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
                 q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                 q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%     warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%     warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/** %%%%%%%%%%%%%%%%%%%%%%%%%%%     warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
 
 // warm cloud phase in case water vapour is over-saturated
                 if ( t_Celsius > 0. ){
                     q_T = c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ]; // total water content
                     t_u = t.x[ i ][ j ][ k ] * t_0; // in K
                     t_Celsius = t_u - t_0;
+
                     p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
                     hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
                     if ( i != 0 )           p_h = pow ( ( ( t.x[ 0 ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) /
                                                           ( t.x[ 0 ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_SL;
                     else                    p_h = p_SL;
+
                     E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                     q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                     q_Rain_n = q_Rain;
+
                     if ( q_T <= q_Rain ){ // subsaturated
                         c.x[ i ][ j ][ k ] = q_T; // total water amount as water vapour
                         cloud.x[ i ][ j ][ k ] = 0.; // no cloud water available
@@ -2490,13 +2482,16 @@ if ( ( i == 10 ) && ( j == 90 ) && ( k == 180 ) ){
                             E_Rain = hp * exp_func ( T_it, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                             q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                             q_Rain = .5 * ( q_Rain_n + q_Rain );
+
                             c.x[ i ][ j ][ k ] = q_Rain; // water vapour restricted to saturated water vapour amount
                             cloud.x[ i ][ j ][ k ] = q_T - c.x[ i ][ j ][ k ]; // cloud water amount
                             ice.x[ i ][ j ][ k ] = 0.; // no cloud ice available
                             q_T = c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ];
+
                             if ( c.x[ i ][ j ][ k ] < 0. )  c.x[ i ][ j ][ k ] = 0.;
                             if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
                             if ( fabs ( q_Rain / q_Rain_n - 1. ) <= 1.e-5 )     break;
+
                             q_Rain_n = q_Rain;
                         }
                     }
@@ -2507,8 +2502,7 @@ if ( ( i == 10 ) && ( j == 90 ) && ( k == 180 ) ){
                 } // end ( t_Celsius > 0. )
 
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%     mixed cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%     mixed cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/** %%%%%%%%%%%%%%%%%%%%%%%%%%%     mixed cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
 
 
 // mixed cloud phase, if 0°C > t > -38°C
@@ -2526,15 +2520,17 @@ if ( ( i == 10 ) && ( j == 90 ) && ( k == 180 ) ){
                     q_c_b = cloud.x[ i ][ j ][ k ];
                     q_i_b = ice.x[ i ][ j ][ k ];
                     q_T = q_v_b + q_c_b + q_i_b; // total water content
+
                     t_u = t.x[ i ][ j ][ k ] * t_0; // in K
                     T = T_nue = t_u; // in K
+
                     E_Rain = hp * exp_func ( T, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                     E_Ice = hp * exp_func ( T, 21.8746, 7.66 ); // saturation water vapour pressure for the ice phase in hPa
                     q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                     q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
                     q_v_hyp = q_Rain;
 
-// §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+/** §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§ **/
 
                     iter_prec = 0;
                     while ( iter_prec <= 20 ){ // iter_prec may be varied
@@ -2547,37 +2543,45 @@ if ( ( i == 10 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "mixed cloud               Ice_Water_Saturation_Adjustment: cloud ice max: " << ice.max() * 1000. << std::endl << std::endl;
 }
 
-//                        if ( iter_prec == 2 )   Cloud_Limitation_Atm ( h, t, c, cloud, ice );
-
                         p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
                         hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
                         if ( i != 0 )  p_h = pow ( ( ( T - gam * hight * 1.e-2 ) / ( T ) ), exp_pressure ) * p_SL; // given in hPa
                         else  p_h = p_SL;
+
                         CND = ( T - t_00 ) / ( t_0 - t_00 );
                         DEP = ( t_0 - T ) / ( t_0 - t_00 );
+
                         d_q_v = - ( q_v_b - q_v_hyp );
                         d_q_c = - d_q_v * CND;
                         d_q_i = - d_q_v * DEP;
+
                         d_t = ( lv * d_q_c + ls * d_q_i ) / cp_l / 1000.; // in K
                         T = T + d_t; // in K
+
                         c.x[ i ][ j ][ k ] = q_v_b;
                         cloud.x[ i ][ j ][ k ] = q_c_b;
                         ice.x[ i ][ j ][ k ] = q_i_b;
+
                         q_v_b = c.x[ i ][ j ][ k ] + d_q_v;
                         q_c_b = cloud.x[ i ][ j ][ k ] + d_q_c;
                         q_i_b = ice.x[ i ][ j ][ k ] + d_q_i;
+
                         E_Rain = hp * exp_func ( T, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                         E_Ice = hp * exp_func ( T, 21.8746, 7.66 ); // saturation water vapour pressure for the ice phase in hPa
                         q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                         q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
+
                         if ( ( q_c_b <= 0. ) && ( q_i_b <= 0. ) ) q_v_hyp = 0.;
                         else q_v_hyp = ( q_c_b * q_Rain + q_i_b * q_Ice ) / ( q_c_b + q_i_b );
 
                         // rate of condensating or evaporating water vapour to form cloud water, 0.5 given by COSMO
                         S_c_c.x[ i ][ j ][ k ] = .5 * d_q_c / dt_rain_dim;
                         if ( is_land ( h, i, j, k ) )  S_c_c.x[ i ][ j ][ k ] = 0.;
+
                         if ( ( iter_prec >= 3 ) && ( fabs ( q_v_b / q_v_hyp - 1. ) <= 1.e-5 ) )     break;
+
                         q_T = q_v_b + q_c_b + q_i_b; // total water content
+
                         q_v_b = .5 * ( c.x[ i ][ j ][ k ] + q_v_b );
                         q_c_b = .5 * ( cloud.x[ i ][ j ][ k ] + q_c_b );
                         q_i_b = .5 * ( ice.x[ i ][ j ][ k ] + q_i_b );
@@ -2594,9 +2598,11 @@ if ( ( i == 10 ) && ( j == 90 ) && ( k == 180 ) ){
                     if ( q_v_b <= 0. )  q_v_b = 0.;
                     if ( q_c_b <= 0. )  q_c_b = 0.;
                     if ( q_i_b <= 0. )  q_i_b = 0.;
+
                     cn.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k ] = q_v_b;
                     cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = q_c_b;
                     icen.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k ] = q_i_b;
+
                     if ( t_Celsius < t_Celsius_2 )     cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = 0.;
                     if ( t_Celsius > 0. )                     icen.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k ] = 0.;
 //                    if ( i >= im_tropopause[ j ] )    cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] =
@@ -2611,16 +2617,16 @@ if ( ( i == 10 ) && ( j == 90 ) && ( k == 180 ) ){
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
-                if ( c.x[ i ][ j ][ k ] < 0. )              c.x[ i ][ j ][ k ] = 0.;
-                if ( cloud.x[ i ][ j ][ k ] < 0. )       cloud.x[ i ][ j ][ k ] = 0.;
-                if ( ice.x[ i ][ j ][ k ] < 0. )           ice.x[ i ][ j ][ k ] = 0.;
-/*
+                if ( c.x[ i ][ j ][ k ] < 0. )  c.x[ i ][ j ][ k ] = 0.;
+                if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
+                if ( ice.x[ i ][ j ][ k ] < 0. )  ice.x[ i ][ j ][ k ] = 0.;
+
                 if ( is_land ( h, i, j, k ) ){
-                    c.x[ i ][ j ][ k ] = 0.;
+                    c.x[ i ][ j ][ k ] = 0.001;
                     cloud.x[ i ][ j ][ k ] = 0.;
                     ice.x[ i ][ j ][ k ] = 0.;
                 }
-*/
+
             }
         }
     }
@@ -2710,22 +2716,29 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
         }
     }
 
+/******************* initial values for rain and snow calculation *********************/
+
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             P_rain.x[ im-1 ][ j ][ k ] = 0.;
             P_snow.x[ im-1 ][ j ][ k ] = 0.;
             S_r.x[ im-1 ][ j ][ k ] = 0.;
             S_s.x[ im-1 ][ j ][ k ] = 0.;
+
             for ( int i = im-2; i >= 0; i-- ){
                 if ( c.x[ i ][ j ][ k ] < 0. )  c.x[ i ][ j ][ k ] = 0.;
                 if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
                 if ( ice.x[ i ][ j ][ k ] < 0. )  ice.x[ i ][ j ][ k ] = 0.;
+
                 t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
                 t_u = t.x[ i ][ j ][ k ] * t_0;
+
                 p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
                 hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+
                 if ( i != 0 )           p_h = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
                 else                    p_h = p_SL;
+
                 r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
                 r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
                 q_h = c.x[ i ][ j ][ k ];  // threshold value for water vapour at local hight h in kg/kg
@@ -2733,20 +2746,24 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                 E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 );  // saturation water vapour pressure for the ice phase in hPa
                 q_Rain  = ep * E_Rain / ( p_h - E_Rain );  // water vapour amount at saturation with water formation in kg/kg
                 q_Ice  = ep * E_Ice / ( p_h - E_Ice );  // water vapour amount at saturation with ice formation in kg/kg
+
                 if ( ( t_u >= t_0 ) && ( c_c_au * cloud.x[ i ][ j ][ k ] > 0. ) )
                     S_c_au = c_c_au * cloud.x[ i ][ j ][ k ];
                    // cloud water to rain, cloud droplet collection in kg / ( kg * s )
                 else  S_c_au = 0.;
+
                 if ( ( t_u <= t_0 ) && ( c_i_au * ice.x[ i ][ j ][ k ] > 0. ) && ( ice.x[ i ][ j ][ k ] >= q_Ice ) )
                     S_i_au = c_i_au * ( ice.x[ i ][ j ][ k ] - q_Ice );     // cloud ice to snow, cloud ice crystal aggregation
                 else  S_i_au = 0.;
                 S_i_au = 0.;
+
                 if ( t_u <= t_0 )  N_i = N_i_0 * exp ( .2 * ( t_0 - t_u ) );
                 else  N_i = N_i_0;
                 if ( t_u <= t_0 ){
                     m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
                     if ( ! ( m_i > 0 && m_i < m_i_max ) ) { m_i = m_i_max; }
                 }
+
                 if ( ( t_Celsius <= 0. ) && ( t_Celsius > t_Celsius_2 ) ){
                     if ( c.x[ i ][ j ][ k ] > q_Ice ){  // supersaturation
                         S_i_dep = c_i_dep * N_i * pow ( m_i, ( 1. / 3. ) ) * ( c.x[ i ][ j ][ k ] - q_Ice );
@@ -2757,24 +2774,30 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                     else  S_i_dep = ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim; // subsaturation
                 }
                 else  S_i_dep = 0.;
+
                 S_r.x[ i ][ j ][ k ] = S_c_au;  // in kg / ( kg * s )
                 S_s.x[ i ][ j ][ k ] = S_i_au;
                 if ( ( is_land ( h, i, j, k ) ) && ( is_land ( h, i+1, j, k ) ) ){
                     S_r.x[ i ][ j ][ k ] = 0.;
                     S_s.x[ i ][ j ][ k ] = 0.;
                 }
+
                 if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )  P_rain.x[ i + 1 ][ j ][ k ] = 0.;
                 if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
+
                 P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] +
                     S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;        // in kg / ( m2 * s )
                 P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] + ( S_s.x[ i ][ j ][ k ] +
                     S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
+
                 if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                 if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;
             }
         }
     }
 
+
+/******************* main part for rain and snow calculation *********************/
 
     if ( true ){
         iter_prec = 0;
@@ -2784,13 +2807,17 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                 for ( int j = 0; j < jm; j++ ){
                     P_rain.x[ im-1 ][ j ][ k ] = 0.;
                     P_snow.x[ im-1 ][ j ][ k ] = 0.;
+
                     for ( int i = im-2; i >= 0; i-- ){
                         t_u = t.x[ i ][ j ][ k ] * t_0;
                         t_Celsius = t_u - t_0;
+
                         p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
                         hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+
                         if ( i != 0 )  p_h = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
                         else  p_h = p_SL;
+
                         r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
                         r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
                         q_h = c.x[ i ][ j ][ k ];  // threshold value for water vapour at local hight h in kg/kg
@@ -2818,6 +2845,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                         if ( ( t_u < t_hn ) && ( cloud.x[ i ][ j ][ k ] > 0. ) )
                             S_c_frz = cloud.x[ i ][ j ][ k ] / dt_rain_dim;  //nucleation of cloud ice due to freezing of cloud water
                         else  S_c_frz = 0.;
+
                         if ( ( t_Celsius <= 0. ) && ( t_Celsius > t_Celsius_2 ) ){
                             if ( c.x[ i ][ j ][ k ] > q_Ice ){  // supersaturation
                                 S_i_dep = c_i_dep * N_i * pow ( m_i, ( 1. / 3. ) ) * ( c.x[ i ][ j ][ k ] - q_Ice );  // supersaturation
@@ -2833,9 +2861,11 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                         if ( ( t_u >= t_0 ) && ( c_c_au * cloud.x[ i ][ j ][ k ] > 0. ) )
                             S_c_au = c_c_au * cloud.x[ i ][ j ][ k ];  // cloud water to rain, cloud droplet collection
                         else  S_c_au = 0.;
+
                         if ( ( t_u <= t_0 ) && ( c_i_au * ice.x[ i ][ j ][ k ] > 0. ) && ( ice.x[ i ][ j ][ k ] >= q_Ice ) )
                             S_i_au = c_i_au * ( ice.x[ i ][ j ][ k ] - q_Ice );  // cloud ice to snow, cloud ice crystal aggregation
                         else  S_i_au = 0.;
+
                         if ( ( t_u < t_0 ) && ( c.x[ i ][ j ][ k ] > q_Ice ) )
                             S_d_au = S_i_dep / ( 1.5 * ( pow ( ( m_s_0 / m_i ),  ( 2. / 3. ) ) - 1. ) );  // depositional growth of cloud ice
                         else  S_d_au = 0.;
@@ -2844,12 +2874,15 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                         if ( t_u > t_0 )  S_ac = c_ac * cloud.x[ i ][ j ][ k ] * pow ( P_rain.x[ i ][ j ][ k ], ( 7. / 9. ) );
                             // accreation rate from depletion of cloud water due to collection by all rain drops
                         else  S_ac = 0.;  // accreation rate from depletion of cloud water due to collection by all rain drops
+
                         if ( t_u < t_0 )  S_rim = c_rim * cloud.x[ i ][ j ][ k ] * P_snow.x[ i ][ j ][ k ];
                         else  S_rim = 0.;  // riming rate of snow mass due to collection of supercooled cloud droplets
                                                      // by falling snow particles
+
                         if ( t_u >= t_0 )  S_shed = c_rim * cloud.x[ i ][ j ][ k ] * P_snow.x[ i ][ j ][ k ];
                         else  S_shed = 0.;  // rate of water shed by melting wet snow particles
                                                        // collecting cloud droplets to produce rain
+
                         if ( t_u < t_0 ){
                             S_agg = c_agg * ice.x[ i ][ j ][ k ] * P_snow.x[ i ][ j ][ k ];  // collection of cloud ice by snow particles
                             S_i_cri = c_i_cri * ice.x[ i ][ j ][ k ] * pow ( P_rain.x[ i ][ j ][ k ], ( 7. / 9. ) );
@@ -2868,6 +2901,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                             ( 1. / 6. ) ) ) * ( q_Rain - c.x[ i ][ j ][ k ] ) * pow ( P_rain.x[ i ][ j ][ k ], ( 4. / 9. ) );
                             // evaporation of rain due to water vapour diffusion
                         else  S_ev = 0.;
+
                         if ( t_u < t_0 )  S_s_dep = c_s_dep * ( 1. + bet_s_dep * pow ( P_snow.x[ i ][ j ][ k ],
                             ( 5. / 26. ) ) ) * ( c.x[ i ][ j ][ k ] - q_Ice ) * pow ( P_snow.x[ i ][ j ][ k ], ( 8. / 13. ) );
                              // deposition/sublimation of snow 
@@ -2877,6 +2911,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                         if ( ( t_u > t_0 ) && ( ice.x[ i ][ j ][ k ] > 0. ) )
                             S_i_melt = ice.x[ i ][ j ][ k ] / dt_snow_dim; // cloud ice particles melting to cloud water
                         else  S_i_melt = 0.;
+
                         if ( t_u > t_0 ){
                             p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );  // given in hPa
                             hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
@@ -2890,6 +2925,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                                 pow ( P_snow.x[ i ][ j ][ k ], ( 8. / 13. ) );  // melting rate of snow to form rain
                         }
                         else  S_s_melt = 0.;
+
                         if ( t_r_frz -  t_u > 0. )  S_r_frz = c_r_frz * pow ( ( t_r_frz -  t_u ), ( 3. / 2. ) ) *
                             pow ( P_rain.x[ i ][ j ][ k ], ( 3. / 2. ) );
                         else  S_r_frz = 0.;
@@ -2905,6 +2941,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                             S_r_frz + S_s_melt;
                         S_s.x[ i ][ j ][ k ] = S_i_au + S_d_au + S_agg + S_rim + S_s_dep +
                             S_i_cri + S_r_cri + S_r_frz - S_s_melt;
+
                         if ( ( is_land ( h, i, j, k ) ) && ( is_land ( h, i+1, j, k ) ) ){
                             S_c_c.x[ i ][ j ][ k ] = 0.;
                             S_v.x[ i ][ j ][ k ] = 0.;
@@ -2917,6 +2954,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
 // rain and snow integration
                         if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )  P_rain.x[ i + 1 ][ j ][ k ] = 0.;
                         if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
+
                         P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] + ( S_r.x[ i ][ j ][ k ] +
                             S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr;
                         P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] +
@@ -2924,6 +2962,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
 
                         if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                         if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;
+
                         if ( c.x[ i ][ j ][ k ] < 0. )  c.x[ i ][ j ][ k ] = 0.;
                         if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
                         if ( ice.x[ i ][ j ][ k ] < 0. )  ice.x[ i ][ j ][ k ] = 0.;
@@ -3051,26 +3090,6 @@ void BC_Thermo::Value_Limitation_Atm ( Array &h, Array &u, Array &v, Array &w,
     }
 }
 
-
-
-
-void BC_Thermo::Cloud_Limitation_Atm ( Array &h, Array &t, Array &c, Array &cloud, Array &ice ){
-// class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = 0; j < jm; j++ ){
-            for ( int i = 0; i < im; i++ ){
-                if ( t.x[ i ][ j ][ k ] >= 1.147 )  t.x[ i ][ j ][ k ] = 1.147;
-                if ( t.x[ i ][ j ][ k ] <= - .78 )  t.x[ i ][ j ][ k ] = - .78;
-                if ( c.x[ i ][ j ][ k ] >= .05 )  c.x[ i ][ j ][ k ] = .05;
-                if ( c.x[ i ][ j ][ k ] < 0. )  c.x[ i ][ j ][ k ] = 0.;
-                if ( cloud.x[ i ][ j ][ k ] >= .02 )  cloud.x[ i ][ j ][ k ] = .02;
-                if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
-                if ( ice.x[ i ][ j ][ k ] >= .005 )  ice.x[ i ][ j ][ k ] = .005;
-                if ( ice.x[ i ][ j ][ k ] < 0. )  ice.x[ i ][ j ][ k ] = 0.;
-           }
-        }
-    }
-}
 
 
 

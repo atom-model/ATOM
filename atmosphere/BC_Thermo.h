@@ -136,8 +136,6 @@ class BC_Thermo
 
         void Value_Limitation_Atm ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-        void Cloud_Limitation_Atm ( Array &h, Array &t, Array &c, Array &cloud, Array &ice );
-
         void Pressure_Limitation_Atm ( Array &, Array & );
 
         int GetTropopauseHightAdd ( double );

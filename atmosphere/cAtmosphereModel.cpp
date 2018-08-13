@@ -283,6 +283,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         circulation.BC_Radiation_multi_layer ( albedo, epsilon, radiation_surface,  
                                                p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
+
     //  class element for the initial conditions for u-v-w-velocity components
     circulation.IC_CellStructure ( h, u, v, w );
 
@@ -665,6 +666,12 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
                 circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
+                LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, 
+                                          t_equator, t_pole, 
+                                          t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
+                                          pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
+                                          radiation_3D, Vegetation );
+
         logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
@@ -676,16 +683,8 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-                
-                //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
-                //  the continents and the ocean ground
-                LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, 
-                                          t_equator, t_pole, 
-                                          t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
-                                          pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
-                                          radiation_3D, Vegetation );
-                //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
 
+                //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
                 double residuum = std::get<0>(min_Residuum_2D.residuumQuery_2D ( rad, the, v, w, residuum_2d ));
 
                 emin = fabs ( ( residuum - residuum_old ) / residuum_old );
@@ -764,6 +763,11 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
+            LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, t_equator, 
+                                      t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
+                                      co2_tropopause, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
+                                      ice, co2, radiation_3D, Vegetation );
+
         logger() << "§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§   global iteration n = " << iter_cnt << "   §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§" << std::endl << std::endl;
 
         logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
@@ -786,13 +790,6 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
 
             circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
-
-            //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
-            //  the continents and the ocean ground
-            LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, t_equator, 
-                                      t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
-                                      co2_tropopause, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
-                                      ice, co2, radiation_3D, Vegetation );
 
             // class element for the surface temperature computation by radiation flux density
             if ( RadiationModel == 1 ){
@@ -840,7 +837,6 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             iter_cnt++;
         }
         //  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::::::::::::
-
         
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
         startPressure.computePressure_3D ( u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
