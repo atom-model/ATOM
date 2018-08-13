@@ -14,14 +14,21 @@
 #include <fstream>
 #include <cstring>
 #include <iomanip>
+#include <Utils.h>
 
 #include "BC_Thermohalin.h"
 #include "Array.h"
 
 using namespace std;
+using namespace AtomUtils;
 
-BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, int Ma, int Ma_max, int Ma_max_half, double dr, double g, double r_0_water, double ua, double va, double wa, double ta, double ca, double pa, double u_0, double p_0, double t_0, double c_0, double cp_w, double L_hyd, double t_average, double t_cretaceous_max, double t_equator, double t_pole, const string &input_path )
-{
+BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max,
+                            int Ma, int Ma_max, int Ma_max_half, double dr, double g,
+                            double r_0_water, double ua, double va, double wa, double ta,
+                            double ca, double pa, double u_0, double p_0, double t_0,
+                            double c_0, double cp_w, double L_hyd, double t_average,
+                            double t_cretaceous_max, double t_equator, double t_pole,
+                            const string &input_path ){
     this -> im = im;
     this -> jm = jm;
     this -> km = km;
@@ -51,7 +58,6 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
     this -> t_pole = t_pole;
     this -> input_path = input_path;
 
-
     int i_middle = i_beg + 36;                          // 0 + 36 = 36 for total depth 100m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
 
     j_half = ( jm - 1 ) / 2;
@@ -59,7 +65,6 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
     d_i_beg = ( double ) i_beg;
     d_i_middle = ( double ) i_middle;
     d_i_max = ( double ) ( im - 1 );
-
 
 // reduction or amplification of flow velocities along coasts
 // for the artificial initial and boundary conditions
@@ -80,35 +85,29 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max, i
 BC_Thermohalin::~BC_Thermohalin(){}
 
 
-void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array &h, Array &v, Array &w )
-{
+void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
+                                    Array &h, Array &v, Array &w ){
     int j_30 = 30;
     int j_60 = 60;
     int j_90 = 90;
     int j_120 = 120;
     int j_150 = 150;
 // initial conditions for v and w velocity components at the sea surface
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            if ( h.x[ im - 1 ][ j ][ k ] != 1. )
-            {
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_water( h, im-1, j, k ) ){
                 v.x[ im - 1 ][ j ][ k ] = water_wind * v.x[ im - 1 ][ j ][ k ] / u_0;
                 w.x[ im - 1 ][ j ][ k ] = water_wind * w.x[ im - 1 ][ j ][ k ] / u_0;
             }
         }
     }
 
-
 // north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° )
-    for ( int j = 0; j < j_30; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            if ( h.x[ im-1 ][ j ][ k ] != 1. )
-            {
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+    for ( int j = 0; j < j_30; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_water( h, im-1, j, k ) ){
+                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
+                    w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
 
                 if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
                 if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
@@ -116,45 +115,36 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
                 alfa = asin ( fabs ( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. ){
                     angle = + alfa - Ekman_angle;
-                }
-                else
-                {
+                }else{
                     angle = - alfa - Ekman_angle;
                 }
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
                     v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
             }
         }
     }
-
 
 // north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° )
-    for ( int j = j_30; j < j_60; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            if ( h.x[ im-1 ][ j ][ k ] != 1. )
-            {
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+    for ( int j = j_30; j < j_60; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_water( h, im-1, j, k ) ){
+                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
+                    w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
 
                 if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
                 if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
@@ -162,46 +152,36 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
                 alfa = asin ( fabs ( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
 
-                if ( v.x[ im-1 ][ j ][ k ] >= 0. )
-                {
+                if ( v.x[ im-1 ][ j ][ k ] >= 0. ){
                     angle = + alfa - Ekman_angle;
-                }
-                else
-                {
+                }else{
                     angle = - alfa - Ekman_angle;
                 }
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
                     v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
                 }
 
-                if (  v.x[ im-1 ][ j ][ k ] <= 0. )
-                {
+                if (  v.x[ im-1 ][ j ][ k ] <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
                 }
-
             }
         }
     }
-
 
 // north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° )
-    for ( int j = j_60; j < j_90; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            if ( h.x[ im-1 ][ j ][ k ] != 1. )
-            {
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+    for ( int j = j_60; j < j_90; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_water( h, im-1, j, k ) ){
+                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
+                     w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
 
                 if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
                 if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
@@ -209,45 +189,36 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
                 alfa = asin ( fabs ( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. ){
                     angle = + alfa - Ekman_angle;
-                }
-                else
-                {
+                }else{
                     angle = - alfa - Ekman_angle;
                 }
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
                     v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
             }
         }
     }
-
 
 // south equatorial Hadley cell ( from j=90 till j=120 compares to 0° till 30° )
-    for ( int j = j_90; j < j_120; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            if ( h.x[ im-1 ][ j ][ k ] != 1. )
-            {
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+    for ( int j = j_90; j < j_120; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_water( h, im-1, j, k ) ){
+                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
+                    w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
 
                 if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
                 if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
@@ -255,29 +226,23 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
                 beta = asin ( fabs( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. ){
                     angle = beta - Ekman_angle;
-                }
-                else
-                {
+                }else{
                     angle = - beta - Ekman_angle;
                 }
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
                     v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
@@ -285,15 +250,12 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
         }
     }
 
-
 // south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° )
-    for ( int j = j_120; j < j_150; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            if ( h.x[ im-1 ][ j ][ k ] != 1. )
-            {
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+    for ( int j = j_120; j < j_150; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_water( h, im-1, j, k ) ){
+                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
+                    w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
 
                 if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
                 if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
@@ -301,29 +263,23 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
                 beta = asin ( fabs( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
 
-                if ( v.x[ im-1 ][ j ][ k ] <= 0. )
-                {
+                if ( v.x[ im-1 ][ j ][ k ] <= 0. ){
                     angle = beta - Ekman_angle;
-                }
-                else
-                {
+                }else{
                     angle = - beta - Ekman_angle;
                 }
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
                     v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
                 }
 
-                if (  v.x[ im-1 ][ j ][ k ] >= 0. )
-                {
+                if (  v.x[ im-1 ][ j ][ k ] >= 0. ){
                     v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
                 }
@@ -331,14 +287,10 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
         }
     }
 
-
 // south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° )
-    for ( int j = j_150; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            if ( h.x[ im-1 ][ j ][ k ] != 1. )
-            {
+    for ( int j = j_150; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_water( h, im-1, j, k ) ){
                 vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
 
                 if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
@@ -347,36 +299,29 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
                 beta = asin ( fabs( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. ){
                     angle = beta - Ekman_angle;
-                }
-                else
-                {
+                }else{
                     angle = - beta - Ekman_angle;
                 }
 
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. )
-                {
+                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
                     v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
 
-                if (  w.x[ im-1 ][ j ][ k ] <= 0. )
-                {
+                if (  w.x[ im-1 ][ j ][ k ] <= 0. ){
                     v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
                     w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
                 }
             }
         }
     }
-
 
 // surface wind vector driving the Ekman spiral in the Ekman layer
 // northern hemisphere
@@ -387,29 +332,23 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
     double v_g = 0.;
     double w_g = 0.;
 
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int i = im-2; i >= i_beg; i-- )
-        {
+    for ( int j = 0; j < jm; j++ ){
+        for ( int i = im-2; i >= i_beg; i-- ){
             gam_z = M_PI * ( double ) ( i - i_beg ) / ( double ) ( im - 1 - i_beg );
             exp_gam_z = exp ( - gam_z );
             sin_gam_z = sin ( gam_z );
             cos_gam_z = cos ( gam_z );
 
-            for ( int k = 0; k < km; k++ )
-            {
-                if ( h.x[ i ][ j ][ k ] == 0. )
+            for ( int k = 0; k < km; k++ ){
+                if ( is_water( h, i, j, k) )
                 {
                     v_g = v.x[ i + 1 ][ j ][ k ];
                     w_g = w.x[ i + 1 ][ j ][ k ];
 
-                    if ( j <= j_half )
-                    {
+                    if ( j <= j_half ){
                         v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
                         w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
-                    }
-                    else
-                    {
+                    }else{
                         sin_gam_z = - sin ( gam_z );
                         v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
                         w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
@@ -425,12 +364,8 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the, Array 
 
 
 
-
-
-void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Array &p_dyn )
-{
+void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Array &p_dyn ){
     // initial conditions for salt content and temperature and salinity decrease below the sea surface
-
     // boundary condition of  temperature and salinity
     // parabolic distribution from pole to pole accepted
     // maximum temperature and salinity of earth's surface at equator t_max = 1.137 compares to 37° C compares to 307 K
@@ -447,7 +382,8 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
     // temperature-distribution by Ruddiman approximated by a parabola
     t_coeff = t_pole - t_equator;
-    t_cretaceous_coeff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
+    t_cretaceous_coeff = t_cretaceous_max / ( ( double ) Ma_max_half -
+        ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
     t_cretaceous = t_cretaceous_coeff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
     if ( Ma == 0 )  t_cretaceous = 0.;
 
@@ -459,10 +395,10 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
     time_slice_number = " Ma = ";
     time_slice_unit = " million years";
 
-    cout << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << time_slice_comment << setw ( 6 ) << 
-        std::fixed << setfill ( ' ' ) << time_slice_number << setw ( 3 ) << Ma << setw ( 12 ) << time_slice_unit 
+    cout << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' )
+        << time_slice_comment << setw ( 6 ) << std::fixed << setfill ( ' ' )
+        << time_slice_number << setw ( 3 ) << Ma << setw ( 12 ) << time_slice_unit 
         << endl << endl;
-
 
     temperature_comment = "      temperature increase at cretaceous times: ";
     temperature_gain = " t increase";
@@ -509,32 +445,27 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
     {
         for ( int j = 0; j < jm; j++ )
         {
-            if ( h.x[ im-1 ][ j ][ k ] == 0. )
+            if ( is_water( h, im-1, j, k ) )
             {
                 d_j = ( double ) j;
                 t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
                 //if ( Ma == 0 )            t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
-                //else                      t.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous; // paleo surface temperature
+                //else                      t.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j /
+                 //   ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous; // paleo surface temperature
 
                 t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
 
-                if ( t_Celsius < 4. )
-                {
+                if ( t_Celsius < 4. ){
                     t.x[ im -1 ][ j ][ k ] = ta + t_cretaceous;
                     t_Celsius = ( ta + t_cretaceous ) * t_0 - t_0; // water temperature not below 4°C
                 }
 
-                if ( Ma == 0 )
-                {          
+                if ( Ma == 0 ){
                     c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + c_cretaceous / c_0; // paleo surface temperature
-                }
-                else
-                {
+                }else{
                     c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ];  // non-dimensional
                 }
-            }
-            else
-            {
+            }else{
                 t.x[ im-1 ][ j ][ k ] = ta + t_cretaceous;
                 c.x[ im-1 ][ j ][ k ] = ca + c_cretaceous / c_0;
             }
@@ -545,30 +476,23 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
     double cm_cbeg = 0.;
 
     // distribution of t and c with increasing depth till i_beg valid for all time slices including the modern world
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
             tm_tbeg = ( t.x[ im-1 ][ j ][ k ] - ta ) / ( double ) ( i_max * i_max - i_beg * i_beg );
             cm_cbeg = ( c.x[ im-1 ][ j ][ k ] - ca ) / ( double ) ( i_max * i_max - i_beg * i_beg );
-            for ( int i = i_beg; i < im-1; i++ )
-            {
-                if ( h.x[ i ][ j ][ k ] == 0. )
-                {
+            for ( int i = i_beg; i < im-1; i++ ){
+                if ( is_water( h, i, j, k) ){
 //                  t.x[ i ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k ] - ta ) * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg ); // linear approach
                     t.x[ i ][ j ][ k ] = ta + tm_tbeg * ( double ) ( i * i - i_beg * i_beg );// parabolic approach
 
                     t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
                     c.x[ i ][ j ][ k ] = ca + cm_cbeg * ( double ) ( i * i - i_beg * i_beg );// parabolic approach
 
-                    if ( t_Celsius < 4. )
-                    {
+                    if ( t_Celsius < 4. ){
                         t.x[ i ][ j ][ k ] = ta;
                         c.x[ i ][ j ][ k ] = ca;
                     }
-                }
-                else
-                {
+                }else{
                     t.x[ i ][ j ][ k ] = ta;
                     c.x[ i ][ j ][ k ] = ca;
                 }
@@ -576,15 +500,10 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
         }
     }
 
-
-    for ( int i = 0; i < i_beg; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int k = 0; k < km; k++ )
-            {
-                if ( h.x[ i ][ j ][ k ] == 0. )
-                {
+    for ( int i = 0; i < i_beg; i++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                if ( is_water( h, i, j, k) ){
                     t.x[ i ][ j ][ k ] = ta;
                     c.x[ i ][ j ][ k ] = ca;
                 }
@@ -594,8 +513,10 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 }
 
 
-void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water, Array &r_salt_water, Array &t, Array &c, Array &h )
-{
+
+
+void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water,
+                                    Array &r_salt_water, Array &t, Array &c, Array &h ){
 // hydrostatic pressure, equations of state for water and salt water density
 // as functions of salinity, temperature and hydrostatic pressure
 
@@ -613,11 +534,10 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water, Array 
     double R_Air = 287.1;                                       // given in J/( kg*K )
 
 // hydrostatic pressure, water and salt water density at the surface
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            p_stat.x[ im-1 ][ j ][ k ] =  .01 * ( r_air * R_Air * t.x[ im-1 ][ j ][ k ] * t_0 ) / 1000.;        // given in bar, isochoric approach, constant air density at the surface
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            p_stat.x[ im-1 ][ j ][ k ] =  .01 * ( r_air * R_Air * t.x[ im-1 ][ j ][ k ] * t_0 ) / 1000.
+            // given in bar, isochoric approach, constant air density at the surface
             r_water.x[ im-1 ][ j ][ k ] = r_0_water;                // given in kg/m³
 
             t_Celsius_1 = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
@@ -627,26 +547,27 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water, Array 
             alfa_t_p = .0708 * ( 1. + .068 * t_Celsius_1 );
             gamma_t_p = .003 * ( 1. - .012 * t_Celsius_1 );
 
-            r_salt_water.x[ im-1 ][ j ][ k ] = C_p + beta_p * c.x[ im-1 ][ j ][ k ] * c_0 - alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[ im-1 ][ j ][ k ] * c_0 ) * t_Celsius_1;
+            r_salt_water.x[ im-1 ][ j ][ k ] = C_p + beta_p * c.x[ im-1 ][ j ][ k ] * c_0 -
+                alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[ im-1 ][ j ][ k ] * c_0 ) * t_Celsius_1;
         }
     }
 
-
 // hydrostatic pressure, water and salt water density in the field
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int i = im-2; i >= 0; i-- )
-            {
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int i = im-2; i >= 0; i-- ){
                 d_i = ( double ) ( im - 1 - i );
 
                 t_Celsius_1 = t.x[ i ][ j ][ k ] * t_0 - t_0;
                 t_Celsius_0 = t.x[ i + 1 ][ j ][ k ] * t_0 - t_0;
 
-//              p_stat.x[ i ][ j ][ k ] = r_0_water * g * d_i * ( L_hyd / ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;                // hydrostatic pressure in bar
-                p_stat.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] * g * d_i * ( L_hyd / ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;             // hydrostatic pressure in bar
-                r_water.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] / ( 1. + beta_water * ( t_Celsius_1 - t_Celsius_0 ) ) / ( 1. - ( p_stat.x[ i ][ j ][ k ] - p_stat.x[ i+1 ][ j ][ k ] ) / E_water * 1e5 );               // given in kg/m³
+//              p_stat.x[ i ][ j ][ k ] = r_0_water * g * d_i * ( L_hyd / ( double ) ( im-1 ) )
+//                   100000. + p_0 / 1000.;                // hydrostatic pressure in bar
+                p_stat.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] * g * d_i * ( L_hyd /
+                    ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;             // hydrostatic pressure in bar
+                r_water.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] / ( 1. + beta_water *
+                    ( t_Celsius_1 - t_Celsius_0 ) ) / ( 1. - ( p_stat.x[ i ][ j ][ k ] -
+                    p_stat.x[ i+1 ][ j ][ k ] ) / E_water * 1e5 );               // given in kg/m³
 
                 p_km  = ( double ) ( im - 1 - i ) * ( L_hyd / ( double ) ( im-1 ) ) / 1000.;
                 C_p = 999.83 + 5.053 * p_km - .048 * p_km * p_km;
@@ -654,7 +575,8 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water, Array 
                 alfa_t_p = .0708 * ( 1. + .351 * p_km + .068 *( 1. - .0683 * p_km ) * t_Celsius_1 );
                 gamma_t_p = .003 * ( 1. - .059 * p_km - .012 * ( 1. - .064 * p_km ) * t_Celsius_1 );
 
-                r_salt_water.x[ i ][ j ][ k ] = C_p + beta_p * c.x[ i ][ j ][ k ] * c_0 - alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[ i ][ j ][ k ] * c_0 ) * t_Celsius_1;
+                r_salt_water.x[ i ][ j ][ k ] = C_p + beta_p * c.x[ i ][ j ][ k ] * c_0 -
+                    alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[ i ][ j ][ k ] * c_0 ) * t_Celsius_1;
             }
         }
     }
@@ -665,8 +587,8 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water, Array 
 
 
 
-void BC_Thermohalin::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperature_File, Array &t )
-{
+void BC_Thermohalin::BC_Surface_Temperature_NASA
+                                    ( const string &Name_SurfaceTemperature_File, Array &t ){
     // initial conditions for the temperature and salinity at the sea surface
 
     cout.precision ( 3 );
@@ -680,12 +602,11 @@ void BC_Thermohalin::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTem
         abort();
     }
 
-
     j = 0;
     k = 0;
 
-    while ( ( k < km ) && ( !Name_SurfaceTemperature_File_Read.eof() ) ) {
-        while ( j < jm ) {
+    while ( ( k < km ) && ( !Name_SurfaceTemperature_File_Read.eof() ) ){
+        while ( j < jm ){
             Name_SurfaceTemperature_File_Read >> dummy_1;
             Name_SurfaceTemperature_File_Read >> dummy_2;
             Name_SurfaceTemperature_File_Read >> dummy_3;
@@ -700,15 +621,11 @@ void BC_Thermohalin::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTem
 
     Name_SurfaceTemperature_File_Read.close();
 
-
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 1; k < km-1; k++ )
-        {
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 1; k < km-1; k++ ){
             if ( k == 180 ) t.x[ im-1 ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k + 1 ] + t.x[ im-1 ][ j ][ k - 1 ] ) * .5;
         }
     }
-
 }
 
 
@@ -716,8 +633,7 @@ void BC_Thermohalin::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTem
 
 
 
-void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalinity_File, Array &c )
-{
+void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalinity_File, Array &c ){
     // initial conditions for the salinity at the sea surface
     streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
 
@@ -727,7 +643,7 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalini
     ifstream Name_SurfaceSalinity_File_Read;
     Name_SurfaceSalinity_File_Read.open(Name_SurfaceSalinity_File);
 
-    if (!Name_SurfaceSalinity_File_Read.is_open()) {
+    if (!Name_SurfaceSalinity_File_Read.is_open()){
         cerr << "ERROR: could not open SurfaceSalinity_File file at " << Name_SurfaceSalinity_File << "\n";
         abort();
     }
@@ -735,8 +651,8 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalini
     j = 0;
     k = 0;
 
-    while ( ( k < km ) && ( !Name_SurfaceSalinity_File_Read.eof() ) ) {
-        while ( j < jm ) {
+    while ( ( k < km ) && ( !Name_SurfaceSalinity_File_Read.eof() ) ){
+        while ( j < jm ){
             Name_SurfaceSalinity_File_Read >> dummy_1;
             Name_SurfaceSalinity_File_Read >> dummy_2;
             Name_SurfaceSalinity_File_Read >> dummy_3;
@@ -757,28 +673,20 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalini
 
 
 
-void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Array &w, Array &c )
-{
+void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Array &w, Array &c ){
 // south polar sea
 // antarctic circumpolar current ( -5000m deep ) ( from j=147 until j=152 compares to 57°S until 62°S,
 //                                                                            from k=0 until k=km compares to 0° until 360° )
-
-
-    for ( int i = i_beg; i < im; i++ )
-    {
-        for ( int j = 147; j < 153; j++ )
-        {
-            for ( int k = 0; k < km; k++ )
-            {
-                if ( h.x[ i ][ j ][ k ] == 0. )
-                {
+    for ( int i = i_beg; i < im; i++ ){
+        for ( int j = 147; j < 153; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                if ( is_water( h, i, j, k) ){
 //                  c.x[ i ][ j ][ k ] = ca;
                     w.x[ i ][ j ][ k ] = .01 / u_0;                 // 1 cm/s
                 }
             }
         }
     }
-
 }
 
 
@@ -788,29 +696,26 @@ void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Arra
 
 
 
-void BC_Thermohalin::Value_Limitation_Hyd ( Array &h, Array &u, Array &v, Array &w, Array &p_dyn, Array &t, Array &c )
-{
+void BC_Thermohalin::Value_Limitation_Hyd ( Array &h, Array &u, Array &v,
+                                    Array &w, Array &p_dyn, Array &t, Array &c ){
 // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int i = 0; i < im; i++ )
-            {
-                if ( u.x[ i ][ j ][ k ] >= 11.11 )              u.x[ i ][ j ][ k ] = 11.11;
-                if ( u.x[ i ][ j ][ k ] <= - 11.11 )            u.x[ i ][ j ][ k ] = - 11.11;
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int i = 0; i < im; i++ ){
+                if ( u.x[ i ][ j ][ k ] >= 11.11 )  u.x[ i ][ j ][ k ] = 11.11;
+                if ( u.x[ i ][ j ][ k ] <= - 11.11 )  u.x[ i ][ j ][ k ] = - 11.11;
 
-                if ( v.x[ i ][ j ][ k ] >= .552 )               v.x[ i ][ j ][ k ] = .552;
-                if ( v.x[ i ][ j ][ k ] <= - .552 )             v.x[ i ][ j ][ k ] = - .552;
+                if ( v.x[ i ][ j ][ k ] >= .552 )  v.x[ i ][ j ][ k ] = .552;
+                if ( v.x[ i ][ j ][ k ] <= - .552 )  v.x[ i ][ j ][ k ] = - .552;
 
-                if ( w.x[ i ][ j ][ k ] >= .552 )               w.x[ i ][ j ][ k ] = .552;
-                if ( w.x[ i ][ j ][ k ] <= - .552 )         w.x[ i ][ j ][ k ] = - .552;
+                if ( w.x[ i ][ j ][ k ] >= .552 )  w.x[ i ][ j ][ k ] = .552;
+                if ( w.x[ i ][ j ][ k ] <= - .552 )  w.x[ i ][ j ][ k ] = - .552;
 
-                if ( t.x[ i ][ j ][ k ] >= 1.147 )              t.x[ i ][ j ][ k ] = 1.147;
-                if ( t.x[ i ][ j ][ k ] <= - 1.01464 )      t.x[ i ][ j ][ k ] = - 1.01464;
+                if ( t.x[ i ][ j ][ k ] >= 1.147 )  t.x[ i ][ j ][ k ] = 1.147;
+                if ( t.x[ i ][ j ][ k ] <= - 1.01464 )  t.x[ i ][ j ][ k ] = - 1.01464;
 
-                if ( c.x[ i ][ j ][ k ] >= 1.1 )                c.x[ i ][ j ][ k ] = 1.1;
-                if ( c.x[ i ][ j ][ k ] < .95 )                 c.x[ i ][ j ][ k ] = .95;
+                if ( c.x[ i ][ j ][ k ] >= 1.1 )  c.x[ i ][ j ][ k ] = 1.1;
+                if ( c.x[ i ][ j ][ k ] < .95 )  c.x[ i ][ j ][ k ] = .95;
             }
         }
     }
@@ -818,17 +723,13 @@ void BC_Thermohalin::Value_Limitation_Hyd ( Array &h, Array &u, Array &v, Array 
 
 
 
-void BC_Thermohalin::Pressure_Limitation_Hyd ( Array &p_dyn, Array &p_dynn )
-{
+void BC_Thermohalin::Pressure_Limitation_Hyd ( Array &p_dyn, Array &p_dynn ){
 // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int i = 0; i < im; i++ )
-            {
-                if ( p_dyn.x[ i ][ j ][ k ] >= .1 )         p_dyn.x[ i ][ j ][ k ] = .1;
-                if ( p_dyn.x[ i ][ j ][ k ] <= - .1 )           p_dyn.x[ i ][ j ][ k ] = - .1;
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int i = 0; i < im; i++ ){
+                if ( p_dyn.x[ i ][ j ][ k ] >= .1 )  p_dyn.x[ i ][ j ][ k ] = .1;
+                if ( p_dyn.x[ i ][ j ][ k ] <= - .1 )  p_dyn.x[ i ][ j ][ k ] = - .1;
 
                 p_dynn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j ][ k ];
             }

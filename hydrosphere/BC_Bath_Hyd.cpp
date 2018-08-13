@@ -28,14 +28,14 @@ BC_Bathymetry_Hydrosphere::BC_Bathymetry_Hydrosphere ( int im, int jm, int km ):
 
 BC_Bathymetry_Hydrosphere::~BC_Bathymetry_Hydrosphere() {}
 
-void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file, double L_hyd, Array &h, Array_2D &Bathymetry)
-{
+void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
+                                                          double L_hyd, Array &h, Array_2D &Bathymetry){
     // default adjustment, h must be 0 everywhere
     h.initArray(im, jm, km, 0.);
 
     ifstream ifile(bathymetry_file);
 
-    if (!ifile.is_open()) {
+    if (!ifile.is_open()){
         cerr << "ERROR: could not open bathymetry file " << bathymetry_file << "\n";
         abort();
     }
@@ -87,33 +87,25 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file, doub
     // reduction and smoothing of peaks and needles in the bathymetry
     double h_center = 0.;
 
-    for ( int k = 2; k < km-2; k++ )
-    {
-        for ( int j = 2; j < jm-2; j++ )
-        {
-            for ( int i = 2; i < im-2; i++ )
-            {
-                if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )
-                 && ( ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 0.  ) ) )
-                 {
+    for ( int k = 2; k < km-2; k++ ){
+        for ( int j = 2; j < jm-2; j++ ){
+            for ( int i = 2; i < im-2; i++ ){
+                if ( ( is_land( h, i, j, k) ) && ( ( is_water( h, i, j+1, k) ) && ( is_water( h, i, j-1, k) ) )
+                 && ( ( is_water( h, i, j, k+1) ) && ( is_water( h, i, j, k-1) ) ) ){
                      h_center = h.x[ i ][ j ][ k ];
                      h.x[ i ][ j ][ k ] = 0.;
                  }
 
-                if ( ( h_center == 1. ) && ( ( h.x[ i ][ j - 2 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) ) )
-                {
+                if ( ( h_center == 1. ) && ( ( is_water( h, i, j-2, k) ) && ( is_water( h, i, j, k+2) ) ) ){
                     h.x[ i ][ j - 1 ][ k + 1 ] = 0.;
                 }
-                if ( ( h_center == 1. ) && ( ( h.x[ i ][ j - 2 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) ) )
-                { 
+                if ( ( h_center == 1. ) && ( ( is_water( h, i, j-2, k) ) && ( is_water( h, i, j, k-2) ) ) ){ 
                     h.x[ i ][ j - 1 ][ k - 1 ] = 0.;
                 }
-                if ( ( h_center == 1. ) && ( ( h.x[ i ][ j + 2 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) ) )
-                {
+                if ( ( h_center == 1. ) && ( ( is_water( h, i, j+2, k) ) && ( is_water( h, i, j, k-2) ) ) ){
                     h.x[ i ][ j + 1 ][ k - 1 ] = 0.;
                 }
-                if ( ( h_center == 1. ) && ( ( h.x[ i ][ j + 2 ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) ) )
-                { 
+                if ( ( h_center == 1. ) && ( ( is_water( h, i, j+2, k) ) && ( is_water( h, i, j, k+2) ) ) ){ 
                     h.x[ i ][ j + 1 ][ k + 1 ] = 0.;
                 }
             }
@@ -121,18 +113,19 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file, doub
     }
 }
 
-void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t, Array &u, Array &v, 
-        Array &w, Array &p_dyn, Array &c, Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn)
-{
+
+
+
+
+void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta,
+                                                    double pa, Array &h, Array &t, Array &u, Array &v,
+                                                    Array &w, Array &p_dyn, Array &c, Array &tn,
+                                                    Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn){
     // boundary conditions for the total solid ground
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int k = 0; k < km; k++ )
-            {
-                if ( is_land(h,  i,  j,  k ) )
-                {
+    for ( int i = 0; i < im; i++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                if ( is_land(h,  i,  j,  k ) ){
                     p_dyn.x[ i ][ j ][ k ] =  p_dynn.x[ i ][ j ][ k ] = pa;
                     t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ta;
                     c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ca;

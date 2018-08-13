@@ -36,8 +36,8 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int jm_, int km_, double dthe_, double dphi_,
 }
 
 
-RHS_Hydrosphere::RHS_Hydrosphere ( int im_, int jm_, int km_, double dt_, double dr_, double dthe_, double dphi_, 
-        double re_, double sc_, double g_, double pr_, double Buoyancy_ ):
+RHS_Hydrosphere::RHS_Hydrosphere ( int im_, int jm_, int km_, double dt_, double dr_,
+        double dthe_, double dphi_, double re_, double sc_, double g_, double pr_, double Buoyancy_ ):
     im(im_), 
     jm(jm_), 
     km(km_),
@@ -57,14 +57,15 @@ RHS_Hydrosphere::RHS_Hydrosphere ( int im_, int jm_, int km_, double dt_, double
 RHS_Hydrosphere::~RHS_Hydrosphere() {}
 
 
-void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd, double g, double cp_w, double u_0, 
-            double t_0, double c_0, double r_0_water, double ta, double pa, double ca,
-            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w,
-            Array &p_dyn, Array &c, Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c,
-            Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D,
-            Array &Salt_Balance, Array &p_stat, Array &r_water, Array &r_salt_water, Array_2D &Evaporation_Dalton,
-            Array_2D &Precipitation, Array_2D &Bathymetry )
-{
+void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
+            double g, double cp_w, double u_0, double t_0, double c_0,
+            double r_0_water, double ta, double pa, double ca, Array_1D &rad,
+             &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w,
+            Array &p_dyn, Array &c, Array &rhs_t, Array &rhs_u, Array &rhs_v,
+            Array &rhs_w, Array &rhs_c, Array &aux_u, Array &aux_v, Array &aux_w,
+            Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D,
+            Array &Salt_Balance, Array &p_stat, Array &r_water, Array &r_salt_water,
+            Array_2D &Evaporation_Dalton, Array_2D &Precipitation, Array_2D &Bathymetry ){
 // collection of coefficients for phase transformation
 
     double k_Force = 1.;// factor for accelleration of convergence processes inside the immersed boundary conditions
@@ -90,7 +91,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
 
-
 //  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>> 
 // only in positive r-direction above ground 
     double topo_step = L_hyd / ( double ) ( im-1 );
@@ -101,13 +101,11 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
     double h_d_i = 0, h_0_0 = 0;
 
-    if ( ( topo_diff < topo_step ) && ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ) ) )
-    {
+    if ( ( topo_diff < topo_step ) && ( ( is_water( h, i, j, k) ) && ( h.x[ i - 1 ][ j ][ k ] == 1. ) ) ){
         h_0_0 = 1. - h_0_i;
         h_d_i = cc * ( 1. - h_0_0 ); 
     }
-    if ( ( topo_diff == topo_step ) || ( h.x[ i ][ j ][ k ] == 0. ) )
-    {
+    if ( ( topo_diff == topo_step ) || ( is_water( h, i, j, k) ) ){
         h_0_i = 1.;
         h_d_i = cc * ( 1. - h_0_i ); 
     }
@@ -118,9 +116,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
     double dist = 0, h_0_j = 0, h_d_j = 0;
 
-    if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j - 1 ][ k ] == 1. ) ) || 
-          ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j + 1 ][ k ] == 1. ) ) )
-    {
+    if ( ( ( is_water( h, i, j, k) ) && ( is_land( h, i, j-1, k) ) ) || 
+          ( ( is_water( h, i, j, k) ) && ( is_land( h, i, j+1, k) ) ) ){
         dist = dist_coeff * dthe;
         h_0_j = dist / dthe;
         h_d_j = cc * ( 1. - h_0_j ); 
@@ -131,9 +128,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
     double h_0_k = 0, h_d_k = 0;     
 
-    if ( ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k - 1 ] == 1. ) ) || 
-          ( ( h.x[ i ][ j ][ k ] == 0. ) && ( h.x[ i ][ j ][ k + 1 ] == 1. ) ) )
-    {
+    if ( ( ( is_water( h, i, j, k) ) && ( is_land( h, i, j, k-1) ) ) || 
+          ( ( is_water( h, i, j, k) ) && ( is_land( h, i, j, k+1) ) ) ){
         dist = dist_coeff * dphi;
         h_0_k = dist / dphi;
         h_d_k = cc * ( 1. - h_0_k ); 
@@ -141,7 +137,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
         h_0_k = 0.; 
         h_d_j = cc * ( 1. - h_0_k ); 
     }
-
 
 // 2. order derivative for temperature, pressure, salt concentrations and velocity components
 
@@ -193,10 +188,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 
 
-    if ( i < im - 2 )
-    {
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
-        {
+    if ( i < im - 2 ){
+        if ( ( is_land( h, i, j, k) ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) ){
             dudr = h_d_i * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i + 1 ][ j ][ k ] - u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
             dvdr = h_d_i * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i + 1 ][ j ][ k ] - v.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
             dwdr = h_d_i * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i + 1 ][ j ][ k ] - w.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
@@ -210,9 +203,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             d2tdr2 = h_d_i * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i + 1 ][ j ][ k ] + t.x[ i + 2 ][ j ][ k ] ) / dr2;
             d2cdr2 = h_d_i * ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i + 1 ][ j ][ k ] + u.x[ i + 2 ][ j ][ k ] ) / dr2;
         }
-    }
-    else
-    {
+    }else{
         dudr = ( u.x[ i+1 ][ j ][ k ] - u.x[ i ][ j ][ k ] ) / dr;
         dvdr = ( v.x[ i+1 ][ j ][ k ] - v.x[ i ][ j ][ k ] ) / dr;
         dwdr = ( w.x[ i+1 ][ j ][ k ] - w.x[ i ][ j ][ k ] ) / dr;
@@ -223,11 +214,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
         d2udr2 = d2vdr2 = d2wdr2 = d2tdr2 = d2cdr2 = 0.;
     }
 
-
-    if ( ( j >= 2 ) && ( j < jm - 3 ) )
-    {
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( ( h.x[ i ][ j + 1 ][ k ] == 0. ) && ( h.x[ i ][ j + 2 ][ k ] == 0. ) ) )
-        {
+    if ( ( j >= 2 ) && ( j < jm - 3 ) ){
+        if ( ( is_land( h, i, j, k) ) && ( ( is_water( h, i, j+1, k) ) && ( is_water( h, i, j+2, k) ) ) ){
             dudthe = h_d_j * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j + 1 ][ k ] - u.x[ i ][ j + 2 ][ k ] ) / 
                         ( 2. * dthe );
             dvdthe = h_d_j * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j + 1 ][ k ] - v.x[ i ][ j + 2 ][ k ] ) / 
@@ -247,8 +235,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             d2tdthe2 = h_d_j * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i ][ j + 1 ][ k ] + t.x[ i ][ j + 2 ][ k ] ) / dthe2;
             d2cdthe2 = h_d_j * ( 2 * c.x[ i ][ j ][ k ] - 2. * c.x[ i ][ j + 1 ][ k ] + c.x[ i ][ j + 2 ][ k ] ) / dthe2;
         }
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j + 1 ][ k ] == 0. ) )
-        {
+        if ( ( is_land( h, i, j, k) ) && ( is_water( h, i, j+1, k) ) ){
             dudthe = h_d_j * ( u.x[ i ][ j + 1 ][ k ] - u.x[ i ][ j ][ k ] ) / dthe;
             dvdthe = h_d_j * ( v.x[ i ][ j + 1 ][ k ] - v.x[ i ][ j ][ k ] ) / dthe;
             dwdthe = h_d_j * ( w.x[ i ][ j + 1 ][ k ] - w.x[ i ][ j ][ k ] ) / dthe;
@@ -259,8 +246,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             d2udthe2 = d2vdthe2 = d2wdthe2 = d2tdthe2 = d2cdthe2 = 0.;
         }
 
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) && ( h.x[ i ][ j - 2 ][ k ] == 0. ) )
-        {
+        if ( ( is_land( h, i, j, k) ) && ( is_water( h, i, j-1, k) ) && ( is_water( h, i, j-2, k) ) ){
             dudthe = h_d_j * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j - 1 ][ k ] - u.x[ i ][ j - 2 ][ k ] ) / 
                         ( 2. * dthe );
             dvdthe = h_d_j * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j - 1 ][ k ] - v.x[ i ][ j - 2 ][ k ] ) / 
@@ -280,8 +266,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             d2tdthe2 = h_d_j * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i ][ j - 1 ][ k ] + t.x[ i ][ j - 2 ][ k ] ) / dthe2;
             d2cdthe2 = h_d_j * ( 2 * c.x[ i ][ j ][ k ] - 2. * c.x[ i ][ j - 1 ][ k ] + c.x[ i ][ j - 2 ][ k ] ) / dthe2;
         }
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j - 1 ][ k ] == 0. ) )
-        {
+        if ( ( is_land( h, i, j, k) ) && ( is_water( h, i, j-1, k) ) ){
             dudthe = h_d_j * ( u.x[ i ][ j ][ k ] - u.x[ i ][ j - 1 ][ k ] ) / dthe;
             dvdthe = h_d_j * ( v.x[ i ][ j ][ k ] - v.x[ i ][ j - 1 ][ k ] ) / dthe;
             dwdthe = h_d_j * ( w.x[ i ][ j ][ k ] - w.x[ i ][ j - 1 ][ k ] ) / dthe;
@@ -294,9 +279,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     }
 
 
-    if ( ( k >= 2 ) && ( k < km - 3 ) )
-    {
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) && ( h.x[ i ][ j ][ k + 2 ] == 0. ) )
+    if ( ( k >= 2 ) && ( k < km - 3 ) ){
+        if ( ( is_land( h, i, j, k) ) && ( is_water( h, i, j, k+1) ) && ( is_water( h, i, j, k+2) ) )
         {
             dudphi = h_d_k * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j ][ k + 1 ] - u.x[ i ][ j ][ k + 2 ] ) / 
                         ( 2. * dphi );
@@ -317,8 +301,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             d2tdthe2 = h_d_k * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i ][ j ][ k + 1 ] + t.x[ i ][ j ][ k + 2 ] ) / dphi2;
             d2cdthe2 = h_d_k * ( 2 * c.x[ i ][ j ][ k ] - 2. * c.x[ i ][ j ][ k + 1 ] + c.x[ i ][ j ][ k + 2 ] ) / dphi2;
         }
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k + 1 ] == 0. ) )
-        {
+        if ( ( is_land( h, i, j, k) ) && ( is_water( h, i, j, k+1) ) ){
             dudphi = h_d_k * ( u.x[ i ][ j ][ k + 1 ] - u.x[ i ][ j ][ k ] ) / dphi;
             dvdphi = h_d_k * ( v.x[ i ][ j ][ k + 1 ] - v.x[ i ][ j ][ k ] ) / dphi;
             dwdphi = h_d_k * ( w.x[ i ][ j ][ k + 1 ] - w.x[ i ][ j ][ k ] ) / dphi;
@@ -329,8 +312,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             d2udphi2 = d2vdphi2 = d2wdphi2 = d2tdphi2 = d2cdphi2 = 0.;
         }
 
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) && ( h.x[ i ][ j ][ k - 2 ] == 0. ) )
-        {
+        if ( ( is_land( h, i, j, k) ) && ( is_water( h, i, j, k-1) ) && ( is_water( h, i, j, k-2) ) ){
             dudphi = h_d_k * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j ][ k - 1 ] - u.x[ i ][ j ][ k - 2 ] ) / 
                         ( 2. * dphi );
             dvdphi = h_d_k * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j ][ k - 1 ] - v.x[ i ][ j ][ k - 2 ] ) / 
@@ -350,8 +332,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             d2tdthe2 = h_d_k * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i ][ j ][ k - 1 ] + t.x[ i ][ j ][ k - 2 ] ) / dphi2;
             d2cdthe2 = h_d_k * ( 2 * c.x[ i ][ j ][ k ] - 2. * c.x[ i ][ j ][ k - 1 ] + c.x[ i ][ j ][ k - 2 ] ) / dphi2;
         }
-        if ( ( h.x[ i ][ j ][ k ] == 1. ) && ( h.x[ i ][ j ][ k - 1 ] == 0. ) )
-        {
+        if ( ( is_land( h, i, j, k) ) && ( is_water( h, i, j, k-1) ) ){
             dudphi = h_d_k * ( u.x[ i ][ j ][ k ] - u.x[ i ][ j ][ k - 1 ] ) / dphi;
             dvdphi = h_d_k * ( v.x[ i ][ j ][ k ] - v.x[ i ][ j ][ k - 1 ] ) / dphi;
             dwdphi = h_d_k * ( w.x[ i ][ j ][ k ] - w.x[ i ][ j ][ k - 1 ] ) / dphi;
@@ -375,8 +356,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     double coeff_salinity = 1.1574e-5 * L_hyd / u_0;
                                                 // 1.1574e-5 == mm/d to mm/s, == .0463
 
-    if ( i == im - 2 )
-    {
+    if ( i == im - 2 ){
         salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 1 ][ j ][ k ] +
                                     4. * c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * dr ) *
                                     ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] -
@@ -387,14 +367,14 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
         salinity_evaporation = + coeff_salinity * salinity_surface;        // (-) originally, (+) for RHS
 
-        if ( h.x[ i ][ j ][ k ] == 1. )    salinity_evaporation = 0.;
+        if ( is_land( h, i, j, k) )    salinity_evaporation = 0.;
 
         if ( salinity_evaporation >= 20. )    salinity_evaporation = 20.;
                         // salinity gradient causes values too high at shelf corners
         if ( salinity_evaporation <= - 20. )    salinity_evaporation = - 20.;
                         // salinity gradient causes values too high at shelf corners
     }
-    else                                 salinity_evaporation = 0.;
+    else  salinity_evaporation = 0.;
 
 
     double RS_buoyancy_Momentum = Buoyancy * g * ( r_salt_water.x[ i ][ j ][ k ] - salt_water_ref )
@@ -406,21 +386,17 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     Salt_Balance.x[ i ][ j ][ k ] = salt_water_ref - r_salt_water.x[ i ][ j ][ k ];
                                                         // difference of salinity compared to average
 
-    if ( Salt_Balance.x[ i ][ j ][ k ] < 0. )
-    {
+    if ( Salt_Balance.x[ i ][ j ][ k ] < 0. ){
         Salt_Diffusion.x[ i ][ j ][ k ] = Salt_Balance.x[ i ][ j ][ k ];
                                                         // for negativ salinity balance, higher than reference
         Salt_Finger.x[ i ][ j ][ k ] = 0.;  
-    }
-    else
-    {
+    }else{
         Salt_Finger.x[ i ][ j ][ k ] = Salt_Balance.x[ i ][ j ][ k ];
                                                         // for positiv salinity balance, lower than reference
         Salt_Diffusion.x[ i ][ j ][ k ] = 0.;
     }
 
-    if ( h.x[ i ][ j ][ k ] == 1. )
-    {
+    if ( is_land( h, i, j, k) ){
         Salt_Balance.x[ i ][ j ][ k ] = 0.;
         Salt_Finger.x[ i ][ j ][ k ] = 0.;
         Salt_Diffusion.x[ i ][ j ][ k ] = 0.;
@@ -429,9 +405,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
         r_salt_water.x[ i ][ j ][ k ] = 1032.;
     }
 
-
 // Right Hand Side of the time derivative ot temperature, pressure, salt concentration and velocity components
-
 //  3D volume iterations
     rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm +
                                         w.x[ i ][ j ][ k ] * dtdphi / rmsinthe ) + ( d2tdr2 + dtdr *
@@ -466,13 +440,12 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
                                         salinity_evaporation
                                          - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
 
-
 // for the Poisson equation to solve for the pressure, pressure gradient sbstracted from the RHS
     aux_u.x[ i ][ j ][ k ] = rhs_u.x[ i ][ j ][ k ] + h_d_i * dpdr / salt_water_ref;
     aux_v.x[ i ][ j ][ k ] = rhs_v.x[ i ][ j ][ k ] + h_d_j * dpdthe / rm / salt_water_ref;
     aux_w.x[ i ][ j ][ k ] = rhs_w.x[ i ][ j ][ k ] + h_d_k * dpdphi / rmsinthe / salt_water_ref;
 
-    if ( h.x[ i ][ j ][ k ] == 1. ){
+    if ( is_land( h, i, j, k) ){
         aux_u.x[ i ][ j ][ k ] = aux_v.x[ i ][ j ][ k ] = aux_w.x[ i ][ j ][ k ] = 0.;
     }
 }
@@ -483,12 +456,11 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
 void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
             Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w, Array &p_dyn,
-            Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w )
-{
+            Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w ){
+
     /********************* logger **********************/
 
-    if ( ( j == 90 ) && ( k == 180 ) )
-    {
+    if ( ( j == 90 ) && ( k == 180 ) ){
         logger() << "enter RK_RHS_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "enter RK_RHS_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "enter RK_RHS_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
@@ -518,9 +490,8 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
     double dist = 0, h_0_j = 0, h_d_j = 0;
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive the-direction along northerly and southerly boundaries 
-    if ( ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j + 1 ][ k ] == 1. ) ) || 
-          ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j - 1 ][ k ] == 1. ) ) )
-    {
+    if ( ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( is_land( h, im-1, j+1, k) ) ) || 
+          ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( is_land( h, im-1, j-1, k) ) ) ){
         dist = dist_coeff * dthe;
         h_0_j = dist / dthe;
         h_d_j = cc * ( 1. - h_0_j ); 
@@ -529,13 +500,11 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
         h_d_j = cc * ( 1. - h_0_j ); 
     }
 
-
     double h_0_k = 0, h_d_k = 0;
 // 2D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // only in positive phi-direction on westerly and easterly boundaries 
-    if ( ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 1. ) ) || 
-          ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 1. ) ) )
-    {
+    if ( ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( is_land( h, im-1, j, k+1) ) ) || 
+          ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( is_land( h, im-1, j, k-1) ) ) ){
         dist = dist_coeff * dphi;
         h_0_k = dist / dphi;
         h_d_k = cc * ( 1. - h_0_k ); 
@@ -543,7 +512,6 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
         h_0_k = 0.; 
         h_d_k = cc * ( 1. - h_0_k ); 
     }
-
 
     double dvdthe = h_d_j * ( v.x[ im-1 ][ j+1 ][ k ] - v.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe );
     double dwdthe = h_d_j * ( w.x[ im-1 ][ j+1 ][ k ] - w.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe );
@@ -559,13 +527,10 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
     double d2vdphi2 = h_d_k * ( v.x[ im-1 ][ j ][ k+1 ] - 2. * v.x[ im-1 ][ j ][ k ] + v.x[ im-1 ][ j ][ k-1 ] ) / dphi2;
     double d2wdphi2 = h_d_k * ( w.x[ im-1 ][ j ][ k+1 ] - 2. * w.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k-1 ] ) / dphi2;
 
-
-if ( ( j >= 2 ) && ( j < jm - 3 ) )
-    {
-        if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) 
-                && ( ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) 
-                && ( h.x[ im-1 ][ j + 2 ][ k ] == 0. ) ) )
-        {
+if ( ( j >= 2 ) && ( j < jm - 3 ) ){
+        if ( ( is_land( h, im-1, j, k) ) 
+                && ( ( is_water( h, im-1, j+1, k ) ) 
+                && ( is_water( h, im-1, j+2, k ) ) ) ){
             dvdthe = h_d_j * ( - 3. * v.x[ im-1 ][ j ][ k ] + 4. * v.x[ im-1 ][ j + 1 ][ k ] - v.x[ im-1 ][ j + 2 ][ k ] ) 
                         / ( 2. * dthe );
             dwdthe = h_d_j * ( - 3. * w.x[ im-1 ][ j ][ k ] + 4. * w.x[ im-1 ][ j + 1 ][ k ] - w.x[ im-1 ][ j + 2 ][ k ] ) 
@@ -576,19 +541,17 @@ if ( ( j >= 2 ) && ( j < jm - 3 ) )
             d2vdthe2 = h_d_j * ( 2. * v.x[ im-1 ][ j ][ k ] - 2. * v.x[ im-1 ][ j + 1 ][ k ] + v.x[ im-1 ][ j + 2 ][ k ] ) / dthe2;
             d2wdthe2 = h_d_j * ( 2. * w.x[ im-1 ][ j ][ k ] - 2. * w.x[ im-1 ][ j + 1 ][ k ] + w.x[ im-1 ][ j + 2 ][ k ] ) / dthe2;
         }
-        if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) 
-                && ( h.x[ im-1 ][ j + 1 ][ k ] == 0. ) )
-        {
+        if ( ( is_land( h, im-1, j, k) ) 
+                && ( is_water( h, im-1, j+1, k ) ) ){
             dvdthe = h_d_j * ( v.x[ im-1 ][ j + 1 ][ k ] - v.x[ im-1 ][ j ][ k ] ) / dthe;
             dwdthe = h_d_j * ( w.x[ im-1 ][ j + 1 ][ k ] - w.x[ im-1 ][ j ][ k ] ) / dthe;
             dpdthe = h_d_j * ( p_dyn.x[ im-1 ][ j + 1 ][ k ] - p_dyn.x[ im-1 ][ j ][ k ] ) / dthe;
 
             d2vdthe2 = d2wdthe2 = 0.;
         }
-        if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) 
-            && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) 
-            && ( h.x[ im-1 ][ j - 2 ][ k ] == 0. ) )
-        {
+        if ( ( is_land( h, im-1, j, k) ) 
+            && ( is_water( h, im-1, j-1, k ) ) 
+            && ( is_water( h, im-1, j-2, k ) ) ){
             dvdthe = h_d_j * ( - 3. * v.x[ im-1 ][ j ][ k ] + 4. * v.x[ im-1 ][ j - 1 ][ k ] - v.x[ im-1 ][ j - 2 ][ k ] ) 
                         / ( 2. * dthe );
             dwdthe = h_d_j * ( - 3. * w.x[ im-1 ][ j ][ k ] + 4. * w.x[ im-1 ][ j - 1 ][ k ] - w.x[ im-1 ][ j - 2 ][ k ] ) 
@@ -599,9 +562,8 @@ if ( ( j >= 2 ) && ( j < jm - 3 ) )
             d2vdthe2 = h_d_j * ( 2. * v.x[ im-1 ][ j ][ k ] - 2. * v.x[ im-1 ][ j - 1 ][ k ] + v.x[ im-1 ][ j - 2 ][ k ] ) / dthe2;
             d2wdthe2 = h_d_j * ( 2. * w.x[ im-1 ][ j ][ k ] - 2. * w.x[ im-1 ][ j - 1 ][ k ] + w.x[ im-1 ][ j - 2 ][ k ] ) / dthe2;
         }
-        if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) 
-            && ( h.x[ im-1 ][ j - 1 ][ k ] == 0. ) )
-        {
+        if ( ( is_land( h, im-1, j, k) ) 
+            && ( is_water( h, im-1, j-1, k ) ) ){
             dvdthe = h_d_j * ( v.x[ im-1 ][ j ][ k ] - v.x[ im-1 ][ j - 1 ][ k ] ) / dthe;
             dwdthe = h_d_j * ( w.x[ im-1 ][ j ][ k ] - w.x[ im-1 ][ j - 1 ][ k ] ) / dthe;
             dpdthe = h_d_j * ( p_dyn.x[ im-1 ][ j ][ k ] - p_dyn.x[ im-1 ][ j - 1 ][ k ] ) / dthe;
@@ -612,12 +574,10 @@ if ( ( j >= 2 ) && ( j < jm - 3 ) )
     }
 
 
-    if ( ( k >= 2 ) && ( k < km - 3 ) )
-    {
-        if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) 
-            && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) 
-            && ( h.x[ im-1 ][ j ][ k + 2 ] == 0. ) )
-        {
+    if ( ( k >= 2 ) && ( k < km - 3 ) ){
+        if ( ( is_land( h, im-1, j, k) ) 
+            && ( is_water( h, im-1, j, k+1) ) 
+            && ( is_water( h, im-1, j, k+2 ) ) ){
             dvdphi = h_d_k * ( - 3. * v.x[ im-1 ][ j ][ k ] + 4. * v.x[ im-1 ][ j ][ k + 1 ] - v.x[ im-1 ][ j ][ k + 2 ] ) 
                         / ( 2. * dphi );
             dwdphi = h_d_k * ( - 3. * w.x[ im-1 ][ j ][ k ] + 4. * w.x[ im-1 ][ j ][ k + 1 ] - w.x[ im-1 ][ j ][ k + 2 ] ) 
@@ -628,19 +588,17 @@ if ( ( j >= 2 ) && ( j < jm - 3 ) )
             d2vdthe2 = h_d_k * ( 2. * v.x[ im-1 ][ j ][ k ] - 2. * v.x[ im-1 ][ j ][ k + 1 ] + v.x[ im-1 ][ j ][ k + 2 ] ) / dphi2;
             d2wdthe2 = h_d_k * ( 2. * w.x[ im-1 ][ j ][ k ] - 2. * w.x[ im-1 ][ j ][ k + 1 ] + w.x[ im-1 ][ j ][ k + 2 ] ) / dphi2;
         }
-        if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) 
-            && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) )
-        {
+        if ( ( is_land( h, im-1, j, k) ) 
+            && ( is_water( h, im-1, j, k+1) ) ){
             dvdphi = h_d_k * ( v.x[ im-1 ][ j ][ k + 1 ] - v.x[ im-1 ][ j ][ k ] ) / dphi;
             dwdphi = h_d_k * ( w.x[ im-1 ][ j ][ k + 1 ] - w.x[ im-1 ][ j ][ k ] ) / dphi;
             dpdphi = h_d_k * ( p_dyn.x[ im-1 ][ j ][ k + 1 ] - p_dyn.x[ im-1 ][ j ][ k ] ) / dphi;
 
             d2vdphi2 = d2wdphi2 = 0.;
         }
-        if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) 
-            && ( h.x[ im-1 ][ j ][ k - 1 ] == 0. ) 
-            && ( h.x[ im-1 ][ j ][ k - 2 ] == 0. ) )
-        {
+        if ( ( is_land( h, im-1, j, k) ) 
+            && ( is_water( h, im-1, j, k-1) ) 
+            && ( is_water( h, im-1, j, k-2) ) ){
             dvdphi = h_d_k * ( - 3. * v.x[ im-1 ][ j ][ k ] + 4. * v.x[ im-1 ][ j ][ k - 1 ] - v.x[ im-1 ][ j ][ k - 2 ] ) 
                         / ( 2. * dphi );
             dwdphi = h_d_k * ( - 3. * w.x[ im-1 ][ j ][ k ] + 4. * w.x[ im-1 ][ j ][ k - 1 ] - w.x[ im-1 ][ j ][ k - 2 ] ) 
@@ -651,9 +609,8 @@ if ( ( j >= 2 ) && ( j < jm - 3 ) )
             d2vdthe2 = h_d_k * ( 2. * v.x[ im-1 ][ j ][ k ] - 2. * v.x[ im-1 ][ j ][ k - 1 ] + v.x[ im-1 ][ j ][ k - 2 ] ) / dphi2;
             d2wdthe2 = h_d_k * ( 2. * w.x[ im-1 ][ j ][ k ] - 2. * w.x[ im-1 ][ j ][ k - 1 ] + w.x[ im-1 ][ j ][ k - 2 ] ) / dphi2;
         }
-        if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) 
-            && ( h.x[ im-1 ][ j ][ k - 1 ] == 0. ) )
-        {
+        if ( ( is_land( h, im-1, j, k) ) 
+            && ( is_water( h, im-1, j, k-1) ) ){
             dvdphi = h_d_k * ( v.x[ im-1 ][ j ][ k ] - v.x[ im-1 ][ j ][ k - 1 ] ) / dphi;
             dwdphi = h_d_k * ( w.x[ im-1 ][ j ][ k ] - w.x[ im-1 ][ j ][ k - 1 ] ) / dphi;
             dpdphi = h_d_k * ( p_dyn.x[ im-1 ][ j ][ k ] - p_dyn.x[ im-1 ][ j ][ k - 1 ] ) / dphi;
@@ -661,17 +618,13 @@ if ( ( j >= 2 ) && ( j < jm - 3 ) )
             d2vdphi2 = d2wdphi2 = 0.;
         }
         d2vdphi2 = d2wdphi2 = 0.;
-    }
-    else
-    {
-        if ( ( h.x[ im-1 ][ j ][ k ] == 1. ) && ( h.x[ im-1 ][ j ][ k + 1 ] == 0. ) )
-        {
+    }else{
+        if ( ( is_land( h, im-1, j, k) ) && ( is_water( h, im-1, j, k+1) ) ){
             dvdphi = h_d_k * ( v.x[ im-1 ][ j ][ k + 1 ] - v.x[ im-1 ][ j ][ k ] ) / dphi;
             dwdphi = h_d_k * ( w.x[ im-1 ][ j ][ k + 1 ] - w.x[ im-1 ][ j ][ k ] ) / dphi;
             dpdphi = h_d_k * ( p_dyn.x[ im-1 ][ j ][ k + 1 ] - p_dyn.x[ im-1 ][ j ][ k ] ) / dphi;
         }
-        if ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( h.x[ im-1 ][ j ][ k - 1 ] == 1. ) )
-        {
+        if ( ( h.x[ im-1 ][ j ][ k ] == 0. ) && ( is_land( h, im-1, j, k-1) ) ){
             dvdphi = h_d_k * ( v.x[ im-1 ][ j ][ k ] - v.x[ im-1 ][ j ][ k - 1 ] ) / dphi;
             dwdphi = h_d_k * ( w.x[ im-1 ][ j ][ k ] - w.x[ im-1 ][ j ][ k - 1 ] ) / dphi;
             dpdphi = h_d_k * ( p_dyn.x[ im-1 ][ j ][ k ] - p_dyn.x[ im-1 ][ j ][ k - 1 ] ) / dphi;
@@ -679,7 +632,6 @@ if ( ( j >= 2 ) && ( j < jm - 3 ) )
         d2vdthe2 = d2wdthe2 = 0.;
         d2vdphi2 = d2wdphi2 = 0.;
     }
-
 
     rhs_v.x[ im-1 ][ j ][ k ] = - ( v.x[ im-1 ][ j ][ k ] * dvdthe / rm + w.x[ im-1 ][ j ][ k ] * dvdphi / rmsinthe ) +
                 - h_d_j * dpdthe / rm / r_0_water - ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
@@ -696,9 +648,7 @@ if ( ( j >= 2 ) && ( j < jm - 3 ) )
     aux_v.x[ im-1 ][ j ][ k ] = rhs_v.x[ im-1 ][ j ][ k ] + h_d_j * dpdthe / rm / r_0_water;
     aux_w.x[ im-1 ][ j ][ k ] = rhs_w.x[ im-1 ][ j ][ k ] + h_d_k * dpdphi / rmsinthe / r_0_water;
 
-
-    if ( ( j == 90 ) && ( k == 180 ) )
-    {
+    if ( ( j == 90 ) && ( k == 180 ) ){
         logger() << "end RK_RHS_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "end RK_RHS_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "end RK_RHS_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
