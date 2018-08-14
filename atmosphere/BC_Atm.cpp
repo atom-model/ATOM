@@ -41,11 +41,16 @@ void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p
 // boundary conditions for the r-direction, loop index i
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
+/******** grid bottom values ***************/
             u.x[ 0 ][ j ][ k ] = 0.;
             v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
             w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
 //            p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];
 //            c.x[ 0 ][ j ][ k ] = c.x[ 3 ][ j ][ k ] - 3. * c.x[ 2 ][ j ][ k ] + 3. * c.x[ 1 ][ j ][ k ];        // extrapolation
+//            cloud.x[ 0 ][ j ][ k ] = cloud.x[ 3 ][ j ][ k ] - 3. * cloud.x[ 2 ][ j ][ k ] + 3. * cloud.x[ 1 ][ j ][ k ];        // extrapolation
+//            ice.x[ 0 ][ j ][ k ] = ice.x[ 3 ][ j ][ k ] - 3. * ice.x[ 2 ][ j ][ k ] + 3. * ice.x[ 1 ][ j ][ k ];        // extrapolation
+
+/******** grid top values ***************/
             t.x[ im-1 ][ j ][ k ] = t_tropopause;
             p_dyn.x[ im-1 ][ j ][ k ] = 0.;
             u.x[ im-1 ][ j ][ k ] = 0.;

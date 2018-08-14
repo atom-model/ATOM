@@ -540,17 +540,17 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
                     }
                 }else{  // if ( NASATemperature == 1 ) surface temperature is NASA based
                     if ( is_land(h, i_mount, j, k) ){  // on land
-//                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( j / d_j_half ) + t_pole_ma + t_land;
-                        t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];
+                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( j / d_j_half ) + t_pole_ma + t_land;
+//                        t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];
                         if(Ma != 0){
-                            t.x[ i_mount ][ j ][ k ] += t_cretaceous_add + t_land;
+                            t.x[ i_mount ][ j ][ k ] += t_cretaceous_add;
                             t.x[ i_mount ][ j ][ k ] += t_pole_diff * abs( 1. -  j / d_j_half );
                         }
                     }else{  //ocean
                         t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];
                         if(Ma != 0){
-                            t.x[ i_mount ][ j ][ k ] += t_pole_diff * abs( 1. -  j / d_j_half );
                             t.x[ i_mount ][ j ][ k ] += t_cretaceous_add;
+                            t.x[ i_mount ][ j ][ k ] += t_pole_diff * abs( 1. -  j / d_j_half );
                         }
                     }
                 }//if ( NASATemperature == 1 )
@@ -2622,7 +2622,7 @@ if ( ( i == 10 ) && ( j == 90 ) && ( k == 180 ) ){
                 if ( ice.x[ i ][ j ][ k ] < 0. )  ice.x[ i ][ j ][ k ] = 0.;
 
                 if ( is_land ( h, i, j, k ) ){
-                    c.x[ i ][ j ][ k ] = 0.001;
+                    c.x[ i ][ j ][ k ] = c_tropopause;
                     cloud.x[ i ][ j ][ k ] = 0.;
                     ice.x[ i ][ j ][ k ] = 0.;
                 }
@@ -3077,11 +3077,14 @@ void BC_Thermo::Value_Limitation_Atm ( Array &h, Array &u, Array &v, Array &w,
                 if ( w.x[ i ][ j ][ k ] <= - .469 )  w.x[ i ][ j ][ k ] = - .469;
                 if ( t.x[ i ][ j ][ k ] >= 1.147 )  t.x[ i ][ j ][ k ] = 1.147;
                 if ( t.x[ i ][ j ][ k ] <= - .78 )  t.x[ i ][ j ][ k ] = - .78;
-                if ( c.x[ i ][ j ][ k ] >= .02 )  c.x[ i ][ j ][ k ] = .02;
+//                if ( c.x[ i ][ j ][ k ] >= .02 )  c.x[ i ][ j ][ k ] = .02;
+                if ( c.x[ i ][ j ][ k ] >= .03 )  c.x[ i ][ j ][ k ] = .03;
                 if ( c.x[ i ][ j ][ k ] < 0. )  c.x[ i ][ j ][ k ] = 0.;
-                if ( cloud.x[ i ][ j ][ k ] >= .006 )  cloud.x[ i ][ j ][ k ] = .006;
+//                if ( cloud.x[ i ][ j ][ k ] >= .006 )  cloud.x[ i ][ j ][ k ] = .006;
+                if ( cloud.x[ i ][ j ][ k ] >= .009 )  cloud.x[ i ][ j ][ k ] = .009;
                 if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
-                if ( ice.x[ i ][ j ][ k ] >= .0025 )  ice.x[ i ][ j ][ k ] = .0025;
+//                if ( ice.x[ i ][ j ][ k ] >= .0025 )  ice.x[ i ][ j ][ k ] = .0025;
+                if ( ice.x[ i ][ j ][ k ] >= .004 )  ice.x[ i ][ j ][ k ] = .004;
                 if ( ice.x[ i ][ j ][ k ] < 0. )  ice.x[ i ][ j ][ k ] = 0.;
                 if ( co2.x[ i ][ j ][ k ] >= 5.36 )  co2.x[ i ][ j ][ k ] = 5.36;
                 if ( co2.x[ i ][ j ][ k ] <= 1. )  co2.x[ i ][ j ][ k ] = 1.;
