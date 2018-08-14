@@ -8,7 +8,6 @@
  * class to compute the pressure independent of the other variables
 */
 
-
 #include <iostream>
 
 #include "Array.h"
@@ -20,8 +19,7 @@
 
 using namespace std;
 
-class Pressure_Hyd
-{
+class Pressure_Hyd{
     private:
         int im, jm, km;
 
@@ -32,9 +30,9 @@ class Pressure_Hyd
         ~Pressure_Hyd ();
 
         void computePressure_3D ( double u_0, double r_0_water, Array_1D &rad, Array_1D &the,
-                 Array &p_dyn, Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w );
+            Array &p_dyn, Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w );
 
         void computePressure_2D ( double u_0, double r_0_water, Array_1D &rad, Array_1D &the,
-                 Array &p_dyn, Array &p_dynn, Array &h, Array &aux_v, Array &aux_w );
+            Array &p_dyn, Array &p_dynn, Array &h, Array &aux_v, Array &aux_w );
 };
 #endif

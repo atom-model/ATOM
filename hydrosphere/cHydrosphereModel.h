@@ -12,7 +12,7 @@
 using namespace std;
 using namespace tinyxml2;
 
-class cHydrosphereModel {
+class cHydrosphereModel{
 public:
 
     cHydrosphereModel();
@@ -94,7 +94,5 @@ private:
     Array r_water; // water density as function of pressure
     Array r_salt_water; // salt water density as function of pressure and temperature
     Array BuoyancyForce_3D; // 3D buoyancy force
-
 };
-
 #endif
