@@ -38,19 +38,40 @@ public:
     PostProcess_Atmosphere(int, int, int, string &output_path);
     ~PostProcess_Atmosphere();
 
-    void paraview_vts ( string &, int iter_cnt, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+    void paraview_vts ( string &, int iter_cnt, Array_1D &, Array_1D &, Array_1D &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-    void paraview_panorama_vts ( string &, int iter_cnt, double &, double &, double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+    void paraview_panorama_vts ( string &, int iter_cnt, double &, double &, double &,
+                                    double &, double &, double &, Array &, Array &, Array &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-    void paraview_vtk_zonal ( string &, int, int iter_cnt, double &, double &, double &, double &, double &, double &, double &, double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,Array & );
+    void paraview_vtk_zonal ( string &, int, int iter_cnt, double &, double &, double &,
+                                    double &, double &, double &, double &, double &, double &,
+                                    double &, double &, Array &, Array &, Array &, Array &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &,Array & );
 
-    void paraview_vtk_longal ( string &, int, int iter_cnt, double &, double &, double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &,Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+    void paraview_vtk_longal ( string &, int, int iter_cnt, double &, double &, double &,
+                                    double &, double &, double &, Array &, Array &, Array &, Array &,
+                                    Array &,Array &, Array &, Array &, Array &, Array &, Array &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-    void paraview_vtk_radial ( string &, int, int, int iter_cnt, double &, double &, double &, double &, double &, double &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+    void paraview_vtk_radial ( string &, int, int, int iter_cnt, double &, double &, double &,
+                                    double &, double &, double &, Array &, Array &, Array &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
+                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
+                                    Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &,
+                                    Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &,
+                                    Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
-    void Atmosphere_v_w_Transfer ( string &, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
+    void Atmosphere_v_w_Transfer ( string &, double, Array &, Array &, Array &, Array &,
+                                    Array_2D &, Array_2D & );
 
-    void Atmosphere_PlotData ( string &, int iter_cnt, double, double, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
+    void Atmosphere_PlotData ( string &, int iter_cnt, double, double, Array &, Array &, Array &,
+                                    Array &, Array &, Array_2D &, Array_2D & );
 
     double exp_func ( double &, const double &, const double & );
 

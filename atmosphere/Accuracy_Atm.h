@@ -27,19 +27,22 @@ class Accuracy_Atm
     public:
 
         Accuracy_Atm( int im, int jm, int km, double dthe, double dphi );
-        Accuracy_Atm( int im, int jm, int km, double dr, double dthe, double dphi );        
+        Accuracy_Atm( int im, int jm, int km, double dr, double dthe, double dphi );
 
         ~Accuracy_Atm ();
 
         std::tuple<double, int, int> residuumQuery_2D ( 
             Array_1D &rad, Array_1D &the, Array &v, Array &w, Vector3D<> & residuum_2d );
         std::tuple<double, int, int, int> 
-            residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v, Array &w, Vector3D<> & residuum_3d );
+            residuumQuery_3D ( Array_1D &rad, Array_1D &the, Array &u, Array &v,
+            Array &w, Vector3D<> & residuum_3d );
         
-        void steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn, Array &p_dyn, Array &p_dynn );
-        void steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn,
-            Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &co2, Array &co2n, Array &p_dyn,
-            Array &p_dynn, double L_atm);
+        void steadyQuery_2D ( Array &v, Array &vn, Array &w, Array &wn,
+            Array &p_dyn, Array &p_dynn );
+        void steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
+            Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn,
+            Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &co2,
+            Array &co2n, Array &p_dyn, Array &p_dynn, double L_atm);
 
         void print(const string& name, double value, int j, int k) const;        
         void print(const string& name, double value, int i, int j, int k) const;
