@@ -60,7 +60,7 @@ RHS_Hydrosphere::~RHS_Hydrosphere() {}
 void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
             double g, double cp_w, double u_0, double t_0, double c_0,
             double r_0_water, double ta, double pa, double ca, Array_1D &rad,
-             &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w,
+            Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w,
             Array &p_dyn, Array &c, Array &rhs_t, Array &rhs_u, Array &rhs_v,
             Array &rhs_w, Array &rhs_c, Array &aux_u, Array &aux_v, Array &aux_w,
             Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D,

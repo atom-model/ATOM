@@ -536,7 +536,7 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water,
 // hydrostatic pressure, water and salt water density at the surface
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            p_stat.x[ im-1 ][ j ][ k ] =  .01 * ( r_air * R_Air * t.x[ im-1 ][ j ][ k ] * t_0 ) / 1000.
+            p_stat.x[ im-1 ][ j ][ k ] =  .01 * ( r_air * R_Air * t.x[ im-1 ][ j ][ k ] * t_0 ) / 1000.;
             // given in bar, isochoric approach, constant air density at the surface
             r_water.x[ im-1 ][ j ][ k ] = r_0_water;                // given in kg/m³
 
