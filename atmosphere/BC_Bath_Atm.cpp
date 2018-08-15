@@ -107,13 +107,13 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                     v.x[ i ][ j ][ k ] = 0.;
                     w.x[ i ][ j ][ k ] = 0.;
                     t.x[ i ][ j ][ k ] = 1.;  // = 273.15 K
-//                    c.x[ i ][ j ][ k ] = 0.001;  // = 1 g/kg water vapour
-//                    cloud.x[ i ][ j ][ k ] = 0.;
-//                    cloud.x[ i ][ j ][ k ] = 0.;
+                    c.x[ i ][ j ][ k ] = c_tropopause;  // = 1 g/kg water vapour
+                    cloud.x[ i ][ j ][ k ] = 0.;
+                    cloud.x[ i ][ j ][ k ] = 0.;
                     ice.x[ i ][ j ][ k ] = 0.;
                     co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
                     p_dyn.x[ i ][ j ][ k ] = 0.;
-
+/*
                     if ( i < im - 1 ){
                         if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i+1, j, k ) ) ){
                             t.x[ i ][ j ][ k ] = t.x[ i + 1 ][ j ][ k ];
@@ -164,6 +164,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                             co2.x[ i ][ j ][ k ] = co2.x[ i ][ j ][ k - 1 ];
                         }
                     }
+*/
                 }// is_land
             } // i
         } // k
