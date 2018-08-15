@@ -40,8 +40,8 @@ class BC_Thermohalin{
         double dr, g, r_0_water, ua, va, wa, ca, pa, ta, u_0, cp_w, L_hyd, t_average;
 
         string time_slice_comment, time_slice_number, time_slice_unit;
-        string temperature_comment, temperature_gain, temperature_modern, t
-            emperature_average, temperature_unit, temperature_cretaceous,
+        string temperature_comment, temperature_gain, temperature_modern,
+            temperature_average, temperature_unit, temperature_cretaceous,
             temperature_average_cret;
         string salinity_comment, salinity_gain, salinity_modern, salinity_average,
         salinity_unit, salinity_cretaceous, salinity_average_cret;
