@@ -382,7 +382,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
                 }
 
                 for ( int i = i_trop; i < im; i++ ){ // above tropopause
-                    t.x[ i_trop ][ j ][ k ] = t_tropopause;
+                    t.x[ i ][ j ][ k ] = t_tropopause;
                     radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
                         pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
                 }
