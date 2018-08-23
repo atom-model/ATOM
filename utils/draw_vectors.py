@@ -30,8 +30,6 @@ def fix_wrong_lats(a):
 
 def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     data = np.genfromtxt(data_dir + '/[{0}Ma_{1}.xyz]_PlotData_{2}.xyz'.format(time, topo_suffix, atm), skip_header=1)
-    for d in data:
-        d[1]=90-d[1]
     x = data[:,0]
     y = data[:,1]
     z = data[:,6]

@@ -169,8 +169,6 @@ def reconstruct_grid(
 def reconstruct_temperature(time_0, time_1, suffix):
     st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, suffix),skip_header=1)
     data = st[:,[0,1,6]]
-    for d in data:
-        d[1]=90-d[1]
     ind = np.lexsort((-data[:,1],data[:,0]))    
     #print(data[ind])
     
@@ -188,8 +186,6 @@ def reconstruct_temperature(time_0, time_1, suffix):
 def reconstruct_precipitation(time_0, time_1, suffix):
     st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, suffix),skip_header=1)
     data = st[:,[0,1,8]]
-    for d in data:
-        d[1]=90-d[1]
     ind = np.lexsort((-data[:,1],data[:,0]))    
     #print(data[ind])
     
@@ -207,8 +203,6 @@ def reconstruct_precipitation(time_0, time_1, suffix):
 def reconstruct_salinity(time_0, time_1, suffix):
     st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Hyd.xyz'.format(time_0, suffix),skip_header=1)
     data = st[:,[0,1,7]]
-    for d in data:
-        d[1]=90-d[1]
     ind = np.lexsort((-data[:,1],data[:,0]))
     #print(data[ind])
 

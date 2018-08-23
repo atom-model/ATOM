@@ -73,8 +73,9 @@ class PostProcess_Hydrosphere{
         void paraview_vtk_zonal ( const string &, int, int, double &, double &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
             Array &, Array &, Array &, Array & );
-
-        void Hydrosphere_PlotData ( const string &, int iter_cnt, double &, Array &, Array &,
-            Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
+        
+        void Hydrosphere_PlotData ( const string &Name_Bathymetry_File, int iter_cnt, double &u_0,
+            Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &BottomWater, Array_2D & Upwelling,
+            Array_2D & Downwelling );
 };
 #endif
