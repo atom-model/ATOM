@@ -695,14 +695,16 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 
 
 
-void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymetry_File, int iter_cnt, double &u_0, Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &BottomWater, Array_2D & Upwelling, Array_2D & Downwelling )
+void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymetry_File, int iter_cnt, double &u_0, 
+        Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &BottomWater, Array_2D & Upwelling, 
+        Array_2D & Downwelling )
 {
-	ofstream PlotData_File;
+    string path = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Hyd"+
+        (iter_cnt > 0 ? "_"+to_string(iter_cnt) : "")+".xyz";
+
+	ofstream PlotData_File(path);
 	PlotData_File.precision ( 4 );
 	PlotData_File.setf ( ios::fixed );
-	string path = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Hyd"+
-        (iter_cnt > 0 ? "_"+to_string(iter_cnt) : "")+".xyz";
-	PlotData_File.open (path);
 
 	if (!PlotData_File.is_open())
 	{
@@ -710,17 +712,17 @@ void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymet
 		abort();
 	}
 
-	PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " << "w-velocity(m/s)" << ", " << "velocity-mag(m/s)" << ", " << "temperature(Celsius)" << ", " << "salinity(psu)" << ", " << "bottom_water(m/s)" << ", " <<  "upwelling(m/s)" << ", " <<  "downwelling(m/s)" << endl;
+	PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " 
+        << "w-velocity(m/s)" << ", " << "velocity-mag(m/s)" << ", " << "temperature(Celsius)" << ", " << "salinity(psu)" 
+        << ", " << "bottom_water(m/s)" << ", " <<  "upwelling(m/s)" << ", " <<  "downwelling(m/s)" << endl;
 
-	double vel_mag;
-
-	for ( int k = 0; k < km; k++ )
-	{
-		for ( int j = 0; j < jm; j++ )
-		{
-			vel_mag = sqrt ( pow ( v.x[ im-1 ][ j ][ k ] * u_0 , 2 ) + pow ( w.x[ im-1 ][ j ][ k ] * u_0, 2 ) );
-			PlotData_File << k << " " << j << " " << h.x[ im-1 ][ j ][ k ] << " " << v.x[ im-1 ][ j ][ k ] * u_0 << " " << w.x[ im-1 ][ j ][ k ] * u_0 << " " << vel_mag << " " << t.x[ im-1 ][ j ][ k ] * 273.15 - 273.15 << " " << c.x[ im-1 ][ j ][ k ] * 35. << " " << BottomWater.y[ j ][ k ] << " " << Upwelling.y[ j ][ k ] << "   " << Downwelling.y[ j ][ k ] << " " <<  endl;
+	for ( int k = 0; k < km; k++ ){
+		for ( int j = 0; j < jm; j++ ){
+			double vel_mag = sqrt ( pow ( v.x[ im-1 ][ j ][ k ] * u_0 , 2 ) + pow ( w.x[ im-1 ][ j ][ k ] * u_0, 2 ) );
+			PlotData_File << k << " " << 90-j << " " << h.x[ im-1 ][ j ][ k ] << " " << v.x[ im-1 ][ j ][ k ] * u_0 
+            << " " << w.x[ im-1 ][ j ][ k ] * u_0 << " " << vel_mag << " " << t.x[ im-1 ][ j ][ k ] * 273.15 - 273.15 
+            << " " << c.x[ im-1 ][ j ][ k ] * 35. << " " << BottomWater.y[ j ][ k ] << " " << Upwelling.y[ j ][ k ] 
+            << "   " << Downwelling.y[ j ][ k ] << " " <<  endl;
 		}
 	}
-	PlotData_File.close();
 }
