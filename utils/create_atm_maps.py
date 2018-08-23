@@ -35,8 +35,6 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
 
         data = np.genfromtxt(data_dir + '/[{0}Ma_{1}.xyz]_PlotData_Atm.xyz'.format(time, topo_suffix), skip_header=1)
         index = map_cfg[directory][0]
-        for d in data:
-            d[1]=90-d[1]
         x = data[:,0]
         y = data[:,1]
         z = data[:,index]
