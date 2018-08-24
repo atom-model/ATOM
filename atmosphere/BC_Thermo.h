@@ -114,7 +114,7 @@ class BC_Thermo
 
 
     public:
-        BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0,
+        BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land,
             double co2_0, Array& h);
 
         ~BC_Thermo();

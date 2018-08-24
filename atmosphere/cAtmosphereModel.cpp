@@ -24,7 +24,6 @@
 #include "Results_Atm.h"
 #include "MinMax_Atm.h"
 #include "Utils.h"
-
 #include "Config.h"
 
 using namespace std;
@@ -89,8 +88,7 @@ cAtmosphereModel::cAtmosphereModel() :
 }
 
 cAtmosphereModel::~cAtmosphereModel() {
-    if(PythonStream::is_enable())
-    {    
+    if(PythonStream::is_enable()){
         std::cout.rdbuf(backup);
     }
 
@@ -246,7 +244,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
 
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo  circulation (this, im, jm, km, c_0, co2_0, h ); 
+    BC_Thermo  circulation (this, im, jm, km, c_0, c_land, t_land, co2_0, h ); 
 
     //  class element calls for the preparation of initial conditions for the flow properties
 
@@ -274,6 +272,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
     circulation.BC_WaterVapour ( h, t, c );
+
+//    goto Print;
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
@@ -304,6 +304,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     cout << endl << endl;
 
     restrain_temperature();
+
+//    Print:
 
     //write the ouput files
     write_file(bathymetry_name, output_path, true);
