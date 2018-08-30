@@ -2735,6 +2735,11 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
     t_Celsius_1 = t_1 - t_0;
     t_Celsius_2 = t_00 - t_0;
 
+    //The m_i is only used in this function and I see no reason it should be a member of this class.
+    //So, I move it out of class.
+    //I also don't see any reason the above horde of variables should stay as class members. -- mchin
+    double m_i = m_i_max; //initialize m_i local variable. If uninitialized, the value in m_i can be anything(bad, very bad). 
+
 // rain and snow distribution based on parameterization schemes adopted from the COSMO code used by the German Weather Forecast
 // the choosen scheme is a Two Category Ice Scheme
 // besides the transport equation for the water vapour exists two equations for the cloud water and the cloud ice transport
@@ -2796,7 +2801,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                 else  N_i = N_i_0;
                 if ( t_u <= t_0 ){
                     m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
-                    if ( ! ( m_i > 0 && m_i < m_i_max ) ) { m_i = m_i_max; }
+                    if ( ! ( m_i > m_i_0 && m_i < m_i_max ) ) { m_i = m_i_max; }
                 }
 
                 if ( ( t_Celsius <= 0. ) && ( t_Celsius > t_Celsius_2 ) ){
@@ -2866,7 +2871,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                         else  N_i = N_i_0;
                         if ( t_u <= t_0 ){
                             m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
-                            if ( ! ( m_i > 0 && m_i < m_i_max ) ) { m_i = m_i_max; }
+                            if ( ! ( m_i > m_i_0 && m_i < m_i_max ) ) { m_i = m_i_max; }
                         }
 
 // nucleation and depositional growth of cloud ice
