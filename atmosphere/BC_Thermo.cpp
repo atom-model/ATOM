@@ -2569,7 +2569,15 @@ if ( ( i == 10 ) && ( j == 90 ) && ( k == 180 ) ){
 
                         p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
                         hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
-                        if ( i != 0 )  p_h = pow ( ( ( T - gam * hight * 1.e-2 ) / ( T ) ), exp_pressure ) * p_SL; // given in hPa
+                        if ( i != 0 ){
+                            if( T > gam * hight * 1.e-2){
+                                p_h = pow ( ( ( T - gam * hight * 1.e-2 ) / ( T ) ), exp_pressure ) * p_SL; // given in hPa
+                            }else{
+                                logger()<<"WARNING: T is less than gam * hight * 1.e-2. "<< __LINE__<<" "
+                                    << __FILE__<<std::endl; 
+                                p_h = p_SL;
+                            }
+                        }
                         else  p_h = p_SL;
                         
                         CND = ( T - t_00 ) / ( t_0 - t_00 );
