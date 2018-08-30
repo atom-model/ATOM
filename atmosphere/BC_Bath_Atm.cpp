@@ -185,12 +185,9 @@ void BC_Bathymetry_Atmosphere::vegetationDistribution ( double max_Precipitation
     // description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
-            if ( ( is_land ( h, 0, j, k ) ) && ( t.x[ 0 ][ j ][ k ] >= 1. ) ){ 
+            if ( max_Precipitation > 0 && is_land( h, 0, j, k ) && !(t.x[ 0 ][ j ][ k ] < 1.) ){ 
                 Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation; // actual vegetation areas
             }else{
-                 Vegetation.y[ j ][ k ] = 0.;
-            }
-            if ( max_Precipitation <= 0. ){ 
                 Vegetation.y[ j ][ k ] = 0.;
             }
         }
