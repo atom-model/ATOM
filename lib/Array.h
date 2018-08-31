@@ -159,6 +159,8 @@ public:
         }
         return false;
     }
+
+    void inspect() const;
 };
 
 inline Array operator* (double coeff, const Array &a){

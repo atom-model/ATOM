@@ -8,13 +8,16 @@
  * class to build 3D arrays
 */
 
-
+#include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <iomanip>   
 
 #include "Array.h"
+#include "Utils.h"
 
 using namespace std;
+using namespace AtomUtils;
 
 #define MAXI 41
 #define MAXJ 181
@@ -127,5 +130,46 @@ void Array::printArray ( int im, int jm, int km )
     cout << endl;
 }
 
-
+void Array::inspect() const{
+    std::vector<double> mins(im, 0), maxes(im, 0), means(im, 0), s_means(im, 0);
+    for(int i=0; i<im; i++){
+        double min_tmp=x[i][0][0], max_tmp=x[i][0][0], mean_tmp=0, s_means_tmp=0, weight_tmp=0;
+        for(int j=0; j<jm; j++){
+            for(int k=0; k<km; k++){
+                min_tmp=std::min(min_tmp, x[i][j][k]);
+                max_tmp=std::max(max_tmp, x[i][j][k]);
+                mean_tmp+=x[i][j][k];
+                double w=cos(abs(90-j)*M_PI/180.);
+                s_means_tmp+=x[i][j][k]*w;
+                weight_tmp+=w;
+            }
+        }
+        mins[i]=min_tmp;
+        maxes[i]=max_tmp;
+        means[i]=mean_tmp/(jm*km);
+        s_means[i]=s_means_tmp/weight_tmp;
+    }
+    logger()<<"==================================="<<std::endl;
+    logger()<<"max:: " << *std::max_element(maxes.begin(), maxes.end()) << std::endl;
+    for(std::vector<double>::iterator it=maxes.begin(); it!=maxes.end(); it++){
+        logger()<< fixed << setprecision(4) << *it << "  ";
+    }
+    logger()<<std::endl;
+    logger()<<"min:: " << *std::min_element(mins.begin(), mins.end()) << std::endl;
+    for(std::vector<double>::iterator it=mins.begin(); it!=mins.end(); it++){
+        logger()<< *it << "  ";
+    }
+    logger()<<std::endl;
+    logger()<<"mean:: " << std::accumulate(means.begin(), means.end(), 0.0)/means.size() << std::endl;
+    for(std::vector<double>::iterator it=means.begin(); it!=means.end(); it++){
+        logger()<< *it << "  ";
+    }
+    logger()<<std::endl;
+    logger()<<"spherical mean of each layer:: " << std::endl;
+    for(std::vector<double>::iterator it=s_means.begin(); it!=s_means.end(); it++){
+        logger()<< *it << "  ";
+    }
+    logger()<<std::endl;
+    logger()<<"==================================="<<std::endl;
+}
 

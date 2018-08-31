@@ -723,6 +723,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         // ::::::::::::   begin of 3D velocity loop : if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::
         for ( int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ )
         {
+            t.inspect();
             //  query to realize zero divergence of the continuity equation ( div c = 0 )
             cout << endl << endl;
             cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
