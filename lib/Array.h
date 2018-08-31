@@ -35,6 +35,7 @@ public:
     Array(): im(0), jm(0), km(0), x(NULL)
     {}
 
+    //copy constructor
     Array(const Array &a){
         im = a.im;
         jm = a.jm;
@@ -57,12 +58,16 @@ public:
         }
     }
 
-    void printArray ( int, int, int );
-    void initArray ( int, int, int, double );
+    void printArray( int im, int jm, int km );
+    void initArray( int im, int jm, int km, double value);
 
     friend Array operator* (double coeff, const Array &a);
 
+    //overload 
     void operator=(const Array &a){
+        if(!x){
+            initArray(a.im, a.jm, a.km, 0);
+        }
         assert(this->im == a.im);
         assert(this->jm == a.jm);
         assert(this->km == a.km);
@@ -73,6 +78,29 @@ public:
                 }
             }
         }
+    }
+
+    //overload
+    Array operator+(double val){
+        Array ret(im, jm, km, 0.);
+        for(int i=0; i<im; i++){
+            for(int j=0; j<jm; j++){
+                for(int k=0; k<km; k++){
+                    ret.x[i][j][k]=this->x[i][j][k]+val;
+                }
+            }
+        }
+        return ret;
+    }
+
+    //overload
+    Array operator-(double val){
+        return operator+(-val);
+    }
+
+    //overload
+    Array operator*(double val){
+        return val*(*this);
     }
 
     double max() const{
