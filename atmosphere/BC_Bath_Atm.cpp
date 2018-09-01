@@ -98,7 +98,6 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                                                 double pa, double gam, double sigma, Array &h, Array &u, 
                                                 Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, 
                                                 Array &co2, Array &radiation_3D, Array_2D &Vegetation ){
-
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
             for ( int i = im-2; i >= 0; i-- ){
@@ -106,65 +105,13 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                     u.x[ i ][ j ][ k ] = 0.;
                     v.x[ i ][ j ][ k ] = 0.;
                     w.x[ i ][ j ][ k ] = 0.;
-                    t.x[ i ][ j ][ k ] = 1.;  // = 273.15 K
-                    c.x[ i ][ j ][ k ] = c_tropopause;  // = 1 g/kg water vapour
-                    cloud.x[ i ][ j ][ k ] = 0.;
+//                    t.x[ i ][ j ][ k ] = 1.;  // = 273.15 K
+//                    c.x[ i ][ j ][ k ] = c_tropopause;  // = 1 g/kg water vapour
+//                    c.x[ i ][ j ][ k ] = 0.; 
                     cloud.x[ i ][ j ][ k ] = 0.;
                     ice.x[ i ][ j ][ k ] = 0.;
                     co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
                     p_dyn.x[ i ][ j ][ k ] = 0.;
-/*
-                    if ( i < im - 1 ){
-                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i+1, j, k ) ) ){
-                            t.x[ i ][ j ][ k ] = t.x[ i + 1 ][ j ][ k ];
-                            p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i + 1 ][ j ][ k ];
-                            c.x[ i ][ j ][ k ] = c.x[ i + 1 ][ j ][ k ];
-                            cloud.x[ i ][ j ][ k ] = cloud.x[ i + 1 ][ j ][ k ];
-                            ice.x[ i ][ j ][ k ] = ice.x[ i + 1 ][ j ][ k ];
-                            co2.x[ i ][ j ][ k ] = co2.x[ i + 1 ][ j ][ k ];
-                        }
-                    }
-                    if ( ( j >= 0 ) && ( j <= jm - 2 ) ){
-                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j+1, k ) ) ){
-                            t.x[ i ][ j ][ k ] = t.x[ i ][ j + 1 ][ k ];
-                            p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j + 1 ][ k ];
-//                            c.x[ i ][ j ][ k ] = c.x[ i ][ j + 1 ][ k ];
-//                            cloud.x[ i ][ j ][ k ] = cloud.x[ i ][ j + 1 ][ k ];
-//                            ice.x[ i ][ j ][ k ] = ice.x[ i ][ j + 1 ][ k ];
-                            co2.x[ i ][ j ][ k ] = co2.x[ i ][ j + 1 ][ k ];
-                        }
-                    }
-                   if ( ( j >= 1 ) && ( j <= jm - 1 ) ){
-                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j-1, k ) ) ){
-                            t.x[ i ][ j ][ k ] = t.x[ i ][ j - 1 ][ k ];
-                            p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j - 1 ][ k ];
-//                            c.x[ i ][ j ][ k ] = c.x[ i ][ j - 1 ][ k ];
-//                            cloud.x[ i ][ j ][ k ] = cloud.x[ i ][ j - 1 ][ k ];
-//                            ice.x[ i ][ j ][ k ] = ice.x[ i ][ j - 1 ][ k ];
-                            co2.x[ i ][ j ][ k ] = co2.x[ i ][ j - 1 ][ k ];
-                        }
-                    }
-                    if ( ( k >= 0 ) && ( k <= km - 2 ) ){
-                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k+1 ) ) ){
-                            t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k + 1 ];
-                            p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j ][ k + 1 ];
-//                            c.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k + 1 ];
-//                            cloud.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k + 1 ];
-//                            ice.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k + 1 ];
-                            co2.x[ i ][ j ][ k ] = co2.x[ i ][ j ][ k + 1 ];
-                        }
-                    }
-                    if ( ( k >= 1 ) && ( k <= km - 1 ) ){
-                        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k-1 ) ) ){
-                            t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k - 1 ];
-                            p_dyn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j ][ k - 1 ];
-//                            c.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k - 1 ];
-//                            cloud.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k - 1 ];
-//                            ice.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k - 1 ];
-                            co2.x[ i ][ j ][ k ] = co2.x[ i ][ j ][ k - 1 ];
-                        }
-                    }
-*/
                 }// is_land
             } // i
         } // k
