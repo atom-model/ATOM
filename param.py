@@ -12,7 +12,7 @@ def main():
             ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
-            ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', False),
+            ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', True),
             ( 'debug','flag to control if the program is running in debug mode', 'bool', True),
         
             #parameters for data reconstruction
@@ -33,8 +33,8 @@ def main():
             ( 'velocity_iter_max_2D', 'the number of velocity iterations', 'int',2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
-            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 4 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 20 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 10 ),
 
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
@@ -109,11 +109,14 @@ def main():
             ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.945 compares to -15.0°C compares to 258.15 K', 'double', 0.945 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
-            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
+#            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.007322 ),
+            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.003661 ),
 
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
             ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.58 ),
             ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.64 ),
+#            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.78 ),
+#            ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.84 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),
