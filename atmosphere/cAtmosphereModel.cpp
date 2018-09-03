@@ -1,5 +1,7 @@
 #include "cAtmosphereModel.h"
 
+#include <fenv.h>
+
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -136,6 +138,9 @@ void cAtmosphereModel::LoadConfig ( const char *filename )
 
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
+    if(debug){
+        feenableexcept(FE_ALL_EXCEPT); //not platform independent, bad, very bad, I know
+    }
     logger() << "RunTimeSlice: " << Ma << " Ma"<< std::endl <<std::endl;
 
     reset_arrays();    
@@ -314,6 +319,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
     if ( emin <= epsres ){
         cout << "***** steady solution reached! *****" << endl;
+    }
+
+    if(debug){
+        fedisableexcept(FE_ALL_EXCEPT); //not platform independent(bad, very bad, I know)
     }
 }
 
