@@ -139,7 +139,7 @@ void cAtmosphereModel::LoadConfig ( const char *filename )
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
     if(debug){
-        feenableexcept(FE_ALL_EXCEPT); //not platform independent, bad, very bad, I know
+        feenableexcept(FE_INVALID | FE_OVERFLOW); //not platform independent, bad, very bad, I know
     }
     logger() << "RunTimeSlice: " << Ma << " Ma"<< std::endl <<std::endl;
 
@@ -331,7 +331,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     }
 
     if(debug){
-        fedisableexcept(FE_ALL_EXCEPT); //not platform independent(bad, very bad, I know)
+        fedisableexcept(FE_INVALID | FE_OVERFLOW); //not platform independent(bad, very bad, I know)
     }
 }
 

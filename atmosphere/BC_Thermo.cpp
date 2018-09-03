@@ -25,6 +25,8 @@
 using namespace std;
 using namespace AtomUtils;
 
+bool debug = false;
+
 BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land, double co2_0, Array& h): 
         m_model(model),
         im(im),
@@ -2436,11 +2438,12 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn, Array &cloud, 
                             Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c ){
-    assert(!cloud.has_nan());
-    assert(!ice.has_nan());
-    assert(!c.has_nan());
-    assert(!t.has_nan());
-
+    if(debug){
+        assert(!cloud.has_nan());
+        assert(!ice.has_nan());
+        assert(!c.has_nan());
+        assert(!t.has_nan());
+    }
     cout.precision ( 6 );
 // Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
 
@@ -2712,10 +2715,12 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "end %%%%%%%%%%%% Ice_Water_Saturation_Adjustment: temperature max: "
     << (t.max() - 1)*t_0 << std::endl << std::endl << std::endl;
 
-    assert(!cloud.has_nan());
-    assert(!ice.has_nan());
-    assert(!c.has_nan());
-    assert(!t.has_nan());
+    if(debug){
+        assert(!cloud.has_nan());
+        assert(!ice.has_nan());
+        assert(!c.has_nan());
+        assert(!t.has_nan());
+    }
 }
 
 
@@ -2726,10 +2731,12 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
 void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p_stat, 
         Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, 
         Array &S_s, Array &S_c_c ){
-    assert(!c.has_nan());
-    assert(!t.has_nan());
-    assert(!cloud.has_nan());
-    assert(!ice.has_nan());
+    if(debug){
+        assert(!c.has_nan());
+        assert(!t.has_nan());
+        assert(!cloud.has_nan());
+        assert(!ice.has_nan());
+    }
     //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
     // constant coefficients for the transport of cloud water and cloud ice amount vice versa, rain and snow in the parameterization procedures
     a_if = .66;
@@ -3058,11 +3065,13 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
             }  // end k
         }  // end iter_prec
     }  // end n
-    assert(!c.has_nan());
-    assert(!cloud.has_nan());
-    assert(!ice.has_nan());
-    assert(!P_snow.has_nan());
-    assert(!P_rain.has_nan());
+    if(debug){
+        assert(!c.has_nan());
+        assert(!cloud.has_nan());
+        assert(!ice.has_nan());
+        assert(!P_snow.has_nan());
+        assert(!P_rain.has_nan());
+    }
 }
 
 
