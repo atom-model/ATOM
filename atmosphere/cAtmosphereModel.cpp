@@ -141,7 +141,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     if(debug){
         feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO); //not platform independent, bad, very bad, I know
     }
-    logger() << "RunTimeSlice: " << Ma << " Ma"<< std::endl <<std::endl;
+//    logger() << "RunTimeSlice: " << Ma << " Ma"<< std::endl <<std::endl;
 
     reset_arrays();    
 
@@ -251,6 +251,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
     BC_Thermo  circulation (this, im, jm, km, c_0, c_land, t_land, co2_0, h ); 
 
+//    t.printArray ( im, jm, km );
+
     //  class element calls for the preparation of initial conditions for the flow properties
 
     //  class element for the tropopause location as a parabolic distribution from pole to pole 
@@ -277,6 +279,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
     circulation.BC_WaterVapour ( h, t, c );
+
+//    t.printArray ( im, jm, km );
 
 //    goto Print;
 
@@ -691,19 +695,19 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                           t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
                                           pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
                                           radiation_3D, Vegetation );
-
+/*
         logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-
+*/
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
                 result.solveRungeKutta_2D_Atmosphere ( prepare_2D, iter_cnt, r_air, u_0, p_0, L_atm, rad, the, phi, rhs_v, rhs_w, 
                                                        h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
-
+/*
         logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-
+*/
                 //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
                 double residuum = std::get<0>(min_Residuum_2D.residuumQuery_2D ( rad, the, v, w, residuum_2d ));
 
@@ -789,7 +793,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                       t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
                                       co2_tropopause, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
                                       ice, co2, radiation_3D, Vegetation );
-
+/*
         logger() << "§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§   global iteration n = " << iter_cnt << "   §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§" << std::endl << std::endl;
 
         logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
@@ -799,7 +803,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: water vapor max: " << c.max() * 1000. << std::endl;
         logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: cloud water max: " << cloud.max() * 1000. << std::endl;
         logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: ice max: " << ice.max() * 1000. << std::endl << std::endl;
-
+*/
             // class RungeKutta for the solution of the differential equations describing the flow properties
             result.solveRungeKutta_3D_Atmosphere ( prepare, iter_cnt, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, 
@@ -808,7 +812,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                    cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, 
                                                    Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
                                                    Evaporation_Dalton, Precipitation );
-
+/*
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: v-velocity max: " << v.max() << std::endl;
@@ -816,7 +820,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: water vapor max: " << c.max() * 1000. << std::endl;
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: cloud water max: " << cloud.max() * 1000. << std::endl;
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: ice max: " << ice.max() * 1000. << std::endl << std::endl;
-
+*/
             circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
             // class element for the surface temperature computation by radiation flux density

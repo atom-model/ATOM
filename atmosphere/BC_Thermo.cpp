@@ -171,7 +171,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
     // class element for the computation of the radiation and the temperature distribution
     // computation of the local temperature based on short and long wave radiation
     // multi layer radiation model
-
+/*
     logger() << "enter +++++++++++++ BC_Radiation_multi_layer: temperature max: "
     << (t.max() - 1)*t_0 << std::endl;
     logger() << "enter +++++++++++++ BC_Radiation_multi_layer: temperature min: "
@@ -182,7 +182,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
 
     logger() << "co2 min: " << co2.min() * co2_0 << "  ice min: " << ice.min() * 1000. << "  cloud min: "
     << cloud.min() * 1000. <<"  water vapour min: " << c.min() * 1000. << std::endl;
-
+*/
     cout.precision ( 4 );
     cout.setf ( ios::fixed );
 
@@ -278,8 +278,8 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
         }
     }
 
-    logger() << std::endl << "enter loop ****** BC_Radiation_multi_layer:          temperature max: " << (t.max() - 1)*t_0
-    << " ****** radiation max: " << radiation_3D.max() << std::endl << std::endl;
+//    logger() << std::endl << "enter loop ****** BC_Radiation_multi_layer:          temperature max: " << (t.max() - 1)*t_0
+//    << " ****** radiation max: " << radiation_3D.max() << std::endl << std::endl;
 
 
 
@@ -403,7 +403,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
         << "  epsilon_3D min: " << epsilon_3D.min() << "  temperature min: " << (t.min() - 1)*t_0 << std::endl << std::endl;
 */
     }
-
+/*
     logger() << std::endl << "exit ************** BC_Radiation_multi_layer: temperature max: "
     << (t.max() - 1)*t_0 << std::endl;
     logger() << "exit ************** BC_Radiation_multi_layer: temperature min: "
@@ -417,6 +417,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
     << cloud.has_nan() << std::endl;
     logger() << " ************** NaNs detected ********************: cloud ice has_nan: "
     << ice.has_nan() << std::endl << std::endl;
+*/
 }
 
 
@@ -430,10 +431,8 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
     // temperature at tropopause t_min = 0.89 compares to -30° C compares to 243 K
     // temperature difference from equator to pole   18°C compares to  t_delta = 0.0659  compares to  18 K
 
-    logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
-    logger() << "enter BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
-
-    t.printArray ( im, jm, km );
+//    logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
+//    logger() << "enter BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
 
     double t_cretaceous_add = 0;  // Lenton_etal_COPSE_time_temp, constant cretaceous mean temperature, added to the surface initial temperature
                                                        // difference between mean temperature ( Ma ) and mean temperature ( previous Ma ) == t_cretaceous_add
@@ -530,34 +529,50 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
     }// temperatur distribution at aa prescribed sun position
 
 
-    t.printArray ( im, jm, km );
-
-
-//    double t_land_adjust = 0.043932;  // == 12°C, parabolic land temperature function adjustment to NASA data
-    double t_land_adjust = 0.;
-
 // pole temperature adjustment, combination of linear time dependent functions 
-    double t_pole_ma = t_pole;  // Stein/Rüdiger/Parish locally constant pole temperature
-                                                    // difference between pole temperature ( Ma ) and pole temperature ( previous Ma ) == t_pole_ma
-
+    double t_pole_ma = 0.;  // Stein/Rüdiger/Parish locally constant pole temperature
+                                             // difference between pole temperature ( Ma ) and pole temperature ( previous Ma ) == t_pole_ma
 
     std::map<int, double> pole_temp_map{  // Stein/Rüdiger/Parish linear pole temperature ( Ma ) distribution
-        {0, 1.},
-        {45, ( 25. + t_0 ) / t_0},
-        {93, ( 23. + t_0 ) / t_0},
-        {140, ( 16. + t_0 ) / t_0}
-    };
+        {0, 0.},
+        {45, 25. },
+        {93, 23. },
+        {140, 16.}
+    }; 
 
     double d_j_half = ( double ) ( jm -1 ) / 2.0;
     // temperature initial conditions along the surface
 
     if ( RadiationModel == 1 ){
-        t_pole_ma = GetPoleTemperature(Ma, pole_temp_map) - t_pole;  // constant local pole temperature as function of Ma for hothouse climates 
+
+//    logger() << "RadiationModel BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
+//    logger() << "   RadiationModel = " << RadiationModel << endl;
+//    logger() << "   temperature in RadiationModel == 1 " << endl << "RadiationModel BC_Temperature: temperature = " <<  t.x[ 0 ][ 0 ][ 0 ] << endl;
+
+//        t_pole_ma = GetPoleTemperature(Ma, pole_temp_map) - t_pole;  // constant local pole temperature as function of Ma for hothouse climates 
+//        t_pole_ma = t.x[ i_mount ][ 0 ][ k ] + ( GetPoleTemperature ( Ma, pole_temp_map ) - t_pole );  // constant local pole temperature as function of Ma for hothouse climates 
+//        t_pole_ma = GetPoleTemperature(Ma, pole_temp_map) - t.x[ i_mount ][ 0 ][ k ];  // constant local pole temperature as function of Ma for hothouse climates 
+//        t_pole_ma = 0.;
         t_eff = t_pole - t_equator;  // coefficient for the zonal parabolic temperature distribution
 
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
                 i_mount = i_topography[ j ][ k ];  // data along the topography
+
+//    if ( t.x[ i_mount ][ 0 ][ k ] <= -0.020 )  t.x[ i_mount ][ 0 ][ k ] = 0.972;
+//    if ( t.x[ i_mount ][ jm-1 ][ k ] <= -0.044 )  t.x[ i_mount ][ jm-1 ][ k ] = 0.953;
+/*
+    if ((k==0)&&(j==1))  logger() << "   Ma = " << Ma << "   t_pole = " << t_pole * t_0 - t_0 << endl 
+        << "   pole_temp_map = " << GetPoleTemperature ( Ma, pole_temp_map ) << endl 
+        << "   ( t_pole + pole_temp_map ) = " <<  ( t_pole * t_0 - t_0 ) + GetPoleTemperature ( Ma, pole_temp_map ) << endl 
+        << "   ( t.x + pole_temp_map ) = " << ( t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 ) + GetPoleTemperature ( Ma, pole_temp_map ) << endl 
+        << "   t_C = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << endl 
+        << "   t_no_dim = " << t.x[ i_mount ][ 0 ][ k ] << "   i_mount = " << i_mount << endl
+        << "   temperature in RadiationModel == 1 " << endl << "RadiationModel BC_Temperature: temperature = " <<  t.x[ 0 ][ 0 ][ 0 ] << endl;
+*/
+                t_pole_ma = GetPoleTemperature ( Ma, pole_temp_map );
+                    // in °C, constant local pole temperature as function of Ma for hothouse climates 
+
                 d_j = ( double ) j;
                 if ( NASATemperature == 0 ){  // parabolic ocean surface temperature assumed
                     t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole + t_cretaceous_add;
@@ -565,7 +580,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
 
                     if ( is_land ( h, 0, j, k ) ){  // parabolic land surface temperature assumed
                         t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
-                            + t_cretaceous_add + t_land + t_land_adjust;
+                            + t_cretaceous_add + t_land;
                                                                         // increasing pole and mean temperature ( Ma ) incorporated
                                                                         // in case land temperature is assumed to be
                                                                         // globally higher than ocean temperature, t_land is added too
@@ -573,20 +588,16 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
                 }else{  // if ( NASATemperature == 1 ) ocean surface temperature based on NASA temperature distribution
                              // transported for later time slices Ma by use_earthbyte_reconstruction
                     if ( is_land (h, 0, j, k ) ){  // on land a parabolic distribution assumed, no NASA based data transportable
-//                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole + t_cretaceous_add + t_land
-//                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) + t_land_adjust;
-                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half )
-                            + t_pole + t_cretaceous_add + t_land
-                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. )
-                            + t_land_adjust;
-                            // Stein/Rüdiger/Parish pole temperature decreasing equator wards
+                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
+                            + t_cretaceous_add + t_land
+                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;  // Stein/Rüdiger/Parish pole temperature decreasing equator wards
                     }
                     if ( is_air ( h, 0, j, k ) ){  // NASA based ocean surface temperature by use_earthbyte_reconstruction
                         if( Ma == 0 ){
                             t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];  // initial temperature by NASA for Ma=0
                         }else{
-                            t.x[ i_mount ][ j ][ k ] += t_cretaceous_add + t_cretaceous_add
-                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. );
+                            t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_cretaceous_add
+                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
                                                                       // parabolic land surface temperature increased by mean t_cretaceous_add
                                                                       // and by a zonally equator wards decreasing temperature difference is added
                                                                       // Stein/Rüdiger/Parish pole temperature decreasing equator wards
@@ -627,12 +638,10 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
         }
     }
 
+//    t.printArray ( im, jm, km );
 
-    t.printArray ( im, jm, km );
-
-
-    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
-    logger() << "exit BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
+//    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
+//    logger() << "exit BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
 }
 
 
@@ -650,12 +659,12 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c ){
     // maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
     // minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
     // value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
-
+/*
     logger() << "enter +++++++++++++ BC_WaterVapour: water vapor max: "
     << c.max() * 1000. << std::endl;
     logger() << "enter +++++++++++++ BC_WaterVapour: water vapor min: "
     << c.min() * 1000. << std::endl << std::endl;
-
+*/
     // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
@@ -696,7 +705,7 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c ){
             } // end i
         }// end k
     }// end j
-
+/*
     logger() << "end +++++++++++++ BC_WaterVapour temperature max: " << (t.max()-1)*t_0 << std::endl;
     logger() << "end +++++++++++++ BC_WaterVapour temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
 
@@ -704,7 +713,7 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &t, Array &c ){
     << c.max() * 1000. << std::endl;
     logger() << "end +++++++++++++ BC_WaterVapour: water vapor min: "
     << c.min() * 1000. << std::endl << std::endl;
-
+*/
 }
 
 
@@ -2446,7 +2455,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
     }
     cout.precision ( 6 );
 // Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
-
+/*
     logger() << std::endl << std::endl << "enter %%%%%%%%%%%% Ice_Water_Saturation_Adjustment: temperature max: "
     << (t.max() - 1)*t_0 << std::endl << std::endl;
 
@@ -2456,7 +2465,7 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
         << cloud.max() * 1000. << std::endl;
     logger() << "enter Ice_Water_Saturation_Adjustment: cloud ice max: "
         << ice.max() * 1000. << std::endl << std::endl;
-
+*/
 // constant coefficients for the adjustment of cloud water and cloud ice amount vice versa
     t_00 = 236.15;
     t_Celsius_2 = t_00 - t_0; // in Kelvin = -37 °C
@@ -2594,7 +2603,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
                     iter_prec = 0;
                     while ( iter_prec <= 20 ){ // iter_prec may be varied
                         ++iter_prec;
-
+/*
 if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "mixed cloud               Ice_Water_Saturation_Adjustment: temperature max: "
         << (t.max() - 1)*t_0 <<"          iter_prec: " << iter_prec << std::endl;
@@ -2605,7 +2614,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "mixed cloud               Ice_Water_Saturation_Adjustment: cloud ice max: "
         << ice.max() * 1000. << std::endl << std::endl;
 }
-
+*/
 /** condensation == water vapor saturation for cloud water formation, deposition == ice crystal for cloud ice formation **/
                         // t_0 = 273.15 K == 0 °C, t_00 = 236.15 K == -37 °C
                         CND = ( T - t_00 ) / ( t_0 - t_00 );
@@ -2662,7 +2671,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
                         if ( is_land ( h, i, j, k ) )  S_c_c.x[ i ][ j ][ k ] = 0.;
 
                         q_T = q_v_b + q_c_b + q_i_b; // total water content, not used except for print out for mass conservation test
-
+/*
 if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "   iter_prec = " << iter_prec << endl;
     logger() << "   CND = " << CND << "   DEP = " << DEP << "   d_t = " << d_t << endl;
@@ -2675,6 +2684,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
         << endl << "   fabs ( q_v_b / q_v_hyp - 1. ) = " << fabs ( q_v_b / q_v_hyp - 1. )
         << endl << endl;
 }
+*/
                         if( iter_prec >= 3 && (q_v_hyp) > std::numeric_limits<double>::epsilon() &&
                             fabs ( q_v_b / q_v_hyp - 1. ) <= 1.e-5 )    break;  // make sure q_v_hyp is not 0 divisor
 
@@ -2704,7 +2714,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
             }
         }
     }
-
+/*
     logger() << "end Ice_Water_Saturation_Adjustment: water vapour max: "
         << c.max() * 1000. << std::endl;
     logger() << "end Ice_Water_Saturation_Adjustment: cloud water max: "
@@ -2714,7 +2724,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
 
     logger() << "end %%%%%%%%%%%% Ice_Water_Saturation_Adjustment: temperature max: "
     << (t.max() - 1)*t_0 << std::endl << std::endl << std::endl;
-
+*/
     if(debug){
         assert(!cloud.has_nan());
         assert(!ice.has_nan());
