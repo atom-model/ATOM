@@ -538,6 +538,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
         {45, 25. },
         {93, 23. },
         {140, 16.}
+        {340, 16.}
     }; 
 
     double d_j_half = ( double ) ( jm -1 ) / 2.0;
@@ -549,19 +550,13 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
 //    logger() << "   RadiationModel = " << RadiationModel << endl;
 //    logger() << "   temperature in RadiationModel == 1 " << endl << "RadiationModel BC_Temperature: temperature = " <<  t.x[ 0 ][ 0 ][ 0 ] << endl;
 
-//        t_pole_ma = GetPoleTemperature(Ma, pole_temp_map) - t_pole;  // constant local pole temperature as function of Ma for hothouse climates 
-//        t_pole_ma = t.x[ i_mount ][ 0 ][ k ] + ( GetPoleTemperature ( Ma, pole_temp_map ) - t_pole );  // constant local pole temperature as function of Ma for hothouse climates 
-//        t_pole_ma = GetPoleTemperature(Ma, pole_temp_map) - t.x[ i_mount ][ 0 ][ k ];  // constant local pole temperature as function of Ma for hothouse climates 
-//        t_pole_ma = 0.;
         t_eff = t_pole - t_equator;  // coefficient for the zonal parabolic temperature distribution
 
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
                 i_mount = i_topography[ j ][ k ];  // data along the topography
 
-//    if ( t.x[ i_mount ][ 0 ][ k ] <= -0.020 )  t.x[ i_mount ][ 0 ][ k ] = 0.972;
-//    if ( t.x[ i_mount ][ jm-1 ][ k ] <= -0.044 )  t.x[ i_mount ][ jm-1 ][ k ] = 0.953;
-/*
+
     if ((k==0)&&(j==1))  logger() << "   Ma = " << Ma << "   t_pole = " << t_pole * t_0 - t_0 << endl 
         << "   pole_temp_map = " << GetPoleTemperature ( Ma, pole_temp_map ) << endl 
         << "   ( t_pole + pole_temp_map ) = " <<  ( t_pole * t_0 - t_0 ) + GetPoleTemperature ( Ma, pole_temp_map ) << endl 
@@ -569,36 +564,41 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
         << "   t_C = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << endl 
         << "   t_no_dim = " << t.x[ i_mount ][ 0 ][ k ] << "   i_mount = " << i_mount << endl
         << "   temperature in RadiationModel == 1 " << endl << "RadiationModel BC_Temperature: temperature = " <<  t.x[ 0 ][ 0 ][ 0 ] << endl;
-*/
+
                 t_pole_ma = GetPoleTemperature ( Ma, pole_temp_map );
                     // in °C, constant local pole temperature as function of Ma for hothouse climates 
 
                 d_j = ( double ) j;
                 if ( NASATemperature == 0 ){  // parabolic ocean surface temperature assumed
                     t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole + t_cretaceous_add;
-                                                            // increasing pole and mean temperature ( Ma ) incorporated
+                                                                      // increasing pole and mean temperature ( Ma ) incorporated
 
                     if ( is_land ( h, 0, j, k ) ){  // parabolic land surface temperature assumed
                         t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
                             + t_cretaceous_add + t_land;
-                                                                        // increasing pole and mean temperature ( Ma ) incorporated
-                                                                        // in case land temperature is assumed to be
-                                                                        // globally higher than ocean temperature, t_land is added too
+                                                                      // increasing pole and mean temperature ( Ma ) incorporated
+                                                                      // in case land temperature is assumed to be
+                                                                      // globally higher than ocean temperature, t_land is added too
                     }
                 }else{  // if ( NASATemperature == 1 ) ocean surface temperature based on NASA temperature distribution
                              // transported for later time slices Ma by use_earthbyte_reconstruction
                     if ( is_land (h, 0, j, k ) ){  // on land a parabolic distribution assumed, no NASA based data transportable
                         t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
-                            + t_cretaceous_add + t_land
-                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;  // Stein/Rüdiger/Parish pole temperature decreasing equator wards
+                            + t_cretaceous_add + t_land;
+                        if ( t.x[ i_mount ][ 0 ][ k ] < t_pole_ma )
+                            t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ]
+                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
+                                                                      // Stein/Rüdiger/Parish pole temperature decreasing equator wards
                     }
                     if ( is_air ( h, 0, j, k ) ){  // NASA based ocean surface temperature by use_earthbyte_reconstruction
                         if( Ma == 0 ){
                             t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];  // initial temperature by NASA for Ma=0
                         }else{
-                            t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_cretaceous_add
-                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
-                                                                      // parabolic land surface temperature increased by mean t_cretaceous_add
+                            t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_cretaceous_add;
+                            if ( t.x[ i_mount ][ 0 ][ k ] < t_pole_ma )
+                                t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ]
+                                + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
+                                                                      // ocean surface temperature increased by mean t_cretaceous_add
                                                                       // and by a zonally equator wards decreasing temperature difference is added
                                                                       // Stein/Rüdiger/Parish pole temperature decreasing equator wards
                         }
