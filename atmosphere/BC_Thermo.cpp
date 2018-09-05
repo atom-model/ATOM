@@ -21,9 +21,11 @@
 #include "Array_2D.h"
 #include "cAtmosphereModel.h"
 #include "Utils.h"
+#include "AtmParameters.h"
 
 using namespace std;
 using namespace AtomUtils;
+using namespace AtmParameters;
 
 BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h) : 
         m_model(model),
