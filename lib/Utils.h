@@ -4,6 +4,10 @@
 
 #include "Array.h"
 
+#define logger() \
+if (false) ; \
+else get_logger()
+
 namespace AtomUtils{
     using namespace std;
     struct HemisphereCoords{
@@ -13,7 +17,7 @@ namespace AtomUtils{
 
     HemisphereCoords convert_coords(double lon, double lat);
 
-    std::ofstream& logger();
+    std::ofstream& get_logger();
 
     inline bool is_land(const Array& h, int i, int j, int k){
         return fabs(h.x[i][j][k] - 1) < std::numeric_limits<double>::epsilon();

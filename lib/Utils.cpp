@@ -2,9 +2,9 @@
 
 using namespace AtomUtils;
 
-std::ofstream& AtomUtils::logger(){
-    static std::ofstream logger("atom_log.txt", std::ofstream::out);
-    return logger;
+std::ofstream& AtomUtils::get_logger(){
+    static std::ofstream o("atom_log.txt", std::ofstream::out);
+    return o;
 }
 
 HemisphereCoords AtomUtils::convert_coords(double lon, double lat){
