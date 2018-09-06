@@ -537,7 +537,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
         {0, 0.},
         {45, 25. },
         {93, 23. },
-        {140, 16.}
+        {140, 16.},
         {340, 16.}
     }; 
 
