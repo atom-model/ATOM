@@ -77,7 +77,7 @@ class BC_Thermo
 
         double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, dp_hdr, dp_hdthe, dp_hdphi;
         double sinthe, sinthe2, lv, ls, coeff_lv, coeff_ls, coeff_L_atm_u_0, r_0;
-        double dt, dt_dim, dt_rain_dim, dt_snow_dim, dr, dthe, dphi, dt2, dr2, dthe2, dphi2, rm2;
+        double dt, dt_dim, dt_rain_dim, dt_snow_dim, dr_dim, dr, dthe, dphi, dt2, dr2, dthe2, dphi2, rm2;
         double rm, costhe, cotthe, rmsinthe, rm2sinthe, rm2sinthe2;
         double E, E_Rain_SL, E_Rain, E_Rain_super, E_Ice, q_Rain, q_Rain_super, q_Ice;
         double c12, c32, c42, t_Celsius_it, t_Celsius_0, t_Celsius_1, t_Celsius_2;
@@ -136,7 +136,8 @@ class BC_Thermo
             Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D,
                 Array &cloud, Array &ice, Array &co2 );
 
-        void BC_WaterVapour ( Array &h, Array &t, Array &c );
+        void BC_WaterVapour ( Array &h, Array &p_stat, Array &t, Array &c,
+                            Array &v, Array &w );
 
         void BC_CloudWaterIce ( Array &, Array &, Array &, Array & );
 
@@ -172,5 +173,7 @@ class BC_Thermo
         double GetPoleTemperature ( int, int, int, double, double );
 
         double GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map);
+
+        double C_Dalton ( double u_0, double v, double w );
 };
 #endif

@@ -258,6 +258,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class element for the tropopause location as a parabolic distribution from pole to pole 
     circulation.TropopauseLocation ();
 
+    //  class element for the initial conditions for u-v-w-velocity components
+    circulation.IC_CellStructure ( h, u, v, w );
+
     //  class element for the surface temperature from NASA for comparison
     //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
     circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
@@ -278,7 +281,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-    circulation.BC_WaterVapour ( h, t, c );
+    circulation.BC_WaterVapour ( h, p_stat, t, c, v, w );
 
 //    t.printArray ( im, jm, km );
 
@@ -292,9 +295,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         circulation.BC_Radiation_multi_layer ( albedo, epsilon, radiation_surface,  
                                                p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
-
-    //  class element for the initial conditions for u-v-w-velocity components
-    circulation.IC_CellStructure ( h, u, v, w );
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
     move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
@@ -519,10 +519,10 @@ void cAtmosphereModel::print_min_max_values()
     min_max_3d.searchMinMax_3D ( " max 3D cloud ice ", " min 3D cloud ice ", "g/kg", ice, h, 1000. );
 
     //  searching of maximum and minimum values of rain precipitation
-    min_max_3d.searchMinMax_3D ( " max 3D rain ", " min 3D rain ", "g/kg", P_rain, h, 1000. );
+    min_max_3d.searchMinMax_3D ( " max 3D rain ", " min 3D rain ", "mm/d", P_rain, h, 8.46e4 );
 
     //  searching of maximum and minimum values of snow precipitation
-    min_max_3d.searchMinMax_3D (  " max 3D snow ", " min 3D snow ", "g/kg", P_snow, h, 1000. );
+    min_max_3d.searchMinMax_3D (  " max 3D snow ", " min 3D snow ", "mm/d", P_snow, h, 8.46e4 );
 
     //  searching of maximum and minimum values of co2
     min_max_3d.searchMinMax_3D ( " max 3D co2 ", " min 3D co2 ", "ppm", co2, h, 280. );
@@ -550,12 +550,12 @@ void cAtmosphereModel::print_min_max_values()
     cout << endl << " precipitation: " << endl << endl;
 
     //  searching of maximum and minimum values of precipitation
-    min_max_2d.searchMinMax_2D (  " max precipitation ", " min precipitation ", "g/kg", Precipitation, h, 1.0/coeff_mmWS );
+    min_max_2d.searchMinMax_2D (  " max precipitation ", " min precipitation ", "mm/d", Precipitation, h, 1. );
     max_Precipitation = min_max_2d.out_maxValue (  );
 
     //  searching of maximum and minimum values of precipitable water
-    min_max_2d.searchMinMax_2D ( " max precipitable water ", " min precipitable water ", "g/kg", 
-                                 precipitable_water, h, 1.0/coeff_mmWS  );
+    min_max_2d.searchMinMax_2D ( " max precipitable water ", " min precipitable water ", "mm", 
+                                 precipitable_water, h, 1. );
 
     cout << endl << " energies at see level without convection influence: " << endl << endl;
 
