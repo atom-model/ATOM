@@ -114,15 +114,13 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_
     // fall velocity for water droplets of 1.0 mm compares to 6.3 m/s
     // fall velocity for water droplets of 5.0 mm compares to 14.1 m/s
 
-//    dt_rain_dim = 250.;// dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
-    dt_rain_dim = 80.;// dt_rain_dim is the time  in 80 s to pass dr = 400 m, 400 m / 80 s = 5. m/s fallout velocity
+    dt_rain_dim = 250.;// dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
 
     // fall velocity for snow flakes of 1.0 mm compares to 0.9 m/s
     // fall velocity for snow flakes of 2.0 mm compares to 1.2 m/s
     // fall velocity for snow flakes of 4.0 mm compares to 1.4 m/s
 
-//    dt_snow_dim = 417.;// dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
-    dt_snow_dim = 400.;// dt_snow_dim is the time  in 400 s to pass dr = 400 m, 400 m / 400 s = 1. m/s fallout velocity
+    dt_snow_dim = 417.;// dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
 
     dt_dim = L_atm / u_0 * dt;// dimensional time step of the system in s == 0.02 s
 
@@ -2818,7 +2816,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
     a_mv = .02;
     N_cf_0_surf = 2.e5;
     N_cf_0_6km = 1.e4;
-    N_i_0 = 1.e2;                                                                           // in m-3
+    N_i_0 = 1.e2;                                                                           // in m-³
 
     t_nuc = 267.15;                                                                     // in K    -6 °C
     t_d = 248.15;                                                                           // in K    -25 °C
@@ -2899,8 +2897,8 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                 p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
                 hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
 
-                if ( i != 0 )           p_h = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
-                else                    p_h = p_SL;
+                if ( i != 0 )  p_h = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
+                else  p_h = p_SL;
 
                 r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
                 r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
@@ -2919,23 +2917,26 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                     S_i_au = c_i_au * ice.x[ i ][ j ][ k ];     // cloud ice to snow, cloud ice crystal aggregation
                 else  S_i_au = 0.;
 
+// ice and snow average size
                 if ( t_u <= t_0 )  N_i = N_i_0 * exp ( .2 * ( t_0 - t_u ) );
-                else  N_i = N_i_0;
+
                 if ( t_u <= t_0 ){
                     m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
-                    if ( ! ( m_i > m_i_0 && m_i < m_i_max ) ) { m_i = m_i_max; }
+                    if ( m_i > m_i_max ) { m_i = m_i_max; }
+                    else  m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
+                    if ( m_i < m_i_0 ) { m_i = m_i_0; }
                 }
 
-                if ( ( t_Celsius <= 0. ) && ( t_Celsius > t_Celsius_2 ) ){
-                    if ( c.x[ i ][ j ][ k ] >= q_Ice ){  // supersaturation
-                        S_i_dep = c_i_dep * N_i * pow ( m_i, ( 1. / 3. ) ) * ( c.x[ i ][ j ][ k ] - q_Ice );
+                if ( t_Celsius <= 0. ){
+                    if ( c.x[ i ][ j ][ k ] > q_Ice ){  // supersaturation
+                        S_i_dep = c_i_dep * N_i * pow ( m_i, ( 1. / 3. ) ) * ( c.x[ i ][ j ][ k ] - q_Ice );  // supersaturation, < III >
                     }
-                    if ( ( c.x[ i ][ j ][ k ] < q_Ice ) &&
-                        ( - ice.x[ i ][ j ][ k ] / dt_snow_dim > ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim ) )
-                            S_i_dep = - ice.x[ i ][ j ][ k ] / dt_snow_dim; // subsaturation
-                    else  S_i_dep = ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim; // subsaturation
+                    if ( ( c.x[ i ][ j ][ k ] < q_Ice ) && ( - ice.x[ i ][ j ][ k ] / dt_snow_dim >
+                        ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim ) )
+                        S_i_dep = - ice.x[ i ][ j ][ k ] / dt_snow_dim; // subsaturation, < III >
                 }
                 else  S_i_dep = 0.;
+
 
                 S_r.x[ i ][ j ][ k ] = S_c_au;  // in kg / ( kg * s )
                 S_s.x[ i ][ j ][ k ] = S_i_au;
@@ -2948,9 +2949,9 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                 if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
                 P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] +
-                    ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 10.;  // in kg / ( m2 * s ) == mm/s
+                    ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;  // in kg / ( m2 * s ) == mm/s
                 P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] +
-                    ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 10.;
+                    ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;
 
                 if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                 if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;
@@ -2990,11 +2991,12 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
 
 // ice and snow average size
                         if ( t_u <= t_0 )  N_i = N_i_0 * exp ( .2 * ( t_0 - t_u ) );
-                        else  N_i = N_i_0;
 
                         if ( t_u <= t_0 ){
                             m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
-                            if ( ! ( m_i > m_i_0 && m_i < m_i_max ) ) { m_i = m_i_max; }
+                            if ( m_i > m_i_max ) { m_i = m_i_max; }
+                            else  m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
+                            if ( m_i < m_i_0 ) { m_i = m_i_0; }
                         }
 
 // nucleation and depositional growth of cloud ice
@@ -3017,8 +3019,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                             }
                             if ( ( c.x[ i ][ j ][ k ] < q_Ice ) && ( - ice.x[ i ][ j ][ k ] / dt_snow_dim >
                                 ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim ) )
-                                    S_i_dep = - ice.x[ i ][ j ][ k ] / dt_snow_dim; // subsaturation, < III >
-                            else  S_i_dep = ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim;  // subsaturation, < III >
+                                S_i_dep = - ice.x[ i ][ j ][ k ] / dt_snow_dim; // subsaturation, < III >
                         }
                         else  S_i_dep = 0.;
 
@@ -3031,7 +3032,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                             S_i_au = c_i_au * ice.x[ i ][ j ][ k ];  // cloud ice to snow, cloud ice crystal aggregation, < V >
                         else  S_i_au = 0.;
 
-                        if ( ( t_u < t_0 ) && ( c.x[ i ][ j ][ k ] > q_Ice ) )
+                        if ( t_u <= t_0 )
                             S_d_au = S_i_dep / ( 1.5 * ( pow ( ( m_s_0 / m_i ),  ( 2. / 3. ) ) - 1. ) );  // depositional growth of cloud ice, < VI >
                         else  S_d_au = 0.;
 
@@ -3078,18 +3079,18 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                         else  S_i_melt = 0.;
 
                         if ( t_u > t_0 ){
-                            p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );  // given in hPa
+                            p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );  // given in hPa
                             hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
-                            p_t_in = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;  // given in hPa
+                            p_t_in = pow ( ( ( t_0 - gam * hight * 1.e-2 ) / t_0 ), exp_pressure ) * p_SL;  // given in hPa
                             E_Rain_t_in = hp * exp_func ( t_0, 17.2694, 35.86 );
                                 // saturation water vapour pressure for the water phase at t = 0°C in hPa
                             q_Rain_t_in = ep * E_Rain_t_in / ( p_t_in - E_Rain_t_in );
                                 // water vapour amount at saturation with water formation in kg/kg
 
-//                            S_s_melt = c_s_melt * ( 1. + b_s_melt * pow ( P_snow.x[ i ][ j ][ k ], ( 5. / 26. ) ) ) *
-                            S_s_melt = 50. * c_s_melt * ( 1. + b_s_melt * pow ( P_snow.x[ i ][ j ][ k ], ( 5. / 26. ) ) ) *
+                            S_s_melt = c_s_melt * ( 1. + b_s_melt * pow ( P_snow.x[ i ][ j ][ k ], ( 5. / 26. ) ) ) *
                                 ( ( t_u - t_0 ) + a_s_melt * ( c.x[ i ][ j ][ k ] - q_Rain_t_in ) ) *
                                 pow ( P_snow.x[ i ][ j ][ k ], ( 8. / 13. ) );  // melting rate of snow to form rain, < XVI >
+                                // arbitrary factor 50 adjusts the average precipitation in mm/d
                         }
                         else  S_s_melt = 0.;
 
@@ -3107,8 +3108,8 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                             S_i_au - S_d_au - S_agg - S_i_cri;
                         S_r.x[ i ][ j ][ k ] = S_c_au + S_ac - S_ev + S_shed - S_r_cri -
                             S_r_frz + S_s_melt;
-                        S_s.x[ i ][ j ][ k ] = S_i_au + S_d_au + S_agg + S_rim + S_s_dep +
-                            S_i_cri + S_r_cri + S_r_frz - S_s_melt;
+                        S_s.x[ i ][ j ][ k ] = S_d_au + S_s_dep + S_i_au + S_rim +
+                            S_agg + S_i_cri + S_r_cri + S_r_frz - S_s_melt;
 
                         if ( ( is_land ( h, i, j, k ) ) && ( is_land ( h, i+1, j, k ) ) ){
                             S_c_c.x[ i ][ j ][ k ] = 0.;
@@ -3124,9 +3125,9 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                         if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
                         P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] +
-                            ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 10.;  // in kg / ( m2 * s ) == mm/s
+                            ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;  // in kg / ( m2 * s ) == mm/s
                         P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] +
-                            ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 10.;  // arbitrary factor 10 adjusts precipitation for the modern world.
+                            ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;  // arbitrary factor 10 adjusts precipitation for the modern world.
 
                         if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                         if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;
