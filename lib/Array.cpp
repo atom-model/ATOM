@@ -130,7 +130,7 @@ void Array::printArray ( int im, int jm, int km )
     cout << endl;
 }
 
-void Array::inspect() const{
+void Array::inspect(const std::string& prefix) const{
     std::vector<double> mins(im, 0), maxes(im, 0), means(im, 0), s_means(im, 0);
     for(int i=0; i<im; i++){
         double min_tmp=x[i][0][0], max_tmp=x[i][0][0], mean_tmp=0, s_means_tmp=0, weight_tmp=0;
@@ -149,27 +149,27 @@ void Array::inspect() const{
         means[i]=mean_tmp/(jm*km);
         s_means[i]=s_means_tmp/weight_tmp;
     }
-    logger()<<"==================================="<<std::endl;
-    logger()<<"max:: " << *std::max_element(maxes.begin(), maxes.end()) << std::endl;
+    logger()<<prefix<<"==================================="<<std::endl;
+    logger()<<prefix<<"max:: " << *std::max_element(maxes.begin(), maxes.end()) << std::endl;
     for(std::vector<double>::iterator it=maxes.begin(); it!=maxes.end(); it++){
-        logger()<< fixed << setprecision(4) << *it << "  ";
+        logger()<<prefix<< fixed << setprecision(4) << *it << "  ";
     }
-    logger()<<std::endl;
-    logger()<<"min:: " << *std::min_element(mins.begin(), mins.end()) << std::endl;
+    logger()<<prefix<<std::endl;
+    logger()<<prefix<<"min:: " << *std::min_element(mins.begin(), mins.end()) << std::endl;
     for(std::vector<double>::iterator it=mins.begin(); it!=mins.end(); it++){
-        logger()<< *it << "  ";
+        logger()<<prefix<< *it << "  ";
     }
-    logger()<<std::endl;
-    logger()<<"mean:: " << std::accumulate(means.begin(), means.end(), 0.0)/means.size() << std::endl;
+    logger()<<prefix<<std::endl;
+    logger()<<prefix<<"mean:: " << std::accumulate(means.begin(), means.end(), 0.0)/means.size() << std::endl;
     for(std::vector<double>::iterator it=means.begin(); it!=means.end(); it++){
-        logger()<< *it << "  ";
+        logger()<<prefix<< *it << "  ";
     }
-    logger()<<std::endl;
-    logger()<<"spherical mean of each layer:: " << std::endl;
+    logger()<<prefix<<std::endl;
+    logger()<<prefix<<"spherical mean of each layer:: " << std::endl;
     for(std::vector<double>::iterator it=s_means.begin(); it!=s_means.end(); it++){
-        logger()<< *it << "  ";
+        logger()<<prefix<< *it << "  ";
     }
-    logger()<<std::endl;
-    logger()<<"==================================="<<std::endl;
+    logger()<<prefix<<std::endl;
+    logger()<<prefix<<"==================================="<<std::endl;
 }
 
