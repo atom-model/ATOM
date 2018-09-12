@@ -95,11 +95,11 @@ class BC_Thermo
             S_melt, S_if_frz, S_cf_frz, S_r_frz, S_c_frz, S_c_au, S_i_au, S_d_au, S_agg,
             S_i_cri, S_r_cri, S_s_dep, S_i_melt, S_s_melt;
         double S_v, S_c, S_i, S_r, S_s, P_rain_n, P_snow_n, P_rain_n_o, P_snow_n_o;
-        double a_if, c_ac, c_rim, bet_ev, alf_melt, bet_melt, bet_dep, bet_s_dep,
-            alf_if, alf_cf, a_s_melt, b_s_melt, E_cf, N_cf, N_cf_0, N_cf_0_surf, N_cf_0_6km;
-        double tau_r, tau_s, t_1, t_00, t_m1, t_m2, t_r_frz, c_r_frz, alf_ev, alf_dep,
-            a_d, b_u, alf_1, alf_2, p_ps, bet_p, p_t_in, E_Rain_t_in, q_Rain_t_in;
-        double a_mc, a_mv, a_m, coeff_P, a_i_m, a_s_m, N_r_0, N_s_0;
+        double c_ac, c_rim, b_ev, b_s_dep,
+            a_s_melt, b_s_melt;
+        double t_1, t_00, t_m1, t_m2, t_r_frz, c_r_frz, a_ev, alf_dep,
+            p_t_in, E_Rain_t_in, q_Rain_t_in;
+        double coeff_P;
         double N_i_0, N_i, t_nuc, t_d, t_hn, m_i_0, m_i_max, m_s_0, c_i_dep,
             c_c_au, c_i_au, c_agg, c_i_cri, c_r_cri, c_s_dep, c_s_melt;
         double coeff_Lv, coeff_Ls, coeff_Q;
