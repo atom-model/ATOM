@@ -151,25 +151,29 @@ void Array::inspect(const std::string& prefix) const{
     }
     logger()<<prefix<<"==================================="<<std::endl;
     logger()<<prefix<<"max:: " << *std::max_element(maxes.begin(), maxes.end()) << std::endl;
+    logger()<<prefix<< " ";
     for(std::vector<double>::iterator it=maxes.begin(); it!=maxes.end(); it++){
-        logger()<<prefix<< fixed << setprecision(4) << *it << "  ";
+        logger()<< fixed << setprecision(4) << *it << "  ";
     }
-    logger()<<prefix<<std::endl;
+    logger()<<std::endl;
     logger()<<prefix<<"min:: " << *std::min_element(mins.begin(), mins.end()) << std::endl;
+    logger()<<prefix<< " ";
     for(std::vector<double>::iterator it=mins.begin(); it!=mins.end(); it++){
-        logger()<<prefix<< *it << "  ";
+        logger()<< *it << "  ";
     }
-    logger()<<prefix<<std::endl;
+    logger()<<std::endl;
     logger()<<prefix<<"mean:: " << std::accumulate(means.begin(), means.end(), 0.0)/means.size() << std::endl;
+    logger()<<prefix<< " ";
     for(std::vector<double>::iterator it=means.begin(); it!=means.end(); it++){
-        logger()<<prefix<< *it << "  ";
+        logger()<< *it << "  ";
     }
-    logger()<<prefix<<std::endl;
+    logger()<<std::endl;
     logger()<<prefix<<"spherical mean of each layer:: " << std::endl;
+    logger()<<prefix<< " ";
     for(std::vector<double>::iterator it=s_means.begin(); it!=s_means.end(); it++){
-        logger()<<prefix<< *it << "  ";
+        logger()<< *it << "  ";
     }
-    logger()<<prefix<<std::endl;
+    logger()<<std::endl;
     logger()<<prefix<<"==================================="<<std::endl;
 }
 

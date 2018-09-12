@@ -174,6 +174,11 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
     // class element for the computation of the radiation and the temperature distribution
     // computation of the local temperature based on short and long wave radiation
     // multi layer radiation model
+    if(debug){
+        Array tmp = (t-1)*t_0;
+        logger()<<"20180912: Enter RML ... "<<std::endl;
+        tmp.inspect("20180912: ");
+    }
 
     logger() << "enter BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl;
 
@@ -410,11 +415,24 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon, 
         }
     }
     logger() << "exit BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl << std::endl;
+    
+    if(debug){
+        Array tmp = (t-1)*t_0;
+        logger()<<"20180912: Exit RML ... "<<std::endl;
+        tmp.inspect("20180912: ");
+    }
+    
 }
 
 
 void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, Array &p_dyn, Array &p_stat )
 {
+    if(debug){
+        Array tmp = (t-1)*t_0;
+        logger()<<"20180912: Enter BCT ... "<<std::endl;
+        tmp.inspect("20180912: ");
+    }
+
     // boundary condition of  temperature on land 
     // parabolic distribution from pole to pole accepted
     // temperature on land at equator t_max = 1.055 compares to 15° C compared to 288 K
@@ -651,6 +669,11 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     }
 
     logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl << std::endl;
+    if(debug){
+        Array tmp = (t-1)*t_0;
+        logger()<<"20180912: Exit BCT ... "<<std::endl;
+        tmp.inspect("20180912: ");
+    }
 }
 
     
