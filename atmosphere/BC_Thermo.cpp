@@ -554,8 +554,11 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
 //    logger() << "   RadiationModel = " << RadiationModel << endl;
 //    logger() << "   temperature in RadiationModel == 1 " << endl << "RadiationModel BC_Temperature: temperature = " <<  t.x[ 0 ][ 0 ][ 0 ] << endl;
 
-
-        t_pole_ma = GetPoleTemperature ( Ma, pole_temp_map );
+        //the t_pole_ma should be the difference between this time slice and the previous one, right? -- mchin
+        if(!m_model->is_first_time_slice()){
+            t_pole_ma = GetPoleTemperature ( Ma, pole_temp_map ) - 
+                    GetPoleTemperature(*m_model->get_previous_time(), pole_temp_map);
+        }
         // in °C, constant local pole temperature as function of Ma for hothouse climates 
 
         t_eff = t_pole - t_equator;  // coefficient for the zonal parabolic temperature distribution
@@ -3297,9 +3300,14 @@ double BC_Thermo::GetPoleTemperature(int Ma, int Ma_1, int Ma_2, double t_1, dou
 
 double BC_Thermo::GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map){
     assert(pole_temp_map.size()>1);
+    
     std::pair<int, double> up = *pole_temp_map.begin(), bottom = *++pole_temp_map.begin();
-    if(Ma <= pole_temp_map.begin()->first || Ma > (--pole_temp_map.end())->first){
-        return t_pole; // when Ma out of boundary
+    
+    // when Ma out of boundary
+    if(Ma <= pole_temp_map.begin()->first){
+        return pole_temp_map.begin()->second; 
+    }else if(Ma > (--pole_temp_map.end())->first){
+        return (--pole_temp_map.end())->second;
     }
 
     for( const auto& pair : pole_temp_map ){
