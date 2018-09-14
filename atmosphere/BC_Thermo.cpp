@@ -424,12 +424,12 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
     // temperature at tropopause t_min = 0.89 compares to -30° C compares to 243 K
     // temperature difference from equator to pole   18°C compares to  t_delta = 0.0659  compares to  18 K
 
-//    logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
-//    logger() << "enter BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
+    // logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
+    // logger() << "enter BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
 
-    double t_cretaceous_add = 0;  // Lenton_etal_COPSE_time_temp, constant cretaceous mean temperature, added to the surface initial temperature
-                                                       // difference between mean temperature ( Ma ) and mean temperature ( previous Ma ) == t_cretaceous_add
-
+    // Lenton_etal_COPSE_time_temp, constant cretaceous mean temperature, added to the surface initial temperature
+    // difference between mean temperature ( Ma ) and mean temperature ( previous Ma ) == t_cretaceous_add
+    double t_cretaceous_add = 0; 
     if(!m_model->is_first_time_slice()){
         t_cretaceous_add = m_model->get_mean_temperature_from_curve(Ma) -  
             m_model->get_mean_temperature_from_curve(*m_model->get_previous_time());
@@ -546,6 +546,8 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
     }; 
 
     double d_j_half = ( double ) ( jm -1 ) / 2.0;
+    int i_mount = 0;
+
     // temperature initial conditions along the surface
 
     if ( RadiationModel == 1 ){
@@ -567,7 +569,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
                 i_mount = i_topography[ j ][ k ];  // data along the topography
-
 /*
     if ((k==0)&&(j==1))  logger() << "   Ma = " << Ma << "   t_pole = " << t_pole * t_0 - t_0 << endl 
         << "   pole_temp_map = " << GetPoleTemperature ( Ma, pole_temp_map ) << endl 
@@ -628,25 +629,26 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h,
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ ){
         i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
-        d_j = ( double ) j;
 
-        double temp_tropopause =  t_eff_tropo * parabola( d_j / d_j_half ) +
+        double temp_tropopause =  t_eff_tropo * parabola( j / ((jm-1)/2.0) ) +
                 t_tropopause_pole + t_cretaceous_add;        
 
         for ( int k = 0; k < km; k++ ){
             i_mount = i_topography[ j ][ k ];
+            double tmp = t.x[ i_mount ][ j ][ k ];
+            tmp = ( temp_tropopause - tmp ) * ( (double) i_mount / i_trop) + tmp;//temperature at mountain top
             for ( int i = 0; i < im; i++ ){
-                if ( i <= i_trop ){
-                    t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ i_mount ][ j ][ k ] ) * ( (double) i / i_trop) + 
-                        t.x[ i_mount ][ j ][ k ];// linear temperature decay up to tropopause, privat  approximation
+                if ( i < i_trop+1 ){
+                    if(i>i_mount){
+                        // linear temperature decay up to tropopause, privat  approximation
+                        t.x[ i ][ j ][ k ] = ( temp_tropopause - tmp ) * ( (double) (i-i_mount) / i_trop) + tmp; 
+                    }else{
+                        t.x[ i ][ j ][ k ] = tmp; //inside mountain
+                    }
                 }else{ // above tropopause
                     t.x[ i ][ j ][ k ] = temp_tropopause;
                 }
             }
-//            for ( int i = 0; i < i_mount; i++ ){
-//                if ( is_land ( h, i, j, k ) )  t.x[ i ][ j ][ k ] = 1.; // inside mountains
-//                if ( is_land ( h, i, j, k ) )  t.x[ i ][ j ][ k ] = t.x[ i_mount ][ j ][ k ]; // inside mountains
-//            }
         }
     }
 
