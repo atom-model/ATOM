@@ -35,8 +35,8 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_
         h(h),
         i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0)))
 {
-    this -> tropopause_equator = model->tropopause_equator;
-    this -> tropopause_pole = model->tropopause_pole;
+    this-> tropopause_equator = model->tropopause_equator;
+    this-> tropopause_pole = model->tropopause_pole;
     this-> L_atm = model->L_atm;
     this-> dt = model->dt;
     this-> dr = model->dr;
@@ -45,50 +45,50 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_
     this-> RadiationModel = model->RadiationModel;
     this-> NASATemperature = model->NASATemperature;
     this-> sun = model->sun;
-    this-> g =  model->g;
-    this-> ep =  model->ep;
-    this-> hp =  model->hp;
-    this-> u_0 =  model->u_0;
-    this-> p_0 =  model->p_0;
-    this-> t_0 =  model->t_0;
-    this-> c_0 =  model->c_0;
-    this-> co2_0 =  model->co2_0;
-    this-> sigma =  model->sigma;
-    this-> albedo_equator =  model->albedo_equator;
-    this-> albedo_pole =  model->albedo_pole;
-    this-> gam =  model->gam;
-    this-> lv =  model->lv;
-    this-> ls =  model->ls;
-    this-> cp_l =  model->cp_l;
-    this-> r_air =  model->r_air;
-    this-> R_Air =  model->R_Air;
-    this-> r_water_vapour =  model->r_water_vapour;
-    this-> R_WaterVapour =  model->R_WaterVapour;
-    this-> co2_cretaceous =  model->co2_cretaceous;
-    this-> co2_vegetation =  model->co2_vegetation;
-    this-> co2_ocean =  model->co2_ocean;
-    this-> co2_land =  model->co2_land;
-    this-> co2_factor =  model->co2_factor;
-    this-> rad_equator =  model->rad_equator;
-    this-> rad_pole =  model->rad_pole;
-    this-> epsilon_pole =  model->epsilon_pole;
-    this-> epsilon_tropopause =  model->epsilon_tropopause;
-    this-> epsilon_equator =  model->epsilon_equator;
-    this-> c_tropopause =  model->c_tropopause;
-    this-> co2_tropopause =  model->co2_tropopause;
-    this-> c_ocean =  model->c_ocean;
-    this-> c_land =  model->c_land;
-    this-> t_average =  model->t_average;
-    this-> co2_average =  model->co2_average;
-    this-> co2_pole =  model->co2_pole;
-    this-> co2_equator =  model->co2_equator;
-    this-> t_land =  model->t_land;
-    this-> t_tropopause =  model->t_tropopause;
-    this-> t_equator =  model->t_equator;
-    this-> t_pole =  model->t_pole;
-    this-> declination =  model->declination;
-    this-> sun_position_lat =  model->sun_position_lat;
-    this-> sun_position_lon =  model->sun_position_lon;
+    this-> g = model->g;
+    this-> ep = model->ep;
+    this-> hp = model->hp;
+    this-> u_0 = model->u_0;
+    this-> p_0 = model->p_0;
+    this-> t_0 = model->t_0;
+    this-> c_0 = model->c_0;
+    this-> co2_0 = model->co2_0;
+    this-> sigma = model->sigma;
+    this-> albedo_equator = model->albedo_equator;
+    this-> albedo_pole = model->albedo_pole;
+    this-> gam = model->gam;
+    this-> lv = model->lv;
+    this-> ls = model->ls;
+    this-> cp_l = model->cp_l;
+    this-> r_air = model->r_air;
+    this-> R_Air = model->R_Air;
+    this-> r_water_vapour = model->r_water_vapour;
+    this-> R_WaterVapour = model->R_WaterVapour;
+    this-> co2_cretaceous = model->co2_cretaceous;
+    this-> co2_vegetation = model->co2_vegetation;
+    this-> co2_ocean = model->co2_ocean;
+    this-> co2_land = model->co2_land;
+    this-> co2_factor = model->co2_factor;
+    this-> rad_equator = model->rad_equator;
+    this-> rad_pole = model->rad_pole;
+    this-> epsilon_pole = model->epsilon_pole;
+    this-> epsilon_tropopause = model->epsilon_tropopause;
+    this-> epsilon_equator = model->epsilon_equator;
+    this-> c_tropopause = model->c_tropopause;
+    this-> co2_tropopause = model->co2_tropopause;
+    this-> c_ocean = model->c_ocean;
+    this-> c_land = model->c_land;
+    this-> t_average = model->t_average;
+    this-> co2_average = model->co2_average;
+    this-> co2_pole = model->co2_pole;
+    this-> co2_equator = model->co2_equator;
+    this-> t_land = model->t_land;
+    this-> t_tropopause = model->t_tropopause;
+    this-> t_equator = model->t_equator;
+    this-> t_pole = model->t_pole;
+    this-> declination = model->declination;
+    this-> sun_position_lat = model->sun_position_lat;
+    this-> sun_position_lon = model->sun_position_lon;
 
     im_tropopause = model->get_tropopause();
 
@@ -2823,39 +2823,43 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
     }
     //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution formed of rain and snow
     // constant coefficients for the transport of cloud water and cloud ice amount vice versa, rain and snow in the parameterization procedures
-    N_i_0 = 1.e2;  // in m-3
-    m_i_0 = 1.e-12;  // in kg
-    m_i_max = 1.e-9;  // in kg
-    m_s_0 = 3.e-9;  // in kg
+    double N_i_0 = 1.e2;  // in m-3
+    double m_i_0 = 1.e-12;  // in kg
+    double m_i_max = 1.e-9;  // in kg
+    double m_s_0 = 3.e-9;  // in kg
 
-    c_i_dep = 1.3e-5;  // in m3/(kg*s)
-    c_c_au = 4.e-4;  // in 1/s
-    c_i_au = 1.e-3;  // in 1/s
-    c_ac = .24;  // m2/kg
-    c_rim = 18.6;  // m2/kg
-    c_agg = 10.3;  // m2/kg
-    c_i_cri = .24;  // m2
-    c_r_cri = 3.2e-5;  // m2
-    a_ev = 1.e-3;  // m2/kg
-    b_ev = 5.9;  // m2*s/kg
-    c_s_dep = 1.8e-2;  // m2/kg
-    b_s_dep = 12.3;  // m2*s/kg
-    c_s_melt = 8.43e-5;  // (m2*s)/(K*kg)
-    b_s_melt = 12.05;  // m2*s/kg
-    a_s_melt = 2.31e3; // K/(kg/kg)
-    c_r_frz = 3.75e-2;  // (m2*s)/(K*kg)
+    double c_i_dep = 1.3e-5;  // in m3/(kg*s)
+    double c_c_au = 4.e-4;  // in 1/s
+    double c_i_au = 1.e-3;  // in 1/s
+    double c_ac = .24;  // m2/kg
+    double c_rim = 18.6;  // m2/kg
+    double c_agg = 10.3;  // m2/kg
+    double c_i_cri = .24;  // m2
+    double c_r_cri = 3.2e-5;  // m2
+    double a_ev = 1.e-3;  // m2/kg
+    double b_ev = 5.9;  // m2*s/kg
+    double c_s_dep = 1.8e-2;  // m2/kg
+    double b_s_dep = 12.3;  // m2*s/kg
+    double c_s_melt = 8.43e-5;  // (m2*s)/(K*kg)
+    double b_s_melt = 12.05;  // m2*s/kg
+    double a_s_melt = 2.31e3; // K/(kg/kg)
+    double c_r_frz = 3.75e-2;  // (m2*s)/(K*kg)
 
-    t_nuc = 267.15;  // in K    -6 °C
-    t_d = 248.15;  // in K    -25 °C
-    t_hn = 236.15;  // in K    -40 °C
-    t_r_frz = 271.15;  // in K    -2 °C
+    double t_nuc = 267.15;  // in K    -6 °C
+    double t_d = 248.15;  // in K    -25 °C
+    double t_hn = 236.15;  // in K    -40 °C
+    double t_r_frz = 271.15;  // in K    -2 °C
 
-    t_1 = 253.15;  // in K    -20 °C
-    t_00 = 236.15;  // in K    -40 °C
-    t_Celsius_1 = t_1 - t_0;  // -20 °C
-    t_Celsius_2 = t_00 - t_0;  // -37 °C
+    double p_t_in = 0.;
+    double E_Rain_t_in = 0.;
+    double q_Rain_t_in = 0.;
 
-    exp_pressure = g / ( 1.e-2 * gam * R_Air );
+//    double t_1 = 253.15;  // in K    -20 °C
+//    double t_00 = 236.15;  // in K    -40 °C
+//    double t_Celsius_1 = t_1 - t_0;  // -20 °C
+//    double t_Celsius_2 = t_00 - t_0;  // -37 °C
+
+    double exp_pressure = g / ( 1.e-2 * gam * R_Air );
 
     //The m_i is only used in this function and I see no reason it should be a member of this class.
     //So, I move it out of class.

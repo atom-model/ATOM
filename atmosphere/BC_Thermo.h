@@ -83,7 +83,7 @@ class BC_Thermo
         double c12, c32, c42, t_Celsius_it, t_Celsius_0, t_Celsius_1, t_Celsius_2;
         double radiation_back, fac_rad;
         double r_dry, r_humid, p_SL, t_SL, exp_pressure, hight;
-        double t_u, t_Celsius_SL, t_dew, t_dew_SL, T, T_nue, T_it, q_T, q_Rain_n;
+        double t_u, T, T_nue, T_it, q_T, q_Rain_n;
         double q_v_b, q_c_b, q_i_b, q_v_hyp, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
         double t_equator, t_tropopause, t_eff, t_pole, t_eff_tropo, t_tropopause_pole,
             c_equator, c_tropopause, coeff_mmWS;
@@ -94,24 +94,17 @@ class BC_Thermo
         double S_c_c, S_au, S_nuc, S_ac, S_rim, S_shed, S_ev, S_dep, S_i_dep,
             S_melt, S_if_frz, S_cf_frz, S_r_frz, S_c_frz, S_c_au, S_i_au, S_d_au, S_agg,
             S_i_cri, S_r_cri, S_s_dep, S_i_melt, S_s_melt;
-        double S_v, S_c, S_i, S_r, S_s, P_rain_n, P_snow_n, P_rain_n_o, P_snow_n_o;
-        double c_ac, c_rim, b_ev, b_s_dep,
-            a_s_melt, b_s_melt;
-        double t_1, t_00, t_m1, t_m2, t_r_frz, c_r_frz, a_ev, alf_dep,
-            p_t_in, E_Rain_t_in, q_Rain_t_in;
-        double coeff_P;
-        double N_i_0, N_i, t_nuc, t_d, t_hn, m_i_0, m_i_max, m_s_0, c_i_dep,
-            c_c_au, c_i_au, c_agg, c_i_cri, c_r_cri, c_s_dep, c_s_melt;
-        double coeff_Lv, coeff_Ls, coeff_Q;
+        double S_v, S_c, S_i, S_r, S_s;
 
- 
- 
+        double t_1, t_00;
+        double coeff_P;
+        double coeff_Lv, coeff_Ls, coeff_Q, N_i;
+
         string time_slice_comment, time_slice_number, time_slice_unit;
         string temperature_comment, temperature_gain, temperature_modern,
             temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
         string co_comment, co_gain, co_modern, co_av, co_unit, co_cretaceous_str,
             co_average_cret, co_average_str;
-
 
     public:
         BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land,
