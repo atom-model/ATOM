@@ -23,6 +23,14 @@ namespace AtomUtils{
         return fabs(h.x[i][j][k] - 1) < std::numeric_limits<double>::epsilon();
     }
 
+    inline bool is_air(const Array& h, int i, int j, int k){
+        return !is_land(h,i,j,k);
+    }
+
+    inline bool is_water(const Array& h, int i, int j, int k){
+        return !is_land(h,i,j,k);
+    }
+
     inline bool is_ocean_surface(const Array& h, int i, int j, int k){
         return i==0 && !is_land(h, i, j, k);
     }

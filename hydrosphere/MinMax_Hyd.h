@@ -8,7 +8,6 @@
  * class to search min/max values of variables
 */
 
-
 #include <iostream>
 
 #include "Array.h"
@@ -19,35 +18,32 @@
 
 using namespace std;
 
+class MinMax_Hyd{
+    private:
+        int im, jm, km, imax, jmax, kmax, imin, jmin, kmin;
+        int imax_level, imin_level, jmax_deg, kmax_deg, jmin_deg, kmin_deg;
 
+        double maxValue, minValue, u_0, c_0, L_hyd;
 
-class MinMax_Hyd
-{
-	private:
-		int im, jm, km, imax, jmax, kmax, imin, jmin, kmin;
-		int imax_level, imin_level, jmax_deg, kmax_deg, jmin_deg, kmin_deg;
+        Array_2D  value ( int, int, double );
+        Array  value_D ( int, int, int, double );
 
-		double maxValue, minValue, u_0, c_0, L_hyd;
+        string name_maxValue, name_minValue, name_unitValue, heading_1, heading_2;
+        string level, deg_north, deg_south, deg_west, deg_east, deg_lat_max,
+            deg_lon_max, deg_lat_min, deg_lon_min;
 
-		Array_2D			value ( int, int, double );
-		Array				value_D ( int, int, int, double );
+    public:
+        MinMax_Hyd ( int, int, double );
+        MinMax_Hyd ( int, int, int, double, double, double );
 
-		string name_maxValue, name_minValue, name_unitValue, heading_1, heading_2;
-		string level, deg_north, deg_south, deg_west, deg_east, deg_lat_max, deg_lon_max, deg_lat_min, deg_lon_min;
+        ~MinMax_Hyd ();
 
-	public:
-		MinMax_Hyd ( int, int, double );
-		MinMax_Hyd ( int, int, int, double, double, double );
+        void searchMinMax_2D ( string &, string &, string &, Array_2D &, Array & );
 
-		~MinMax_Hyd ();
+        void searchMinMax_3D ( string &, string &, string &, Array &, Array & );
 
-		void searchMinMax_2D ( string &, string &, string &, Array_2D &, Array & );
+        double out_maxValue (  ) const;
 
-		void searchMinMax_3D ( string &, string &, string &, Array &, Array & );
-
-		double out_maxValue (  ) const;
-
-		double out_minValue (  ) const;
-
+        double out_minValue (  ) const;
 };
 #endif

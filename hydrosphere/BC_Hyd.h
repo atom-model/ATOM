@@ -19,8 +19,7 @@
 
 using namespace std;
 
-class BC_Hydrosphere
-{
+class BC_Hydrosphere{
 private:
     int im, jm, km;
     double c13, c43;
@@ -30,9 +29,11 @@ public:
     ~BC_Hydrosphere();
 
 
-    void RB_radius ( double, double, double, double, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array & );
+    void RB_radius ( double, double, double, double, Array_1D &, Array &, Array &,
+        Array &, Array &, Array &, Array & );
 
-    void RB_theta ( double, double, double, Array &, Array &, Array &, Array &, Array &, Array & );
+    void RB_theta ( double, double, double, Array &, Array &, Array &, Array &,
+        Array &, Array & );
 
     void RB_phi ( Array &, Array &, Array &, Array &, Array &, Array & );
 };

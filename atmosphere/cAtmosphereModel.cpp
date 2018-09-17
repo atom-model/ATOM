@@ -1,5 +1,7 @@
 #include "cAtmosphereModel.h"
 
+#include <fenv.h>
+
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -24,7 +26,6 @@
 #include "Results_Atm.h"
 #include "MinMax_Atm.h"
 #include "Utils.h"
-
 #include "Config.h"
 #include "AtmParameters.h"
 
@@ -90,8 +91,7 @@ cAtmosphereModel::cAtmosphereModel() :
 }
 
 cAtmosphereModel::~cAtmosphereModel() {
-    if(PythonStream::is_enable())
-    {    
+    if(PythonStream::is_enable()){
         std::cout.rdbuf(backup);
     }
 
@@ -139,7 +139,10 @@ void cAtmosphereModel::LoadConfig ( const char *filename )
 
 void cAtmosphereModel::RunTimeSlice ( int Ma )
 {
-    logger() << "RunTimeSlice: " << Ma << " Ma"<< std::endl <<std::endl;
+    if(debug){
+        feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO); //not platform independent, bad, very bad, I know
+    }
+//    logger() << "RunTimeSlice: " << Ma << " Ma"<< std::endl <<std::endl;
 
     reset_arrays();    
 
@@ -247,12 +250,17 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
 
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo  circulation (this, im, jm, km, h ); 
+    BC_Thermo  circulation (this, im, jm, km, c_0, c_land, t_land, co2_0, h ); 
+
+//    t.printArray ( im, jm, km );
 
     //  class element calls for the preparation of initial conditions for the flow properties
 
     //  class element for the tropopause location as a parabolic distribution from pole to pole 
     circulation.TropopauseLocation ();
+
+    //  class element for the initial conditions for u-v-w-velocity components
+    circulation.IC_CellStructure ( h, u, v, w );
 
     //  class element for the surface temperature from NASA for comparison
     //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
@@ -262,7 +270,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
-    circulation.BC_Temperature ( temperature_NASA, h, t, p_dyn, p_stat );
+    circulation.BC_Temperature ( temperature_NASA, h, t, tn, p_dyn, p_stat );
 
     //  class element for the correction of the temperature initial distribution around coasts
     if ( ( NASATemperature == 1 ) && ( Ma > 0 ) && !use_earthbyte_reconstruction) 
@@ -274,7 +282,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-    circulation.BC_WaterVapour ( h, t, c );
+    circulation.BC_WaterVapour ( h, p_stat, t, c, v, w );
+
+//    t.printArray ( im, jm, km );
+
+//    goto Print;
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
@@ -284,12 +296,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         circulation.BC_Radiation_multi_layer ( albedo, epsilon, radiation_surface,  
                                                p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
-    //  class element for the initial conditions for u-v-w-velocity components
-    circulation.IC_CellStructure ( h, u, v, w );
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
-    move_data_to_new_arrays(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
-    move_data_to_new_arrays(jm, km, .9, old_arrays_2d, new_arrays_2d);
+    move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+    move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d);
 
 
 
@@ -301,9 +311,20 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     run_3D_loop( boundary, result, LandArea, prepare, startPressure, calculate_MSL, circulation);
 
+    cout << std::endl << " ************** NaNs detected in temperature ********************: temperature has_nan: "
+    << t.has_nan() << std::endl;
+    cout << " ************** NaNs detected in water vapor ********************: water vapor has_nan: "
+    << c.has_nan() << std::endl;
+    cout << " ************** NaNs detected in cloud water ********************: cloud water has_nan: "
+    << cloud.has_nan() << std::endl;
+    cout << " ************** NaNs detected in cloud ice ********************: cloud ice has_nan: "
+    << ice.has_nan() << std::endl;
+
     cout << endl << endl;
 
     restrain_temperature();
+
+//    Print:
 
     //write the ouput files
     write_file(bathymetry_name, output_path, true);
@@ -312,6 +333,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
     if ( emin <= epsres ){
         cout << "***** steady solution reached! *****" << endl;
+    }
+
+    if(debug){
+        fedisableexcept(FE_INVALID | FE_OVERFLOW |FE_DIVBYZERO); //not platform independent(bad, very bad, I know)
     }
 }
 
@@ -495,10 +520,10 @@ void cAtmosphereModel::print_min_max_values()
     min_max_3d.searchMinMax_3D ( " max 3D cloud ice ", " min 3D cloud ice ", "g/kg", ice, h, 1000. );
 
     //  searching of maximum and minimum values of rain precipitation
-    min_max_3d.searchMinMax_3D ( " max 3D rain ", " min 3D rain ", "g/kg", P_rain, h, 1000. );
+    min_max_3d.searchMinMax_3D ( " max 3D rain ", " min 3D rain ", "mm/d", P_rain, h, 8.46e4 );
 
     //  searching of maximum and minimum values of snow precipitation
-    min_max_3d.searchMinMax_3D (  " max 3D snow ", " min 3D snow ", "g/kg", P_snow, h, 1000. );
+    min_max_3d.searchMinMax_3D (  " max 3D snow ", " min 3D snow ", "mm/d", P_snow, h, 8.46e4 );
 
     //  searching of maximum and minimum values of co2
     min_max_3d.searchMinMax_3D ( " max 3D co2 ", " min 3D co2 ", "ppm", co2, h, 280. );
@@ -526,12 +551,12 @@ void cAtmosphereModel::print_min_max_values()
     cout << endl << " precipitation: " << endl << endl;
 
     //  searching of maximum and minimum values of precipitation
-    min_max_2d.searchMinMax_2D (  " max precipitation ", " min precipitation ", "g/kg", Precipitation, h, 1.0/coeff_mmWS );
+    min_max_2d.searchMinMax_2D (  " max precipitation ", " min precipitation ", "mm/d", Precipitation, h, 1. );
     max_Precipitation = min_max_2d.out_maxValue (  );
 
     //  searching of maximum and minimum values of precipitable water
-    min_max_2d.searchMinMax_2D ( " max precipitable water ", " min precipitable water ", "g/kg", 
-                                 precipitable_water, h, 1.0/coeff_mmWS  );
+    min_max_2d.searchMinMax_2D ( " max precipitable water ", " min precipitable water ", "mm", 
+                                 precipitable_water, h, 1. );
 
     cout << endl << " energies at see level without convection influence: " << endl << endl;
 
@@ -666,17 +691,24 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
                 circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
-                //  class RungeKutta for the solution of the differential equations describing the flow properties
-                result.solveRungeKutta_2D_Atmosphere ( prepare_2D, iter_cnt, r_air, u_0, p_0, L_atm, rad, the, phi, rhs_v, rhs_w, 
-                                                       h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
-                
-                //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
-                //  the continents and the ocean ground
-                LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, 
+                LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, 
                                           t_equator, t_pole, 
                                           t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
                                           pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
                                           radiation_3D, Vegetation );
+/*
+        logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
+*/
+                //  class RungeKutta for the solution of the differential equations describing the flow properties
+                result.solveRungeKutta_2D_Atmosphere ( prepare_2D, iter_cnt, r_air, u_0, p_0, L_atm, rad, the, phi, rhs_v, rhs_w, 
+                                                       h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
+/*
+        logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
+*/
                 //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
                 double residuum = std::get<0>(min_Residuum_2D.residuumQuery_2D ( rad, the, v, w, residuum_2d ));
 
@@ -693,7 +725,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
 
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-            startPressure.computePressure_2D ( circulation, u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
+            startPressure.computePressure_2D ( u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
 
             // limit of the computation in the sense of time steps
             if ( iter_cnt > nm )
@@ -718,10 +750,12 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
     int Ma = int(round(*get_current_time()));
 
-    // ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::
+    move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+
+    /** ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   :::::::::::::::: **/
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
-        // ::::::::::::   begin of 3D velocity loop : if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::
+        /** ::::::::::::   begin of 3D velocity loop : if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::: **/
         for ( int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ )
         {
             Array tmp = (t-1)*t_0;
@@ -756,6 +790,21 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
+            LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, t_equator, 
+                                      t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
+                                      co2_tropopause, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
+                                      ice, co2, radiation_3D, Vegetation );
+/*
+        logger() << "§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§   global iteration n = " << iter_cnt << "   §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§" << std::endl << std::endl;
+
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: w-velocity max: " << w.max() << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: water vapor max: " << c.max() * 1000. << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: cloud water max: " << cloud.max() * 1000. << std::endl;
+        logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: ice max: " << ice.max() * 1000. << std::endl << std::endl;
+*/
             // class RungeKutta for the solution of the differential equations describing the flow properties
             result.solveRungeKutta_3D_Atmosphere ( prepare, iter_cnt, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, 
@@ -764,13 +813,16 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                    cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, 
                                                    Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
                                                    Evaporation_Dalton, Precipitation );
-
-            //  class BC_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
-            //  the continents and the ocean ground
-            LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, t_land, t_cretaceous, t_equator, 
-                                      t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
-                                      co2_tropopause, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
-                                      ice, co2, radiation_3D, Vegetation );
+/*
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: v-velocity max: " << v.max() << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: w-velocity max: " << w.max() << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: water vapor max: " << c.max() * 1000. << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: cloud water max: " << cloud.max() * 1000. << std::endl;
+        logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: ice max: " << ice.max() * 1000. << std::endl << std::endl;
+*/
+            circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
             // class element for the surface temperature computation by radiation flux density
             if ( RadiationModel == 1 ){
@@ -806,10 +858,9 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                          Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Dalton, Vegetation, 
                                          albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
-            //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation 
-            //  distribution formed of rain and snow
-            if ( velocity_iter % 2 == 0)
-            {
+            //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
+            //  resulting the precipitation distribution formed of rain and snow
+            if ( velocity_iter % 2 == 0){
                 circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, 
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
             }
@@ -817,19 +868,18 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
             iter_cnt++;
         }
-        //  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::::::::::::
-
+        /**  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::::::: **/
         
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-        startPressure.computePressure_3D ( circulation, u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
-
-        //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, resulting the precipitation distribution 
-        //  formed of rain and snow
+        startPressure.computePressure_3D ( u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
+/*
+        //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
+        //  resulting the precipitation formed of rain and snow
         if(iter_cnt >= 2){
             circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, cloud, ice, 
                                               P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
         }
-
+*/
         //logger() << fabs ( p_dyn.x[ 20 ][ 30 ][ 150 ] - p_dynn.x[ 20 ][ 30 ][ 150 ] ) << " pressure_mchin" <<Ma<<std::endl;
         //logger() << std::get<0>(max_diff( im, jm, km, p_dyn, p_dynn)) << " pressure_max_diff" <<Ma<<std::endl;
 
@@ -844,7 +894,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             break;
         }
     }
-    //  :::::   end of pressure loop_3D: if ( pressure_iter > pressure_iter_max )   :::::::::::::::::::::::::::::
+    /**  :::::   end of pressure loop_3D: if ( pressure_iter > pressure_iter_max )   ::::::::::::::::::::::::::::: **/
 }
 
 

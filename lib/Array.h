@@ -180,6 +180,9 @@ public:
             for ( int j = 0; j < jm; j++ ){
                 for ( int k = 0; k < km; k++ ){
                     if(isnan(x[ i ][ j ][ k ])){
+                        if ( isnan( x[ i ][ j ][ k ] ) )
+                            cout << endl << "  ************* NaN detected ************  "
+                            << endl << "   i = " << i << "   j = " << j << "   k = " << k << endl;
                         return true;
                     }
                 }

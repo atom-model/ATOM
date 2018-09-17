@@ -13,7 +13,7 @@ def main():
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
             ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', False),
-            ( 'debug','flag to control if the program is running in debug mode', 'bool', True),
+            ( 'debug','flag to control if the program is running in debug mode', 'bool', False),
         
             #parameters for data reconstruction
             ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
@@ -24,7 +24,7 @@ def main():
             ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True ),
         
             ( 'time_start', 'start time', 'int', 0 ),
-            ( 'time_end', 'end time', 'int', 5 ),
+            ( 'time_end', 'end time', 'int', 60 ),
             ( 'time_step', 'step size between timeslices', 'int', 5 ),
         ],
 
@@ -34,7 +34,7 @@ def main():
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
             ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 40),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2 ),
 
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
@@ -98,7 +98,7 @@ def main():
             ( 'va', 'initial velocity component in theta-direction', 'double', 0.0 ),
             ( 'wa', 'initial velocity component in phi-direction', 'double', 0.0 ),
             ( 'pa', 'initial value for the pressure field', 'double', 0.0 ),
-            ( 'ca', 'value 0.04 stands for the maximum value of 40 g/kg water vapour', 'double', 0.0 ),
+            ( 'ca', 'value 1. stands for the value of 35 g/kg water vapour', 'double', 1.0 ),
             ( 'ta', 'initial value for the temperature field, 1.0 compares to 0° C compares to 273.15 K', 'double', 1.0 ),
             ( 'coa', 'initial value of co2 = 1.0 compares to 280 ppm in pre-industrial times', 'double', 1.0 ),
 
@@ -106,14 +106,18 @@ def main():
             ( 't_cretaceous', 'value at modern times', 'double', 0.0 ),
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
-            ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
+            ( 't_equator', 'temperature t_0 = 1.11 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
+#            ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.945 compares to -15.0°C compares to 258.15 K', 'double', 0.945 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
             ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
+#            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.003661 ),
 
-            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.0001 ),
+            ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
             ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.58 ),
             ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.64 ),
+#            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.78 ),
+#            ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.84 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),
@@ -132,7 +136,7 @@ def main():
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
             ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 40),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 

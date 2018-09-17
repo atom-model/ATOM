@@ -6,8 +6,12 @@ CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml
 
 # Common files for the shared lib (libatom.a)
 LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o lib/Config.o lib/Utils.o
-ATM_OBJ = atmosphere/AtmParameters.o atmosphere/cAtmosphereModel.o atmosphere/Pressure_Atm.o atmosphere/PostProcess_Atm.o atmosphere/BC_Atm.o atmosphere/BC_Bath_Atm.o atmosphere/BC_Thermo.o atmosphere/RHS_Atm.o atmosphere/RungeKutta_Atm.o atmosphere/Results_Atm.o atmosphere/MinMax_Atm.o atmosphere/Accuracy_Atm.o
+
+ATM_OBJ = atmosphere/AtmParameters.o atmosphere/cAtmosphereModel.o atmosphere/Pressure_Atm.o \
+atmosphere/PostProcess_Atm.o atmosphere/BC_Atm.o atmosphere/BC_Bath_Atm.o atmosphere/BC_Thermo.o atmosphere/RHS_Atm.o atmosphere/RungeKutta_Atm.o atmosphere/Results_Atm.o atmosphere/MinMax_Atm.o atmosphere/Accuracy_Atm.o
+
 HYD_OBJ = hydrosphere/HydParameters.o hydrosphere/cHydrosphereModel.o hydrosphere/Accuracy_Hyd.o hydrosphere/BC_Hyd.o hydrosphere/MinMax_Hyd.o hydrosphere/PostProcess_Hyd.o hydrosphere/RungeKutta_Hyd.o hydrosphere/BC_Bath_Hyd.o hydrosphere/BC_Thermohalin.o hydrosphere/Pressure_Hyd.o hydrosphere/RHS_Hyd.o hydrosphere/Results_Hyd.o
+
 XML_OBJ = tinyxml2/tinyxml2.o
 
 # Command line objects
@@ -23,7 +27,7 @@ TARGET_DIR = benchmark
 
 target = $(addprefix $(TARGET_DIR)/,$(COPY_FILE))
 
-all: atm hyd python $(target)
+all: atm hyd test python $(target)
 
 libatom.a: $(PARAM_OUTPUTS) $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
 	ar rcs libatom.a $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
@@ -39,6 +43,9 @@ $(PARAM_OUTPUTS): param.py
 	rm -f atmosphere/cAtmosphereModel.o hydrosphere/cHydrosphereModel.o
 	python param.py
 
+
+test: atm hyd python test/main.o
+	$(CXX) $(CFLAGS) test/main.o cli/DefaultStream.o -L. -latom $(LDFLAGS) -o test/run
 
 analyze:
 	analyze-build make
@@ -57,6 +64,9 @@ lib/%.o: lib/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 cli/%.o: cli/%.cpp
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+test/%.o: test/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 atmosphere/%.o: atmosphere/%.cpp

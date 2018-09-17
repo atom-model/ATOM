@@ -19,8 +19,6 @@
 
 using namespace std;
 
-
-
 class BC_Atmosphere
 {
     private:
@@ -33,12 +31,8 @@ class BC_Atmosphere
         BC_Atmosphere ( int, int, int, double );
         ~BC_Atmosphere();
 
-
         void BC_radius ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
         void BC_theta ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
         void BC_phi ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
 };
 #endif

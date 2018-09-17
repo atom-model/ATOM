@@ -290,25 +290,15 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     //  surface pressure computed by surface temperature with gas equation
     oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
-/*
-      cout << endl << " ***** printout of 3D-field v-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
 
-      cout << endl << " ***** printout of 3D-field w-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
 
-      cout << endl << " ***** printout of 3D-field vn-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
-
-      cout << endl << " ***** printout of 3D-field wn-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
-*/
     //  storing of velocity components, pressure and temperature for iteration start
-    move_data_to_new_arrays(im, jm, km, .9, old_arrays_3d, new_arrays_3d);
-    move_data_to_new_arrays(jm, km, .9, old_arrays_2d, new_arrays_2d, im-1);
+    move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+    move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d, im-1);
 
     // computation of the ratio ocean to land areas
     calculate_MSL.land_oceanFraction ( h );
+
 
     /*******************************************   start of pressure and velocity iterations ******************************/
 
@@ -363,7 +353,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
       w.printArray( im, jm, km );
 */
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dynn max: " << p_dynn.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
 
@@ -372,7 +361,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                           rad, the, phi, rhs_v, rhs_w, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
 
         logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dynn max: " << p_dynn.max() << std::endl;
         logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
 /*
@@ -411,7 +399,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-            startPressure.computePressure_2D ( oceanflow, u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
+            startPressure.computePressure_2D ( u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
 
             // limit of the computation in the sense of time steps
             if ( iter_cnt > nm )
@@ -426,7 +414,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     }// end of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::::::::
 
     cout << endl << endl;
-    
+
+
     // ::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::::::::::
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
@@ -461,8 +450,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             // limiting the increase of flow properties around geometrical peaks and corners
             oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
+        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
+
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dynn max: " << p_dynn.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
 
@@ -473,8 +463,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                 p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, 
                 Salt_Balance, p_stat, r_water, r_salt_water, Bathymetry );
 
+        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
+
         logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dynn max: " << p_dynn.max() << std::endl;
         logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
 
@@ -616,7 +607,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-        startPressure.computePressure_3D ( oceanflow, u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
+        startPressure.computePressure_3D ( u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
 
         if( pressure_iter % checkpoint == 0 ){
             write_file(bathymetry_name, output_path);

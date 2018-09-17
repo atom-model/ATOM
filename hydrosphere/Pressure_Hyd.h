@@ -8,21 +8,18 @@
  * class to compute the pressure independent of the other variables
 */
 
-
 #include <iostream>
 
 #include "Array.h"
 #include "Array_1D.h"
 #include "Array_2D.h"
-#include "BC_Thermohalin.h"
 
 #ifndef _PRESSURE_
 #define _PRESSURE_
 
 using namespace std;
 
-class Pressure_Hyd
-{
+class Pressure_Hyd{
     private:
         int im, jm, km;
 
@@ -32,10 +29,10 @@ class Pressure_Hyd
         Pressure_Hyd ( int, int, int, double, double, double );
         ~Pressure_Hyd ();
 
-        void computePressure_3D ( BC_Thermohalin &oceanflow, double u_0, double r_0_water, Array_1D &rad, Array_1D &the,
-                 Array &p_dyn, Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w );
+        void computePressure_3D ( double u_0, double r_0_water, Array_1D &rad, Array_1D &the,
+            Array &p_dyn, Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w );
 
-        void computePressure_2D ( BC_Thermohalin &oceanflow, double u_0, double r_0_water, Array_1D &rad, Array_1D &the,
-                 Array &p_dyn, Array &p_dynn, Array &h, Array &aux_v, Array &aux_w );
+        void computePressure_2D ( double u_0, double r_0_water, Array_1D &rad, Array_1D &the,
+            Array &p_dyn, Array &p_dynn, Array &h, Array &aux_v, Array &aux_w );
 };
 #endif
