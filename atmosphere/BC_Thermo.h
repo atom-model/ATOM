@@ -64,10 +64,10 @@ class BC_Thermo
             d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
         double t_cretaceous, t_cretaceous_eff;
         double j_par_f, j_pol_f, e, a, j_d, t_dd, k_par_f, k_pol_f;
-        double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
+        double g, ep, hp, u_0, p_0, t_0, sigma, cp_l, r_air, L_atm, c13, c43;
         double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average,
             precipitation_average, precipitation_NASA_average;
-        double eps, c_ocean, t_land, c_land, c_coeff, t_average, co2_average,
+        double eps, c_ocean, c_coeff, t_average, co2_average,
             co2_equator, co2_pole, gam, t_Ik, atmospheric_window, rad_surf_diff;
         double albedo_co2_eff, albedo_equator, albedo_pole;
         double rad_eff, rad_equator, rad_pole, rad_surf;
@@ -101,8 +101,7 @@ class BC_Thermo
         double coeff_Lv, coeff_Ls, coeff_Q, N_i;
 
     public:
-        BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land,
-            double co2_0, Array& h);
+        BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h);
 
         ~BC_Thermo();
 

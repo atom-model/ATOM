@@ -27,7 +27,7 @@ using namespace std;
 using namespace AtomUtils;
 using namespace AtmParameters;
 
-BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land, double co2_0, Array& h): 
+BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h): 
         m_model(model),
         im(im),
         jm(jm),
@@ -51,8 +51,6 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_
     this-> u_0 = model->u_0;
     this-> p_0 = model->p_0;
     this-> t_0 = model->t_0;
-    this-> c_0 = model->c_0;
-    this-> co2_0 = model->co2_0;
     this-> sigma = model->sigma;
     this-> albedo_equator = model->albedo_equator;
     this-> albedo_pole = model->albedo_pole;
@@ -77,12 +75,10 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_
     this-> c_tropopause = model->c_tropopause;
     this-> co2_tropopause = model->co2_tropopause;
     this-> c_ocean = model->c_ocean;
-    this-> c_land = model->c_land;
     this-> t_average = model->t_average;
     this-> co2_average = model->co2_average;
     this-> co2_pole = model->co2_pole;
     this-> co2_equator = model->co2_equator;
-    this-> t_land = model->t_land;
     this-> t_tropopause = model->t_tropopause;
     this-> t_equator = model->t_equator;
     this-> t_pole = model->t_pole;
