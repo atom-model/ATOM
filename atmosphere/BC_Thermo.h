@@ -45,7 +45,6 @@ class BC_Thermo
         int n_smooth;
         int j_r, k_r, j_sun;
         int RadiationModel, sun_position_lat, sun_position_lon, declination, NASATemperature;
-        int iter_prec; 
         
         int *im_tropopause;
         std::vector<std::vector<int> > i_topography;

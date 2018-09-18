@@ -2597,9 +2597,7 @@ if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
 }
 */
                     }else{ /**     oversaturated     **/
-                        iter_prec = 0;
-                        while ( iter_prec <= 20 ){ // iter_prec may be varied
-                            ++iter_prec;
+                        for(int iter_prec = 1; iter_prec <= 20; iter_prec++ ){ // iter_prec may be varied
 /*
 if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "warm cloud               Ice_Water_Saturation_Adjustment: temperature max: " << (t.max() - 1)*t_0 <<"          iter_prec: " << iter_prec << std::endl;
@@ -2669,9 +2667,8 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
 
 /** §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§ **/
 
-                    iter_prec = 0;
-                    while ( iter_prec <= 20 ){ // iter_prec may be varied
-                        ++iter_prec;
+                    for(int iter_prec = 1; iter_prec <= 20; iter_prec++ ){ // iter_prec may be varied
+
 /*
 if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "mixed cloud               Ice_Water_Saturation_Adjustment: temperature max: "
@@ -2965,9 +2962,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
 /******************* main part for rain and snow calculation *********************/
 
     if ( true ){
-        iter_prec = 0;
-        while ( iter_prec <= 5 ){  // iter_prec may be varied, but is sufficient
-            iter_prec = iter_prec + 1;
+        for(int iter_prec = 1; iter_prec <= 5; iter_prec++ ){ // iter_prec may be varied, but is sufficient
             for ( int k = 0; k < km; k++ ){
                 for ( int j = 0; j < jm; j++ ){
                     P_rain.x[ im-1 ][ j ][ k ] = 0.;
