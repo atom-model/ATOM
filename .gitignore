@@ -37,3 +37,5 @@ Roger_dev.geany
 *config_hyd.xml
 */atm_maps/*
 */hyd_maps/*
+AtmParameters*
+HydParameters*
