@@ -223,13 +223,13 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
     epsilon_eff_2D = epsilon_pole - epsilon_equator;
 
     for ( int j = 0; j < jm; j++ ){
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0);
+        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0);
 
         // on zero level, lateral parabolic distribution
         epsilon_eff_max = epsilon_eff_2D * parabola( j / j_max_half ) + epsilon_pole;
 
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             d_i_max = ( double ) ( im - 1 );
 
             // in W/m², assumption of parabolic surface radiation at zero level
@@ -300,10 +300,10 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
 */
         // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
         for ( int j = 0; j < jm; j++ ){
-            i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+            int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
 
             for ( int k = 0; k < km; k++ ){
-                i_mount = i_topography[ j ][ k ];
+                int i_mount = i_topography[ j ][ k ];
 
                 std::vector<double> alfa(im, 0);
                 std::vector<double> beta(im, 0);
@@ -642,13 +642,13 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ ){
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
 
         double temp_tropopause =  t_eff_tropo * parabola( j / ((jm-1)/2.0) ) +
                 t_tropopause_pole + t_cretaceous_add;        
 
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             double tmp = t.x[ i_mount ][ j ][ k ];
             tmp = ( temp_tropopause - tmp ) * ( (double) i_mount / i_trop) + tmp;//temperature at mountain top
             for ( int i = 0; i < im; i++ ){
@@ -702,7 +702,7 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &p_stat, Array &t, Array &c,
     // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
 
             if ( is_air ( h, 0, j, k ) ){
                 c.x[ i_mount ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
@@ -753,10 +753,10 @@ if ( ( j == 90 ) && ( k == 180 ) ){
 
     // water vapour distribution decreasing approaching tropopause
     for ( int j = 0; j < jm; j++ ){
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_trop;
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             for ( int i = 0; i < im; i++ ){
                 if ( i < i_trop ){
                     d_i = ( double ) i;
@@ -843,7 +843,7 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
     // CO2-content as initial solution
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
 
             if ( is_air ( h, i_mount, j, k ) ){
                 d_j = ( double ) j;
@@ -861,10 +861,10 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
     // co2 distribution decreasing approaching tropopause, above no co2
     for ( int j = 0; j < jm; j++ ){
         // i_trop = im_tropopause[ j ];
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_trop;
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             for ( int i = 1; i <= im - 1; i++ ){
                 if ( i <= i_trop ){
                     d_i = ( double ) i;
@@ -987,7 +987,6 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     wa_Polar_Tropopause = 0.;
 
 // preparations for diagonal velocity value connections
-    im_1 = im - 1;
     j_aeq = 90;
     j_pol_n = 0;
     j_pol_s = jm-1;
@@ -1044,11 +1043,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_aeq; j < j_aeq + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) i_max - ( double ) im_1;
+        d_i_max = ( double ) i_max - ( double ) (im-1);
         if ( i_max == 40 ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) i - ( double ) im_1;
+                d_i = ( double ) i - ( double ) (im-1);
                 v.x[ i ][ j ][ k ] = va_equator_Tropopause * d_i / d_i_max;
                 w.x[ i ][ j ][ k ] = wa_equator_Tropopause * d_i / d_i_max;
             }
@@ -1098,11 +1097,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_pol_n; j < j_fer_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Polar_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Polar_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
             }
@@ -1126,11 +1125,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_pol_v_n; j < j_pol_v_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Polar_Tropopause_75 * d_i / d_i_max;
             }
         }
@@ -1174,11 +1173,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_n; j < j_fer_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Ferrel_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
             }
@@ -1202,11 +1201,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_v_n; j < j_fer_v_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause_45 * d_i / d_i_max;
             }
         }
@@ -1249,11 +1248,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_had_n; j < j_had_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
             }
@@ -1276,11 +1275,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_had_v_n; j < j_had_v_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Hadley_Tropopause_15 * d_i / d_i_max;
             }
         }
@@ -1333,10 +1332,10 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_had_s; j < j_had_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
             }
@@ -1359,11 +1358,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_had_v_s; j < j_had_v_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Hadley_Tropopause_15 * d_i / d_i_max;
             }
         }
@@ -1405,10 +1404,10 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_s; j < j_fer_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Ferrel_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
             }
@@ -1431,11 +1430,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_v_s; j < j_fer_v_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause_45 * d_i / d_i_max;
             }
         }
@@ -1476,10 +1475,10 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_s + 1; j < j_pol_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Polar_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Polar_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
             }
@@ -1503,11 +1502,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_pol_v_s; j < j_pol_v_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Polar_Tropopause_75 * d_i / d_i_max;
             }
         }
@@ -2327,8 +2326,8 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
     }
 
     k_half = ( km -1 ) / 2;                                                             // position at 180°E ( Greenwich )
-    j = 0;
-    k = 0;
+    int j = 0;
+    int k = 0;
 
     while ( ( k < km ) && !Name_SurfaceTemperature_File_Read.eof() ){
         while ( j < jm ){
@@ -2367,8 +2366,8 @@ void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecip
         abort();
     }
 
-    j = 0;
-    k = 0;
+    int j = 0;
+    int k = 0;
 
     while ( ( k < km ) && !Name_SurfacePrecipitation_File_Read.eof() ){
         while ( j < jm ){
@@ -2425,7 +2424,6 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
                              Array &radiation_3D, Array_2D &Q_radiation, Array_2D &Q_latent,
                              Array_2D &Q_sensible, Array_2D &Q_bottom ){
     double Q_Latent_Ice = 0.; 
-    int i_mount = 0;
 
 // collection of coefficients for phase transformation
     coeff_Lv = lv / ( L_atm / ( double ) ( im-1 ) );                                        // coefficient for Q_latent generated by cloud water
@@ -2448,7 +2446,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
         sinthe = sin( the.z[ j ] );
         rmsinthe = rm * sinthe;
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             t_Celsius = t.x[ i_mount ][ j ][ k ] * t_0 - t_0;  // conversion from Kelvin to Celsius
             T = t.x[ i_mount ][ j ][ k ] * t_0;
             p_h = p_stat.x[ i_mount ][ j ][ k ];
@@ -2482,7 +2480,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 // latent heat of water vapour
 
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             for ( int i = i_mount + 1; i < im-2; i++ ){
 // collection of coefficients
                 rm = rad.z[ i ];

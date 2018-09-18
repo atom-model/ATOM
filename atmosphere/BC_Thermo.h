@@ -31,8 +31,8 @@ class BC_Thermo
 
         int Ma;
 
-        int i, j, k, im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator,
-            tropopause_pole, im_1, i_land, i_trop, i_mount;
+        int im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator,
+            tropopause_pole;
         Array& h;
         int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s,
             j_had_n, j_had_s, j_had_v_n, j_had_v_s;
