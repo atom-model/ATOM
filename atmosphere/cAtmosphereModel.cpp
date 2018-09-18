@@ -250,7 +250,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
 
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo  circulation (this, im, jm, km, c_0, c_land, t_land, co2_0, h ); 
+    BC_Thermo  circulation (this, im, jm, km, h ); 
 
 //    t.printArray ( im, jm, km );
 

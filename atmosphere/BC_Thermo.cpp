@@ -27,7 +27,7 @@ using namespace std;
 using namespace AtomUtils;
 using namespace AtmParameters;
 
-BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land, double co2_0, Array& h): 
+BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h): 
         m_model(model),
         im(im),
         jm(jm),
@@ -51,8 +51,6 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_
     this-> u_0 = model->u_0;
     this-> p_0 = model->p_0;
     this-> t_0 = model->t_0;
-    this-> c_0 = model->c_0;
-    this-> co2_0 = model->co2_0;
     this-> sigma = model->sigma;
     this-> albedo_equator = model->albedo_equator;
     this-> albedo_pole = model->albedo_pole;
@@ -77,12 +75,10 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_
     this-> c_tropopause = model->c_tropopause;
     this-> co2_tropopause = model->co2_tropopause;
     this-> c_ocean = model->c_ocean;
-    this-> c_land = model->c_land;
     this-> t_average = model->t_average;
     this-> co2_average = model->co2_average;
     this-> co2_pole = model->co2_pole;
     this-> co2_equator = model->co2_equator;
-    this-> t_land = model->t_land;
     this-> t_tropopause = model->t_tropopause;
     this-> t_equator = model->t_equator;
     this-> t_pole = model->t_pole;
@@ -227,13 +223,13 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
     epsilon_eff_2D = epsilon_pole - epsilon_equator;
 
     for ( int j = 0; j < jm; j++ ){
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0);
+        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0);
 
         // on zero level, lateral parabolic distribution
         epsilon_eff_max = epsilon_eff_2D * parabola( j / j_max_half ) + epsilon_pole;
 
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             d_i_max = ( double ) ( im - 1 );
 
             // in W/m², assumption of parabolic surface radiation at zero level
@@ -304,10 +300,10 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
 */
         // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
         for ( int j = 0; j < jm; j++ ){
-            i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+            int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
 
             for ( int k = 0; k < km; k++ ){
-                i_mount = i_topography[ j ][ k ];
+                int i_mount = i_topography[ j ][ k ];
 
                 std::vector<double> alfa(im, 0);
                 std::vector<double> beta(im, 0);
@@ -456,21 +452,21 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
     cout.precision ( 3 );
 
-    time_slice_comment = "      time slice of Cretaceous-AGCM:";
-    time_slice_number = " Ma = ";
-    time_slice_unit = " million years";
+    string time_slice_comment = "      time slice of Cretaceous-AGCM:";
+    string time_slice_number = " Ma = ";
+    string time_slice_unit = " million years";
 
     cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << time_slice_comment << 
         resetiosflags ( ios::left ) << setw ( 6 ) << fixed << setfill ( ' ' ) << time_slice_number << 
         setw ( 3 ) << Ma << setw ( 12 ) << time_slice_unit << endl << endl;
 
-    temperature_comment = "      temperature increase at cretaceous times: ";
-    temperature_gain = " t increase";
-    temperature_modern = "      mean temperature at modern times: ";
-    temperature_cretaceous = "      mean temperature at cretaceous times: ";
-    temperature_average = " t modern";
-    temperature_average_cret = " t cretaceous";
-    temperature_unit =  "°C ";
+    string temperature_comment = "      temperature increase at cretaceous times: ";
+    string temperature_gain = " t increase";
+    string temperature_modern = "      mean temperature at modern times: ";
+    string temperature_cretaceous = "      mean temperature at cretaceous times: ";
+    string temperature_average = " t modern";
+    string temperature_average_cret = " t cretaceous";
+    string temperature_unit =  "°C ";
 
     cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << 
         resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << 
@@ -540,9 +536,10 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     }// temperatur distribution at aa prescribed sun position
 
 
-// pole temperature adjustment, combination of linear time dependent functions 
-    double t_pole_ma = 0.;  // Stein/Rüdiger/Parish locally constant pole temperature
-                                             // difference between pole temperature ( Ma ) and pole temperature ( previous Ma ) == t_pole_ma
+    // pole temperature adjustment, combination of linear time dependent functions 
+    // Stein/Rüdiger/Parish locally constant pole temperature
+    // difference between pole temperature ( Ma ) and pole temperature ( previous Ma )
+    double t_pole_diff_ocean = 0., t_pole_diff_land;
 
     std::map<int, double> pole_temp_map{  // Stein/Rüdiger/Parish linear pole temperature ( Ma ) distribution
         {0, 0.},
@@ -574,11 +571,14 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 //    logger() << "   RadiationModel = " << RadiationModel << endl;
 //    logger() << "   temperature in RadiationModel == 1 " << endl << "RadiationModel BC_Temperature: temperature = " <<  t.x[ 0 ][ 0 ][ 0 ] << endl;
 
-        //the t_pole_ma should be the difference between this time slice and the previous one, right? -- mchin
+        //the t_pole_diff_ocean should be the difference between this time slice and the previous one, right? -- mchin
         if(!m_model->is_first_time_slice()){
-            t_pole_ma = GetPoleTemperature ( Ma, pole_temp_map ) - 
+            t_pole_diff_ocean = GetPoleTemperature ( Ma, pole_temp_map ) - 
                     GetPoleTemperature(*m_model->get_previous_time(), pole_temp_map);
         }
+        //on land, the difference is between this time slice and present day because 
+        //the temperature data from previous time on land is not used.
+        t_pole_diff_land = GetPoleTemperature ( Ma, pole_temp_map );
         // in °C, constant local pole temperature as function of Ma for hothouse climates 
 
         t_eff = t_pole - t_equator;  // coefficient for the zonal parabolic temperature distribution
@@ -609,29 +609,22 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                                                                       // globally higher than ocean temperature, t_land is added too
                     }
                 }else{  // if ( NASATemperature == 1 ) ocean surface temperature based on NASA temperature distribution
-                             // transported for later time slices Ma by use_earthbyte_reconstruction
+                    // transported for later time slices Ma by use_earthbyte_reconstruction
                     if ( is_land (h, 0, j, k ) ){  // on land a parabolic distribution assumed, no NASA based data transportable
                         t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
 //                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + ( t_pole_ma + t_0 ) / t_0
                             + t_cretaceous_add + t_land;
 
-                        if ( t.x[ i_mount ][ 0 ][ k ] < t_pole_ma )
-                            t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ]
-                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
-
-                                                                      // Stein/Rüdiger/Parish pole temperature decreasing equator wards
-                    }
-                    if ( is_air ( h, 0, j, k ) ){  // NASA based ocean surface temperature by use_earthbyte_reconstruction
-                        if( Ma == 0 ){
-                            t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];  // initial temperature by NASA for Ma=0
-                        }else{
-                            t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_cretaceous_add;
-                            if ( t.x[ i_mount ][ 0 ][ k ] < t_pole_ma )
-                                t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ]
-                                + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
-                                                                      // ocean surface temperature increased by mean t_cretaceous_add
-                                                                      // and by a zonally equator wards decreasing temperature difference is added
-                                                                      // Stein/Rüdiger/Parish pole temperature decreasing equator wards
+                            // Stein/Rüdiger/Parish pole temperature decreasing equator wards
+                            t.x[ i_mount ][ j ][ k ] += t_pole_diff_land * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
+                    }else{ // if the this location is ocean
+                        assert(i_mount==0);
+                        if(Ma > 0){//when Ma==0, the temperature data has already been read into t.x[ 0 ][ j ][ k ]        
+                            // ocean surface temperature increased by mean t_cretaceous_add
+                            // and by a zonally equator wards decreasing temperature difference is added
+                            // Stein/Rüdiger/Parish pole temperature decreasing equator wards
+                            t.x[ 0 ][ j ][ k ] += t_cretaceous_add + 
+                                t_pole_diff_ocean * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
                         }
                     }
                 }// else ( NASATemperature == 1 )
@@ -646,13 +639,13 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ ){
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
 
         double temp_tropopause =  t_eff_tropo * parabola( j / ((jm-1)/2.0) ) +
                 t_tropopause_pole + t_cretaceous_add;        
 
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             double tmp = t.x[ i_mount ][ j ][ k ];
             tmp = ( temp_tropopause - tmp ) * ( (double) i_mount / i_trop) + tmp;//temperature at mountain top
             for ( int i = 0; i < im; i++ ){
@@ -706,7 +699,7 @@ void BC_Thermo::BC_WaterVapour ( Array &h, Array &p_stat, Array &t, Array &c,
     // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
 
             if ( is_air ( h, 0, j, k ) ){
                 c.x[ i_mount ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
@@ -757,10 +750,10 @@ if ( ( j == 90 ) && ( k == 180 ) ){
 
     // water vapour distribution decreasing approaching tropopause
     for ( int j = 0; j < jm; j++ ){
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_trop;
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             for ( int i = 0; i < im; i++ ){
                 if ( i < i_trop ){
                     d_i = ( double ) i;
@@ -811,13 +804,13 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
 
     cout.precision ( 3 );
 
-    co_comment = "      co2 increase at cretaceous times: ";
-    co_gain = " co2 increase";
-    co_modern = "      mean co2 at modern times: ";
-    co_cretaceous_str = "      mean co2 at cretaceous times: ";
-    co_average_str = " co2 modern";
-    co_average_cret = " co2 cretaceous";
-    co_unit =  "ppm ";
+    string co_comment = "      co2 increase at cretaceous times: ";
+    string co_gain = " co2 increase";
+    string co_modern = "      mean co2 at modern times: ";
+    string co_cretaceous_str = "      mean co2 at cretaceous times: ";
+    string co_average_str = " co2 modern";
+    string co_average_cret = " co2 cretaceous";
+    string co_unit =  "ppm ";
 
     cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) <<
         co_comment << resetiosflags ( ios::left )         << setw ( 12 ) << co_gain << " = "
@@ -847,7 +840,7 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
     // CO2-content as initial solution
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
 
             if ( is_air ( h, i_mount, j, k ) ){
                 d_j = ( double ) j;
@@ -865,10 +858,10 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
     // co2 distribution decreasing approaching tropopause, above no co2
     for ( int j = 0; j < jm; j++ ){
         // i_trop = im_tropopause[ j ];
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_trop;
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             for ( int i = 1; i <= im - 1; i++ ){
                 if ( i <= i_trop ){
                     d_i = ( double ) i;
@@ -991,7 +984,6 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     wa_Polar_Tropopause = 0.;
 
 // preparations for diagonal velocity value connections
-    im_1 = im - 1;
     j_aeq = 90;
     j_pol_n = 0;
     j_pol_s = jm-1;
@@ -1048,11 +1040,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_aeq; j < j_aeq + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) i_max - ( double ) im_1;
+        d_i_max = ( double ) i_max - ( double ) (im-1);
         if ( i_max == 40 ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) i - ( double ) im_1;
+                d_i = ( double ) i - ( double ) (im-1);
                 v.x[ i ][ j ][ k ] = va_equator_Tropopause * d_i / d_i_max;
                 w.x[ i ][ j ][ k ] = wa_equator_Tropopause * d_i / d_i_max;
             }
@@ -1102,11 +1094,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_pol_n; j < j_fer_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Polar_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Polar_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
             }
@@ -1130,11 +1122,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_pol_v_n; j < j_pol_v_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Polar_Tropopause_75 * d_i / d_i_max;
             }
         }
@@ -1178,11 +1170,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_n; j < j_fer_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Ferrel_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
             }
@@ -1206,11 +1198,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_v_n; j < j_fer_v_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause_45 * d_i / d_i_max;
             }
         }
@@ -1253,11 +1245,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_had_n; j < j_had_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
             }
@@ -1280,11 +1272,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_had_v_n; j < j_had_v_n + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Hadley_Tropopause_15 * d_i / d_i_max;
             }
         }
@@ -1337,10 +1329,10 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_had_s; j < j_had_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
             }
@@ -1363,11 +1355,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_had_v_s; j < j_had_v_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Hadley_Tropopause_15 * d_i / d_i_max;
             }
         }
@@ -1409,10 +1401,10 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_s; j < j_fer_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Ferrel_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
             }
@@ -1435,11 +1427,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_v_s; j < j_fer_v_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause_45 * d_i / d_i_max;
             }
         }
@@ -1480,10 +1472,10 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_fer_s + 1; j < j_pol_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Polar_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
                 w.x[ i ][ j ][ k ] = wa_Polar_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
             }
@@ -1507,11 +1499,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     }
     for ( int j = j_pol_v_s; j < j_pol_v_s + 1; j++ ){
         i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - im_1 );
+        d_i_max = ( double ) ( i_max - (im-1) );
         if ( d_i_max == 0. ) d_i_max = 1.e-6;
         for ( int k = 0; k < km; k++ ){
             for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - im_1 );
+                d_i = ( double ) ( i - (im-1) );
                 v.x[ i ][ j ][ k ] = va_Polar_Tropopause_75 * d_i / d_i_max;
             }
         }
@@ -2331,8 +2323,8 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
     }
 
     k_half = ( km -1 ) / 2;                                                             // position at 180°E ( Greenwich )
-    j = 0;
-    k = 0;
+    int j = 0;
+    int k = 0;
 
     while ( ( k < km ) && !Name_SurfaceTemperature_File_Read.eof() ){
         while ( j < jm ){
@@ -2371,8 +2363,8 @@ void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecip
         abort();
     }
 
-    j = 0;
-    k = 0;
+    int j = 0;
+    int k = 0;
 
     while ( ( k < km ) && !Name_SurfacePrecipitation_File_Read.eof() ){
         while ( j < jm ){
@@ -2429,7 +2421,6 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
                              Array &radiation_3D, Array_2D &Q_radiation, Array_2D &Q_latent,
                              Array_2D &Q_sensible, Array_2D &Q_bottom ){
     double Q_Latent_Ice = 0.; 
-    int i_mount = 0;
 
 // collection of coefficients for phase transformation
     coeff_Lv = lv / ( L_atm / ( double ) ( im-1 ) );                                        // coefficient for Q_latent generated by cloud water
@@ -2452,7 +2443,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
         sinthe = sin( the.z[ j ] );
         rmsinthe = rm * sinthe;
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             t_Celsius = t.x[ i_mount ][ j ][ k ] * t_0 - t_0;  // conversion from Kelvin to Celsius
             T = t.x[ i_mount ][ j ][ k ] * t_0;
             p_h = p_stat.x[ i_mount ][ j ][ k ];
@@ -2486,7 +2477,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 // latent heat of water vapour
 
         for ( int k = 0; k < km; k++ ){
-            i_mount = i_topography[ j ][ k ];
+            int i_mount = i_topography[ j ][ k ];
             for ( int i = i_mount + 1; i < im-2; i++ ){
 // collection of coefficients
                 rm = rad.z[ i ];
@@ -2601,9 +2592,7 @@ if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
 }
 */
                     }else{ /**     oversaturated     **/
-                        iter_prec = 0;
-                        while ( iter_prec <= 20 ){ // iter_prec may be varied
-                            ++iter_prec;
+                        for(int iter_prec = 1; iter_prec <= 20; iter_prec++ ){ // iter_prec may be varied
 /*
 if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "warm cloud               Ice_Water_Saturation_Adjustment: temperature max: " << (t.max() - 1)*t_0 <<"          iter_prec: " << iter_prec << std::endl;
@@ -2673,9 +2662,8 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
 
 /** §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§ **/
 
-                    iter_prec = 0;
-                    while ( iter_prec <= 20 ){ // iter_prec may be varied
-                        ++iter_prec;
+                    for(int iter_prec = 1; iter_prec <= 20; iter_prec++ ){ // iter_prec may be varied
+
 /*
 if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "mixed cloud               Ice_Water_Saturation_Adjustment: temperature max: "
@@ -2969,9 +2957,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
 /******************* main part for rain and snow calculation *********************/
 
     if ( true ){
-        iter_prec = 0;
-        while ( iter_prec <= 5 ){  // iter_prec may be varied, but is sufficient
-            iter_prec = iter_prec + 1;
+        for(int iter_prec = 1; iter_prec <= 5; iter_prec++ ){ // iter_prec may be varied, but is sufficient
             for ( int k = 0; k < km; k++ ){
                 for ( int j = 0; j < jm; j++ ){
                     P_rain.x[ im-1 ][ j ][ k ] = 0.;

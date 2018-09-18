@@ -31,8 +31,8 @@ class BC_Thermo
 
         int Ma;
 
-        int i, j, k, im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator,
-            tropopause_pole, im_1, i_land, i_trop, i_mount;
+        int im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator,
+            tropopause_pole;
         Array& h;
         int j_aeq, j_pol_n, j_pol_s, j_pol_v_n, j_pol_v_s, j_fer_n, j_fer_s, j_fer_v_n, j_fer_v_s,
             j_had_n, j_had_s, j_had_v_n, j_had_v_s;
@@ -45,7 +45,6 @@ class BC_Thermo
         int n_smooth;
         int j_r, k_r, j_sun;
         int RadiationModel, sun_position_lat, sun_position_lon, declination, NASATemperature;
-        int iter_prec; 
         
         int *im_tropopause;
         std::vector<std::vector<int> > i_topography;
@@ -64,10 +63,10 @@ class BC_Thermo
             d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
         double t_cretaceous, t_cretaceous_eff;
         double j_par_f, j_pol_f, e, a, j_d, t_dd, k_par_f, k_pol_f;
-        double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
+        double g, ep, hp, u_0, p_0, t_0, sigma, cp_l, r_air, L_atm, c13, c43;
         double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average,
             precipitation_average, precipitation_NASA_average;
-        double eps, c_ocean, t_land, c_land, c_coeff, t_average, co2_average,
+        double eps, c_ocean, c_coeff, t_average, co2_average,
             co2_equator, co2_pole, gam, t_Ik, atmospheric_window, rad_surf_diff;
         double albedo_co2_eff, albedo_equator, albedo_pole;
         double rad_eff, rad_equator, rad_pole, rad_surf;
@@ -100,15 +99,8 @@ class BC_Thermo
         double coeff_P;
         double coeff_Lv, coeff_Ls, coeff_Q, N_i;
 
-        string time_slice_comment, time_slice_number, time_slice_unit;
-        string temperature_comment, temperature_gain, temperature_modern,
-            temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
-        string co_comment, co_gain, co_modern, co_av, co_unit, co_cretaceous_str,
-            co_average_cret, co_average_str;
-
     public:
-        BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land,
-            double co2_0, Array& h);
+        BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h);
 
         ~BC_Thermo();
 
