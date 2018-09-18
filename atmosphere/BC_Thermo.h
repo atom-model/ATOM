@@ -100,12 +100,6 @@ class BC_Thermo
         double coeff_P;
         double coeff_Lv, coeff_Ls, coeff_Q, N_i;
 
-        string time_slice_comment, time_slice_number, time_slice_unit;
-        string temperature_comment, temperature_gain, temperature_modern,
-            temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
-        string co_comment, co_gain, co_modern, co_av, co_unit, co_cretaceous_str,
-            co_average_cret, co_average_str;
-
     public:
         BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land,
             double co2_0, Array& h);

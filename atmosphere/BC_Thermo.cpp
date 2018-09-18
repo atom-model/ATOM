@@ -456,21 +456,21 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
     cout.precision ( 3 );
 
-    time_slice_comment = "      time slice of Cretaceous-AGCM:";
-    time_slice_number = " Ma = ";
-    time_slice_unit = " million years";
+    string time_slice_comment = "      time slice of Cretaceous-AGCM:";
+    string time_slice_number = " Ma = ";
+    string time_slice_unit = " million years";
 
     cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << time_slice_comment << 
         resetiosflags ( ios::left ) << setw ( 6 ) << fixed << setfill ( ' ' ) << time_slice_number << 
         setw ( 3 ) << Ma << setw ( 12 ) << time_slice_unit << endl << endl;
 
-    temperature_comment = "      temperature increase at cretaceous times: ";
-    temperature_gain = " t increase";
-    temperature_modern = "      mean temperature at modern times: ";
-    temperature_cretaceous = "      mean temperature at cretaceous times: ";
-    temperature_average = " t modern";
-    temperature_average_cret = " t cretaceous";
-    temperature_unit =  "°C ";
+    string temperature_comment = "      temperature increase at cretaceous times: ";
+    string temperature_gain = " t increase";
+    string temperature_modern = "      mean temperature at modern times: ";
+    string temperature_cretaceous = "      mean temperature at cretaceous times: ";
+    string temperature_average = " t modern";
+    string temperature_average_cret = " t cretaceous";
+    string temperature_unit =  "°C ";
 
     cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << 
         resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << 
@@ -811,13 +811,13 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
 
     cout.precision ( 3 );
 
-    co_comment = "      co2 increase at cretaceous times: ";
-    co_gain = " co2 increase";
-    co_modern = "      mean co2 at modern times: ";
-    co_cretaceous_str = "      mean co2 at cretaceous times: ";
-    co_average_str = " co2 modern";
-    co_average_cret = " co2 cretaceous";
-    co_unit =  "ppm ";
+    string co_comment = "      co2 increase at cretaceous times: ";
+    string co_gain = " co2 increase";
+    string co_modern = "      mean co2 at modern times: ";
+    string co_cretaceous_str = "      mean co2 at cretaceous times: ";
+    string co_average_str = " co2 modern";
+    string co_average_cret = " co2 cretaceous";
+    string co_unit =  "ppm ";
 
     cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) <<
         co_comment << resetiosflags ( ios::left )         << setw ( 12 ) << co_gain << " = "
