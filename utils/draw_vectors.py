@@ -73,8 +73,8 @@ def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     m.drawmeridians(np.arange(-180., 180., 45.), labels=[0,0,0,1], fontsize=10)
     #m.drawcoastlines()   
 
-    cbar = m.colorbar(cs, location='bottom', pad="10%")
-    plt.title("{}Ma Velocity".format(time))
+    cbar = m.colorbar(cs, location='bottom', pad="10%", label='Velocity (m/s)')
+    plt.title("Velocity at {}Ma".format(time))
     plt.savefig(output_dir + '/{}Ma_velocity.png'.format(time), bbox_inches='tight')
     print(output_dir + '/{}Ma_velocity.png has been saved!'.format(time))
     #plt.show()
