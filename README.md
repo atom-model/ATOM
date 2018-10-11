@@ -1,12 +1,12 @@
 # ATOM
 
-ATOM (Atmospheric and Ocean Model) is a fast climate model.
+ATOM (Atmospheric and Ocean Model) is a fast, low-complexity, non-parallel climate model.
 
 ## Run ATOM inside the Docker container
 
-The ATOM depends on pygplates, gmt, matplotlib and other libraries. It is quite a hassle to install all the dependencies in your computer. The easiest way to get started is with the gplates/atom Docker container which GPlates development team have prepared for the users. 
+ATOM depends on pygplates, gmt, matplotlib and other libraries. It is time-consuming to install all the dependencies in your computer. The easiest way to get started is with the gplates/atom Docker container which the GPlates development team have prepared for the users. 
 
-First, you need to install Docker and be familiar yourself with the basic Docker operations. [Docker download](https://www.docker.com/community-edition) 
+First, you need to install Docker and familiarise yourself with basic Docker operations. [Docker download](https://www.docker.com/community-edition) 
 
 Run "docker pull gplates/atom" or use [Kitematic](https://kitematic.com/) to download the container from Docker Hub.
 
@@ -76,7 +76,7 @@ As a regular user:
     make
     pip install -e python/
 
-# The ATOM requires many dependencies to run. It is highly recommended to use the Docker container to run ATOM.
+# ATOM requires many dependencies to run. It is highly recommended to use the Docker container to run ATOM.
 
 ## CLI usage
 
@@ -136,7 +136,7 @@ Look at `examples/sample.py`. It shows how to modify a parameter through Python.
 
 ## Parameters
 
-There are many, many parameters that you can adjust.
+There are many parameters that you can adjust.
 
 **If you are browsing the source code**, the canonical source for parameter documentation is `param.py`. 
 
