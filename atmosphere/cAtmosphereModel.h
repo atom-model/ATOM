@@ -84,7 +84,7 @@ public:
     float calculate_mean_temperature(const Array& t);
 
     static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
-    static const double the0, phi0, r0;
+    static const double the0, phi0, r0, zeta;
 
 private:
     void SetDefaultConfig();

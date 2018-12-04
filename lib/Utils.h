@@ -4,10 +4,6 @@
 
 #include "Array.h"
 
-#define logger() \
-if (false) ; \
-else get_logger()
-
 namespace AtomUtils{
     using namespace std;
     struct HemisphereCoords{
@@ -17,7 +13,7 @@ namespace AtomUtils{
 
     HemisphereCoords convert_coords(double lon, double lat);
 
-    std::ofstream& get_logger();
+    std::ofstream& logger();
 
     inline bool is_land(const Array& h, int i, int j, int k){
         return fabs(h.x[i][j][k] - 1) < std::numeric_limits<double>::epsilon();
@@ -67,7 +63,7 @@ namespace AtomUtils{
     inline double trapezoidal(int & n, double &dstep, double *value){
         double sum=0;
         for (int i = 1; i < n; i++){sum += 2*value[i];}
-		return dstep/2 * (value[0] + sum + value[n]);                 // Trapezoidal Rule integration
+        return dstep/2 * (value[0] + sum + value[n]);                 // Trapezoidal Rule integration
     }
 
     inline double rectangular(int & n, double &dstep, double *value){

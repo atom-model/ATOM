@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "Array.h"
+#include "Array_1D.h"
 #include "Array_2D.h"
 
 #ifndef _MINMAX_
@@ -40,7 +41,8 @@ class MinMax_Hyd{
 
         void searchMinMax_2D ( string &, string &, string &, Array_2D &, Array & );
 
-        void searchMinMax_3D ( string &, string &, string &, Array &, Array & );
+        void searchMinMax_3D ( string &name_maxValue, string &name_minValue, 
+            string &name_unitValue, Array_1D &rad, Array &val_D, Array &h );
 
         double out_maxValue (  ) const;
 

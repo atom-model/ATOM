@@ -58,18 +58,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max,
     this -> t_pole = t_pole;
     this -> input_path = input_path;
 
-    int i_middle = i_beg + 36;                          // 0 + 36 = 36 for total depth 100m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
-
     j_half = ( jm - 1 ) / 2;
-
-    d_i_beg = ( double ) i_beg;
-    d_i_middle = ( double ) i_middle;
-    d_i_max = ( double ) ( im - 1 );
-
-// reduction or amplification of flow velocities along coasts
-// for the artificial initial and boundary conditions
-//  u_max = .03 / u_0;              // u_max = 0.03 m/s compares to average of up/downwelling
-    u_max = .0;
 
 // ocean surface velocity is about 3% of the wind velocity at the surface
     water_wind = .03;
@@ -291,7 +280,8 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
     for ( int j = j_150; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
             if ( is_water( h, im-1, j, k ) ){
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] 
+                    + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
 
                 if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
                 if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
@@ -323,6 +313,11 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
         }
     }
 
+    double i_Ekman_layer = 500.;                                    // assumed Ekman-layer depth of 500m
+    double coeff = i_Ekman_layer / L_hyd;
+
+    int i_Ekman = ( im - 1 ) * ( 1. - coeff );
+
 // surface wind vector driving the Ekman spiral in the Ekman layer
 // northern hemisphere
     double gam_z = 0.;
@@ -333,26 +328,50 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
     double w_g = 0.;
 
     for ( int j = 0; j < jm; j++ ){
-        for ( int i = im-2; i >= i_beg; i-- ){
-            gam_z = M_PI * ( double ) ( i - i_beg ) / ( double ) ( im - 1 - i_beg );
+        for ( int i = im-2; i >= i_Ekman; i-- ){
+            gam_z = M_PI * ( double ) ( i - i_Ekman ) 
+                / ( double ) ( im - 1 - i_Ekman );
             exp_gam_z = exp ( - gam_z );
             sin_gam_z = sin ( gam_z );
             cos_gam_z = cos ( gam_z );
 
             for ( int k = 0; k < km; k++ ){
-                if ( is_water( h, i, j, k) )
-                {
+                if ( is_water( h, i, j, k) ){
                     v_g = v.x[ i + 1 ][ j ][ k ];
                     w_g = w.x[ i + 1 ][ j ][ k ];
 
                     if ( j <= j_half ){
-                        v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
-                        w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
+                        v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z 
+                            + v_g * ( 1. - exp_gam_z * cos_gam_z );
+                        w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) 
+                            - v_g * exp_gam_z * sin_gam_z;
                     }else{
                         sin_gam_z = - sin ( gam_z );
-                        v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
-                        w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
+                        v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z 
+                            + v_g * ( 1. - exp_gam_z * cos_gam_z );
+                        w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) 
+                            - v_g * exp_gam_z * sin_gam_z;
                     }
+                }
+            }
+        }
+    }
+
+    for ( int i = 0; i <= i_Ekman; i++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                v.x[ i ][ j ][ k ] = 0.;
+                w.x[ i ][ j ][ k ] = 0.;
+                }
+            }
+        }
+
+    for ( int i = 0; i <= im-1; i++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                if ( is_land( h, i, j, k) ){
+                    v.x[ i ][ j ][ k ] = 0.;
+                    w.x[ i ][ j ][ k ] = 0.;
                 }
             }
         }
@@ -364,7 +383,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
 
 
 
-void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Array &p_dyn ){
+void BC_Thermohalin::BC_Temperature_Salinity ( Array_1D &rad, Array &h, Array &t, Array &c, Array &p_dyn ){
     // initial conditions for salt content and temperature and salinity decrease below the sea surface
     // boundary condition of  temperature and salinity
     // parabolic distribution from pole to pole accepted
@@ -451,7 +470,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
                 t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
                 //if ( Ma == 0 )            t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
                 //else                      t.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j /
-                 //   ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous; // paleo surface temperature
+                //   ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous; // paleo surface temperature
 
                 t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
 
@@ -474,19 +493,25 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
     double tm_tbeg = 0.;
     double cm_cbeg = 0.;
+    double d_i_max = ( double ) i_max;
+    double d_i_beg = ( double ) i_beg;
+    double d_i = 0.;
 
-    // distribution of t and c with increasing depth till i_beg valid for all time slices including the modern world
+// distribution of t and c with increasing depth till i_beg valid for all time slices including the modern world
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            tm_tbeg = ( t.x[ im-1 ][ j ][ k ] - ta ) / ( double ) ( i_max * i_max - i_beg * i_beg );
-            cm_cbeg = ( c.x[ im-1 ][ j ][ k ] - ca ) / ( double ) ( i_max * i_max - i_beg * i_beg );
+            tm_tbeg = ( t.x[ im-1 ][ j ][ k ] - ta ) 
+                / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
+            cm_cbeg = ( c.x[ im-1 ][ j ][ k ] - ca ) 
+                / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
             for ( int i = i_beg; i < im-1; i++ ){
                 if ( is_water( h, i, j, k) ){
-//                  t.x[ i ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k ] - ta ) * ( double ) ( i - i_beg ) / ( double ) ( i_max - i_beg ); // linear approach
-                    t.x[ i ][ j ][ k ] = ta + tm_tbeg * ( double ) ( i * i - i_beg * i_beg );// parabolic approach
-
+                    d_i = ( double ) i;
+                    t.x[ i ][ j ][ k ] = ta + tm_tbeg 
+                        * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
                     t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
-                    c.x[ i ][ j ][ k ] = ca + cm_cbeg * ( double ) ( i * i - i_beg * i_beg );// parabolic approach
+                    c.x[ i ][ j ][ k ] = ca + cm_cbeg 
+                        * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
 
                     if ( t_Celsius < 4. ){
                         t.x[ i ][ j ][ k ] = ta;
@@ -515,7 +540,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
 
 
-void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water,
+void BC_Thermohalin::BC_Pressure_Density ( Array_1D &rad, Array &p_stat, Array &r_water,
                                     Array &r_salt_water, Array &t, Array &c, Array &h ){
 // hydrostatic pressure, equations of state for water and salt water density
 // as functions of salinity, temperature and hydrostatic pressure
@@ -528,15 +553,16 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water,
     double alfa_t_p =  0.;
     double gamma_t_p =  0.;
 
-    double E_water = 2.15e9;                                // given in N/m²
+    double E_water = 2.15e9;                            // given in N/m²
     double beta_water = 8.8e-5;                         // given in m³/( m³ * °C)
-    double r_air = 1.2041;                                      // given in kg/m³
-    double R_Air = 287.1;                                       // given in J/( kg*K )
+    double r_air = 1.2041;                              // given in kg/m³
+    double R_Air = 287.1;                               // given in J/( kg*K )
 
 // hydrostatic pressure, water and salt water density at the surface
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            p_stat.x[ im-1 ][ j ][ k ] =  .01 * ( r_air * R_Air * t.x[ im-1 ][ j ][ k ] * t_0 ) / 1000.;
+            p_stat.x[ im-1 ][ j ][ k ] =  .01 * ( r_air * R_Air 
+                * t.x[ im-1 ][ j ][ k ] * t_0 ) / 1000.;
             // given in bar, isochoric approach, constant air density at the surface
             r_water.x[ im-1 ][ j ][ k ] = r_0_water;                // given in kg/m³
 
@@ -547,8 +573,10 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water,
             alfa_t_p = .0708 * ( 1. + .068 * t_Celsius_1 );
             gamma_t_p = .003 * ( 1. - .012 * t_Celsius_1 );
 
-            r_salt_water.x[ im-1 ][ j ][ k ] = C_p + beta_p * c.x[ im-1 ][ j ][ k ] * c_0 -
-                alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[ im-1 ][ j ][ k ] * c_0 ) * t_Celsius_1;
+            r_salt_water.x[ im-1 ][ j ][ k ] = C_p + beta_p 
+                * c.x[ im-1 ][ j ][ k ] * c_0 - alfa_t_p * t_Celsius_1 
+                - gamma_t_p * ( c_0 - c.x[ im-1 ][ j ][ k ] * c_0 ) 
+                * t_Celsius_1;
         }
     }
 
@@ -561,22 +589,27 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water,
                 t_Celsius_1 = t.x[ i ][ j ][ k ] * t_0 - t_0;
                 t_Celsius_0 = t.x[ i + 1 ][ j ][ k ] * t_0 - t_0;
 
-//              p_stat.x[ i ][ j ][ k ] = r_0_water * g * d_i * ( L_hyd / ( double ) ( im-1 ) )
-//                   100000. + p_0 / 1000.;                // hydrostatic pressure in bar
-                p_stat.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] * g * d_i * ( L_hyd /
-                    ( double ) ( im-1 ) ) / 100000. + p_0 / 1000.;             // hydrostatic pressure in bar
-                r_water.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] / ( 1. + beta_water *
-                    ( t_Celsius_1 - t_Celsius_0 ) ) / ( 1. - ( p_stat.x[ i ][ j ][ k ] -
-                    p_stat.x[ i+1 ][ j ][ k ] ) / E_water * 1e5 );               // given in kg/m³
+                p_stat.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] 
+                    * g * d_i * ( L_hyd / ( double ) ( im-1 ) ) / 100000. 
+                    + p_0 / 1000.;             // hydrostatic pressure in bar
+                r_water.x[ i ][ j ][ k ] = r_water.x[ i + 1 ][ j ][ k ] 
+                    / ( 1. + beta_water * ( t_Celsius_1 - t_Celsius_0 ) ) 
+                    / ( 1. - ( p_stat.x[ i ][ j ][ k ] -
+                    p_stat.x[ i+1 ][ j ][ k ] ) / E_water * 1e5 );  // given in kg/m³
 
-                p_km  = ( double ) ( im - 1 - i ) * ( L_hyd / ( double ) ( im-1 ) ) / 1000.;
+                p_km  = ( double ) ( im - 1 - i ) * ( L_hyd 
+                    / ( double ) ( im-1 ) ) / 1000.;
                 C_p = 999.83 + 5.053 * p_km - .048 * p_km * p_km;
                 beta_p = .808 - .0085* p_km;
-                alfa_t_p = .0708 * ( 1. + .351 * p_km + .068 *( 1. - .0683 * p_km ) * t_Celsius_1 );
-                gamma_t_p = .003 * ( 1. - .059 * p_km - .012 * ( 1. - .064 * p_km ) * t_Celsius_1 );
+                alfa_t_p = .0708 * ( 1. + .351 * p_km + .068 
+                    * ( 1. - .0683 * p_km ) * t_Celsius_1 );
+                gamma_t_p = .003 * ( 1. - .059 * p_km - .012 
+                    * ( 1. - .064 * p_km ) * t_Celsius_1 );
 
-                r_salt_water.x[ i ][ j ][ k ] = C_p + beta_p * c.x[ i ][ j ][ k ] * c_0 -
-                    alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[ i ][ j ][ k ] * c_0 ) * t_Celsius_1;
+                r_salt_water.x[ i ][ j ][ k ] = C_p + beta_p 
+                    * c.x[ i ][ j ][ k ] * c_0 - alfa_t_p * t_Celsius_1 
+                    - gamma_t_p * ( c_0 - c.x[ i ][ j ][ k ] * c_0 ) 
+                    * t_Celsius_1;
             }
         }
     }
@@ -588,7 +621,7 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water,
 
 
 void BC_Thermohalin::BC_Surface_Temperature_NASA
-                                    ( const string &Name_SurfaceTemperature_File, Array &t ){
+                     ( const string &Name_SurfaceTemperature_File, Array &t ){
     // initial conditions for the temperature and salinity at the sea surface
 
     cout.precision ( 3 );
@@ -598,7 +631,8 @@ void BC_Thermohalin::BC_Surface_Temperature_NASA
     Name_SurfaceTemperature_File_Read.open(Name_SurfaceTemperature_File);
 
     if (!Name_SurfaceTemperature_File_Read.is_open()) {
-        cerr << "ERROR: could not open SurfaceTemperature_File file at " << Name_SurfaceTemperature_File << "\n";
+        cerr << "ERROR: could not open SurfaceTemperature_File file at " 
+            << Name_SurfaceTemperature_File << "\n";
         abort();
     }
 
@@ -623,7 +657,8 @@ void BC_Thermohalin::BC_Surface_Temperature_NASA
 
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 1; k < km-1; k++ ){
-            if ( k == 180 ) t.x[ im-1 ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k + 1 ] + t.x[ im-1 ][ j ][ k - 1 ] ) * .5;
+            if ( k == 180 ) t.x[ im-1 ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k + 1 ] 
+                + t.x[ im-1 ][ j ][ k - 1 ] ) * .5;
         }
     }
 }
@@ -633,9 +668,11 @@ void BC_Thermohalin::BC_Surface_Temperature_NASA
 
 
 
-void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalinity_File, Array &c ){
+void BC_Thermohalin::BC_Surface_Salinity_NASA 
+                     ( const string &Name_SurfaceSalinity_File, Array &c ){
     // initial conditions for the salinity at the sea surface
-    streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, endpos_3, anfangpos_4, endpos_4;
+    streampos anfangpos_1, endpos_1, anfangpos_2, endpos_2, anfangpos_3, 
+        endpos_3, anfangpos_4, endpos_4;
 
     cout.precision ( 3 );
     cout.setf ( ios::fixed );
@@ -644,7 +681,8 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalini
     Name_SurfaceSalinity_File_Read.open(Name_SurfaceSalinity_File);
 
     if (!Name_SurfaceSalinity_File_Read.is_open()){
-        cerr << "ERROR: could not open SurfaceSalinity_File file at " << Name_SurfaceSalinity_File << "\n";
+        cerr << "ERROR: could not open SurfaceSalinity_File file at " 
+        << Name_SurfaceSalinity_File << "\n";
         abort();
     }
 
@@ -673,21 +711,322 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalini
 
 
 
-void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Array &w, Array &c ){
-// south polar sea
-// antarctic circumpolar current ( -5000m deep ) ( from j=147 until j=152 compares to 57°S until 62°S,
-//                                                                            from k=0 until k=km compares to 0° until 360° )
-    for ( int i = i_beg; i < im; i++ ){
-        for ( int j = 147; j < 153; j++ ){
-            for ( int k = 0; k < km; k++ ){
-                if ( is_water( h, i, j, k) ){
-//                  c.x[ i ][ j ][ k ] = ca;
-                    w.x[ i ][ j ][ k ] = .01 / u_0;                 // 1 cm/s
+void BC_Thermohalin::IC_Equatorial_Currents 
+                     ( Array &h, Array &u, Array &v, Array &w ){
+// currents along the equator
+// equatorial undercurrent - Cromwell flow, EUC
+// equatorial intermediate current, EIC
+// nothern and southern equatorial subsurface counter-currents, NSCC und SSCC
+// nothern and southern equatorial counter-currents, NECC und SECC
+
+    double IC_water = 1.5;  // no dimension, ( average velocity compares to   u_0 * IC_water = 0,25 * IC_water = 0,375 m/s )
+
+// one grid step compares to a depth of 25 m for L_hyd = 1000m   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    i_EIC_u = i_beg; // 1000m depth
+    i_EIC_o = 28; // 0m depth
+    i_SCC_u = 8; // 800m depth
+    i_SCC_o = 28; // 300m depth
+    i_ECC_u = 28; // 400m depth
+    i_ECC_o = im; // 0m depth
+    i_EUC_u = 32; // 200m depth
+    i_EUC_o = 36; // 100m depth
+
+// equatorial currents and counter-currents
+
+//  §§§§§§§§§§§§§§§§§§§§§§§§§   valid for all paleo-ocean constellations along the equator   §§§§§§§§§§§§§§§§§§§§§§§§§§
+
+    j_half = ( jm -1 ) / 2;
+    k_beg = 0;
+    k_end = 0;
+
+// extention of land and ocean areas
+    for ( int k = 1; k < km-1; k++ ){
+        if ( k < km ){
+            if ( ( is_water( h, im-1, j_half, k ) ) 
+                && ( is_land( h, im-1, j_half, k+1 ) ) ){
+                k_end = k;
+            }
+            if ( ( is_land( h, im-1, j_half, k ) ) 
+                && ( is_water( h, im-1, j_half, k+1 ) ) ){
+                k_beg = k;
+            }
+            if ( ( ( is_water( h, im-1, j_half, k ) ) 
+                && ( is_water( h, im-1, j_half, k+1 ) ) ) 
+                && ( k == km-2 ) ){
+                k_end = k;
+            }
+
+// equatorial northern counter-current ( NECC, i=im-1 until i=im compares to 0 until -200m depth )
+// equatorial northern counter-current ( from j=83 until j=88 compares to 3°N until 8°N )
+            for ( int i = i_ECC_u; i < i_ECC_o; i++ ){
+                for ( int j =83; j < 88; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = + .05 * IC_water 
+                                * ( double ) ( i - i_ECC_u ) 
+                                / ( double ) ( i_ECC_o - i_ECC_u );
+                        }
+                    }
+                }
+            }
+
+// equatorial southern counter-current ( SECC, i=im-1 until i=im compares to 0 until -200m depth )
+// equatorial southern counter-current ( from j=93 until j=96 compares to 3°S until 6°S )
+            for ( int i = i_ECC_u; i < i_ECC_o; i++ ){
+                for ( int j = 93; j < 98; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = + .05 * IC_water 
+                                * ( double ) ( i - i_ECC_u ) 
+                                / ( double ) ( i_ECC_o - i_ECC_u );
+                        }
+                    }
+                }
+            }
+
+// equatorial undercurrent - Cromwell current ( EUC, i=im-2 until i=im-1 compares to -100 until -200m depth )
+// equatorial undercurrent - Cromwell current ( from j=87 until j=93 compares to 3°N until 3°S )
+            for ( int i = i_EUC_u; i < i_EUC_o; i++ ){
+                for ( int j = 87; j < 94; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = + .05 * IC_water;
+                        }
+                    }
+                }
+            }
+
+// equatorial intermediate current ( EIC, i=im-4 until i=im-2 compares to -300 until -1000m depth )
+// equatorial intermediate current ( from j=88 until j=92 compares to 2°N until 2°S )
+            for ( int i = i_EIC_u; i < i_EIC_o; i++ ){
+                for ( int j = 88; j < 93; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = - .05 * IC_water 
+                                * ( double ) ( i - i_EIC_u ) 
+                                / ( double ) ( i_EIC_o - i_EIC_u );
+                        }
+                    }
+                }
+            }
+
+// equatorial northern and southern subsurface counter-current
+// equatorial northern subsurface counter-current ( NSCC, i=im-3 until i=im-2 compares to -300 until -800m depth )
+// equatorial northern subsurface counter-current ( from j=86 until j=87 compares to 3°N until 4°N )
+            for ( int i = i_SCC_u; i < i_SCC_o; i++ ){
+                for ( int j = 86; j < 88; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = .05 * IC_water 
+                                * ( double ) ( i - i_SCC_u ) 
+                                / ( double ) ( i_SCC_o - i_SCC_u );
+                        }
+                    }
+                }
+            }
+
+// equatorial southern subsurface counter-current ( SSCC, i=im-3 until i=im-2 compares to -300 until -800m depth )
+// equatorial southern subsurface counter-current ( from j=93 until j=94 compares to 3°S until 4°S )
+            for ( int i = i_SCC_u; i < i_SCC_o; i++ ){
+                for ( int j = 93; j < 95; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = .05 * IC_water 
+                                * ( double ) ( i - i_SCC_u ) 
+                                / ( double ) ( i_SCC_o - i_SCC_u );
+                        }
+                    }
                 }
             }
         }
     }
 }
+
+
+
+
+
+
+void BC_Thermohalin::IC_CircumPolar_Current 
+                     ( Array &h, Array &u, Array &v, Array &w, Array &c ){
+// south polar sea
+// antarctic circumpolar current ( -5000m deep ) ( from j=147 until j=152 compares to 57°S until 62°S,
+// from k=0 until k=km compares to 0° until 360° )
+    for ( int i = i_beg; i < im; i++ ){
+        for ( int j = 147; j < 153; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                if ( is_water( h, i, j, k ) ){
+//                  c.x[ i ][ j ][ k ] = ca;
+                    w.x[ i ][ j ][ k ] = 2. * u_0;  // 0.5 m/s
+                }
+            }
+        }
+    }
+}
+
+
+
+
+void BC_Thermohalin::IC_u_WestEastCoast 
+                     ( Array_1D &rad, Array &h, Array &u, Array &v, 
+                     Array &w, Array &un, Array &vn, Array &wn ){
+// initial conditions for v and w velocity components at the sea surface close to east or west coasts
+// reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
+// w component unchanged
+
+    int i_beg = 20;  // == 500m depth
+    int i_middle = i_beg + 16;  // 0 + 36 = 36 for total depth 100m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
+    int i_half = 38;
+    d_i_middle = ( double ) i_middle;
+    d_i_half = ( double ) i_half;
+    d_i_max = ( double ) i_max;
+
+// search for east coasts and associated velocity components to close the circulations
+// transition between coast flows and open sea flows included
+
+// northern hemisphere: east coast
+//    k_grad = 6;                                                                            // extension of velocity change
+    k_grad = 10;                                                                            // extension of velocity change
+    k_a = k_grad;                                                                        // left distance
+    k_b = 0;                                                                                // right distance
+
+    k_water = 0;                                                                        // on water closest to coast
+    k_sequel = 1;                                                                        // on solid ground
+
+    for ( int j = 0; j < 91; j++ ){                                                    // outer loop: latitude
+        for ( int k = 0; k < km; k++ ){                                            // inner loop: longitude
+            if ( is_land( h, i_half, j, k ) ) k_sequel = 0;                // if solid ground: k_sequel = 0
+            if ( ( is_water( h, i_half, j, k ) ) && ( k_sequel == 0 ) ) 
+                k_water = 0;    // if water and and k_sequel = 0 then is water closest to coast
+            else k_water = 1;                                                        // somewhere on water
+
+            if ( ( is_water( h, i_half, j, k ) ) && ( k_water == 0 ) ){    // if water is closest to coast, change of velocity components begins
+                for ( int l = 0; l < k_grad; l++ ){                                // extension of change, sign change in v-velocity and distribution of u-velocity with depth
+                    for ( int i = i_beg; i < i_half; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
+                        m = i + ( i_half - i_middle );
+                        d_i = ( double ) i;
+                        u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * water_wind 
+                            / ( ( double )( l + 1 ) );    // increase with depth, decrease with distance from coast
+                        u.x[ m ][ j ][ k + l ] = - d_i / d_i_middle * water_wind 
+                            / ( ( double )( l + 1 ) );// decrease with depth, decrease with distance from coast
+                    }
+                }
+                k_sequel = 1;                                                            // looking for another east coast
+            }
+        }                                                                                        // end of longitudinal loop
+        k_water = 0;                                                                    // starting at another latitude
+    }                                                                                            // end of latitudinal loop
+
+
+// southern hemisphere: east coast
+    k_water = 0;
+    k_sequel = 1;
+
+    for ( int j = 91; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_land( h, i_half, j, k ) ) k_sequel = 0;
+            if ( ( is_water( h, i_half, j, k ) ) && ( k_sequel == 0 ) ) 
+                k_water = 0;
+            else k_water = 1;
+            if ( ( is_water( h, i_half, j, k ) ) && ( k_water == 0 ) ){
+                for ( int l = 0; l < k_grad; l++ ){
+                    for ( int i = i_beg; i < i_half; i++ ){
+                        m = i + ( i_half - i_middle );
+                        d_i = ( double ) i;
+                        u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * water_wind 
+                            / ( ( double )( l + 1 ) );    // increase with depth, decrease with distance from coast
+                        u.x[ m ][ j ][ k + l ] = - d_i / d_i_middle * water_wind 
+                            / ( ( double )( l + 1 ) );// decrease with depth, decrease with distance from coast
+                    }
+                }
+                k_sequel = 1;
+            }
+        }
+        k_water = 0;
+    }
+
+
+// search for east coasts and associated velocity components to close the circulations
+// transition between coast flows and open sea flows included
+
+// northern hemisphere: west coast
+//    k_grad = 6;                                                                            // extension of velocity change
+    k_a = 0;                                                                                // left distance
+    k_water = 0;                                                                        // somewhere on water
+    flip = 0;                                                                                // somewhere on water
+
+    for ( int j = 0; j < 91; j++ ){                                                    // outer loop: latitude
+        for ( int k = 0; k < km; k++ ){                                            // inner loop: longitude
+            if ( is_water( h, i_half, j, k ) ){                                        // if somewhere on water
+                k_water = 0;                                                            // somewhere on water: k_water = 0
+                flip = 0;                                                                    // somewhere on water: flip = 0
+            }
+            else k_water = 1;                                                        // first time on land
+
+            if ( ( flip == 0 ) && ( k_water == 1 ) ){                            // on water closest to land
+                for ( int l = k; l > ( k - k_grad + 1 ); l-- ){                        // backward extention of velocity change: nothing changes
+                    for ( int i = i_beg; i < i_half; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
+                        m = i + ( i_half - i_middle );
+                        d_i = ( double ) i;
+                        u.x[ i ][ j ][ l ] = + d_i / d_i_half * water_wind 
+                            / ( ( double )( k - l + 1 ) );    // increase with depth, decrease with distance from coast
+                        u.x[ m ][ j ][ l ] = + d_i / d_i_middle * water_wind 
+                            / ( ( double )( k - l + 1 ) );    // decrease with depth, decrease with distance from coast
+                    }
+                }
+                flip = 1;
+            }
+        }
+        flip = 0;
+    }
+
+
+// southern hemisphere: west coast
+    k_water = 0;
+    flip = 0;
+
+    for ( int j = 91; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_water( h, i_half, j, k ) ){
+                k_water = 0;
+                flip = 0;
+            }
+            else k_water = 1;
+
+            if ( ( flip == 0 ) && ( k_water == 1 ) ){
+                for ( int l = k; l > ( k - k_grad + 1 ); l-- ){
+                    for ( int i = i_beg; i < i_half; i++ ){
+                        m = i + ( i_half - i_middle );
+                        d_i = ( double ) i;
+                        u.x[ i ][ j ][ l ] = + d_i / d_i_half * water_wind 
+                            / ( ( double )( k - l + 1 ) );
+                        u.x[ m ][ j ][ l ] = + d_i / d_i_middle * water_wind 
+                            / ( ( double )( k - l + 1 ) );
+                    }
+                }
+                flip = 1;
+            }
+        }
+        flip = 0;
+    }
+
+    for ( int i = 0; i < i_beg; i++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                u.x[ i ][ j ][ k ] = 0.;
+                }
+            }
+        }
+    }
+
+
+
 
 
 

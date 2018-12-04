@@ -35,7 +35,8 @@ BC_Hydrosphere::~BC_Hydrosphere() {}
 
 
 
-void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, double dr, Array_1D &rad, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c )
+void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, Array_1D &rad, 
+                     Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c )
 {
 // boundary conditions for the r-direction, loop index i
     
@@ -45,7 +46,7 @@ void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, double dr, Arr
         {
 // temperature und salinity at sea level are constant values
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
-            u.x[ 0 ][ j ][ k ] = c43 * u.x[ 1 ][ j ][ k ] - c13 * u.x[ 2 ][ j ][ k ];        // Neumann
+//            u.x[ 0 ][ j ][ k ] = c43 * u.x[ 1 ][ j ][ k ] - c13 * u.x[ 2 ][ j ][ k ];        // Neumann
 //            v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];        // Neumann
 //            w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];        // Neumann
 //            p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];        // Neumann
@@ -58,7 +59,7 @@ void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, double dr, Arr
 
             t.x[ 0 ][ j ][ k ] = ta;        // Dirichlet
             c.x[ 0 ][ j ][ k ] = ca;        // Dirichlet
-//            u.x[ 0 ][ j ][ k ] = 0.;        // Dirichlet
+            u.x[ 0 ][ j ][ k ] = 0.;        // Dirichlet
             v.x[ 0 ][ j ][ k ] = 0.;        // Dirichlet
             w.x[ 0 ][ j ][ k ] = 0.;        // Dirichlet
             p_dyn.x[ 0 ][ j ][ k ] = 0.;        // Dirichlet
@@ -87,7 +88,7 @@ void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, double dr, Arr
 
 
 
-void BC_Hydrosphere::RB_theta ( double ca, double ta, double pa, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c )
+void BC_Hydrosphere::RB_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c )
 {
 // boundary conditions for the the-direction, loop index j
 

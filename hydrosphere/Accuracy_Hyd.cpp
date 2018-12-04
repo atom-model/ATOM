@@ -85,10 +85,11 @@ Accuracy_Hyd::Accuracy_Hyd ( int n, int nm, int Ma, int im, int jm, int km,
 Accuracy_Hyd::~Accuracy_Hyd () {}
 
 
-double Accuracy_Hyd::residuumQuery_3D ( Array_1D &rad, Array_1D &the,
+double Accuracy_Hyd::residuumQuery_3D ( double L_hyd, Array_1D &rad, Array_1D &the,
                                     Array &u, Array &v, Array &w ){
 // value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
     min = residuum = 0.;
+//    double zeta = 3.715;
 
     for ( int i = 1; i < im-1; i++ ){
         for ( int j = 1; j < jm-1; j++ ){
@@ -106,6 +107,9 @@ double Accuracy_Hyd::residuumQuery_3D ( Array_1D &rad, Array_1D &the,
                 if ( fabs ( residuum ) >= min ){
                     min = residuum;
                     i_res = i;
+//                    i_res = ( int )( ( - exp( zeta 
+//                        * ( rad.z[ im-1-i ] - 1. ) ) + 1. ) 
+//                        * ( L_hyd / ( double ) ( im-1 ) ) );  // coordinate stretching
                     j_res = j;
                     k_res = k;
                 }
@@ -118,9 +122,10 @@ double Accuracy_Hyd::residuumQuery_3D ( Array_1D &rad, Array_1D &the,
 
 
 
-double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
-                                        Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn,
-                                        Array &p_dyn, Array &p_dynn ){
+double Accuracy_Hyd::steadyQuery_3D ( double L_hyd, Array_1D &rad, Array &u, 
+                     Array &un, Array &v, Array &vn, Array &w, Array &wn, 
+                     Array &t, Array &tn, Array &c, Array &cn, Array &p_dyn, 
+                     Array &p_dynn ){
 // state of a steady solution ( min_u )
     min_u = max_u = 0.;
     min_v = max_v = 0.;
@@ -128,6 +133,7 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
     min_t = max_t = 0.;
     min_c = max_c = 0.;
     min_p = max_p = 0.;
+//    double zeta = 3.715;
 
     for ( int i = 0; i < im; i++ ){
         for ( int j = 0; j < jm; j++ ){
@@ -136,6 +142,9 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                 if ( max_u >= min_u ){
                     min_u = max_u;
                     i_u = i;
+//                    i_u = ( int )( ( - exp( zeta 
+//                        * ( rad.z[ im-1-i ] - 1. ) ) + 1. ) 
+//                        * ( L_hyd / ( double ) ( im-1 ) ) );  // coordinate stretching;
                     j_u = j;
                     k_u = k;
                 }
@@ -144,6 +153,9 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                 if ( max_v >= min_v ){
                     min_v = max_v;
                     i_v = i;
+//                    i_v = ( int )( ( - exp( zeta 
+ //                       * ( rad.z[ im-1-i ] - 1. ) ) + 1. ) 
+  //                      * ( L_hyd / ( double ) ( im-1 ) ) );  // coordinate stretching;
                     j_v= j;
                     k_v = k;
                 }
@@ -152,6 +164,9 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                 if ( max_w >= min_w ){
                     min_w = max_w;
                     i_w = i;
+//                    i_w = ( int )( ( - exp( zeta 
+//                        * ( rad.z[ im-1-i ] - 1. ) ) + 1. ) 
+//                        * ( L_hyd / ( double ) ( im-1 ) ) );  // coordinate stretching;
                     j_w = j;
                     k_w = k;
                 }
@@ -159,6 +174,9 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                 max_t = fabs ( t.x[ i ][ j ][ k ] - tn.x[ i ][ j ][ k ] );
                 if ( max_t >= min_t ){
                     min_t = max_t;
+//                    i_t = ( int )( ( - exp( zeta 
+//                        * ( rad.z[ im-1-i ] - 1. ) ) + 1. ) 
+//                        * ( L_hyd / ( double ) ( im-1 ) ) );  // coordinate stretching;
                     i_t = i;
                     j_t = j;
                     k_t = k;
@@ -168,6 +186,9 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                 if ( max_c >= min_c ){
                     min_c = max_c;
                     i_c = i;
+//                    i_c = ( int )( ( - exp( zeta 
+//                        * ( rad.z[ im-1-i ] - 1. ) ) + 1. ) 
+//                        * ( L_hyd / ( double ) ( im-1 ) ) );  // coordinate stretching;
                     j_c = j;
                     k_c = k;
                 }
@@ -176,6 +197,9 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                 if ( max_p >= min_p ){
                     min_p = max_p;
                     i_p = i;
+//                    i_p = ( int )( ( - exp( zeta 
+//                        * ( rad.z[ im-1-i ] - 1. ) ) + 1. ) 
+//                        * ( L_hyd / ( double ) ( im-1 ) ) );  // coordinate stretching;
                     j_p = j;
                     k_p = k;
                 }
@@ -270,6 +294,7 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
         default :     cout << choice << "error in iterationPrintout_3D member function in class Accuracy" << endl;
     }
     i_loc_level = - i_loc * int ( L_hyd ) / ( im - 1 );
+//    i_loc_level = - i_loc;
 
     if ( j_loc <= 90 ){
         j_loc_deg = 90 - j_loc;

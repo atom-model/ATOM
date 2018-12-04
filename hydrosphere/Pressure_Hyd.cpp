@@ -114,6 +114,7 @@ void Pressure_Hyd::computePressure_3D ( double u_0, double r_0_water,
     for ( int i = 1; i < im-1; i++ ){
         rm = rad.z[ i ];
         rm2 = rm * rm;
+
         for ( int j = 1; j < jm-1; j++ ){
             sinthe = sin( the.z[ j ] );
             rmsinthe = rm * sinthe;
@@ -127,11 +128,10 @@ void Pressure_Hyd::computePressure_3D ( double u_0, double r_0_water,
             for ( int k = 1; k < km-1; k++ ){
 // determining RHS-derivatives around mountain surfaces
                 drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-
                 if ( i <= im - 3 ){
-                    if ( ( is_land( h, i, j, k) ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
+                    if ( ( is_land ( h, i, j, k ) ) && ( is_water ( h, i+1, j, k ) ) )
                             drhs_udr = ( - 3. * aux_u.x[ i ][ j ][ k ] + 4. * aux_u.x[ i + 1 ][ j ][ k ] - aux_u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-                }else     drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i ][ j ][ k ] ) / dr;
+                }else  drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i ][ j ][ k ] ) / dr;
 
 // gradients of RHS terms at mountain sides 2.order accurate in the-direction
                 drhs_vdthe = ( aux_v.x[ im-1 ][ j+1 ][ k ] - aux_v.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe * rm );
@@ -168,6 +168,8 @@ void Pressure_Hyd::computePressure_3D ( double u_0, double r_0_water,
                                                     + ( p_dynn.x[ i ][ j+1 ][ k ] + p_dynn.x[ i ][ j-1 ][ k ] ) * num2
                                                     + ( p_dynn.x[ i ][ j ][ k+1 ] + p_dynn.x[ i ][ j ][ k-1 ] ) * num3 
                                                     - r_0_water * ( drhs_udr + drhs_vdthe + drhs_wdphi ) ) / denom;
+
+                if ( is_land ( h, i, j, k ) )  p_dyn.x[ i ][ j ][ k ] = .0;
             }
         }
     }
@@ -201,6 +203,9 @@ void Pressure_Hyd::computePressure_3D ( double u_0, double r_0_water,
     logger() << "exit Pressure_Hyd::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_0_water *.01 << std::endl;
 //    logger() << "exit Pressure_Hyd::computePressure_3D: p_dynn: " << p_dynn.max() * u_0 * u_0 * r_0_water *.01 << std::endl << std::endl;
 }
+
+
+
 
 
 void Pressure_Hyd::computePressure_2D ( double u_0, double r_0_water,

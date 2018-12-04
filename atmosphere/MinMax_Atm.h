@@ -14,6 +14,7 @@
 
 #include "Array.h"
 #include "Array_2D.h"
+#include "Array_1D.h"
 
 #ifndef _MINMAX_
 #define _MINMAX_
@@ -34,9 +35,9 @@ class MinMax_Atm
         MinMax_Atm ( int, int, int );
         ~MinMax_Atm ();
 
-        void searchMinMax_2D ( string , string , string , Array_2D &, Array &, double coeff=1.0);
+        void searchMinMax_2D ( string, string, string, Array_2D &, Array &, double coeff=1.0);
 
-        void searchMinMax_3D ( string , string , string , Array &, Array &, 
+        void searchMinMax_3D ( double &L_atm, Array_1D &rad, string, string, string, Array &, Array &,
                                double coeff=1.0, 
                                std::function< double(double) > lambda = default_lambda,
                                bool print_heading=false );

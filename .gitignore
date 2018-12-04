@@ -39,3 +39,6 @@ Roger_dev.geany
 */hyd_maps/*
 AtmParameters*
 HydParameters*
+*.geany
+*.tar.gz
+

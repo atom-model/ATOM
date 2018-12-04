@@ -29,7 +29,7 @@ BC_Bathymetry_Hydrosphere::BC_Bathymetry_Hydrosphere ( int im, int jm, int km ):
 BC_Bathymetry_Hydrosphere::~BC_Bathymetry_Hydrosphere() {}
 
 void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
-                                                          double L_hyd, Array &h, Array_2D &Bathymetry){
+                                double L_hyd, Array &h, Array_2D &Bathymetry, Array_1D &rad ){
     // default adjustment, h must be 0 everywhere
     h.initArray(im, jm, km, 0.);
 
@@ -40,6 +40,12 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
         abort();
     }
 
+//    int i_bottom = 0;
+//    double stretch = 0.;
+//    double zeta = 3.715;
+//    double depth_max = 1. + ( double ) ( im - 1 );
+//    double depth_max = 1.;
+
     double lon, lat, depth;
     int j, k;
     for (j = 0; j < jm && !ifile.eof(); j++) {
@@ -47,17 +53,48 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
             depth = 999; // in case the height is NaN
             ifile >> lon >> lat >> depth;
 
-            if ( depth > 0. )
-            {
-                depth = 0;
-            }
-            
-            int i_boden = (im-1) + int(floor( depth / L_hyd * ( im - 1 ) ) );
-            Bathymetry.y[ j ][ k ] = -depth;
-            for ( int i = 0; i <= i_boden; i++ ){
-                h.x[ i ][ j ][ k ] = 1.;
+            if ( depth > 0. ){
+                Bathymetry.y[ j ][ k ] = depth = 0;
+            }else{
+                Bathymetry.y[ j ][ k ] = - depth;
             }
 
+            int i_bottom = (im-1) + int(floor( depth / L_hyd * ( im - 1 ) ) );
+            Bathymetry.y[ j ][ k ] = -depth;
+            for ( int i = 0; i <= i_bottom; i++ ){
+                h.x[ i ][ j ][ k ] = 1.;
+}
+
+
+
+
+
+/*
+            for ( int i = im-1; i > 0; i-- ){
+                 stretch = - ( ( rad.z[ i ] / rad.z[ im-1 ] - 1. ) * ( rad.z[ i ] / rad.z[ im-1 ] - 1. ) - 1. ) * L_hyd;
+
+//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "    i = " << i << "    j = " << j << "    k = " << k << "    rad = " << rad.z[ i ] << "    i_bottom = " << i_bottom << "    zeta = " << zeta << "    L_hyd = " << L_hyd << "    depth = " << depth << "    stretch = " << ( ( - exp( zeta * ( rad.z[ i ] - 1. ) ) + depth_max ) * ( L_hyd / ( double ) ( im-1 ) ) ) << "    step = " << ( ( ( - exp( zeta * ( rad.z[ i ] - 1. ) ) + depth_max ) ) - ( ( - exp( zeta * ( rad.z[ i-1 ] - 1. ) ) + depth_max ) ) ) * ( L_hyd / ( double ) ( im-1 ) ) << endl;
+
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "    i = " << i << "    j = " << j << "    k = " << k << "    rad = " << rad.z[ i ] << "    i_bottom = " << i_bottom << "    zeta = " << zeta << "    L_hyd = " << L_hyd << "    depth = " << depth << "    stretch = " << stretch << "    step = " << ( - ( ( rad.z[ i ] / rad.z[ im-1 ] ) * ( rad.z[ i ] / rad.z[ im-1 ] ) - 1. ) + ( ( rad.z[ i-1 ] / rad.z[ im-1 ] ) * ( rad.z[ i ] / rad.z[ im-1 ] ) - 1. ) ) * L_hyd << endl;
+
+//                if ( fabs ( depth ) <= fabs ( ( - exp( zeta * ( rad.z[ im - 1 - i ] - 1. ) ) + 1. ) * ( L_hyd / ( double ) ( im-1 ) ) ) ){
+//                if ( depth <= ( - exp( zeta * ( rad.z[ i ] - 1. ) ) + depth_max ) * ( L_hyd / ( double ) ( im-1 ) ) ){
+//                if ( fabs ( depth ) <= fabs ( stretch ) ){
+                if ( stretch >= - depth ){
+//                if ( fabs ( depth ) <= fabs ( - ( ( i / ( im - 1 ) ) * ( i / ( im - 1 ) ) - 1. ) * L_hyd ) ){
+
+                    i_bottom = i;
+                    break;
+                }
+            }
+
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << " break    i_bottom = " << i_bottom << "    j = " << j << "    k = " << k << "    rad = " << rad.z[ i_bottom ] << "    i_bottom = " << i_bottom << "    zeta = " << zeta << "    L_hyd = " << L_hyd << "    depth = " << depth << "    stretch = " << - ( ( rad.z[ i_bottom ] / rad.z[ im-1 ] ) * ( rad.z[ i_bottom ] / rad.z[ im-1 ] ) - 1. ) * L_hyd << "    step = " << ( - ( ( rad.z[ i_bottom ] / rad.z[ im-1 ] ) * ( rad.z[ i_bottom ] / rad.z[ im-1 ] ) - 1. ) + ( ( rad.z[ i_bottom-1 ] / rad.z[ im-1 ] ) * ( rad.z[ i_bottom ] / rad.z[ im-1 ] ) - 1. ) ) * L_hyd << endl;
+
+//            for ( int i = i_bottom; i >= 0; i-- ){
+            for ( int i = 0; i <= i_bottom; i++ ){
+                h.x[ i ][ j ][ k ] = 1.;
+            }
+*/
             if(ifile.fail())
             {
                 ifile.clear();
@@ -83,7 +120,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
             move_data(h.x[ i ][ j ], km);
         }
     }
-
+/*
     // reduction and smoothing of peaks and needles in the bathymetry
     double h_center = 0.;
 
@@ -111,6 +148,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
             }
         }
     }
+*/
 }
 
 
@@ -120,7 +158,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
 void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta,
                                                     double pa, Array &h, Array &t, Array &u, Array &v,
                                                     Array &w, Array &p_dyn, Array &c, Array &tn,
-                                                    Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn){
+                                                    Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn ){
     // boundary conditions for the total solid ground
     for ( int i = 0; i < im; i++ ){
         for ( int j = 0; j < jm; j++ ){

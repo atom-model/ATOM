@@ -37,9 +37,11 @@ BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int NASATemperature,
 BC_Bathymetry_Atmosphere::~BC_Bathymetry_Atmosphere(){}
 
 void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename,
-                                           double L_atm, Array_2D &Topography, Array &h ){
+                                           double L_atm, Array_1D &rad, Array_2D &Topography, Array &h ){
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
+
+    double zeta = 3.715;
 
     // default adjustment, h must be 0 everywhere
     h.initArray(im, jm, km, 0.);
@@ -58,10 +60,17 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename,
             height = -999; // in case the height is NaN
             ifile >> lon >> lat >> height;
             if ( height < 0. ){
-                h.x[ 0 ][ j ][ k ] = Topography.y[ j ][ k ] = 0.;
+                height = Topography.y[ j ][ k ] = 0.;
             }else{
-                int i_h = int(floor( height / L_atm * ( im - 1 ) ) );
                 Topography.y[ j ][ k ] = height;
+
+                for ( int i = 0; i < im; i++ ){
+                    if ( height <= ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) ) ){
+                        i_h = i;
+                        break;
+                    }
+                }
+
                 for ( int i = 0; i <= i_h; i++ ){
                     h.x[ i ][ j ][ k ] = 1.;
                 }
@@ -157,7 +166,7 @@ void BC_Bathymetry_Atmosphere::land_oceanFraction ( Array &h ){
     cout.precision ( 3 );
 
     cout << endl;
-    cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      total number of points at constant hight " 
+    cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      total number of points at constant height " 
         << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_point_max << endl << 
         setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << "      number of points on the ocean surface " << " = " 
         << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_ocean << endl << setiosflags ( ios::left ) 

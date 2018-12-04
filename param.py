@@ -8,8 +8,8 @@ def main():
     # name, description, datatype, default
     PARAMS = {
         'common': [
-            ( 'bathymetry_path', '', 'string', '../data/Paleotopography_bathymetry/Golonka_rev210' ),
-            ( 'BathymetrySuffix', '', 'string', 'Ma_Golonka.xyz' ),
+            ( 'bathymetry_path', '', 'string', '../data/simon_topo/' ),
+            ( 'BathymetrySuffix', '', 'string', 'Ma_Simon.xyz' ),
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
             ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', False),
@@ -54,8 +54,8 @@ def main():
             ( 'Ma_max_half', 'half of time scale', 'int', 150 ),
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
-            ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 24 steps = 9600 m', 'int', 24 ),
-            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 30 ),
+            ( 'tropopause_pole', 'extension of the troposphere at the poles 9600 m', 'double', 9600 ),
+            ( 'tropopause_equator', 'extension of the troposphere at the equator 12000 m', 'double', 12000. ),
 
             ( 'rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 230. ),
             ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 40. ),
@@ -107,17 +107,13 @@ def main():
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
             ( 't_equator', 'temperature t_0 = 1.11 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
-#            ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.945 compares to -15.0°C compares to 258.15 K', 'double', 0.945 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
-            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
-#            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.003661 ),
+            ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
 
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
-            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.58 ),
+            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.64 ),
             ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.64 ),
-#            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.78 ),
-#            ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.84 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),
@@ -136,7 +132,7 @@ def main():
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
             ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2 ),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 
@@ -228,61 +224,27 @@ def main():
 
                 for slug, desc, ctype, default in PARAMS [ section ]:
                     func_name = XML_READ_FUNCS [ ctype ]
-                    f.write( '    Config::%s(%s, "%s", %s );\n' % ( func_name, element_var_name, slug, slug ) )
-                    if 'atmosphere' in filename:
-                        f.write( '  AtmParameters::{0}={0};\n'.format(slug))
-                    else:
-                        f.write( '  HydParameters::{0}={0};\n'.format(slug))
+                    f.write ( '    Config::%s(%s, "%s", %s );\n' % ( func_name, element_var_name, slug, slug ) )
                 f.write ( "  }\n" )
 
 
-    def write_cpp_params ( filename, classname, sections ):
-        with open ( filename, 'w' ) as f:
-            f.write ( "// config files\n" )
-            f.write ( "// THIS FILE IS AUTOMATICALLY GENERATED BY param.py\n" )
-            f.write ( "// ANY CHANGES WILL BE OVERWRITTEN AT COMPILE TIME\n" )
-            f.write ( "\n" )
 
-            if classname == 'cAtmosphereModel':
-                f.write("#include\"AtmParameters.h\"\n")
-                f.write("namespace AtmParameters{\n") 
-            else:
-                f.write("#include\"HydParameters.h\"\n")
-                f.write("namespace HydParameters{\n")
 
-            for section in sections:
-                f.write ( '\n  // %s section\n' % section )
-
-                for slug, desc, ctype, default in PARAMS[section]:
-                    f.write ( '  %s %s;\n' % ( ctype, slug ) )
-            
-            f.write("}\n")
-
-    def write_cpp_headers ( filename, sections, is_extern=False ):
+    def write_cpp_headers ( filename, sections ):
         with open ( filename, 'w' ) as f:
             f.write ( "// header files\n" )
             f.write ( "// THIS FILE IS AUTOMATICALLY GENERATED BY param.py\n" )
             f.write ( "// ANY CHANGES WILL BE OVERWRITTEN AT COMPILE TIME\n" )
             f.write ( "\n" )
-            if is_extern:
-                f.write("#include<string>\n\n")
-                f.write("using namespace std;\n")
-                if 'atmosphere' in filename:
-                    f.write("namespace AtmParameters{\n")
-                else:
-                    f.write("namespace HydParameters{\n")
 
             for section in sections:
                 f.write ( '\n// %s section\n' % section )
 
                 for slug, desc, ctype, default in PARAMS [ section ]:
-                    if is_extern:
-                        f.write('   extern %s %s;\n' % ( ctype, slug ) )
-                    else:
-                        f.write('%s %s;\n' % ( ctype, slug ) )
-            
-            if is_extern:
-                f.write("}\n")
+                    f.write('%s %s;\n' % ( ctype, slug ) )
+
+
+
 
     def write_pxi ( input_filename, output_filename, substitutions ):
         data = open ( input_filename, 'rb' ).read()
@@ -309,9 +271,6 @@ def main():
 
         with open ( output_filename, 'w' ) as f:
             f.write ( """# pxi files\n""" )
-            f.write("# THIS FILE IS AUTOMATICALLY GENERATED BY param.py\n")
-            f.write("# ANY CHANGES WILL BE OVERWRITTEN AT COMPILE TIME\n")
-
             f.write ( data )
 
 
@@ -379,25 +338,12 @@ cdef extern from "c%sModel.h":
         write_cpp_load_config ( filename, classname, sections )
 
 
-    for filename, classname, sections in [
-        ( 'atmosphere/AtmParameters.cpp', 'cAtmosphereModel', atmosphere_sections ),
-        ( 'hydrosphere/HydParameters.cpp', 'cHydrosphereModel', hydrosphere_sections )
-    ]:
-        write_cpp_params ( filename, classname, sections )
-
 
     for filename, sections in [
         ( 'atmosphere/AtmosphereParams.h.inc', atmosphere_sections ),
         ( 'hydrosphere/HydrosphereParams.h.inc', hydrosphere_sections )
     ]:
         write_cpp_headers ( filename, sections )
-
-
-    for filename, sections in [
-        ( 'atmosphere/AtmParameters.h', atmosphere_sections ), 
-        ( 'hydrosphere/HydParameters.h', hydrosphere_sections )
-    ]:
-        write_cpp_headers ( filename, sections, True )
 
 
 

@@ -42,8 +42,6 @@
 #include "tinyxml2.h"
 #include "PythonStream.h"
 
-#include "HydParameters.h"
-
 using namespace std;
 using namespace tinyxml2;
 using namespace AtomUtils;
@@ -149,7 +147,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     double dthe = the_degree / pi180; // dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
     double dphi = phi_degree / pi180; // dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
     double dr = 0.025;  // 0.025 x 40 = 1.0 compares to 16 km : 40 = 150 m for 1 radial step
-    double dt = 0.00001; // time step satisfies the CFL condition
+    double dt = 0.000001; // time step satisfies the CFL condition
 
     const double the0 = 0.; // North Pole
     const double phi0 = 0.; // zero meridian in Greenwich
@@ -164,15 +162,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     the.Coordinates ( jm, the0, dthe );
     phi.Coordinates ( km, phi0, dphi );
 
-
-    //  cout << endl << " ***** printout of 3D-field temperature ***** " << endl << endl;
-    //  t.printArray( im, jm, km );
-    //  cout << endl << " ***** printout of 2D-field vegetation ***** " << endl << endl;
-    //  Vegetation.printArray_2D( jm, km );
-
-    //  cout << endl << " ***** printout of 1D-field radius ***** " << endl << endl;
-    //  rad.printArray_1D( im );
-
     //  initial values for the number of computed steps and the time
     int switch_2D = 0;
     double residuum;
@@ -180,7 +169,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     // radial expansion of the computational field for the computation of initial values
     int i_max = im - 1;   // corresponds to sea level
-    int i_beg = 0;  // compares to an ocean depth of 1000 m with step size 25m, location of the thermocline
+    int i_beg = 0;  // location of the thermocline
 
     // naming a transfer file for the v- and w-vlocity component of the atmosphere at sea level
     string Name_v_w_Transfer_File;
@@ -241,11 +230,11 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
     // class BC_Bathymetry_Hydrosphere for the geometrical boundary condition of the computational area
-    BC_Bathymetry_Hydrosphere       depth ( im, jm, km );
+    BC_Bathymetry_Hydrosphere       bathy ( im, jm, km );
 
     //  class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents 
     //  and the ocean ground
-    depth.BC_SeaGround(bathymetry_filepath, L_hyd, h, Bathymetry);
+    bathy.BC_SeaGround(bathymetry_filepath, L_hyd, h, Bathymetry, rad );
 
     // class BC_Hydrosphere for the boundary conditions for the variables at the spherical shell surfaces and the 
     // meridional interface
@@ -279,18 +268,23 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     {
         oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
     }
-    //  initial conditions for u-v-w-velocity components following the Ekman spiral
+    //  initial conditions for v-w-velocity components following the Ekman spiral
     oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
 
+    //  initial conditions for u-velocity component
+    oceanflow.IC_u_WestEastCoast ( rad, h, u, v, w, un, vn, wn );
+
+    //  initial conditions for the equatorial currents
+    oceanflow.IC_Equatorial_Currents ( h, u, v, w );
+
     //  initial conditions for u, v and w velocity components in the circumpolar current
-    if ( Ma <= 41 )     oceanflow.IC_CircumPolar_Current ( h, u, v, w, c ); // Drake passage closed 41 Ma ago
+//    if ( Ma <= 41 )     oceanflow.IC_CircumPolar_Current ( h, u, v, w, c ); // Drake passage closed 41 Ma ago
 
     //  salinity distribution as initial condition in 3 dimensions
-    oceanflow.BC_Temperature_Salinity ( h, t, c, p_dyn );
+    oceanflow.BC_Temperature_Salinity ( rad, h, t, c, p_dyn );
 
     //  surface pressure computed by surface temperature with gas equation
-    oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
-
+    oceanflow.BC_Pressure_Density ( rad, p_stat, r_water, r_salt_water, t, c, h );
 
     //  storing of velocity components, pressure and temperature for iteration start
     move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
@@ -304,18 +298,15 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     double emin = epsres * 100.;
     iter_cnt = 1;
-    
+
     // ::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::::
-    if ( switch_2D != 1 )
-    {
+    if ( switch_2D != 1 ){
         // ******   iteration of initial conditions on the surface for the correction of flows close to coasts   ************
         // ******   start of pressure and velocity iterations for the 2D iterational process   *********************************
         //:::::::::::::   begin of pressure loop_2D : if ( pressure_iter_2D > pressure_iter_max_2D )   ::::::::::::::::
-        for ( int pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++)
-        {
+        for ( int pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++){
             // :::::  begin of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::
-            for( int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++)
-            {
+            for( int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++){
                 cout << endl << endl;
                 cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
                 cout << " 2D OGCM iterational process" << endl;
@@ -328,7 +319,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                     << pressure_iter_max_2D << "    pressure_iter_2D = " << pressure_iter_2D << endl;
 
                 // class BC_Atmosphaere for the geometry of a shell of a sphere
-                boundary.RB_theta ( ca, ta, pa, t, u, v, w, p_dyn, c );
+                boundary.RB_theta ( t, u, v, w, p_dyn, c );
                 boundary.RB_phi ( t, u, v, w, p_dyn, c );
 
                 // old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
@@ -338,20 +329,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
                 residuum_old = emin;
 
-                oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
-/*
-      cout << endl << " ***** vor RK  printout of 3D-field v-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
+//                oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
-      cout << endl << " ***** vor RK  printout of 3D-field w-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
-
-      cout << endl << " ***** vor RK  printout of 3D-field vn-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
-
-      cout << endl << " ***** vor RK  printout of 3D-field wn-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
-*/
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
@@ -363,19 +342,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
         logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-/*
-      cout << endl << " ***** nach RK  printout of 3D-field v-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
 
-      cout << endl << " ***** nach RK  printout of 3D-field w-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
-
-      cout << endl << " ***** nach RK  printout of 3D-field vn-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
-
-      cout << endl << " ***** nach RK  printout of 3D-field wn-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
-*/
                 // new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
                 Accuracy_Hyd        min_Residuum_2D ( im, jm, km, dthe, dphi );
                 min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
@@ -402,8 +369,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             startPressure.computePressure_2D ( u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
 
             // limit of the computation in the sense of time steps
-            if ( iter_cnt > nm )
-            {
+            if ( iter_cnt > nm ){
                 cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
                 break;
             }
@@ -416,12 +382,13 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     cout << endl << endl;
 
 
+            //  restoring the velocity component and the temperature for the new time step
+//            move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+
     // ::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::::::::::
-    for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
-    {
+    for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ ){
         //   begin of 3D velocity loop : if ( velocity_iter > velocity_iter_max )   :::::::::::
-        for( int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ )
-        {
+        for( int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ ){
             cout << endl << endl;
             cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
             cout << " 3D OGCM iterational process" << endl;
@@ -434,27 +401,34 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
             //old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
             Accuracy_Hyd        min_Residuum_old ( im, jm, km, dr, dthe, dphi );
-            min_Residuum_old.residuumQuery_3D ( rad, the, u, v, w );
+            min_Residuum_old.residuumQuery_3D ( L_hyd, rad, the, u, v, w );
             emin = min_Residuum_old.out_min (  );
 
             residuum_old = emin;
 
             // class RB_Hydrosphaere for the geometry of a shell of a sphere
-            boundary.RB_radius ( ca, ta, pa, dr, rad, t, u, v, w, p_dyn, c );
-            boundary.RB_theta ( ca, ta, pa, t, u, v, w, p_dyn, c );
+            boundary.RB_radius ( ca, ta, pa, rad, t, u, v, w, p_dyn, c );
+            boundary.RB_theta ( t, u, v, w, p_dyn, c );
             boundary.RB_phi ( t, u, v, w, p_dyn, c );
 
+            // class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
+            // the continents and the ocean ground
+            bathy.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );
+
             // surface pressure computed by surface temperature with gas equation
-            oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
+//            oceanflow.BC_Pressure_Density ( rad, p_stat, r_water, r_salt_water, t, c, h );
 
             // limiting the increase of flow properties around geometrical peaks and corners
-            oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
+//            oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
-
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
+        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: t min: " << (t.min() - 1)*t_0 << std::endl;
+        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn min: " << p_dyn.min() << std::endl;
+        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: v-velocity min: " << v.min() << std::endl;
+        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: w-velocity min: " << w.min() << std::endl << std::endl;
 
 
             // class RungeKutta for the solution of the differential equations describing the flow properties
@@ -464,18 +438,21 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                 Salt_Balance, p_stat, r_water, r_salt_water, Bathymetry );
 
         logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
-
         logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
+        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: t min: " << (t.min() - 1)*t_0 << std::endl;
+        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn min: " << p_dyn.min() << std::endl;
+        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: v-velocity min: " << v.min() << std::endl;
+        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: w-velocity min: " << w.min() << std::endl << std::endl;
 
             // class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
             // the continents and the ocean ground
-            depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );
+            bathy.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );
 
             // new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
             Accuracy_Hyd        min_Residuum ( im, jm, km, dr, dthe, dphi );
-            min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
+            min_Residuum.residuumQuery_3D ( L_hyd, rad, the, u, v, w );
             emin = min_Residuum.out_min (  );
             int i_res = min_Residuum.out_i_res (  );
             j_res = min_Residuum.out_j_res (  );
@@ -487,66 +464,66 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             // statements on the convergence und iterational process
             Accuracy_Hyd        min_Stationary ( iter_cnt, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, velocity_iter, 
                                     pressure_iter, velocity_iter_max, pressure_iter_max, L_hyd );
-            min_Stationary.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, p_dyn, p_dynn );
+            min_Stationary.steadyQuery_3D ( L_hyd, rad, u, un, v, vn, w, wn, t, tn, c, cn, p_dyn, p_dynn );
 
             // 3D_fields
 
             //      searching of maximum and minimum values of temperature
             string str_max_temperature = " max temperature ", str_min_temperature = " min temperature ", str_unit_temperature = "C";
             MinMax_Hyd      minmaxTemperature ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxTemperature.searchMinMax_3D ( str_max_temperature, str_min_temperature, str_unit_temperature, t, h );
+            minmaxTemperature.searchMinMax_3D ( str_max_temperature, str_min_temperature, str_unit_temperature, rad, t, h );
 
             //  searching of maximum and minimum values of u-component
             string str_max_u = " max 3D u-component ", str_min_u = " min 3D u-component ", str_unit_u = "mm/s";
             MinMax_Hyd      minmax_u ( im, jm, km, u_0, c_0, L_hyd );
-            minmax_u.searchMinMax_3D ( str_max_u, str_min_u, str_unit_u, u, h );
+            minmax_u.searchMinMax_3D ( str_max_u, str_min_u, str_unit_u, rad, u, h );
 
             //  searching of maximum and minimum values of v-component
             string str_max_v = " max 3D v-component ", str_min_v = " min 3D v-component ", str_unit_v = "m/s";
             MinMax_Hyd      minmax_v ( im, jm, km, u_0, c_0, L_hyd );
-            minmax_v.searchMinMax_3D ( str_max_v, str_min_v, str_unit_v, v, h );
+            minmax_v.searchMinMax_3D ( str_max_v, str_min_v, str_unit_v, rad, v, h );
 
             //  searching of maximum and minimum values of w-component
             string str_max_w = " max 3D w-component ", str_min_w = " min 3D w-component ", str_unit_w = "m/s";
             MinMax_Hyd      minmax_w ( im, jm, km, u_0, c_0, L_hyd );
-            minmax_w.searchMinMax_3D ( str_max_w, str_min_w, str_unit_w, w, h );
+            minmax_w.searchMinMax_3D ( str_max_w, str_min_w, str_unit_w, rad, w, h );
 
             //      searching of maximum and minimum values of pressure
             string str_max_pressure = " max pressure dynamic ", str_min_pressure = " min pressure dynamic ", str_unit_pressure = "hPa";
             MinMax_Hyd      minmaxPressure ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, p_dyn, h );
+            minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, rad, p_dyn, h );
 
             //      searching of maximum and minimum values of static pressure
             string str_max_pressure_stat = " max pressure static ", str_min_pressure_stat = " min pressure static ", str_unit_pressure_stat = "bar";
             MinMax_Hyd      minmaxPressure_stat ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxPressure_stat.searchMinMax_3D ( str_max_pressure_stat, str_min_pressure_stat, str_unit_pressure_stat, p_stat, h );
+            minmaxPressure_stat.searchMinMax_3D ( str_max_pressure_stat, str_min_pressure_stat, str_unit_pressure_stat, rad, p_stat, h );
 
             cout << endl << " salinity based results in the three dimensional space: " << endl << endl;
 
             //  searching of maximum and minimum values of salt concentration
             string str_max_salt_concentration = " max salt concentration ", str_min_salt_concentration = " min salt concentration ", str_unit_salt_concentration = "psu";
             MinMax_Hyd      minmaxSalt ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxSalt.searchMinMax_3D ( str_max_salt_concentration, str_min_salt_concentration, str_unit_salt_concentration, c, h );
+            minmaxSalt.searchMinMax_3D ( str_max_salt_concentration, str_min_salt_concentration, str_unit_salt_concentration, rad, c, h );
 
             //  searching of maximum and minimum values of salt balance
             string str_max_salt_balance = " max salt balance ", str_min_salt_balance = " min salt balance ", str_unit_salt_balance = "psu";
             MinMax_Hyd      minmaxSaltBalance ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxSaltBalance.searchMinMax_3D ( str_max_salt_balance, str_min_salt_balance, str_unit_salt_balance, Salt_Balance, h );
+            minmaxSaltBalance.searchMinMax_3D ( str_max_salt_balance, str_min_salt_balance, str_unit_salt_balance, rad, Salt_Balance, h );
 
             //  searching of maximum and minimum values of salt finger
             string str_max_salt_finger = " max salt finger ", str_min_salt_finger = " min salt finger ", str_unit_salt_finger = "psu";
             MinMax_Hyd      minmaxSaltFinger ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxSaltFinger.searchMinMax_3D ( str_max_salt_finger, str_min_salt_finger, str_unit_salt_finger, Salt_Finger, h );
+            minmaxSaltFinger.searchMinMax_3D ( str_max_salt_finger, str_min_salt_finger, str_unit_salt_finger, rad, Salt_Finger, h );
 
             //  searching of maximum and minimum values of salt diffusion
             string str_max_salt_diffusion = " max salt diffusion ", str_min_salt_diffusion = " min salt diffusion ", str_unit_salt_diffusion = "psu";
             MinMax_Hyd      minmaxSaltDiffusion ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxSaltDiffusion.searchMinMax_3D ( str_max_salt_diffusion, str_min_salt_diffusion, str_unit_salt_diffusion, Salt_Diffusion, h );
+            minmaxSaltDiffusion.searchMinMax_3D ( str_max_salt_diffusion, str_min_salt_diffusion, str_unit_salt_diffusion, rad, Salt_Diffusion, h );
 
             //  searching of maximum and minimum values of buoyancy force
             string str_max_BuoyancyForce_3D = " max buoyancy force ", str_min_BuoyancyForce_3D = " min buoyancy force ", str_unit_BuoyancyForce_3D = "kN/m2";
             MinMax_Hyd      minmaxBuoyancyForce_3D ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxBuoyancyForce_3D.searchMinMax_3D ( str_max_BuoyancyForce_3D, str_min_BuoyancyForce_3D, str_unit_BuoyancyForce_3D, BuoyancyForce_3D, h );
+            minmaxBuoyancyForce_3D.searchMinMax_3D ( str_max_BuoyancyForce_3D, str_min_BuoyancyForce_3D, str_unit_BuoyancyForce_3D, rad, BuoyancyForce_3D, h );
 
             // 2D_fields
 
@@ -600,7 +577,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
             //  restoring the velocity component and the temperature for the new time step
             move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
-
             iter_cnt++;
         }
         //  ::::::  end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::
@@ -614,8 +590,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
         }
 
         //  limit of the computation in the sense of time steps
-        if ( iter_cnt > nm )
-        {
+        if ( iter_cnt > nm ){
             cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
             break;
         }
@@ -753,7 +728,7 @@ void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepa
     write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, iter_cnt-1, u_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, 
             t, u, v, w, c, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
-    //  radial data along constant hight above ground
+    //  radial data along constant height above ground
     int i_radial = 40;
     //  int i_radial = 39;
     write_File.paraview_vtk_radial ( bathymetry_name, i_radial, iter_cnt-1, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, 

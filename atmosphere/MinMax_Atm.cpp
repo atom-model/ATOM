@@ -70,7 +70,7 @@ MinMax_Atm::MinMax_Atm ( int im, int jm, int km  )
 
 MinMax_Atm::~MinMax_Atm () {}
 
-void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, string name_unitValue, 
+void MinMax_Atm::searchMinMax_3D( double &L_atm, Array_1D &rad, string name_maxValue, string name_minValue, string name_unitValue, 
                                   Array &value_D, Array &h, double coeff, 
                                   std::function< double(double) > lambda,
                                   bool print_heading)
@@ -78,6 +78,8 @@ void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, st
     // search for minimum and maximum values of the 3-dimensional data sets
     minValue = maxValue = value_D.x[ 0 ][ 0 ][ 0 ];
     imax = jmax = kmax = imin = jmin = kmin = 0;
+
+    double zeta = 3.715;
 
     for ( int j = 0; j < jm; j++ )
     {
@@ -88,12 +90,13 @@ void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, st
                 if ( value_D.x[ i ][ j ][ k ] > maxValue ) 
                 {
                     maxValue = value_D.x[ i ][ j ][ k ];
-                    imax = i;
+//                    imax = i;
+                    imax = ( int )( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
                     jmax = j;
                     kmax = k;
                 }else if ( value_D.x[ i ][ j ][ k ] < minValue ){
                     minValue = value_D.x[ i ][ j ][ k ];
-                    imin = i;
+                    imin = ( int )( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
                     jmin = j;
                     kmin = k;
                 }
@@ -101,8 +104,10 @@ void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, st
         }
     }
 
-    int imax_level = imax * 400;
-    int imin_level = imin * 400;
+//    int imax_level = imax * 400;
+//    int imin_level = imin * 400;
+    int imax_level = imax;
+    int imin_level = imin;
 
     //  maximum latitude and longitude units recalculated
     HemisphereCoords coords = convert_coords(kmax, jmax);

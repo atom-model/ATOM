@@ -123,7 +123,8 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
         }
     }
 
-    double i_Ekman_layer = 500.;                                    // assumed Ekman-layer depth of 500m
+/*
+    double i_Ekman_layer = 100.;                                    // assumed Ekman-layer depth of 500m
     double coeff = i_Ekman_layer / L_hyd;
     double rmsinthe = 0.;
 
@@ -131,6 +132,9 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
     int j_half = ( jm -1 ) / 2;
     int i_max = im - 1;
     int i_diff = i_max - i_Ekman;
+
+//    cout << "   L_hyd = " << L_hyd << "   i_Ekman_layer = " << i_Ekman_layer << "   coeff = " << coeff << "   i_Ekman = " << i_Ekman << "   i_diff = " << i_diff << endl; 
+
 
 //    Ekman pumping, upwelling, downwelling
     for ( int k = 0; k < km; k++ ){
@@ -158,7 +162,43 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
             else cout << "       i_diff = i_max - i_Ekman    must be an even number to use the Simpson integration method" << endl;
         }
     }
+*/
 
+     for ( int k = 0; k < km; k++ ){
+          for ( int j = 0; j < jm; j++ ){
+               for ( int i = 0; i < im; i++ ){
+                    if ( h.x[ i ][ j ][ k ] == 0. ){
+                         if ( u.x[ i ][ j ][ k ] > 0. ) Upwelling.y[ j ][ k ] 
+                             += u.x[ i ][ j ][ k ] * u_0;
+                         if ( u.x[ i ][ j ][ k ] < 0. ) Downwelling.y[ j ][ k ] 
+                             += u.x[ i ][ j ][ k ] * u_0;
+                    }
+               }
+          }
+     }
+
+     for ( int k = 0; k < km; k++ ){
+          for ( int j = 0; j < jm; j++ ){
+               Downwelling.y[ j ][ k ] = fabs ( Downwelling.y[ j ][ k ] );
+          }
+     }
+
+//     ideal age corresponds to deep currents
+
+     for ( int k = 0; k < km; k++ ){
+          for ( int j = 0; j < jm; j++ ){
+               for ( int i = 0; i < 30; i++ ){
+                    if ( h.x[ i ][ j ][ k ] == 0. ){
+                         BottomWater.y[ j ][ k ] += sqrt ( u.x[ i ][ j ][ k ] 
+                             * u.x[ i ][ j ][ k ] + v.x[ i ][ j ][ k ] 
+                             * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] 
+                             * w.x[ i ][ j ][ k ] ) * u_0;
+                    }
+               }
+          }
+     }
+
+/*
     for ( int k = 1; k < km-1; k++ ){
         for ( int j = 1; j < j_half-1; j++ ){
             rmsinthe = rad.z[ im-1 ] * sin( the.z[ j ] );
@@ -223,6 +263,7 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
                 Downwelling.y[ j ][ km-1 ] ) / 2.;
         }
     }
+*/
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
@@ -418,7 +459,7 @@ void Results_Hyd::land_oceanFraction ( Array &h ){
 
     cout << endl;
     cout << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' )
-        << "      total number of points at constant hight " << " = " << resetiosflags ( ios::left )
+        << "      total number of points at constant height " << " = " << resetiosflags ( ios::left )
         << setw ( 7 ) << fixed << setfill ( ' ' ) << h_point_max << endl << setiosflags ( ios::left )
         << setw ( 50 ) << setfill ( '.' ) << "      number of points on the ocean surface " << " = "
         << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' ) << h_ocean << endl

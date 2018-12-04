@@ -45,11 +45,12 @@ class Accuracy_Hyd{
         ~Accuracy_Hyd ();
 
         double residuumQuery_2D ( Array_1D &, Array_1D &, Array &, Array & );
-        double residuumQuery_3D ( Array_1D &, Array_1D &, Array &, Array &, Array & );
+        double residuumQuery_3D ( double L_hyd, Array_1D &, Array_1D &, Array &, Array &, Array & );
 
         double steadyQuery_2D ( Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-        double steadyQuery_3D ( Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-            Array &, Array &, Array &, Array &, Array & );
+        double steadyQuery_3D ( double L_hyd, Array_1D &rad, Array &u, Array &un, Array &v, Array &vn,
+                                Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn,
+                                Array &p_dyn, Array &p_dynn );
 
         double out_min () const;
         int out_i_res () const;

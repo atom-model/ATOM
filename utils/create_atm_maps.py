@@ -11,12 +11,12 @@ from draw_vectors import draw_velocity
 from draw_topo import draw_topography
 
 map_cfg = {
-    'temperature': (6, -60, 40, u'Temperature (Celsius °C)'),
-    'v_velocity': (3, -1, 1, 'v_velocity (m/s)'),
-    'w_velocity': (4, -1, 2, 'w_velocity (m/s)'),
-    'water_vapour': (7, 0, 20, 'Water Vapour (g/kg)'),
-    'precipitation': (8, 0, 1500, 'Precipitation (mm/yr)'),
-    'precipitable_water': (9, 0, 30, 'Precipitable Water (mm)'),
+    'temperature': (6, -60, 40),
+    'v_velocity': (3, -1, 1),
+    'w_velocity': (4, -1, 2),
+    'water_vapour': (7, 0, 20),
+    'precipitation': (8, 0, 7),
+    'precipitable_water': (9, 0, 30),
 }
 
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
@@ -38,9 +38,7 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         x = data[:,0]
         y = data[:,1]
         z = data[:,index]
-        if directory == 'precipitation':
-            z=z*365
-
+        
         topo = data[:,2]
 
         plt.figure(figsize=(15, 8))
@@ -55,14 +53,7 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         v_min = map_cfg[directory][1]
         v_max = map_cfg[directory][2] 
 
-        #cs = m.scatter(xi, yi, marker='.', c=z, alpha=0.5, lw=0, vmin=v_min, vmax=v_max)
-
-        zz = np.zeros((181, 361))
-        for i in range(181):
-            for j in range(361):
-                zz[180-i][j] = z[j*181+i]
-        img_data = m.transform_scalar(zz, np.arange(-180,180),np.arange(-90,90),361,181)
-        cs = m.imshow(img_data,alpha=0.5, vmin=v_min, vmax=v_max)
+        cs = m.scatter(xi, yi, marker='.', c=z, alpha=0.5, lw=0, vmin=v_min, vmax=v_max)
 
         m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
                             colors ='k', linewidths= 0.3 )
@@ -71,8 +62,8 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         m.drawmeridians(np.arange(-180., 180., 45.), labels=[0,0,0,1], fontsize=10)
         #m.drawcoastlines()   
 
-        cbar = m.colorbar(cs, location='bottom', pad="10%", label=map_cfg[directory][3])
-        plt.title("{1} at {0}Ma".format(time, directory.capitalize()))
+        cbar = m.colorbar(cs, location='bottom', pad="10%")
+        plt.title("{0}Ma {1}".format(time,directory))
         plt.savefig(output_dir+'/'+directory+'/{0}_Ma_{1}.png'.format(time, directory), bbox_inches='tight')
         print(output_dir+'/'+directory+'/{0}_Ma_{1}.png has been saved!'.format(time, directory))
         #plt.show()

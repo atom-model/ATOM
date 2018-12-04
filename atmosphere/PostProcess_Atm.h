@@ -35,7 +35,7 @@ private:
     void dump_array(const string &name, Array &a, double multiplier, ofstream &f);
 
 public:
-    PostProcess_Atmosphere(int, int, int, string &output_path);
+    PostProcess_Atmosphere( int, int, int, string &output_path );
     ~PostProcess_Atmosphere();
 
     void paraview_vts ( string &, int iter_cnt, Array_1D &, Array_1D &, Array_1D &, Array &,
@@ -48,8 +48,8 @@ public:
                                     Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
     void paraview_vtk_zonal ( string &, int, int iter_cnt, double &, double &, double &,
-                                    double &, double &, double &, double &, double &, double &,
-                                    double &, double &, Array &, Array &, Array &, Array &, Array &,
+                                    double &, double &, double &, double &, double &, double &, double &,
+                                    double &, double &, Array_1D &rad, Array &, Array &, Array &, Array &, Array &,
                                     Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
                                     Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
                                     Array &, Array &, Array &, Array &, Array &,Array & );

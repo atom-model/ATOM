@@ -29,12 +29,11 @@ public:
     ~BC_Hydrosphere();
 
 
-    void RB_radius ( double, double, double, double, Array_1D &, Array &, Array &,
-        Array &, Array &, Array &, Array & );
+    void RB_radius ( double ca, double ta, double pa, Array_1D &rad, 
+                     Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c );
 
-    void RB_theta ( double, double, double, Array &, Array &, Array &, Array &,
-        Array &, Array & );
+    void RB_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c );
 
-    void RB_phi ( Array &, Array &, Array &, Array &, Array &, Array & );
+    void RB_phi ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c );
 };
 #endif

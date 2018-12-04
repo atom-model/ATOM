@@ -12,6 +12,7 @@
 
 #include "Array.h"
 #include "Array_2D.h"
+#include "Array_1D.h"
 
 #ifndef _BC_BATHYMETRY_HYDROSPHERE_
 #define _BC_BATHYMETRY_HYDROSPHERE_
@@ -28,7 +29,7 @@ class BC_Bathymetry_Hydrosphere{
         ~BC_Bathymetry_Hydrosphere();
 
         void BC_SeaGround(const string &bathymetry_file, double L_hyd, Array &h,
-            Array_2D &Bathymetry);
+            Array_2D &Bathymetry, Array_1D &rad );
 
         void BC_SolidGround ( double ca, double ta, double pa, Array &h, Array &t,
             Array &u, Array &v, Array &w, Array &p_dyn, Array &c, Array &tn, Array &un,

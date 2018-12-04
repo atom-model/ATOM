@@ -78,7 +78,7 @@ void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p
 
 
 void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn,
-                                     Array &c, Array &cloud, Array &ice, Array &co2 ){
+                               Array &c, Array &cn, Array &cloud, Array &ice, Array &co2 ){
 // boundary conditions for the the-direction, loop index j
     for ( int k = 0; k < km; k++ ){
         for ( int i = 0; i < im; i++ ){
@@ -96,6 +96,8 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_
             p_dyn.x[ i ][ jm-1 ][ k ] = 0.;
             c.x[ i ][ 0 ][ k ] = c43 * c.x[ i ][ 1 ][ k ] - c13 * c.x[ i ][ 2 ][ k ];
             c.x[ i ][ jm-1 ][ k ] = c43 * c.x[ i ][ jm-2 ][ k ] - c13 * c.x[ i ][ jm-3 ][ k ];
+            cn.x[ i ][ 0 ][ k ] = c43 * cn.x[ i ][ 1 ][ k ] - c13 * cn.x[ i ][ 2 ][ k ];
+            cn.x[ i ][ jm-1 ][ k ] = c43 * cn.x[ i ][ jm-2 ][ k ] - c13 * cn.x[ i ][ jm-3 ][ k ];
             cloud.x[ i ][ 0 ][ k ] = c43 * cloud.x[ i ][ 1 ][ k ] - c13 * cloud.x[ i ][ 2 ][ k ];
             cloud.x[ i ][ jm-1 ][ k ] = c43 * cloud.x[ i ][ jm-2 ][ k ] - c13 * cloud.x[ i ][ jm-3 ][ k ];
             ice.x[ i ][ 0 ][ k ] = c43 * ice.x[ i ][ 1 ][ k ] - c13 * ice.x[ i ][ 2 ][ k ];

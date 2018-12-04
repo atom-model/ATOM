@@ -15,43 +15,37 @@
 using namespace std;
 
 
-RungeKutta_Hydrosphere::RungeKutta_Hydrosphere ( int im, int jm, int km, double dt )
-{
-	this -> im = im;
-	this -> jm = jm;
-	this -> km = km;
-	this -> dt = dt;
+RungeKutta_Hydrosphere::RungeKutta_Hydrosphere ( int im, int jm, int km, double dt ){
+    this -> im = im;
+    this -> jm = jm;
+    this -> km = km;
+    this -> dt = dt;
 }
 
-RungeKutta_Hydrosphere::~RungeKutta_Hydrosphere () {}
+RungeKutta_Hydrosphere::~RungeKutta_Hydrosphere (){}
 
 
 
 void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &prepare,
-                   int &n, double L_hyd, double g, double cp_w, double u_0, double t_0, double c_0,
+                   int &iter_cnt, double L_hyd, double g, double cp_w, double u_0, double t_0, double c_0,
                    double r_0_water, double ta, double pa, double ca, Array_1D &rad, Array_1D &the, Array_1D &phi,
                    Array_2D &Evaporation_Dalton, Array_2D &Precipitation, Array &h, Array &rhs_t,
                    Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c,
                    Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c,
                    Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn,
                    Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion,
-                   Array &Buoyancy_Force, Array &Salt_Balance, Array &p_stat,
-                   Array &r_water, Array &r_salt_water, Array_2D &Bathymetry )
-{
+                   Array &BuoyancyForce_3D, Array &Salt_Balance, Array &p_stat,
+                   Array &r_water, Array &r_salt_water, Array_2D &Bathymetry ){
 //  3D volume iterations
 // Runge-Kutta 4. order for u, v and w component, temperature and salt concentration
-
-    for ( int i = 1; i < im-1; i++ )
-    {
-        for ( int j = 1; j < jm-1; j++ )
-        {
-            for ( int k = 1; k < km-1; k++ )
-            {
+    for ( int i = 1; i < im-1; i++ ){
+        for ( int j = 1; j < jm-1; j++ ){
+            for ( int k = 1; k < km-1; k++ ){
 // Runge-Kutta 4. order for k1 step ( dt )
                 prepare.RK_RHS_3D_Hydrosphere ( i, j, k, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca,
-                             rad, the, phi, h, t, u, v, w, p_dyn, c, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, aux_u, aux_v, aux_w,
-                             Salt_Finger, Salt_Diffusion, Buoyancy_Force, Salt_Balance, p_stat, r_water, r_salt_water,
-                             Evaporation_Dalton, Precipitation, Bathymetry );
+                rad, the, phi, h, t, u, v, w, p_dyn, c, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, aux_u, aux_v, aux_w,
+                Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water,
+                Evaporation_Dalton, Precipitation, Bathymetry );
 
                 kt1 = rhs_t.x[ i ][ j ][ k ];
                 ku1 = rhs_u.x[ i ][ j ][ k ];
@@ -68,7 +62,7 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
 // Runge-Kutta 4. order for k2 step ( dt )
                 prepare.RK_RHS_3D_Hydrosphere ( i, j, k, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca,
                 rad, the, phi, h, t, u, v, w, p_dyn, c, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, aux_u, aux_v, aux_w,
-                Salt_Finger, Salt_Diffusion, Buoyancy_Force, Salt_Balance, p_stat, r_water, r_salt_water,
+                Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water,
                 Evaporation_Dalton, Precipitation, Bathymetry );
 
                 kt2 = rhs_t.x[ i ][ j ][ k ];
@@ -86,25 +80,25 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
     // Runge-Kutta 4. order for k3 step ( dt )
                 prepare.RK_RHS_3D_Hydrosphere ( i, j, k, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca,
                 rad, the, phi, h, t, u, v, w, p_dyn, c, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, aux_u, aux_v, aux_w,
-                Salt_Finger, Salt_Diffusion, Buoyancy_Force, Salt_Balance, p_stat, r_water, r_salt_water,
+                Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water,
                 Evaporation_Dalton, Precipitation, Bathymetry );
 
                 kt3 = rhs_t.x[ i ][ j ][ k ];
                 ku3 = rhs_u.x[ i ][ j ][ k ];
                 kv3 = rhs_v.x[ i ][ j ][ k ];
-                kw3 =rhs_w.x[ i ][ j ][ k ];
+                kw3 = rhs_w.x[ i ][ j ][ k ];
                 kc3 = rhs_c.x[ i ][ j ][ k ];
 
                 t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] + kt3 * dt;
                 u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] + ku3 * dt;
                 v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] + kv3 * dt;
-                w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] + kw3 * dt;
+                w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] + kw3 * dt;
                 c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] + kc3 * dt;
 
     // Runge-Kutta 4. order for k4 step ( dt )
                 prepare.RK_RHS_3D_Hydrosphere ( i, j, k, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca,
                 rad, the, phi, h, t, u, v, w, p_dyn, c, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, aux_u, aux_v, aux_w,
-                Salt_Finger, Salt_Diffusion, Buoyancy_Force, Salt_Balance, p_stat, r_water, r_salt_water,
+                Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, p_stat, r_water, r_salt_water,
                 Evaporation_Dalton, Precipitation, Bathymetry );
 
                 kt4 = rhs_t.x[ i ][ j ][ k ];
@@ -138,10 +132,8 @@ void RungeKutta_Hydrosphere::solveRungeKutta_2D_Hydrosphere ( RHS_Hydrosphere &p
     cout.precision ( 9 );
     cout.setf ( ios::fixed );
 
-    for ( int j = 1; j < jm-1; j++ )
-    {
-        for ( int k = 1; k < km-1; k++ )
-        {
+    for ( int j = 1; j < jm-1; j++ ){
+        for ( int k = 1; k < km-1; k++ ){
 // Runge-Kutta 4. order for k1 step ( dt )
             prepare_2D.RK_RHS_2D_Hydrosphere ( j, k, r_0_water, rad, the, phi, h, v, w, p_dyn,
                                 rhs_v, rhs_w, aux_v, aux_w );

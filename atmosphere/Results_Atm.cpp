@@ -289,6 +289,9 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
         }
     }
 
+//    double zeta = 3.715;
+//    double step = 0.;
+
 // surface values of Evaporation, Condensation, Water, Water_super, IceAir, precipitable_water only for radial printout
     precipitable_water.y[ 0 ][ 0 ] = 0.;
     precipitable_water.y[ 0 ][ 0 ] = 0.;
@@ -332,17 +335,28 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                 e = 100. * c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep;  // water vapour pressure in Pa
                 a = e / ( R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 );  // absolute humidity in kg/m³
                 precipitable_water.y[ j ][ k ] +=  a * L_atm / ( double ) ( im - 1 );  // mass of water in kg/m²
-                // precipitable_water mass in 1 kg/m² compares to 1 mm hight, with water density kg/ ( m² * mm )
+/*
+                step = ( ( exp( zeta * ( rad.z[ i + 1 ] - 1. ) ) - 1 ) 
+                     - ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) ) 
+                     * ( L_atm / ( double ) ( im-1 ) );
+                precipitable_water.y[ j ][ k ] +=  a * ( exp( zeta 
+                    * ( rad.z[ i ] - 1. ) ) - 1 ) * step;
+                    // mass of water in kg/m², coordinate stretching 
+                    // precipitable_water mass in 1 kg/m² compares to 1 mm height, with water density kg/ ( m² * mm )
+*/
             }
         }
     }
 
-    double coeff_prec = 86400.;  // dimensions see below
+    double coeff_prec = 8.64e+4;  // dimensions see below
+    double coeff_rain_snow = dr * ( L_atm / ( double ) ( im-1 ) );  // dimensionsional in kg/(m²*s) == mm/s
 
 // surface values of precipitation and precipitable water
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            Precipitation.y[ j ][ k ] = coeff_prec * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );
+//            P_rain.x[ 0 ][ j ][ k ] = coeff_rain_snow * P_rain.x[ 0 ][ j ][ k ];
+//            P_snow.x[ 0 ][ j ][ k ] = coeff_rain_snow * P_snow.x[ 0 ][ j ][ k ];
+            Precipitation.y[ j ][ k ] = coeff_prec * coeff_rain_snow * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );
             // 60 s * 60 min * 24 h = 86400 s == 1 d
             // Precipitation, P_rain and P_snow in kg/ ( m² * s ) = mm/s
             // Precipitation in 86400. * kg/ ( m² * d ) = 86400 mm/d

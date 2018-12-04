@@ -42,10 +42,10 @@ class Accuracy_Atm
         void steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
             Array &w, Array &wn, Array &t, Array &tn, Array &c, Array &cn,
             Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &co2,
-            Array &co2n, Array &p_dyn, Array &p_dynn, double L_atm);
+            Array &co2n, Array &p_dyn, Array &p_dynn, double L_atm, Array_1D &rad);
 
         void print(const string& name, double value, int j, int k) const;        
-        void print(const string& name, double value, int i, int j, int k) const;
+        void print(const string& name, double value, int i, int j, int k, double L_atm, Array_1D &rad ) const;
 
         double out_min (  ) const;
         int out_i_res (  ) const;

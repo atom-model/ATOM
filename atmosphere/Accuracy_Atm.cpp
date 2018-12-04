@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <cstring>
 
+#include "Array_1D.h"
 #include "Accuracy_Atm.h"
 #include "Utils.h"
 
@@ -191,7 +192,7 @@ void Accuracy_Atm::print(const string& name, double value, int j, int k) const{
 
 void Accuracy_Atm::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Array &w, Array &wn, Array &t, Array &tn, 
     Array &c, Array &cn, Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &co2, Array &co2n, Array &p_dyn, 
-    Array &p_dynn, double L_atm)
+    Array &p_dynn, double L_atm, Array_1D &rad )
 {
     // state of a steady solution ( min )
     double min_u = 0.; 
@@ -313,32 +314,36 @@ void Accuracy_Atm::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn, Ar
     cout << endl << endl << " 3D iterational process for the surface boundary conditions\n printout of maximum and minimum " <<
         "absolute and relative errors of the computed values at their locations: level, latitude, longitude" << endl;
     
-    print(" residuum: continuity equation ", min, i_res * int ( L_atm ) / ( im - 1 ), j_res, k_res);
+    print(" residuum: continuity equation ", min, i_res * int ( L_atm ) / ( im - 1 ), j_res, k_res, L_atm, rad );
 
-    print(" dp: pressure Poisson equation ", min_p, i_p * int ( L_atm ) / ( im - 1 ), j_p, k_p);
+    print(" dp: pressure Poisson equation ", min_p, i_p * int ( L_atm ) / ( im - 1 ), j_p, k_p, L_atm, rad );
 
-    print(" du: Navier Stokes equation ", min_u, i_u * int ( L_atm ) / ( im - 1 ), j_u, k_u);
+    print(" du: Navier Stokes equation ", min_u, i_u * int ( L_atm ) / ( im - 1 ), j_u, k_u, L_atm, rad );
 
-    print(" dv: Navier Stokes equation ", min_v, i_v * int ( L_atm ) / ( im - 1 ), j_v, k_v);
+    print(" dv: Navier Stokes equation ", min_v, i_v * int ( L_atm ) / ( im - 1 ), j_v, k_v, L_atm, rad );
 
-    print(" dw: Navier Stokes equation ", min_w, i_w * int ( L_atm ) / ( im - 1 ), j_w, k_w);
+    print(" dw: Navier Stokes equation ", min_w, i_w * int ( L_atm ) / ( im - 1 ), j_w, k_w, L_atm, rad );
 
-    print(" dt: energy transport equation ", min_t, i_t * int ( L_atm ) / ( im - 1 ), j_t, k_t);
+    print(" dt: energy transport equation ", min_t, i_t * int ( L_atm ) / ( im - 1 ), j_t, k_t, L_atm, rad );
 
-    print(" dc: vapour transport equation ", min_c, i_c * int ( L_atm ) / ( im - 1 ), j_c, k_c);
+    print(" dc: vapour transport equation ", min_c, i_c * int ( L_atm ) / ( im - 1 ), j_c, k_c, L_atm, rad );
 
-    print(" dcloud: cloud transport equation ", min_cloud, i_cloud * int ( L_atm ) / ( im - 1 ), j_cloud, k_cloud);
+    print(" dcloud: cloud transport equation ", min_cloud, i_cloud * int ( L_atm ) / ( im - 1 ), j_cloud, k_cloud, L_atm, rad );
 
-    print(" dice: ice transport equation ", min_ice, i_ice * int ( L_atm ) / ( im - 1 ), j_ice, k_ice);
+    print(" dice: ice transport equation ", min_ice, i_ice * int ( L_atm ) / ( im - 1 ), j_ice, k_ice, L_atm, rad );
 
-    print(" dco: CO2 transport equation ", min_co2, i_co2 * int ( L_atm ) / ( im - 1 ), j_co2, k_co2);
+    print(" dco: CO2 transport equation ", min_co2, i_co2 * int ( L_atm ) / ( im - 1 ), j_co2, k_co2, L_atm, rad );
 
     return;
 }
 
-void Accuracy_Atm::print(const string& name, double value, int i, int j, int k) const{
+void Accuracy_Atm::print(const string& name, double value, int i, int j, int k, double L_atm, Array_1D &rad ) const{
 
     AtomUtils::HemisphereCoords coords = AtomUtils::convert_coords(k, j);
+
+    double zeta = 3.715;
+
+    i = ( int )( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
 
     cout << setiosflags ( ios::left ) << setw ( 36 ) << setfill ( '.' ) << name << " = " << resetiosflags ( ios::left ) << 
         setw ( 12 ) << fixed << setfill ( ' ' ) << value << setw ( 5 ) << int(coords.lat) << setw ( 3 ) << coords.north_or_south 

@@ -17,20 +17,23 @@
 #ifndef _RHS_ATMOSPHERE_
 #define _RHS_ATMOSPHERE_
 
+class cAtmosphereModel;
+
 using namespace std;
 
 
 class RHS_Atmosphere
 {
     private:
+        cAtmosphereModel* m_model;
         int im, jm, km;
 
-        double dt, dr, dthe, dphi;
+        double dt, dr, dthe, dphi, zeta;
         double re, sc_WaterVapour, sc_CO2, g, pr, gam, WaterVapour, Buoyancy, CO2, sigma;
 
     public:
         RHS_Atmosphere ( int, int, double, double, double );
-        RHS_Atmosphere ( int, int, int, double, double, double, double, double, double,
+        RHS_Atmosphere ( cAtmosphereModel* model, int, int, int, double, double, double, double, double, double,
                                        double, double, double, double, double, double, double, double, double );
         ~RHS_Atmosphere ();
 

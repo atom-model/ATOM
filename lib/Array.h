@@ -191,7 +191,7 @@ public:
         return false;
     }
 
-    void inspect(const std::string& prefix="") const;
+    void inspect() const;
 };
 
 inline Array operator* (double coeff, const Array &a){
