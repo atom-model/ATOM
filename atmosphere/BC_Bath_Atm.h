@@ -7,7 +7,8 @@
  * 
  * class to read and prepare the bathymetric and topografic data
 */
-
+#ifndef _BC_BATHYMETRIE_ATMOSPHERE_
+#define _BC_BATHYMETRIE_ATMOSPHERE_
 
 #include <iostream>
 
@@ -15,10 +16,9 @@
 #include "Array_2D.h"
 #include "Array_1D.h"
 
-#ifndef _BC_BATHYMETRIE_ATMOSPHERE_
-#define _BC_BATHYMETRIE_ATMOSPHERE_
-
 using namespace std;
+
+class cAtmosphereModel;
 
 class BC_Bathymetry_Atmosphere
 {
@@ -42,12 +42,17 @@ class BC_Bathymetry_Atmosphere
         double h_point_max, h_land, h_ocean, ozean_land;
         
         BC_Bathymetry_Atmosphere(){};
+        cAtmosphereModel* m_model;
 
     public:
-        BC_Bathymetry_Atmosphere ( int, int, int, int, double, double, double );
+        BC_Bathymetry_Atmosphere(
+                cAtmosphereModel* model, int NASATemperature,
+                int im, int jm, int km, double co2_vegetation, 
+                double co2_land, double co2_ocean );
+
         ~BC_Bathymetry_Atmosphere();
 
-        void BC_MountainSurface( string &topo_filename, double L_atm, Array_2D &Topography, Array &h );
+        void BC_MountainSurface(string &topo_filename, Array_2D &Topography, Array &h );
 
         void BC_IceShield ( int, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D & );
 

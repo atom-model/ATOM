@@ -86,6 +86,17 @@ public:
     static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
     static const double the0, phi0, r0;
 
+    /*
+     * This function must be called after init_layer_heights()
+    */
+    double get_layer_height(int i){
+        if(0<i || i>im-1){
+            return -1;
+        }
+        return m_layer_heights[i];
+    }
+
+
 private:
     void SetDefaultConfig();
     void reset_arrays();
@@ -110,6 +121,18 @@ private:
     }
 
     void restrain_temperature();
+
+    /*
+     * This function must be called after "rad" has been initialized.
+    */
+    void init_layer_heights(){
+        const double zeta = 3.715;
+        double h = L_atm / ( im-1 );
+        for(int i=0; i<im; i++){
+            m_layer_heights.push_back( (exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * h );
+        } 
+        return;
+    }
 
     static cAtmosphereModel* m_model;
 
@@ -143,7 +166,7 @@ private:
     Array_1D rad; // radial coordinate direction
     Array_1D the; // lateral coordinate direction
     Array_1D phi; // longitudinal coordinate direction
-
+    std::vector<double> m_layer_heights;
 
     // 2D arrays
     Array_2D Topography; // topography

@@ -166,7 +166,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     the.Coordinates ( jm, the0, dthe );
     phi.Coordinates ( km, phi0, dphi );
 
-
+    init_layer_heights();
+    
     //  initial values for the number of computed steps and the time
     double t_cretaceous = 0.;
 
@@ -220,10 +221,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  initialization of the bathymetry/topography
 
     //  class BC_Bathymetry_Atmosphere for the geometrical boundary condition of the computational area
-    BC_Bathymetry_Atmosphere LandArea ( NASATemperature, im, jm, km, co2_vegetation, co2_land, co2_ocean );
+    BC_Bathymetry_Atmosphere LandArea(this, NASATemperature, im, jm, km, co2_vegetation, co2_land, co2_ocean);
 
     //  topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-    LandArea.BC_MountainSurface ( bathymetry_filepath, L_atm, Topography, h );
+    LandArea.BC_MountainSurface ( bathymetry_filepath, Topography, h );
 
     //  class element for the computation of the ratio ocean to land areas, also supply and removal of CO2 on land, ocean and by vegetation
     LandArea.land_oceanFraction ( h );
