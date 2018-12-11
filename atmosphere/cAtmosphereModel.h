@@ -81,6 +81,17 @@ public:
         return im_tropopause;
     }
 
+    /*
+     * Given a latitude, return the layer index of tropopause
+    */
+    int get_tropopause_layer(int j){
+        //refer to  BC_Thermo::TropopauseLocation and BC_Thermo::GetTropopauseHightAdd
+        //tropopause height is proportional to the mean tropospheric temperature.
+        //higher near the equator - warm troposphere
+        //lower at the poles - cold troposphere
+        return tropopause_equator;//return a constant number for now, need to be fixed
+    }
+
     float calculate_mean_temperature(const Array& t);
 
     static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
@@ -88,6 +99,7 @@ public:
 
     /*
      * This function must be called after init_layer_heights()
+     * Given a layer index i, return the height of this layer
     */
     double get_layer_height(int i){
         if(0<i || i>im-1){

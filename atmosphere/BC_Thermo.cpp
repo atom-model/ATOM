@@ -223,7 +223,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
     epsilon_eff_2D = epsilon_pole - epsilon_equator;
 
     for ( int j = 0; j < jm; j++ ){
-        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0);
+        int i_trop = m_model->get_tropopause_layer(j);
 
         // on zero level, lateral parabolic distribution
         epsilon_eff_max = epsilon_eff_2D * parabola( j / j_max_half ) + epsilon_pole;
@@ -247,7 +247,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
 
                 // radial parabolic distribution, start on zero level
                 epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) *
-                    parabola( (double)i / (im -1) );
+                    parabola( m_model->get_layer_height(i) / m_model->get_layer_height(i_trop) );
                 
                 if ( fabs(m_model->CO2 - 1) < std::numeric_limits<double>::epsilon() ){
                     // influence of co2 in the atmosphere, co2_coeff = 1. means no influence
