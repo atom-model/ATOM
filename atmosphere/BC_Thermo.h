@@ -84,7 +84,7 @@ class BC_Thermo
         double r_dry, r_humid, p_SL, t_SL, exp_pressure, hight;
         double t_u, T, T_nue, T_it, q_T, q_Rain_n;
         double q_v_b, q_c_b, q_i_b, q_v_hyp, CND, DEP, d_q_v, d_q_c, d_q_i, d_t, q_Ice_n;
-        double t_equator, t_tropopause, t_eff, t_pole, t_eff_tropo, t_tropopause_pole,
+        double t_equator, t_tropopause, t_eff, t_pole, t_eff_tropo,
             c_equator, c_tropopause, coeff_mmWS;
         double co2_tropopause, co2_eff, co2_coeff, co_pol, co2_vegetation,
             co2_ocean, co2_land, co2_cretaceous, co2_factor;
