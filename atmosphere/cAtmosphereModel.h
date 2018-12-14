@@ -111,6 +111,11 @@ private:
 
     void restrain_temperature();
 
+    /*
+     * initialize water vapour Array c
+    */
+    void init_water_vapour();
+
     static cAtmosphereModel* m_model;
 
     PythonStream ps;

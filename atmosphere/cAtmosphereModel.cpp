@@ -1004,3 +1004,81 @@ void cAtmosphereModel::restrain_temperature(){
         }
     }
 }
+
+/*
+*
+*/
+void cAtmosphereModel::init_water_vapour(){
+    // initial and boundary conditions of water vapour on water and land surfaces
+    // parabolic water vapour distribution from pole to pole accepted
+
+    // maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
+    // minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
+    // value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
+
+    double t_u = 0.;  // not air but ocean surface temperature should be used
+    double sat_difference = 0.;  // not air but ocean surface temperature
+    // should be involved in water vapour saturation difference, it is not the saturation deficit
+    double Dalton_Evaporation = 0;  // ocean surface evaporation
+
+    // water vapour contents computed by Clausius-Clapeyron-formula
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            int i_mount = i_topography[ j ][ k ];
+
+            if ( is_air ( h, 0, j, k ) ){
+                c.x[ i_mount ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
+                    ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01 );
+                // saturation of relative water vapour in kg/kg
+                c.x[ i_mount ][ j ][ k ] = c_ocean * c.x[ i_mount ][ j ][ k ];
+                // relativ water vapour contents on ocean surface reduced by factor
+
+                p_stat.x[ i_mount ][ j ][ k ] = ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01;  // given in hPa
+                t_u = t.x[ i_mount ][ j ][ k ] * t_0; // in K
+                r_dry = 100. * p_stat.x[ i_mount ][ j ][ k ] / ( R_Air * t.x[ i_mount ][ j ][ k ] * t_0 );
+                r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i_mount ][ j ][ k ] );
+                e = c.x[ i_mount ][ j ][ k ] * p_stat.x[ i_mount ][ j ][ k ] / ep;  // water vapour pressure in hPa
+                E = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                sat_difference = ( E - e );  // saturation difference in hPa/K
+                Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) *
+                    sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
+                // Evaporation_Dalton given in mm/d,  recalculation in kg/kg water vapour/ dry air by
+                // c_ev = 8.46e-4 * Dalton_Evaporation * dt_dim / ( r_humid * dr_dim ) [ mm/d * m³ * s / ( kg * m ) * ( kg/kg_air ) ] == [ kg/kg_air ]
+                // [ mm/s ] == [ kg / ( m² * s ) ]
+
+                c.x[ i_mount ][ j ][ k ] = Dalton_Evaporation + c.x[ i_mount ][ j ][ k ]; // kg/kg_air
+            }
+            else if ( is_land ( h, 0, j, k ) ){
+                c.x[ i_mount ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
+                    ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01 );
+                c.x[ i_mount ][ j ][ k ] = c_land * c.x[ i_mount ][ j ][ k ];
+                // relativ water vapour contents on land reduced by factor
+                // Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount + 1 ][ j ][ k ], w.x[ i_mount + 1 ][ j ][ k ] ) *
+                // sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
+                c.x[ i_mount ][ j ][ k ] = Dalton_Evaporation + c.x[ i_mount ][ j ][ k ]; // kg/kg_air
+            }
+        }
+    }
+
+    // water vapour distribution decreasing approaching tropopause
+    for ( int j = 0; j < jm; j++ ){
+        int i_trop = get_tropopause_layer(j);
+        for ( int k = 0; k < km; k++ ){
+            int i_mount = i_topography[ j ][ k ];
+
+            for ( int i = 0; i < im; i++ ){
+                if ( i < i_trop ){
+                    if(i>i_mount){
+			double x = (get_layer_height(i) - get_layer_height(i_mount)) / (
+                            get_layer_height(i_trop) - get_layer_height(i_mount));
+                        c.x[ i ][ j ][ k ] = parabolic_interp(c_tropopause, c.x[ i_mount ][ j ][ k ], x); 
+                    }else{
+                        c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];
+                    }
+                }else{
+                    c.x[ i ][ j ][ k ] = c_tropopause;
+                }
+            } // end i
+        }// end k
+    }// end j
+}
