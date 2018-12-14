@@ -92,6 +92,14 @@ public:
         return tropopause_equator;//return a constant number for now, need to be fixed
     }
 
+    /*
+     *
+    */
+    int get_mountain_top(int j, int k){
+        return i_topography[j][k];
+    }
+
+
     float calculate_mean_temperature(const Array& t);
 
     static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
@@ -132,6 +140,8 @@ private:
         return calculate_mean_temperature(t);
     }
 
+    std::vector<std::vector<int> > i_topography;
+
     void restrain_temperature();
 
     /*
@@ -151,6 +161,8 @@ private:
         } 
         return;
     }
+
+    void init_topography(string &topo_filename);
 
     static cAtmosphereModel* m_model;
 

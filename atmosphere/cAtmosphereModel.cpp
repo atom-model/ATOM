@@ -28,6 +28,7 @@
 #include "Utils.h"
 #include "Config.h"
 #include "AtmParameters.h"
+#include "AtomMath.h"
 
 using namespace std;
 using namespace tinyxml2;
@@ -55,6 +56,7 @@ const double cAtmosphereModel::phi0 = 0.;             // zero meridian in Greenw
 const double cAtmosphereModel::r0 = 1.; 
 
 cAtmosphereModel::cAtmosphereModel() :
+    i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0))),
     im_tropopause(NULL),
     is_node_weights_initialised(false), 
     old_arrays_3d {&u,  &v,  &w,  &t,  &p_dyn,  &c,  &cloud,  &ice,  &co2 },
@@ -224,8 +226,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     BC_Bathymetry_Atmosphere LandArea(this, NASATemperature, im, jm, km, co2_vegetation, co2_land, co2_ocean);
 
     //  topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-    LandArea.BC_MountainSurface ( bathymetry_filepath, Topography, h );
-
+    //LandArea.BC_MountainSurface ( bathymetry_filepath, Topography, h );
+    init_topography(bathymetry_filepath);
     //  class element for the computation of the ratio ocean to land areas, also supply and removal of CO2 on land, ocean and by vegetation
     LandArea.land_oceanFraction ( h );
 
@@ -283,8 +285,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
-    circulation.BC_WaterVapour ( h, p_stat, t, c, v, w );
-
+    //circulation.BC_WaterVapour ( h, p_stat, t, c, v, w );
+    init_water_vapour();
 //    t.printArray ( im, jm, km );
 
 //    goto Print;
@@ -1006,6 +1008,15 @@ void cAtmosphereModel::restrain_temperature(){
     }
 }
 
+double C_Dalton ( double u_0, double v, double w ){
+    // variation of the heat transfer coefficient in Dalton's evaporation law, parabola
+    double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
+    // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
+    double v_max = 10.;  // Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
+    double vel_magnitude = sqrt ( v * v + w * w ) * u_0;
+    return sqrt ( C_max * C_max / v_max * vel_magnitude );  // result in mm/h
+}
+
 /*
 *
 */
@@ -1036,10 +1047,13 @@ void cAtmosphereModel::init_water_vapour(){
 
                 p_stat.x[ i_mount ][ j ][ k ] = ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01;  // given in hPa
                 t_u = t.x[ i_mount ][ j ][ k ] * t_0; // in K
-                r_dry = 100. * p_stat.x[ i_mount ][ j ][ k ] / ( R_Air * t.x[ i_mount ][ j ][ k ] * t_0 );
-                r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i_mount ][ j ][ k ] );
-                e = c.x[ i_mount ][ j ][ k ] * p_stat.x[ i_mount ][ j ][ k ] / ep;  // water vapour pressure in hPa
-                E = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                double r_dry = 100. * p_stat.x[ i_mount ][ j ][ k ] / ( R_Air * t.x[ i_mount ][ j ][ k ] * t_0 );
+                double r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i_mount ][ j ][ k ] );
+                double e = c.x[ i_mount ][ j ][ k ] * p_stat.x[ i_mount ][ j ][ k ] / ep;  // water vapour pressure in hPa
+                double E = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                double dt_dim = L_atm / u_0 * dt;// dimensional time step of the system in s == 0.02 s
+                double dr_dim = dr * L_atm;  // = 0.025 * 16000 = 400
+
                 sat_difference = ( E - e );  // saturation difference in hPa/K
                 Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) *
                     sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
@@ -1072,7 +1086,7 @@ void cAtmosphereModel::init_water_vapour(){
                     if(i>i_mount){
 			double x = (get_layer_height(i) - get_layer_height(i_mount)) / (
                             get_layer_height(i_trop) - get_layer_height(i_mount));
-                        c.x[ i ][ j ][ k ] = parabolic_interp(c_tropopause, c.x[ i_mount ][ j ][ k ], x); 
+                        c.x[ i ][ j ][ k ] = parabola_interp(c_tropopause, c.x[ i_mount ][ j ][ k ], x); 
                     }else{
                         c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];
                     }
@@ -1083,3 +1097,71 @@ void cAtmosphereModel::init_water_vapour(){
         }// end k
     }// end j
 }
+
+/*
+*
+*/
+void cAtmosphereModel::init_topography(string &topo_filename){
+    // default adjustment, h must be 0 everywhere
+    h.initArray(im, jm, km, 0.);
+
+    // reading data from file Name_Bathymetry_File_Read
+    ifstream ifile(topo_filename);
+    if ( ! ifile.is_open()) {
+        std::cerr << "ERROR: could not open Name_Bathymetry_File file: " <<  topo_filename << std::endl;
+        abort();
+    }
+
+    double lon, lat, height;
+    int j, k;
+    for (j = 0; j < jm && !ifile.eof(); j++) {
+        for (k = 0; k < km && !ifile.eof(); k++) {
+            height = -999; // in case the height is NaN
+            ifile >> lon >> lat >> height;
+            if ( height < 0. ){
+                h.x[ 0 ][ j ][ k ] = Topography.y[ j ][ k ] = 0.;
+            }else{
+                Topography.y[ j ][ k ] = height;
+                for ( int i = 0; i < im; i++ ){
+                    if(height > get_layer_height(i)){
+                        h.x[ i ][ j ][ k ] = 1.;
+                    }else{
+                        break;
+                    }   
+                }   
+            }   
+            if(ifile.fail()){
+                ifile.clear();
+                std::string tmp;
+                std::getline(ifile, tmp);
+                logger() << "bad data in topography at: " << lon << " " << lat << " " << tmp << std::endl;
+            }   
+            //logger() << lon << " " << lat << " " << h.x[ 0 ][ j ][ k ] << std::endl;            
+        }   
+    }   
+    if(j != jm || k != km ){
+       std::cerr << "wrong topography file size! aborting..."<<std::endl;
+        abort();
+    }
+
+    // rewriting bathymetrical data from -180° _ 0° _ +180° coordinate system to 0°- 360°
+    for ( int j = 0; j < jm; j++ ){
+        move_data(Topography.y[ j ], km);
+        for ( int i = 0; i < im; i++ ){
+            move_data(h.x[ i ][ j ], km);
+        }
+    }
+
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            for ( int i = im-2; i >= 0; i-- ){
+                if ( is_land ( h, i, j, k ) ){
+                    i_topography[ j ][ k ] = i;
+                    break;
+                }
+            }
+        }
+    }
+
+}
+

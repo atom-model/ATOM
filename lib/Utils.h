@@ -1,3 +1,6 @@
+#ifndef _UTILS_
+#define _UTILS_
+
 #include <iostream>
 #include <fstream>
 #include <limits>
@@ -80,3 +83,5 @@ namespace AtomUtils{
         return exp(co_1 * (T_K - 273.15) / (T_K - co_2));                        // temperature in °K
     }
 }
+
+#endif
