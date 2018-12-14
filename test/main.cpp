@@ -1,4 +1,5 @@
 #include <iostream>
+#include "AtomMath.h"
 #include "cAtmosphereModel.h"
 #include "BC_Thermo.h"
 
@@ -9,7 +10,7 @@ public:
     {
         cout << "Hello test" << endl;
         cAtmosphereModel model;
-        model.LoadConfig("../benchmark/config_atm.xml");
+        //model.LoadConfig("../benchmark/config_atm.xml");
 
         //model.LoadTemperatureCurve();
         /*for(map<float, float >::const_iterator it = model.m_temperature_curve.begin();
@@ -33,8 +34,23 @@ public:
     }
 };
 
+void test_parabola_interp();
+
 int main(int argc, char **argv) {
     AtomTest test;
     test.run();
+    test_parabola_interp();
+}
+
+void test_parabola_interp(){
+    std::cout << parabola_interp(10, 20, 0) << std::endl;
+    std::cout << parabola_interp(10, 20, 0.25) << std::endl;
+    std::cout << parabola_interp(10, 20, 0.5) << std::endl;
+    std::cout << parabola_interp(10, 20, 0.75) << std::endl;
+    std::cout << parabola_interp(10, 20, 1) << std::endl;
+    std::cout << parabola_interp(10, 20, 1.25) << std::endl;
+    std::cout << parabola_interp(10, 20, 1.5) << std::endl;
+    std::cout << parabola_interp(10, 20, 1.75) << std::endl;
+    std::cout << parabola_interp(10, 20, 2) << std::endl;
 }
 
