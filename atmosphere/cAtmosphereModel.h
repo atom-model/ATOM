@@ -102,7 +102,7 @@ public:
      * Given a layer index i, return the height of this layer
     */
     double get_layer_height(int i){
-        if(0<i || i>im-1){
+        if(0>i || i>im-1){
             return -1;
         }
         return m_layer_heights[i];
@@ -142,6 +142,7 @@ private:
         double h = L_atm / ( im-1 );
         for(int i=0; i<im; i++){
             m_layer_heights.push_back( (exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * h );
+            //std::cout << m_layer_heights.back() << std::endl;
         } 
         return;
     }

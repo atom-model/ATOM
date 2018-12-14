@@ -633,6 +633,9 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     // zonal temperature along tropopause
     t_eff_tropo = t_tropopause_pole - t_tropopause;
 
+    //use "linear temperature decay" to generate temperature data for layers between mountain top and tropopause
+    //use "mountain top temperature" for the layers below mountain top
+    //use "tropopause tempeature" for the layers above tropopause
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ ){
         double temp_tropopause =  t_eff_tropo * parabola( j / ((jm-1)/2.0) ) +
@@ -642,20 +645,25 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
             int i_mount = i_topography[ j ][ k ];
             int i_trop = m_model->get_tropopause_layer(j);
 
-            double tmp = t.x[ 0 ][ j ][ k ];
-            for ( int i = 0; i < im; i++ ){
+            double t_mount_top = ( temp_tropopause - t.x[ 0 ][ j ][ k ] ) *
+                ( m_model->get_layer_height(i_mount) / m_model->get_layer_height(i_trop)) + 
+                t.x[ 0 ][ j ][ k ]; //temperature at mountain top
+
+            for ( int i = 1; i < im; i++ ){
                 if ( i < i_trop+1 ){
                     if(i>i_mount){
                         // linear temperature decay up to tropopause, privat  approximation
-                        t.x[ i ][ j ][ k ] = ( temp_tropopause - tmp ) * 
-                            ( m_model->get_layer_height(i) / m_model->get_layer_height(i_trop)) + tmp; 
+                        t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ 0 ][ j ][ k ] ) * 
+                            ( m_model->get_layer_height(i) / m_model->get_layer_height(i_trop)) + 
+                            t.x[ 0 ][ j ][ k ]; 
                     }else{
-                        t.x[ i ][ j ][ k ] = tmp; //inside mountain
+                        t.x[ i ][ j ][ k ] = t_mount_top; //inside mountain
                     }
                 }else{ // above tropopause
                     t.x[ i ][ j ][ k ] = temp_tropopause;
                 }
             }
+            t.x[ 0 ][ j ][ k ] = t_mount_top;
         }
     }
 
