@@ -16,28 +16,34 @@
 #include <sstream>
 #include <algorithm> 
 
+#include "cAtmosphereModel.h"
 #include "BC_Bath_Atm.h"
 #include "Utils.h"
 
 using namespace std;
 using namespace AtomUtils;
 
-BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere ( int NASATemperature,
-                                                int im, int jm, int km, double co2_vegetation, 
-                                                double co2_land, double co2_ocean ):
+BC_Bathymetry_Atmosphere::BC_Bathymetry_Atmosphere( 
+        cAtmosphereModel* model, int NASATemperature,
+        int im, int jm, int km, double co2_vegetation, 
+        double co2_land, double co2_ocean ):
+    
     im(im),
     jm(jm),
     km(km),
     NASATemperature(NASATemperature),
     co2_vegetation(co2_vegetation),
     co2_ocean(co2_ocean),
-    co2_land(co2_land)
+    co2_land(co2_land),
+    m_model(model)
 {}
 
 BC_Bathymetry_Atmosphere::~BC_Bathymetry_Atmosphere(){}
 
-void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename,
-                                           double L_atm, Array_2D &Topography, Array &h ){
+void BC_Bathymetry_Atmosphere::BC_MountainSurface( 
+        string &topo_filename,
+        Array_2D &Topography, Array &h ){
+    
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
 
@@ -60,10 +66,13 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename,
             if ( height < 0. ){
                 h.x[ 0 ][ j ][ k ] = Topography.y[ j ][ k ] = 0.;
             }else{
-                int i_h = int(floor( height / L_atm * ( im - 1 ) ) );
                 Topography.y[ j ][ k ] = height;
-                for ( int i = 0; i <= i_h; i++ ){
-                    h.x[ i ][ j ][ k ] = 1.;
+                for ( int i = 0; i < im; i++ ){
+                    if(height > m_model->get_layer_height(i)){
+                        h.x[ i ][ j ][ k ] = 1.;
+                    }else{
+                        break;
+                    }
                 }
             }
             if(ifile.fail()){
@@ -105,9 +114,9 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
                     u.x[ i ][ j ][ k ] = 0.;
                     v.x[ i ][ j ][ k ] = 0.;
                     w.x[ i ][ j ][ k ] = 0.;
-//                    t.x[ i ][ j ][ k ] = 1.;  // = 273.15 K
-//                    c.x[ i ][ j ][ k ] = c_tropopause;  // = 1 g/kg water vapour
-//                    c.x[ i ][ j ][ k ] = 0.; 
+                    //t.x[ i ][ j ][ k ] = 1.;  // = 273.15 K
+                    //c.x[ i ][ j ][ k ] = c_tropopause;  // = 1 g/kg water vapour
+                    //c.x[ i ][ j ][ k ] = 0.; 
                     cloud.x[ i ][ j ][ k ] = 0.;
                     ice.x[ i ][ j ][ k ] = 0.;
                     co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
@@ -117,14 +126,6 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
         } // k
     } // j
 }
-
-
-
-
-
-
-
-
 
 void BC_Bathymetry_Atmosphere::vegetationDistribution ( double max_Precipitation,
                                                         Array_2D &Precipitation, Array_2D &Vegetation, 

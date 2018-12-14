@@ -223,7 +223,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
     epsilon_eff_2D = epsilon_pole - epsilon_equator;
 
     for ( int j = 0; j < jm; j++ ){
-        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0);
+        int i_trop = m_model->get_tropopause_layer(j);
 
         // on zero level, lateral parabolic distribution
         epsilon_eff_max = epsilon_eff_2D * parabola( j / j_max_half ) + epsilon_pole;
@@ -247,7 +247,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
 
                 // radial parabolic distribution, start on zero level
                 epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) *
-                    parabola( (double)i / (im -1) );
+                    parabola( m_model->get_layer_height(i) / m_model->get_layer_height(i_trop) );
                 
                 if ( fabs(m_model->CO2 - 1) < std::numeric_limits<double>::epsilon() ){
                     // influence of co2 in the atmosphere, co2_coeff = 1. means no influence
@@ -586,7 +586,6 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
-                i_mount = i_topography[ j ][ k ];  // data along the topography
 /*
     if ((k==0)&&(j==1))  logger() << "   Ma = " << Ma << "   t_pole = " << t_pole * t_0 - t_0 << endl 
         << "   pole_temp_map = " << GetPoleTemperature ( Ma, pole_temp_map ) << endl 
@@ -611,14 +610,13 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                 }else{  // if ( NASATemperature == 1 ) ocean surface temperature based on NASA temperature distribution
                     // transported for later time slices Ma by use_earthbyte_reconstruction
                     if ( is_land (h, 0, j, k ) ){  // on land a parabolic distribution assumed, no NASA based data transportable
-                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
+                        t.x[ 0 ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
 //                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + ( t_pole_ma + t_0 ) / t_0
                             + t_cretaceous_add + t_land;
 
                             // Stein/Rüdiger/Parish pole temperature decreasing equator wards
-                            t.x[ i_mount ][ j ][ k ] += t_pole_diff_land * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
+                            t.x[ 0 ][ j ][ k ] += t_pole_diff_land * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
                     }else{ // if the this location is ocean
-                        assert(i_mount==0);
                         if(Ma > 0){//when Ma==0, the temperature data has already been read into t.x[ 0 ][ j ][ k ]        
                             // ocean surface temperature increased by mean t_cretaceous_add
                             // and by a zonally equator wards decreasing temperature difference is added
@@ -633,33 +631,39 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     }// if ( RadiationModel == 1 )
 
     // zonal temperature along tropopause
-    t_tropopause_pole = - 4.; // temperature reduction at poles in°C
-    t_tropopause_pole = t_tropopause + t_tropopause_pole / t_0;
     t_eff_tropo = t_tropopause_pole - t_tropopause;
 
+    //use "linear temperature decay" to generate temperature data for layers between mountain top and tropopause
+    //use "mountain top temperature" for the layers below mountain top
+    //use "tropopause tempeature" for the layers above tropopause
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ ){
-        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
-
         double temp_tropopause =  t_eff_tropo * parabola( j / ((jm-1)/2.0) ) +
-                t_tropopause_pole + t_cretaceous_add;        
+                t_tropopause_pole + t_cretaceous_add;   //temperature at tropopause     
 
         for ( int k = 0; k < km; k++ ){
             int i_mount = i_topography[ j ][ k ];
-            double tmp = t.x[ i_mount ][ j ][ k ];
-            tmp = ( temp_tropopause - tmp ) * ( (double) i_mount / i_trop) + tmp;//temperature at mountain top
-            for ( int i = 0; i < im; i++ ){
+            int i_trop = m_model->get_tropopause_layer(j);
+
+            double t_mount_top = ( temp_tropopause - t.x[ 0 ][ j ][ k ] ) *
+                ( m_model->get_layer_height(i_mount) / m_model->get_layer_height(i_trop)) + 
+                t.x[ 0 ][ j ][ k ]; //temperature at mountain top
+
+            for ( int i = 1; i < im; i++ ){
                 if ( i < i_trop+1 ){
                     if(i>i_mount){
                         // linear temperature decay up to tropopause, privat  approximation
-                        t.x[ i ][ j ][ k ] = ( temp_tropopause - tmp ) * ( (double) (i-i_mount) / i_trop) + tmp; 
+                        t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ 0 ][ j ][ k ] ) * 
+                            ( m_model->get_layer_height(i) / m_model->get_layer_height(i_trop)) + 
+                            t.x[ 0 ][ j ][ k ]; 
                     }else{
-                        t.x[ i ][ j ][ k ] = tmp; //inside mountain
+                        t.x[ i ][ j ][ k ] = t_mount_top; //inside mountain
                     }
                 }else{ // above tropopause
                     t.x[ i ][ j ][ k ] = temp_tropopause;
                 }
             }
+            t.x[ 0 ][ j ][ k ] = t_mount_top;
         }
     }
 

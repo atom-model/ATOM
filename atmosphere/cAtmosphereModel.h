@@ -81,10 +81,33 @@ public:
         return im_tropopause;
     }
 
+    /*
+     * Given a latitude, return the layer index of tropopause
+    */
+    int get_tropopause_layer(int j){
+        //refer to  BC_Thermo::TropopauseLocation and BC_Thermo::GetTropopauseHightAdd
+        //tropopause height is proportional to the mean tropospheric temperature.
+        //higher near the equator - warm troposphere
+        //lower at the poles - cold troposphere
+        return tropopause_equator;//return a constant number for now, need to be fixed
+    }
+
     float calculate_mean_temperature(const Array& t);
 
     static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
     static const double the0, phi0, r0;
+
+    /*
+     * This function must be called after init_layer_heights()
+     * Given a layer index i, return the height of this layer
+    */
+    double get_layer_height(int i){
+        if(0>i || i>im-1){
+            return -1;
+        }
+        return m_layer_heights[i];
+    }
+
 
 private:
     void SetDefaultConfig();
@@ -115,6 +138,19 @@ private:
      * initialize water vapour Array c
     */
     void init_water_vapour();
+
+    /* 
+    * This function must be called after "rad" has been initialized.
+    */
+    void init_layer_heights(){
+        const double zeta = 3.715;
+        double h = L_atm / ( im-1 );
+        for(int i=0; i<im; i++){
+            m_layer_heights.push_back( (exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * h );
+            //std::cout << m_layer_heights.back() << std::endl;
+        } 
+        return;
+    }
 
     static cAtmosphereModel* m_model;
 
@@ -148,7 +184,7 @@ private:
     Array_1D rad; // radial coordinate direction
     Array_1D the; // lateral coordinate direction
     Array_1D phi; // longitudinal coordinate direction
-
+    std::vector<double> m_layer_heights;
 
     // 2D arrays
     Array_2D Topography; // topography
