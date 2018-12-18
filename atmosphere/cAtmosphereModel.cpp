@@ -284,12 +284,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class element for the surface pressure computed by surface temperature with gas equation
     circulation.BC_Pressure ( p_stat, p_dyn, t, h );
 
-    //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
+    //parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
     //circulation.BC_WaterVapour ( h, p_stat, t, c, v, w );
     init_water_vapour();
-//    t.printArray ( im, jm, km );
-
-//    goto Print;
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
@@ -472,6 +469,9 @@ void cAtmosphereModel::reset_arrays()
     S_r.initArray(im, jm, km, 0.); // rain mass rate due to category two ice scheme
     S_s.initArray(im, jm, km, 0.); // snow mass rate due to category two ice scheme
     S_c_c.initArray(im, jm, km, 0.); // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
+
+    for (auto &i : i_topography)
+        std::fill(i.begin(), i.end(), 0);
 }
 
 
@@ -1036,7 +1036,7 @@ void cAtmosphereModel::init_water_vapour(){
     // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            int i_mount = i_topography[ j ][ k ];
+            int i_mount = get_mountain_top(j, k);
 
             if ( is_air ( h, 0, j, k ) ){
                 c.x[ i_mount ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
@@ -1079,13 +1079,13 @@ void cAtmosphereModel::init_water_vapour(){
     for ( int j = 0; j < jm; j++ ){
         int i_trop = get_tropopause_layer(j);
         for ( int k = 0; k < km; k++ ){
-            int i_mount = i_topography[ j ][ k ];
+            int i_mount = get_mountain_top(j, k);
 
             for ( int i = 0; i < im; i++ ){
                 if ( i < i_trop ){
                     if(i>i_mount){
-			double x = (get_layer_height(i) - get_layer_height(i_mount)) / (
-                            get_layer_height(i_trop) - get_layer_height(i_mount));
+			            double x = (get_layer_height(i) - get_layer_height(i_mount)) / 
+                            (get_layer_height(i_trop) - get_layer_height(i_mount));
                         c.x[ i ][ j ][ k ] = parabola_interp(c_tropopause, c.x[ i_mount ][ j ][ k ], x); 
                     }else{
                         c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];
@@ -1118,14 +1118,15 @@ void cAtmosphereModel::init_topography(string &topo_filename){
         for (k = 0; k < km && !ifile.eof(); k++) {
             height = -999; // in case the height is NaN
             ifile >> lon >> lat >> height;
-            if ( height < 0. ){
-                h.x[ 0 ][ j ][ k ] = Topography.y[ j ][ k ] = 0.;
+            if ( ! (height > 0) ){
+                h.x[ 0 ][ j ][ k ] = Topography.y[ j ][ k ] = 0;
             }else{
                 Topography.y[ j ][ k ] = height;
                 for ( int i = 0; i < im; i++ ){
                     if(height > get_layer_height(i)){
-                        h.x[ i ][ j ][ k ] = 1.;
+                        h.x[ i ][ j ][ k ] = 1;
                     }else{
+                        i_topography[ j ][ k ] = i-1;
                         break;
                     }   
                 }   
@@ -1147,21 +1148,60 @@ void cAtmosphereModel::init_topography(string &topo_filename){
     // rewriting bathymetrical data from -180° _ 0° _ +180° coordinate system to 0°- 360°
     for ( int j = 0; j < jm; j++ ){
         move_data(Topography.y[ j ], km);
+        move_data(i_topography[ j ], km);
         for ( int i = 0; i < im; i++ ){
             move_data(h.x[ i ][ j ], km);
         }
     }
+}
 
+/*
+*
+*/
+void cAtmosphereModel::init_co2(){
+    // initial and boundary conditions of CO2 content on water and land surfaces
+    // parabolic CO2 content distribution from pole to pole accepted
+
+    // CO2-distribution by Ruddiman approximated by a parabola
+    double co2_cretaceous = 3.2886 * pow ( ( t_cretaceous + t_average ), 2 ) - 32.8859 *
+        ( t_cretaceous + t_average ) + 102.2148;  // in ppm
+    double co2_average = 3.2886 * pow ( t_average, 2 ) - 32.8859 * t_average + 102.2148;  // in ppm
+    co2_cretaceous = co2_cretaceous - co2_average;
+
+    //use parabolic distribution from pole to pole to initialize co2  
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            int i_mount = get_mountain_top(j, k);
+
+            if ( is_water ( h, 0, j, k ) ){
+                co2.x[ 0 ][ j ][ k ] = parabola_interp(co2_equator, co2_pole, 2*j/(jm-1)) + co2_cretaceous + co2_ocean; 
+            }else{
+                co2.x[ i_mount ][ j ][ k ] = parabola_interp(co2_equator, co2_pole, 2*j/(jm-1)) + 
+                    + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ];
+            }
+            co2.x[ 0 ][ j ][ k ] /= co2_0;// non-dimensional
+        }
+    }
+
+    // co2 distribution decreasing approaching tropopause, above no co2
     for ( int j = 0; j < jm; j++ ){
+        int i_trop = get_tropopause_layer(j);
         for ( int k = 0; k < km; k++ ){
-            for ( int i = im-2; i >= 0; i-- ){
-                if ( is_land ( h, i, j, k ) ){
-                    i_topography[ j ][ k ] = i;
-                    break;
+            int i_mount = get_mountain_top(j, k);
+            
+            for ( int i = 1; i < im; i++ ){
+                if ( i < i_trop ){
+                    if(i>i_mount){
+                        double x = (get_layer_height(i) - get_layer_height(i_mount)) / 
+                            (get_layer_height(i_trop) - get_layer_height(i_mount));
+                        co2.x[ i ][ j ][ k ] = parabola_interp(co2_tropopause, co2.x[ i_mount ][ j ][ k ], x); 
+                    }else{
+                        c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];
+                    }
+                }else{
+                    c.x[ i ][ j ][ k ] = c_tropopause;
                 }
             }
         }
     }
-
 }
-

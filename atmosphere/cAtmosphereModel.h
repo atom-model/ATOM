@@ -145,6 +145,11 @@ private:
     void restrain_temperature();
 
     /*
+     * initialize co2 Array co2
+    */
+    void init_co2();
+
+    /*
      * initialize water vapour Array c
     */
     void init_water_vapour();

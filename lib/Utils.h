@@ -48,6 +48,7 @@ namespace AtomUtils{
 
     //change data coordinate system from -180° _ 0° _ +180° to 0°- 360°
     void move_data(double* data, int len);
+    void move_data(std::vector<int>& data, int len);
 
     void move_data_to_new_arrays(int im, int jm, int km, double coeff, std::vector<Array*>& arrays, 
                         std::vector<Array*>& new_arrays);

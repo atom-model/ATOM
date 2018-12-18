@@ -36,6 +36,14 @@ void AtomUtils::move_data(double* data, int len)
     data[len-1] = data[0];
 }
 
+void AtomUtils::move_data(std::vector<int>& data, int len)
+{   
+    for(int i=0; i<len/2; i++){
+        std::iter_swap(data.begin()+i, data.begin()+len/2+i);
+    }
+    data[len-1] = data[0];
+}
+
 //the size of arrays must be the same with the size of new_arrays
 //the values in the new_arrays will be assigned to coeff * old_values
 void AtomUtils::move_data_to_new_arrays( int im, int jm, int km, double coeff, std::vector<Array*>& arrays, 
