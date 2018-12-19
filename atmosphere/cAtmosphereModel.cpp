@@ -1205,3 +1205,40 @@ void cAtmosphereModel::init_co2(){
         }
     }
 }
+
+
+/*
+*
+*/
+void cAtmosphereModel::init_velocities(){
+    // boundary condition for the velocity components in the circulation cells
+
+    // latest version by Grotjahn ( Global Atmospheric Circulations, 1993 )
+    // default for the velocity components u, v, and w as initial conditions
+
+    // velocities given in m/s, 1 m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this class element
+    // do not change the velocity initial conditions !!
+
+    // initial velocity components in the northern and southern
+    // Pole, Ferrel and Hadley cells
+
+    // equator ( at j=90 compares to 0° latitude )
+    // u-component up to tropopause and back on half distance (  i = 20 )
+    double ua_00 = 1.;  // in m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this function
+    double va_equator_SL =  0.000;
+    double va_equator_Tropopause = 0.000;
+    double wa_equator_SL = - 1.;
+    double wa_equator_Tropopause = - 7.5;
+    int tropopause_layer = get_tropopause_layer(90); //j=90 equator            
+    double tropopause_height = get_layer_height(tropopause_layer);
+    for( int k = 0; k < km; k++ ){
+        for( int i = 0; i < tropopause_layer; i++ ){
+            u.x[ i ][ 90 ][ k ] = -ua_00 * parabola_interp(-1, 0, get_layer_height(i)*2/tropopause_height);
+            v.x[ i ][ 90 ][ k ] = ( va_equator_Tropopause - va_equator_SL ) *
+                    get_layer_height(i)/tropopause_height + va_equator_SL;
+            w.x[ i ][ 90 ][ k ] = ( wa_equator_Tropopause - wa_equator_SL ) *
+                    get_layer_height(i)/tropopause_height + wa_equator_SL;
+
+        }
+    }
+}

@@ -22,6 +22,7 @@
 #include "cAtmosphereModel.h"
 #include "Utils.h"
 #include "AtmParameters.h"
+#include "AtomMath.h"
 
 using namespace std;
 using namespace AtomUtils;
@@ -935,6 +936,47 @@ void BC_Thermo::TropopauseLocation(){
 */
 }
 
+void  BC_Thermo::init_u(Array &u, int lat_1, int lat_2, double coefficient){
+    for(int j = lat_1; j < lat_2+1; j++ ){
+        int tropopause_layer = m_model->get_tropopause_layer(j);             
+        double tropopause_height = m_model->get_layer_height(tropopause_layer);
+        for( int k = 0; k < km; k++ ){
+            for( int i = 0; i < tropopause_layer; i++ ){
+                u.x[ i ][ j ][ k ] = -coefficient * 
+                    parabola_interp(-1, 0, m_model->get_layer_height(i)*2/tropopause_height);
+            }
+        }
+    }
+}
+
+void  BC_Thermo::init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl){
+    for(int j = lat_1; j < lat_2+1; j++ ){
+        int tropopause_layer = m_model->get_tropopause_layer(j);
+        double tropopause_height = m_model->get_layer_height(tropopause_layer);
+        for( int k = 0; k < km; k++ ){
+            for( int i = 0; i < tropopause_layer; i++ ){
+                v_or_w.x[ i ][ j ][ k ] = ( coeff_trop - coeff_sl ) *
+                    m_model->get_layer_height(i)/tropopause_height + coeff_sl;
+            }
+        }
+    }
+}
+
+void  BC_Thermo::init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff){
+    for(int j = lat_1; j < lat_2+1; j++ ){
+        int tropopause_layer = m_model->get_tropopause_layer(j);
+        if(tropopause_layer >= im-1) return;
+        double tropopause_height = m_model->get_layer_height(tropopause_layer);
+        for( int k = 0; k < km; k++ ){
+            for( int i = tropopause_layer; i < im; i++ ){
+                v_or_w.x[ i ][ j ][ k ] = coeff * (m_model->get_layer_height(im-1) - m_model->get_layer_height(i)) / 
+                    (m_model->get_layer_height(im-1) - tropopause_height);
+            }
+        }
+    }
+}
+
+
 void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
 // boundary condition for the velocity components in the circulation cells
 
@@ -943,14 +985,6 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
 
 // velocities given in m/s, 1 m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this class element
 // do not change the velocity initial conditions !!
-
-// velocity assumptions at the equator 0°
-    ua_00 = 1.;  // in m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this class elemen
-    va_equator_SL =  0.000;
-    va_equator_Tropopause = 0.000;
-//  wa_equator_SL = - 2.;
-    wa_equator_SL = - 1.;
-    wa_equator_Tropopause = - 7.5;
 
 // velocity assumptions for latitude at 15° and 30° in the Hadley cell
     ua_30 = - 1.;
@@ -976,16 +1010,6 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     wa_Ferrel_SL = -.2;                                                                 // subpolar jet
 //  wa_Ferrel_SL = -.4;                                                                 // subpolar jet
     wa_Ferrel_Tropopause = 10.;                                                     // subpolar jet in m/s compares to 36 km/h
-
-// velocity assumptions for latitude 90° in the Polar cell
-    ua_90 = - 0.5;
-    va_Polar_SL = 0.;
-    va_Polar_Tropopause = 0.;
-    va_Polar_SL_75 = .5;
-    va_Polar_Tropopause_75 = - 1.;
-//  wa_Polar_SL = - 0.05;
-    wa_Polar_SL = - 0.01;
-    wa_Polar_Tropopause = 0.;
 
 // preparations for diagonal velocity value connections
     j_aeq = 90;
@@ -1015,45 +1039,18 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
 
 // equator ( at j=90 compares to 0° latitude )
 // u-component up to tropopause and back on half distance (  i = 20 )
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_aeq; j < j_aeq + 1; j++ ){
-            i_max = im_tropopause[ j ];
-            i_half = im_tropopause[ j ] / 2;
-            d_i_half = ( double ) i_half;
-            for ( int i = 0; i <= i_max; i++ ){
-                d_i = ( double ) i;
-                u.x[ i ][ j ][ k ] = - ua_00 * ( d_i * d_i / ( d_i_half * d_i_half ) - 2. * d_i / d_i_half );
-            }
-        }
-    }
 
-// equator ( at j=90 )
-// v- and w-component up to tropopause and stratosphere above
-    for ( int j = j_aeq; j < j_aeq + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) i_max;
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = 0; i < i_max; i++ ){
-                d_i = ( double ) i;
-                v.x[ i ][ j ][ k ] = ( va_equator_Tropopause - va_equator_SL ) *
-                    d_i / d_i_max + va_equator_SL;
-                w.x[ i ][ j ][ k ] = ( wa_equator_Tropopause - wa_equator_SL ) *
-                    d_i / d_i_max + wa_equator_SL;
-            }
-        }
-    }
-    for ( int j = j_aeq; j < j_aeq + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) i_max - ( double ) (im-1);
-        if ( i_max == 40 ) d_i_max = 1.e-6;
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) i - ( double ) (im-1);
-                v.x[ i ][ j ][ k ] = va_equator_Tropopause * d_i / d_i_max;
-                w.x[ i ][ j ][ k ] = wa_equator_Tropopause * d_i / d_i_max;
-            }
-        }
-    }
+    double ua_00 = 1.;  // in m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this function
+    double va_equator_SL =  0.000;
+    double va_equator_Tropopause = 0.000;
+    double wa_equator_SL = - 1.;
+    double wa_equator_Tropopause = - 7.5;
+
+    init_u(u,90,90,ua_00);
+    init_v_or_w(v,90,90,va_equator_Tropopause,va_equator_SL);
+    init_v_or_w(w,90,90,wa_equator_Tropopause,wa_equator_SL);
+    init_v_or_w_above_tropopause(v,90,90,va_equator_Tropopause);
+    init_v_or_w_above_tropopause(v,90,90,wa_equator_Tropopause);
 
 /////////////////////////////////////// end equator ///////////////////////////////////////
 
@@ -1069,72 +1066,22 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
 // north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° northern latitude )
 // u-component up to tropopause and back on half distance
 // extension around North Pole ( from j=0 till j=5 compares to 85° till 90° northern latitude )
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = 0; j < j_pol_n +1; j++ ){
-            i_max = im_tropopause[ j ];
-            i_half = im_tropopause[ j ] / 2;
-            d_i_half = ( double ) i_half;
-            for ( int i = 0; i <= i_max; i++ ){
-                d_i = ( double ) i;
-                u.x[ i ][ j ][ k ] = - ua_90 * ( d_i * d_i / ( d_i_half * d_i_half ) - 2. * d_i / d_i_half );
-            }
-        }
-    }
+    double ua_90 = - 0.5;
+    double va_Polar_SL = 0.;
+    double va_Polar_Tropopause = 0.;
+    double va_Polar_SL_75 = .5;
+    double va_Polar_Tropopause_75 = - 1.;
+    double wa_Polar_SL = - 0.01;
+    double wa_Polar_Tropopause = 0.;
 
-// north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° northern latitude )
-// v- and w-component from Pole up to tropopause
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_pol_n; j < j_fer_n + 1; j++ ){
-            i_max = im_tropopause[ j ];
-            d_i_max = ( double ) i_max;
-            for ( int i = 0; i < i_max; i++ ){
-                d_i = ( double ) i;
-                v.x[ i ][ j ][ k ] = ( va_Polar_Tropopause - va_Polar_SL ) *
-                    d_i / d_i_max + va_Polar_SL;
-                w.x[ i ][ j ][ k ] = ( wa_Polar_Tropopause - wa_Polar_SL ) *
-                    d_i / d_i_max + wa_Polar_SL;   // indifferent except at j_pol_n
-            }
-        }
-    }
-    for ( int j = j_pol_n; j < j_fer_n + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - (im-1) );
-        if ( d_i_max == 0. ) d_i_max = 1.e-6;
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - (im-1) );
-                v.x[ i ][ j ][ k ] = va_Polar_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
-                w.x[ i ][ j ][ k ] = wa_Polar_Tropopause * d_i / d_i_max;   // replacement for forming diagonals
-            }
-        }
-    }
+    init_u(u, 0, 0, ua_90); //lat: 90
+    init_v_or_w(v,0,30,va_Polar_Tropopause,va_Polar_SL); //lat: 90-60
+    init_v_or_w(w,0,30,wa_Polar_Tropopause,wa_Polar_SL); //lat: 90-60
+    init_v_or_w(v,15,15,va_Polar_Tropopause_75,va_Polar_SL_75); //lat: 75
 
-// north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° northern latitude )
-// v-component up to tropopause and back on half distance
-// extension around the North Pole ( from j=0 till j=5 compares to 85° till 90° northern latitude )
-// v-component at 75°N
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_pol_v_n; j <  j_pol_v_n + 1; j++ ){
-            i_max = im_tropopause[ j ];
-            d_i_max = ( double ) i_max;
-            for ( int i = 0; i < i_max; i++ ){
-                d_i = ( double ) i;
-                v.x[ i ][ j ][ k ] = ( va_Polar_Tropopause_75 - va_Polar_SL_75 ) *
-                    d_i / d_i_max + va_Polar_SL_75;
-            }
-        }
-    }
-    for ( int j = j_pol_v_n; j < j_pol_v_n + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - (im-1) );
-        if ( d_i_max == 0. ) d_i_max = 1.e-6;
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - (im-1) );
-                v.x[ i ][ j ][ k ] = va_Polar_Tropopause_75 * d_i / d_i_max;
-            }
-        }
-    }
+    init_v_or_w_above_tropopause(v,0,30,va_Polar_Tropopause);
+    init_v_or_w_above_tropopause(v,0,30,wa_Polar_Tropopause);
+    init_v_or_w_above_tropopause(v,15,15,va_Polar_Tropopause_75);
 
 /////////////////////////////////// end northern polar cell /////////////////////////////////////////
 

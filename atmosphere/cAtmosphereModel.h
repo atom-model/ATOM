@@ -154,6 +154,11 @@ private:
     */
     void init_water_vapour();
 
+    /*
+     * initialize velocities Array u, w, v
+    */
+    void init_velocities();
+
     /* 
     * This function must be called after "rad" has been initialized.
     */

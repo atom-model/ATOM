@@ -160,5 +160,11 @@ class BC_Thermo
         double GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map);
 
         double C_Dalton ( double u_0, double v, double w );
+
+        void init_u(Array &u, int lat_1, int lat_2, double coefficient);
+
+        void init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl);
+
+        void init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff);
 };
 #endif
