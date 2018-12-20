@@ -936,6 +936,23 @@ void BC_Thermo::TropopauseLocation(){
 */
 }
 
+void BC_Thermo::smooth_transition(Array &u, Array &v, Array &w, int lat){
+    int start = lat-3, end = lat+3;
+    for ( int i = 0; i < im; i++ ){
+        for ( int k = 0; k < km; k++ ){
+            for ( int j = start; j <= end; j++ ){
+                u.x[ i ][ j ][ k ] = ( u.x[ i ][ end ][ k ] - u.x[ i ][ start ][ k ] ) *
+                    ( ( double ) ( j - start )  / ( end - start ) ) + u.x[ i ][ start ][ k ];
+                v.x[ i ][ j ][ k ] = ( v.x[ i ][ end ][ k ] - v.x[ i ][ start ][ k ] ) *
+                    ( ( double ) ( j - start )  / ( end - start ) ) + v.x[ i ][ start ][ k ];
+                w.x[ i ][ j ][ k ] = ( w.x[ i ][ end ][ k ] - w.x[ i ][ start ][ k ] ) *
+                    ( ( double ) ( j - start )  / ( end - start ) ) + w.x[ i ][ start ][ k ];
+            }
+        }
+    }
+}
+
+
 void BC_Thermo::form_diagonals(Array &a, int start, int end){
     for ( int k = 0; k < km; k++ ){
         for ( int j = start; j < end; j++ ){
@@ -1149,288 +1166,6 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
         }
     }
 
-/*
-/////////////////////////////////////////// forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
-/////////////////////////////////////////// forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
-
-///////////////////////////////////////////////// Pacific ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// North Pacific
-///////////////////////////////////////////////// change in sign of v-component in the northern hemisphere //////////////////////////
-//  ua_00 = .03;  // in m/s compares to 1.08 km/h, non-dimensionalized by u_0 below
-//  d_i_half = ( double ) i_half;
-
-    j_had_n_end = j_had_n - 8;
-
-    k_w = 120;
-    k_w_end = k_w - 5;
-    k_e = 240;
-
-    d_j_w = ( double ) j_aeq;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-/////////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-///////////////////////////////////////////// smoothing transitions /////////////////////////////////////////////////
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w_end + 1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-///////////////////////////////////////////////// Pacific ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// South Pacific
-///////////////////////////////////////////////// change in sign of v-component in the southern hemisphere /////////////////////////////////////////////////
-
-
-    j_had_s_end = j_had_s + 8;
-
-    k_w = 130;
-    k_w_end = k_w - 5;
-    k_e = 260;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-
-
-///////////////////////////////////////////////// Indic ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// North Indic .......................................................................... only on land
-///////////////////////////////////////////////// change in sign of v-component in the northern hemisphere //////////////////////////
-
-    j_had_n_end = j_had_n - 5;
-    j_had_s_end = j_had_s + 5;
-
-    k_w = 30;
-    k_w_end = k_w - 10;
-    k_e = 90;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-///////////////////////////////////////////////// Indicic ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// South Indic
-///////////////////////////////////////////////// change in sign of v-component in the southern hemisphere /////////////////////////////////////////////////
-
-    j_had_n_end = j_had_n - 5;
-    j_had_s_end = j_had_s + 5;
-
-    k_w = 35;
-    k_w_end = k_w - 3;
-    k_e = 90;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-///////////////////////////////////////////////// Atlantic ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// North Altlantic
-///////////////////////////////////////////////// change in sign of v-component in the northern hemisphere //////////////////////////
-
-    j_had_n_end = j_had_n - 5;
-    j_had_s_end = j_had_s + 5;
-
-    k_w = 280;
-    k_w_end = k_w - 5;
-    k_e = 330;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-///////////////////////////////////////////////// Atlantic ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// South Atlantic
-///////////////////////////////////////////////// change in sign of v-component in the southern hemisphere /////////////////////////////////////////////////
-
-    j_had_n_end = j_had_n - 5;
-    j_had_s_end = j_had_s + 5;
-
-    k_w = 320;
-    k_w_end = k_w - 5;
-    k_e = 360;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// end of forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
-/////////////////////////////////////////// end of forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
-*/
 
 ///////////////////////////////////////////////// smoothing transitions from cell to cell //////////////////////////
 ///////////////////////////////////////////////// smoothing transitions from cell to cell //////////////////////////
@@ -1438,157 +1173,22 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
 ///////////////////////////////////////////////// Northern hemisphere ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Northern hemisphere
 ///////////////////////////////////////////////// smoothing transitions from Headley to Ferrel to Polar cells //////////////////////////
+    smooth_transition(u,v,w,60); 
+    smooth_transition(u,v,w,30);    
+    smooth_transition(u,v,w,75);
+    smooth_transition(u,v,w,45);
 
-    j_s = j_had_n - 3;
-    j_n = j_had_n + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-    j_s = j_fer_n - 3;
-    j_n = j_fer_n + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
+    smooth_transition(u,v,w,90); 
 
-// Northern hemisphere
-///////////////////////////////////////////////// smoothing transitions around jets /////////////////////////////////////////////////////
-    j_s = j_had_v_n - 3;
-    j_n = j_had_v_n + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-    j_s = j_fer_v_n - 3;
-    j_n = j_fer_v_n + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
+    smooth_transition(u,v,w,120);
+    smooth_transition(u,v,w,150);
+    smooth_transition(u,v,w,105);
+    smooth_transition(u,v,w,135);
 
-///////////////////////////////////////////////// smoothing transitions around equator //////////////////////////
-    j_s = j_aeq - 3;
-    j_n = j_aeq + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-
-///////////////////////////////////////////////// Southern hemisphere ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Southern hemisphere
-///////////////////////////////////////////////// smoothing transitions from Headley to Ferrel to Polar cells //////////////////////////
-
-    j_s = j_had_s - 3;
-    j_n = j_had_s + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-    j_s = j_fer_s - 3;
-    j_n = j_fer_s + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-
-// Southern hemisphere
-///////////////////////////////////////////////// smoothing transitions around jets /////////////////////////////////////////////////////
-
-    j_s = j_had_v_s - 3;
-    j_n = j_had_v_s + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-    j_s = j_fer_v_s - 3;
-    j_n = j_fer_v_s + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-
-// non dimensionalization by u_0
+    // non dimensionalization by u_0
     for ( int i = 0; i < im; i++ ){
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
-/*
-                u.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] / u_0;
-                v.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] / u_0;
-                w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] / u_0;
-*/
                 u.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] / u_0;
                 v.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] / u_0;
                 w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] / u_0;

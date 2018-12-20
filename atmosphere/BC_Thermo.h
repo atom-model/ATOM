@@ -168,5 +168,7 @@ class BC_Thermo
         void init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff);
 
         void form_diagonals(Array &a, int start, int end);
+
+        void smooth_transition(Array &u, Array &v, Array &w, int lat);
 };
 #endif
