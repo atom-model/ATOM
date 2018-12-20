@@ -936,6 +936,17 @@ void BC_Thermo::TropopauseLocation(){
 */
 }
 
+void BC_Thermo::form_diagonals(Array &a, int start, int end){
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = start; j < end; j++ ){
+            for ( int i = 0; i < im; i++ ){
+                a.x[ i ][ j ][ k ] = ( a.x[ i ][ end ][ k ] - a.x[ i ][ start ][ k ] ) *
+                    ( j - start ) / (double)(end - start) + a.x[ i ][ start ][ k ];
+            }
+        }
+    }
+}
+
 void  BC_Thermo::init_u(Array &u, int lat_1, int lat_2, double coefficient){
     for(int j = lat_1; j < lat_2+1; j++ ){
         int tropopause_layer = m_model->get_tropopause_layer(j);             
@@ -1098,336 +1109,45 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
 
 // north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° northern latitude )
 // w-component formed by the diagonal starting from subtropical jet and North Pole
-    d_j_60n = ( double ) j_fer_n;
-    d_j_90n = ( double ) j_pol_n;
-    d_diff = d_j_60n - d_j_90n;
- 
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_pol_n; j < j_fer_n + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_fer_n ][ k ] - u.x[ i ][ j_pol_n ][ k ] ) *
-                    ( d_j - d_j_90n ) / d_diff + u.x[ i ][ j_pol_n ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_fer_n ][ k ] - w.x[ i ][ j_pol_n ][ k ] ) *
-                    ( d_j - d_j_90n ) / d_diff + w.x[ i ][ j_pol_n ][ k ];
-            }
-        }
-    }
+    //northen hemisphere
+    form_diagonals(u, 0, 30);
+    form_diagonals(w, 0, 30);
+    form_diagonals(v, 0, 15);
+    form_diagonals(v, 15, 30);
 
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
+    form_diagonals(u, 30, 60);
+    form_diagonals(w, 30, 60);
+    form_diagonals(v, 30, 45);
+    form_diagonals(v, 45, 60);
 
-// north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° northern latitude )
-// v-component formed by the diagonal starting from equator till 45°N
-    d_j_90n = ( double ) j_pol_n;
-    d_j_75n = ( double ) j_pol_v_n;
-    d_diff = d_j_75n - d_j_90n;
- 
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_pol_n; j < j_pol_v_n + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_pol_v_n ][ k ] - v.x[ i ][ j_pol_n ][ k ] ) *
-                    ( d_j - d_j_90n ) / d_diff + v.x[ i ][ j_pol_n ][ k ];
-            }
-        }
-    }
+    form_diagonals(u, 60, 90);
+    form_diagonals(w, 60, 90);
+    form_diagonals(v, 60, 75);
+    form_diagonals(v, 75, 90);
 
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
+    //southen hemisphere
+    form_diagonals(u, 90, 120);
+    form_diagonals(w, 90, 120);
+    form_diagonals(v, 90, 105);
+    form_diagonals(v, 105, 120);
 
-// north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° northern latitude )
-// v-component formed by the diagonal starting from 45°N till subtropical jet
-    d_j_75n = ( double ) j_pol_v_n;
-    d_j_60n = ( double ) j_fer_n;
-    d_diff = d_j_60n - d_j_75n;
-  
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_pol_v_n; j < j_fer_n + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_fer_n ][ k ] - v.x[ i ][ j_pol_v_n ][ k ] ) *
-                    ( d_j - d_j_75n ) / d_diff + v.x[ i ][ j_pol_v_n ][ k ];
-            }
-        }
-    }
+    form_diagonals(u, 120, 150);
+    form_diagonals(w, 120, 150);
+    form_diagonals(v, 120, 135);
+    form_diagonals(v, 135, 150);
 
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
+    form_diagonals(u, 150, 180);
+    form_diagonals(w, 150, 180);
+    form_diagonals(v, 150, 165);
+    form_diagonals(v, 165, 180);
 
-// north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° northern latitude )
-// w-component formed by the diagonal starting from tropical jet and subtropical jet
-    d_j_60n = ( double ) j_fer_n;
-    d_j_30n = ( double ) j_had_n;
-    d_diff = d_j_30n - d_j_60n;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_fer_n + 1; j < j_had_n + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_had_n ][ k ] - u.x[ i ][ j_fer_n ][ k ] ) *
-                    ( d_j - d_j_60n ) / d_diff + u.x[ i ][ j_fer_n ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_had_n ][ k ] - w.x[ i ][ j_fer_n ][ k ] ) *
-                    ( d_j - d_j_60n ) / d_diff + w.x[ i ][ j_fer_n ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° northern latitude )
-// v-component formed by the diagonal starting from equator till 45°N
-    d_j_60n = ( double ) j_fer_n;
-    d_j_45n = ( double ) j_fer_v_n;
-    d_diff = d_j_45n - d_j_60n;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_fer_n; j < j_fer_v_n + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_fer_v_n ][ k ] - v.x[ i ][ j_fer_n ][ k ] ) *
-                    ( d_j - d_j_60n ) / d_diff + v.x[ i ][ j_fer_n ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° northern latitude )
-// v-component formed by the diagonal starting from 45°N till subtropical jet
-    d_j_45n = ( double ) j_fer_v_n;
-    d_j_30n = ( double ) j_had_n;
-    d_diff = d_j_30n - d_j_45n;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_fer_v_n; j < j_had_n + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_had_n ][ k ] - v.x[ i ][ j_fer_v_n ][ k ] ) *
-                    ( d_j - d_j_45n ) / d_diff + v.x[ i ][ j_fer_v_n ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° southern latitude )
-// v-component formed by the diagonal starting from equator till 45°S
-    d_j_30s = ( double ) j_had_s;
-    d_j_45s = ( double ) j_fer_v_s;
-    d_diff = d_j_45s - d_j_30s;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_fer_v_s; j > j_had_s  - 1; j-- ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_fer_v_s ][ k ] - v.x[ i ][ j_had_s ][ k ] ) *
-                    ( d_j - d_j_30s ) / d_diff + v.x[ i ][ j_had_s ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° northern latitude )
-// u- and w-component formed by the diagonal starting from equator and tropical jet
-    d_j_5n = ( double ) j_aeq;
-    d_j_30n = ( double ) j_had_n;
-    d_diff = d_j_5n - d_j_30n;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_had_n; j < j_aeq + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_aeq ][ k ] - u.x[ i ][ j_had_n ][ k ] ) *
-                    ( d_j - d_j_30n ) / d_diff + u.x[ i ][ j_had_n ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_aeq ][ k ] - w.x[ i ][ j_had_n ][ k ] ) *
-                    ( d_j - d_j_30n ) / d_diff + w.x[ i ][ j_had_n ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° northern latitude )
-// v-component formed by the diagonal starting from equator till 15°N
-    d_j_5n = ( double ) j_aeq;
-    d_j_15n = ( double ) j_had_v_n;
-    d_diff = d_j_5n - d_j_15n;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_had_v_n; j < j_aeq + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_aeq ][ k ] - v.x[ i ][ j_had_v_n ][ k ] ) *
-                    ( d_j - d_j_15n ) / d_diff + v.x[ i ][ j_had_v_n ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° northern latitude )
-// v-component formed by the diagonal starting from 15°N till subtropical jet
-    d_j_15n = ( double ) j_had_v_n;
-    d_j_30n = ( double ) j_had_n;
-    d_diff = d_j_15n - d_j_30n;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_had_n; j < j_had_v_n + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_had_v_n ][ k ] - v.x[ i ][ j_had_n ][ k ] ) *
-                    ( d_j - d_j_30n ) / d_diff + v.x[ i ][ j_had_n ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// change in j-direction in southern hemisphere //////////////////////////////////////////////
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° southern latitude )
-// w-component formed by the diagonal starting from tropical jet and subtropical jet
-    d_j_60s = ( double ) j_fer_s;
-    d_j_90s = ( double ) j_pol_s;
-    d_diff = d_j_60s - d_j_90s;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_fer_s; j < j_pol_s + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_fer_s ][ k ] - u.x[ i ][ j_pol_s ][ k ] ) *
-                    ( d_j - d_j_90s ) / d_diff + u.x[ i ][ j_pol_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_fer_s ][ k ] - w.x[ i ][ j_pol_s ][ k ] ) *
-                    ( d_j - d_j_90s ) / d_diff + w.x[ i ][ j_pol_s ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° southern latitude )
-// v-component formed by the diagonal starting from 60°S till 75°S
-    d_j_75s = ( double ) j_pol_v_s;
-    d_j_90s = ( double ) j_pol_s;
-    d_diff = d_j_90s - d_j_75s;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_pol_s; j > j_pol_v_s - 1; j-- ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_pol_s ][ k ] - v.x[ i ][ j_pol_v_s ][ k ] ) *
-                    ( d_j - d_j_75s ) / d_diff + v.x[ i ][ j_pol_v_s ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° southern latitude )
-// v-component formed by the diagonal starting from 60°S till 75°S
-    d_j_60s = ( double ) j_fer_s;
-    d_j_75s = ( double ) j_pol_v_s;
-    d_diff = d_j_75s - d_j_60s;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_pol_v_s; j > j_fer_s - 1; j-- ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_pol_v_s ][ k ] - v.x[ i ][ j_fer_s ][ k ] ) *
-                    ( d_j - d_j_60s ) / d_diff + v.x[ i ][ j_fer_s ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° southern latitude )
-// w-component formed by the diagonal starting from polar jet and subtropical jet
-    d_j_60s = ( double ) j_fer_s;
-    d_j_30s = ( double ) j_had_s;
-    d_diff = d_j_30s - d_j_60s;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_had_s; j < j_fer_s + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_had_s ][ k ] - u.x[ i ][ j_fer_s ][ k ] ) *
-                    ( d_j - d_j_60s ) / d_diff + u.x[ i ][ j_fer_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_had_s ][ k ] - w.x[ i ][ j_fer_s ][ k ] ) *
-                    ( d_j - d_j_60s ) / d_diff + w.x[ i ][ j_fer_s ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° southern latitude )
-// v-component formed by the diagonal starting from 45°S till subtropical jet
-    d_j_45s = ( double ) j_fer_v_s;
-    d_j_60s = ( double ) j_fer_s;
-    d_diff = d_j_60s - d_j_45s;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_fer_s; j > j_fer_v_s - 1; j-- ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_fer_s ][ k ] - v.x[ i ][ j_fer_v_s ][ k ] ) *
-                    ( d_j - d_j_45s ) / d_diff + v.x[ i ][ j_fer_v_s ][ k ];
-            }
-        }
-    }
-
-///////////// forming diagonals ///////////////////////////////////////////////////////
-
-// south equatorial Hadley cell
-// u- and w-component formed by the diagonal starting from equatorjet and subtropical jet
-    d_j_5s = ( double ) j_aeq;
-    d_j_30s = ( double ) j_had_s;
-    d_diff = d_j_5s - d_j_30s;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_aeq; j < j_had_s + 1; j++ ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_aeq ][ k ] - u.x[ i ][ j_had_s ][ k ] ) *
-                    ( d_j - d_j_30s ) / d_diff + u.x[ i ][ j_had_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_aeq ][ k ] - w.x[ i ][ j_had_s ][ k ] ) *
-                    ( d_j - d_j_30s ) / d_diff + w.x[ i ][ j_had_s ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// south equatorial Hadley cell
-// v-component formed by the diagonal starting from 15°S till subtropical jet
-    d_j_15s = ( double ) j_had_v_s;
-    d_j_30s = ( double ) j_had_s;
-    d_diff = d_j_30s - d_j_15s;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_had_s; j > j_had_v_s - 1; j-- ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_had_s ][ k ] - v.x[ i ][ j_had_v_s ][ k ] ) *
-                    ( d_j - d_j_15s ) / d_diff + v.x[ i ][ j_had_v_s ][ k ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
-
-// south equatorial Hadley cell
-// v-component formed by the diagonal starting from equator till 15°N
-    d_j_5s = ( double ) j_aeq;
-    d_j_15s = ( double ) j_had_v_s;
-    d_diff = d_j_15s - d_j_5s;
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_had_v_s; j > j_aeq - 1; j-- ){
-            d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_had_v_s ][ k ] - v.x[ i ][ j_aeq ][ k ] ) *
-                    ( d_j - d_j_5s ) / d_diff + v.x[ i ][ j_aeq ][ k ];
-            }
-        }
-    }
-
-///////////////////////////////////////////////// change in sign of v-component /////////////////////////////////////////////////
-///////////////////////////////////////////////// values identical with the northern hemisphere //////////////////////////////////////////////////
     for ( int i = 0; i < im; i++ ){
-        for ( int j = j_aeq + 1; j < jm; j++ ){
+        for ( int j = 91; j < jm; j++ ){
             for ( int k = 0; k < km; k++ ){
                 v.x[ i ][ j ][ k ] = - v.x[ i ][ j ][ k ];
             }
         }
     }
-
-/////////////////////////////////////////////// end forming diagonals ///////////////////////////////////////////////////
 
 /*
 /////////////////////////////////////////// forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
