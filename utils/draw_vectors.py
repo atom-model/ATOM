@@ -59,7 +59,7 @@ def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     #vx = fix_wrong_lats(vx)
     #vy = fix_wrong_lats(vy)
     if atm == "Atm":    
-        clim = [0, 1.5]
+        clim = [0, 1.2]
     else:
         clim = [0, 0.06]
     cs = m.quiver(down_sample(xi), down_sample(yi), down_sample(vy), down_sample(vx), down_sample(magitude), width=0.001,

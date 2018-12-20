@@ -960,6 +960,7 @@ void  BC_Thermo::init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_t
             }
         }
     }
+    init_v_or_w_above_tropopause(v_or_w, lat_1, lat_2, coeff_trop);
 }
 
 void  BC_Thermo::init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff){
@@ -1001,19 +1002,11 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     j_had_v_n = 75;
     j_had_v_s = 105;
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
+    // initial velocity components in the northern and southern
+    // Pole, Ferrel and Hadley cells
 
-// initial velocity components in the northern and southern
-// Pole, Ferrel and Hadley cells
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////// equator ///////////////////////////////////////
-
-// equator ( at j=90 compares to 0° latitude )
-// u-component up to tropopause and back on half distance (  i = 20 )
+    // equator ( at j=90 compares to 0° latitude )
+    // u-component up to tropopause and back on half distance (  i = 20 )
 
     double ua_00 = 1.;  // in m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this function
     double va_equator_SL =  0.000;
@@ -1021,26 +1014,13 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     double wa_equator_SL = - 1.;
     double wa_equator_Tropopause = - 7.5;
 
+    //equator
     init_u(u,90,90,ua_00);//lat: 0
+    
     init_v_or_w(v,90,90,va_equator_Tropopause,va_equator_SL);
     init_v_or_w(w,90,90,wa_equator_Tropopause,wa_equator_SL);
-    init_v_or_w_above_tropopause(v,90,90,va_equator_Tropopause);
-    init_v_or_w_above_tropopause(v,90,90,wa_equator_Tropopause);
-
-/////////////////////////////////////// end equator ///////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-// cell structure in northern hemisphere
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////// northern polar cell /////////////////////////////////////////
-
-
-// north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° northern latitude )
-// u-component up to tropopause and back on half distance
-// extension around North Pole ( from j=0 till j=5 compares to 85° till 90° northern latitude )
+    
+    //polar cell
     double ua_90 = - 0.5;
     double va_Polar_SL = 0.;
     double va_Polar_Tropopause = 0.;
@@ -1049,25 +1029,21 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     double wa_Polar_SL = - 0.01;
     double wa_Polar_Tropopause = 0.;
 
+    //northern polar cell
     init_u(u, 0, 0, ua_90); //lat: 90
 
     init_v_or_w(v,0,30,va_Polar_Tropopause,va_Polar_SL); //lat: 90-60
     init_v_or_w(w,0,30,wa_Polar_Tropopause,wa_Polar_SL); //lat: 90-60
     init_v_or_w(v,15,15,va_Polar_Tropopause_75,va_Polar_SL_75); //lat: 75
 
-    init_v_or_w_above_tropopause(v,0,30,va_Polar_Tropopause);
-    init_v_or_w_above_tropopause(w,0,30,wa_Polar_Tropopause);
-    init_v_or_w_above_tropopause(v,15,15,va_Polar_Tropopause_75);//lat: 75
+    //southern polar cell
+    init_u(u, 180, 180, ua_90); //lat: -90
 
-/////////////////////////////////// end northern polar cell /////////////////////////////////////////
+    init_v_or_w(v,150,180,va_Polar_Tropopause,va_Polar_SL); //lat: -90-(-60)
+    init_v_or_w(w,150,180,wa_Polar_Tropopause,wa_Polar_SL); //lat: -90-(-60)
+    init_v_or_w(v,165,165,va_Polar_Tropopause_75,va_Polar_SL_75); //lat: -75
 
-/////////////////////////////////// northern Ferrel cell /////////////////////////////////////////
-
-// north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° northern latitude )
-
-// u-component up to tropopause and back on half distance
-// extension around 60° northern latitude ( from j=29 till j=31 compares to 59° till 61° northern latitude )
-
+    //Ferrel cell
     double ua_60 = 0.5;
     double va_Ferrel_SL = 0.5;
     double va_Ferrel_Tropopause = 1.;
@@ -1076,25 +1052,21 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     double wa_Ferrel_SL = -0.2;    // subpolar jet
     double wa_Ferrel_Tropopause = 10.;           
 
+    //northern Ferrel cell
     init_u(u, 30, 30, ua_60); //lat: 60 
 
     init_v_or_w(v,30,30,va_Ferrel_Tropopause,va_Ferrel_SL); //lat: 60
     init_v_or_w(w,30,30,wa_Ferrel_Tropopause,wa_Ferrel_SL); //lat: 60
     init_v_or_w(v,45,45,va_Ferrel_Tropopause_45,va_Ferrel_SL_45); //lat: 45   
+
+    //southern Ferrel cell
+    init_u(u, 150, 150, ua_60); //lat: -60 
+
+    init_v_or_w(v,150,150,va_Ferrel_Tropopause,va_Ferrel_SL); //lat: -60
+    init_v_or_w(w,150,150,wa_Ferrel_Tropopause,wa_Ferrel_SL); //lat: -60
+    init_v_or_w(v,135,135,va_Ferrel_Tropopause_45,va_Ferrel_SL_45); //lat: -45   
  
-    init_v_or_w_above_tropopause(v,30,30,va_Ferrel_Tropopause);
-    init_v_or_w_above_tropopause(w,30,30,wa_Ferrel_Tropopause);
-    init_v_or_w_above_tropopause(v,45,45,va_Ferrel_Tropopause_45);
-
-//////////////////////////////// end northern Ferrel cell ////////////////////////////////////////
-
-//////////////////////////////// northern Hadley cell ////////////////////////////////////////
-
-// north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° northern latitude )
-// u-component up to tropopause and back on half distance
-// extension around 30° northern latitude ( from j=59 till j=61 compares to 29° till 31° northern latitude )
-
-    // velocity assumptions for latitude at 15° and 30° in the Hadley cell
+    // Hadley cell
     double ua_30 = - 1.;
     double va_Hadley_SL = .25;
     double va_Hadley_Tropopause = - 1.;
@@ -1103,244 +1075,19 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     double wa_Hadley_SL = 1.;            // at surface
     double wa_Hadley_Tropopause = 30.;  // subtropic jet in m/s compares to 108 km/h
 
+    //northern Hadley cell
     init_u(u, 60, 60, ua_30); //lat: 30 
 
     init_v_or_w(v,60,60,va_Hadley_Tropopause,va_Hadley_SL); //lat: 30
     init_v_or_w(w,60,60,wa_Hadley_Tropopause,wa_Hadley_SL); //lat: 30
     init_v_or_w(v,75,75,va_Hadley_Tropopause_15,va_Hadley_SL_15); //lat: 15   
 
-    init_v_or_w_above_tropopause(v,60,60,va_Hadley_Tropopause);
-    init_v_or_w_above_tropopause(w,60,60,wa_Hadley_Tropopause);
-    init_v_or_w_above_tropopause(v,75,75,va_Hadley_Tropopause_15);
+    //southern Hadley cell
+    init_u(u, 120, 120, ua_30); //lat: -30 
 
-////////////////////////////////// end northern Hadley cell ////////////////////////////////////////
-
-// ||||||||||||||||||||||||||||||||||||||| equator ||||||||||||||||||||||||||||||||||||||||||||||
-// ||||||||||||||||||||||||||||||||||||||| equator ||||||||||||||||||||||||||||||||||||||||||||||
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-// cell structure in southern hemisphere
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////// southern Hadley cell ////////////////////////////////////////
-
-
-// south equatorial Hadley cell ( from j=90 till j=120 compares to 0° till 30° southern latitude )
-// u-component up to tropopause and back on half distance
-// extension around 30° southern latitude ( from j=119 till j=121 compares to 29° till 31° southern latitude )
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_had_s; j < j_had_s + 1; j++ ){
-            i_max = im_tropopause[ j ];
-            i_half = im_tropopause[ j ] / 2;
-            d_i_half = ( double ) i_half;
-            for ( int i = 0; i <= i_max; i++ ){
-                d_i = ( double ) i;
-                u.x[ i ][ j ][ k ] = - ua_30 * ( d_i * d_i / ( d_i_half * d_i_half ) - 2. * d_i / d_i_half );
-            }
-        }
-    }
-
-// south equatorial Hadley cell
-// v- and w-component up to tropopause and stratosphere above
-// extension around 30° southern latitude ( from j=119 till j=121 compares to 29° till 31° southern latitude )
-    for ( int j = j_had_s; j < j_had_s + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) i_max;
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = 0; i < i_max; i++ ){
-                d_i = ( double ) i;
-                v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause - va_Hadley_SL ) *
-                    d_i / d_i_max + va_Hadley_SL;    // replacement for forming diagonals
-                w.x[ i ][ j ][ k ] = ( wa_Hadley_Tropopause - wa_Hadley_SL ) *
-                    d_i / d_i_max + wa_Hadley_SL;    // replacement for forming diagonals
-            }
-        }
-    }
-    for ( int j = j_had_s; j < j_had_s + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - (im-1) );
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - (im-1) );
-                v.x[ i ][ j ][ k ] = va_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
-                w.x[ i ][ j ][ k ] = wa_Hadley_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
-            }
-        }
-    }
-
-// extension around 30° southern latitude ( from j=119 till j=121 compares to 29° till 31° southern latitude )
-// v-component up to tropopause and stratosphere above
-// v-component at 15°S
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_had_v_s; j <  j_had_v_s + 1; j++ ){
-            i_max = im_tropopause[ j ];
-            d_i_max = ( double ) i_max;
-            for ( int i = 0; i < i_max; i++ ){
-                d_i = ( double ) i;
-                v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause_15 - va_Hadley_SL_15 ) *
-                    d_i / d_i_max + va_Hadley_SL_15;
-            }
-        }
-    }
-    for ( int j = j_had_v_s; j < j_had_v_s + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - (im-1) );
-        if ( d_i_max == 0. ) d_i_max = 1.e-6;
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - (im-1) );
-                v.x[ i ][ j ][ k ] = va_Hadley_Tropopause_15 * d_i / d_i_max;
-            }
-        }
-    }
-
-////////////////////////////// end southern Hadley cell ////////////////////////////////////////////
-
-////////////////////////////// southern Ferrel cell ////////////////////////////////////////////
-
-// south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° southern latitude )
-// u-component up to tropopause and back on half distance
-// extension around 60° southern latitude ( from j=139 till j=151 compares to 59° till 61° southern latitude )
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_fer_s; j < j_fer_s + 1; j++ ){
-            i_max = im_tropopause[ j ];
-            i_half = im_tropopause[ j ] / 2;
-            d_i_half = ( double ) i_half;
-            for ( int i = 0; i <= i_max; i++ ){
-                d_i = ( double ) i;
-                u.x[ i ][ j ][ k ] = - ua_60 * ( d_i * d_i / ( d_i_half * d_i_half ) - 2. * d_i / d_i_half );
-            }
-        }
-    }
-
-// south equatorial Ferrel cell
-// v- and w-component up to tropopause and stratosphere above
-    for ( int j = j_fer_s; j < j_fer_s + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) i_max;
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = 0; i < i_max; i++ ){
-                d_i = ( double ) i;
-                v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause - va_Ferrel_SL ) *
-                    d_i / d_i_max + va_Ferrel_SL;    // replacement for forming diagonals
-                w.x[ i ][ j ][ k ] = ( wa_Ferrel_Tropopause - wa_Ferrel_SL ) *
-                    d_i / d_i_max + wa_Ferrel_SL;    // replacement for forming diagonals
-            }
-        }
-    }
-    for ( int j = j_fer_s; j < j_fer_s + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - (im-1) );
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - (im-1) );
-                v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
-                w.x[ i ][ j ][ k ] = wa_Ferrel_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
-            }
-        }
-    }
-
-// south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° southern latitude )
-// v-component up to tropopause and stratosphere above
-// v-component at 45°N
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_fer_v_s; j <  j_fer_v_s + 1; j++ ){
-            i_max = im_tropopause[ j ];
-            d_i_max = ( double ) i_max;
-            for ( int i = 0; i < i_max; i++ ){
-                d_i = ( double ) i;
-                v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause_45 - va_Ferrel_SL_45 ) *
-                    d_i / d_i_max + va_Ferrel_SL_45;
-            }
-        }
-    }
-    for ( int j = j_fer_v_s; j < j_fer_v_s + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - (im-1) );
-        if ( d_i_max == 0. ) d_i_max = 1.e-6;
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - (im-1) );
-                v.x[ i ][ j ][ k ] = va_Ferrel_Tropopause_45 * d_i / d_i_max;
-            }
-        }
-    }
-
-///////////////////////////// end southern Ferrel cell /////////////////////////////////////////////
-
-///////////////////////////// southern Polar cell /////////////////////////////////////////////
-
-// south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° southern latitude )
-// u-component up to tropopause and back on half distance
-// extension around South Pole ( from j=175 till j=180 compares to 85° till 90° southern latitude )
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_pol_s; j < jm; j++ ){
-            i_max = im_tropopause[ j ];
-            i_half = im_tropopause[ j ] / 2;
-            d_i_half = ( double ) i_half;
-            for ( int i = 0; i <= i_max; i++ ){
-                d_i = ( double ) i;
-                u.x[ i ][ j ][ k ] = - ua_90 * ( d_i * d_i / ( d_i_half * d_i_half ) - 2. * d_i / d_i_half );
-            }
-        }
-    }
-
-// south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° southern latitude )
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_fer_s + 1; j < j_pol_s + 1; j++ ){
-            i_max = im_tropopause[ j ];
-            d_i_max = ( double ) i_max;
-            for ( int i = 0; i < i_max; i++ ){
-                d_i = ( double ) i;
-                v.x[ i ][ j ][ k ] = ( ( va_Polar_Tropopause - va_Polar_SL ) *
-                    d_i / d_i_max + va_Polar_SL );
-                w.x[ i ][ j ][ k ] = ( wa_Polar_Tropopause - wa_Polar_SL ) *
-                    d_i / d_i_max + wa_Polar_SL;  // indifferent except at j_pol_s
-            }
-        }
-    }
-    for ( int j = j_fer_s + 1; j < j_pol_s + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - (im-1) );
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - (im-1) );
-                v.x[ i ][ j ][ k ] = va_Polar_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
-                w.x[ i ][ j ][ k ] = wa_Polar_Tropopause * d_i / d_i_max;    // replacement for forming diagonals
-            }
-        }
-    }
-
-// south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° southern latitude )
-// u-component up to tropopause and back on half distance
-// extension around South Pole ( from j=175 till j=180 compares to 85° till 90° southern latitude )
-// v-component at 75°S
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = j_pol_v_s; j <  j_pol_v_s + 1; j++ ){
-            i_max = im_tropopause[ j ];
-            d_i_max = ( double ) i_max;
-            for ( int i = 0; i < i_max; i++ ){
-                d_i = ( double ) i;
-                v.x[ i ][ j ][ k ] = ( va_Polar_Tropopause_75 - va_Polar_SL_75 ) *
-                    d_i / d_i_max + va_Polar_SL_75;
-            }
-        }
-    }
-    for ( int j = j_pol_v_s; j < j_pol_v_s + 1; j++ ){
-        i_max = im_tropopause[ j ];
-        d_i_max = ( double ) ( i_max - (im-1) );
-        if ( d_i_max == 0. ) d_i_max = 1.e-6;
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = i_max; i < im; i++ ){
-                d_i = ( double ) ( i - (im-1) );
-                v.x[ i ][ j ][ k ] = va_Polar_Tropopause_75 * d_i / d_i_max;
-            }
-        }
-    }
-
-///////////////////////////////////////// end southern polar cell ///////////////////////////////////
+    init_v_or_w(v,120,120,va_Hadley_Tropopause,va_Hadley_SL); //lat: -30
+    init_v_or_w(w,120,120,wa_Hadley_Tropopause,wa_Hadley_SL); //lat: -30
+    init_v_or_w(v,105,105,va_Hadley_Tropopause_15,va_Hadley_SL_15); //lat: -15 
 
 /////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
 /////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
