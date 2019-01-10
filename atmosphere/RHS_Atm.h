@@ -34,7 +34,7 @@ class RHS_Atmosphere
                                        double, double, double, double, double, double, double, double, double );
         ~RHS_Atmosphere ();
 
-        void RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep,
+        void RK_RHS_3D_Atmosphere (int i, int j, int k, double lv, double ls, double ep,
                                             double hp, double u_0, double t_0, double c_0, double co2_0,
                                             double p_0, double r_air, double r_water_vapour, double r_co2,
                                             double L_atm, double cp_l, double R_Air, double R_WaterVapour,

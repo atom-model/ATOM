@@ -119,7 +119,7 @@ RHS_Atmosphere::~RHS_Atmosphere()
 #define d2xdphi2_c(X) \
     (h_d_k * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i ][ j ][ k - 1 ] + X->x[ i ][ j ][ k - 2 ] ) / dphi2)
 
-void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep, 
+void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, double lv, double ls, double ep, 
                                             double hp, double u_0, double t_0, double c_0, double co2_0, 
                                             double p_0, double r_air, double r_water_vapour, double r_co2, 
                                             double L_atm, double cp_l, double R_Air, double R_WaterVapour, 
@@ -327,8 +327,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
            dcodthe = dxdthe_vals[i_co];
     
     double dudphi = dxdphi_vals[i_u], dvdphi = dxdphi_vals[i_v], dwdphi = dxdphi_vals[i_w], dtdphi = dxdphi_vals[i_t],
-          dpdphi = dxdphi_vals[i_p], dcdphi = dxdphi_vals[i_c], dclouddphi = dxdphi_vals[i_cloud], dicedphi = dxdphi_vals[i_ice],
-          dcodphi = dxdphi_vals[i_co];
+           dpdphi = dxdphi_vals[i_p], dcdphi = dxdphi_vals[i_c], dclouddphi = dxdphi_vals[i_cloud], dicedphi = dxdphi_vals[i_ice],
+           dcodphi = dxdphi_vals[i_co];
 
     double d2udr2 = d2xdr2_vals[i_u], d2vdr2 = d2xdr2_vals[i_v], d2wdr2 = d2xdr2_vals[i_w], d2tdr2 = d2xdr2_vals[i_t],
            d2cdr2 = d2xdr2_vals[i_c], d2clouddr2 = d2xdr2_vals[i_cloud], d2icedr2 = d2xdr2_vals[i_ice],
@@ -339,8 +339,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
            d2codthe2 = d2xdthe2_vals[i_co];
 
     double d2udphi2 = d2xdphi2_vals[i_u], d2vdphi2 = d2xdphi2_vals[i_v], d2wdphi2 = d2xdphi2_vals[i_w], d2tdphi2 = d2xdphi2_vals[i_t],
-          d2cdphi2 = d2xdphi2_vals[i_c], d2clouddphi2 = d2xdphi2_vals[i_cloud], d2icedphi2 = d2xdphi2_vals[i_ice],
-          d2codphi2 = d2xdphi2_vals[i_co];
+           d2cdphi2 = d2xdphi2_vals[i_c], d2clouddphi2 = d2xdphi2_vals[i_cloud], d2icedphi2 = d2xdphi2_vals[i_ice],
+           d2codphi2 = d2xdphi2_vals[i_co];
 
 
     double exp_pressure = g / ( 1.e-2 * gam * R_Air );

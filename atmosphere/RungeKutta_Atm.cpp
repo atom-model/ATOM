@@ -48,7 +48,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
         for ( int j = 1; j < jm-1; j++ ){
             for ( int k = 1; k < km-1; k++ ){
 // Runge-Kutta 4. order for k1 step ( dt )
-                prepare.RK_RHS_3D_Atmosphere ( n, i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
+                prepare.RK_RHS_3D_Atmosphere ( i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
                                                     r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2,
                                                     rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, rhs_t,
                                                     rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, aux_u,
@@ -74,7 +74,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                 co2.x[ i ][ j ][ k ] = co2n.x[ i ][ j ][ k ] + kco1 * .5 * dt;
 
 // Runge-Kutta 4. order for k2 step ( dt )
-                prepare.RK_RHS_3D_Atmosphere ( n, i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
+                prepare.RK_RHS_3D_Atmosphere ( i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
                                                     r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2,
                                                     rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, rhs_t,
                                                     rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, aux_u,
@@ -100,7 +100,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                 co2.x[ i ][ j ][ k ] = co2n.x[ i ][ j ][ k ] + kco2 * .5 * dt;
 
 // Runge-Kutta 4. order for k3 step ( dt )
-                prepare.RK_RHS_3D_Atmosphere ( n, i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
+                prepare.RK_RHS_3D_Atmosphere ( i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
                                                     r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2,
                                                     rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, rhs_t,
                                                     rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, aux_u,
@@ -126,7 +126,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                 co2.x[ i ][ j ][ k ] = co2n.x[ i ][ j ][ k ] + kco3 * dt;
 
 // Runge-Kutta 4. order for k4 step ( dt )
-                prepare.RK_RHS_3D_Atmosphere ( n, i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
+                prepare.RK_RHS_3D_Atmosphere ( i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
                                                     r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2,
                                                     rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, rhs_t,
                                                     rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, aux_u,
