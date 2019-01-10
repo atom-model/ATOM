@@ -65,6 +65,60 @@ RHS_Atmosphere::~RHS_Atmosphere()
 {
 }
 
+//
+#define dxdr_a(X) \
+    (h_d_i * ( X->x[ i+1 ][ j ][ k ] - X->x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * exp_rm)
+#define dxdr_b(X) \
+    (h_d_i * ( - 3. * X->x[ i ][ j ][ k ] + 4. * X->x[ i + 1 ][ j ][ k ] - X->x[ i + 2 ][ j ][ k ] ) / ( 2. * dr ) * exp_rm)
+
+//
+#define d2xdr2_a(X) \
+    (h_d_i * ( X->x[ i+1 ][ j ][ k ] - 2. * X->x[ i ][ j ][ k ] + X->x[ i-1 ][ j ][ k ] ) / dr2 * exp_2_rm \
+    - h_d_i * ( X->x[ i+1 ][ j ][ k ] - X->x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * exp_2_rm_2)
+#define d2xdr2_b(X) \
+    (h_d_i * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i + 1 ][ j ][ k ] + X->x[ i + 2 ][ j ][ k ] ) / dr2 * exp_2_rm \
+    - h_d_i * ( - 3. * X->x[ i ][ j ][ k ] + 4. * X->x[ i + 1 ][ j ][ k ] - X->x[ i + 2 ][ j ][ k ] ) / ( 2. * dr ) * exp_2_rm_2)
+
+//
+#define dxdthe_a(X) \
+    (h_d_j * ( X->x[ i ][ j+1 ][ k ] - X->x[ i ][ j-1 ][ k ] ) / ( 2. * dthe ))
+#define dxdthe_b(X) \
+    (h_d_j * ( - 3. * X->x[ i ][ j ][ k ] + 4. * X->x[ i ][ j + 1 ][ k ] - X->x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe ))
+#define dxdthe_c(X) \
+    (h_d_j * ( - 3. * X->x[ i ][ j ][ k ] + 4. * X->x[ i ][ j - 1 ][ k ] - X->x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe ))
+#define dxdthe_d(X) \
+    (h_d_j * ( X->x[ i ][ j + 1 ][ k ] - X->x[ i ][ j ][ k ] ) / dthe)
+#define dxdthe_e(X) \
+    (h_d_j * ( X->x[ i ][ j - 1 ][ k ] - X->x[ i ][ j ][ k ] ) / dthe)
+
+//
+#define d2xdthe2_a(X) \
+    (h_d_j * ( X->x[ i ][ j+1 ][ k ] - 2. * X->x[ i ][ j ][ k ] + X->x[ i ][ j-1 ][ k ] ) / dthe2)
+#define d2xdthe2_b(X) \
+    (h_d_j * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i ][ j + 1 ][ k ] + X->x[ i ][ j + 2 ][ k ] ) / dthe2)
+#define d2xdthe2_c(X) \
+    (h_d_j * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i ][ j - 1 ][ k ] + X->x[ i ][ j - 2 ][ k ] ) / dthe2)
+
+//
+#define dxdphi_a(X) \
+    (h_d_k * ( X->x[ i ][ j ][ k+1 ] - X->x[ i ][ j ][ k-1 ] ) / ( 2. * dphi ))
+#define dxdphi_b(X) \
+    (h_d_k * ( - 3. * X->x[ i ][ j ][ k ] + 4. * X->x[ i ][ j ][ k + 1 ] - X->x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi ))
+#define dxdphi_c(X) \
+    (h_d_k * ( - 3. * X->x[ i ][ j ][ k ] + 4. * X->x[ i ][ j ][ k - 1 ] - X->x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi ))
+#define dxdphi_d(X) \
+    (h_d_k * ( X->x[ i ][ j ][ k + 1 ] - X->x[ i ][ j ][ k ] ) / dphi)
+#define dxdphi_e(X) \
+    (h_d_k * ( X->x[ i ][ j ][ k - 1 ] - X->x[ i ][ j ][ k ] ) / dphi)
+
+//
+#define d2xdphi2_a(X) \
+    (h_d_k * ( X->x[ i ][ j ][ k+1 ] - 2. * X->x[ i ][ j ][ k ] + X->x[ i ][ j ][ k-1 ] ) / dphi2)
+#define d2xdphi2_b(X) \
+    (h_d_k * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i ][ j ][ k + 1 ] + X->x[ i ][ j ][ k + 2 ] ) / dphi2)
+#define d2xdphi2_c(X) \
+    (h_d_k * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i ][ j ][ k - 1 ] + X->x[ i ][ j ][ k - 2 ] ) / dphi2)
+
 void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep, 
                                             double hp, double u_0, double t_0, double c_0, double co2_0, 
                                             double p_0, double r_air, double r_water_vapour, double r_co2, 
@@ -96,6 +150,12 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     // collection of coefficients
     double rm = rad.z[ i ];
     double rm2 = rm * rm;
+
+    // collection of coefficients for coordinate stretching
+    double zeta = 3.715;
+    double exp_rm = 1. / exp( zeta * rm );
+    double exp_2_rm = 1. / exp( 2. * zeta * rm );
+    double exp_2_rm_2 = 2. / exp( 2. * zeta * rm );
 
     // collection of coefficients
     double sinthe = sin( the.z[ j ] );
@@ -148,237 +208,139 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
         h_d_j = cc * ( 1. - h_0_k ); 
     }
 
-    // 2. order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
-    double dudr = h_d_i * ( u.x[ i+1 ][ j ][ k ] - u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-    double dvdr = h_d_i * ( v.x[ i+1 ][ j ][ k ] - v.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-    double dwdr = h_d_i * ( w.x[ i+1 ][ j ][ k ] - w.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-    double dtdr = h_d_i * ( t.x[ i+1 ][ j ][ k ] - t.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-    double dpdr = h_d_i * ( p_dyn.x[ i+1 ][ j ][ k ] - p_dyn.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-    double dcdr = h_d_i * ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-    double dclouddr = h_d_i * ( cloud.x[ i+1 ][ j ][ k ] - cloud.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-    double dicedr = h_d_i * ( ice.x[ i+1 ][ j ][ k ] - ice.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-    double dcodr = h_d_i * ( co2.x[ i+1 ][ j ][ k ] - co2.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
+    std::vector<Array*> arrays{&u, &v, &w, &t, &p_dyn, &c, &cloud, &ice, &co2};
+    enum array_index {i_u, i_v, i_w, i_t, i_p, i_c, i_cloud, i_ice, i_co, last_array_index};
+    std::vector<double> dxdr_vals(last_array_index), 
+                        dxdthe_vals(last_array_index), 
+                        dxdphi_vals(last_array_index),
+                        d2xdr2_vals(last_array_index),
+                        d2xdthe2_vals(last_array_index),
+                        d2xdphi2_vals(last_array_index);
 
-    double dudthe = h_d_j * ( u.x[ i ][ j+1 ][ k ] - u.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dvdthe = h_d_j * ( v.x[ i ][ j+1 ][ k ] - v.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dwdthe = h_d_j * ( w.x[ i ][ j+1 ][ k ] - w.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dtdthe = h_d_j * ( t.x[ i ][ j+1 ][ k ] - t.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dpdthe = h_d_j * ( p_dyn.x[ i ][ j+1 ][ k ] - p_dyn.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dcdthe = h_d_j * ( c.x[ i ][ j+1 ][ k ] - c.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dclouddthe = h_d_j * ( cloud.x[ i ][ j+1 ][ k ] - cloud.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dicedthe = h_d_j * ( ice.x[ i ][ j+1 ][ k ] - ice.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dcodthe = h_d_j * ( co2.x[ i ][ j+1 ][ k ] - co2.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-
-    double dudphi = h_d_k * ( u.x[ i ][ j ][ k+1 ] - u.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dvdphi = h_d_k * ( v.x[ i ][ j ][ k+1 ] - v.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dwdphi = h_d_k * ( w.x[ i ][ j ][ k+1 ] - w.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dtdphi = h_d_k * ( t.x[ i ][ j ][ k+1 ] - t.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dpdphi = h_d_k * ( p_dyn.x[ i ][ j ][ k+1 ] - p_dyn.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dcdphi = h_d_k * ( c.x[ i ][ j ][ k+1 ] - c.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dclouddphi = h_d_k * ( cloud.x[ i ][ j ][ k+1 ] - cloud.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dicedphi = h_d_k * ( ice.x[ i ][ j ][ k+1 ] - ice.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dcodphi = h_d_k * ( co2.x[ i ][ j ][ k+1 ] - co2.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
-
-    // 2. order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
-    double d2udr2 = h_d_i * ( u.x[ i+1 ][ j ][ k ] - 2. * u.x[ i ][ j ][ k ] + u.x[ i-1 ][ j ][ k ] ) / dr2;
-    double d2vdr2 = h_d_i * ( v.x[ i+1 ][ j ][ k ] - 2. * v.x[ i ][ j ][ k ] + v.x[ i-1 ][ j ][ k ] ) / dr2;
-    double d2wdr2 = h_d_i * ( w.x[ i+1 ][ j ][ k ] - 2. * w.x[ i ][ j ][ k ] + w.x[ i-1 ][ j ][ k ] ) / dr2;
-    double d2tdr2 = h_d_i * ( t.x[ i+1 ][ j ][ k ] - 2. * t.x[ i ][ j ][ k ] + t.x[ i-1 ][ j ][ k ] ) / dr2;
-    double d2cdr2 = h_d_i * ( c.x[ i+1 ][ j ][ k ] - 2. * c.x[ i ][ j ][ k ] + c.x[ i-1 ][ j ][ k ] ) / dr2;
-    double d2clouddr2 = h_d_i * ( cloud.x[ i+1 ][ j ][ k ] - 2. * cloud.x[ i ][ j ][ k ] + cloud.x[ i-1 ][ j ][ k ] ) / dr2;
-    double d2icedr2 = h_d_i * ( ice.x[ i+1 ][ j ][ k ] - 2. * ice.x[ i ][ j ][ k ] + ice.x[ i-1 ][ j ][ k ] ) / dr2;
-    double d2codr2 = h_d_i * ( co2.x[ i+1 ][ j ][ k ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i-1 ][ j ][ k ] ) / dr2;
-
-    double d2udthe2 = h_d_j * ( u.x[ i ][ j+1 ][ k ] - 2. * u.x[ i ][ j ][ k ] + u.x[ i ][ j-1 ][ k ] ) / dthe2;
-    double d2vdthe2 = h_d_j * ( v.x[ i ][ j+1 ][ k ] - 2. * v.x[ i ][ j ][ k ] + v.x[ i ][ j-1 ][ k ] ) / dthe2;
-    double d2wdthe2 = h_d_j * ( w.x[ i ][ j+1 ][ k ] - 2. * w.x[ i ][ j ][ k ] + w.x[ i ][ j-1 ][ k ] ) / dthe2;
-    double d2tdthe2 = h_d_j * ( t.x[ i ][ j+1 ][ k ] - 2. * t.x[ i ][ j ][ k ] + t.x[ i ][ j-1 ][ k ] ) / dthe2;
-    double d2cdthe2 = h_d_j * ( c.x[ i ][ j+1 ][ k ] - 2. * c.x[ i ][ j ][ k ] + c.x[ i ][ j-1 ][ k ] ) / dthe2;
-    double d2clouddthe2 = h_d_j * ( cloud.x[ i ][ j+1 ][ k ] - 2. * cloud.x[ i ][ j ][ k ] + cloud.x[ i ][ j-1 ][ k ] ) / dthe2;
-    double d2icedthe2 = h_d_j * ( ice.x[ i ][ j+1 ][ k ] - 2. * ice.x[ i ][ j ][ k ] + ice.x[ i ][ j-1 ][ k ] ) / dthe2;
-    double d2codthe2 = h_d_j * ( co2.x[ i ][ j+1 ][ k ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i ][ j-1 ][ k ] ) / dthe2;
-
-    double d2udphi2 = h_d_k * ( u.x[ i ][ j ][ k+1 ] - 2. * u.x[ i ][ j ][ k ] + u.x[ i ][ j ][ k-1 ] ) / dphi2;
-    double d2vdphi2 = h_d_k * ( v.x[ i ][ j ][ k+1 ] - 2. * v.x[ i ][ j ][ k ] + v.x[ i ][ j ][ k-1 ] ) / dphi2;
-    double d2wdphi2 = h_d_k * ( w.x[ i ][ j ][ k+1 ] - 2. * w.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k-1 ] ) / dphi2;
-    double d2tdphi2 = h_d_k * ( t.x[ i ][ j ][ k+1 ] - 2. * t.x[ i ][ j ][ k ] + t.x[ i ][ j ][ k-1 ] ) / dphi2;
-    double d2cdphi2 = h_d_k * ( c.x[ i ][ j ][ k+1 ] - 2. * c.x[ i ][ j ][ k ] + c.x[ i ][ j ][ k-1 ] ) / dphi2;
-    double d2clouddphi2 = h_d_k * ( cloud.x[ i ][ j ][ k+1 ] - 2. * cloud.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k-1 ] ) / dphi2;
-    double d2icedphi2 = h_d_k * ( ice.x[ i ][ j ][ k+1 ] - 2. * ice.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k-1 ] ) / dphi2;
-    double d2codphi2 = h_d_k * ( co2.x[ i ][ j ][ k+1 ] - 2. * co2.x[ i ][ j ][ k ] + co2.x[ i ][ j ][ k-1 ] ) / dphi2;
+    // finite differences 1. and 2. order in the free flow field with no contact to solid surfaces
+    for(int n=0; n<last_array_index; n++){
+        // 1. order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
+        dxdr_vals[n] = dxdr_a(arrays[n]);
+        dxdthe_vals[n] = dxdthe_a(arrays[n]);
+        dxdphi_vals[n] = dxdphi_a(arrays[n]);
+        // 2. order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
+        d2xdr2_vals[n] = d2xdr2_a(arrays[n]);
+        d2xdthe2_vals[n] = d2xdthe2_a(arrays[n]);
+        d2xdphi2_vals[n] = d2xdphi2_a(arrays[n]); 
+    }
 
     if ( i < im - 2 ){
         if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i+1, j, k ) ) ){
-            dudr = h_d_i * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i + 1 ][ j ][ k ] - u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-            dvdr = h_d_i * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i + 1 ][ j ][ k ] - v.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-            dwdr = h_d_i * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i + 1 ][ j ][ k ] - w.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-            dtdr = h_d_i * ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i + 1 ][ j ][ k ] - t.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-            dpdr = h_d_i * ( - 3. * p_dyn.x[ i ][ j ][ k ] + 4. * p_dyn.x[ i + 1 ][ j ][ k ] - p_dyn.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-            dcdr = h_d_i * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i + 1 ][ j ][ k ] - u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-            dclouddr = h_d_i * ( - 3. * cloud.x[ i ][ j ][ k ] + 4. * cloud.x[ i + 1 ][ j ][ k ] - cloud.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-            dicedr = h_d_i * ( - 3. * ice.x[ i ][ j ][ k ] + 4. * ice.x[ i + 1 ][ j ][ k ] - ice.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-            dcodr = h_d_i * ( - 3. * co2.x[ i ][ j ][ k ] + 4. * co2.x[ i + 1 ][ j ][ k ] - co2.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-
-            d2udr2 = h_d_i * ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i + 1 ][ j ][ k ] + u.x[ i + 2 ][ j ][ k ] ) / dr2;
-            d2vdr2 = h_d_i * ( 2 * v.x[ i ][ j ][ k ] - 2. * v.x[ i + 1 ][ j ][ k ] + v.x[ i + 2 ][ j ][ k ] ) / dr2;
-            d2wdr2 = h_d_i * ( 2 * w.x[ i ][ j ][ k ] - 2. * w.x[ i + 1 ][ j ][ k ] + w.x[ i + 2 ][ j ][ k ] ) / dr2;
-            d2tdr2 = h_d_i * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i + 1 ][ j ][ k ] + t.x[ i + 2 ][ j ][ k ] ) / dr2;
-            d2cdr2 = h_d_i * ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i + 1 ][ j ][ k ] + u.x[ i + 2 ][ j ][ k ] ) / dr2;
-            d2clouddr2 = h_d_i * ( 2 * cloud.x[ i ][ j ][ k ] - 2. * cloud.x[ i + 1 ][ j ][ k ] + cloud.x[ i + 2 ][ j ][ k ] ) / dr2;
-            d2icedr2 = h_d_i * ( 2 * ice.x[ i ][ j ][ k ] - 2. * ice.x[ i + 1 ][ j ][ k ] + ice.x[ i + 2 ][ j ][ k ] ) / dr2;
-            d2codr2 = h_d_i * ( 2 * co2.x[ i ][ j ][ k ] - 2. * co2.x[ i + 1 ][ j ][ k ] + co2.x[ i + 2 ][ j ][ k ] ) / dr2;
-        }else{
-            dudr = h_d_i * ( u.x[ i+1 ][ j ][ k ] - u.x[ i ][ j ][ k ] ) / dr;
-            dvdr = h_d_i * ( v.x[ i+1 ][ j ][ k ] - v.x[ i ][ j ][ k ] ) / dr;
-            dwdr = h_d_i * ( w.x[ i+1 ][ j ][ k ] - w.x[ i ][ j ][ k ] ) / dr;
-            dtdr = h_d_i * ( t.x[ i+1 ][ j ][ k ] - t.x[ i ][ j ][ k ] ) / dr;
-            dpdr = h_d_i * ( p_dyn.x[ i+1 ][ j ][ k ] - p_dyn.x[ i ][ j ][ k ] ) / dr;
-            dcdr = h_d_i * ( c.x[ i+1 ][ j ][ k ] - c.x[ i ][ j ][ k ] ) / dr;
-            dclouddr = h_d_i * ( cloud.x[ i+1 ][ j ][ k ] - cloud.x[ i ][ j ][ k ] ) / dr;
-            dicedr = h_d_i * ( ice.x[ i+1 ][ j ][ k ] - ice.x[ i ][ j ][ k ] ) / dr;
-            dcodr = h_d_i * ( co2.x[ i+1 ][ j ][ k ] - co2.x[ i ][ j ][ k ] ) / dr;
-
-            d2udr2 = d2vdr2 = d2wdr2 = d2tdr2 = d2cdr2 = d2clouddr2 = d2icedr2 = d2codr2 = 0.;
+            for(int n=0; n<last_array_index; n++){
+                dxdr_vals[n] = dxdr_b(arrays[n]);
+                d2xdr2_vals[n] = d2xdr2_b(arrays[n]);
+            }
         }
     }
 
     if ( ( j >= 2 ) && ( j < jm - 3 ) ){
+        // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral southward direction
         if ( ( is_land ( h, i, j, k ) ) && ( ( is_air ( h, i, j+1, k ) ) && ( is_air ( h, i, j+2, k ) ) ) ){
-            dudthe = h_d_j * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j + 1 ][ k ] - u.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dvdthe = h_d_j * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j + 1 ][ k ] - v.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dwdthe = h_d_j * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i ][ j + 1 ][ k ] - w.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dtdthe = h_d_j * ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i ][ j + 1 ][ k ] - t.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dpdthe = h_d_j * ( - 3. * p_dyn.x[ i ][ j ][ k ] + 4. * p_dyn.x[ i ][ j + 1 ][ k ] - p_dyn.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dcdthe = h_d_j * ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j + 1 ][ k ] - c.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dclouddthe = h_d_j * ( - 3. * cloud.x[ i ][ j ][ k ] + 4. * cloud.x[ i ][ j + 1 ][ k ] - cloud.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dicedthe = h_d_j * ( - 3. * ice.x[ i ][ j ][ k ] + 4. * ice.x[ i ][ j + 1 ][ k ] - ice.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dcodthe = h_d_j * ( - 3. * co2.x[ i ][ j ][ k ] + 4. * co2.x[ i ][ j + 1 ][ k ] - co2.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
-
-            d2udthe2 = h_d_j * ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i ][ j + 1 ][ k ] + u.x[ i ][ j + 2 ][ k ] ) / dthe2;
-            d2vdthe2 = h_d_j * ( 2 * v.x[ i ][ j ][ k ] - 2. * v.x[ i ][ j + 1 ][ k ] + v.x[ i ][ j + 2 ][ k ] ) / dthe2;
-            d2wdthe2 = h_d_j * ( 2 * w.x[ i ][ j ][ k ] - 2. * w.x[ i ][ j + 1 ][ k ] + w.x[ i ][ j + 2 ][ k ] ) / dthe2;
-            d2tdthe2 = h_d_j * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i ][ j + 1 ][ k ] + t.x[ i ][ j + 2 ][ k ] ) / dthe2;
-            d2cdthe2 = h_d_j * ( 2 * c.x[ i ][ j ][ k ] - 2. * c.x[ i ][ j + 1 ][ k ] + c.x[ i ][ j + 2 ][ k ] ) / dthe2;
-            d2clouddthe2 = h_d_j * ( 2 * cloud.x[ i ][ j ][ k ] - 2. * cloud.x[ i ][ j + 1 ][ k ] + cloud.x[ i ][ j + 2 ][ k ] ) / dthe2;
-            d2icedthe2 = h_d_j * ( 2 * ice.x[ i ][ j ][ k ] - 2. * ice.x[ i ][ j + 1 ][ k ] + ice.x[ i ][ j + 2 ][ k ] ) / dthe2;
-            d2codthe2 = h_d_j * ( 2 * co2.x[ i ][ j ][ k ] - 2. * co2.x[ i ][ j + 1 ][ k ] + co2.x[ i ][ j + 2 ][ k ] ) / dthe2;
-        }else{
-            dudthe = h_d_j * ( u.x[ i ][ j + 1 ][ k ] - u.x[ i ][ j ][ k ] ) / dthe;
-            dvdthe = h_d_j * ( v.x[ i ][ j + 1 ][ k ] - v.x[ i ][ j ][ k ] ) / dthe;
-            dwdthe = h_d_j * ( w.x[ i ][ j + 1 ][ k ] - w.x[ i ][ j ][ k ] ) / dthe;
-            dtdthe = h_d_j * ( t.x[ i ][ j + 1 ][ k ] - t.x[ i ][ j ][ k ] ) / dthe;
-            dpdthe = h_d_j * ( p_dyn.x[ i ][ j + 1 ][ k ] - p_dyn.x[ i ][ j ][ k ] ) / dthe;
-            dcdthe = h_d_j * ( c.x[ i ][ j + 1 ][ k ] - c.x[ i ][ j ][ k ] ) / dthe;
-            dclouddthe = h_d_j * ( cloud.x[ i ][ j + 1 ][ k ] - cloud.x[ i ][ j ][ k ] ) / dthe;
-            dicedthe = h_d_j * ( ice.x[ i ][ j + 1 ][ k ] - ice.x[ i ][ j ][ k ] ) / dthe;
-            dcodthe = h_d_j * ( co2.x[ i ][ j + 1 ][ k ] - co2.x[ i ][ j ][ k ] ) / dthe;
-
-            d2udthe2 = d2vdthe2 = d2wdthe2 = d2tdthe2 = d2cdthe2 = d2clouddthe2 = d2icedthe2 = d2codthe2 = 0.;
+            for(int n=0; n<last_array_index; n++){
+                dxdthe_vals[n] = dxdthe_b(arrays[n]);
+                d2xdthe2_vals[n] = d2xdthe2_b(arrays[n]);
+            }            
+        }
+        // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral northward direction
+        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j-1, k ) ) && ( is_air ( h, i, j-2, k ) ) ){
+            for(int n=0; n<last_array_index; n++){
+                dxdthe_vals[n] = dxdthe_c(arrays[n]);
+                d2xdthe2_vals[n] = d2xdthe2_c(arrays[n]);
+            }
         }
 
+        // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral southward direction
+        if ( ( ( is_land ( h, i, j, k ) ) 
+                && ( ( is_air ( h, i, j+1, k ) ) && ( is_land ( h, i, j+2, k ) ) ) ) 
+                || ( ( j == jm - 2 )
+                && ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j+1, k ) ) ) ) ){
+            for(int n=0; n<last_array_index; n++){
+                dxdthe_vals[n] = dxdthe_d(arrays[n]);
+                d2xdthe2_vals[n] = 0.;
+            }
+        }
 
-        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j-1, k ) ) && ( is_air ( h, i, j-2, k ) ) ){
-            dudthe = h_d_j * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j - 1 ][ k ] - u.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
-            dvdthe = h_d_j * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j - 1 ][ k ] - v.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
-            dwdthe = h_d_j * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i ][ j - 1 ][ k ] - w.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
-            dtdthe = h_d_j * ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i ][ j - 1 ][ k ] - t.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
-            dpdthe = h_d_j * ( - 3. * p_dyn.x[ i ][ j ][ k ] + 4. * p_dyn.x[ i ][ j - 1 ][ k ] - p_dyn.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
-            dcdthe = h_d_j * ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j - 1 ][ k ] - c.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
-            dclouddthe = h_d_j * ( - 3. * cloud.x[ i ][ j ][ k ] + 4. * cloud.x[ i ][ j - 1 ][ k ] - cloud.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
-            dicedthe = h_d_j * ( - 3. * ice.x[ i ][ j ][ k ] + 4. * ice.x[ i ][ j - 1 ][ k ] - ice.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
-            dcodthe = h_d_j * ( - 3. * co2.x[ i ][ j ][ k ] + 4. * co2.x[ i ][ j - 1 ][ k ] - co2.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
-
-            d2udthe2 = h_d_j * ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i ][ j - 1 ][ k ] + u.x[ i ][ j - 2 ][ k ] ) / dthe2;
-            d2vdthe2 = h_d_j * ( 2 * v.x[ i ][ j ][ k ] - 2. * v.x[ i ][ j - 1 ][ k ] + v.x[ i ][ j - 2 ][ k ] ) / dthe2;
-            d2wdthe2 = h_d_j * ( 2 * w.x[ i ][ j ][ k ] - 2. * w.x[ i ][ j - 1 ][ k ] + w.x[ i ][ j - 2 ][ k ] ) / dthe2;
-            d2tdthe2 = h_d_j * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i ][ j - 1 ][ k ] + t.x[ i ][ j - 2 ][ k ] ) / dthe2;
-            d2cdthe2 = h_d_j * ( 2 * c.x[ i ][ j ][ k ] - 2. * c.x[ i ][ j - 1 ][ k ] + c.x[ i ][ j - 2 ][ k ] ) / dthe2;
-            d2clouddthe2 = h_d_j * ( 2 * cloud.x[ i ][ j ][ k ] - 2. * cloud.x[ i ][ j - 1 ][ k ] + cloud.x[ i ][ j - 2 ][ k ] ) / dthe2;
-            d2icedthe2 = h_d_j * ( 2 * ice.x[ i ][ j ][ k ] - 2. * ice.x[ i ][ j - 1 ][ k ] + ice.x[ i ][ j - 2 ][ k ] ) / dthe2;
-            d2codthe2 = h_d_j * ( 2 * co2.x[ i ][ j ][ k ] - 2. * co2.x[ i ][ j - 1 ][ k ] + co2.x[ i ][ j - 2 ][ k ] ) / dthe2;
-        }else{
-            dudthe = h_d_j * ( u.x[ i ][ j ][ k ] - u.x[ i ][ j - 1 ][ k ] ) / dthe;
-            dvdthe = h_d_j * ( v.x[ i ][ j ][ k ] - v.x[ i ][ j - 1 ][ k ] ) / dthe;
-            dwdthe = h_d_j * ( w.x[ i ][ j ][ k ] - w.x[ i ][ j - 1 ][ k ] ) / dthe;
-            dtdthe = h_d_j * ( t.x[ i ][ j ][ k ] - t.x[ i ][ j - 1 ][ k ] ) / dthe;
-            dpdthe = h_d_j * ( p_dyn.x[ i ][ j ][ k ] - p_dyn.x[ i ][ j - 1 ][ k ] ) / dthe;
-            dcdthe = h_d_j * ( c.x[ i ][ j ][ k ] - c.x[ i ][ j - 1 ][ k ] ) / dthe;
-            dclouddthe = h_d_j * ( cloud.x[ i ][ j ][ k ] - cloud.x[ i ][ j - 1 ][ k ] ) / dthe;
-            dicedthe = h_d_j * ( ice.x[ i ][ j ][ k ] - ice.x[ i ][ j - 1 ][ k ] ) / dthe;
-            dcodthe = h_d_j * ( co2.x[ i ][ j ][ k ] - co2.x[ i ][ j - 1 ][ k ] ) / dthe;
-
-            d2udthe2 = d2vdthe2 = d2wdthe2 = d2tdthe2 = d2cdthe2 = d2clouddthe2 = d2icedthe2 = d2codthe2 = 0.;
+        // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral northward direction
+        if ( ( ( is_land ( h, i, j, k ) ) 
+                && ( ( is_air ( h, i, j-1, k ) ) && ( is_land ( h, i, j-2, k ) ) ) ) 
+                || ( ( j == 1 )
+                && ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j-1, k ) ) ) ) ){
+            for(int n=0; n<last_array_index; n++){
+                dxdthe_vals[n] = dxdthe_e(arrays[n]);
+                d2xdthe2_vals[n] = 0.;
+            }            
         }
     }
 
 
     if ( ( k >= 2 ) && ( k < km - 3 ) ){
+        // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in longitudial eastward direction
         if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k+1 ) ) && ( is_air ( h, i, j, k+2 ) ) ){
-            dudphi = h_d_k * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j ][ k + 1 ] - u.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
-            dvdphi = h_d_k * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j ][ k + 1 ] - v.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
-            dwdphi = h_d_k * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i ][ j ][ k + 1 ] - w.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
-            dtdphi = h_d_k * ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i ][ j ][ k + 1 ] - t.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
-            dpdphi = h_d_k * ( - 3. * p_dyn.x[ i ][ j ][ k ] + 4. * p_dyn.x[ i ][ j ][ k + 1 ] - p_dyn.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
-            dcdphi = h_d_k * ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j ][ k + 1 ] - c.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
-            dclouddphi = h_d_k * ( - 3. * cloud.x[ i ][ j ][ k ] + 4. * cloud.x[ i ][ j ][ k + 1 ] - cloud.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
-            dicedphi = h_d_k * ( - 3. * ice.x[ i ][ j ][ k ] + 4. * ice.x[ i ][ j ][ k + 1 ] - ice.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
-            dcodphi = h_d_k * ( - 3. * co2.x[ i ][ j ][ k ] + 4. * co2.x[ i ][ j ][ k + 1 ] - co2.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
-
-            d2udphi2 = h_d_k * ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i ][ j ][ k + 1 ] + u.x[ i ][ j ][ k + 2 ] ) / dphi2;
-            d2vdphi2 = h_d_k * ( 2 * v.x[ i ][ j ][ k ] - 2. * v.x[ i ][ j ][ k + 1 ] + v.x[ i ][ j ][ k + 2 ] ) / dphi2;
-            d2wdphi2 = h_d_k * ( 2 * w.x[ i ][ j ][ k ] - 2. * w.x[ i ][ j ][ k + 1 ] + w.x[ i ][ j ][ k + 2 ] ) / dphi2;
-            d2tdphi2 = h_d_k * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i ][ j ][ k + 1 ] + t.x[ i ][ j ][ k + 2 ] ) / dphi2;
-            d2cdphi2 = h_d_k * ( 2 * c.x[ i ][ j ][ k ] - 2. * c.x[ i ][ j ][ k + 1 ] + c.x[ i ][ j ][ k + 2 ] ) / dphi2;
-            d2clouddphi2 = h_d_k * ( 2 * cloud.x[ i ][ j ][ k ] - 2. * cloud.x[ i ][ j ][ k + 1 ] + cloud.x[ i ][ j ][ k + 2 ] ) / dphi2;
-            d2icedphi2 = h_d_k * ( 2 * ice.x[ i ][ j ][ k ] - 2. * ice.x[ i ][ j ][ k + 1 ] + ice.x[ i ][ j ][ k + 2 ] ) / dphi2;
-            d2codphi2 = h_d_k * ( 2 * co2.x[ i ][ j ][ k ] - 2. * co2.x[ i ][ j ][ k + 1 ] + co2.x[ i ][ j ][ k + 2 ] ) / dphi2;
-        }else{
-            dudphi = h_d_k * ( u.x[ i ][ j ][ k + 1 ] - u.x[ i ][ j ][ k ] ) / dphi;
-            dvdphi = h_d_k * ( v.x[ i ][ j ][ k + 1 ] - v.x[ i ][ j ][ k ] ) / dphi;
-            dwdphi = h_d_k * ( w.x[ i ][ j ][ k + 1 ] - w.x[ i ][ j ][ k ] ) / dphi;
-            dtdphi = h_d_k * ( t.x[ i ][ j ][ k + 1 ] - t.x[ i ][ j ][ k ] ) / dphi;
-            dpdphi = h_d_k * ( p_dyn.x[ i ][ j ][ k + 1 ] - p_dyn.x[ i ][ j ][ k ] ) / dphi;
-            dcdphi = h_d_k * ( c.x[ i ][ j ][ k + 1 ] - c.x[ i ][ j ][ k ] ) / dphi;
-            dclouddphi = h_d_k * ( cloud.x[ i ][ j ][ k + 1 ] - cloud.x[ i ][ j ][ k ] ) / dphi;
-            dicedphi = h_d_k * ( ice.x[ i ][ j ][ k + 1 ] - ice.x[ i ][ j ][ k ] ) / dphi;
-            dcodphi = h_d_k * ( co2.x[ i ][ j ][ k + 1 ] - co2.x[ i ][ j ][ k ] ) / dphi;
-
-            d2udphi2 = d2vdphi2 = d2wdphi2 = d2tdphi2 = d2cdphi2 = d2clouddphi2 = d2icedphi2 = d2codphi2 = 0.;
+            for(int n=0; n<last_array_index; n++){
+                dxdphi_vals[n] = dxdphi_b(arrays[n]);
+                d2xdphi2_vals[n] = d2xdphi2_b(arrays[n]);
+            }
+        }
+        
+        // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in longitudial westward direction
+        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k-1 ) ) && ( is_air ( h, i, j, k-2 ) ) ){
+            for(int n=0; n<last_array_index; n++){
+                dxdphi_vals[n] = dxdphi_c(arrays[n]);
+                d2xdphi2_vals[n] = d2xdphi2_c(arrays[n]);
+            }
         }
 
-        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k-1 ) ) && ( is_air ( h, i, j, k-2 ) ) ){
-            dudphi = h_d_k * ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i ][ j ][ k - 1 ] - u.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
-            dvdphi = h_d_k * ( - 3. * v.x[ i ][ j ][ k ] + 4. * v.x[ i ][ j ][ k - 1 ] - v.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
-            dwdphi = h_d_k * ( - 3. * w.x[ i ][ j ][ k ] + 4. * w.x[ i ][ j ][ k - 1 ] - w.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
-            dtdphi = h_d_k * ( - 3. * t.x[ i ][ j ][ k ] + 4. * t.x[ i ][ j ][ k - 1 ] - t.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
-            dpdphi = h_d_k * ( - 3. * p_dyn.x[ i ][ j ][ k ] + 4. * p_dyn.x[ i ][ j ][ k - 1 ] - p_dyn.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
-            dcdphi = h_d_k * ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j ][ k - 1 ] - c.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
-            dclouddphi = h_d_k * ( - 3. * cloud.x[ i ][ j ][ k ] + 4. * cloud.x[ i ][ j ][ k - 1 ] - cloud.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
-            dicedphi = h_d_k * ( - 3. * ice.x[ i ][ j ][ k ] + 4. * ice.x[ i ][ j ][ k - 1 ] - ice.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
-            dcodphi = h_d_k * ( - 3. * co2.x[ i ][ j ][ k ] + 4. * co2.x[ i ][ j ][ k - 1 ] - co2.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
+        // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral eastward direction
+        if ( ( ( is_land ( h, i, j, k ) ) 
+                && ( ( is_air ( h, i, j, k+1 ) ) && ( is_land ( h, i, j, k+2 ) ) ) ) 
+                || ( ( k == km - 2 )
+                && ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j, k+1 ) ) ) ) ){
+            for(int n=0; n<last_array_index; n++){
+                dxdphi_vals[n] = dxdphi_e(arrays[n]);
+                d2xdphi2_vals[n] = 0.;
+            }
+        }
 
-            d2udphi2 = h_d_k * ( 2 * u.x[ i ][ j ][ k ] - 2. * u.x[ i ][ j ][ k - 1 ] + u.x[ i ][ j ][ k - 2 ] ) / dphi2;
-            d2vdphi2 = h_d_k * ( 2 * v.x[ i ][ j ][ k ] - 2. * v.x[ i ][ j ][ k - 1 ] + v.x[ i ][ j ][ k - 2 ] ) / dphi2;
-            d2wdphi2 = h_d_k * ( 2 * w.x[ i ][ j ][ k ] - 2. * w.x[ i ][ j ][ k - 1 ] + w.x[ i ][ j ][ k - 2 ] ) / dphi2;
-            d2tdphi2 = h_d_k * ( 2 * t.x[ i ][ j ][ k ] - 2. * t.x[ i ][ j ][ k - 1 ] + t.x[ i ][ j ][ k - 2 ] ) / dphi2;
-            d2cdphi2 = h_d_k * ( 2 * c.x[ i ][ j ][ k ] - 2. * c.x[ i ][ j ][ k - 1 ] + c.x[ i ][ j ][ k - 2 ] ) / dphi2;
-            d2clouddphi2 = h_d_k * ( 2 * cloud.x[ i ][ j ][ k ] - 2. * cloud.x[ i ][ j ][ k - 1 ] + cloud.x[ i ][ j ][ k - 2 ] ) / dphi2;
-            d2icedphi2 = h_d_k * ( 2 * ice.x[ i ][ j ][ k ] - 2. * ice.x[ i ][ j ][ k - 1 ] + ice.x[ i ][ j ][ k - 2 ] ) / dphi2;
-            d2codphi2 = h_d_k * ( 2 * co2.x[ i ][ j ][ k ] - 2. * co2.x[ i ][ j ][ k - 1 ] + co2.x[ i ][ j ][ k - 2 ] ) / dphi2;
-        }else{
-            dudphi = h_d_k * ( u.x[ i ][ j ][ k ] - u.x[ i ][ j ][ k - 1 ] ) / dphi;
-            dvdphi = h_d_k * ( v.x[ i ][ j ][ k ] - v.x[ i ][ j ][ k - 1 ] ) / dphi;
-            dwdphi = h_d_k * ( w.x[ i ][ j ][ k ] - w.x[ i ][ j ][ k - 1 ] ) / dphi;
-            dtdphi = h_d_k * ( t.x[ i ][ j ][ k ] - t.x[ i ][ j ][ k - 1 ] ) / dphi;
-            dpdphi = h_d_k * ( p_dyn.x[ i ][ j ][ k ] - p_dyn.x[ i ][ j ][ k - 1 ] ) / dphi;
-            dcdphi = h_d_k * ( c.x[ i ][ j ][ k ] - c.x[ i ][ j ][ k - 1 ] ) / dphi;
-            dclouddphi = h_d_k * ( cloud.x[ i ][ j ][ k ] - cloud.x[ i ][ j ][ k - 1 ] ) / dphi;
-            dicedphi = h_d_k * ( ice.x[ i ][ j ][ k ] - ice.x[ i ][ j ][ k - 1 ] ) / dphi;
-            dcodphi = h_d_k * ( co2.x[ i ][ j ][ k ] - co2.x[ i ][ j ][ k - 1 ] ) / dphi;
-
-            d2udphi2 = d2vdphi2 = d2wdphi2 = d2tdphi2 = d2cdphi2 = d2clouddphi2 = d2icedphi2 = d2codphi2 = 0.;
+        // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral westward direction
+        if ( ( ( is_land ( h, i, j, k ) ) 
+                && ( ( is_air ( h, i, j, k-1 ) ) && ( is_land ( h, i, j, k-2 ) ) ) ) 
+                || ( ( k == 1 )
+                && ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k-1 ) ) ) ) ){
+            for(int n=0; n<last_array_index; n++){
+                dxdphi_vals[n] = dxdphi_e(arrays[n]);
+                d2xdphi2_vals[n] = 0.;
+            }
         }
     }
+
+    double dudr = dxdr_vals[i_u], dvdr = dxdr_vals[i_v], dwdr = dxdr_vals[i_w], dtdr = dxdr_vals[i_t],
+           dpdr = dxdr_vals[i_p], dcdr = dxdr_vals[i_c], dclouddr = dxdr_vals[i_cloud], dicedr = dxdr_vals[i_ice],
+           dcodr = dxdr_vals[i_co];
+    
+    double dudthe = dxdthe_vals[i_u], dvdthe = dxdthe_vals[i_v], dwdthe = dxdthe_vals[i_w], dtdthe = dxdthe_vals[i_t],
+           dpdthe = dxdthe_vals[i_p], dcdthe = dxdthe_vals[i_c], dclouddthe = dxdthe_vals[i_cloud], dicedthe = dxdthe_vals[i_ice],
+           dcodthe = dxdthe_vals[i_co];
+    
+    double dudphi = dxdphi_vals[i_u], dvdphi = dxdphi_vals[i_v], dwdphi = dxdphi_vals[i_w], dtdphi = dxdphi_vals[i_t],
+          dpdphi = dxdphi_vals[i_p], dcdphi = dxdphi_vals[i_c], dclouddphi = dxdphi_vals[i_cloud], dicedphi = dxdphi_vals[i_ice],
+          dcodphi = dxdphi_vals[i_co];
+
+    double d2udr2 = d2xdr2_vals[i_u], d2vdr2 = d2xdr2_vals[i_v], d2wdr2 = d2xdr2_vals[i_w], d2tdr2 = d2xdr2_vals[i_t],
+           d2cdr2 = d2xdr2_vals[i_c], d2clouddr2 = d2xdr2_vals[i_cloud], d2icedr2 = d2xdr2_vals[i_ice],
+           d2codr2 = d2xdr2_vals[i_co];
+
+    double d2udthe2 = d2xdthe2_vals[i_u], d2vdthe2 = d2xdthe2_vals[i_v], d2wdthe2 = d2xdthe2_vals[i_w], d2tdthe2 = d2xdthe2_vals[i_t],
+           d2cdthe2 = d2xdthe2_vals[i_c], d2clouddthe2 = d2xdthe2_vals[i_cloud], d2icedthe2 = d2xdthe2_vals[i_ice],
+           d2codthe2 = d2xdthe2_vals[i_co];
+
+    double d2udphi2 = d2xdphi2_vals[i_u], d2vdphi2 = d2xdphi2_vals[i_v], d2wdphi2 = d2xdphi2_vals[i_w], d2tdphi2 = d2xdphi2_vals[i_t],
+          d2cdphi2 = d2xdphi2_vals[i_c], d2clouddphi2 = d2xdphi2_vals[i_cloud], d2icedphi2 = d2xdphi2_vals[i_ice],
+          d2codphi2 = d2xdphi2_vals[i_co];
 
 
     double exp_pressure = g / ( 1.e-2 * gam * R_Air );
