@@ -10,60 +10,11 @@
 
 #include <iostream>
 #include <cmath>
-#include "RHS_Atm.h"
+#include "cAtmosphereModel.h"
 #include "Utils.h"
 
 using namespace std;
 using namespace AtomUtils;
-
-
-RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, double re ):
-    im(0),
-    jm(jm),
-    km(km),
-    dt(0),
-    dr(0),
-    dthe(dthe),
-    dphi(dphi),
-    re(re),
-    sc_WaterVapour(0),
-    sc_CO2(0),
-    g(0),
-    pr(0),
-    gam(0),
-    WaterVapour(0),
-    Buoyancy(0),
-    CO2(0),
-    sigma(0)
-{}
-
-
-RHS_Atmosphere::RHS_Atmosphere ( int im, int jm, int km, double dt, double dr, double dthe, double dphi, 
-                                 double re, double sc_WaterVapour, double sc_CO2, double g, double pr, 
-                                 double WaterVapour, double Buoyancy, double CO2, double gam, double sigma, 
-                                 double lambda ):
-    im(im),
-    jm(jm),
-    km(km),
-    dt(dt),
-    dr(dr),
-    dthe(dthe),
-    dphi(dphi),
-    re(re),
-    sc_WaterVapour(sc_WaterVapour),
-    sc_CO2(sc_CO2),
-    g(g),
-    pr(pr),
-    gam(gam),
-    WaterVapour(WaterVapour),
-    Buoyancy(Buoyancy),
-    CO2(CO2),
-    sigma(sigma)
-{}
-
-RHS_Atmosphere::~RHS_Atmosphere() 
-{
-}
 
 //
 #define dxdr_a(X) \
@@ -119,24 +70,8 @@ RHS_Atmosphere::~RHS_Atmosphere()
 #define d2xdphi2_c(X) \
     (h_d_k * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i ][ j ][ k - 1 ] + X->x[ i ][ j ][ k - 2 ] ) / dphi2)
 
-void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, double lv, double ls, double ep, 
-                                            double hp, double u_0, double t_0, double c_0, double co2_0, 
-                                            double p_0, double r_air, double r_water_vapour, double r_co2, 
-                                            double L_atm, double cp_l, double R_Air, double R_WaterVapour, 
-                                            double R_co2, Array_1D &rad, Array_1D &the, Array_1D &phi, 
-                                            Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, 
-                                            Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, 
-                                            Array &rhs_t, Array &rhs_u, Array &rhs_v, Array &rhs_w, Array &rhs_c, 
-                                            Array &rhs_cloud, Array &rhs_ice, Array &rhs_co2, Array &aux_u, 
-                                            Array &aux_v, Array &aux_w, Array &Q_Latent, Array &BuoyancyForce,
-                                            Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v, 
-                                            Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c, 
-                                            Array_2D &Topography, Array_2D &Evaporation_Dalton, 
-                                            Array_2D &Precipitation )
+void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k) 
 {
-    cout.precision ( 8 );
-    cout.setf ( ios::fixed );
-
     double k_Force = 1.;// factor for acceleration of convergence processes inside the immersed boundary conditions
     double cc = 1.;
     double dist_coeff = 1.;
@@ -457,9 +392,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int i, int j, int k, double lv, doub
 
 
 
-void RHS_Atmosphere::RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u_0, double p_0, double L_atm,
-                                            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w, 
-                                            Array &p_dyn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w ){
+void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
     //  2D surface iterations
     double k_Force = 1.;// factor for acceleration of convergence processes inside the immersed boundary conditions
     double cc = 1.;
@@ -638,3 +571,5 @@ if ( ( j >= 2 ) && ( j < jm - 3 ) ){
     aux_v.x[ 0 ][ j ][ k ] = rhs_v.x[ 0 ][ j ][ k ] + h_d_j * dpdthe / rm / r_air;
     aux_w.x[ 0 ][ j ][ k ] = rhs_w.x[ 0 ][ j ][ k ] + h_d_k * dpdphi / rmsinthe / r_air;
 }
+
+

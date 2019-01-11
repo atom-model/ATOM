@@ -237,12 +237,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     BC_Atmosphere  boundary ( im, jm, km, t_tropopause );
 
     //  class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-    RHS_Atmosphere  prepare ( im, jm, km, dt, dr, dthe, dphi, re, sc_WaterVapour, sc_CO2, g, pr, 
-                              WaterVapour, Buoyancy, CO2, gam, sigma, lamda );
-    RHS_Atmosphere  prepare_2D ( jm, km, dthe, dphi, re );
 
     //  class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
-    RungeKutta_Atmosphere  result ( im, jm, km, dt, dr, dphi, dthe );
+    RungeKutta_Atmosphere  result(this, im, jm, km, dt, dr, dphi, dthe );
 
     //  class Results_MSL_Atm to compute and show results on the mean sea level, MSL
     Results_MSL_Atm  calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_equator, lv, ls, 
@@ -306,11 +303,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     // ***********************************   start of pressure and velocity iterations ***********************************
 
-    run_2D_loop(boundary, result, LandArea, prepare_2D, startPressure, circulation);
+    run_2D_loop(boundary, result, LandArea, startPressure, circulation);
     
     cout << endl << endl;
 
-    run_3D_loop( boundary, result, LandArea, prepare, startPressure, calculate_MSL, circulation);
+    run_3D_loop( boundary, result, LandArea, startPressure, calculate_MSL, circulation);
 
     cout << std::endl << " ************** NaNs detected in temperature ********************: temperature has_nan: "
     << t.has_nan() << std::endl;
@@ -656,7 +653,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
 }
 
 void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
-                                    BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare_2D, 
+                                    BC_Bathymetry_Atmosphere &LandArea, 
                                     Pressure_Atm &startPressure, BC_Thermo &circulation){
     int switch_2D = 0;    
     iter_cnt = 1;
@@ -706,7 +703,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         logger() << "enter cAtmosphereModel solveRungeKutta_2D_Atmosphere: w-velocity max: " << w.max() << std::endl << std::endl;
 */
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
-                result.solveRungeKutta_2D_Atmosphere ( prepare_2D, iter_cnt, r_air, u_0, p_0, L_atm, rad, the, phi, rhs_v, rhs_w, 
+                result.solveRungeKutta_2D_Atmosphere ( iter_cnt, r_air, u_0, p_0, L_atm, rad, the, phi, rhs_v, rhs_w, 
                                                        h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
 /*
         logger() << "end cAtmosphereModel solveRungeKutta_2D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
@@ -745,7 +742,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
 
 void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
-                                    BC_Bathymetry_Atmosphere &LandArea, RHS_Atmosphere &prepare,
+                                    BC_Bathymetry_Atmosphere &LandArea,
                                     Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL,                  
                                     BC_Thermo &circulation){
     
@@ -810,7 +807,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         logger() << "enter cAtmosphereModel solveRungeKutta_3D_Atmosphere: ice max: " << ice.max() * 1000. << std::endl << std::endl;
 */
             // class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_3D_Atmosphere ( prepare, iter_cnt, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
+            result.solveRungeKutta_3D_Atmosphere ( iter_cnt, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air, 
                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2, rad, 
                                                    the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, 
                                                    h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, 

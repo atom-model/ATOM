@@ -17,7 +17,7 @@
 #define _RUNGEKUTTA_ATMOSPHERE_
 
 using namespace std;
-
+class cAtmosphereModel;
 
 class RungeKutta_Atmosphere
 {
@@ -28,12 +28,14 @@ class RungeKutta_Atmosphere
                      kt2, ku2, kv2, kw2, kp2, kc2, kcloud2, kice2, kco2, kt3, ku3, kv3, kw3,
                      kp3, kc3, kcloud3, kice3, kco3, kt4, ku4, kv4, kw4, kp4, kc4, kcloud4, kice4, kco4;
 
+        cAtmosphereModel* m_model;
+
     public:
-        RungeKutta_Atmosphere ( int, int, int, double, double, double, double );
+        RungeKutta_Atmosphere (cAtmosphereModel* model, int, int, int, double, double, double, double );
         ~RungeKutta_Atmosphere ();
 
 
-        void solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &, int &, double, double,
+        void solveRungeKutta_3D_Atmosphere( int &, double, double,
                  double, double, double, double, double, double, double, double, double,
                  double, double, double, double, double, double,
                  Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &,
@@ -42,7 +44,7 @@ class RungeKutta_Atmosphere
                  Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
                  Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
 
-        void solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &, int &,
+        void solveRungeKutta_2D_Atmosphere( int &,
                 double, double, double, double, Array_1D &, Array_1D &, Array_1D &,
                 Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 };

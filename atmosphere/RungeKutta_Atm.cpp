@@ -9,13 +9,14 @@
 
 #include <iostream>
 #include <cmath>
+#include "cAtmosphereModel.h"
 #include "RungeKutta_Atm.h"
 #include "RHS_Atm.h"
 
 using namespace std;
 
 
-RungeKutta_Atmosphere::RungeKutta_Atmosphere ( int im, int jm, int km, double dt,
+RungeKutta_Atmosphere::RungeKutta_Atmosphere(cAtmosphereModel* model, int im, int jm, int km, double dt,
                                                             double dr, double dthe, double dphi ){
     this -> im = im;
     this -> jm = jm;
@@ -24,12 +25,13 @@ RungeKutta_Atmosphere::RungeKutta_Atmosphere ( int im, int jm, int km, double dt
     this -> dr = dr;
     this -> dphi = dphi;
     this -> dthe = dthe;
+    m_model = model;
 }
 
 RungeKutta_Atmosphere::~RungeKutta_Atmosphere () {}
 
 
-void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prepare,
+void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere (
                                                            int &n, double lv, double ls, double ep, double hp, double u_0,
                                                            double t_0, double c_0, double co2_0, double p_0, double r_air,
                                                            double r_water_vapour, double r_co2, double L_atm, double cp_l,
@@ -48,12 +50,8 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
         for ( int j = 1; j < jm-1; j++ ){
             for ( int k = 1; k < km-1; k++ ){
 // Runge-Kutta 4. order for k1 step ( dt )
-                prepare.RK_RHS_3D_Atmosphere ( i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
-                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2,
-                                                    rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, rhs_t,
-                                                    rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, aux_u,
-                                                    aux_v, aux_w, Latency, BuoyancyForce, Q_Sensible, P_rain, P_snow,
-                                                    S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, Evaporation_Dalton, Precipitation );
+
+                m_model->RK_RHS_3D_Atmosphere(i, j, k);
 
                 kt1 = rhs_t.x[ i ][ j ][ k ];
                 ku1 = rhs_u.x[ i ][ j ][ k ];
@@ -74,12 +72,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                 co2.x[ i ][ j ][ k ] = co2n.x[ i ][ j ][ k ] + kco1 * .5 * dt;
 
 // Runge-Kutta 4. order for k2 step ( dt )
-                prepare.RK_RHS_3D_Atmosphere ( i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
-                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2,
-                                                    rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, rhs_t,
-                                                    rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, aux_u,
-                                                    aux_v, aux_w, Latency, BuoyancyForce, Q_Sensible, P_rain, P_snow,
-                                                    S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, Evaporation_Dalton, Precipitation );
+                m_model->RK_RHS_3D_Atmosphere(i, j, k);
 
                 kt2 = rhs_t.x[ i ][ j ][ k ];
                 ku2 = rhs_u.x[ i ][ j ][ k ];
@@ -100,12 +93,8 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                 co2.x[ i ][ j ][ k ] = co2n.x[ i ][ j ][ k ] + kco2 * .5 * dt;
 
 // Runge-Kutta 4. order for k3 step ( dt )
-                prepare.RK_RHS_3D_Atmosphere ( i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
-                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2,
-                                                    rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, rhs_t,
-                                                    rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, aux_u,
-                                                    aux_v, aux_w, Latency, BuoyancyForce, Q_Sensible, P_rain, P_snow,
-                                                    S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, Evaporation_Dalton, Precipitation );
+                
+                m_model->RK_RHS_3D_Atmosphere(i, j, k);
 
                 kt3 = rhs_t.x[ i ][ j ][ k ];
                 ku3 = rhs_u.x[ i ][ j ][ k ];
@@ -126,12 +115,8 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                 co2.x[ i ][ j ][ k ] = co2n.x[ i ][ j ][ k ] + kco3 * dt;
 
 // Runge-Kutta 4. order for k4 step ( dt )
-                prepare.RK_RHS_3D_Atmosphere ( i, j, k, lv, ls, ep, hp, u_0, t_0, c_0, co2_0, p_0, r_air,
-                                                    r_water_vapour, r_co2, L_atm, cp_l, R_Air, R_WaterVapour, R_co2,
-                                                    rad, the, phi, h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, rhs_t,
-                                                    rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, aux_u,
-                                                    aux_v, aux_w, Latency, BuoyancyForce, Q_Sensible, P_rain, P_snow,
-                                                    S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, Evaporation_Dalton, Precipitation );
+
+                m_model->RK_RHS_3D_Atmosphere(i, j, k);
 
                 kt4 = rhs_t.x[ i ][ j ][ k ];
                 ku4 = rhs_u.x[ i ][ j ][ k ];
@@ -160,7 +145,7 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
 
 
 
-void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prepare_2D,
+void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere (
                                                             int &n, double r_air, double u_0, double p_0, double L_atm,
                                                             Array_1D &rad, Array_1D &the, Array_1D &phi, Array &rhs_v, Array &rhs_w,
                                                             Array &h, Array &v, Array &w, Array &p_dyn, Array &vn, Array &wn,
@@ -174,8 +159,8 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
     for ( int j = 1; j < jm-1; j++ ){
         for ( int k = 1; k < km-1; k++ ){
 // Runge-Kutta 4. order for k1 step ( dt )
-            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the, phi,
-                                h, v, w, p_dyn, rhs_v, rhs_w, aux_v, aux_w );
+
+            m_model->RK_RHS_2D_Atmosphere( j, k);
 
             kv1 = rhs_v.x[ 0 ][ j ][ k ];
             kw1 =rhs_w.x[ 0 ][ j ][ k ];
@@ -184,8 +169,8 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
             w.x[ 0 ][ j ][ k ] = wn.x[ 0 ][ j ][ k ] + kw1 * .5 * dt;
 
     // Runge-Kutta 4. order for k2 step ( dt )
-            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the, phi,
-                                h, v, w, p_dyn, rhs_v, rhs_w, aux_v, aux_w );
+
+            m_model->RK_RHS_2D_Atmosphere( j, k);
 
             kv2 = rhs_v.x[ 0 ][ j ][ k ];
             kw2 = rhs_w.x[ 0 ][ j ][ k ];
@@ -194,8 +179,8 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
             w.x[ 0 ][ j ][ k ] = wn.x[ 0 ][ j ][ k ] + kw2 * .5 * dt;
 
         // Runge-Kutta 4. order for k3 step ( dt )
-            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the, phi,
-                                h, v, w, p_dyn, rhs_v, rhs_w, aux_v, aux_w );
+
+            m_model->RK_RHS_2D_Atmosphere( j, k);
 
             kv3 = rhs_v.x[ 0 ][ j ][ k ];
             kw3 = rhs_w.x[ 0 ][ j ][ k ];
@@ -204,8 +189,8 @@ void RungeKutta_Atmosphere::solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prep
             w.x[ 0 ][ j ][ k ] = wn.x[ 0 ][ j ][ k ] + kw3 * dt;
 
         // Runge-Kutta 4. order for k4 step ( dt )
-            prepare_2D.RK_RHS_2D_Atmosphere ( j, k, r_air, u_0, p_0, L_atm, rad, the, phi,
-                                h, v, w, p_dyn,  rhs_v, rhs_w, aux_v, aux_w );
+
+            m_model->RK_RHS_2D_Atmosphere( j, k);
 
             kv4 = rhs_v.x[ 0 ][ j ][ k ];
             kw4 =rhs_w.x[ 0 ][ j ][ k ];
