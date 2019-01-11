@@ -123,11 +123,11 @@ private:
     void print_min_max_values();
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
 
-    void run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
+    void run_2D_loop( BC_Atmosphere &boundary,
                       BC_Bathymetry_Atmosphere &LandArea,
                       Pressure_Atm &startPressure, BC_Thermo &circulation);
 
-    void run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphere &result,
+    void run_3D_loop( BC_Atmosphere &boundary,
                       BC_Bathymetry_Atmosphere &LandArea,
                       Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL, 
                       BC_Thermo &circulation);
@@ -135,7 +135,8 @@ private:
 public:
     void RK_RHS_2D_Atmosphere(int j, int k);
     void RK_RHS_3D_Atmosphere(int i, int j, int k);
-
+    void solveRungeKutta_2D_Atmosphere();
+    void solveRungeKutta_3D_Atmosphere();
 private:
     void load_temperature_curve();
     std::map<float,float> m_temperature_curve;
