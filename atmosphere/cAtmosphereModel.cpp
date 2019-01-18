@@ -6,6 +6,8 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <chrono>
+#include <ctime>    
 #include <cmath>
 #include <csignal>
 #include <cstdio>
@@ -329,6 +331,10 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 void cAtmosphereModel::Run() 
 {
+    auto start_time = std::chrono::system_clock::now();
+    std::time_t start_time_t = std::chrono::system_clock::to_time_t(start_time);
+    logger() << "Start Time:" << std::ctime(&start_time_t) << std::endl;
+
     mkdir(output_path.c_str(), 0777);
 
     cout << std::endl << "Output is being written to " << output_path << std::endl << std::endl;
@@ -363,6 +369,10 @@ void cAtmosphereModel::Run()
     cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
     cout << "***** end of object oriented C++ program for the computation of 3D-atmospheric circulation *****";
     cout << "\n\n\n\n";
+
+    auto end_time = std::chrono::system_clock::now();
+    std::time_t end_time_t = std::chrono::system_clock::to_time_t(end_time);
+    logger() << "End Time:" << std::ctime(&end_time_t) << std::endl;
 }
 
 
