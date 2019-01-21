@@ -42,8 +42,6 @@
 #include "tinyxml2.h"
 #include "PythonStream.h"
 
-#include "HydParameters.h"
-
 using namespace std;
 using namespace tinyxml2;
 using namespace AtomUtils;

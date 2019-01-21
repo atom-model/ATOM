@@ -29,7 +29,6 @@
 #include "MinMax_Atm.h"
 #include "Utils.h"
 #include "Config.h"
-#include "AtmParameters.h"
 #include "AtomMath.h"
 
 using namespace std;
@@ -291,8 +290,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){
-        circulation.BC_Radiation_multi_layer ( albedo, epsilon, radiation_surface,  
-                                               p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+        BC_Radiation_multi_layer(); 
     }
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
@@ -791,8 +789,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
 
             // class element for the surface temperature computation by radiation flux density
             if ( RadiationModel == 1 ){
-                 circulation.BC_Radiation_multi_layer ( albedo, epsilon, radiation_surface, 
-                                                        p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+                BC_Radiation_multi_layer(); 
             }
             //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             double residuum = std::get<0>(min_Residuum.residuumQuery_3D ( rad, the, u, v, w, residuum_3d ));

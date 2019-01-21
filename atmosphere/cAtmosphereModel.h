@@ -190,6 +190,8 @@ private:
 
     void smooth_transition(Array &u, Array &v, Array &w, int lat);
 
+    void BC_Radiation_multi_layer();
+
     static cAtmosphereModel* m_model;
 
     PythonStream ps;

@@ -230,10 +230,10 @@ def main():
                 for slug, desc, ctype, default in PARAMS [ section ]:
                     func_name = XML_READ_FUNCS [ ctype ]
                     f.write( '    Config::%s(%s, "%s", %s );\n' % ( func_name, element_var_name, slug, slug ) )
-                    if 'atmosphere' in filename:
-                        f.write( '  AtmParameters::{0}={0};\n'.format(slug))
-                    else:
-                        f.write( '  HydParameters::{0}={0};\n'.format(slug))
+                    #if 'atmosphere' in filename:
+                    #    f.write( '  AtmParameters::{0}={0};\n'.format(slug))
+                    #else:
+                    #    f.write( '  HydParameters::{0}={0};\n'.format(slug))
                 f.write ( "  }\n" )
 
 
@@ -244,12 +244,12 @@ def main():
             f.write ( "// ANY CHANGES WILL BE OVERWRITTEN AT COMPILE TIME\n" )
             f.write ( "\n" )
 
-            if classname == 'cAtmosphereModel':
-                f.write("#include\"AtmParameters.h\"\n")
-                f.write("namespace AtmParameters{\n") 
-            else:
-                f.write("#include\"HydParameters.h\"\n")
-                f.write("namespace HydParameters{\n")
+            #if classname == 'cAtmosphereModel':
+            #    f.write("#include\"AtmParameters.h\"\n")
+            #    f.write("namespace AtmParameters{\n") 
+            #else:
+            #    f.write("#include\"HydParameters.h\"\n")
+            #    f.write("namespace HydParameters{\n")
 
             for section in sections:
                 f.write ( '\n  // %s section\n' % section )
@@ -268,10 +268,10 @@ def main():
             if is_extern:
                 f.write("#include<string>\n\n")
                 f.write("using namespace std;\n")
-                if 'atmosphere' in filename:
-                    f.write("namespace AtmParameters{\n")
-                else:
-                    f.write("namespace HydParameters{\n")
+                #if 'atmosphere' in filename:
+                #    f.write("namespace AtmParameters{\n")
+                #else:
+                #    f.write("namespace HydParameters{\n")
 
             for section in sections:
                 f.write ( '\n// %s section\n' % section )
@@ -380,11 +380,11 @@ cdef extern from "c%sModel.h":
         write_cpp_load_config ( filename, classname, sections )
 
 
-    for filename, classname, sections in [
-        ( 'atmosphere/AtmParameters.cpp', 'cAtmosphereModel', atmosphere_sections ),
-        ( 'hydrosphere/HydParameters.cpp', 'cHydrosphereModel', hydrosphere_sections )
-    ]:
-        write_cpp_params ( filename, classname, sections )
+    #for filename, classname, sections in [
+    #    ( 'atmosphere/AtmParameters.cpp', 'cAtmosphereModel', atmosphere_sections ),
+    #    ( 'hydrosphere/HydParameters.cpp', 'cHydrosphereModel', hydrosphere_sections )
+    #]:
+    #    write_cpp_params ( filename, classname, sections )
 
 
     for filename, sections in [
@@ -394,11 +394,11 @@ cdef extern from "c%sModel.h":
         write_cpp_headers ( filename, sections )
 
 
-    for filename, sections in [
-        ( 'atmosphere/AtmParameters.h', atmosphere_sections ), 
-        ( 'hydrosphere/HydParameters.h', hydrosphere_sections )
-    ]:
-        write_cpp_headers ( filename, sections, True )
+    #for filename, sections in [
+    #    ( 'atmosphere/AtmParameters.h', atmosphere_sections ), 
+    #    ( 'hydrosphere/HydParameters.h', hydrosphere_sections )
+    #]:
+    #    write_cpp_headers ( filename, sections, True )
 
 
 

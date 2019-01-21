@@ -116,11 +116,6 @@ class BC_Thermo
             Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &,
             Array &, Array &, Array &, Array & );
 
-        void BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
-            Array_2D &radiation_surface, Array &p_stat, 
-            Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D,
-                Array &cloud, Array &ice, Array &co2 );
-
         void BC_WaterVapour ( Array &h, Array &p_stat, Array &t, Array &c,
                             Array &v, Array &w );
 

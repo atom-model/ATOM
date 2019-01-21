@@ -21,12 +21,10 @@
 #include "Array_2D.h"
 #include "cAtmosphereModel.h"
 #include "Utils.h"
-#include "AtmParameters.h"
 #include "AtomMath.h"
 
 using namespace std;
 using namespace AtomUtils;
-using namespace AtmParameters;
 
 BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h): 
         m_model(model),
@@ -164,10 +162,7 @@ BC_Thermo::~BC_Thermo(){}
 
 
 
-void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
-                             Array_2D &radiation_surface, Array &p_stat, Array &t, Array &c,
-                             Array &h, Array &epsilon_3D, Array &radiation_3D, Array &cloud,
-                             Array &ice, Array &co2 ){
+void cAtmosphereModel::BC_Radiation_multi_layer(){
     // class element for the computation of the radiation and the temperature distribution
     // computation of the local temperature based on short and long wave radiation
     // multi layer radiation model
@@ -176,35 +171,9 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
         logger()<<"20180912: Enter RML ... "<<std::endl;
         tmp.inspect("20180912: ");
     }
-/*
-    logger() << "enter +++++++++++++ BC_Radiation_multi_layer: temperature max: "
-    << (t.max() - 1)*t_0 << std::endl;
-    logger() << "enter +++++++++++++ BC_Radiation_multi_layer: temperature min: "
-    << (t.min() - 1)*t_0 << std::endl << std::endl;
 
-    logger() << "co2 max: " << co2.max() * co2_0 << "  ice max: " << ice.max() * 1000. << "  cloud max: "
-    << cloud.max() * 1000. <<"  water vapour max: " << c.max() * 1000. << std::endl;
-
-    logger() << "co2 min: " << co2.min() * co2_0 << "  ice min: " << ice.min() * 1000. << "  cloud min: "
-    << cloud.min() * 1000. <<"  water vapour min: " << c.min() * 1000. << std::endl;
-*/
-    cout.precision ( 4 );
-    cout.setf ( ios::fixed );
-
-    pi180 = 180./M_PI;
-
-    j_half = ( jm -1 ) / 2;  // position of the sun at 0°S
-    j_max = jm - 1;
-    d_j_half = ( double ) j_half;
-    d_j_max = ( double ) j_max;
-    k_half = ( km -1 ) / 2;  // position of the sun at 0° oder 180° ( Greenwich )
-    k_max = km - 1;
-    d_k_half = ( double ) k_half;
-    d_k_max = ( double ) k_max;
-
-    j_sun = 0;                // equatorial sun location
-    rad_eff = rad_pole - rad_equator;
-    albedo_co2_eff = albedo_pole - albedo_equator;
+    double rad_eff = rad_pole - rad_equator;
+    double albedo_co2_eff = albedo_pole - albedo_equator;
 
     double j_max_half = ( jm -1 ) / 2;
     // effective temperature, albedo and emissivity/absorptivity for the two layer model
@@ -219,9 +188,9 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
     }
 
     // absorption/emissivity computation
-    epsilon_eff_max = .594; // constant  given by Häckel ( F. Baur and H. Philips, 1934 )
+    double epsilon_eff_max = .594; // constant  given by Häckel ( F. Baur and H. Philips, 1934 )
     // constant value stands for other non-condensable gases than water vapour in the equation for epsilon
-    epsilon_eff_2D = epsilon_pole - epsilon_equator;
+    double epsilon_eff_2D = epsilon_pole - epsilon_equator;
 
     for ( int j = 0; j < jm; j++ ){
         int i_trop = m_model->get_tropopause_layer(j);
@@ -231,7 +200,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
 
         for ( int k = 0; k < km; k++ ){
             int i_mount = i_topography[ j ][ k ];
-            d_i_max = ( double ) ( im - 1 );
 
             // in W/m², assumption of parabolic surface radiation at zero level
             radiation_surface.y[ j ][ k ] = rad_eff * parabola( j / j_max_half ) + rad_pole;
@@ -242,19 +210,16 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
                 if ( ice.x[ i ][ j ][ k ] < 0. )    ice.x[ i ][ j ][ k ] = 0.;
 
                 // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
-                e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep;
+                double e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep;
                 
-                d_i = ( double ) i;
-
                 // radial parabolic distribution, start on zero level
-                epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) *
+                double epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) *
                     parabola( m_model->get_layer_height(i) / m_model->get_layer_height(i_trop) );
                 
+                double co2_coeff = 1.;
                 if ( fabs(m_model->CO2 - 1) < std::numeric_limits<double>::epsilon() ){
                     // influence of co2 in the atmosphere, co2_coeff = 1. means no influence
                     co2_coeff = co2_factor * ( co2_equator / co2_tropopause );
-                }else{
-                    co2_coeff = 1.;
                 }
 
                 // dependency given by Häckel ( F. Baur and H. Philips, 1934 )
@@ -292,16 +257,9 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
     // temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
 
     for ( int iter_rad = 1;  iter_rad <= 4; iter_rad++ ){ // iter_rad may be varied
-/*
-        logger() << std::endl << "   iter_rad = " << iter_rad << endl 
-        << "enter ****** max radiation_3D: " << radiation_3D.max()
-        << "  epsilon_3D max: " << epsilon_3D.max() << "  temperature max: " << (t.max() - 1)*t_0 << std::endl;
-        logger() << "enter ****** min radiation_3D: " << radiation_3D.min()
-        << "  epsilon_3D min: " << epsilon_3D.min() << "  temperature min: " << (t.min() - 1)*t_0 << std::endl << std::endl;
-*/
         // coefficient formed for the tridiogonal set of equations for the absorption/emission coefficient of the multi-layer radiation model
         for ( int j = 0; j < jm; j++ ){
-            int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+            int i_trop = get_tropopause_layer(j);
 
             for ( int k = 0; k < km; k++ ){
                 int i_mount = i_topography[ j ][ k ];
@@ -317,12 +275,12 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
                     pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. ); 
 
                 // back radiation absorbed by the first water vapour layer out of 40
-                radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * 
+                double radiation_back = epsilon_3D.x[ i_mount + 1 ][ j ][ k ] * sigma * 
                     pow ( t.x[ i_mount + 1 ][ j ][ k ] * t_0, 4. );
-                atmospheric_window = .1007 * radiation_surface.y[ j ][ k ]; // radiation loss through the atmospheric window
-                rad_surf_diff = radiation_back + radiation_surface.y[ j ][ k ] - atmospheric_window; // radiation leaving the surface
+                double atmospheric_window = .1007 * radiation_surface.y[ j ][ k ]; // radiation loss through the atmospheric window
+                double rad_surf_diff = radiation_back + radiation_surface.y[ j ][ k ] - atmospheric_window; // radiation leaving the surface
 
-                fac_rad = ( double ) i_mount * .07 + 1.;  // linear increase with hight, best choice for Ma>0
+                double fac_rad = ( double ) i_mount * .07 + 1.;  // linear increase with hight, best choice for Ma>0
                 // compensation of the missing water vapour at the place of mountain areas to result in a higher emissivity 
                 //for higher back radiation
                 rad_surf_diff = fac_rad * rad_surf_diff;
@@ -347,6 +305,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
 
                 // Thomas algorithm to solve the tridiogonal equation system for the solution of the radiation with a recurrence formula
                 // additionally embedded in an iterational process
+                double aa, bb, cc, dd;
                 for ( int i = i_mount; i < i_trop; i++ ){ // values at the surface
                     if ( i == i_mount ){
                         bb = - radiation_3D.x[ i ][ j ][ k ];
@@ -427,7 +386,7 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_2D &albedo, Array_2D &epsilon,
 
 void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, Array &tn, Array &p_dyn, Array &p_stat )
 {
-    if(debug){
+    if(m_model->debug){
         Array tmp = (t-1)*t_0;
         logger()<<"20180912: Enter BCT ... "<<std::endl;
         tmp.inspect("20180912: ");
@@ -603,7 +562,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
                     if ( is_land ( h, 0, j, k ) ){  // parabolic land surface temperature assumed
                         t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
-                            + t_cretaceous_add + t_land;
+                            + t_cretaceous_add + m_model->t_land;
                                                                       // increasing pole and mean temperature ( Ma ) incorporated
                                                                       // in case land temperature is assumed to be
                                                                       // globally higher than ocean temperature, t_land is added too
@@ -613,7 +572,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                     if ( is_land (h, 0, j, k ) ){  // on land a parabolic distribution assumed, no NASA based data transportable
                         t.x[ 0 ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
 //                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + ( t_pole_ma + t_0 ) / t_0
-                            + t_cretaceous_add + t_land;
+                            + t_cretaceous_add + m_model->t_land;
 
                             // Stein/Rüdiger/Parish pole temperature decreasing equator wards
                             t.x[ 0 ][ j ][ k ] += t_pole_diff_land * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
@@ -632,7 +591,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     }// if ( RadiationModel == 1 )
 
     // zonal temperature along tropopause
-    t_eff_tropo = t_tropopause_pole - t_tropopause;
+    t_eff_tropo = m_model->t_tropopause_pole - t_tropopause;
 
     //use "linear temperature decay" to generate temperature data for layers between mountain top and tropopause
     //use "mountain top temperature" for the layers below mountain top
@@ -640,7 +599,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ ){
         double temp_tropopause =  t_eff_tropo * parabola( j / ((jm-1)/2.0) ) +
-                t_tropopause_pole + t_cretaceous_add;   //temperature at tropopause     
+                m_model->t_tropopause_pole + t_cretaceous_add;   //temperature at tropopause     
 
         for ( int k = 0; k < km; k++ ){
             int i_mount = i_topography[ j ][ k ];
@@ -669,12 +628,11 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     }
 
     logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl << std::endl;
-    if(debug){
+    if(m_model->debug){
         Array tmp = (t-1)*t_0;
         logger()<<"20180912: Exit BCT ... "<<std::endl;
         tmp.inspect("20180912: ");
     }
-//    t.printArray ( im, jm, km );
 
 //    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
 //    logger() << "exit BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
@@ -742,7 +700,7 @@ if ( ( j == 90 ) && ( k == 180 ) ){
             if ( is_land ( h, 0, j, k ) ){
                 c.x[ i_mount ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
                     ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01 );
-                c.x[ i_mount ][ j ][ k ] = c_land * c.x[ i_mount ][ j ][ k ];
+                c.x[ i_mount ][ j ][ k ] = m_model->c_land * c.x[ i_mount ][ j ][ k ];
                 // relativ water vapour contents on land reduced by factor
 //                Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount + 1 ][ j ][ k ], w.x[ i_mount + 1 ][ j ][ k ] ) *
 //                    sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
@@ -832,6 +790,7 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
     d_i_max = ( double ) i_max;
     d_j_half = ( double ) j_half;
 
+    double co2_0 = m_model->co2_0;
     co2_equator = co2_equator / co2_0;
     co2_pole = co2_pole / co2_0;
     co2_cretaceous = co2_cretaceous / co2_0;
@@ -1406,7 +1365,7 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn, Array &cloud, 
                             Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c ){
-    if(debug){
+    if(m_model->debug){
         assert(!cloud.has_nan());
         assert(!ice.has_nan());
         assert(!c.has_nan());
@@ -1685,7 +1644,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "end %%%%%%%%%%%% Ice_Water_Saturation_Adjustment: temperature max: "
     << (t.max() - 1)*t_0 << std::endl << std::endl << std::endl;
 */
-    if(debug){
+    if(m_model->debug){
         assert(!cloud.has_nan());
         assert(!ice.has_nan());
         assert(!c.has_nan());
@@ -1701,7 +1660,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
 void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p_stat, 
         Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, 
         Array &S_s, Array &S_c_c ){
-    if(debug){
+    if(m_model->debug){
         assert(!c.has_nan());
         assert(!t.has_nan());
         assert(!cloud.has_nan());
@@ -2031,7 +1990,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
             }  // end k
         }  // end iter_prec
     }  // end n
-    if(debug){
+    if(m_model->debug){
         assert(!c.has_nan());
         assert(!cloud.has_nan());
         assert(!ice.has_nan());
