@@ -7,8 +7,6 @@
  * 
  * class to prepare the boundary and initial conditions for diverse variables
 */
-
-
 #include <iostream>
 #include <cmath>
 #include <fstream>
@@ -25,6 +23,8 @@
 
 using namespace std;
 using namespace AtomUtils;
+
+double get_pole_temperature(int Ma, const std::map<int, double> &pole_temp_map);
 
 BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h): 
         m_model(model),
@@ -156,11 +156,7 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h)
     d_k_max = ( double ) k_max;
 }
 
-
 BC_Thermo::~BC_Thermo(){}
-
-
-
 
 void cAtmosphereModel::BC_Radiation_multi_layer(){
     // class element for the computation of the radiation and the temperature distribution
@@ -248,11 +244,6 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
         }
     }
 
-//    logger() << std::endl << "enter loop ****** BC_Radiation_multi_layer:          temperature max: " << (t.max() - 1)*t_0
-//    << " ****** radiation max: " << radiation_3D.max() << std::endl << std::endl;
-
-
-
     // iteration procedure for the computation of the temperature based on the multi-layer radiation model
     // temperature needs an initial guess which must be corrected by the long wave radiation remaining in the atmosphere
 
@@ -330,8 +321,8 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 }
 
                 // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
-                    t.x[ i_trop ][ j ][ k ] = t_tropopause;
-                    radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
+                t.x[ i_trop ][ j ][ k ] = t_tropopause;
+                radiation_3D.x[ i_trop ][ j ][ k ] = ( 1. - epsilon_3D.x[ i_trop ][ j ][ k ] ) * sigma * 
                         pow ( t.x[ i_trop ][ j ][ k ] * t_0, 4. );
 
                 // recurrence formula for the radiation and temperature
@@ -350,31 +341,9 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 }
             }
         }
-/*
-        logger() << std::endl << "end ****** max radiation_3D: " << radiation_3D.max()
-        << "  epsilon_3D max: " << epsilon_3D.max() << "  temperature max: " << (t.max() - 1)*t_0 << std::endl;
-        logger() << "end ****** min radiation_3D: " << radiation_3D.min()
-        << "  epsilon_3D min: " << epsilon_3D.min() << "  temperature min: " << (t.min() - 1)*t_0 << std::endl << std::endl;
-*/
     }
     logger() << "exit BC_Radiation_multi_layer: temperature max: " << (t.max() - 1)*t_0 << std::endl << std::endl;
 
-    /*
-    logger() << std::endl << "exit ************** BC_Radiation_multi_layer: temperature max: "
-    << (t.max() - 1)*t_0 << std::endl;
-    logger() << "exit ************** BC_Radiation_multi_layer: temperature min: "
-    << (t.min() - 1)*t_0 << std::endl << std::endl;
-
-    logger() << " ************** NaNs detected ********************: temperature has_nan: "
-    << t.has_nan() << std::endl;
-    logger() << " ************** NaNs detected ********************: water vapor has_nan: "
-    << c.has_nan() << std::endl;
-    logger() << " ************** NaNs detected ********************: cloud water has_nan: "
-    << cloud.has_nan() << std::endl;
-    logger() << " ************** NaNs detected ********************: cloud ice has_nan: "
-    << ice.has_nan() << std::endl << std::endl;
-*/
-   
     if(debug){
         Array tmp = (t-1)*t_0;
         logger()<<"20180912: Exit RML ... "<<std::endl;
@@ -384,9 +353,9 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
 }
 
 
-void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, Array &tn, Array &p_dyn, Array &p_stat )
+void cAtmosphereModel::init_temperature()
 {
-    if(m_model->debug){
+    if(debug){
         Array tmp = (t-1)*t_0;
         logger()<<"20180912: Enter BCT ... "<<std::endl;
         tmp.inspect("20180912: ");
@@ -404,64 +373,36 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     // Lenton_etal_COPSE_time_temp, constant cretaceous mean temperature, added to the surface initial temperature
     // difference between mean temperature ( Ma ) and mean temperature ( previous Ma ) == t_cretaceous_add
     double t_cretaceous_add = 0; 
-    if(!m_model->is_first_time_slice()){
-        t_cretaceous_add = m_model->get_mean_temperature_from_curve(Ma) -  
-            m_model->get_mean_temperature_from_curve(*m_model->get_previous_time());
+    if(!is_first_time_slice()){
+        t_cretaceous_add = get_mean_temperature_from_curve(*get_current_time()) - 
+            get_mean_temperature_from_curve(*get_previous_time());
         t_cretaceous_add /= t_0; 
     }
-
-    cout.precision ( 3 );
-
-    string time_slice_comment = "      time slice of Cretaceous-AGCM:";
-    string time_slice_number = " Ma = ";
-    string time_slice_unit = " million years";
-
-    cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << time_slice_comment << 
-        resetiosflags ( ios::left ) << setw ( 6 ) << fixed << setfill ( ' ' ) << time_slice_number << 
-        setw ( 3 ) << Ma << setw ( 12 ) << time_slice_unit << endl << endl;
-
-    string temperature_comment = "      temperature increase at cretaceous times: ";
-    string temperature_gain = " t increase";
-    string temperature_modern = "      mean temperature at modern times: ";
-    string temperature_cretaceous = "      mean temperature at cretaceous times: ";
-    string temperature_average = " t modern";
-    string temperature_average_cret = " t cretaceous";
-    string temperature_unit =  "°C ";
-
-    cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) << temperature_comment << 
-        resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << 
-        t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) 
-        << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average  << " = "  << setw ( 7 )  
-        << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) << setfill ( '.' )  << 
-        setiosflags ( ios::left ) << temperature_cretaceous << resetiosflags ( ios::left ) << setw ( 13 ) << 
-        temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << 
-        temperature_unit << endl;
 
     // temperatur distribution at aa prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
     // sun_position_lon = 180, position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
     // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
 
-    if ( ( Ma > 0 ) && ( sun == 1 ) ){
-        j_par = sun_position_lat; // position of maximum temperature, sun position
+    if ( ( *get_current_time() > 0 ) && ( sun == 1 ) ){
+        double j_par = sun_position_lat; // position of maximum temperature, sun position
         j_par = j_par + declination; // angle of sun axis, declination = 23,4°
-        j_pol = jm - 1;
-        j_par_f = ( double ) j_par;
-        j_pol_f = ( double ) j_pol;
+        double j_pol = jm - 1;
+        double j_par_f = ( double ) j_par;
+        double j_pol_f = ( double ) j_pol;
 
-        aa = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) - ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * 
+        double aa = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) - ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * 
             ( j_par_f - j_pol_f ) );
-        bb = - 2. * aa * j_par_f;
-        cc = t_equator + aa * j_par_f * j_par_f;
-        j_d = sqrt ( ( cc - t_pole ) / aa );
-        dd = 2. * aa * j_d + bb;
-        t_dd = dd * j_d + t_pole;
-        e = t_pole;
+        double bb = - 2. * aa * j_par_f;
+        double cc = t_equator + aa * j_par_f * j_par_f;
+        double j_d = sqrt ( ( cc - t_pole ) / aa );
+        double dd = 2. * aa * j_d + bb;
+        double e = t_pole;
 
         // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
-                d_j = ( double ) j;
+                double d_j = ( double ) j;
                 if ( d_j <= j_d ){
                     t.x[ 0 ][ j ][ k ] = dd * d_j + e + t_cretaceous_add;
                 }
@@ -473,17 +414,17 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 
         // longitudinally variable temperature distribution from west to east in parabolic form
         // communicates the impression of local sun radiation on the southern hemisphere
-        k_par = sun_position_lon;  // position of the sun at constant longitude
-        k_pol = km - 1;
+        double k_par = sun_position_lon;  // position of the sun at constant longitude
+        double k_pol = km - 1;
 
         double t_360 = (  t_0 + 5. ) / t_0;
 
         for ( int j = 0; j < jm; j++ ){
             double jm_temp_asym = t.x[ 0 ][ j ][ 20 ];//transfer of zonal constant temperature into aa 1D-temperature field
             for ( int k = 0; k < km; k++ ){
-                k_par_f = ( double ) k_par;
-                k_pol_f = ( double ) k_pol;
-                d_k = ( double ) k;
+                double k_par_f = ( double ) k_par;
+                double k_pol_f = ( double ) k_pol;
+                double d_k = ( double ) k;
 
                 aa = ( jm_temp_asym - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * 
                     ( k_par_f - k_pol_f ) );
@@ -532,30 +473,21 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
 //    logger() << "   temperature in RadiationModel == 1 " << endl << "RadiationModel BC_Temperature: temperature = " <<  t.x[ 0 ][ 0 ][ 0 ] << endl;
 
         //the t_pole_diff_ocean should be the difference between this time slice and the previous one, right? -- mchin
-        if(!m_model->is_first_time_slice()){
-            t_pole_diff_ocean = GetPoleTemperature ( Ma, pole_temp_map ) - 
-                    GetPoleTemperature(*m_model->get_previous_time(), pole_temp_map);
+        if(!is_first_time_slice()){
+            t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map) - 
+                get_pole_temperature(*get_previous_time(), pole_temp_map);
         }
         //on land, the difference is between this time slice and present day because 
         //the temperature data from previous time on land is not used.
-        t_pole_diff_land = GetPoleTemperature ( Ma, pole_temp_map );
+        t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map );
         // in °C, constant local pole temperature as function of Ma for hothouse climates 
 
-        t_eff = t_pole - t_equator;  // coefficient for the zonal parabolic temperature distribution
+        double t_eff = t_pole - t_equator;  // coefficient for the zonal parabolic temperature distribution
 //        t_eff = ( t_pole_ma + t_0 ) / t_0 - t_equator;  // coefficient for the zonal parabolic temperature distribution
 
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
-/*
-    if ((k==0)&&(j==1))  logger() << "   Ma = " << Ma << "   t_pole = " << t_pole * t_0 - t_0 << endl 
-        << "   pole_temp_map = " << GetPoleTemperature ( Ma, pole_temp_map ) << endl 
-        << "   ( t_pole + pole_temp_map ) = " <<  ( t_pole * t_0 - t_0 ) + GetPoleTemperature ( Ma, pole_temp_map ) << endl 
-        << "   ( t.x + pole_temp_map ) = " << ( t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 ) + GetPoleTemperature ( Ma, pole_temp_map ) << endl 
-        << "   t_C = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << endl 
-        << "   t_no_dim = " << t.x[ i_mount ][ 0 ][ k ] << "   i_mount = " << i_mount << endl
-        << "   temperature in RadiationModel == 1 " << endl << "RadiationModel BC_Temperature: temperature = " <<  t.x[ 0 ][ 0 ][ 0 ] << endl;
-*/
-                d_j = ( double ) j;
+                double d_j = ( double ) j;
                 if ( NASATemperature == 0 ){  // parabolic ocean surface temperature assumed
                     t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole + t_cretaceous_add;
                                                                       // increasing pole and mean temperature ( Ma ) incorporated
@@ -577,7 +509,8 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                             // Stein/Rüdiger/Parish pole temperature decreasing equator wards
                             t.x[ 0 ][ j ][ k ] += t_pole_diff_land * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
                     }else{ // if the this location is ocean
-                        if(Ma > 0){//when Ma==0, the temperature data has already been read into t.x[ 0 ][ j ][ k ]        
+                        if(*get_current_time() > 0){//when the current time is 0, 
+                                                    //the temperature data has already been read into t.x[ 0 ][ j ][ k ]        
                             // ocean surface temperature increased by mean t_cretaceous_add
                             // and by a zonally equator wards decreasing temperature difference is added
                             // Stein/Rüdiger/Parish pole temperature decreasing equator wards
@@ -591,7 +524,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     }// if ( RadiationModel == 1 )
 
     // zonal temperature along tropopause
-    t_eff_tropo = m_model->t_tropopause_pole - t_tropopause;
+    double t_eff_tropo = t_tropopause_pole - t_tropopause;
 
     //use "linear temperature decay" to generate temperature data for layers between mountain top and tropopause
     //use "mountain top temperature" for the layers below mountain top
@@ -599,14 +532,14 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     for ( int j = 0; j < jm; j++ ){
         double temp_tropopause =  t_eff_tropo * parabola( j / ((jm-1)/2.0) ) +
-                m_model->t_tropopause_pole + t_cretaceous_add;   //temperature at tropopause     
+                t_tropopause_pole + t_cretaceous_add;   //temperature at tropopause     
 
         for ( int k = 0; k < km; k++ ){
             int i_mount = i_topography[ j ][ k ];
-            int i_trop = m_model->get_tropopause_layer(j);
+            int i_trop = get_tropopause_layer(j);
 
             double t_mount_top = ( temp_tropopause - t.x[ 0 ][ j ][ k ] ) *
-                ( m_model->get_layer_height(i_mount) / m_model->get_layer_height(i_trop)) + 
+                (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
                 t.x[ 0 ][ j ][ k ]; //temperature at mountain top
 
             for ( int i = 1; i < im; i++ ){
@@ -614,7 +547,7 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
                     if(i>i_mount){
                         // linear temperature decay up to tropopause, privat  approximation
                         t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ 0 ][ j ][ k ] ) * 
-                            ( m_model->get_layer_height(i) / m_model->get_layer_height(i_trop)) + 
+                            (get_layer_height(i) / get_layer_height(i_trop)) + 
                             t.x[ 0 ][ j ][ k ]; 
                     }else{
                         t.x[ i ][ j ][ k ] = t_mount_top; //inside mountain
@@ -628,124 +561,12 @@ void BC_Thermo::BC_Temperature( Array_2D &temperature_NASA, Array &h, Array &t, 
     }
 
     logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl << std::endl;
-    if(m_model->debug){
+    if(debug){
         Array tmp = (t-1)*t_0;
         logger()<<"20180912: Exit BCT ... "<<std::endl;
         tmp.inspect("20180912: ");
     }
-
-//    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
-//    logger() << "exit BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
 }
-
-
-void BC_Thermo::BC_WaterVapour ( Array &h, Array &p_stat, Array &t, Array &c,
-                            Array &v, Array &w ){
-    // initial and boundary conditions of water vapour on water and land surfaces
-    // parabolic water vapour distribution from pole to pole accepted
-
-    // maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
-    // minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
-    // value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
-/*
-    logger() << "enter +++++++++++++ BC_WaterVapour: water vapor max: "
-    << c.max() * 1000. << std::endl;
-    logger() << "enter +++++++++++++ BC_WaterVapour: water vapor min: "
-    << c.min() * 1000. << std::endl << std::endl;
-*/
-
-    double t_u = 0.;  // not air but ocean surface temperature should be used
-    double sat_difference = 0.;  // not air but ocean surface temperature
-    // should be involved in water vapour saturation difference, it is not the saturation deficit
-    double Dalton_Evaporation = 0;  // ocean surface evaporation
-
-    // water vapour contents computed by Clausius-Clapeyron-formula
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = 0; j < jm; j++ ){
-            int i_mount = i_topography[ j ][ k ];
-
-            if ( is_air ( h, 0, j, k ) ){
-                c.x[ i_mount ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
-                    ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01 );
-                // saturation of relative water vapour in kg/kg
-                c.x[ i_mount ][ j ][ k ] = c_ocean * c.x[ i_mount ][ j ][ k ];
-                // relativ water vapour contents on ocean surface reduced by factor
-
-                p_stat.x[ i_mount ][ j ][ k ] = ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01;  // given in hPa
-                t_u = t.x[ i_mount ][ j ][ k ] * t_0; // in K
-                r_dry = 100. * p_stat.x[ i_mount ][ j ][ k ] / ( R_Air * t.x[ i_mount ][ j ][ k ] * t_0 );
-                r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i_mount ][ j ][ k ] );
-                e = c.x[ i_mount ][ j ][ k ] * p_stat.x[ i_mount ][ j ][ k ] / ep;  // water vapour pressure in hPa
-                E = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                sat_difference = ( E - e );  // saturation difference in hPa/K
-                Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) *
-                    sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
-                // Evaporation_Dalton given in mm/d,  recalculation in kg/kg water vapour/ dry air by
-                // c_ev = 8.46e-4 * Dalton_Evaporation * dt_dim / ( r_humid * dr_dim ) [ mm/d * m³ * s / ( kg * m ) * ( kg/kg_air ) ] == [ kg/kg_air ]
-                // [ mm/s ] == [ kg / ( m² * s ) ]
-
-                c.x[ i_mount ][ j ][ k ] = Dalton_Evaporation + c.x[ i_mount ][ j ][ k ]; // kg/kg_air
-/*
-if ( ( j == 90 ) && ( k == 180 ) ){
-    logger() << "   j = " << j << "   k = " << k << endl;
-    logger() << "   t_u = " << t_u << "   r_dry = " << r_dry << "   r_humid = " << r_humid << endl;
-    logger() << "   e = " << e << "   E = " << E
-        << "   sat_difference = " << sat_difference << "   t_0 = " << t_0
-        << "   C_Dalton = " << C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) << "   t.x = " << t.x[ i_mount ][ j ][ k ]
-        << "   v.x = " << v.x[ 0 ][ j ][ k ] << "   w.x = " << w.x[ 0 ][ j ][ k ]
-        << "   c = " << c.x[ i_mount ][ j ][ k ] << "   Dalton_Evaporation = " << Dalton_Evaporation << endl << endl;
-}
-*/
-            }
-            if ( is_land ( h, 0, j, k ) ){
-                c.x[ i_mount ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
-                    ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01 );
-                c.x[ i_mount ][ j ][ k ] = m_model->c_land * c.x[ i_mount ][ j ][ k ];
-                // relativ water vapour contents on land reduced by factor
-//                Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount + 1 ][ j ][ k ], w.x[ i_mount + 1 ][ j ][ k ] ) *
-//                    sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
-                c.x[ i_mount ][ j ][ k ] = Dalton_Evaporation + c.x[ i_mount ][ j ][ k ]; // kg/kg_air
-            }
-        }
-    }
-
-
-
-    // water vapour distribution decreasing approaching tropopause
-    for ( int j = 0; j < jm; j++ ){
-        int i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
-        d_i_max = ( double ) i_trop;
-        for ( int k = 0; k < km; k++ ){
-            int i_mount = i_topography[ j ][ k ];
-            for ( int i = 0; i < im; i++ ){
-                if ( i < i_trop ){
-                    d_i = ( double ) i;
-                    c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ] - ( c_tropopause - c.x[ i_mount ][ j ][ k ] ) * 
-                        ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );       // radial parabolic decrease
-                }else{
-                    c.x[ i ][ j ][ k ] = c_tropopause;
-                }
-//                if ( is_land ( h, i, j, k ) ){
-//                    c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];
-//                }
-            } // end i
-        }// end k
-    }// end j
-/*
-    logger() << "end +++++++++++++ BC_WaterVapour temperature max: " << (t.max()-1)*t_0 << std::endl;
-    logger() << "end +++++++++++++ BC_WaterVapour temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
-
-    logger() << "end +++++++++++++ BC_WaterVapour: water vapor max: "
-    << c.max() * 1000. << std::endl;
-    logger() << "end +++++++++++++ BC_WaterVapour: water vapor min: "
-    << c.min() * 1000. << std::endl << std::endl;
-*/
-}
-
-
-
-
-
 
 
 void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 ){
@@ -843,7 +664,6 @@ void BC_Thermo::BC_CO2( Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, 
         }
     }
 }
-
 
 void BC_Thermo::TropopauseLocation(){
 // parabolic tropopause location distribution from pole to pole assumed
@@ -2160,11 +1980,11 @@ int BC_Thermo::GetTropopauseHightAdd(double t_cret){
 }
 
 
-double BC_Thermo::GetPoleTemperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
+double get_pole_temperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
     return (t_2 - t_1) / (double) (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
 }
 
-double BC_Thermo::GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map){
+double get_pole_temperature(int Ma, const std::map<int, double> &pole_temp_map){
     assert(pole_temp_map.size()>1);
     
     std::pair<int, double> up = *pole_temp_map.begin(), bottom = *++pole_temp_map.begin();
@@ -2184,10 +2004,8 @@ double BC_Thermo::GetPoleTemperature(int Ma, const std::map<int, double> &pole_t
             up = pair;
         }
     }
-    return GetPoleTemperature(Ma, up.first, bottom.first, up.second, bottom.second);
+    return get_pole_temperature(Ma, up.first, bottom.first, up.second, bottom.second);
 }
-
-
 
 double BC_Thermo::C_Dalton ( double u_0, double v, double w ){
     // variation of the heat transfer coefficient in Dalton's evaporation law, parabola

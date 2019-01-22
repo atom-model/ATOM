@@ -192,6 +192,8 @@ private:
 
     void BC_Radiation_multi_layer();
 
+    void init_temperature();
+
     static cAtmosphereModel* m_model;
 
     PythonStream ps;

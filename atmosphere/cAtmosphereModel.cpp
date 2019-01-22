@@ -270,7 +270,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
 
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
-    circulation.BC_Temperature ( temperature_NASA, h, t, tn, p_dyn, p_stat );
+    init_temperature();
 
     //  class element for the correction of the temperature initial distribution around coasts
     if ( ( NASATemperature == 1 ) && ( Ma > 0 ) && !use_earthbyte_reconstruction) 
