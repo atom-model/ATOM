@@ -12,19 +12,11 @@ from reconstruct_atom_data import *
 from pyatom import Atmosphere, Hydrosphere
 import create_atm_maps, create_hyd_maps
 
-simon = False
-if len(sys.argv) >= 2 and sys.argv[1] == "simon":
-    simon = True
-
 atm_model = Atmosphere()
 hyd_model = Hydrosphere()
 
-if not simon:
-    atm_model.load_config( './config_atm.xml' )
-    hyd_model.load_config( './config_hyd.xml' )
-else:
-   atm_model.load_config( './config_simon_atm.xml' )
-   hyd_model.load_config( './config_simon_hyd.xml' )
+atm_model.load_config( './config_atm.xml' )
+hyd_model.load_config( './config_hyd.xml' )
 
 start_time = atm_model.time_start
 end_time = atm_model.time_end
@@ -34,10 +26,7 @@ times = range(start_time, end_time+1, time_step)
 
 atom_output_dir = atm_model.output_path
 
-if not simon:
-    BATHYMETRY_SUFFIX = 'Ma_Golonka.xyz'
-else:
-    BATHYMETRY_SUFFIX = 'Ma_Simon.xyz'
+BATHYMETRY_SUFFIX = 'Ma_smooth.xyz'
 
 for t in range(len(times)):
     time = times[t]
@@ -50,12 +39,9 @@ for t in range(len(times)):
         reconstruct_salinity(time,times[t+1], BATHYMETRY_SUFFIX)
 
 try:
-    if not simon:
-        topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
-        topo_suffix = 'Golonka'
-    else:
-        topo_dir = '../data/topo_grids/'
-        topo_suffix = 'Simon'
+    topo_dir = '../data/topo_grids/'
+    topo_suffix = 'smooth'
+    
     atm_map_output_dir = './atm_maps'
     hyd_map_output_dir = './hyd_maps'
 

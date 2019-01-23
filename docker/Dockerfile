@@ -56,13 +56,17 @@ WORKDIR /build/ATOM
 RUN make
 RUN pip install -e /build/ATOM/python
 
-RUN mkdir /workspace
+RUN mkdir /build/ATOM/workspace
 
 # Copy test files to workspace
-RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb /workspace/
+RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb /build/ATOM/workspace/
+RUN cp -av /build/ATOM/benchmark/config_atm.xml /build/ATOM/workspace/config_atm.xml
+RUN cp -av /build/ATOM/benchmark/config_hyd.xml /build/ATOM/workspace/config_hyd.xml
+
+ADD topo_grids /build/ATOM/data
 
 # setup space for working in
-VOLUME /workspace/output
+VOLUME /build/ATOM/workspace/output
 
 RUN chmod a+x /build/ATOM/docker/notebook.sh
 
@@ -74,8 +78,7 @@ CMD ["/build/ATOM/docker/notebook.sh"]
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR /workspace
-
+WORKDIR /build/ATOM/workspace
 #WORKDIR /build/ATOM/benchmark
 
 EXPOSE 8888
