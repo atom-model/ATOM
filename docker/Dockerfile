@@ -51,7 +51,7 @@ RUN apt-get install -y gmt python-tk
 
 WORKDIR /build
 ARG CACHE_DATE=2016-01-01
-RUN git clone https://github.com/atom-model/ATOM.git -b Roger --single-branch
+RUN git clone https://github.com/atom-model/ATOM.git -b mchin --single-branch
 WORKDIR /build/ATOM
 RUN make
 RUN pip install -e /build/ATOM/python
@@ -59,10 +59,10 @@ RUN pip install -e /build/ATOM/python
 RUN mkdir /workspace
 
 # Copy test files to workspace
-RUN cp -av /build/ATOM/examples/* /workspace/
+RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb /workspace/
 
 # setup space for working in
-VOLUME /workspace/volume
+VOLUME /workspace/output
 
 RUN chmod a+x /build/ATOM/docker/notebook.sh
 
@@ -74,6 +74,8 @@ CMD ["/build/ATOM/docker/notebook.sh"]
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR /build/ATOM/benchmark
+WORKDIR /workspace
+
+#WORKDIR /build/ATOM/benchmark
 
 EXPOSE 8888
