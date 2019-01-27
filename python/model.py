@@ -64,7 +64,7 @@ class Model ( object ):
 model = Model()
 
 model.load_config_atm ( "config_atm.xml" )
-model.run_Model_atm ( 5 )
+model.run_Model_atm ( 0 )
 
 #model.load_config_hyd ( "config_hyd.xml" )
 #model.run_Model_hyd ( 5 )

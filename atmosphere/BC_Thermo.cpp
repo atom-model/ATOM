@@ -2414,7 +2414,7 @@ void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecip
 
 
 
-void BC_Thermo::BC_Pressure ( double Latm, Array_1D &rad, Array &p_stat, Array &p_dyn, Array &t, Array &h ){
+void BC_Thermo::BC_Pressure ( double L_atm, Array_1D &rad, Array &p_stat, Array &p_dyn, Array &t, Array &h ){
     double zeta = 3.715;
     exp_pressure = g / ( 1.e-2 * gam * R_Air );
 // boundary condition of surface pressure given by surface temperature through gas equation
@@ -2430,6 +2430,7 @@ void BC_Thermo::BC_Pressure ( double Latm, Array_1D &rad, Array &p_stat, Array &
                 height = ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
                 p_stat.x[ i ][ j ][ k ] = pow ( ( ( t.x[ 0 ][ j ][ k ] * t_0 - gam * height * 1.e-2 ) /
                     ( t.x[ 0 ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_stat.x[ 0 ][ j ][ k ];
+                // international standard athmosphere formula in hPa
                 // linear temperature distribution T = T0 - gam * height
                 // current air pressure, step size in 500 m, from politropic formula in hPa
             }
@@ -2914,12 +2915,16 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array_1D &rad, Array &h, Array &c, Arr
                 if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
                 step = ( ( exp( zeta * ( rad.z[ i + 1 ] - 1. ) ) - 1 ) 
-                    - ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) );
+                     - ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) ) 
+                     * ( L_atm / ( double ) ( im-1 ) );
+                P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ]
+                     + r_humid * ( ( S_r.x[ i ][ j ][ k ] - S_r.x[ i + 1 ][ j ][ k ] ) 
+                     / 2. * step ) / 2.;  // in kg / ( m2 * s ) == mm/s
+                P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ]
+                     + r_humid * ( ( S_s.x[ i ][ j ][ k ] - S_s.x[ i + 1 ][ j ][ k ] ) 
+                     / 2. * step ) / 2.;
 
-                P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] +
-                    S_r.x[ i ][ j ][ k ] * r_humid * step;  // in kg / ( m2 * s ) == mm/s
-                P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] +
-                    S_s.x[ i ][ j ][ k ] * r_humid * step;
+//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   zeta = " << zeta << "   rad = " << rad.z[ i ] << "   step = " << step << "   height = " << ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) ) << "   P_rain = " << P_rain.x[ i ][ j ][ k ] << "   P_snow = " << P_snow.x[ i ][ j ][ k ] << "   S_r = " << S_r.x[ i ][ j ][ k ] << "   S_s = " << S_s.x[ i ][ j ][ k ] << "   r_humid = " << r_humid << endl;
 
                 if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                 if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;
@@ -2932,7 +2937,8 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array_1D &rad, Array &h, Array &c, Arr
 
     if ( true ){
         iter_prec = 0;
-        while ( iter_prec <= 5 ){  // iter_prec may be varied, but is sufficient
+//        while ( iter_prec <= 5 ){  // iter_prec may be varied, but is sufficient
+        while ( iter_prec <= 0 ){  // iter_prec may be varied, but is sufficient
             iter_prec = iter_prec + 1;
             for ( int k = 0; k < km; k++ ){
                 for ( int j = 0; j < jm; j++ ){
@@ -3092,13 +3098,17 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array_1D &rad, Array &h, Array &c, Arr
                         if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )  P_rain.x[ i + 1 ][ j ][ k ] = 0.;
                         if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
-                       step = ( ( exp( zeta * ( rad.z[ i + 1 ] - 1. ) ) - 1 ) 
-                           - ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) );
+                        step = ( ( exp( zeta * ( rad.z[ i + 1 ] - 1. ) ) - 1 ) 
+                             - ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) ) 
+                             * ( L_atm / ( double ) ( im-1 ) );
+                        P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ]
+                             + r_humid * ( ( S_r.x[ i ][ j ][ k ] - S_r.x[ i + 1 ][ j ][ k ] ) 
+                             / 2. * step ) / 2.;  // in kg / ( m2 * s ) == mm/s
+                        P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ]
+                             + r_humid * ( ( S_s.x[ i ][ j ][ k ] - S_s.x[ i + 1 ][ j ][ k ] ) 
+                             / 2. * step ) / 2.;
 
-                       P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] +
-                             S_r.x[ i ][ j ][ k ] * r_humid * step;  // in kg / ( m2 * s ) == mm/s
-                        P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] +
-                             S_s.x[ i ][ j ][ k ] * r_humid * step;
+//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   zeta = " << zeta << "   rad = " << rad.z[ i ] << "   step = " << step << "   height = " << ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) ) << "   P_rain = " << P_rain.x[ i ][ j ][ k ] << "   P_snow = " << P_snow.x[ i ][ j ][ k ] << "   S_r = " << S_r.x[ i ][ j ][ k ] << "   S_s = " << S_s.x[ i ][ j ][ k ] << "   r_humid = " << r_humid << endl;
 
                         if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                         if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;
