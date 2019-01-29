@@ -5,6 +5,7 @@ from atom cimport cAtmosphereModel, cHydrosphereModel
 
 from libcpp cimport bool
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 
 class Model:
     """
@@ -91,6 +92,13 @@ cdef class Atmosphere:
         self._check_alive()
         self._thisptr.RunTimeSlice(t)
         return None
+
+    def get_temperature(Atmosphere self, time, height=None, lon=None, lat=None):
+        self._check_alive()
+        if height and lon and lat:
+            return self._thisptr.get_temperature(time, height, lon, lat)
+        else:
+            return self._thisptr.get_temperature(time)
 
 {{ atmosphere_params }}
 

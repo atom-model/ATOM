@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <fstream>
+#include <limits>
 
 #include "Array.h"
 #include "Array_2D.h"
@@ -116,6 +117,25 @@ public:
         return m_layer_heights[i];
     }
 
+    /*
+    */
+    std::vector<double> get_temperature(int time){
+        if(!m_t_s.empty())
+            //return m_t_s[time].back();
+            return std::vector<double>();
+        else
+            return std::vector<double>(10,-1);
+    }
+    
+    /*
+    */
+    double get_temperature(int time, int height, int lon, int lat){
+        if(!m_t_s.empty())
+            //return m_t_s[time].back();
+            return 100;
+        else
+            return std::numeric_limits<double>::quiet_NaN();
+    }
 
 private:
     void SetDefaultConfig();
@@ -220,6 +240,8 @@ private:
     std::vector<std::vector<double> > m_node_weights;
 
     std::vector<Array*> old_arrays_3d, new_arrays_3d, old_arrays_2d, new_arrays_2d; 
+
+    std::map<int, std::vector<Array> > m_t_s; // keep intermediate temperature results
 
     //  class Array for 1-D, 2-D and 3-D field declarations
     // 1D arrays

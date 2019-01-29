@@ -151,6 +151,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     m_current_time = m_time_list.insert(float(Ma)).first;
 
+    m_t_s[Ma] = std::vector<Array>();
+
     struct stat info;
     if( stat( output_path.c_str(), &info ) != 0 ){
         mkdir(output_path.c_str(), 0777);
@@ -313,6 +315,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //write the ouput files
     write_file(bathymetry_name, output_path, true);
+
+    m_t_s[int(round(*m_current_time))].push_back(t);
 
     //  final remarks
     cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
@@ -826,6 +830,8 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
                 circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, 
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
             }
+
+            m_t_s[int(round(*m_current_time))].push_back(t);
 
             move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
             iter_cnt++;
