@@ -56,7 +56,7 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
             for j in range(361):
                 zz[180-i][j] = z[j*181+i]
         img_data = m.transform_scalar(zz, np.arange(-180,180),np.arange(-90,90),361,181)
-        cs = m.imshow(img_data,alpha=0.5, vmin=v_min, vmax=v_max)
+        cs = m.imshow(img_data,alpha=0.5, vmin=v_min, vmax=v_max, cmap='jet')
 
         m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
                             colors ='k', linewidths= 0.3 )

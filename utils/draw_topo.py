@@ -29,7 +29,7 @@ def draw_topography(time, output_dir, topo_dir, topo_suffix):
     #    for j in range(361):
     #        zz[180-i][j] = z[j*181+i]
     img_data = m.transform_scalar(zz, np.arange(-180,180),np.arange(-90,90),361,181)
-    cs = m.imshow(img_data,alpha=0.5, vmin=v_min, vmax=v_max)
+    cs = m.imshow(img_data,alpha=0.5, vmin=v_min, vmax=v_max, cmap='terrain')
 
 
     m.drawparallels(np.arange(-90., 90., 10.), labels=[1,0,0,0], fontsize=10)

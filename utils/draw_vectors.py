@@ -63,7 +63,7 @@ def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     else:
         clim = [0, 0.06]
     cs = m.quiver(down_sample(xi), down_sample(yi), down_sample(vy), down_sample(vx), down_sample(magitude), width=0.001,
-             headlength=7, headwidth=5, pivot='tail', clim=clim)
+             headlength=7, headwidth=5, pivot='tail', clim=clim, cmap='jet')
     #m.scatter(down_sample(xi),down_sample(yi),marker='.',color='r')
     
     m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),

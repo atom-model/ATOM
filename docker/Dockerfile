@@ -63,7 +63,7 @@ RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb /build/ATOM/workspace/
 RUN cp -av /build/ATOM/benchmark/config_atm.xml /build/ATOM/workspace/config_atm.xml
 RUN cp -av /build/ATOM/benchmark/config_hyd.xml /build/ATOM/workspace/config_hyd.xml
 
-ADD topo_grids /build/ATOM/data
+ADD topo_grids /build/ATOM/data/topo_grids
 
 # setup space for working in
 VOLUME /build/ATOM/workspace/output
