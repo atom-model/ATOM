@@ -95,7 +95,7 @@ cdef class Atmosphere:
 
     def get_temperature(Atmosphere self, time, height=None, lon=None, lat=None):
         self._check_alive()
-        if height and lon and lat:
+        if all(v is not None for v in [height, lon, lat]):
             return self._thisptr.get_temperature(time, height, lon, lat)
         else:
             return self._thisptr.get_temperature(time)

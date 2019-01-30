@@ -27,6 +27,22 @@ HemisphereCoords AtomUtils::convert_coords(double lon, double lat){
     return ret;
 }
 
+/*
+* [-180, 180] to [0, 360]
+*/
+int AtomUtils::lon_2_index(double lon){
+    if(lon<0)
+        return int(round(360+lon));
+    else
+        return int(round(lon));
+}
+/*
+* [-90, 90] to [0, 180]
+*/
+int AtomUtils::lat_2_index(double lat){
+    return int(round(90-lat));
+}
+
 //change data coordinate system from -180° _ 0° _ +180° to 0°- 360°
 void AtomUtils::move_data(double* data, int len)
 {

@@ -20,6 +20,9 @@ namespace AtomUtils{
 
     HemisphereCoords convert_coords(double lon, double lat);
 
+    int lon_2_index(double lon);
+    int lat_2_index(double lat);
+
     std::ofstream& get_logger();
 
     inline bool is_land(const Array& h, int i, int j, int k){

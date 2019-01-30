@@ -118,6 +118,18 @@ public:
     }
 
     /*
+    * Given a altitude, return the layer index
+    */
+    int get_layer_index(double height){
+        std::size_t i = 0;
+        for(; i<m_layer_heights.size(); i++){
+            if(height<m_layer_heights[i])
+                return i-1;
+        }
+        return i;
+    }
+
+    /*
     */
     std::vector<double> get_temperature(int time){
         if(!m_t_s.empty())
@@ -129,13 +141,7 @@ public:
     
     /*
     */
-    double get_temperature(int time, int height, int lon, int lat){
-        if(!m_t_s.empty())
-            //return m_t_s[time].back();
-            return 100;
-        else
-            return std::numeric_limits<double>::quiet_NaN();
-    }
+    double get_temperature(int time, int height, int lon, int lat);
 
 private:
     void SetDefaultConfig();
