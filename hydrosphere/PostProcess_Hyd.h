@@ -57,20 +57,20 @@ class PostProcess_Hydrosphere{
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-        void paraview_panorama_vts ( const string &, int, double &, double &, Array &,
+        void paraview_panorama_vts ( const string &, int, double &, double &, double &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 
-        void paraview_vtk_radial ( const string &, int, int, double &, double &, double &,
+        void paraview_vtk_radial ( const string &, int, int, double &, double &, double &, double &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &,
             Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
-        void paraview_vtk_longal ( const string &, int, int, double &, double &, Array &,
+        void paraview_vtk_longal ( const string &, int, int, double &, double &, double &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
             Array &, Array &, Array &, Array &, Array & );
 
-        void paraview_vtk_zonal ( const string &, int, int, double &, double &, Array &,
+        void paraview_vtk_zonal ( const string &, int, int, double &, double &, double &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
             Array &, Array &, Array &, Array & );
         

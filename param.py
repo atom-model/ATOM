@@ -156,8 +156,12 @@ def main():
             ( 'va', 'initial velocity component in theta-direction', 'double', 0.0 ),
             ( 'wa', 'initial velocity component in phi-direction', 'double', 0.0 ),
             ( 'pa', 'initial value for the pressure field', 'double', 0.0 ),
-            ( 'ta', 'compares to 4°C', 'double', 1.01464 ),
-            ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 1.0 ),
+#            ( 'ta', 'compares to 4°C', 'double', 1.01464 ),
+            ( 'ta', 'compares to -1°C', 'double', 0.9963 ),
+#            ( 'ta', 'compares to -4°C', 'double', 0.9853 ),
+#            ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 1.0 ),
+            ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 0.95 ),
+#            ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 0.867 ),
 
             ( 'ca_max', 'c = 1.0983 compares to a salinity of 38.00 psu  used for deep flow initialization', 'double', 1.0983 ),
 

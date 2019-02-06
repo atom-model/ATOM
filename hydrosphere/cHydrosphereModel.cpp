@@ -280,6 +280,16 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     //  initial conditions for u, v and w velocity components in the circumpolar current
 //    if ( Ma <= 41 )     oceanflow.IC_CircumPolar_Current ( h, u, v, w, c ); // Drake passage closed 41 Ma ago
 
+
+
+//    double emin = epsres * 100.;
+
+
+
+//    goto Printout;
+
+
+
     //  salinity distribution as initial condition in 3 dimensions
     oceanflow.BC_Temperature_Salinity ( rad, h, t, c, p_dyn );
 
@@ -298,6 +308,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     double emin = epsres * 100.;
     iter_cnt = 1;
+
+//    goto Printout;
+
 
     // ::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::::
     if ( switch_2D != 1 ){
@@ -329,7 +342,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
                 residuum_old = emin;
 
-//                oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
+                oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
@@ -598,6 +611,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
+    Printout:
+
     write_file(bathymetry_name, output_path, true);
 
     //  final remarks
@@ -719,26 +734,26 @@ void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepa
 
     int j_longal = 75;
     //  int j_longal = 90;
-    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, iter_cnt-1, u_0, r_0_water, h, p_dyn, p_stat, r_water, 
+    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, iter_cnt-1, u_0, c_0, r_0_water, h, p_dyn, p_stat, r_water, 
         r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
     //  zonal data along constant longitudes
     int k_zonal = 185;
     //  int k_zonal = 140;
-    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, iter_cnt-1, u_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, 
+    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, iter_cnt-1, u_0, c_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, 
             t, u, v, w, c, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
 
     //  radial data along constant height above ground
     int i_radial = 40;
     //  int i_radial = 39;
-    write_File.paraview_vtk_radial ( bathymetry_name, i_radial, iter_cnt-1, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, 
+    write_File.paraview_vtk_radial ( bathymetry_name, i_radial, iter_cnt-1, u_0, t_0, c_0, r_0_water, h, p_dyn, p_stat, r_water, 
         r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, 
         Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, 
         Precipitation, Bathymetry );
 
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
     if(paraview_panorama_vts){
-        write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
+        write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, c_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
             u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
     }
     //  writing of plot data in the PlotData file

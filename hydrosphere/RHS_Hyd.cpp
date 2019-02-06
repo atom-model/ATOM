@@ -362,13 +362,14 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
         if ( is_land( h, i, j, k) )    salinity_evaporation = 0.;
 
-        if ( salinity_evaporation >= 20. )    salinity_evaporation = 20.;
+//        if ( salinity_evaporation >= 20. )    salinity_evaporation = 20.;
                         // salinity gradient causes values too high at shelf corners
-        if ( salinity_evaporation <= - 20. )    salinity_evaporation = - 20.;
+//        if ( salinity_evaporation <= - 20. )    salinity_evaporation = - 20.;
                         // salinity gradient causes values too high at shelf corners
     }
     else  salinity_evaporation = 0.;
 
+//    salinity_evaporation = 0.;    // test case
 
     double RS_buoyancy_Momentum = Buoyancy * g * ( r_salt_water.x[ i ][ j ][ k ] - salt_water_ref )
                                                             / salt_water_ref;       // buoyancy based on water density 
