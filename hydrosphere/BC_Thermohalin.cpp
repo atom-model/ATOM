@@ -449,25 +449,10 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
             {
                 d_j = ( double ) j;
                 t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
-                //if ( Ma == 0 )            t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
-                //else                      t.x[ im-1 ][ j ][ k ] = t_coeff * ( d_j * d_j /
-                 //   ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + t_pole + t_cretaceous; // paleo surface temperature
+
+                c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + c_cretaceous / c_0;  // non-dimensional
 
                 t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
-
-                if ( t_Celsius < 4. ){
-                    t.x[ im -1 ][ j ][ k ] = ta + t_cretaceous;
-                    t_Celsius = ( ta + t_cretaceous ) * t_0 - t_0; // water temperature not below 4°C
-                }
-
-                if ( Ma == 0 ){
-                    c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + c_cretaceous / c_0; // paleo surface temperature
-                }else{
-                    c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ];  // non-dimensional
-                }
-            }else{
-                t.x[ im-1 ][ j ][ k ] = ta + t_cretaceous;
-                c.x[ im-1 ][ j ][ k ] = ca + c_cretaceous / c_0;
             }
         }
     }
@@ -487,11 +472,12 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
                     t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
                     c.x[ i ][ j ][ k ] = ca + cm_cbeg * ( double ) ( i * i - i_beg * i_beg );// parabolic approach
-
-                    if ( t_Celsius < 4. ){
+/*
+                    if ( t_Celsius <= ( ta * t_0 - t_0 ) ){ // water temperature not below 4°C
                         t.x[ i ][ j ][ k ] = ta;
                         c.x[ i ][ j ][ k ] = ca;
                     }
+*/
                 }else{
                     t.x[ i ][ j ][ k ] = ta;
                     c.x[ i ][ j ][ k ] = ca;
@@ -711,11 +697,11 @@ void BC_Thermohalin::Value_Limitation_Hyd ( Array &h, Array &u, Array &v,
                 if ( w.x[ i ][ j ][ k ] >= .552 )  w.x[ i ][ j ][ k ] = .552;
                 if ( w.x[ i ][ j ][ k ] <= - .552 )  w.x[ i ][ j ][ k ] = - .552;
 
-                if ( t.x[ i ][ j ][ k ] >= 1.147 )  t.x[ i ][ j ][ k ] = 1.147;
-                if ( t.x[ i ][ j ][ k ] <= - 1.01464 )  t.x[ i ][ j ][ k ] = - 1.01464;
+                if ( t.x[ i ][ j ][ k ] >= 1.147 )  t.x[ i ][ j ][ k ] = 1.147; //40.15 °C
+                if ( t.x[ i ][ j ][ k ] <= 0.9963 )  t.x[ i ][ j ][ k ] = 0.9963;// -1.0 °C
 
-                if ( c.x[ i ][ j ][ k ] >= 1.1 )  c.x[ i ][ j ][ k ] = 1.1;
-                if ( c.x[ i ][ j ][ k ] < .95 )  c.x[ i ][ j ][ k ] = .95;
+                //if ( c.x[ i ][ j ][ k ] >= 1.1 )  c.x[ i ][ j ][ k ] = 1.1;
+                //if ( c.x[ i ][ j ][ k ] < .95 )  c.x[ i ][ j ][ k ] = .95;
             }
         }
     }

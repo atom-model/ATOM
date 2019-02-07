@@ -1618,11 +1618,13 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                 if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )  P_rain.x[ i + 1 ][ j ][ k ] = 0.;
                 if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
-                P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] +
-                    ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;  // in kg / ( m2 * s ) == mm/s
-                P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] +
-                    ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;
-                      // arbitrary factor 200 adjusts precipitation for the modern world.
+                float step = m_model->get_layer_height(i+1) - m_model->get_layer_height(i-1);
+                P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ]
+                     + r_humid * ( ( S_r.x[ i ][ j ][ k ] - S_r.x[ i + 1 ][ j ][ k ] )
+                     / 2. * step ) / 2.;  // in kg / ( m2 * s ) == mm/s
+                P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ]
+                     + r_humid * ( ( S_s.x[ i ][ j ][ k ] - S_s.x[ i + 1 ][ j ][ k ] )
+                     / 2. * step ) / 2.;
 
                 if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                 if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;
@@ -1634,7 +1636,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
 /******************* main part for rain and snow calculation *********************/
 
     if ( true ){
-        for(int iter_prec = 1; iter_prec <= 5; iter_prec++ ){ // iter_prec may be varied, but is sufficient
+        for(int iter_prec = 1; iter_prec <= 1; iter_prec++ ){ // iter_prec may be varied, but is sufficient
             for ( int k = 0; k < km; k++ ){
                 for ( int j = 0; j < jm; j++ ){
                     P_rain.x[ im-1 ][ j ][ k ] = 0.;
@@ -1793,11 +1795,13 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                         if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )  P_rain.x[ i + 1 ][ j ][ k ] = 0.;
                         if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
-                        P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] +
-                            ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;  // in kg / ( m2 * s ) == mm/s
-                        P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] +
-                            ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;
-                              // arbitrary factor 200 adjusts precipitation for the modern world.
+                        float step = m_model->get_layer_height(i+1) - m_model->get_layer_height(i-1);
+                        P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ]
+                             + r_humid * ( ( S_r.x[ i ][ j ][ k ] - S_r.x[ i + 1 ][ j ][ k ] )
+                             / 2. * step ) / 2.;  // in kg / ( m2 * s ) == mm/s
+                        P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ]
+                             + r_humid * ( ( S_s.x[ i ][ j ][ k ] - S_s.x[ i + 1 ][ j ][ k ] )
+                             / 2. * step ) / 2.;
 
                         if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                         if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;

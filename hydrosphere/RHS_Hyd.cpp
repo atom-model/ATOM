@@ -365,9 +365,9 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
         if ( is_land( h, i, j, k) )    salinity_evaporation = 0.;
 
-        if ( salinity_evaporation >= 20. )    salinity_evaporation = 20.;
+        //if ( salinity_evaporation >= 20. )    salinity_evaporation = 20.;
                         // salinity gradient causes values too high at shelf corners
-        if ( salinity_evaporation <= - 20. )    salinity_evaporation = - 20.;
+        //if ( salinity_evaporation <= - 20. )    salinity_evaporation = - 20.;
                         // salinity gradient causes values too high at shelf corners
     }
     else  salinity_evaporation = 0.;

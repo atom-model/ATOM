@@ -72,7 +72,7 @@ void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, double dr, Arr
             //p_dyn.x[ im-1 ][ j ][ k ] = c43 * p_dyn.x[ im-2 ][ j ][ k ] - c13 * p_dyn.x[ im-3 ][ j ][ k ];        // Neumann
 
 //            t.x[ im-1 ][ j ][ k ] = t.x[ im-4 ][ j ][ k ] - 3. * t.x[ im-3 ][ j ][ k ] + 3. * t.x[ im-2 ][ j ][ k ];        // extrapolation
-            u.x[ im-1 ][ j ][ k ] = u.x[ im-4 ][ j ][ k ] - 3. * u.x[ im-3 ][ j ][ k ] + 3. * u.x[ im-2 ][ j ][ k ];        // extrapolation
+            //u.x[ im-1 ][ j ][ k ] = u.x[ im-4 ][ j ][ k ] - 3. * u.x[ im-3 ][ j ][ k ] + 3. * u.x[ im-2 ][ j ][ k ];        // extrapolation
 //            v.x[ im-1 ][ j ][ k ] = v.x[ im-4 ][ j ][ k ] - 3. * v.x[ im-3 ][ j ][ k ] + 3. * v.x[ im-2 ][ j ][ k ];        // extrapolation
 //            w.x[ im-1 ][ j ][ k ] = w.x[ im-4 ][ j ][ k ] - 3. * w.x[ im-3 ][ j ][ k ] + 3. * w.x[ im-2 ][ j ][ k ];        // extrapolation
 //            p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 3. * p_dyn.x[ im-2 ][ j ][ k ];        // extrapolation

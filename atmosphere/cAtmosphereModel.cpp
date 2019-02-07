@@ -612,7 +612,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
     //  radial data along constant hight above ground
     int i_radial = 0;
     //  int i_radial = 10;
-    write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
+/*    write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
                                      BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, 
                                      Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, 
                                      Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, 
@@ -639,7 +639,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
                                            BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
                                            Q_Sensible, epsilon_3D, P_rain, P_snow );
     }
-
+*/
     //  writing of v-w-data in the v_w_transfer file
     PostProcess_Atmosphere ppa ( im, jm, km, output_path );
     ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
