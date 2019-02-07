@@ -110,17 +110,20 @@ public:
      * This function must be called after init_layer_heights()
      * Given a layer index i, return the height of this layer
     */
-    double get_layer_height(int i){
+    float get_layer_height(int i){
         if(0>i || i>im-1){
             return -1;
         }
         return m_layer_heights[i];
     }
+    std::vector<float> get_layer_heights(){
+        return m_layer_heights;
+    }   
 
     /*
     * Given a altitude, return the layer index
     */
-    int get_layer_index(double height){
+    int get_layer_index(float height){
         std::size_t i = 0;
         for(; i<m_layer_heights.size(); i++){
             if(height<m_layer_heights[i])
@@ -128,20 +131,6 @@ public:
         }
         return i;
     }
-
-    /*
-    */
-    std::vector<double> get_temperature(int time){
-        if(!m_t_s.empty())
-            //return m_t_s[time].back();
-            return std::vector<double>();
-        else
-            return std::vector<double>(10,-1);
-    }
-    
-    /*
-    */
-    double get_temperature(int time, int height, int lon, int lat);
 
 private:
     void SetDefaultConfig();
@@ -195,8 +184,8 @@ private:
     * This function must be called after "rad" has been initialized.
     */
     void init_layer_heights(){
-        const double zeta = 3.715;
-        double h = L_atm / ( im-1 );
+        const float zeta = 3.715;
+        float h = L_atm / ( im-1 );
         for(int i=0; i<im; i++){
             m_layer_heights.push_back( (exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * h );
             //std::cout << m_layer_heights.back() << std::endl;
@@ -220,6 +209,9 @@ private:
 
     void init_temperature();
 
+    void save_data();
+    void save_array(const string& fn, const Array& a);
+
     static cAtmosphereModel* m_model;
 
     PythonStream ps;
@@ -231,7 +223,7 @@ private:
 
     static const int im=41, jm=181, km=361, nm=200;
 
-    int iter_cnt; // iteration count
+    int iter_cnt, iter_cnt_3d, iter_cnt_2d; // iteration count
 
     string bathymetry_name, bathymetry_filepath;
 
@@ -254,7 +246,7 @@ private:
     Array_1D rad; // radial coordinate direction
     Array_1D the; // lateral coordinate direction
     Array_1D phi; // longitudinal coordinate direction
-    std::vector<double> m_layer_heights;
+    std::vector<float> m_layer_heights;
 
     // 2D arrays
     Array_2D Topography; // topography

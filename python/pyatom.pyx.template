@@ -93,12 +93,9 @@ cdef class Atmosphere:
         self._thisptr.RunTimeSlice(t)
         return None
 
-    def get_temperature(Atmosphere self, time, height=None, lon=None, lat=None):
+    def get_layer_heights(Atmosphere self):
         self._check_alive()
-        if all(v is not None for v in [height, lon, lat]):
-            return self._thisptr.get_temperature(time, height, lon, lat)
-        else:
-            return self._thisptr.get_temperature(time)
+        return self._thisptr.get_layer_heights()
 
 {{ atmosphere_params }}
 

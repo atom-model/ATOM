@@ -82,12 +82,12 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
 def create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
     answer = ""
     if os.path.exists(output_dir):
-        while True:
+        while False:
             answer = raw_input("Do you want to delete the existing output folder {} [Y/N]? ".format(
                 os.path.abspath(output_dir))).lower()
             if answer in ["y", "n"]:
                 break
-
+        answer = "y"
         if answer == "y":
             shutil.rmtree(output_dir)
             print("Delete the existing " + os.path.abspath(output_dir))

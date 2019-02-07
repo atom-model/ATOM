@@ -331,8 +331,7 @@ cdef extern from "c%sModel.h":
         void LoadConfig ( const char *filename )
         void Run()
         void RunTimeSlice ( int time_slice )
-        double get_temperature(int time, int height, int lon, int lat)
-        vector[double] get_temperature(int time)
+        vector[float] get_layer_heights()
 """ % ( model, model, model ) )
 
             for section in sections:

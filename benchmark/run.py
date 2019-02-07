@@ -15,8 +15,8 @@ import create_atm_maps, create_hyd_maps
 atm_model = Atmosphere()
 hyd_model = Hydrosphere()
 
-atm_model.load_config( './config_atm.xml' )
-hyd_model.load_config( './config_hyd.xml' )
+atm_model.load_config( './config_atm_dev.xml' )
+hyd_model.load_config( './config_hyd_dev.xml' )
 
 start_time = atm_model.time_start
 end_time = atm_model.time_end

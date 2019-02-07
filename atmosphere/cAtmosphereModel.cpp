@@ -2,6 +2,7 @@
 
 #include <fenv.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -150,8 +151,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     reset_arrays();    
 
     m_current_time = m_time_list.insert(float(Ma)).first;
-
-    m_t_s[Ma] = std::vector<Array>();
 
     struct stat info;
     if( stat( output_path.c_str(), &info ) != 0 ){
@@ -316,7 +315,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //write the ouput files
     write_file(bathymetry_name, output_path, true);
 
-    m_t_s[int(round(*m_current_time))].push_back(t);
+    save_data();    
 
     //  final remarks
     cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
@@ -336,6 +335,10 @@ void cAtmosphereModel::Run()
     auto start_time = std::chrono::system_clock::now();
     std::time_t start_time_t = std::chrono::system_clock::to_time_t(start_time);
     logger() << "Start Time:" << std::ctime(&start_time_t) << std::endl;
+    //char buffer[80];
+    //strftime(buffer, 80, "%c", localtime(&start_time_t));
+    //timestamp = string(buffer);
+    //std::cout << timestamp << std::endl;
 
     mkdir(output_path.c_str(), 0777);
 
@@ -737,6 +740,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
                                     BC_Thermo &circulation){
     
     iter_cnt = 1;
+    iter_cnt_3d = 0;
     emin = epsres * 100.;
 
     int Ma = int(round(*get_current_time()));
@@ -831,10 +835,10 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
             }
 
-            m_t_s[int(round(*m_current_time))].push_back(t);
-
             move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+            
             iter_cnt++;
+            iter_cnt_3d++;
         }
         /**  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::::::: **/
         
@@ -1420,4 +1424,43 @@ void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, i
     }
 }
 
+void cAtmosphereModel::save_array(const string& fn, const Array& a){
+    for(int i=0; i<im; i++){
+        std::ofstream os(fn + "_" + to_string(i) + ".bin", std::ios::binary | std::ios::out);
+        for(int j=jm-1; j>=0; j--){
+            os.write(reinterpret_cast<const char*>(t.x[i][j]+(km/2)), std::streamsize((km/2)*sizeof(double)));
+            os.write(reinterpret_cast<const char*>(t.x[i][j]), std::streamsize((km/2+1)*sizeof(double)));
+        }
+        os.close();
+    }
+}
 
+/*
+*
+*/
+void  cAtmosphereModel::save_data(){
+    /*
+    time_t rawtime;
+    char buffer [80];
+
+    time (&rawtime);
+    strftime(buffer, 80, "%c", localtime(&rawtime));
+    string timestamp = string(buffer);
+    */
+    struct stat info;
+    string path = output_path + "/bin_data/";
+    if( stat( path.c_str(), &info ) != 0 ){
+        mkdir(path.c_str(), 0777);
+    }
+    std::ostringstream ss;
+    ss << "_" << (int)(*get_current_time()) << "_" << iter_cnt_3d /*<< "_" << timestamp << ".bin"*/;
+    std::string postfix_str = ss.str();
+    //std::replace( postfix_str.begin(), postfix_str.end(), ' ', '_');
+    //std::replace( postfix_str.begin(), postfix_str.end(), ':', '-');
+
+    save_array(path + string("t") + postfix_str, t);
+    save_array(path + string("u") + postfix_str, u);
+    save_array(path + string("v") + postfix_str, v);
+    save_array(path + string("w") + postfix_str, w);
+    save_array(path + string("h") + postfix_str, h);
+}
