@@ -106,24 +106,23 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
                             Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion,
                             Array_2D &BuoyancyForce_2D, Array_2D &Salt_total,
                             Array_2D &BottomWater ){
-// total upwelling as sum on normal velocity component values in a virtual vertical column
-    int i_half = ( im - 1 ) / 2;
+    // total upwelling as sum on normal velocity component values in a virtual vertical column
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            Upwelling.y[ j ][ k ] = 0.;                                                                // Upwelling
-            Downwelling.y[ j ][ k ] = 0.;                                                                // Downwelling
-            aux_v[ j ][ k ] = 0.;                                                                            // auxiliar field for Upwelling
-            aux_w[ j ][ k ] = 0.;                                                                            // auxiliar field for Downwelling
-            BottomWater.y[ j ][ k ] = 0.;                                                                // Bottom water
-            SaltFinger.y[ j ][ k ] = 0.;                                                                // SaltFinger
-            SaltDiffusion.y[ j ][ k ] = 0.;                                                                // SaltFinger
-            BuoyancyForce_2D.y[ j ][ k ] = 0.;                                                                // Saltdiffusion
-            Salt_total.y[ j ][ k ] = 0.;                                                                // total Salt
+            Upwelling.y[ j ][ k ] = 0.; // Upwelling
+            Downwelling.y[ j ][ k ] = 0.; // Downwelling
+            aux_v[ j ][ k ] = 0.;  // auxiliar field for Upwelling
+            aux_w[ j ][ k ] = 0.;  // auxiliar field for Downwelling
+            BottomWater.y[ j ][ k ] = 0.;    // Bottom water
+            SaltFinger.y[ j ][ k ] = 0.;     // SaltFinger
+            SaltDiffusion.y[ j ][ k ] = 0.;    // SaltFinger
+            BuoyancyForce_2D.y[ j ][ k ] = 0.;  // Saltdiffusion
+            Salt_total.y[ j ][ k ] = 0.;   // total Salt
         }
     }
 
-    double i_Ekman_layer = 500.;                                    // assumed Ekman-layer depth of 500m
+    double i_Ekman_layer = 500.;  // assumed Ekman-layer depth of 500m
     double coeff = i_Ekman_layer / L_hyd;
     double rmsinthe = 0.;
 
@@ -132,7 +131,7 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
     int i_max = im - 1;
     int i_diff = i_max - i_Ekman;
 
-//    Ekman pumping, upwelling, downwelling
+    //Ekman pumping, upwelling, downwelling
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = i_Ekman; i < im-1; i++ ){
@@ -194,6 +193,7 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
         }
     }
 
+
     for ( int k = 0; k < km; k++ ){
         for ( int i = 0; i < im; i++ ){
             Upwelling.y[ 0 ][ k ] = c43 * Upwelling.y[ 1 ][ k ] -
@@ -226,7 +226,7 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            for ( int i = i_half; i < im; i++ ){
+            for ( int i = im/2; i < im; i++ ){
                 if ( is_water( h, i, j, k) ){
                     SaltFinger.y[ j ][ k ] += Salt_Finger.x[ i ][ j ][ k ];
                     SaltDiffusion.y[ j ][ k ] += Salt_Diffusion.x[ i ][ j ][ k ];
@@ -237,8 +237,7 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
         }
     }
 
-
-// boundaries of buoyancy force
+    // boundaries of buoyancy force
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             Buoyancy_Force_3D.x[ 0 ][ j ][ k ] = c43 * Buoyancy_Force_3D.x[ 1 ][ j ][ k ] -
