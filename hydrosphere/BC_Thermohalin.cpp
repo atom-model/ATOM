@@ -655,20 +655,137 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA ( const string &Name_SurfaceSalini
     Name_SurfaceSalinity_File_Read.close();
 }
 
+void BC_Thermohalin::IC_Equatorial_Currents 
+                     ( Array &h, Array &u, Array &v, Array &w ){
+// currents along the equator
+// equatorial undercurrent - Cromwell flow, EUC
+// equatorial intermediate current, EIC
+// nothern and southern equatorial subsurface counter-currents, NSCC und SSCC
+// nothern and southern equatorial counter-currents, NECC und SECC
 
+    double IC_water = 1.5;  // no dimension, ( average velocity compares to   u_0 * IC_water = 0,25 * IC_water = 0,375 m/s )
 
+// one grid step compares to a depth of 25 m for L_hyd = 1000m   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    i_EIC_u = i_beg; // 1000m depth
+    i_EIC_o = 28; // 0m depth
+    i_SCC_u = 8; // 800m depth
+    i_SCC_o = 28; // 300m depth
+    i_ECC_u = 28; // 400m depth
+    i_ECC_o = im; // 0m depth
+    float i_EUC_u = 32; // 200m depth
+    float i_EUC_o = 36; // 100m depth
 
+// equatorial currents and counter-currents
 
-void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Array &w, Array &c ){
-// south polar sea
-// antarctic circumpolar current ( -5000m deep ) ( from j=147 until j=152 compares to 57°S until 62°S,
-//                                                                            from k=0 until k=km compares to 0° until 360° )
-    for ( int i = i_beg; i < im; i++ ){
-        for ( int j = 147; j < 153; j++ ){
-            for ( int k = 0; k < km; k++ ){
-                if ( is_water( h, i, j, k) ){
-//                  c.x[ i ][ j ][ k ] = ca;
-                    w.x[ i ][ j ][ k ] = .01 / u_0;                 // 1 cm/s
+//  §§§§§§§§§§§§§§§§§§§§§§§§§   valid for all paleo-ocean constellations along the equator   §§§§§§§§§§§§§§§§§§§§§§§§§§
+
+    j_half = ( jm -1 ) / 2;
+    k_beg = 0;
+    k_end = 0;
+
+// extention of land and ocean areas
+    for ( int k = 1; k < km-1; k++ ){
+        if ( k < km ){
+            if ( ( is_water( h, im-1, j_half, k ) ) 
+                && ( is_land( h, im-1, j_half, k+1 ) ) ){
+                k_end = k;
+            }
+            if ( ( is_land( h, im-1, j_half, k ) ) 
+                && ( is_water( h, im-1, j_half, k+1 ) ) ){
+                k_beg = k;
+            }
+            if ( ( ( is_water( h, im-1, j_half, k ) ) 
+                && ( is_water( h, im-1, j_half, k+1 ) ) ) 
+                && ( k == km-2 ) ){
+                k_end = k;
+            }
+
+// equatorial northern counter-current ( NECC, i=im-1 until i=im compares to 0 until -200m depth )
+// equatorial northern counter-current ( from j=83 until j=88 compares to 3°N until 8°N )
+            for ( int i = i_ECC_u; i < i_ECC_o; i++ ){
+                for ( int j =83; j < 88; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = + .05 * IC_water 
+                                * ( double ) ( i - i_ECC_u ) 
+                                / ( double ) ( i_ECC_o - i_ECC_u );
+                        }
+                    }
+                }
+            }
+
+// equatorial southern counter-current ( SECC, i=im-1 until i=im compares to 0 until -200m depth )
+// equatorial southern counter-current ( from j=93 until j=96 compares to 3°S until 6°S )
+            for ( int i = i_ECC_u; i < i_ECC_o; i++ ){
+                for ( int j = 93; j < 98; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = + .05 * IC_water 
+                                * ( double ) ( i - i_ECC_u ) 
+                                / ( double ) ( i_ECC_o - i_ECC_u );
+                        }
+                    }
+                }
+            }
+
+// equatorial undercurrent - Cromwell current ( EUC, i=im-2 until i=im-1 compares to -100 until -200m depth )
+// equatorial undercurrent - Cromwell current ( from j=87 until j=93 compares to 3°N until 3°S )
+            for ( int i = i_EUC_u; i < i_EUC_o; i++ ){
+                for ( int j = 87; j < 94; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = + .05 * IC_water;
+                        }
+                    }
+                }
+            }
+
+// equatorial intermediate current ( EIC, i=im-4 until i=im-2 compares to -300 until -1000m depth )
+// equatorial intermediate current ( from j=88 until j=92 compares to 2°N until 2°S )
+            for ( int i = i_EIC_u; i < i_EIC_o; i++ ){
+                for ( int j = 88; j < 93; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = - .05 * IC_water 
+                                * ( double ) ( i - i_EIC_u ) 
+                                / ( double ) ( i_EIC_o - i_EIC_u );
+                        }
+                    }
+                }
+            }
+
+// equatorial northern and southern subsurface counter-current
+// equatorial northern subsurface counter-current ( NSCC, i=im-3 until i=im-2 compares to -300 until -800m depth )
+// equatorial northern subsurface counter-current ( from j=86 until j=87 compares to 3°N until 4°N )
+            for ( int i = i_SCC_u; i < i_SCC_o; i++ ){
+                for ( int j = 86; j < 88; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = .05 * IC_water 
+                                * ( double ) ( i - i_SCC_u ) 
+                                / ( double ) ( i_SCC_o - i_SCC_u );
+                        }
+                    }
+                }
+            }
+
+// equatorial southern subsurface counter-current ( SSCC, i=im-3 until i=im-2 compares to -300 until -800m depth )
+// equatorial southern subsurface counter-current ( from j=93 until j=94 compares to 3°S until 4°S )
+            for ( int i = i_SCC_u; i < i_SCC_o; i++ ){
+                for ( int j = 93; j < 95; j++ ){
+                    for ( int k = k_beg; k <= k_end; k++ ){
+                        if ( is_water( h, i, j, k ) ){
+                            v.x[ i ][ j ][ k ] = 0.;
+                            w.x[ i ][ j ][ k ] = .05 * IC_water 
+                                * ( double ) ( i - i_SCC_u ) 
+                                / ( double ) ( i_SCC_o - i_SCC_u );
+                        }
+                    }
                 }
             }
         }
@@ -680,6 +797,177 @@ void BC_Thermohalin::IC_CircumPolar_Current ( Array &h, Array &u, Array &v, Arra
 
 
 
+void BC_Thermohalin::IC_CircumPolar_Current 
+                     ( Array &h, Array &u, Array &v, Array &w, Array &c ){
+// south polar sea
+// antarctic circumpolar current ( -5000m deep ) ( from j=147 until j=152 compares to 57°S until 62°S,
+// from k=0 until k=km compares to 0° until 360° )
+    for ( int i = i_beg; i < im; i++ ){
+        for ( int j = 147; j < 153; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                if ( is_water( h, i, j, k ) ){
+//                  c.x[ i ][ j ][ k ] = ca;
+                    w.x[ i ][ j ][ k ] = 2. * u_0;  // 0.5 m/s
+                }
+            }
+        }
+    }
+}
+
+
+
+
+void BC_Thermohalin::IC_u_WestEastCoast 
+                     ( Array_1D &rad, Array &h, Array &u, Array &v, 
+                     Array &w, Array &un, Array &vn, Array &wn ){
+// initial conditions for v and w velocity components at the sea surface close to east or west coasts
+// reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
+// w component unchanged
+
+    int i_beg = 20;  // == 500m depth
+    int i_middle = i_beg + 16;  // 0 + 36 = 36 for total depth 100m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
+    int i_half = 38;
+    d_i_middle = ( double ) i_middle;
+    d_i_half = ( double ) i_half;
+    d_i_max = ( double ) i_max;
+
+// search for east coasts and associated velocity components to close the circulations
+// transition between coast flows and open sea flows included
+
+// northern hemisphere: east coast
+//    k_grad = 6;                                                                            // extension of velocity change
+    k_grad = 10;                                                                            // extension of velocity change
+    k_a = k_grad;                                                                        // left distance
+    k_b = 0;                                                                                // right distance
+
+    k_water = 0;                                                                        // on water closest to coast
+    k_sequel = 1;                                                                        // on solid ground
+
+    for ( int j = 0; j < 91; j++ ){                                                    // outer loop: latitude
+        for ( int k = 0; k < km; k++ ){                                            // inner loop: longitude
+            if ( is_land( h, i_half, j, k ) ) k_sequel = 0;                // if solid ground: k_sequel = 0
+            if ( ( is_water( h, i_half, j, k ) ) && ( k_sequel == 0 ) ) 
+                k_water = 0;    // if water and and k_sequel = 0 then is water closest to coast
+            else k_water = 1;                                                        // somewhere on water
+
+            if ( ( is_water( h, i_half, j, k ) ) && ( k_water == 0 ) ){    // if water is closest to coast, change of velocity components begins
+                for ( int l = 0; l < k_grad; l++ ){                                // extension of change, sign change in v-velocity and distribution of u-velocity with depth
+                    for ( int i = i_beg; i < i_half; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
+                        m = i + ( i_half - i_middle );
+                        d_i = ( double ) i;
+                        u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * water_wind 
+                            / ( ( double )( l + 1 ) );    // increase with depth, decrease with distance from coast
+                        u.x[ m ][ j ][ k + l ] = - d_i / d_i_middle * water_wind 
+                            / ( ( double )( l + 1 ) );// decrease with depth, decrease with distance from coast
+                    }
+                }
+                k_sequel = 1;                                                            // looking for another east coast
+            }
+        }                                                                                        // end of longitudinal loop
+        k_water = 0;                                                                    // starting at another latitude
+    }                                                                                            // end of latitudinal loop
+
+
+// southern hemisphere: east coast
+    k_water = 0;
+    k_sequel = 1;
+
+    for ( int j = 91; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_land( h, i_half, j, k ) ) k_sequel = 0;
+            if ( ( is_water( h, i_half, j, k ) ) && ( k_sequel == 0 ) ) 
+                k_water = 0;
+            else k_water = 1;
+            if ( ( is_water( h, i_half, j, k ) ) && ( k_water == 0 ) ){
+                for ( int l = 0; l < k_grad; l++ ){
+                    for ( int i = i_beg; i < i_half; i++ ){
+                        m = i + ( i_half - i_middle );
+                        d_i = ( double ) i;
+                        u.x[ i ][ j ][ k + l ] = - d_i / d_i_half * water_wind 
+                            / ( ( double )( l + 1 ) );    // increase with depth, decrease with distance from coast
+                        u.x[ m ][ j ][ k + l ] = - d_i / d_i_middle * water_wind 
+                            / ( ( double )( l + 1 ) );// decrease with depth, decrease with distance from coast
+                    }
+                }
+                k_sequel = 1;
+            }
+        }
+        k_water = 0;
+    }
+
+
+// search for east coasts and associated velocity components to close the circulations
+// transition between coast flows and open sea flows included
+
+// northern hemisphere: west coast
+//    k_grad = 6;                                                                            // extension of velocity change
+    k_a = 0;                                                                                // left distance
+    k_water = 0;                                                                        // somewhere on water
+    flip = 0;                                                                                // somewhere on water
+
+    for ( int j = 0; j < 91; j++ ){                                                    // outer loop: latitude
+        for ( int k = 0; k < km; k++ ){                                            // inner loop: longitude
+            if ( is_water( h, i_half, j, k ) ){                                        // if somewhere on water
+                k_water = 0;                                                            // somewhere on water: k_water = 0
+                flip = 0;                                                                    // somewhere on water: flip = 0
+            }
+            else k_water = 1;                                                        // first time on land
+
+            if ( ( flip == 0 ) && ( k_water == 1 ) ){                            // on water closest to land
+                for ( int l = k; l > ( k - k_grad + 1 ); l-- ){                        // backward extention of velocity change: nothing changes
+                    for ( int i = i_beg; i < i_half; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
+                        m = i + ( i_half - i_middle );
+                        d_i = ( double ) i;
+                        u.x[ i ][ j ][ l ] = + d_i / d_i_half * water_wind 
+                            / ( ( double )( k - l + 1 ) );    // increase with depth, decrease with distance from coast
+                        u.x[ m ][ j ][ l ] = + d_i / d_i_middle * water_wind 
+                            / ( ( double )( k - l + 1 ) );    // decrease with depth, decrease with distance from coast
+                    }
+                }
+                flip = 1;
+            }
+        }
+        flip = 0;
+    }
+
+
+// southern hemisphere: west coast
+    k_water = 0;
+    flip = 0;
+
+    for ( int j = 91; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( is_water( h, i_half, j, k ) ){
+                k_water = 0;
+                flip = 0;
+            }
+            else k_water = 1;
+
+            if ( ( flip == 0 ) && ( k_water == 1 ) ){
+                for ( int l = k; l > ( k - k_grad + 1 ); l-- ){
+                    for ( int i = i_beg; i < i_half; i++ ){
+                        m = i + ( i_half - i_middle );
+                        d_i = ( double ) i;
+                        u.x[ i ][ j ][ l ] = + d_i / d_i_half * water_wind 
+                            / ( ( double )( k - l + 1 ) );
+                        u.x[ m ][ j ][ l ] = + d_i / d_i_middle * water_wind 
+                            / ( ( double )( k - l + 1 ) );
+                    }
+                }
+                flip = 1;
+            }
+        }
+        flip = 0;
+    }
+
+    for ( int i = 0; i < i_beg; i++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                u.x[ i ][ j ][ k ] = 0.;
+            }
+        }
+    }
+}
 
 
 void BC_Thermohalin::Value_Limitation_Hyd ( Array &h, Array &u, Array &v,

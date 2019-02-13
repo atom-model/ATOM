@@ -331,12 +331,14 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
             for ( int i = 0; i < im; i++ ){
                 e = 100. * c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep;  // water vapour pressure in Pa
                 a = e / ( R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 );  // absolute humidity in kg/m³
-                
+                //precipitable_water.y[ j ][ k ] +=  a * L_atm / ( double ) ( im - 1 );  // mass of water in kg/m²
+                 
                 float zeta = 3.715;
                 float step = ( ( exp( zeta * ( rad.z[ i + 1 ] - 1. ) ) - 1 )
                      - ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) )
                      * ( L_atm / ( double ) ( im-1 ) );
                 precipitable_water.y[ j ][ k ] +=  a * step;
+                
                  // mass of water in kg/m²
                 // precipitable_water mass in 1 kg/m² compares to 1 mm hight, with water density kg/ ( m² * mm )
             }

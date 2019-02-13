@@ -15,8 +15,8 @@ map_cfg = {
     'w_velocity': (4, -0.03, 0.1, 'w_velocity (m/s)'),
     'salinity': (7, 34, 39, 'Salinity (psu)'),
     'bottom_water': (8, 0, 7, 'Bottom Water (m/s)'),
-    'upwelling': (9, 0, 0.01, 'Upwelling (m/s)'),
-    'downwelling': (10, 0, 0.01, 'Downwelling (m/s)')
+    'upwelling': (9, 0, 0.06, 'Upwelling (m/s)'),
+    'downwelling': (10, 0, 0.1, 'Downwelling (m/s)')
 }
 
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):

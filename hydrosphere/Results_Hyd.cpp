@@ -121,7 +121,7 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
             Salt_total.y[ j ][ k ] = 0.;   // total Salt
         }
     }
-
+/*
     double i_Ekman_layer = 500.;  // assumed Ekman-layer depth of 500m
     double coeff = i_Ekman_layer / L_hyd;
     double rmsinthe = 0.;
@@ -222,7 +222,26 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, do
             Downwelling.y[ j ][ 0 ] = Downwelling.y[ j ][ km-1 ] = ( Downwelling.y[ j ][ 0 ] +
                 Downwelling.y[ j ][ km-1 ] ) / 2.;
         }
-    }
+    }*/
+
+     for ( int k = 0; k < km; k++ ){
+          for ( int j = 0; j < jm; j++ ){
+               for ( int i = 0; i < im; i++ ){
+                    if ( h.x[ i ][ j ][ k ] == 0. ){
+                         if ( u.x[ i ][ j ][ k ] > 0. ) Upwelling.y[ j ][ k ] 
+                             += u.x[ i ][ j ][ k ] * u_0;
+                         if ( u.x[ i ][ j ][ k ] < 0. ) Downwelling.y[ j ][ k ] 
+                             += u.x[ i ][ j ][ k ] * u_0;
+                    }
+               }
+          }
+     }
+
+     for ( int k = 0; k < km; k++ ){
+          for ( int j = 0; j < jm; j++ ){
+               Downwelling.y[ j ][ k ] = fabs ( Downwelling.y[ j ][ k ] );
+          }
+     }
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){

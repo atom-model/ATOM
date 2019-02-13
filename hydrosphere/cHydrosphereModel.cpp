@@ -280,8 +280,14 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     //  initial conditions for u-v-w-velocity components following the Ekman spiral
     oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
 
+    //  initial conditions for u-velocity component
+    oceanflow.IC_u_WestEastCoast ( rad, h, u, v, w, un, vn, wn );
+
+    //  initial conditions for the equatorial currents
+    oceanflow.IC_Equatorial_Currents ( h, u, v, w );
+
     //  initial conditions for u, v and w velocity components in the circumpolar current
-    if ( Ma <= 41 )     oceanflow.IC_CircumPolar_Current ( h, u, v, w, c ); // Drake passage closed 41 Ma ago
+    //if ( Ma <= 41 )     oceanflow.IC_CircumPolar_Current ( h, u, v, w, c ); // Drake passage closed 41 Ma ago
 
     //  salinity distribution as initial condition in 3 dimensions
     oceanflow.BC_Temperature_Salinity ( h, t, c, p_dyn );

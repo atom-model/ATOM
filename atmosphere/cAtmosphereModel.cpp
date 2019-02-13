@@ -315,6 +315,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //write the ouput files
     write_file(bathymetry_name, output_path, true);
 
+    iter_cnt_3d++;
     save_data();    
 
     //  final remarks
@@ -839,6 +840,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
             
             iter_cnt++;
             iter_cnt_3d++;
+            save_data();
         }
         /**  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::::::: **/
         
@@ -1428,8 +1430,8 @@ void cAtmosphereModel::save_array(const string& fn, const Array& a){
     for(int i=0; i<im; i++){
         std::ofstream os(fn + "_" + to_string(i) + ".bin", std::ios::binary | std::ios::out);
         for(int j=jm-1; j>=0; j--){
-            os.write(reinterpret_cast<const char*>(t.x[i][j]+(km/2)), std::streamsize((km/2)*sizeof(double)));
-            os.write(reinterpret_cast<const char*>(t.x[i][j]), std::streamsize((km/2+1)*sizeof(double)));
+            os.write(reinterpret_cast<const char*>(a.x[i][j]+(km/2)), std::streamsize((km/2)*sizeof(double)));
+            os.write(reinterpret_cast<const char*>(a.x[i][j]), std::streamsize((km/2+1)*sizeof(double)));
         }
         os.close();
     }
@@ -1439,14 +1441,6 @@ void cAtmosphereModel::save_array(const string& fn, const Array& a){
 *
 */
 void  cAtmosphereModel::save_data(){
-    /*
-    time_t rawtime;
-    char buffer [80];
-
-    time (&rawtime);
-    strftime(buffer, 80, "%c", localtime(&rawtime));
-    string timestamp = string(buffer);
-    */
     struct stat info;
     string path = output_path + "/bin_data/";
     if( stat( path.c_str(), &info ) != 0 ){
@@ -1455,12 +1449,24 @@ void  cAtmosphereModel::save_data(){
     std::ostringstream ss;
     ss << "_" << (int)(*get_current_time()) << "_" << iter_cnt_3d /*<< "_" << timestamp << ".bin"*/;
     std::string postfix_str = ss.str();
-    //std::replace( postfix_str.begin(), postfix_str.end(), ' ', '_');
-    //std::replace( postfix_str.begin(), postfix_str.end(), ':', '-');
 
-    save_array(path + string("t") + postfix_str, t);
-    save_array(path + string("u") + postfix_str, u);
-    save_array(path + string("v") + postfix_str, v);
-    save_array(path + string("w") + postfix_str, w);
+    Array t_t(im, jm, km, 0),  v_t(im, jm, km, 0), w_t(im, jm, km, 0), m_t(im, jm, km, 0);
+    for(int i=0; i<im; i++){
+        for(int j=0; j<jm; j++){
+            for(int k=0; k<km; k++){
+                m_t.x[ i ][ j ][ k ] = sqrt ( pow ( v.x[ i ][ j ][ k ] * u_0, 2 ) + pow ( w.x[ i ][ j ][ k ] * u_0, 2 ) );
+                t_t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k ] * t_0 - t_0;
+                v_t.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] * u_0;
+                w_t.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] * u_0;
+            }
+        }
+    }
+
+    save_array(path + string("t") + postfix_str, t_t);
+    save_array(path + string("v") + postfix_str, v_t);
+    save_array(path + string("w") + postfix_str, w_t);
+    save_array(path + string("m") + postfix_str, m_t);
     save_array(path + string("h") + postfix_str, h);
+    save_array(path + string("c") + postfix_str, c);
+    save_array(path + string("p") + postfix_str, p_dyn);
 }
