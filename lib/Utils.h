@@ -71,19 +71,19 @@ namespace AtomUtils{
         return dstep/3 * (value[0] + sum_odd + sum_even + value[n]);             // Simpson Rule integration
     }
 
-    inline double trapezoidal(int & n, double &dstep, double *value){
+    inline double trapezoidal(int n, double dstep, double *value){
         double sum=0;
         for (int i = 1; i < n; i++){sum += 2*value[i];}
 		return dstep/2 * (value[0] + sum + value[n]);                 // Trapezoidal Rule integration
     }
 
-    inline double rectangular(int & n, double &dstep, double *value){
+    inline double rectangular(int n, double dstep, double *value){
         double sum = 0;
         for (int i = 0; i <= n; i++){sum += value[i];}
         return dstep * sum;                // Rectangular Rule integration
     }
 
-    inline double exp_func(double &T_K, const double &co_1, const double &co_2){
+    inline double exp_func(double T_K, const double co_1, const double co_2){
         return exp(co_1 * (T_K - 273.15) / (T_K - co_2));                        // temperature in °K
     }
 

@@ -1183,9 +1183,9 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 
 
-void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn, Array &cloud, 
-                            Array &cloudn, Array &ice, Array &icen, Array &t, Array &p_stat, Array &S_c_c ){
-    if(m_model->debug){
+void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
+{ 
+    if(debug){
         assert(!cloud.has_nan());
         assert(!ice.has_nan());
         assert(!c.has_nan());
@@ -1205,37 +1205,31 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
         << ice.max() * 1000. << std::endl << std::endl;
 */
 // constant coefficients for the adjustment of cloud water and cloud ice amount vice versa
-    t_00 = 236.15;
-    t_Celsius_2 = t_00 - t_0; // in Kelvin = -37 °C
-
-    exp_pressure = g / ( 1.e-2 * gam * R_Air );
-
+    float t_00 = 236.15;
+    float t_Celsius_2 = t_00 - t_0; // in Kelvin = -37 °C
+    float exp_pressure = g / ( 1.e-2 * gam * R_Air );
+    float q_v_hyp, q_T;
+    float dt_dim = L_atm / u_0 * dt;// dimensional time step of the system in s == 0.02 s
     // setting water vapour, cloud water and cloud ice into the proper thermodynamic ratio based on the local temperatures
     // starting from a guessed parabolic temperature and water vapour distribution in north/south direction
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
 /** %%%%%%%%%%%%%%%%%%%%%%%%%%     saturation pressure     %%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
-                t_u = t.x[ i ][ j ][ k ] * t_0; // in K
-                t_Celsius = t_u - t_0; // in C
+                float t_u = t.x[ i ][ j ][ k ] * t_0; // in K
+                float t_Celsius = t_u - t_0; // in C
 
-                p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
-                hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+                float p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
+                float hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+                float p_h;
                 if ( i != 0 )           p_h = pow ( ( ( t.x[ i ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) /
                                                       ( t.x[ i ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_SL;
                 else                     p_h = p_SL;
 
-                r_dry = 100. * p_h / ( R_Air * t_u );
-//              r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );
-//                             density of humid air, COSMO version withot cloud and ice water, masses negligible
-                r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
-                e_h = .01 * r_humid * R_WaterVapour * t_u; // delivers the same results
-                a_h = 216.6 * e_h / t_u; // absolute humidity in kg/m3
-                q_h = c.x[ i ][ j ][ k ]; // threshold value for water vapour at local hight h in kg/kg
-                E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 ); // saturation water vapour pressure for the ice phase in hPa
-                q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
-                q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
+                float E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                float E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 ); // saturation water vapour pressure for the ice phase in hPa
+                float q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
+                float q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
 
 /** %%%%%%%%%%%%%%%%%%%%%%%%%%%     warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
 
@@ -1253,13 +1247,12 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array &h, Array &c, Array &cn,
 
                     E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                     q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
-                    q_Rain_n = q_Rain;
-
+                    float q_Rain_n = q_Rain;
+                    float T_it;
                     if ( q_T <= q_Rain ){ /**     subsaturated     **/
                         c.x[ i ][ j ][ k ] = q_T; // total water amount as water vapour
                         cloud.x[ i ][ j ][ k ] = 0.; // no cloud water available
                         ice.x[ i ][ j ][ k ] = 0.; // no cloud ice available above 0 °C
-                        T_it = t_u;
 /*
 if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "no cloud               Ice_Water_Saturation_Adjustment: temperature max: " << (t.max() - 1)*t_0 <<"          iter_prec: " << iter_prec << std::endl;
@@ -1314,9 +1307,9 @@ if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
                 if ( t_Celsius < 0. ){
                     if ( t_Celsius < t_Celsius_2 )  cloud.x[ i ][ j ][ k ] = 0.;
                     if ( t_Celsius > 0. )  ice.x[ i ][ j ][ k ] = 0.;
-                    q_v_b = c.x[ i ][ j ][ k ];
-                    q_c_b = cloud.x[ i ][ j ][ k ];
-                    q_i_b = ice.x[ i ][ j ][ k ];
+                    float q_v_b = c.x[ i ][ j ][ k ];
+                    float q_c_b = cloud.x[ i ][ j ][ k ];
+                    float q_i_b = ice.x[ i ][ j ][ k ];
                     q_T = q_v_b + q_c_b + q_i_b; // total water content
 /*
 if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
@@ -1325,7 +1318,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
 }
 */
                     t_u = t.x[ i ][ j ][ k ] * t_0; // in K
-                    T = T_nue = t_u; // in K
+                    float T = t_u; // in K
 
                     E_Rain = hp * exp_func ( T, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                     E_Ice = hp * exp_func ( T, 21.8746, 7.66 ); // saturation water vapour pressure for the ice phase in hPa
@@ -1355,21 +1348,21 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
 */
 /** condensation == water vapor saturation for cloud water formation, deposition == ice crystal for cloud ice formation **/
                         // t_0 = 273.15 K == 0 °C, t_00 = 236.15 K == -37 °C
-                        CND = ( T - t_00 ) / ( t_0 - t_00 );
+                        float CND = ( T - t_00 ) / ( t_0 - t_00 );
                         if ( T < t_00 ) CND = 0.;
                          // T = t_00 => CND = 0 ( no condensation == no cloud water ),
                          // T = t_0 => CND = 1 ( max condensation == max cloud water )
 
-                        DEP = ( t_0 - T ) / ( t_0 - t_00 );
+                        float DEP = ( t_0 - T ) / ( t_0 - t_00 );
                         if ( T > t_0 ) DEP = 0.;
                         // T = t_0 => DEP = 0 ( no deposition == no cloud ice ),
                         // T = t_00 => DEP = 1 ( max deposition == max cloud ice )
 
-                        d_q_v = q_v_hyp - q_v_b;  // changes in water vapour causing cloud water and cloud ice
-                        d_q_c = - d_q_v * CND;
-                        d_q_i = - d_q_v * DEP;
+                        float d_q_v = q_v_hyp - q_v_b;  // changes in water vapour causing cloud water and cloud ice
+                        float d_q_c = - d_q_v * CND;
+                        float d_q_i = - d_q_v * DEP;
 
-                        d_t = ( lv * d_q_c + ls * d_q_i ) / cp_l; // in K, temperature changes
+                        float d_t = ( lv * d_q_c + ls * d_q_i ) / cp_l; // in K, temperature changes
                         T = T + d_t; // in K
 
                         q_v_b = c.x[ i ][ j ][ k ] + d_q_v;  // new values
@@ -1661,7 +1654,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
 
                         r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
                         r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
-                        q_h = c.x[ i ][ j ][ k ];  // threshold value for water vapour at local hight h in kg/kg
                         E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 );  // saturation water vapour pressure for the water phase at t > 0°C in hPa
                         E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 );  // saturation water vapour pressure for the ice phase in hPa
                         q_Rain = ep * E_Rain / ( p_h - E_Rain );  // water vapour amount at saturation with water formation in kg/kg

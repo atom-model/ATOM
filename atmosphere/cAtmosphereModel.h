@@ -212,6 +212,8 @@ private:
     void save_data();
     void save_array(const string& fn, const Array& a);
 
+    void Ice_Water_Saturation_Adjustment();
+
     static cAtmosphereModel* m_model;
 
     PythonStream ps;

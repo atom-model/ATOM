@@ -778,7 +778,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
 
             //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
             if ( velocity_iter % 2 == 0 ){
-                circulation.Ice_Water_Saturation_Adjustment ( h, c, cn, cloud, cloudn, ice, icen, t, p_stat, S_c_c );
+                Ice_Water_Saturation_Adjustment();
             }
 
             circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
