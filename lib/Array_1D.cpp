@@ -36,16 +36,12 @@ void Array_1D::initArray_1D( int mm, double cc )
 
         this->mm = mm;
         z = new double[mm];
-        for ( int i = 0; i < mm; i++ )
-        {
-            z[ i ] = cc;
-        }
     }else{
         assert(mm == this->mm);
-        for ( int i = 0; i < mm; i++ )
-        {
-            z[ i ] = cc;
-        }
+    }
+    for ( int i = 0; i < mm; i++ )
+    {
+        z[ i ] = cc;
     }
 }
 

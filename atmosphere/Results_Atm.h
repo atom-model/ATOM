@@ -79,7 +79,5 @@ class Results_MSL_Atm
         float GetMean_2D(int jm, int km, Array_2D &val_2D);
 
         void CalculateNodeWeights(int jm, int km);
-
-        double C_Dalton ( double u_0, double v, double w );
 };
 #endif

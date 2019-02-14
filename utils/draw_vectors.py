@@ -61,7 +61,7 @@ def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     if atm == "Atm":    
         clim = [0, 1.2]
     else:
-        clim = [0, 0.06]
+        clim = [0, 0.04]
     cs = m.quiver(down_sample(xi), down_sample(yi), down_sample(vy), down_sample(vx), down_sample(magitude), width=0.001,
              headlength=7, headwidth=5, pivot='tail', clim=clim, cmap='jet')
     #m.scatter(down_sample(xi),down_sample(yi),marker='.',color='r')

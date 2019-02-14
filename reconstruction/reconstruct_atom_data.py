@@ -166,7 +166,7 @@ def reconstruct_grid(
     print "Reconstruction done!"
    
 
-def reconstruct_temperature(time_0, time_1, suffix):
+def reconstruct_temperature(time_0, time_1, suffix='Ma_smooth.xyz'):
     st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, suffix),skip_header=1)
     data = st[:,[0,1,6]]
     ind = np.lexsort((-data[:,1],data[:,0]))    
@@ -183,7 +183,7 @@ def reconstruct_temperature(time_0, time_1, suffix):
         DATA_DIR + '/{0}Ma_Reconstructed_Temperature.xyz'.format(time_1))       
 
 
-def reconstruct_precipitation(time_0, time_1, suffix):
+def reconstruct_precipitation(time_0, time_1, suffix='Ma_smooth.xyz'):
     st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, suffix),skip_header=1)
     data = st[:,[0,1,8]]
     ind = np.lexsort((-data[:,1],data[:,0]))    
@@ -200,7 +200,7 @@ def reconstruct_precipitation(time_0, time_1, suffix):
         DATA_DIR + '/{0}Ma_Reconstructed_Precipitation.xyz'.format(time_1))  
 
 
-def reconstruct_salinity(time_0, time_1, suffix):
+def reconstruct_salinity(time_0, time_1, suffix='Ma_smooth.xyz'):
     st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Hyd.xyz'.format(time_0, suffix),skip_header=1)
     data = st[:,[0,1,7]]
     ind = np.lexsort((-data[:,1],data[:,0]))

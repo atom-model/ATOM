@@ -92,6 +92,17 @@ cAtmosphereModel::cAtmosphereModel() :
     m_model = this;
 
     load_temperature_curve();
+
+    //  Coordinate system in form of a spherical shell
+    //  rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
+    rad.initArray_1D(im, 0); // radial coordinate direction
+    the.initArray_1D(jm, 0); // lateral coordinate direction
+    phi.initArray_1D(km, 0); // longitudinal coordinate direction
+    rad.Coordinates ( im, r0, dr );
+    the.Coordinates ( jm, the0, dthe );
+    phi.Coordinates ( km, phi0, dphi );
+
+    init_layer_heights();
 }
 
 cAtmosphereModel::~cAtmosphereModel() {
@@ -164,14 +175,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     cout.precision ( 6 );
     cout.setf ( ios::fixed );
 
-    //  Coordinate system in form of a spherical shell
-    //  rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
-    rad.Coordinates ( im, r0, dr );
-    the.Coordinates ( jm, the0, dthe );
-    phi.Coordinates ( km, phi0, dphi );
-
-    init_layer_heights();
-    
     //  initial values for the number of computed steps and the time
     double t_cretaceous = 0.;
 
@@ -384,12 +387,6 @@ void cAtmosphereModel::Run()
 
 void cAtmosphereModel::reset_arrays()
 {
-    // reset of arrays to the initial value
-    // 1D arrays
-    rad.initArray_1D(im, 1.); // radial coordinate direction
-    the.initArray_1D(jm, 2.); // lateral coordinate direction
-    phi.initArray_1D(km, 3.); // longitudinal coordinate direction
-
     // 2D arrays
     Topography.initArray_2D(jm, km, 0.); // topography
 
@@ -822,12 +819,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
 
 
             //  composition of results
-            calculate_MSL.run_MSL_data ( iter_cnt, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, 
-                                         co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, 
-                                         radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, 
-                                         temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, 
-                                         Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Dalton, Vegetation, 
-                                         albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
+            run_MSL_data(); 
 
             //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
             //  resulting the precipitation distribution formed of rain and snow
@@ -979,15 +971,6 @@ void cAtmosphereModel::restrain_temperature(){
     }
 }
 
-double C_Dalton ( double u_0, double v, double w ){
-    // variation of the heat transfer coefficient in Dalton's evaporation law, parabola
-    double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
-    // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
-    double v_max = 10.;  // Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
-    double vel_magnitude = sqrt ( v * v + w * w ) * u_0;
-    return sqrt ( C_max * C_max / v_max * vel_magnitude );  // result in mm/h
-}
-
 /*
 *
 */
@@ -1007,7 +990,7 @@ void cAtmosphereModel::init_water_vapour(){
     // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            int i_mount = get_mountain_top(j, k);
+            int i_mount = get_surface_layer(j, k);
 
             if ( is_air ( h, 0, j, k ) ){
                 c.x[ i_mount ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
@@ -1050,7 +1033,7 @@ void cAtmosphereModel::init_water_vapour(){
     for ( int j = 0; j < jm; j++ ){
         int i_trop = get_tropopause_layer(j);
         for ( int k = 0; k < km; k++ ){
-            int i_mount = get_mountain_top(j, k);
+            int i_mount = get_surface_layer(j, k);
 
             for ( int i = 0; i < im; i++ ){
                 if ( i < i_trop ){
@@ -1142,7 +1125,7 @@ void cAtmosphereModel::init_co2(){
     //use parabolic distribution from pole to pole to initialize co2  
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            int i_mount = get_mountain_top(j, k);
+            int i_mount = get_surface_layer(j, k);
 
             if ( is_water ( h, 0, j, k ) ){
                 co2.x[ 0 ][ j ][ k ] = parabola_interp(co2_equator, co2_pole, 2*j/(jm-1)) + co2_cretaceous + co2_ocean; 
@@ -1158,7 +1141,7 @@ void cAtmosphereModel::init_co2(){
     for ( int j = 0; j < jm; j++ ){
         int i_trop = get_tropopause_layer(j);
         for ( int k = 0; k < km; k++ ){
-            int i_mount = get_mountain_top(j, k);
+            int i_mount = get_surface_layer(j, k);
             
             for ( int i = 1; i < im; i++ ){
                 if ( i < i_trop ){
@@ -1450,7 +1433,7 @@ void  cAtmosphereModel::save_data(){
     ss << "_" << (int)(*get_current_time()) << "_" << iter_cnt_3d /*<< "_" << timestamp << ".bin"*/;
     std::string postfix_str = ss.str();
 
-    Array t_t(im, jm, km, 0),  v_t(im, jm, km, 0), w_t(im, jm, km, 0), m_t(im, jm, km, 0);
+    Array t_t(im, jm, km, 0),  v_t(im, jm, km, 0), w_t(im, jm, km, 0), m_t(im, jm, km, 0), u_t(im, jm, km, 0);
     for(int i=0; i<im; i++){
         for(int j=0; j<jm; j++){
             for(int k=0; k<km; k++){
@@ -1458,6 +1441,7 @@ void  cAtmosphereModel::save_data(){
                 t_t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k ] * t_0 - t_0;
                 v_t.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] * u_0;
                 w_t.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] * u_0;
+                u_t.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] * u_0;
             }
         }
     }
@@ -1465,6 +1449,7 @@ void  cAtmosphereModel::save_data(){
     save_array(path + string("t") + postfix_str, t_t);
     save_array(path + string("v") + postfix_str, v_t);
     save_array(path + string("w") + postfix_str, w_t);
+    save_array(path + string("u") + postfix_str, u_t);
     save_array(path + string("m") + postfix_str, m_t);
     save_array(path + string("h") + postfix_str, h);
     save_array(path + string("c") + postfix_str, c);

@@ -96,10 +96,9 @@ public:
     /*
      *
     */
-    int get_mountain_top(int j, int k){
+    int get_surface_layer(int j, int k){
         return i_topography[j][k];
     }
-
 
     float calculate_mean_temperature(const Array& t);
 
@@ -147,6 +146,7 @@ private:
                       Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL, 
                       BC_Thermo &circulation);
 
+    void run_MSL_data();
 public:
     void RK_RHS_2D_Atmosphere(int j, int k);
     void RK_RHS_3D_Atmosphere(int i, int j, int k);

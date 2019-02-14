@@ -115,3 +115,15 @@ AtomUtils::max_diff(int im, int jm, int km, const Array &a1, const Array &a2)
     }
     return ret;
 }
+
+
+double AtomUtils::C_Dalton ( double u_0, double v, double w )
+{
+    // variation of the heat transfer coefficient in Dalton's evaporation law, parabola
+    double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
+    // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
+    double v_max = 10.;  // Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
+    double vel_magnitude = sqrt ( v * v + w * w ) * u_0;
+    return sqrt ( C_max * C_max / v_max * vel_magnitude );  // result in mm/h
+}
+
