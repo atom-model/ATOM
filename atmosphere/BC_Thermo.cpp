@@ -1182,7 +1182,8 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 
 
-
+//Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water 
+//dependent on water vapour amount and temperature
 void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
 { 
     if(debug){
@@ -1191,20 +1192,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
         assert(!c.has_nan());
         assert(!t.has_nan());
     }
-    cout.precision ( 6 );
-// Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
-/*
-    logger() << std::endl << std::endl << "enter %%%%%%%%%%%% Ice_Water_Saturation_Adjustment: temperature max: "
-    << (t.max() - 1)*t_0 << std::endl << std::endl;
-
-    logger() << "enter Ice_Water_Saturation_Adjustment: water vapour max: "
-        << c.max() * 1000. << std::endl;
-    logger() << "enter Ice_Water_Saturation_Adjustment: cloud water max: "
-        << cloud.max() * 1000. << std::endl;
-    logger() << "enter Ice_Water_Saturation_Adjustment: cloud ice max: "
-        << ice.max() * 1000. << std::endl << std::endl;
-*/
-// constant coefficients for the adjustment of cloud water and cloud ice amount vice versa
+    // constant coefficients for the adjustment of cloud water and cloud ice amount vice versa
     float t_00 = 236.15;
     float t_Celsius_2 = t_00 - t_0; // in Kelvin = -37 °C
     float exp_pressure = g / ( 1.e-2 * gam * R_Air );
@@ -1215,63 +1203,42 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
-/** %%%%%%%%%%%%%%%%%%%%%%%%%%     saturation pressure     %%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
+                /** %%%%%%%%%%%%%%%%%%%%%%%%%%     saturation pressure     %%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
                 float t_u = t.x[ i ][ j ][ k ] * t_0; // in K
                 float t_Celsius = t_u - t_0; // in C
 
                 float p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
-                float hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+                float height = get_layer_height(i);
                 float p_h;
-                if ( i != 0 )           p_h = pow ( ( ( t.x[ i ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) /
-                                                      ( t.x[ i ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_SL;
-                else                     p_h = p_SL;
+                if ( i != 0 )
+                    p_h = pow( (t_u - gam * height * 1.e-2 ) / t_u , exp_pressure ) * p_SL;
+                else                     
+                    p_h = p_SL;
 
                 float E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                 float E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 ); // saturation water vapour pressure for the ice phase in hPa
                 float q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                 float q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
 
-/** %%%%%%%%%%%%%%%%%%%%%%%%%%%     warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
+                /** %%%%%%%%%%%%%%%%%%%%%%%%%%%     warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
 
-// warm cloud phase in case water vapour is over-saturated
-                if ( t_Celsius >= 0. ){
+                // warm cloud phase in case water vapour is over-saturated
+                if ( !(t_Celsius < 0.) ){ //temperature above 0 Celsius
                     q_T = c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ]; // total water content
-                    t_u = t.x[ i ][ j ][ k ] * t_0; // in K
-                    t_Celsius = t_u - t_0;
 
-                    p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
-                    hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
-                    if ( i != 0 )           p_h = pow ( ( ( t.x[ i ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) /
-                                                          ( t.x[ i ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_SL;
-                    else                    p_h = p_SL;
-
-                    E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                    q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                     float q_Rain_n = q_Rain;
                     float T_it;
-                    if ( q_T <= q_Rain ){ /**     subsaturated     **/
+                    if ( q_T <= q_Rain ) /**     subsaturated     **/
+                    {
                         c.x[ i ][ j ][ k ] = q_T; // total water amount as water vapour
                         cloud.x[ i ][ j ][ k ] = 0.; // no cloud water available
                         ice.x[ i ][ j ][ k ] = 0.; // no cloud ice available above 0 °C
                         T_it = t_u;
-/*
-if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
-    logger() << "no cloud               Ice_Water_Saturation_Adjustment: temperature max: " << (t.max() - 1)*t_0 <<"          iter_prec: " << iter_prec << std::endl;
-    logger() << "no cloud               Ice_Water_Saturation_Adjustment: water vapour max: " << c.max() * 1000. << std::endl;
-    logger() << "no cloud               Ice_Water_Saturation_Adjustment: cloud water max: " << cloud.max() * 1000. << std::endl;
-    logger() << "no cloud               Ice_Water_Saturation_Adjustment: cloud ice max: " << ice.max() * 1000. << std::endl << std::endl;
-}
-*/
-                    }else{ /**     oversaturated     **/
-                        for(int iter_prec = 1; iter_prec <= 20; iter_prec++ ){ // iter_prec may be varied
-/*
-if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
-    logger() << "warm cloud               Ice_Water_Saturation_Adjustment: temperature max: " << (t.max() - 1)*t_0 <<"          iter_prec: " << iter_prec << std::endl;
-    logger() << "warm cloud               Ice_Water_Saturation_Adjustment: water vapour max: " << c.max() * 1000. << std::endl;
-    logger() << "warm cloud               Ice_Water_Saturation_Adjustment: cloud water max: " << cloud.max() * 1000. << std::endl;
-    logger() << "warm cloud               Ice_Water_Saturation_Adjustment: cloud ice max: " << ice.max() * 1000. << std::endl << std::endl;
-}
-*/
+                    }
+                    else /**     oversaturated     **/
+                    {
+                        for(int iter_prec = 1; iter_prec <= 20; iter_prec++ )// iter_prec may be varied
+                        { 
                             T_it = ( t_u + lv / cp_l * c.x[ i ][ j ][ k ] - lv / cp_l * q_Rain );
                             E_Rain = hp * exp_func ( T_it, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                             q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
@@ -1285,40 +1252,29 @@ if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
                             if ( c.x[ i ][ j ][ k ] < 0. )  c.x[ i ][ j ][ k ] = 0.;
                             if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
 
-//                            if ( fabs ( q_Rain / q_Rain_n - 1. ) <= 1.e-5 )     break;
-
-                            if( ( q_Rain_n ) > std::numeric_limits<double>::epsilon() &&
-                                fabs ( q_Rain / q_Rain_n - 1. ) <= 1.e-5 )    break;  // make sure q_Rain_n is not 0 divisor
+                            if( fabs( q_Rain - q_Rain_n ) <= 1.e-5 * q_Rain_n ) //the difference between q_Rain and q_Rain_n small enough 
+                                break;  
 
                             q_Rain_n = q_Rain;
-                        }
+                        }//end of for 
                     }
                     cn.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k ];
                     cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ];
                     icen.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k ];
                     t.x[ i ][ j ][ k ] = T_it / t_0;
                 } // end ( t_Celsius > 0. )
-/** %%%%%%%%%%%%%%%%%%%%%%%%%%%     end          warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
+                /** %%%%%%%%%%%%%%%%%%%%%%%%%%%     end  warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
 
+                /** %%%%%%%%%%%%%%%%%%%%%%%%%%%     mixed cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
 
-/** %%%%%%%%%%%%%%%%%%%%%%%%%%%     mixed cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
-
-/** %%%%%%%%%%%%%%%%%%%%%%%%%%     saturation pressure     %%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
-// mixed cloud phase, if 0°C > t > -37°C
-                if ( t_Celsius < 0. ){
-                    if ( t_Celsius < t_Celsius_2 )  cloud.x[ i ][ j ][ k ] = 0.;
-                    if ( t_Celsius > 0. )  ice.x[ i ][ j ][ k ] = 0.;
+                /** %%%%%%%%%%%%%%%%%%%%%%%%%%     saturation pressure     %%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
+                // mixed cloud phase, if 0°C > t > -37°C
+                else{ //temperature below 0 Celsius
+                    if ( t_Celsius < t_Celsius_2 )  cloud.x[ i ][ j ][ k ] = 0.;//if below -37, no cloud
                     float q_v_b = c.x[ i ][ j ][ k ];
                     float q_c_b = cloud.x[ i ][ j ][ k ];
                     float q_i_b = ice.x[ i ][ j ][ k ];
                     q_T = q_v_b + q_c_b + q_i_b; // total water content
-/*
-if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
-    logger() << "   q_v_b = " << q_v_b * 1000. << "   q_c_b = " << q_c_b * 1000.
-        << "   q_i_b = " << q_i_b * 1000. << "   q_T = " << q_T * 1000. << endl << endl;
-}
-*/
-                    t_u = t.x[ i ][ j ][ k ] * t_0; // in K
                     float T = t_u; // in K
 
                     E_Rain = hp * exp_func ( T, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
@@ -1326,38 +1282,19 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
                     q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                     q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
 
-                    if ( ( q_c_b > 0. ) && ( q_i_b > 0. ) )
+                    if ( q_c_b > 0. && q_i_b > 0. )
                         q_v_hyp = ( q_c_b * q_Rain + q_i_b * q_Ice ) / ( q_c_b + q_i_b );
-                    if ( ( q_c_b >= 0. ) && ( q_i_b == 0. ) )  q_v_hyp = q_Rain;
-                    if ( ( q_c_b == 0. ) && ( q_i_b > 0. ) )  q_v_hyp = q_Ice;
+                    else if ( q_c_b > 0. && !(q_i_b > 0.) )  q_v_hyp = q_Rain;
+                    else if ( !(q_c_b > 0.) && q_i_b > 0. )  q_v_hyp = q_Ice;
+                    else q_v_hyp = 0;
 
-/** §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§ **/
+                    /** §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§ **/
 
                     for(int iter_prec = 1; iter_prec <= 20; iter_prec++ ){ // iter_prec may be varied
-
-/*
-if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
-    logger() << "mixed cloud               Ice_Water_Saturation_Adjustment: temperature max: "
-        << (t.max() - 1)*t_0 <<"          iter_prec: " << iter_prec << std::endl;
-    logger() << "mixed cloud               Ice_Water_Saturation_Adjustment: water vapour max: "
-        << c.max() * 1000. << std::endl;
-    logger() << "mixed cloud               Ice_Water_Saturation_Adjustment: cloud water max: "
-        << cloud.max() * 1000. << std::endl;
-    logger() << "mixed cloud               Ice_Water_Saturation_Adjustment: cloud ice max: "
-        << ice.max() * 1000. << std::endl << std::endl;
-}
-*/
-/** condensation == water vapor saturation for cloud water formation, deposition == ice crystal for cloud ice formation **/
-                        // t_0 = 273.15 K == 0 °C, t_00 = 236.15 K == -37 °C
-                        float CND = ( T - t_00 ) / ( t_0 - t_00 );
-                        if ( T < t_00 ) CND = 0.;
-                         // T = t_00 => CND = 0 ( no condensation == no cloud water ),
-                         // T = t_0 => CND = 1 ( max condensation == max cloud water )
-
-                        float DEP = ( t_0 - T ) / ( t_0 - t_00 );
-                        if ( T > t_0 ) DEP = 0.;
-                        // T = t_0 => DEP = 0 ( no deposition == no cloud ice ),
-                        // T = t_00 => DEP = 1 ( max deposition == max cloud ice )
+                    /** condensation == water vapor saturation for cloud water formation, deposition == ice crystal 
+                        for cloud ice formation **/
+                        float CND = T > t_00 ? ( T - t_00 ) / ( t_0 - t_00 ) : 0;
+                        float DEP = T < t_0 ? ( t_0 - T ) / ( t_0 - t_00 ) : 0;
 
                         float d_q_v = q_v_hyp - q_v_b;  // changes in water vapour causing cloud water and cloud ice
                         float d_q_c = - d_q_v * CND;
@@ -1374,65 +1311,44 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
                         if ( q_c_b < 0. )  q_c_b = 0.;
                         if ( q_i_b < 0. )  q_i_b = 0.;
 
-                        p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa, needed for saturation water vapour
-                        hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
-                        if ( i != 0 ){
-                            if( T > gam * hight * 1.e-2){
-                                p_h = pow ( ( ( T - gam * hight * 1.e-2 ) / ( T ) ), exp_pressure ) * p_SL; // given in hPa
-                            }else{
-                                logger()<<"WARNING: T is less than gam * hight * 1.e-2. "<< __LINE__<<" "
-                                    << __FILE__<<std::endl; 
-                                p_h = p_SL;
-                            }
-                        }
-                        else  p_h = p_SL;
+                        if ( i != 0 )
+                            p_h = pow ( ( ( T - gam * height * 1.e-2 ) / ( T ) ), exp_pressure ) * p_SL; // given in hPa
+                        else 
+                            p_h = p_SL;
 
                         E_Rain = hp * exp_func ( T, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                         E_Ice = hp * exp_func ( T, 21.8746, 7.66 ); // saturation water vapour pressure for the ice phase in hPa
                         q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                         q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
 
+                        q_v_hyp = 0;
                         if ( ( q_c_b > 0. ) && ( q_i_b > 0. ) )
                             q_v_hyp = ( q_c_b * q_Rain + q_i_b * q_Ice ) / ( q_c_b + q_i_b );
                         // average amount of ater vapour based on temperature changes
-                        if ( ( q_c_b >= 0. ) && ( q_i_b == 0. ) )  q_v_hyp = q_Rain;
-                        if ( ( q_c_b == 0. ) && ( q_i_b > 0. ) )  q_v_hyp = q_Ice;
+                        if ( q_c_b > 0.  && !( q_i_b > 0. ) )  q_v_hyp = q_Rain;
+                        if ( !( q_c_b > 0. ) &&  q_i_b > 0.  )  q_v_hyp = q_Ice;
 
                         // rate of condensating or evaporating water vapour to form cloud water, 0.5 given by COSMO
-//                        S_c_c.x[ i ][ j ][ k ] = .5 * d_q_c / dt_dim;
                         S_c_c.x[ i ][ j ][ k ] = .5 * ( cn.x[ i ][ j ][ k ] - c.x[ i ][ j ][ k ] ) / dt_dim;
                         if ( is_land ( h, i, j, k ) )  S_c_c.x[ i ][ j ][ k ] = 0.;
 
                         q_T = q_v_b + q_c_b + q_i_b; // total water content, not used except for print out for mass conservation test
-/*
-if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
-    logger() << "   iter_prec = " << iter_prec << endl;
-    logger() << "   CND = " << CND << "   DEP = " << DEP << "   d_t = " << d_t << endl;
-    logger() << "   d_q_v = " << d_q_v * 1000. << "   d_q_c = " << d_q_c * 1000.
-        << "   d_q_i = " << d_q_i * 1000. << "   q_v_hyp = " << q_v_hyp * 1000.
-        << "   T = " << T << endl << endl;
-    logger() << "   q_v_b = " << q_v_b * 1000. << "   q_c_b = " << q_c_b * 1000.
-        << "   q_i_b = " << q_i_b * 1000. << "   q_T = " << q_T * 1000. << endl
-        << "   ( d_q_v + d_q_c + d_q_i ) = " << ( d_q_v + d_q_c + d_q_i ) * 1000.
-        << endl << "   fabs ( q_v_b / q_v_hyp - 1. ) = " << fabs ( q_v_b / q_v_hyp - 1. )
-        << endl << endl;
-}
-*/
-                        if( iter_prec >= 3 && (q_v_hyp) > std::numeric_limits<double>::epsilon() &&
-                            fabs ( q_v_b / q_v_hyp - 1. ) <= 1.e-5 )    break;  // make sure q_v_hyp is not 0 divisor
+                        
+                        if( iter_prec >= 3 && fabs ( q_v_b - q_v_hyp ) < 1.e-5 * q_v_hyp)
+                            break;
 
                         q_v_b = .5 * ( q_v_hyp + q_v_b );  // has smoothing effect
                     } // iter_prec end
 
-/** §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     end          iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§ **/
+                    /** §§§§§§§§§§§§§   end iterations for mixed cloud phase     §§§§§§§**/
 
                     cn.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k ] = q_v_b;  // new values achieved after converged iterations
-                    cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = q_c_b;
                     icen.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k ] = q_i_b;
-
-                    if ( t_Celsius < t_Celsius_2 )     cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = 0.;
-                    if ( t_Celsius > 0. )                     icen.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k ] = 0.;
                     t.x[ i ][ j ][ k ] = T / t_0;
+                    if ( t_Celsius < t_Celsius_2 )     
+                        cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = 0.;
+                    else
+                        cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = q_c_b;
                 } // end ( ( t_Celsius < 0. ) && ( t_Celsius >= t_Celsius_2 ) )
             } // end i
         } // end j
@@ -1447,18 +1363,7 @@ if ( ( i == 13 ) && ( j == 90 ) && ( k == 180 ) ){
             }
         }
     }
-/*
-    logger() << "end Ice_Water_Saturation_Adjustment: water vapour max: "
-        << c.max() * 1000. << std::endl;
-    logger() << "end Ice_Water_Saturation_Adjustment: cloud water max: "
-        << cloud.max() * 1000. << std::endl;
-    logger() << "end Ice_Water_Saturation_Adjustment: cloud ice max: "
-        << ice.max() * 1000. << std::endl << std::endl;
-
-    logger() << "end %%%%%%%%%%%% Ice_Water_Saturation_Adjustment: temperature max: "
-    << (t.max() - 1)*t_0 << std::endl << std::endl << std::endl;
-*/
-    if(m_model->debug){
+    if(debug){
         assert(!cloud.has_nan());
         assert(!ice.has_nan());
         assert(!c.has_nan());
