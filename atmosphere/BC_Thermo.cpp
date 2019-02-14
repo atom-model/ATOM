@@ -1253,6 +1253,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
                         c.x[ i ][ j ][ k ] = q_T; // total water amount as water vapour
                         cloud.x[ i ][ j ][ k ] = 0.; // no cloud water available
                         ice.x[ i ][ j ][ k ] = 0.; // no cloud ice available above 0 °C
+                        T_it = t_u;
 /*
 if ( ( i == 5 ) && ( j == 90 ) && ( k == 180 ) ){
     logger() << "no cloud               Ice_Water_Saturation_Adjustment: temperature max: " << (t.max() - 1)*t_0 <<"          iter_prec: " << iter_prec << std::endl;
