@@ -878,13 +878,12 @@ void BC_Thermohalin::IC_u_WestEastCoast
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: east coast
-//    k_grad = 6;                                                                            // extension of velocity change
     k_grad = 10;                                                                            // extension of velocity change
     k_a = k_grad;                                                                        // left distance
     k_b = 0;                                                                                // right distance
 
     k_water = 0;                                                                        // on water closest to coast
-    k_sequel = 1;                                                                        // on solid ground
+    k_sequel = 1;                                                                        // on solid ground k_sequel = 0
 
     for ( int j = 0; j < 91; j++ ){                                                    // outer loop: latitude
         for ( int k = 0; k < km; k++ ){                                            // inner loop: longitude
@@ -943,7 +942,6 @@ void BC_Thermohalin::IC_u_WestEastCoast
 // transition between coast flows and open sea flows included
 
 // northern hemisphere: west coast
-//    k_grad = 6;                                                                            // extension of velocity change
     k_a = 0;                                                                                // left distance
     k_water = 0;                                                                        // somewhere on water
     flip = 0;                                                                                // somewhere on water
@@ -1040,8 +1038,8 @@ void BC_Thermohalin::Value_Limitation_Hyd ( Array &h, Array &u, Array &v,
                 if ( t.x[ i ][ j ][ k ] >= 1.147 )  t.x[ i ][ j ][ k ] = 1.147;      // 40.15 °C
                 if ( t.x[ i ][ j ][ k ] <= 0.9963 )  t.x[ i ][ j ][ k ] = 0.9963;    // -1.0 °C
 
-//                if ( c.x[ i ][ j ][ k ] >= 1.1272 )  c.x[ i ][ j ][ k ] = 1.1272;    // 39.0 psu
-//                if ( c.x[ i ][ j ][ k ] <= .95 )  c.x[ i ][ j ][ k ] = .95;           // 32.0 psu
+                if ( c.x[ i ][ j ][ k ] >= 1.156 )  c.x[ i ][ j ][ k ] = 1.156;    // 40.0 psu
+                if ( c.x[ i ][ j ][ k ] <= .95 )  c.x[ i ][ j ][ k ] = .95;           // 32.0 psu
             }
         }
     }

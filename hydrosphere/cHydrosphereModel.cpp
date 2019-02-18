@@ -283,9 +283,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
 //    double emin = epsres * 100.;
-
-
-
 //    goto Printout;
 
 
@@ -343,6 +340,11 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                 residuum_old = emin;
 
                 oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
+            // composition of results
+            calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 
+                    Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, 
+                    Salt_total, BottomWater );
+
 
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
@@ -429,10 +431,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             bathy.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );
 
             // surface pressure computed by surface temperature with gas equation
-//            oceanflow.BC_Pressure_Density ( rad, p_stat, r_water, r_salt_water, t, c, h );
+            oceanflow.BC_Pressure_Density ( rad, p_stat, r_water, r_salt_water, t, c, h );
 
             // limiting the increase of flow properties around geometrical peaks and corners
-//            oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
+            oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
@@ -611,7 +613,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
-    Printout:
+//    Printout:
 
     write_file(bathymetry_name, output_path, true);
 

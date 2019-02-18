@@ -207,7 +207,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                     r_dry = 100. * p_stat.x[ 0 ][ j ][ k ] / ( R_Air * t.x[ 0 ][ j ][ k ] * t_0 );
                     r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );
                     // density of humid air, COSMO version withot cloud and ice water, masses negligible
-                    e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep;  // water vapour pressure in Pa
+                    e = c.x[ 0 ][ j ][ k ] * p_stat.x[ 0 ][ j ][ k ] / ep;  // water vapour pressure in hPa
                     t_denom = t_Celsius + 234.175;
                     E = hp * exp ( 17.0809 * t_Celsius / t_denom );  // saturation vapour pressure in the water phase for t > 0°C in hPa
                     Delta = 4000. * E / ( t_denom * t_denom );  // gradient of the water vapour pressure curve in hPa/K, coef = 234.175 * 17.0809
@@ -697,10 +697,14 @@ void Results_MSL_Atm::CalculateNodeWeights(int jm, int km){
 
 double Results_MSL_Atm::C_Dalton ( double u_0, double v, double w ){
     // variation of the heat transfer coefficient in Dalton's evaporation law, parabola
+    // air velocity measured 2m above sea level
     double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
     // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
-    double v_max = 10.;  // Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
+    double v_max = 10.;
+    double fac = 4.4;  // factor to adjust the ratio of NASA precipitation 
+                       // to Dalton evaporation for the modern world, 
+                       // relative difference between global precipitation and evaporation is 10%
     double vel_magnitude = sqrt ( v * v + w * w ) * u_0;
-    return sqrt ( C_max * C_max / v_max * vel_magnitude );  // result in mm/h
+    return sqrt ( C_max * C_max / v_max * vel_magnitude ) / fac;  // result in mm/h
 }
 

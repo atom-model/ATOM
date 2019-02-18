@@ -120,7 +120,7 @@ private:
     std::set<float> m_time_list;
     std::set<float>::const_iterator m_current_time;
 
-    static const int im=41, jm=181, km=361, nm=200;
+    static const int im=41, jm=181, km=361, nm=500;
 
     int iter_cnt; // iteration count
 

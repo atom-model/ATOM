@@ -141,6 +141,93 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
         h_d_k = cc * ( 1. - h_0_k ); 
     }
 
+
+// preparations for salinity increase due to evaporation and 
+// buoyancy effects by salt water density changes
+    double salinity_evaporation = 0.;
+    double salinity_surface = 0.;
+    double drodc = .7;    // gradient given in kg/m³/m
+    double salt_water_ref = r_water.x[ i ][ j ][ k ] + drodc * c.x[ i ][ j ][ k ] * c_0;
+                          // common linear approach for salt water based on fresh water
+    double coeff_buoy = L_hyd / ( u_0 * u_0 );
+                          // coefficient for the buoyancy term == 16.0
+    double coeff_salinity = 1.1574 * L_hyd / u_0;
+                          // 1.1574 is the conversion from (Evap-Prec) in mm/d to m/s
+
+
+// surface salinity increase due to evaporation, 
+// procedure given in Rui Xin Huang, Ocean Circulation, p. 165
+    if ( i == im - 2 ){
+/*
+    // this formula contains a 2. order accurate gradient of 1. order, needs 3 points, not always available along coasts
+    // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
+        salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 2 ][ j ][ k ] +
+                           4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) *
+                           ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * 
+                           ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );
+*/
+    // this formula contains a 1. order accurate gradient of 1. order, needs 2 points, in general available along coasts
+    // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
+    salinity_surface = - salt_water_ref * ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr *
+                       ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * 
+                       ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );
+
+    salinity_evaporation = coeff_salinity * salinity_surface;
+
+    if ( is_land( h, i, j, k) )    salinity_evaporation = 0.;
+    }
+    else  salinity_evaporation = 0.;
+
+    salinity_evaporation = 0.;    // test case
+
+//    c.x[ i+1 ][ j ][ k ] = c.x[ i+1 ][ j ][ k ] + salinity_evaporation / c_0;
+
+    if ( c.x[ im-1 ][ j ][ k ] >= 1.156 )  c.x[ im-1 ][ j ][ k ] = 1.156;  // 40.0 psu
+    if ( c.x[ im-1 ][ j ][ k ] <= .95 )  c.x[ im-1 ][ j ][ k ] = .95;        // 32.0 psu
+
+
+/*
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation << "   salt_water_ref = " << salt_water_ref << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   drodc = " << drodc << "   r_water = " << r_water.x[ i ][ j ][ k ] << "   c = " << c.x[ i ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ i ][ j ][ k ] * c_0 << "   c40 * c_0 = " << c.x[ i+1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] ) << "   c_grad_1 = " << ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ im - 2 ][ j ][ k ] + 4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) << endl;
+*/
+
+
+
+// Boussineq-approximation for the buoyancy force caused by salinity, higher salinity causes negative buoyancy
+    double RS_buoyancy_Momentum = Buoyancy * coeff_buoy * g * ( r_salt_water.x[ i ][ j ][ k ] - salt_water_ref )
+                                  / salt_water_ref;  // buoyancy based on water density, salt water is heavier than fresh water 
+//    double RS_buoyancy_Momentum = 0.;  // test case
+
+    BuoyancyForce_3D.x[ i ][ j ][ k ] = RS_buoyancy_Momentum / coeff_buoy;
+                                        // dimension as pressure in kN/m2
+    Salt_Balance.x[ i ][ j ][ k ] = salt_water_ref - r_salt_water.x[ i ][ j ][ k ];
+                                        // difference of salinity compared to average
+
+    if ( Salt_Balance.x[ i ][ j ][ k ] < 0. ){
+        Salt_Diffusion.x[ i ][ j ][ k ] = Salt_Balance.x[ i ][ j ][ k ];
+                                        // for negativ salinity balance, higher than reference
+        Salt_Finger.x[ i ][ j ][ k ] = 0.;  
+    }else{
+        Salt_Finger.x[ i ][ j ][ k ] = Salt_Balance.x[ i ][ j ][ k ];
+                                        // for positiv salinity balance, lower than reference
+        Salt_Diffusion.x[ i ][ j ][ k ] = 0.;
+    }
+
+//    BuoyancyForce_3D.x[ i ][ j ][ k ] = 0.;    // test case
+//    BuoyancyForce_3D.x[ im-1 ][ j ][ k ] = 0.;    // test case
+
+/*
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation << "   salt_water_ref = " << salt_water_ref << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   drodc = " << drodc << "   r_water = " << r_water.x[ i ][ j ][ k ] << "   c = " << c.x[ i ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ i ][ j ][ k ] * c_0 << "   c40 * c_0 = " << c.x[ i+1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] ) << "   RS_buoyancy_Momentum = " << RS_buoyancy_Momentum << "   coeff_buoy = " << coeff_buoy << "   BuoyancyForce_3D = " << BuoyancyForce_3D.x[ i ][ j ][ k ] << endl;
+*/
+
+    if ( is_land( h, i, j, k) ){
+        Salt_Balance.x[ i ][ j ][ k ] = 0.;
+        Salt_Finger.x[ i ][ j ][ k ] = 0.;
+        Salt_Diffusion.x[ i ][ j ][ k ] = 0.;
+        BuoyancyForce_3D.x[ i ][ j ][ k ] = 0.;
+        r_water.x[ i ][ j ][ k ] = 1007.;
+        r_salt_water.x[ i ][ j ][ k ] = 1032.;
+    }
+
 // 2. order derivative for temperature, pressure, salt concentrations and velocity components
 
 // computation of initial and boundary conditions for the v and w velocity component
@@ -339,66 +426,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     }
 
 
-    double salinity_evaporation = 0.;
-    double salinity_surface = 0.;
-    double drodc = .7;                                                // gradient given in kg/m³
-    double salt_water_ref = r_water.x[ i ][ j ][ k ] + drodc * c.x[ i ][ j ][ k ] * c_0;
-                                                // common linear approach for salt water based on fresh water
-    double coeff_buoy = r_0_water * u_0 * u_0 / L_hyd;
-                                                // coefficient for the buoyancy term == .0625
-    double coeff_salinity = 1.1574e-5 * L_hyd / u_0;
-                                                // 1.1574e-5 == mm/d to mm/s, == .0463
-
-    if ( i == im - 2 ){
-        salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 1 ][ j ][ k ] +
-                                    4. * c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * dr ) *
-                                    ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] -
-                                    Precipitation.y[ j ][ k ] );
-//           salinity_surface = salt_water_ref * ( c.x[ im - 1 ][ j ][ k ] - c.x[ im - 2 ][ j ][ k ] ) / dr *
-//                                      ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] ) * ( Evaporation_Dalton.y[ j ][ k ] -
-//                                      Precipitation.y[ j ][ k ] );
-
-        salinity_evaporation = + coeff_salinity * salinity_surface;        // (-) originally, (+) for RHS
-
-        if ( is_land( h, i, j, k) )    salinity_evaporation = 0.;
-
-//        if ( salinity_evaporation >= 20. )    salinity_evaporation = 20.;
-                        // salinity gradient causes values too high at shelf corners
-//        if ( salinity_evaporation <= - 20. )    salinity_evaporation = - 20.;
-                        // salinity gradient causes values too high at shelf corners
-    }
-    else  salinity_evaporation = 0.;
-
-//    salinity_evaporation = 0.;    // test case
-
-    double RS_buoyancy_Momentum = Buoyancy * g * ( r_salt_water.x[ i ][ j ][ k ] - salt_water_ref )
-                                                            / salt_water_ref;       // buoyancy based on water density 
-
-    BuoyancyForce_3D.x[ i ][ j ][ k ] = RS_buoyancy_Momentum * coeff_buoy * 1000.;
-                                                        // dimension as pressure in kN/m2
-
-    Salt_Balance.x[ i ][ j ][ k ] = salt_water_ref - r_salt_water.x[ i ][ j ][ k ];
-                                                        // difference of salinity compared to average
-
-    if ( Salt_Balance.x[ i ][ j ][ k ] < 0. ){
-        Salt_Diffusion.x[ i ][ j ][ k ] = Salt_Balance.x[ i ][ j ][ k ];
-                                                        // for negativ salinity balance, higher than reference
-        Salt_Finger.x[ i ][ j ][ k ] = 0.;  
-    }else{
-        Salt_Finger.x[ i ][ j ][ k ] = Salt_Balance.x[ i ][ j ][ k ];
-                                                        // for positiv salinity balance, lower than reference
-        Salt_Diffusion.x[ i ][ j ][ k ] = 0.;
-    }
-
-    if ( is_land( h, i, j, k) ){
-        Salt_Balance.x[ i ][ j ][ k ] = 0.;
-        Salt_Finger.x[ i ][ j ][ k ] = 0.;
-        Salt_Diffusion.x[ i ][ j ][ k ] = 0.;
-        BuoyancyForce_3D.x[ i ][ j ][ k ] = 0.;
-        r_water.x[ i ][ j ][ k ] = 1007.;
-        r_salt_water.x[ i ][ j ][ k ] = 1032.;
-    }
-
 // Right Hand Side of the time derivative ot temperature, pressure, salt concentration and velocity components
 //  3D volume iterations
     rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm 
@@ -408,7 +435,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
     rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm 
             + w.x[ i ][ j ][ k ] * dudphi / rmsinthe ) 
-//            + h_d_i * dpdr / salt_water_ref + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 
             + dpdr / salt_water_ref + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2 
             + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re 
             + RS_buoyancy_Momentum 
@@ -416,7 +442,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
     rhs_v.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dvdr + v.x[ i ][ j ][ k ] * dvdthe / rm 
             + w.x[ i ][ j ][ k ] * dvdphi / rmsinthe ) 
-//            - h_d_j * dpdthe / rm / salt_water_ref + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe 
             - dpdthe / rm / salt_water_ref + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe 
             - ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[ i ][ j ][ k ] + d2vdphi2 / rm2sinthe2 
             + 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re 
@@ -424,7 +449,6 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
     rhs_w.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dwdr + v.x[ i ][ j ][ k ] * dwdthe / rm 
             + w.x[ i ][ j ][ k ] * dwdphi / rmsinthe ) 
-//            - h_d_k * dpdphi / rmsinthe / salt_water_ref + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 
             - dpdphi / rmsinthe / salt_water_ref + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 
             + dwdthe / rm2sinthe  * costhe - ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[ i ][ j ][ k ] 
             + d2wdphi2 / rm2sinthe2 + 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re 
@@ -432,8 +456,7 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
 
     rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm 
             + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe ) + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 
-            + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc * re ) 
-            + salinity_evaporation;
+            + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc * re ); 
 //            - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
 
 

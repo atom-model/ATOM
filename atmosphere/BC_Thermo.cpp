@@ -651,10 +651,8 @@ void BC_Thermo::BC_WaterVapour ( Array_1D &rad, Array &h, Array &p_stat, Array &
                 sat_difference = ( E - e );  // saturation difference in hPa/K
                 Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) *
                     sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
-                // Evaporation_Dalton given in mm/d,  recalculation in kg/kg water vapour/ dry air by
-                // c_ev = 8.46e-4 * Dalton_Evaporation * dt_dim / ( r_humid * dr_dim ) [ mm/d * m³ * s / ( kg * m ) * ( kg/kg_air ) ] == [ kg/kg_air ]
-                // [ mm/s ] == [ kg / ( m² * s ) ]
-
+//                Dalton_Evaporation = C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) *
+//                    sat_difference * 24.;  // mm/h in mm/d
                 c.x[ i_mount ][ j ][ k ] = Dalton_Evaporation + c.x[ i_mount ][ j ][ k ]; // kg/kg_air
             }
             if ( is_land ( h, 0, j, k ) ){
@@ -664,6 +662,8 @@ void BC_Thermo::BC_WaterVapour ( Array_1D &rad, Array &h, Array &p_stat, Array &
                 // relativ water vapour contents on land reduced by factor
 //                Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount + 1 ][ j ][ k ], w.x[ i_mount + 1 ][ j ][ k ] ) *
 //                    sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
+//                Dalton_Evaporation = C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) *
+//                    sat_difference * 24.;  // mm/h in mm/d
                 c.x[ i_mount ][ j ][ k ] = Dalton_Evaporation + c.x[ i_mount ][ j ][ k ]; // kg/kg_air
             }
         }
@@ -3323,9 +3323,13 @@ double BC_Thermo::GetPoleTemperature(int Ma, const std::map<int, double> &pole_t
 
 double BC_Thermo::C_Dalton ( double u_0, double v, double w ){
     // variation of the heat transfer coefficient in Dalton's evaporation law, parabola
+    // air velocity measured 2m above sea level
     double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
     // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
-    double v_max = 10.;  // Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
+    double v_max = 10.;
+    double fac = 4.4;  // factor to adjust the ratio of NASA precipitation 
+                       // to Dalton evaporation for the modern world, 
+                       // relative difference between global precipitation and evaporation is 10%
     double vel_magnitude = sqrt ( v * v + w * w ) * u_0;
-    return sqrt ( C_max * C_max / v_max * vel_magnitude );  // result in mm/h
+    return sqrt ( C_max * C_max / v_max * vel_magnitude ) / fac;  // result in mm/h
 }

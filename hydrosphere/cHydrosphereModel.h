@@ -30,7 +30,7 @@ private:
     void reset_arrays();
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
 
-    const int im = 41, jm = 181, km = 361, nm = 200;
+    const int im = 41, jm = 181, km = 361, nm = 500;
 
     int iter_cnt;
 

@@ -276,6 +276,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         circulation.IC_Temperature_WestEastCoast ( h, t );
     }
 */
+
     //  class element for the surface pressure computed by surface temperature with gas equation
     circulation.BC_Pressure ( L_atm, rad, p_stat, p_dyn, t, h );
 

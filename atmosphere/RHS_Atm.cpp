@@ -444,25 +444,28 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     double r_dry = 100. * p_h / ( R_Air * t_u );
 
     // collection of coefficients
-    double coeff_energy = L_atm / ( cp_l * t_0 * u_0 );  // coefficient for the source terms = .00729
-    double coeff_buoy = r_air * u_0 * u_0 / L_atm; // coefficient for bouancy term = 0.00482
+    double coeff_energy = L_atm / ( cp_l * t_0 * u_0 ); // coefficient for the source terms = .00729
+    double coeff_buoy =  L_atm / ( u_0 * u_0 ); // coefficient for bouancy term = 208.333
     double coeff_trans = L_atm / u_0;   // coefficient for the concentration terms = 2000.
     double vapour_evaporation = 0.;
     double vapour_surface = 0.;
     double evap_precip = 0.;
-    double coeff_vapour = 1.1574e-5 * L_atm / u_0;// 1.1574e-3 == mm/d to m/s, == .01234
-
-    // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
+    double coeff_vapour = 1.1574 * L_atm / u_0;
+                          // 1.1574 is the conversion from (Evap-Prec) in mm/d to m/s
+// Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
     double r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
 
-    double RS_buoyancy_Momentum = Buoyancy * ( r_humid - r_dry ) / r_dry * g; // any humid air is less dense than dry air
+    double RS_buoyancy_Momentum = coeff_buoy * Buoyancy * ( r_humid - r_dry ) / r_dry * g; // any humid air is less dense than dry air
+//    double RS_buoyancy_Momentum = 0.;  // test case
 
-    BuoyancyForce.x[ i ][ j ][ k ] = - RS_buoyancy_Momentum * coeff_buoy * 1000.;// dimension as pressure in kN/m2
+    BuoyancyForce.x[ i ][ j ][ k ] = - RS_buoyancy_Momentum / coeff_buoy;// dimension as pressure in kN/m2
 
     if ( is_land ( h, i, j, k ) ){
         BuoyancyForce.x[ i ][ j ][ k ] = 0.;
     }
 
+
+// additional water vapour as a source term due to evaporation at ocean surface ( i = 0 )
     if ( i == 1 ){
         evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
         if ( evap_precip >= 6. ){
@@ -471,8 +474,10 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
         if ( evap_precip <= - 6. ){
             evap_precip = - 6.;         // vapour gradient causes values too high at shelf corners
         }
-        vapour_surface = r_humid * ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 3 ][ j ][ k ] ) / 
+    // this formula contains a 2. order accurate gradient of 1. order, needs 3 points
+        vapour_surface = r_humid * ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / 
                          ( 2. * dr ) * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;     // 2. ord.
+    // this formula contains a 1. order accurate gradient of 1. order, needs 2 points
 //      vapour_surface = r_humid * ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;
 
         vapour_evaporation = + coeff_vapour * vapour_surface;
@@ -482,6 +487,11 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     }else{
         vapour_evaporation = 0.;
     }
+
+        vapour_evaporation = 0.; //  test case
+
+//    c.x[ 0 ][ j ][ k ] = c.x[ 0 ][ j ][ k ] + vapour_evaporation;
+
 
     // Right Hand Side of the time derivative ot temperature, pressure, water vapour concentration and velocity components
     rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm
@@ -493,7 +503,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
     rhs_u.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dudr + v.x[ i ][ j ][ k ] * dudthe / rm 
             + w.x[ i ][ j ][ k ] * dudphi / rmsinthe )
-//            - h_d_i * dpdr / r_air + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2
             - dpdr / r_air + ( d2udr2 + h_d_i * 2. * u.x[ i ][ j ][ k ] / rm2 + d2udthe2 / rm2
             + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re
             - RS_buoyancy_Momentum
@@ -501,7 +510,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
     rhs_v.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dvdr + v.x[ i ][ j ][ k ] * dvdthe / rm
             + w.x[ i ][ j ][ k ] * dvdphi / rmsinthe ) +
-//            - h_d_j * dpdthe / rm / r_air + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
             - dpdthe / rm / r_air + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
             - ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_j * v.x[ i ][ j ][ k ] + d2vdphi2 / rm2sinthe2
             + 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re
@@ -509,7 +517,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
     rhs_w.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dwdr + v.x[ i ][ j ][ k ] * dwdthe / rm
             + w.x[ i ][ j ][ k ] * dwdphi / rmsinthe ) +
-//            - h_d_k * dpdphi / rmsinthe / r_air + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2
             - dpdphi / rmsinthe / r_air + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2
             + dwdthe / rm2sinthe  * costhe - ( 1. + costhe * costhe / ( rm * sinthe2 ) ) * h_d_k * w.x[ i ][ j ][ k ]
             + d2wdphi2 / rm2sinthe2 + 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re
@@ -518,8 +525,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm
             + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe ) + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2
             + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-            + S_v.x[ i ][ j ][ k ] * coeff_trans
-            + vapour_evaporation;
+            + S_v.x[ i ][ j ][ k ] * coeff_trans;
+//            + vapour_evaporation;
 //            - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_cloud.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dclouddr + v.x[ i ][ j ][ k ] * dclouddthe / rm
