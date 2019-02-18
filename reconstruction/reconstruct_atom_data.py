@@ -16,7 +16,7 @@ from sphere_tools import sampleOnSphere
 ROTATION_DIR = os.path.dirname(os.path.realpath(__file__)) + '/data'
 BUFFER_DEGREES = 15.
 DATA_DIR = './output'
-BATHYMETRY_SUFFIX = 'Ma_Golonka.xyz'
+BATHYMETRY_SUFFIX = 'Ma_smooth.xyz'
 
 def reconstruct_grid(
         time_of_existing_grid, 
@@ -151,6 +151,7 @@ def reconstruct_grid(
     input_data = np.genfromtxt(ascii_grid_file)
     input_min = np.nanmin(input_data[:,2])
     input_max = min(np.nanmax(input_data[:,2]), 40.0)
+    #print input_min, input_max
 
     for line in new_data:
         if line[2] > input_max:
@@ -233,7 +234,7 @@ def main():
         else:
             reconstruct_salinity(time_0, time_1, BATHYMETRY_SUFFIX)
     except:
-        print("Usage: python reconstruct_atom_data.py 0 10 ./output Ma_Golonka.xyz atm/hyd") 
+        print("Usage: python reconstruct_atom_data.py 0 10 ./output Ma_smooth.xyz atm/hyd") 
         import traceback
         traceback.print_exc()
 

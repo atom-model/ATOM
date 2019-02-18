@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
-from draw_vectors import draw_velocity
+from draw_atm_velocities  import draw_velocity
 from draw_topo import draw_topography
 
 map_cfg = {
@@ -15,7 +15,7 @@ map_cfg = {
     'v_velocity': (3, -1, 1, 'v_velocity (m/s)'),
     'w_velocity': (4, -1, 2, 'w_velocity (m/s)'),
     'water_vapour': (7, 0, 20, 'Water Vapour (g/kg)'),
-    'precipitation': (8, 0, 1500, 'Precipitation (mm/yr)'),
+    'precipitation': (8, 0, 5000, 'Precipitation (mm/yr)'),
     'precipitable_water': (9, 0, 30, 'Precipitable Water (mm)'),
 }
 
@@ -26,7 +26,7 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
             continue
 
         if 'velocity' == directory:
-            draw_velocity(time, output_dir + "/velocity/", data_dir, topo_suffix)
+            draw_velocity(time, output_dir + "/velocity/", data_dir)
             continue
 
         if directory not in map_cfg:

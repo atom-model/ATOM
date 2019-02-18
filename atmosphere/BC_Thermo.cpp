@@ -1181,7 +1181,9 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi, Array
 
 
 
-
+//Tao, W.-K., Simpson, J., and McCumber, M.: 
+//An Ice-Water Saturation Adjustment, American Meteorological Society, Notes and 
+//Correspon-dence, Volume 1, 321–235, 1988, 1988.
 //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water 
 //dependent on water vapour amount and temperature
 void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
@@ -1228,7 +1230,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
 
                     float q_Rain_n = q_Rain;
                     float T_it;
-                    if ( q_T <= q_Rain ) /**     subsaturated     **/
+                    if ( !(q_T > q_Rain) ) /**     subsaturated     **/
                     {
                         c.x[ i ][ j ][ k ] = q_T; // total water amount as water vapour
                         cloud.x[ i ][ j ][ k ] = 0.; // no cloud water available
@@ -1239,7 +1241,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
                     {
                         for(int iter_prec = 1; iter_prec <= 20; iter_prec++ )// iter_prec may be varied
                         { 
-                            T_it = ( t_u + lv / cp_l * c.x[ i ][ j ][ k ] - lv / cp_l * q_Rain );
+                            T_it = ( t_u + lv / cp_l * (c.x[ i ][ j ][ k ] -  q_Rain) );
                             E_Rain = hp * exp_func ( T_it, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                             q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                             q_Rain = .5 * ( q_Rain_n + q_Rain );  // smoothing the iteration process
@@ -1252,7 +1254,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
                             if ( c.x[ i ][ j ][ k ] < 0. )  c.x[ i ][ j ][ k ] = 0.;
                             if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
 
-                            if( fabs( q_Rain - q_Rain_n ) <= 1.e-5 * q_Rain_n ) //the difference between q_Rain and q_Rain_n small enough 
+                            if( fabs( q_Rain - q_Rain_n ) < 1.e-5 * q_Rain_n ) //the difference between q_Rain and q_Rain_n small enough 
                                 break;  
 
                             q_Rain_n = q_Rain;

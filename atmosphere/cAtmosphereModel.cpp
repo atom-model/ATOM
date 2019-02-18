@@ -255,8 +255,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class BC_Thermo for the initial and boundary conditions of the flow properties
     BC_Thermo  circulation (this, im, jm, km, h ); 
 
-//    t.printArray ( im, jm, km );
-
     //  class element calls for the preparation of initial conditions for the flow properties
 
     //  class element for the tropopause location as a parabolic distribution from pole to pole 
@@ -275,12 +273,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
     init_temperature();
-
-    //  class element for the correction of the temperature initial distribution around coasts
-    if ( ( NASATemperature == 1 ) && ( Ma > 0 ) && !use_earthbyte_reconstruction) 
-    {
-        circulation.IC_Temperature_WestEastCoast ( h, t );
-    }
 
     //  class element for the surface pressure computed by surface temperature with gas equation
     circulation.BC_Pressure ( p_stat, p_dyn, t, h );
@@ -744,7 +736,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
     int Ma = int(round(*get_current_time()));
 
     move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
-
+    save_data();
     /** ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   :::::::::::::::: **/
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
@@ -957,6 +949,13 @@ void cAtmosphereModel::calculate_node_weights()
 *
 */
 void cAtmosphereModel::restrain_temperature(){
+    for(int j=0;j<jm;j++){
+        for(int k=0; k<km; k++){
+            if(t.x[0][j][k] - 1 > 0){
+                t.x[0][j][k] -= exp((t.x[0][j][k] - 1) * t_0 / 4) / exp(10) * 5 / t_0;
+            }
+        }
+    }
     double tmp_1 = get_mean_temperature_from_curve(*get_current_time());
     double tmp_2 = calculate_mean_temperature();
     double diff = tmp_2 - tmp_1;
@@ -1430,7 +1429,10 @@ void  cAtmosphereModel::save_data(){
         mkdir(path.c_str(), 0777);
     }
     std::ostringstream ss;
-    ss << "_" << (int)(*get_current_time()) << "_" << iter_cnt_3d /*<< "_" << timestamp << ".bin"*/;
+    if(iter_cnt_3d == pressure_iter_max * velocity_iter_max + 1)
+        ss << "_" << (int)(*get_current_time()) << "_n";
+    else
+        ss << "_" << (int)(*get_current_time()) << "_" << iter_cnt_3d;
     std::string postfix_str = ss.str();
 
     Array t_t(im, jm, km, 0),  v_t(im, jm, km, 0), w_t(im, jm, km, 0), m_t(im, jm, km, 0), u_t(im, jm, km, 0);
