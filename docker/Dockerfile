@@ -64,9 +64,6 @@ RUN cp -av /build/ATOM/benchmark/create_maps.ipynb /build/ATOM/workspace/
 RUN cp -av /build/ATOM/benchmark/config_atm.xml /build/ATOM/workspace/config_atm.xml
 RUN cp -av /build/ATOM/benchmark/config_hyd.xml /build/ATOM/workspace/config_hyd.xml
 
-ADD topo_grids /build/ATOM/data/topo_grids
-
-
 RUN apt-get update; apt-get install -y curl \
     && curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/Paleotopography_Grids/topo_grids.tar.gz \
     | tar -xvC /build/ATOM/data 
