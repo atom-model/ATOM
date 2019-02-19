@@ -142,55 +142,13 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     }
 
 
-// preparations for salinity increase due to evaporation and 
 // buoyancy effects by salt water density changes
-    double salinity_evaporation = 0.;
-    double salinity_surface = 0.;
     double drodc = .7;    // gradient given in kg/m³/m
     double salt_water_ref = r_water.x[ i ][ j ][ k ] + drodc * c.x[ i ][ j ][ k ] * c_0;
                           // common linear approach for salt water based on fresh water
+
     double coeff_buoy = L_hyd / ( u_0 * u_0 );
                           // coefficient for the buoyancy term == 16.0
-    double coeff_salinity = 1.1574 * L_hyd / u_0;
-                          // 1.1574 is the conversion from (Evap-Prec) in mm/d to m/s
-
-
-// surface salinity increase due to evaporation, 
-// procedure given in Rui Xin Huang, Ocean Circulation, p. 165
-    if ( i == im - 2 ){
-/*
-    // this formula contains a 2. order accurate gradient of 1. order, needs 3 points, not always available along coasts
-    // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
-        salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 2 ][ j ][ k ] +
-                           4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) *
-                           ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * 
-                           ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );
-*/
-    // this formula contains a 1. order accurate gradient of 1. order, needs 2 points, in general available along coasts
-    // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
-    salinity_surface = - salt_water_ref * ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr *
-                       ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * 
-                       ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );
-
-    salinity_evaporation = coeff_salinity * salinity_surface;
-
-    if ( is_land( h, i, j, k) )    salinity_evaporation = 0.;
-    }
-    else  salinity_evaporation = 0.;
-
-    salinity_evaporation = 0.;    // test case
-
-//    c.x[ i+1 ][ j ][ k ] = c.x[ i+1 ][ j ][ k ] + salinity_evaporation / c_0;
-
-    if ( c.x[ im-1 ][ j ][ k ] >= 1.156 )  c.x[ im-1 ][ j ][ k ] = 1.156;  // 40.0 psu
-    if ( c.x[ im-1 ][ j ][ k ] <= .95 )  c.x[ im-1 ][ j ][ k ] = .95;        // 32.0 psu
-
-
-/*
-    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation << "   salt_water_ref = " << salt_water_ref << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   drodc = " << drodc << "   r_water = " << r_water.x[ i ][ j ][ k ] << "   c = " << c.x[ i ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ i ][ j ][ k ] * c_0 << "   c40 * c_0 = " << c.x[ i+1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] ) << "   c_grad_1 = " << ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ im - 2 ][ j ][ k ] + 4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) << endl;
-*/
-
-
 
 // Boussineq-approximation for the buoyancy force caused by salinity, higher salinity causes negative buoyancy
     double RS_buoyancy_Momentum = Buoyancy * coeff_buoy * g * ( r_salt_water.x[ i ][ j ][ k ] - salt_water_ref )

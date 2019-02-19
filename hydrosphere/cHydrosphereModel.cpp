@@ -223,7 +223,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     PostProcess_Hydrosphere     read_Transfer ( im, jm, km, output_path );
     read_Transfer.Atmosphere_TransferFile_read ( bathymetry_name, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
 
-
     cout << "***** time slice for the Oceanic Global Circulation Modell ( OGCM ) is:    Ma = " << Ma << " million years" 
         << endl << endl;
     cout << "***** bathymetry/topography given y the x-y-z data set:    " << bathymetry_name.c_str() << endl << endl;
@@ -432,6 +431,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
             // surface pressure computed by surface temperature with gas equation
             oceanflow.BC_Pressure_Density ( rad, p_stat, r_water, r_salt_water, t, c, h );
+
+            // preparations for salinity increase due to evaporation and precipitation differences
+            oceanflow.BC_Evaporation ( Evaporation_Dalton, Precipitation, h, c, r_water );
 
             // limiting the increase of flow properties around geometrical peaks and corners
             oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );

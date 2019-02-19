@@ -20,8 +20,7 @@
 using namespace std;
 using namespace AtomUtils;
 
-PostProcess_Atmosphere::PostProcess_Atmosphere( int im, int jm, int km, string &output_path )
-{
+PostProcess_Atmosphere::PostProcess_Atmosphere( int im, int jm, int km, string &output_path ){
     this->im = im;
     this->jm = jm;
     this->km = km;
@@ -30,13 +29,13 @@ PostProcess_Atmosphere::PostProcess_Atmosphere( int im, int jm, int km, string &
 
 PostProcess_Atmosphere::~PostProcess_Atmosphere(){}
 
-void PostProcess_Atmosphere::dump_array( const string &name, Array &a, double multiplier, ofstream &f )
-{
+void PostProcess_Atmosphere::dump_array( const string &name, Array &a, 
+                 double multiplier, ofstream &f ){
     f <<  "    <DataArray type=\"Float32\" Name=\"" << name << "\" format=\"ascii\">\n";
 
-    for (int k = 0; k < km; k++) {
-        for (int j = 0; j < jm; j++) {
-            for (int i = 0; i < im; i++) {
+    for (int k = 0; k < km; k++){
+        for (int j = 0; j < jm; j++){
+            for (int i = 0; i < im; i++){
                 f << (a.x[i][j][k] * multiplier) << endl;
             }
             f << "\n";
@@ -47,88 +46,91 @@ void PostProcess_Atmosphere::dump_array( const string &name, Array &a, double mu
     f << "    </DataArray>\n";
 }
 
-void PostProcess_Atmosphere::dump_radial( const string &desc, Array &a, double multiplier, int i, ofstream &f )
-{
+void PostProcess_Atmosphere::dump_radial( const string &desc, Array &a, 
+                 double multiplier, int i, ofstream &f ){
     f << "SCALARS " << desc << " float " << 1 << endl;
     f << "LOOKUP_TABLE default" << endl;
 
-    for (int j = 0; j < jm; j++) {
-        for (int k = 0; k < km; k++) {
+    for (int j = 0; j < jm; j++){
+        for (int k = 0; k < km; k++){
             f << (a.x[i][j][k] * multiplier) << endl;
         }
     }
 }
 
-void PostProcess_Atmosphere::dump_radial_2d( const string &desc, Array_2D &a, double multiplier, ofstream &f )
-{
+void PostProcess_Atmosphere::dump_radial_2d( const string &desc, Array_2D &a, 
+                 double multiplier, ofstream &f ){
     f << "SCALARS " << desc << " float " << 1 << endl;
     f << "LOOKUP_TABLE default" << endl;
 
-    for (int j = 0; j < jm; j++) {
-        for (int k = 0; k < km; k++) {
+    for (int j = 0; j < jm; j++){
+        for (int k = 0; k < km; k++){
             f << (a.y[j][k] * multiplier) << endl;
         }
     }
 }
 
-void PostProcess_Atmosphere::dump_zonal( const string &desc, Array &a, double multiplier, int k, ofstream &f )
-{
+void PostProcess_Atmosphere::dump_zonal( const string &desc, Array &a, 
+                 double multiplier, int k, ofstream &f ){
     f <<  "SCALARS " << desc << " float " << 1 << endl;
     f <<  "LOOKUP_TABLE default" << endl;
 
-    for ( int i = 0; i < im; i++ ) {
-        for ( int j = 0; j < jm; j++ ) {
+    for ( int i = 0; i < im; i++ ){
+        for ( int j = 0; j < jm; j++ ){
             f << (a.x[ i ][ j ][ k ] * multiplier) << endl;
         }
     }
 }
 
-void PostProcess_Atmosphere::dump_longal( const string &desc, Array &a, double multiplier, int j, ofstream &f )
-{
+void PostProcess_Atmosphere::dump_longal( const string &desc, Array &a, 
+                 double multiplier, int j, ofstream &f ){
     f << "SCALARS " << desc << " float " << 1 << endl;
     f << "LOOKUP_TABLE default" << endl;
 
-    for (int i = 0; i < im; i++) {
-        for (int k = 0; k < km; k++) {
+    for (int i = 0; i < im; i++){
+        for (int k = 0; k < km; k++){
             f << (a.x[i][j][k] * multiplier) << endl;
         }
     }
 }
 
-void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_File, double u_0, Array &v, Array &w, Array &t, Array &p_dyn, Array_2D &Evaporation_Dalton, Array_2D &Precipitation )
-{
+void PostProcess_Atmosphere::Atmosphere_v_w_Transfer ( string &Name_Bathymetry_File, 
+                 double u_0, Array &v, Array &w, Array &t, Array &p_dyn, 
+                 Array_2D &Evaporation_Dalton, Array_2D &Precipitation ){
     string Name_v_w_Transfer_File = output_path + "/[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
     ofstream v_w_Transfer_File;
     v_w_Transfer_File.precision(4);
     v_w_Transfer_File.setf(ios::fixed);
     v_w_Transfer_File.open(Name_v_w_Transfer_File);
 
-    if (!v_w_Transfer_File.is_open()) {
+    if (!v_w_Transfer_File.is_open()){
         cout << "ERROR: transfer file name in atmosphere: " << Name_v_w_Transfer_File << "\n";
         cerr << "ERROR: could not open transfer file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }
 
-    for ( int j = 0; j < jm; j++ ) {
-        for ( int k = 0; k < km; k++ ) {
-            v_w_Transfer_File << v.x[ 0 ][ j ][ k ] * u_0 << " " << w.x[ 0 ][ j ][ k ] * u_0 << " " << t.x[ 0 ][ j ][ k ] << " " << p_dyn.x[ 0 ][ j ][ k ] << " " << Evaporation_Dalton.y[ j ][ k ] << " " << Precipitation.y[ j ][ k ] << endl;    // dimensional v and w values
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            v_w_Transfer_File << v.x[ 0 ][ j ][ k ] * u_0 << " " 
+            << w.x[ 0 ][ j ][ k ] * u_0 << " " << t.x[ 0 ][ j ][ k ] << " " 
+            << p_dyn.x[ 0 ][ j ][ k ] << " " << Evaporation_Dalton.y[ j ][ k ] 
+            << " " << Precipitation.y[ j ][ k ] << endl;    // dimensional v and w values
         }
     }
     v_w_Transfer_File.close();
 }
 
-void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow )
-{
+void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &t, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow ){
     double x, y, z, dx, dy, dz;
 
-    string Atmosphere_panorama_vts_File_Name = output_path + "/[" + Name_Bathymetry_File + "]_Atm_panorama_" + std::to_string(n) + ".vts";
+    string Atmosphere_panorama_vts_File_Name = output_path + "/[" + Name_Bathymetry_File 
+                   + "]_Atm_panorama_" + std::to_string(n) + ".vts";
     ofstream Atmosphere_panorama_vts_File;
     Atmosphere_panorama_vts_File.precision(4);
     Atmosphere_panorama_vts_File.setf(ios::fixed);
     Atmosphere_panorama_vts_File.open(Atmosphere_panorama_vts_File_Name);
 
-    if (!Atmosphere_panorama_vts_File.is_open())
-    {
+    if (!Atmosphere_panorama_vts_File.is_open()){
         cerr << "ERROR: could not open panorama_vts file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }
@@ -144,12 +146,9 @@ void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File
     Atmosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" Name=\"Velocity\" format=\"ascii\">\n"  << endl;
 
 
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int i = 0; i < im; i++ )
-            {
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int i = 0; i < im; i++ ){
 // transformtion from spherical to cartesian coordinates for representation in ParaView
                 Atmosphere_panorama_vts_File << u.x[ i ][ j ][ k ] << " " << v.x[ i ][ j ][ k ] << " " << w.x[ i ][ j ][ k ] << endl;
             }
@@ -168,12 +167,9 @@ void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File
 
 // writing of temperature
     Atmosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Temperature\" format=\"ascii\">\n"  << endl;
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int i = 0; i < im; i++ )
-            {
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int i = 0; i < im; i++ ){
                 Atmosphere_panorama_vts_File << t.x[ i ][ j ][ k ] * t_0 - t_0 << endl;
             }
             Atmosphere_panorama_vts_File <<  "\n"  << endl;
@@ -211,12 +207,9 @@ void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File
     dy = .1;
     dz = .1;
 
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int i = 0; i < im; i++ )
-            {
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int i = 0; i < im; i++ ){
                 if ( k == 0 || j == 0 ) x = 0.;
                 else x = x + dx;
                 Atmosphere_panorama_vts_File << x << " " << y << " " << z  << endl;
@@ -239,8 +232,7 @@ void PostProcess_Atmosphere::paraview_panorama_vts (string &Name_Bathymetry_File
     Atmosphere_panorama_vts_File.close();
 }
 
-void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int Ma, int i_radial, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &radiation_3D, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Dalton, Array_2D &Q_Evaporation, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Topography, Array_2D &temp_NASA )
-{
+void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, int Ma, int i_radial, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &radiation_3D, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array_2D &precipitable_water, Array_2D &Q_bottom, Array_2D &Q_radiation, Array_2D &Q_latent, Array_2D &Q_sensible, Array_2D &Evaporation_Penman, Array_2D &Evaporation_Dalton, Array_2D &Q_Evaporation, Array_2D &temperature_NASA, Array_2D &precipitation_NASA, Array_2D &Vegetation, Array_2D &albedo, Array_2D &epsilon, Array_2D &Precipitation, Array_2D &Topography, Array_2D &temp_NASA ){
     double x, y, z, dx, dy;
 
     string Atmosphere_radial_File_Name = output_path + "/[" + Name_Bathymetry_File + "]_Atm_radial_" + std::to_string(i_radial) + "_" + std::to_string(n) + ".vtk";
@@ -249,8 +241,7 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
     Atmosphere_vtk_radial_File.setf(ios::fixed);
     Atmosphere_vtk_radial_File.open(Atmosphere_radial_File_Name);
 
-    if (!Atmosphere_vtk_radial_File.is_open())
-    {
+    if (!Atmosphere_vtk_radial_File.is_open()){
         cerr << "ERROR: could not open paraview_vtk file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }
@@ -270,10 +261,8 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
     dx = .1;
     dy = .1;
 
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
             if ( k == 0 ) y = 0.;
             else y = y + dy;
 
@@ -286,29 +275,33 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
 
     i_mount = 0;
 
-    if ( Ma == 0 )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
-            for ( int j = 0; j < jm; j++ )
-            {
+    if ( Ma == 0 ){
+        for ( int k = 0; k < km; k++ ){
+            for ( int j = 0; j < jm; j++ ){
                 temp_NASA.y[ j ][ k ] = temperature_NASA.y[ j ][ k ] * t_0 - t_0;
 
-                for ( int i = im-2; i >= 0; i-- )
-                {
-                    if ( Ma == 0 )
-                    {
-                        if ( ( is_air ( h, i+1, j, k ) ) && ( is_land ( h, i, j, k ) ) )        aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
-                        if ( is_air ( h, 0, j, k ) )                                                                aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
+                for ( int i = im-2; i >= 0; i-- ){
+                    if ( Ma == 0 ){
+                        if ( ( is_air ( h, i+1, j, k ) ) && ( is_land ( h, i, j, k ) ) )
+                              aux_v.x[ i_radial ][ j ][ k ] = ( t.x[ 0 ][ j ][ k ] - 
+                              temperature_NASA.y[ j ][ k ] ) * t_0;
+                        if ( is_air ( h, 0, j, k ) )  aux_v.x[ i_radial ][ j ][ k ] = 
+                              ( t.x[ 0 ][ j ][ k ] - temperature_NASA.y[ j ][ k ] ) * t_0;
                     }
-                    else                                                                                                     aux_v.x[ i_radial ][ j ][ k ] = 0.;
-
-                    aux_w.x[ i_radial ][ j ][ k ] = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
+                    else  aux_v.x[ i_radial ][ j ][ k ] = 0.;
                 }
                 i_mount = 0;
             }
         }
     }
+
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            aux_w.x[ 0 ][ j ][ k ] = Evaporation_Dalton.y[ j ][ k ] - 
+                    Precipitation.y[ j ][ k ];
+        }
+    }
+
 
 
     Atmosphere_vtk_radial_File <<  "POINT_DATA " << jm * km << endl;
@@ -320,10 +313,8 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
 // writing temperature
     Atmosphere_vtk_radial_File <<  "SCALARS Temperature float " << 1 << endl;
     Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
             Atmosphere_vtk_radial_File << t.x[ i_radial ][ j ][ k ] * t_0 - t_0 << endl;
         }
     }
@@ -382,18 +373,15 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
 
 // writing zonal u-v cell structure
     Atmosphere_vtk_radial_File <<  "VECTORS v-w-Cell float " << endl;
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
             Atmosphere_vtk_radial_File << v.x[ i_radial ][ j ][ k ] << " " << w.x[ i_radial ][ j ][ k ] << " " << z << endl;
         }
     }
     Atmosphere_vtk_radial_File.close();
 }
 
-void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, int k_zonal, int n, double &gam, double &hp, double &ep, double &R_Air, double &g, double &L_atm, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array_1D &rad, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &radiation_3D, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c )
-{
+void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, int k_zonal, int n, double &gam, double &hp, double &ep, double &R_Air, double &g, double &L_atm, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array_1D &rad, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &radiation_3D, Array &epsilon_3D, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c ){
     double x, y, z, dx, dy;
 
     string Atmosphere_zonal_File_Name = output_path + "/[" + Name_Bathymetry_File + "]_Atm_zonal_" + std::to_string(k_zonal) + "_" + std::to_string(n) + ".vtk";
@@ -402,8 +390,7 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
     Atmosphere_vtk_zonal_File.setf ( ios::fixed );
     Atmosphere_vtk_zonal_File.open ( Atmosphere_zonal_File_Name);
 
-    if (!Atmosphere_vtk_zonal_File.is_open())
-    {
+    if (!Atmosphere_vtk_zonal_File.is_open()){
         cerr << "ERROR: could not open vtk_zonal file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }
@@ -424,10 +411,8 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
 //    dx = .01;
     dy = .05;
 
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
+    for ( int i = 0; i < im; i++ ){
+        for ( int j = 0; j < jm; j++ ){
             if ( j == 0 ) y = 0.;
             else y = y + dy;
 
@@ -447,10 +432,8 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
 // writing of temperature
     Atmosphere_vtk_zonal_File <<  "SCALARS Temperature float " << 1 << endl;
     Atmosphere_vtk_zonal_File <<  "LOOKUP_TABLE default"  <<endl;
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
+    for ( int i = 0; i < im; i++ ){
+        for ( int j = 0; j < jm; j++ ){
             Atmosphere_vtk_zonal_File << t.x[ i ][ j ][ k_zonal ] * t_0 - t_0 << endl;
         }
     }
@@ -458,10 +441,8 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
 //    double height = 0.;
 //    double exp_pressure = g / ( 1.e-2 * gam * R_Air );
 
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
+    for ( int i = 0; i < im; i++ ){
+        for ( int j = 0; j < jm; j++ ){
             aux_w.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] + cloud.x[ i ][ j ][ k_zonal ] + ice.x[ i ][ j ][ k_zonal ];
 
             t_u = t.x[ i ][ j ][ k_zonal ] * t_0;                                                                    // in K
@@ -475,8 +456,8 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
 //                else                     p_h = p_SL;
 
 
-            if ( i != 0 )             p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
-            else                     p_h = p_SL;
+            if ( i != 0 )  p_h = exp ( - g * ( double ) i * ( L_atm / ( double ) ( im-1 ) ) / ( R_Air * t_u ) ) * p_SL;
+            else           p_h = p_SL;
 
             r_dry = p_h / ( R_Air * t_u );
 
@@ -488,11 +469,10 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
 
             aux_u.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] / q_Rain;
 
-            if ( T <= t_0 )
-            {
+            if ( T <= t_0 ){
                 aux_v.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] / q_Ice;
             }
-            else         aux_v.x[ i ][ j ][ k_zonal ] = 0.;
+            else  aux_v.x[ i ][ j ][ k_zonal ] = 0.;
         }
     }
 
@@ -524,18 +504,15 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
 
 // writing zonal u-v cell structure
     Atmosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
+    for ( int i = 0; i < im; i++ ){
+        for ( int j = 0; j < jm; j++ ){
             Atmosphere_vtk_zonal_File << u.x[ i ][ j ][ k_zonal ] << " " << v.x[ i ][ j ][ k_zonal ] << " " << z << endl;
         }
     }
     Atmosphere_vtk_zonal_File.close();
 }
 
-void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, int j_longal, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow )
-{
+void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, int j_longal, int n, double &u_0, double &t_0, double &p_0, double &r_air, double &c_0, double &co2_0, Array &h, Array &p_dyn, Array &p_stat, Array &BuoyancyForce, Array &t, Array &u, Array &v, Array &w, Array &c, Array &co2, Array &cloud, Array &ice, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent, Array &Q_Sensible, Array &epsilon_3D, Array &P_rain, Array &P_snow ){
     double x, y, z, dx, dz;
 
     string Atmosphere_longal_File_Name = output_path + "/[" + Name_Bathymetry_File + "]_Atm_longal_" + std::to_string(j_longal) + "_" + std::to_string(n) + ".vtk";
@@ -544,8 +521,7 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
     Atmosphere_vtk_longal_File.setf(ios::fixed);
     Atmosphere_vtk_longal_File.open(Atmosphere_longal_File_Name);
 
-    if (!Atmosphere_vtk_longal_File.is_open())
-    {
+    if (!Atmosphere_vtk_longal_File.is_open()){
         cerr << "ERROR: could not open vtk_longal file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }
@@ -565,10 +541,8 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
     dx = .1;
     dz = .025;
 
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
+    for ( int i = 0; i < im; i++ ){
+        for ( int k = 0; k < km; k++ ){
             if ( k == 0 ) {
                 z = 0.;
             } else {
@@ -590,18 +564,14 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
 // writing of temperature
     Atmosphere_vtk_longal_File <<  "SCALARS Temperature float " << 1 << endl;
     Atmosphere_vtk_longal_File <<  "LOOKUP_TABLE default"  <<endl;
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
+    for ( int i = 0; i < im; i++ ){
+        for ( int k = 0; k < km; k++ ){
             Atmosphere_vtk_longal_File << t.x[ i ][ j_longal ][ k ] * t_0 - t_0 << endl;
         }
     }
 
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
+    for ( int i = 0; i < im; i++ ){
+        for ( int k = 0; k < km; k++ ){
             aux_w.x[ i ][ j_longal ][ k ] = c.x[ i ][ j_longal ][ k ] + cloud.x[ i ][ j_longal ][ k ] + ice.x[ i ][ j_longal ][ k ];
         }
     }
@@ -625,10 +595,8 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
 
 // writing longitudinal u-v cell structure
     Atmosphere_vtk_longal_File <<  "VECTORS u-w-Cell float" << endl;
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
+    for ( int i = 0; i < im; i++ ){
+        for ( int k = 0; k < km; k++ ){
             Atmosphere_vtk_longal_File << u.x[ i ][ j_longal ][ k ] << " " << y << " " << w.x[ i ][ j_longal ][ k ] << endl;
         }
     }
@@ -637,16 +605,14 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
 
 
 void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File, int iter_cnt, double u_0, double t_0, 
-        Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water )
-{
+        Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water ){
     string Name_PlotData_File = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Atm"+
         (iter_cnt > 0 ? "_"+to_string(iter_cnt) : "") + ".xyz";
     ofstream PlotData_File(Name_PlotData_File);
     PlotData_File.precision(4);
     PlotData_File.setf(ios::fixed);
 
-    if (!PlotData_File.is_open())
-    {
+    if (!PlotData_File.is_open()){
         cerr << "ERROR: could not open PlotData file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }
@@ -668,29 +634,24 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
 
 
 void PostProcess_Atmosphere::save(  const string &filename, const std::vector<string> &field_names, 
-                                    const std::vector<Vector3D<>* > &data, unsigned layer )
-{
+                                    const std::vector<Vector3D<>* > &data, unsigned layer ){
     assert(field_names.size() == data.size());
     ofstream ofs(filename);
 
-    if (!ofs.is_open())
-    {
+    if (!ofs.is_open()){
         cerr << "ERROR: unable to open file " << filename << "\n";
         abort();
     }
 
-    for(std::size_t i = 0; i < field_names.size(); i++)
-    {
+    for(std::size_t i = 0; i < field_names.size(); i++){
         ofs << "lons(deg)" << " ";
         ofs << "lats(deg)" << " ";
         ofs << field_names[i] << " ";
     }
     ofs << std::endl;
 
-    for ( int k = 0; k < km; k++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
             ofs << k << " " << j << " ";
             for(std::size_t i = 0; i < data.size(); i++)
             {   
@@ -702,8 +663,7 @@ void PostProcess_Atmosphere::save(  const string &filename, const std::vector<st
 }
 
 
-double PostProcess_Atmosphere::exp_func ( double &T_K, const double &co_1, const double &co_2 )
-{
+double PostProcess_Atmosphere::exp_func ( double &T_K, const double &co_1, const double &co_2 ){
     return exp ( co_1 * ( T_K - 273.15 ) / ( T_K - co_2 ) );                        // temperature in °K
 }
 

@@ -450,8 +450,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     double vapour_evaporation = 0.;
     double vapour_surface = 0.;
     double evap_precip = 0.;
-    double coeff_vapour = 1.1574 * L_atm / u_0;
-                          // 1.1574 is the conversion from (Evap-Prec) in mm/d to m/s
+    double coeff_vapour = 1.1574e-5 * L_atm / u_0;
+                          // 1.1574e-5 is the conversion from (Evap-Prec) in mm/d to m/s
 // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
     double r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
 
@@ -490,7 +490,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
         vapour_evaporation = 0.; //  test case
 
-//    c.x[ 0 ][ j ][ k ] = c.x[ 0 ][ j ][ k ] + vapour_evaporation;
+    c.x[ 0 ][ j ][ k ] = c.x[ 0 ][ j ][ k ] + vapour_evaporation;
 
 
     // Right Hand Side of the time derivative ot temperature, pressure, water vapour concentration and velocity components
