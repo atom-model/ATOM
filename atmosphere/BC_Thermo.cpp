@@ -1415,10 +1415,6 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
     double t_hn = 236.15;  // in K    -40 °C
     double t_r_frz = 271.15;  // in K    -2 °C
 
-    double p_t_in = 0.;
-    double E_Rain_t_in = 0.;
-    double q_Rain_t_in = 0.;
-
     double exp_pressure = g / ( 1.e-2 * gam * R_Air );
 
     float dt_snow_dim = 417.;// dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
@@ -1471,7 +1467,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
     
                 float S_c_au, S_i_au, N_i;
 
-                if ( ( t_u >= t_0 ) && ( c_c_au * cloud.x[ i ][ j ][ k ] > 0. ) )
+                if ( !( t_u < t_0 ) && ( c_c_au * cloud.x[ i ][ j ][ k ] > 0. ) )
                     S_c_au = c_c_au * cloud.x[ i ][ j ][ k ];
                    // cloud water to rain, cloud droplet collection in kg / ( kg * s )
                 else  S_c_au = 0.;
@@ -1480,14 +1476,13 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                     S_i_au = c_i_au * ice.x[ i ][ j ][ k ];     // cloud ice to snow, cloud ice crystal aggregation
                 else  S_i_au = 0.;
 
-// ice and snow average size
-                if ( t_u <= t_0 )  N_i = N_i_0 * exp ( .2 * ( t_0 - t_u ) );
-
-                if ( t_u <= t_0 ){
+                // ice and snow average size
+                if ( !(t_u > t_0) )  
+                {
+                    N_i = N_i_0 * exp ( .2 * ( t_0 - t_u ) );
                     m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
-                    if ( m_i > m_i_max ) { m_i = m_i_max; }
-                    else  m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
-                    if ( m_i < m_i_0 ) { m_i = m_i_0; }
+                    if ( m_i > m_i_max ) m_i = m_i_max; 
+                    if ( m_i < m_i_0 ) m_i = m_i_0; 
                 }
 
                 S_r.x[ i ][ j ][ k ] = S_c_au;  // in kg / ( kg * s )
@@ -1500,7 +1495,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                 if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )  P_rain.x[ i + 1 ][ j ][ k ] = 0.;
                 if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
-                /*
+                
                 float step = m_model->get_layer_height(i+1) - m_model->get_layer_height(i);
                 P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ]
                      + r_humid * ( ( S_r.x[ i ][ j ][ k ] - S_r.x[ i + 1 ][ j ][ k ] )
@@ -1508,12 +1503,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                 P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ]
                      + r_humid * ( ( S_s.x[ i ][ j ][ k ] - S_s.x[ i + 1 ][ j ][ k ] )
                      / 2. * step ) / 2.;
-                */
-                P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] +
-                    ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;  // in kg / ( m2 * s ) == mm/s
-                P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] +
-                    ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;
-                      // arbitrary factor 200 adjusts precipitation for the modern world.
+            
 
                 if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                 if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;
@@ -1539,7 +1529,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                         float height = get_layer_height(i);
 
                         float p_h, N_i, S_nuc, S_c_frz, S_i_dep, S_c_au, S_i_au, S_d_au, S_ac, S_rim, S_shed;
-                        float S_agg, S_i_cri, S_r_cri, S_ev, S_s_dep, S_i_melt, S_s_melt,S_r_frz;
+                        float S_agg, S_i_cri, S_r_cri, S_ev, S_s_dep, S_i_melt, S_s_melt, S_r_frz;
                         if ( i != 0 )  
                             p_h = pow ( ( ( t_u - gam * height * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
                         else  
@@ -1553,23 +1543,23 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                         float q_Rain = ep * E_Rain / ( p_h - E_Rain );  // water vapour amount at saturation with water formation in kg/kg
                         float q_Ice  = ep * E_Ice / ( p_h - E_Ice );  // water vapour amount at saturation with ice formation in kg/kg
 
-// ice and snow average size
-                        if ( t_u <= t_0 )  N_i = N_i_0 * exp ( .2 * ( t_0 - t_u ) );
-
-                        if ( t_u <= t_0 ){
+                        // ice and snow average size
+                        if ( !(t_u > t_0) )
+                        {  
+                            N_i = N_i_0 * exp ( .2 * ( t_0 - t_u ) );
                             m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
                             if ( m_i > m_i_max ) { m_i = m_i_max; }
-                            else  m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
                             if ( m_i < m_i_0 ) { m_i = m_i_0; }
                         }
 
-// nucleation and depositional growth of cloud ice
+                        // nucleation and depositional growth of cloud ice
                         if ( ice.x[ i ][ j ][ k ] == 0. ){
-                            if ( ( t_u < t_d ) && ( c.x[ i ][ j ][ k ] >= q_Ice ) )
+                            if (
+                                    ( ( t_u < t_d ) && ( c.x[ i ][ j ][ k ] >= q_Ice ) ) || 
+                                    ( ( ( t_d <= t_u ) && ( t_u <= t_nuc ) ) && ( c.x[ i ][ j ][ k ] >= q_Rain ) ) 
+                                )
                                 S_nuc = m_i_0 / ( r_humid * dt_snow_dim ) * N_i;  // nucleation of cloud ice, < I >
 
-                            if ( ( ( t_d <= t_u ) && ( t_u <= t_nuc ) ) && ( c.x[ i ][ j ][ k ] >= q_Rain ) )
-                                S_nuc = m_i_0 / ( r_humid * dt_snow_dim ) * N_i;  // nucleation of cloud ice, < I >
                         }
                         else  S_nuc = 0.;
 
@@ -1577,17 +1567,18 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                             S_c_frz = cloud.x[ i ][ j ][ k ] / dt_rain_dim;  //nucleation of cloud ice due to freezing of cloud water, < II >
                         else  S_c_frz = 0.;
 
-                        if ( t_Celsius <= 0. ){
+                        if ( !(t_Celsius > 0.) ){
                             if ( c.x[ i ][ j ][ k ] > q_Ice ){  // supersaturation
                                 S_i_dep = c_i_dep * N_i * pow ( m_i, ( 1. / 3. ) ) * ( c.x[ i ][ j ][ k ] - q_Ice );  // supersaturation, < III >
                             }
-                            if ( ( c.x[ i ][ j ][ k ] < q_Ice ) && ( - ice.x[ i ][ j ][ k ] / dt_snow_dim >
-                                ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim ) )
+                            if (    ( c.x[ i ][ j ][ k ] < q_Ice ) && 
+                                    ( - ice.x[ i ][ j ][ k ]  > c.x[ i ][ j ][ k ] - q_Ice  ) 
+                                )
                                 S_i_dep = - ice.x[ i ][ j ][ k ] / dt_snow_dim; // subsaturation, < III >
                         }
                         else  S_i_dep = 0.;
 
-// autoconversion processes
+                        // autoconversion processes
                         if ( ( t_u >= t_0 ) && ( cloud.x[ i ][ j ][ k ] > 0. ) )
                             S_c_au = c_c_au * cloud.x[ i ][ j ][ k ];  // cloud water to rain, cloud droplet collection, < IV >
                         else  S_c_au = 0.;
@@ -1600,16 +1591,19 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                             S_d_au = S_i_dep / ( 1.5 * ( pow ( ( m_s_0 / m_i ),  ( 2. / 3. ) ) - 1. ) );  // depositional growth of cloud ice, < VI >
                         else  S_d_au = 0.;
 
-// collection mechanism
-                        if ( t_u > t_0 )  S_ac = c_ac * cloud.x[ i ][ j ][ k ] * pow ( P_rain.x[ i ][ j ][ k ], ( 7. / 9. ) );
+                        // collection mechanism
+                        if ( t_u > t_0 )  
+                            S_ac = c_ac * cloud.x[ i ][ j ][ k ] * pow ( P_rain.x[ i ][ j ][ k ], ( 7. / 9. ) );
                             // accreation rate from depletion of cloud water due to collection by all rain drops, < VII >
                         else  S_ac = 0.;  // accreation rate from depletion of cloud water due to collection by all rain drops
 
-                        if ( t_u < t_0 )  S_rim = c_rim * cloud.x[ i ][ j ][ k ] * P_snow.x[ i ][ j ][ k ];
+                        if ( t_u < t_0 )  
+                            S_rim = c_rim * cloud.x[ i ][ j ][ k ] * P_snow.x[ i ][ j ][ k ];
                         else  S_rim = 0.;  // riming rate of snow mass due to collection of supercooled cloud droplets, < VIII >
                                                      // by falling snow particles
 
-                        if ( t_u >= t_0 )  S_shed = c_rim * cloud.x[ i ][ j ][ k ] * P_snow.x[ i ][ j ][ k ];
+                        if ( t_u >= t_0 )  
+                            S_shed = c_rim * cloud.x[ i ][ j ][ k ] * P_snow.x[ i ][ j ][ k ];
                         else  S_shed = 0.;  // rate of water shed by melting wet snow particles, < IX >
                                                        // collecting cloud droplets to produce rain
 
@@ -1626,29 +1620,34 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                             S_r_cri = 0.;
                         }
 
-// diffusional growth of rain and snow
-                        if ( t_u >= t_0 )  S_ev = a_ev * ( 1. + b_ev * pow ( P_rain.x[ i ][ j ][ k ],
-                            ( 1. / 6. ) ) ) * ( q_Rain - c.x[ i ][ j ][ k ] ) * pow ( P_rain.x[ i ][ j ][ k ], ( 4. / 9. ) );
-                            // evaporation of rain due to water vapour diffusion, < XIII >
-                        else  S_ev = 0.;
-
-                        if ( t_u < t_0 )  S_s_dep = c_s_dep * ( 1. + b_s_dep * pow ( P_snow.x[ i ][ j ][ k ],
-                            ( 5. / 26. ) ) ) * ( c.x[ i ][ j ][ k ] - q_Ice ) * pow ( P_snow.x[ i ][ j ][ k ], ( 8. / 13. ) );
+                        // diffusional growth of rain and snow
+                        if ( t_u < t_0 ) // temperature below zero
+                        {  
+                            S_s_dep = c_s_dep * ( 1. + b_s_dep * pow ( P_snow.x[ i ][ j ][ k ], ( 5. / 26. ) ) ) * 
+                                ( c.x[ i ][ j ][ k ] - q_Ice ) * pow ( P_snow.x[ i ][ j ][ k ], ( 8. / 13. ) );
                              // deposition/sublimation of snow, < XIV >
-                        else  S_s_dep = 0.;
+                            S_ev = 0.;
+                        }
+                        else
+                        {  
+                            S_ev = a_ev * ( 1. + b_ev * pow ( P_rain.x[ i ][ j ][ k ], ( 1. / 6. ) ) ) *
+                                ( q_Rain - c.x[ i ][ j ][ k ] ) * pow ( P_rain.x[ i ][ j ][ k ], ( 4. / 9. ) );
+                            // evaporation of rain due to water vapour diffusion, < XIII >
+                            S_s_dep = 0.;
+                        }
 
-// melting and freezing
-                        if ( ( t_u > t_0 ) && ( ice.x[ i ][ j ][ k ] > 0. ) )
-                            S_i_melt = ice.x[ i ][ j ][ k ] / dt_snow_dim; // cloud ice particles melting to cloud water, < XV >
-                        else  S_i_melt = 0.;
-
-                        if ( t_u > t_0 ){
+                        // melting and freezing
+                        S_i_melt = 0.;
+                        S_s_melt = 0.;
+                        if ( t_u > t_0 ){ // temperature above zero
+                            if( ice.x[ i ][ j ][ k ] > 0. )
+                                S_i_melt = ice.x[ i ][ j ][ k ] / dt_snow_dim; // cloud ice particles melting to cloud water, < XV >
                             p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );  // given in hPa
                             height = get_layer_height(i);
-                            p_t_in = pow ( ( ( t_0 - gam * height * 1.e-2 ) / t_0 ), exp_pressure ) * p_SL;  // given in hPa
-                            E_Rain_t_in = hp * exp_func ( t_0, 17.2694, 35.86 );
+                            float p_t_in = pow ( ( ( t_0 - gam * height * 1.e-2 ) / t_0 ), exp_pressure ) * p_SL;  // given in hPa
+                            float E_Rain_t_in = hp * exp_func ( t_0, 17.2694, 35.86 );
                                 // saturation water vapour pressure for the water phase at t = 0°C in hPa
-                            q_Rain_t_in = ep * E_Rain_t_in / ( p_t_in - E_Rain_t_in );
+                            float q_Rain_t_in = ep * E_Rain_t_in / ( p_t_in - E_Rain_t_in );
                                 // water vapour amount at saturation with water formation in kg/kg
 
                             S_s_melt = c_s_melt * ( 1. + b_s_melt * pow ( P_snow.x[ i ][ j ][ k ], ( 5. / 26. ) ) ) *
@@ -1656,14 +1655,14 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                                 pow ( P_snow.x[ i ][ j ][ k ], ( 8. / 13. ) );  // melting rate of snow to form rain, < XVI >
                                 // arbitrary factor 50 adjusts the average precipitation in mm/d
                         }
-                        else  S_s_melt = 0.;
 
-                        if ( t_r_frz -  t_u > 0. )  S_r_frz = c_r_frz * pow ( ( t_r_frz -  t_u ), ( 3. / 2. ) ) *
-                            pow ( P_rain.x[ i ][ j ][ k ], ( 3. / 2. ) );
-                            // immersion freezing and contact nucleation, < XVII >
+                        if ( t_r_frz - t_u > 0. )  
+                            S_r_frz = c_r_frz * pow ( ( t_r_frz -  t_u ), ( 3. / 2. ) ) *
+                                pow ( P_rain.x[ i ][ j ][ k ], ( 3. / 2. ) );
+                                // immersion freezing and contact nucleation, < XVII >
                         else  S_r_frz = 0.;
 
-// sinks and sources
+                        // sinks and sources
                         S_v.x[ i ][ j ][ k ] = - S_c_c.x[ i ][ j ][ k ] + S_ev - S_i_dep -
                             S_s_dep - S_nuc;
                         S_c.x[ i ][ j ][ k ] = S_c_c.x[ i ][ j ][ k ] - S_c_au - S_ac - S_c_frz +
@@ -1684,24 +1683,18 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                             S_s.x[ i ][ j ][ k ] = 0.;
                         }
 
-// rain and snow integration
+                        // rain and snow integration
                         if ( P_rain.x[ i + 1 ][ j ][ k ] < 0. )  P_rain.x[ i + 1 ][ j ][ k ] = 0.;
                         if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
-                        /*
-                        float step = m_model->get_layer_height(i+1) - m_model->get_layer_height(i-1);
+                        float step = m_model->get_layer_height(i+1) - m_model->get_layer_height(i);
                         P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ]
                              + r_humid * ( ( S_r.x[ i ][ j ][ k ] - S_r.x[ i + 1 ][ j ][ k ] )
                              / 2. * step ) / 2.;  // in kg / ( m2 * s ) == mm/s
                         P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ]
                              + r_humid * ( ( S_s.x[ i ][ j ][ k ] - S_s.x[ i + 1 ][ j ][ k ] )
                              / 2. * step ) / 2.;
-                        */
-                        P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ] +
-                            ( S_r.x[ i ][ j ][ k ] + S_r.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;  // in kg / ( m2 * s ) == mm/s
-                        P_snow.x[ i ][ j ][ k ] = P_snow.x[ i + 1 ][ j ][ k ] +
-                            ( S_s.x[ i ][ j ][ k ] + S_s.x[ i + 1 ][ j ][ k ] ) * .5 * r_humid * dr * 200.;
-                      // arbitrary factor 200 adjusts precipitation for the modern world.
+                        
                         if ( P_rain.x[ i ][ j ][ k ] < 0. )  P_rain.x[ i ][ j ][ k ] = 0.;
                         if ( P_snow.x[ i ][ j ][ k ] < 0. )  P_snow.x[ i ][ j ][ k ] = 0.;
 
@@ -1712,8 +1705,8 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                 }  // end j
             }  // end k
         }  // end iter_prec
-    }  // end n
-    if(m_model->debug){
+    }  // end if true
+    if(debug){
         assert(!c.has_nan());
         assert(!cloud.has_nan());
         assert(!ice.has_nan());
