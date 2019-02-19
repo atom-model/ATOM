@@ -66,13 +66,16 @@ RUN cp -av /build/ATOM/benchmark/config_hyd.xml /build/ATOM/workspace/config_hyd
 
 ADD topo_grids /build/ATOM/data/topo_grids
 
+
+RUN apt-get update; apt-get install -y curl \
+    && curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/Paleotopography_Grids/topo_grids.tar.gz \
+    | tar -xvC /build/ATOM/data 
+
 # setup space for working in
 VOLUME /build/ATOM/workspace/output
 
 RUN chmod a+x /build/ATOM/docker/notebook.sh
 
-#ADD notebook.sh /workspace/
-#RUN chmod a+x /workspace/notebook.sh
 #ENTRYPOINT ["/workspace/notebook.sh"]
 CMD ["/build/ATOM/docker/notebook.sh"] 
 
