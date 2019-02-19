@@ -816,8 +816,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
             //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
             //  resulting the precipitation distribution formed of rain and snow
             if ( velocity_iter % 2 == 0){
-                circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, 
-                                                      cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
+                Two_Category_Ice_Scheme(); 
             }
 
             move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);

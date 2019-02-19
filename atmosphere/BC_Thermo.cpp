@@ -1378,10 +1378,9 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
 
 
 
-void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p_stat, 
-        Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v, Array &S_c, Array &S_i, Array &S_r, 
-        Array &S_s, Array &S_c_c ){
-    if(m_model->debug){
+void cAtmosphereModel::Two_Category_Ice_Scheme() 
+{    
+    if(debug){
         assert(!c.has_nan());
         assert(!t.has_nan());
         assert(!cloud.has_nan());
@@ -1420,22 +1419,17 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
     double E_Rain_t_in = 0.;
     double q_Rain_t_in = 0.;
 
-//    double t_1 = 253.15;  // in K    -20 °C
-//    double t_00 = 236.15;  // in K    -40 °C
-//    double t_Celsius_1 = t_1 - t_0;  // -20 °C
-//    double t_Celsius_2 = t_00 - t_0;  // -37 °C
-
     double exp_pressure = g / ( 1.e-2 * gam * R_Air );
 
-    //The m_i is only used in this function and I see no reason it should be a member of this class.
-    //So, I move it out of class.
-    //I also don't see any reason the above horde of variables should stay as class members. -- mchin
-    double m_i = m_i_max; //initialize m_i local variable. If uninitialized, the value in m_i can be anything(bad, very bad). 
+    float dt_snow_dim = 417.;// dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
+    float dt_rain_dim = 250.;// dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
 
-// rain and snow distribution based on parameterization schemes adopted from the COSMO code used by the German Weather Forecast
-// the choosen scheme is a Two Category Ice Scheme
-// besides the transport equation for the water vapour exists two equations for the cloud water and the cloud ice transport
-// since the diagnostic version of the code is applied the rain and snow mass transport is computed by column equilibrium integral equation
+    double m_i = m_i_max;  
+
+    // rain and snow distribution based on parameterization schemes adopted from the COSMO code used by the German Weather Forecast
+    // the choosen scheme is a Two Category Ice Scheme
+    // besides the transport equation for the water vapour exists two equations for the cloud water and the cloud ice transport
+    // since the diagnostic version of the code is applied the rain and snow mass transport is computed by column equilibrium integral equation
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
@@ -1448,7 +1442,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
         }
     }
 
-/******************* initial values for rain and snow calculation *********************/
+    /******************* initial values for rain and snow calculation *********************/
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
@@ -1462,22 +1456,20 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                 if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
                 if ( ice.x[ i ][ j ][ k ] < 0. )  ice.x[ i ][ j ][ k ] = 0.;
 
-                t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
-                t_u = t.x[ i ][ j ][ k ] * t_0;
+                float t_u = t.x[ i ][ j ][ k ] * t_0;
 
-                p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
-                hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+                float p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
+                float height = get_layer_height(i);
+                float p_h;
+                if ( i != 0 )  
+                    p_h = pow ( ( ( t_u - gam * height * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
+                else  
+                    p_h = p_SL;
 
-                if ( i != 0 )  p_h = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
-                else  p_h = p_SL;
-
-                r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
-                r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
-                q_h = c.x[ i ][ j ][ k ];  // threshold value for water vapour at local hight h in kg/kg
-                E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 );  // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 );  // saturation water vapour pressure for the ice phase in hPa
-                q_Rain  = ep * E_Rain / ( p_h - E_Rain );  // water vapour amount at saturation with water formation in kg/kg
-                q_Ice  = ep * E_Ice / ( p_h - E_Ice );  // water vapour amount at saturation with ice formation in kg/kg
+                float r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
+                float r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
+    
+                float S_c_au, S_i_au, N_i;
 
                 if ( ( t_u >= t_0 ) && ( c_c_au * cloud.x[ i ][ j ][ k ] > 0. ) )
                     S_c_au = c_c_au * cloud.x[ i ][ j ][ k ];
@@ -1497,17 +1489,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                     else  m_i = r_humid * ice.x[ i ][ j ][ k ] / N_i;
                     if ( m_i < m_i_0 ) { m_i = m_i_0; }
                 }
-
-                if ( t_Celsius <= 0. ){
-                    if ( c.x[ i ][ j ][ k ] > q_Ice ){  // supersaturation
-                        S_i_dep = c_i_dep * N_i * pow ( m_i, ( 1. / 3. ) ) * ( c.x[ i ][ j ][ k ] - q_Ice );  // supersaturation, < III >
-                    }
-                    if ( ( c.x[ i ][ j ][ k ] < q_Ice ) && ( - ice.x[ i ][ j ][ k ] / dt_snow_dim >
-                        ( c.x[ i ][ j ][ k ] - q_Ice ) / dt_snow_dim ) )
-                        S_i_dep = - ice.x[ i ][ j ][ k ] / dt_snow_dim; // subsaturation, < III >
-                }
-                else  S_i_dep = 0.;
-
 
                 S_r.x[ i ][ j ][ k ] = S_c_au;  // in kg / ( kg * s )
                 S_s.x[ i ][ j ][ k ] = S_i_au;
@@ -1541,7 +1522,7 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
     }
 
 
-/******************* main part for rain and snow calculation *********************/
+    /******************* main part for rain and snow calculation *********************/
 
     if ( true ){
         for(int iter_prec = 1; iter_prec <= 5; iter_prec++ ){ // iter_prec may be varied, but is sufficient
@@ -1551,21 +1532,26 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
                     P_snow.x[ im-1 ][ j ][ k ] = 0.;
 
                     for ( int i = im-2; i >= 0; i-- ){
-                        t_u = t.x[ i ][ j ][ k ] * t_0;
-                        t_Celsius = t_u - t_0;
+                        float t_u = t.x[ i ][ j ][ k ] * t_0;
+                        float t_Celsius = t_u - t_0;
 
-                        p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
-                        hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
+                        float p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
+                        float height = get_layer_height(i);
 
-                        if ( i != 0 )  p_h = pow ( ( ( t_u - gam * hight * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
-                        else  p_h = p_SL;
+                        float p_h, N_i, S_nuc, S_c_frz, S_i_dep, S_c_au, S_i_au, S_d_au, S_ac, S_rim, S_shed;
+                        float S_agg, S_i_cri, S_r_cri, S_ev, S_s_dep, S_i_melt, S_s_melt,S_r_frz;
+                        if ( i != 0 )  
+                            p_h = pow ( ( ( t_u - gam * height * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
+                        else  
+                            p_h = p_SL;
 
-                        r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
-                        r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
-                        E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 );  // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                        E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 );  // saturation water vapour pressure for the ice phase in hPa
-                        q_Rain = ep * E_Rain / ( p_h - E_Rain );  // water vapour amount at saturation with water formation in kg/kg
-                        q_Ice  = ep * E_Ice / ( p_h - E_Ice );  // water vapour amount at saturation with ice formation in kg/kg
+    
+                        float r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
+                        float r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
+                        float E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 );  // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                        float E_Ice = hp * exp_func ( t_u, 21.8746, 7.66 );  // saturation water vapour pressure for the ice phase in hPa
+                        float q_Rain = ep * E_Rain / ( p_h - E_Rain );  // water vapour amount at saturation with water formation in kg/kg
+                        float q_Ice  = ep * E_Ice / ( p_h - E_Ice );  // water vapour amount at saturation with ice formation in kg/kg
 
 // ice and snow average size
                         if ( t_u <= t_0 )  N_i = N_i_0 * exp ( .2 * ( t_0 - t_u ) );
@@ -1658,8 +1644,8 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array &h, Array &c, Array &t, Array &p
 
                         if ( t_u > t_0 ){
                             p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );  // given in hPa
-                            hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
-                            p_t_in = pow ( ( ( t_0 - gam * hight * 1.e-2 ) / t_0 ), exp_pressure ) * p_SL;  // given in hPa
+                            height = get_layer_height(i);
+                            p_t_in = pow ( ( ( t_0 - gam * height * 1.e-2 ) / t_0 ), exp_pressure ) * p_SL;  // given in hPa
                             E_Rain_t_in = hp * exp_func ( t_0, 17.2694, 35.86 );
                                 // saturation water vapour pressure for the water phase at t = 0°C in hPa
                             q_Rain_t_in = ep * E_Rain_t_in / ( p_t_in - E_Rain_t_in );

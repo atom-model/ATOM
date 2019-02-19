@@ -250,7 +250,6 @@ void cAtmosphereModel::run_MSL_data()
                 float a = e / ( R_WaterVapour * t.x[ i ][ j ][ k ] * t_0 );  // absolute humidity in kg/m³
                 //precipitable_water.y[ j ][ k ] +=  a * L_atm / ( double ) ( im - 1 );  // mass of water in kg/m²
                  
-                float zeta = 3.715;
                 float step = get_layer_height(i+1) - get_layer_height(i);
                 precipitable_water.y[ j ][ k ] +=  a * step;
                 

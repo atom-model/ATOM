@@ -210,9 +210,12 @@ private:
     void init_temperature();
 
     void save_data();
+
     void save_array(const string& fn, const Array& a);
 
     void Ice_Water_Saturation_Adjustment();
+
+    void Two_Category_Ice_Scheme();
 
     static cAtmosphereModel* m_model;
 
