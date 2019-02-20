@@ -451,6 +451,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             // surface pressure computed by surface temperature with gas equation
             oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
 
+            // preparations for salinity increase due to evaporation and precipitation differences
+            oceanflow.BC_Evaporation ( Evaporation_Dalton, Precipitation, h, c, r_water );
+
             // limiting the increase of flow properties around geometrical peaks and corners
             oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
