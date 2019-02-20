@@ -851,7 +851,8 @@ void BC_Thermohalin::IC_u_WestEastCoast
             else k_water = 1;                                                        // somewhere on water
 
             if ( ( is_water( h, i_half, j, k ) ) && ( k_water == 0 ) ){    // if water is closest to coast, change of velocity components begins
-                for ( int l = 0; l < k_grad; l++ ){                                // extension of change, sign change in v-velocity and distribution of u-velocity with depth
+                for ( int l = 0; l < k_grad; l++ ){// extension of change, sign change in v-velocity and distribution of u-velocity with depth
+                    if(k+l > km-1) break;
                     for ( int i = i_beg; i < i_half; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
                         m = i + ( i_half - i_middle );
                         d_i = ( double ) i;
@@ -880,6 +881,7 @@ void BC_Thermohalin::IC_u_WestEastCoast
             else k_water = 1;
             if ( ( is_water( h, i_half, j, k ) ) && ( k_water == 0 ) ){
                 for ( int l = 0; l < k_grad; l++ ){
+                    if(k+l > km-1) break; 
                     for ( int i = i_beg; i < i_half; i++ ){
                         m = i + ( i_half - i_middle );
                         d_i = ( double ) i;
@@ -915,6 +917,7 @@ void BC_Thermohalin::IC_u_WestEastCoast
 
             if ( ( flip == 0 ) && ( k_water == 1 ) ){                            // on water closest to land
                 for ( int l = k; l > ( k - k_grad + 1 ); l-- ){                        // backward extention of velocity change: nothing changes
+                    if(l < 0) break;
                     for ( int i = i_beg; i < i_half; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
                         m = i + ( i_half - i_middle );
                         d_i = ( double ) i;
@@ -945,6 +948,7 @@ void BC_Thermohalin::IC_u_WestEastCoast
 
             if ( ( flip == 0 ) && ( k_water == 1 ) ){
                 for ( int l = k; l > ( k - k_grad + 1 ); l-- ){
+                    if(l < 0) break;    
                     for ( int i = i_beg; i < i_half; i++ ){
                         m = i + ( i_half - i_middle );
                         d_i = ( double ) i;
