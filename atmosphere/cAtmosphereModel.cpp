@@ -275,7 +275,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     init_temperature();
 
     //  class element for the surface pressure computed by surface temperature with gas equation
-    circulation.BC_Pressure ( p_stat, p_dyn, t, h );
+    BC_Pressure();
 
     //parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
     //circulation.BC_WaterVapour ( h, p_stat, t, c, v, w );
@@ -675,7 +675,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
                     "    pressure_iter_2D = " << pressure_iter_2D << endl;
 
                 //  class BC_Atmosphaere for the geometry of a shell of a sphere
-                boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
+                boundary.BC_theta ( t, u, v, w, p_dyn, c, cn, cloud, ice, co2 );
                 boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
                 
                 //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
@@ -765,7 +765,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
             
             //  class BC_Atmosphaere for the geometry of a shell of a sphere
             boundary.BC_radius ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
-            boundary.BC_theta ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
+            boundary.BC_theta ( t, u, v, w, p_dyn, c, cn, cloud, ice, co2 );
             boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
 
             //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature

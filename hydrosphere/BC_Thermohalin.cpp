@@ -58,18 +58,8 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max,
     this -> t_pole = t_pole;
     this -> input_path = input_path;
 
-    int i_middle = i_beg + 36;                          // 0 + 36 = 36 for total depth 100m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
 
     j_half = ( jm - 1 ) / 2;
-
-    d_i_beg = ( double ) i_beg;
-    d_i_middle = ( double ) i_middle;
-    d_i_max = ( double ) ( im - 1 );
-
-// reduction or amplification of flow velocities along coasts
-// for the artificial initial and boundary conditions
-//  u_max = .03 / u_0;              // u_max = 0.03 m/s compares to average of up/downwelling
-    u_max = .0;
 
 // ocean surface velocity is about 3% of the wind velocity at the surface
     water_wind = .03;
@@ -291,8 +281,8 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
     for ( int j = j_150; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
             if ( is_water( h, im-1, j, k ) ){
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
-
+                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] 
+                    + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
                 if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
                 if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
                 if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
@@ -323,6 +313,11 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
         }
     }
 
+    double i_Ekman_layer = 500.;                                    // assumed Ekman-layer depth of 500m
+    double coeff = i_Ekman_layer / L_hyd;
+
+    int i_Ekman = ( im - 1 ) * ( 1. - coeff );
+
 // surface wind vector driving the Ekman spiral in the Ekman layer
 // northern hemisphere
     double gam_z = 0.;
@@ -333,8 +328,9 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
     double w_g = 0.;
 
     for ( int j = 0; j < jm; j++ ){
-        for ( int i = im-2; i >= i_beg; i-- ){
-            gam_z = M_PI * ( double ) ( i - i_beg ) / ( double ) ( im - 1 - i_beg );
+        for ( int i = im-2; i >= i_Ekman; i-- ){
+            gam_z = M_PI * ( double ) ( i - i_Ekman ) 
+                / ( double ) ( im - 1 - i_Ekman );
             exp_gam_z = exp ( - gam_z );
             sin_gam_z = sin ( gam_z );
             cos_gam_z = cos ( gam_z );
@@ -353,6 +349,25 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
                         v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
                         w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
                     }
+                }
+            }
+        }
+    }
+    for ( int i = 0; i <= i_Ekman; i++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                v.x[ i ][ j ][ k ] = 0.;
+                w.x[ i ][ j ][ k ] = 0.;
+                }
+            }
+        }
+
+    for ( int i = 0; i <= im-1; i++ ){
+        for ( int j = 0; j < jm; j++ ){
+            for ( int k = 0; k < km; k++ ){
+                if ( is_land( h, i, j, k) ){
+                    v.x[ i ][ j ][ k ] = 0.;
+                    w.x[ i ][ j ][ k ] = 0.;
                 }
             }
         }
@@ -447,7 +462,6 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
         {
             if ( is_water( h, im-1, j, k ) )
             {
-                d_j = ( double ) j;
                 t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
 
                 c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + c_cretaceous / c_0;  // non-dimensional
@@ -992,8 +1006,8 @@ void BC_Thermohalin::Value_Limitation_Hyd ( Array &h, Array &u, Array &v,
                 if ( t.x[ i ][ j ][ k ] >= 1.147 )  t.x[ i ][ j ][ k ] = 1.147; //40.15 °C
                 if ( t.x[ i ][ j ][ k ] <= 0.9963 )  t.x[ i ][ j ][ k ] = 0.9963;// -1.0 °C
 
-                //if ( c.x[ i ][ j ][ k ] >= 1.1 )  c.x[ i ][ j ][ k ] = 1.1;
-                //if ( c.x[ i ][ j ][ k ] < .95 )  c.x[ i ][ j ][ k ] = .95;
+                if ( c.x[ i ][ j ][ k ] >= 1.156 )  c.x[ i ][ j ][ k ] = 1.156;    // 40.0 psu
+                if ( c.x[ i ][ j ][ k ] <= .95 )  c.x[ i ][ j ][ k ] = .95;           // 32.0 psu
             }
         }
     }

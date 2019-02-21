@@ -147,7 +147,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     double dthe = the_degree / pi180; // dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
     double dphi = phi_degree / pi180; // dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
     double dr = 0.025;  // 0.025 x 40 = 1.0 compares to 16 km : 40 = 150 m for 1 radial step
-    double dt = 0.00001; // time step satisfies the CFL condition
+    double dt = 0.000001; // time step satisfies the CFL condition
 
     const double the0 = 0.; // North Pole
     const double phi0 = 0.; // zero meridian in Greenwich
@@ -332,7 +332,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                     << pressure_iter_max_2D << "    pressure_iter_2D = " << pressure_iter_2D << endl;
 
                 // class BC_Atmosphaere for the geometry of a shell of a sphere
-                boundary.RB_theta ( ca, ta, pa, t, u, v, w, p_dyn, c );
+                boundary.RB_theta ( t, u, v, w, p_dyn, c );
                 boundary.RB_phi ( t, u, v, w, p_dyn, c );
 
                 // old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
@@ -343,19 +343,11 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                 residuum_old = emin;
 
                 oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
-/*
-      cout << endl << " ***** vor RK  printout of 3D-field v-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
+                // composition of results
+                calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 
+                    Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, 
+                    Salt_total, BottomWater );
 
-      cout << endl << " ***** vor RK  printout of 3D-field w-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
-
-      cout << endl << " ***** vor RK  printout of 3D-field vn-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
-
-      cout << endl << " ***** vor RK  printout of 3D-field wn-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
-*/
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
@@ -445,8 +437,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
             // class RB_Hydrosphaere for the geometry of a shell of a sphere
             boundary.RB_radius ( ca, ta, pa, dr, rad, t, u, v, w, p_dyn, c );
-            boundary.RB_theta ( ca, ta, pa, t, u, v, w, p_dyn, c );
+            boundary.RB_theta ( t, u, v, w, p_dyn, c );
             boundary.RB_phi ( t, u, v, w, p_dyn, c );
+
+            // class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
+            // the continents and the ocean ground
+            depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );
 
             // surface pressure computed by surface temperature with gas equation
             oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );

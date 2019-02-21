@@ -55,6 +55,12 @@ void Pressure_Atm::computePressure_3D ( double u_0, double r_air,
         }
     }
 
+    double zeta = 3.715;
+    // collection of coefficients for coordinate stretching
+    double exp_rm = 0.;
+    double exp_2_rm = 0.;
+    double exp_2_rm_2 = 0.;
+
 // boundary conditions for the the-direction, loop index j
     for ( int k = 0; k < km; k++ ){
         for ( int i = 0; i < im; i++ ){
@@ -105,23 +111,28 @@ void Pressure_Atm::computePressure_3D ( double u_0, double r_air,
         rm = rad.z[ i ];
         rm2 = rm * rm;
 
+// collection of coefficients for coordinate stretching
+        exp_rm = 1. / exp( zeta * rm );
+        exp_2_rm = 1. / exp( 2. * zeta * rm );
+        exp_2_rm_2 = 2. / exp( 2. * zeta * rm );
+
         for ( int j = 1; j < jm-1; j++ ){
             sinthe = sin( the.z[ j ] );
             rmsinthe = rm * sinthe;
             rm2sinthe2 = rmsinthe * rmsinthe;
-            denom = 2. / dr2 + 2. / ( rm2 * dthe2 ) + 2. / ( rm2sinthe2 * dphi2 );
-            num1 = 1. / dr2;
+            denom = 2. / dr2 * exp_2_rm + 2. / ( rm2 * dthe2 ) + 2. / ( rm2sinthe2 * dphi2 );
+            num1 = 1. / dr2 * exp_2_rm;            
             num2 = 1. / ( rm2 * dthe2 );
             num3 = 1. / ( rm2sinthe2 * dphi2 );
 
 // determining RHS values around mountain surface
             for ( int k = 1; k < km-1; k++ ){
 // determining RHS-derivatives around mountain surfaces
-                drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
+                drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * exp_rm;
                 if ( i <= im - 3 ){
                     if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i+1, j, k ) ) )
-                            drhs_udr = ( - 3. * aux_u.x[ i ][ j ][ k ] + 4. * aux_u.x[ i + 1 ][ j ][ k ] - aux_u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
-                }else  drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i ][ j ][ k ] ) / dr;
+                            drhs_udr = ( - 3. * aux_u.x[ i ][ j ][ k ] + 4. * aux_u.x[ i + 1 ][ j ][ k ] - aux_u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr ) * exp_rm;
+                }else  drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i ][ j ][ k ] ) / dr * exp_rm;
 
 // gradients of RHS terms at mountain sides 2.order accurate in the-direction
                 drhs_vdthe = ( aux_v.x[ i ][ j+1 ][ k ] - aux_v.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe * rm );
@@ -150,7 +161,7 @@ void Pressure_Atm::computePressure_3D ( double u_0, double r_air,
                 }
 
 // explicit pressure computation based on the Poisson equation
-                p_dyn.x[ i ][ j ][ k ] = ( ( p_dynn.x[ i+1 ][ j ][ k ] + p_dynn.x[ i-1 ][ j ][ k ] ) * num1
+                p_dyn.x[ i ][ j ][ k ] = ( ( p_dynn.x[ i+1 ][ j ][ k ] + p_dynn.x[ i-1 ][ j ][ k ] ) * num1 * exp_2_rm_2
                                                     + ( p_dynn.x[ i ][ j+1 ][ k ] + p_dynn.x[ i ][ j-1 ][ k ] ) * num2
                                                     + ( p_dynn.x[ i ][ j ][ k+1 ] + p_dynn.x[ i ][ j ][ k-1 ] ) * num3 
                                                     - r_air * ( drhs_udr + drhs_vdthe + drhs_wdphi ) ) / denom;

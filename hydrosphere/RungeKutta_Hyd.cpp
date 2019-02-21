@@ -35,7 +35,7 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
                    Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c,
                    Array &tn, Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn,
                    Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion,
-                   Array &Buoyancy_Force, Array &Salt_Balance, Array &p_stat,
+                   Array &Buoyancy_Force_3D, Array &Salt_Balance, Array &p_stat,
                    Array &r_water, Array &r_salt_water, Array_2D &Bathymetry )
 {
 //  3D volume iterations
@@ -50,7 +50,7 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
 // Runge-Kutta 4. order for k1 step ( dt )
                 prepare.RK_RHS_3D_Hydrosphere ( i, j, k, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca,
                              rad, the, phi, h, t, u, v, w, p_dyn, c, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, aux_u, aux_v, aux_w,
-                             Salt_Finger, Salt_Diffusion, Buoyancy_Force, Salt_Balance, p_stat, r_water, r_salt_water,
+                             Salt_Finger, Salt_Diffusion, Buoyancy_Force_3D, Salt_Balance, p_stat, r_water, r_salt_water,
                              Evaporation_Dalton, Precipitation, Bathymetry );
 
                 kt1 = rhs_t.x[ i ][ j ][ k ];
@@ -68,7 +68,7 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
 // Runge-Kutta 4. order for k2 step ( dt )
                 prepare.RK_RHS_3D_Hydrosphere ( i, j, k, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca,
                 rad, the, phi, h, t, u, v, w, p_dyn, c, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, aux_u, aux_v, aux_w,
-                Salt_Finger, Salt_Diffusion, Buoyancy_Force, Salt_Balance, p_stat, r_water, r_salt_water,
+                Salt_Finger, Salt_Diffusion, Buoyancy_Force_3D, Salt_Balance, p_stat, r_water, r_salt_water,
                 Evaporation_Dalton, Precipitation, Bathymetry );
 
                 kt2 = rhs_t.x[ i ][ j ][ k ];
@@ -86,25 +86,25 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
     // Runge-Kutta 4. order for k3 step ( dt )
                 prepare.RK_RHS_3D_Hydrosphere ( i, j, k, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca,
                 rad, the, phi, h, t, u, v, w, p_dyn, c, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, aux_u, aux_v, aux_w,
-                Salt_Finger, Salt_Diffusion, Buoyancy_Force, Salt_Balance, p_stat, r_water, r_salt_water,
+                Salt_Finger, Salt_Diffusion, Buoyancy_Force_3D, Salt_Balance, p_stat, r_water, r_salt_water,
                 Evaporation_Dalton, Precipitation, Bathymetry );
 
                 kt3 = rhs_t.x[ i ][ j ][ k ];
                 ku3 = rhs_u.x[ i ][ j ][ k ];
                 kv3 = rhs_v.x[ i ][ j ][ k ];
-                kw3 =rhs_w.x[ i ][ j ][ k ];
+                kw3 = rhs_w.x[ i ][ j ][ k ];
                 kc3 = rhs_c.x[ i ][ j ][ k ];
 
                 t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] + kt3 * dt;
                 u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] + ku3 * dt;
                 v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] + kv3 * dt;
-                w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] + kw3 * dt;
+                w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] + kw3 * dt;
                 c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] + kc3 * dt;
 
     // Runge-Kutta 4. order for k4 step ( dt )
                 prepare.RK_RHS_3D_Hydrosphere ( i, j, k, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca,
                 rad, the, phi, h, t, u, v, w, p_dyn, c, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, aux_u, aux_v, aux_w,
-                Salt_Finger, Salt_Diffusion, Buoyancy_Force, Salt_Balance, p_stat, r_water, r_salt_water,
+                Salt_Finger, Salt_Diffusion, Buoyancy_Force_3D, Salt_Balance, p_stat, r_water, r_salt_water,
                 Evaporation_Dalton, Precipitation, Bathymetry );
 
                 kt4 = rhs_t.x[ i ][ j ][ k ];

@@ -217,6 +217,8 @@ private:
 
     void Two_Category_Ice_Scheme();
 
+    void BC_Pressure();
+
     static cAtmosphereModel* m_model;
 
     PythonStream ps;

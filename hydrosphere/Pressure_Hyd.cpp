@@ -129,8 +129,8 @@ void Pressure_Hyd::computePressure_3D ( double u_0, double r_0_water,
                 drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
 
                 if ( i <= im - 3 ){
-                    if ( ( is_land( h, i, j, k) ) && ( h.x[ i + 1 ][ j ][ k ] == 0. ) )
-                            drhs_udr = ( - 3. * aux_u.x[ i ][ j ][ k ] + 4. * aux_u.x[ i + 1 ][ j ][ k ] - aux_u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
+                    if ( ( is_land ( h, i, j, k ) ) && ( is_water ( h, i+1, j, k ) ) )        
+                        drhs_udr = ( - 3. * aux_u.x[ i ][ j ][ k ] + 4. * aux_u.x[ i + 1 ][ j ][ k ] - aux_u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr );
                 }else     drhs_udr = ( aux_u.x[ i+1 ][ j ][ k ] - aux_u.x[ i ][ j ][ k ] ) / dr;
 
 // gradients of RHS terms at mountain sides 2.order accurate in the-direction
@@ -168,6 +168,7 @@ void Pressure_Hyd::computePressure_3D ( double u_0, double r_0_water,
                                                     + ( p_dynn.x[ i ][ j+1 ][ k ] + p_dynn.x[ i ][ j-1 ][ k ] ) * num2
                                                     + ( p_dynn.x[ i ][ j ][ k+1 ] + p_dynn.x[ i ][ j ][ k-1 ] ) * num3 
                                                     - r_0_water * ( drhs_udr + drhs_vdthe + drhs_wdphi ) ) / denom;
+                if ( is_land ( h, i, j, k ) )  p_dyn.x[ i ][ j ][ k ] = .0;
             }
         }
     }

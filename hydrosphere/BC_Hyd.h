@@ -32,7 +32,7 @@ public:
     void RB_radius ( double, double, double, double, Array_1D &, Array &, Array &,
         Array &, Array &, Array &, Array & );
 
-    void RB_theta ( double, double, double, Array &, Array &, Array &, Array &,
+    void RB_theta ( Array &, Array &, Array &, Array &,
         Array &, Array & );
 
     void RB_phi ( Array &, Array &, Array &, Array &, Array &, Array & );

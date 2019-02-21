@@ -828,7 +828,7 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     init_v_or_w(w,90,90,wa_equator_Tropopause,wa_equator_SL);
     
     //polar cell
-    double ua_90 = - 0.5;
+    double ua_90 = 0.5;
     double va_Polar_SL = 0.;
     double va_Polar_Tropopause = 0.;
     double va_Polar_SL_75 = .5;
@@ -874,7 +874,7 @@ void BC_Thermo::IC_CellStructure ( Array &h, Array &u, Array &v, Array &w ){
     init_v_or_w(v,135,135,va_Ferrel_Tropopause_45,va_Ferrel_SL_45); //lat: -45   
  
     // Hadley cell
-    double ua_30 = - 1.;
+    double ua_30 = 1.;
     double va_Hadley_SL = .25;
     double va_Hadley_Tropopause = - 1.;
     double va_Hadley_SL_15 = 1.;
@@ -1061,8 +1061,9 @@ void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecip
 
 
 
-void BC_Thermo::BC_Pressure ( Array &p_stat, Array &p_dyn, Array &t, Array &h ){
-    exp_pressure = g / ( 1.e-2 * gam * R_Air );
+void cAtmosphereModel::BC_Pressure()
+{
+    float exp_pressure = g / ( 1.e-2 * gam * R_Air );
 
 // boundary condition of surface pressure given by surface temperature through gas equation
     for ( int k = 0; k < km; k++ ){
@@ -1074,8 +1075,8 @@ void BC_Thermo::BC_Pressure ( Array &p_stat, Array &p_dyn, Array &t, Array &h ){
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 1; i < im; i++ ){
-                hight = ( double ) i * ( L_atm / ( double ) ( im-1 ) );
-                p_stat.x[ i ][ j ][ k ] = pow ( ( ( t.x[ 0 ][ j ][ k ] * t_0 - gam * hight * 1.e-2 ) /
+                float height = get_layer_height(i);
+                p_stat.x[ i ][ j ][ k ] = pow ( ( ( t.x[ 0 ][ j ][ k ] * t_0 - gam * height * 1.e-2 ) /
                     ( t.x[ 0 ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_stat.x[ 0 ][ j ][ k ];
                 // linear temperature distribution T = T0 - gam * hight
                 // current air pressure, step size in 500 m, from politropic formula in hPa
@@ -1825,7 +1826,7 @@ void BC_Thermo::Value_Limitation_Atm ( Array &h, Array &u, Array &v, Array &w,
                 if ( cloud.x[ i ][ j ][ k ] >= .01 )  cloud.x[ i ][ j ][ k ] = .01;
                 if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
 //                if ( ice.x[ i ][ j ][ k ] >= .0025 )  ice.x[ i ][ j ][ k ] = .0025;
-                if ( ice.x[ i ][ j ][ k ] >= .005 )  ice.x[ i ][ j ][ k ] = .005;
+                if ( ice.x[ i ][ j ][ k ] >= .0005 )  ice.x[ i ][ j ][ k ] = .0005;
                 if ( ice.x[ i ][ j ][ k ] < 0. )  ice.x[ i ][ j ][ k ] = 0.;
                 if ( co2.x[ i ][ j ][ k ] >= 5.36 )  co2.x[ i ][ j ][ k ] = 5.36;
                 if ( co2.x[ i ][ j ][ k ] <= 1. )  co2.x[ i ][ j ][ k ] = 1.;
