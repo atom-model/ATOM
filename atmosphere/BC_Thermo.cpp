@@ -1422,6 +1422,9 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
 
     double m_i = m_i_max;  
 
+    float p_h, N_i, S_nuc, S_c_frz, S_i_dep, S_c_au, S_i_au, S_d_au, S_ac, S_rim, S_shed;
+    float S_agg, S_i_cri, S_r_cri, S_ev, S_s_dep, S_i_melt, S_s_melt, S_r_frz;
+
     // rain and snow distribution based on parameterization schemes adopted from the COSMO code used by the German Weather Forecast
     // the choosen scheme is a Two Category Ice Scheme
     // besides the transport equation for the water vapour exists two equations for the cloud water and the cloud ice transport
@@ -1465,8 +1468,6 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                 float r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
                 float r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
     
-                float S_c_au, S_i_au, N_i;
-
                 if ( !( t_u < t_0 ) && ( c_c_au * cloud.x[ i ][ j ][ k ] > 0. ) )
                     S_c_au = c_c_au * cloud.x[ i ][ j ][ k ];
                    // cloud water to rain, cloud droplet collection in kg / ( kg * s )
@@ -1496,7 +1497,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                 if ( P_snow.x[ i + 1 ][ j ][ k ] < 0. )  P_snow.x[ i + 1 ][ j ][ k ] = 0.;
 
                 
-                float step = m_model->get_layer_height(i+1) - m_model->get_layer_height(i);
+                float step = get_layer_height(i+1) - get_layer_height(i);
                 P_rain.x[ i ][ j ][ k ] = P_rain.x[ i + 1 ][ j ][ k ]
                      + r_humid * ( ( S_r.x[ i ][ j ][ k ] - S_r.x[ i + 1 ][ j ][ k ] )
                      / 2. * step ) / 2.;  // in kg / ( m2 * s ) == mm/s
@@ -1515,7 +1516,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
     /******************* main part for rain and snow calculation *********************/
 
     if ( true ){
-        for(int iter_prec = 1; iter_prec <= 5; iter_prec++ ){ // iter_prec may be varied, but is sufficient
+        for(int iter_prec = 1; iter_prec <= 1; iter_prec++ ){
             for ( int k = 0; k < km; k++ ){
                 for ( int j = 0; j < jm; j++ ){
                     P_rain.x[ im-1 ][ j ][ k ] = 0.;
@@ -1528,8 +1529,6 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                         float p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
                         float height = get_layer_height(i);
 
-                        float p_h, N_i, S_nuc, S_c_frz, S_i_dep, S_c_au, S_i_au, S_d_au, S_ac, S_rim, S_shed;
-                        float S_agg, S_i_cri, S_r_cri, S_ev, S_s_dep, S_i_melt, S_s_melt, S_r_frz;
                         if ( i != 0 )  
                             p_h = pow ( ( ( t_u - gam * height * 1.e-2 ) / ( t_u ) ), exp_pressure ) * p_SL;
                         else  
