@@ -1503,11 +1503,10 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
         }
     }
 
-
     /******************* main part for rain and snow calculation *********************/
 
     if ( true ){
-        for(int iter_prec = 1; iter_prec <= 1; iter_prec++ ){
+        for(int iter_prec = 1; iter_prec < 25; iter_prec++ ){
             for ( int k = 0; k < km; k++ ){
                 for ( int j = 0; j < jm; j++ ){
                     P_rain.x[ im-1 ][ j ][ k ] = 0.;
@@ -1525,7 +1524,6 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                         else  
                             p_h = p_SL;
 
-    
                         float r_dry = 100. * p_h / ( R_Air * t_u );  // density of dry air in kg/m³
                         float r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
                         float E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 );  // saturation water vapour pressure for the water phase at t > 0°C in hPa
@@ -1649,6 +1647,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                                 // immersion freezing and contact nucleation, < XVII >
                         else  S_r_frz = 0.;
 
+                        S_s_melt=0; // this thing causes problem.
                         // sinks and sources
                         S_v.x[ i ][ j ][ k ] = - S_c_c.x[ i ][ j ][ k ] + S_ev - S_i_dep -
                             S_s_dep - S_nuc;

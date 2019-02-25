@@ -15,7 +15,7 @@ map_cfg = {
     'v_velocity': (3, -1, 1, 'v_velocity (m/s)'),
     'w_velocity': (4, -1, 2, 'w_velocity (m/s)'),
     'water_vapour': (7, 0, 20, 'Water Vapour (g/kg)'),
-    'precipitation': (8, 0, 5000, 'Precipitation (mm/yr)'),
+    'precipitation': (8, 0, 2000, 'Precipitation (mm/yr)'),
     'precipitable_water': (9, 0, 30, 'Precipitable Water (mm)'),
 }
 
