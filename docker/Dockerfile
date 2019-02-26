@@ -60,6 +60,7 @@ RUN mkdir /home/ATOM/workspace
 
 # Copy test files to workspace
 RUN cp -av /home/ATOM/benchmark/GEOS2115.ipynb /home/ATOM/workspace/
+RUN cp -av /home/ATOM/benchmark/GEOS2115_utils.py /home/ATOM/workspace/GEOS2115_utils.py
 RUN cp -av /home/ATOM/benchmark/create_maps.ipynb /home/ATOM/workspace/
 RUN cp -av /home/ATOM/benchmark/config_atm.xml /home/ATOM/workspace/config_atm.xml
 RUN cp -av /home/ATOM/benchmark/config_hyd.xml /home/ATOM/workspace/config_hyd.xml
