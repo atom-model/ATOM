@@ -247,32 +247,26 @@ def draw_surfacre_wind_velocity_map(time):
             tmp.append(t[3::4])
         return tmp[3::4]
 
-    zeros = np.zeros(181*361)
-
-    vm_0 = np.fromfile('./output/bin_data/m_{}_n_0.bin'.format(time),'<f8')
-    v_0 = np.fromfile('./output/bin_data/v_{}_n_0.bin'.format(time),'<f8')
-    w_0 = np.fromfile('./output/bin_data/w_{}_n_0.bin'.format(time),'<f8')
+    #zeros = np.zeros(181*361)
+    v = np.fromfile('./output/bin_data/v_{}_n_0.bin'.format(time),'<f8')
+    w = np.fromfile('./output/bin_data/w_{}_n_0.bin'.format(time),'<f8')
     h = np.fromfile('./output/bin_data/h_{}_n_0.bin'.format(time),'<f8')
 
-    mask = np.isclose(vm_0,zeros)
+    #mask = np.isclose(v_0,zeros)
 
-    for layer_idx in range(1,41):
-        vm = np.fromfile('./output/bin_data/m_{0}_n_{1}.bin'.format(time, layer_idx),'<f8')
-        v = np.fromfile('./output/bin_data/v_{0}_n_{1}.bin'.format(time, layer_idx),'<f8')
-        w = np.fromfile('./output/bin_data/w_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
+    #for layer_idx in range(1,41):
+    #    v = np.fromfile('./output/bin_data/v_{0}_n_{1}.bin'.format(time, layer_idx),'<f8')
+    #    w = np.fromfile('./output/bin_data/w_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
     
-
-        vm = vm*mask
-        vm_0 = vm_0 + vm
-        v = v*mask
-        v_0 = v_0 + v
-        w = w*mask
-        w_0 = w_0 + w
-        mask = np.isclose(vm_0,zeros)
+    #    v = v*mask
+    #    v_0 = v_0 + v
+    #    w = w*mask
+    #    w_0 = w_0 + w
+    #    mask = np.isclose(vm_0,zeros)
     
-    vm = vm_0
-    v = v_0
-    w = w_0
+    vm = np.sqrt(v**2+w**2)
+    v = v/vm
+    w = w/vm
 
     x = np.linspace(-180, 180, 361)
     y = np.linspace(-90, 90, 181)
@@ -294,8 +288,6 @@ def draw_surfacre_wind_velocity_map(time):
     
     wn = down_sample(w) 
     vn = down_sample(-v)
-    wn = wn / np.sqrt(np.square(wn) + np.square(vn))
-    vn = vn / np.sqrt(np.square(wn) + np.square(vn))
     cs = m.quiver(down_sample(xi), down_sample(yi), wn, vn, down_sample(vm), width=0.001,
              headlength=7, headwidth=5, pivot='tail', clim=[0, 1.2], cmap='jet')
 

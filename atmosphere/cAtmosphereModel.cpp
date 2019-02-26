@@ -736,7 +736,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
     int Ma = int(round(*get_current_time()));
 
     move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
-    save_data();
+    if(debug) save_data();
     /** ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   :::::::::::::::: **/
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
@@ -823,7 +823,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
             
             iter_cnt++;
             iter_cnt_3d++;
-            save_data();
+            if(debug) save_data();
         }
         /**  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::::::: **/
         
@@ -840,7 +840,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
         //logger() << fabs ( p_dyn.x[ 20 ][ 30 ][ 150 ] - p_dynn.x[ 20 ][ 30 ][ 150 ] ) << " pressure_mchin" <<Ma<<std::endl;
         //logger() << std::get<0>(max_diff( im, jm, km, p_dyn, p_dynn)) << " pressure_max_diff" <<Ma<<std::endl;
 
-        if( pressure_iter % checkpoint == 0 ){
+        if( debug && pressure_iter % checkpoint == 0 ){
             write_file(bathymetry_name, output_path);
         }
 
@@ -1409,6 +1409,7 @@ void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, i
 
 void cAtmosphereModel::save_array(const string& fn, const Array& a){
     for(int i=0; i<im; i++){
+        if(!debug && i>0) break;
         std::ofstream os(fn + "_" + to_string(i) + ".bin", std::ios::binary | std::ios::out);
         for(int j=jm-1; j>=0; j--){
             os.write(reinterpret_cast<const char*>(a.x[i][j]+(km/2)), std::streamsize((km/2)*sizeof(double)));
@@ -1438,11 +1439,17 @@ void  cAtmosphereModel::save_data(){
     for(int i=0; i<im; i++){
         for(int j=0; j<jm; j++){
             for(int k=0; k<km; k++){
-                m_t.x[ i ][ j ][ k ] = sqrt ( pow ( v.x[ i ][ j ][ k ] * u_0, 2 ) + pow ( w.x[ i ][ j ][ k ] * u_0, 2 ) );
+                //m_t.x[ i ][ j ][ k ] = sqrt ( pow ( v.x[ i ][ j ][ k ] * u_0, 2 ) + pow ( w.x[ i ][ j ][ k ] * u_0, 2 ) );
                 t_t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k ] * t_0 - t_0;
                 v_t.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] * u_0;
                 w_t.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] * u_0;
-                u_t.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] * u_0;
+
+                if(fabs(v_t.x[ i ][ j ][ k ]) > 0 && !(fabs(v_t.x[ 0 ][ j ][ k ]) > 0))
+                    v_t.x[ 0 ][ j ][ k ] = v_t.x[ i ][ j ][ k ];
+                if(fabs(w_t.x[ i ][ j ][ k ]) > 0 && !(fabs(w_t.x[ 0 ][ j ][ k ]) > 0))
+                    w_t.x[ 0 ][ j ][ k ] = w_t.x[ i ][ j ][ k ];
+
+                //u_t.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] * u_0;
             }
         }
     }
@@ -1450,9 +1457,9 @@ void  cAtmosphereModel::save_data(){
     save_array(path + string("t") + postfix_str, t_t);
     save_array(path + string("v") + postfix_str, v_t);
     save_array(path + string("w") + postfix_str, w_t);
-    save_array(path + string("u") + postfix_str, u_t);
-    save_array(path + string("m") + postfix_str, m_t);
+    //save_array(path + string("u") + postfix_str, u_t);
+    //save_array(path + string("m") + postfix_str, m_t);
     save_array(path + string("h") + postfix_str, h);
-    save_array(path + string("c") + postfix_str, c);
-    save_array(path + string("p") + postfix_str, p_dyn);
+    //save_array(path + string("c") + postfix_str, c);
+    //save_array(path + string("p") + postfix_str, p_dyn);
 }

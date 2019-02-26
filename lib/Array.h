@@ -13,6 +13,7 @@
 #define _ARRAY_
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <cmath>
 #include <cassert>
@@ -101,6 +102,18 @@ public:
     //overload
     Array operator*(double val){
         return val*(*this);
+    }
+
+    void save(const string& fn, bool surface_only){
+        for(int i=0; i<im; i++){
+            if(surface_only && i>0) break;
+            std::ofstream os(fn + "_" + to_string(i) + ".bin", std::ios::binary | std::ios::out);
+            for(int j=jm-1; j>=0; j--){
+                os.write(reinterpret_cast<const char*>(x[i][j]+(km/2)), std::streamsize((km/2)*sizeof(double)));
+                os.write(reinterpret_cast<const char*>(x[i][j]), std::streamsize((km/2+1)*sizeof(double)));
+            }
+            os.close();
+        }
     }
 
     double max() const{

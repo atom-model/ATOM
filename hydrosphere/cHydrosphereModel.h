@@ -29,11 +29,13 @@ private:
     void SetDefaultConfig();
     void reset_arrays();
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
+    void save_data();
 
     const int im = 41, jm = 181, km = 361, nm = 200;
 
-    int iter_cnt;
-
+    int iter_cnt, iter_cnt_3d;
+    int m_current_time;
+    
     std::vector<Array*> old_arrays_3d, new_arrays_3d, old_arrays_2d, new_arrays_2d;
 
     // 1D arrays

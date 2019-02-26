@@ -130,6 +130,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     // maximum number of overall iterations ( n ),
     // maximum number of inner velocity loop iterations ( velocity_iter_max ),
     // maximum number of outer pressure loop iterations ( pressure_iter_max )
+    m_current_time = Ma;
 
     reset_arrays();
 
@@ -192,10 +193,13 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
         Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Temperature.xyz";
         Name_SurfaceSalinity_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Salinity.xyz";
 
-        std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - time_step) + " " +
-                std::to_string(Ma) + " " + output_path + " " + BathymetrySuffix +" hyd";
-        int ret = system(cmd_str.c_str());
-        std::cout << " reconstruction script returned: " << ret << std::endl;
+        struct stat info;
+        if( stat( Name_SurfaceSalinity_File.c_str(), &info ) != 0){
+            std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - time_step) + " " +
+                    std::to_string(Ma) + " " + output_path + " " + BathymetrySuffix +" hyd";
+            int ret = system(cmd_str.c_str());
+            std::cout << " reconstruction script returned: " << ret << std::endl;
+        }
     }
 
     string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
@@ -411,7 +415,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
-
+    iter_cnt_3d = 0;
     // ::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::::::::::
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
@@ -605,6 +609,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
 
             iter_cnt++;
+            iter_cnt_3d++;
         }
         //  ::::::  end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::
 
@@ -612,7 +617,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
         startPressure.computePressure_3D ( u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
 
-        if( pressure_iter % checkpoint == 0 ){
+        if( debug && pressure_iter % checkpoint == 0 ){
             write_file(bathymetry_name, output_path);
         }
 
@@ -627,7 +632,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     cout << endl << endl;
 
     write_file(bathymetry_name, output_path, true);
-
+    
+    iter_cnt_3d++;
+    save_data();
+    
     //  final remarks
     cout << endl << "***** end of the Hydrosphere General Circulation Modell ( OGCM ) *****" << endl << endl;
 
@@ -741,6 +749,7 @@ void cHydrosphereModel::Run()
 
 void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepath, bool is_final_result)
 {
+/*
     //  printout in ParaView and plot files
     //  class PostProcess_Hydrosphaere for the printing of results
     PostProcess_Hydrosphere     write_File ( im, jm, km, filepath );
@@ -769,8 +778,36 @@ void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepa
         write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
             u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
     }
+*/
     //  writing of plot data in the PlotData file
     PostProcess_Hydrosphere     ppa ( im, jm, km, output_path );
     ppa.Hydrosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, h, v, w, t, c, BottomWater, Upwelling, Downwelling );
 
+}
+
+
+void  cHydrosphereModel::save_data(){
+    struct stat info;
+    string path = output_path + "/bin_data/";
+    if( stat( path.c_str(), &info ) != 0 ){
+        mkdir(path.c_str(), 0777);
+    }
+    std::ostringstream ss;
+    if(iter_cnt_3d == pressure_iter_max * velocity_iter_max + 1)
+        ss << "_" << m_current_time << "_n";
+    else
+        ss << "_" << m_current_time << "_" << iter_cnt_3d;
+    std::string postfix_str = ss.str();
+
+    Array  v_t(im, jm, km, 0), w_t(im, jm, km, 0);
+    for(int i=0; i<im; i++){
+        for(int j=0; j<jm; j++){
+            for(int k=0; k<km; k++){
+                v_t.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] * u_0;
+                w_t.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] * u_0;
+            }
+        }
+    }
+    v_t.save(path + std::string("hyd_v")+postfix_str, false);
+    w_t.save(path + std::string("hyd_w")+postfix_str, false);
 }

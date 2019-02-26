@@ -49,37 +49,36 @@ RUN rm -rf basemap-1.1.0/ v1.1.0.tar.gz
 
 RUN apt-get install -y gmt python-tk
 
-WORKDIR /build
-ARG CACHE_DATE=2016-01-01
+WORKDIR /home
+ARG CACHE_DATE=2019-02-26
 RUN git clone https://github.com/atom-model/ATOM.git -b mchin --single-branch
-WORKDIR /build/ATOM
+WORKDIR /home/ATOM
 RUN make
-RUN pip install -e /build/ATOM/python
+RUN pip install -e /home/ATOM/python
 
-RUN mkdir /build/ATOM/workspace
+RUN mkdir /home/ATOM/workspace
 
 # Copy test files to workspace
-RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb /build/ATOM/workspace/
-RUN cp -av /build/ATOM/benchmark/create_maps.ipynb /build/ATOM/workspace/
-RUN cp -av /build/ATOM/benchmark/config_atm.xml /build/ATOM/workspace/config_atm.xml
-RUN cp -av /build/ATOM/benchmark/config_hyd.xml /build/ATOM/workspace/config_hyd.xml
+RUN cp -av /home/ATOM/benchmark/GEOS2115.ipynb /home/ATOM/workspace/
+RUN cp -av /home/ATOM/benchmark/create_maps.ipynb /home/ATOM/workspace/
+RUN cp -av /home/ATOM/benchmark/config_atm.xml /home/ATOM/workspace/config_atm.xml
+RUN cp -av /home/ATOM/benchmark/config_hyd.xml /home/ATOM/workspace/config_hyd.xml
 
 RUN apt-get update; apt-get install -y curl \
     && curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/Paleotopography_Grids/topo_grids.tar.gz \
-    | tar -xvC /build/ATOM/data 
+    | tar -xvC /home/ATOM/data 
 
 # setup space for working in
-VOLUME /build/ATOM/workspace/output
+VOLUME /home/ATOM/workspace/output
 
-RUN chmod a+x /build/ATOM/docker/notebook.sh
+RUN chmod a+x /home/ATOM/docker/notebook.sh
 
 #ENTRYPOINT ["/workspace/notebook.sh"]
-CMD ["/build/ATOM/docker/notebook.sh"] 
+CMD ["/home/ATOM/docker/notebook.sh"] 
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR /build/ATOM/workspace
-#WORKDIR /build/ATOM/benchmark
+WORKDIR /home/ATOM/workspace
 
 EXPOSE 8888
