@@ -808,6 +808,6 @@ void  cHydrosphereModel::save_data(){
             }
         }
     }
-    v_t.save(path + std::string("hyd_v")+postfix_str, false);
-    w_t.save(path + std::string("hyd_w")+postfix_str, false);
+    v_t.save(path + std::string("hyd_v")+postfix_str, true);
+    w_t.save(path + std::string("hyd_w")+postfix_str, true);
 }
