@@ -799,15 +799,23 @@ void  cHydrosphereModel::save_data(){
         ss << "_" << m_current_time << "_" << iter_cnt_3d;
     std::string postfix_str = ss.str();
 
-    Array  v_t(im, jm, km, 0), w_t(im, jm, km, 0);
+    Array  v_t(im, jm, km, 0), w_t(im, jm, km, 0), c_t(im, jm, km, 0), t_t(im, jm, km, 0);
     for(int i=0; i<im; i++){
         for(int j=0; j<jm; j++){
             for(int k=0; k<km; k++){
+                c_t.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k ] * 35.;
                 v_t.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] * u_0;
                 w_t.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] * u_0;
+                t_t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k ] * 273.15 - 273.15;
             }
         }
     }
-    v_t.save(path + std::string("hyd_v")+postfix_str, true);
-    w_t.save(path + std::string("hyd_w")+postfix_str, true);
+    v_t.save(path + std::string("hyd_v")+postfix_str, im-1);
+    w_t.save(path + std::string("hyd_w")+postfix_str, im-1);
+    v_t.save(path + std::string("hyd_v")+postfix_str, im-5);
+    w_t.save(path + std::string("hyd_w")+postfix_str, im-5);
+    v_t.save(path + std::string("hyd_v")+postfix_str, im-10);
+    w_t.save(path + std::string("hyd_w")+postfix_str, im-10);
+    c_t.save(path + std::string("hyd_s")+postfix_str, im-1);
+    t_t.save(path + std::string("hyd_t")+postfix_str, im-1);
 }

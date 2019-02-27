@@ -1454,12 +1454,13 @@ void  cAtmosphereModel::save_data(){
         }
     }
 
-    save_array(path + string("t") + postfix_str, t_t);
-    save_array(path + string("v") + postfix_str, v_t);
-    save_array(path + string("w") + postfix_str, w_t);
+    t_t.save(path + string("t") + postfix_str, 0);
+    v_t.save(path + string("v") + postfix_str, 0);
+    w_t.save(path + string("w") + postfix_str, 0);
     //save_array(path + string("u") + postfix_str, u_t);
     //save_array(path + string("m") + postfix_str, m_t);
-    save_array(path + string("h") + postfix_str, h);
+    h.save(path + string("h") + postfix_str, 0);
     //save_array(path + string("c") + postfix_str, c);
     //save_array(path + string("p") + postfix_str, p_dyn);
+    Precipitation.save(path + string("p") + postfix_str);
 }

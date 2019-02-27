@@ -13,33 +13,14 @@ def down_sample(a):
     return tmp[3::4]
 
 def draw_velocity(time, output_dir, data_dir):
-    zeros = np.zeros(181*361)
+    v = np.fromfile('./output/bin_data/v_{}_n_0.bin'.format(time),'<f8')
+    w = np.fromfile('./output/bin_data/w_{}_n_0.bin'.format(time),'<f8')
+    h = np.fromfile('./output/bin_data/h_{}_n_0.bin'.format(time),'<f8') 
 
-    vm_0 = np.fromfile(data_dir + '/bin_data/m_{}_5_0.bin'.format(time),'<f8')
-    v_0 = np.fromfile(data_dir + '/bin_data/v_{}_5_0.bin'.format(time),'<f8')
-    w_0 = np.fromfile(data_dir + '/bin_data/w_{}_5_0.bin'.format(time),'<f8')
-    h = np.fromfile(data_dir + '/bin_data/h_{}_5_0.bin'.format(time),'<f8')
-
-    mask = np.isclose(vm_0,zeros)
-
-    for layer_idx in range(1,41):
-
-        vm = np.fromfile(data_dir + '/bin_data/m_{0}_4_{1}.bin'.format(time, layer_idx),'<f8')
-        v = np.fromfile(data_dir + '/bin_data/v_{0}_4_{1}.bin'.format(time, layer_idx),'<f8')
-        w = np.fromfile(data_dir + '/bin_data/w_{0}_4_{1}.bin'.format(time, layer_idx),'<f8')
-    
-
-        vm = vm*mask
-        vm_0 = vm_0 + vm
-        v = v*mask
-        v_0 = v_0 + v
-        w = w*mask
-        w_0 = w_0 + w
-        mask = np.isclose(vm_0,zeros)
-    
-    vm = vm_0
-    v = v_0
-    w = w_0
+    vm = np.sqrt(v**2+w**2)
+    vm[vm==0] = 1
+    v = v/vm
+    w = w/vm
 
     x = np.linspace(-180, 180, 361)
     y = np.linspace(-90, 90, 181)

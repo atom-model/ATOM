@@ -5,9 +5,12 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
+ATOM_HOME = '../'
+#ATOM_HOME = '/build/ATOM/'
+
 def draw_topography_map(time):
     #the location and naming convention of topography files
-    topo_dir = '../data/topo_grids/'
+    topo_dir = ATOM_HOME + 'data/topo_grids/'
 
     #read in data
     data = np.genfromtxt(topo_dir + '/{0}Ma_smooth.xyz'.format(time))
@@ -43,8 +46,8 @@ def draw_topography_map(time):
 
 def draw_NASA_present_day_temperature_map():
     #read in data
-    data = np.genfromtxt('../data/SurfaceTemperature_NASA.xyz')
-    topo_data = np.genfromtxt('../data/topo_grids/0Ma_smooth.xyz')
+    data = np.genfromtxt(ATOM_HOME + 'data/SurfaceTemperature_NASA.xyz')
+    topo_data = np.genfromtxt(ATOM_HOME + 'data/topo_grids/0Ma_smooth.xyz')
 
     x = data[:,0]
     y = data[:,1]
@@ -84,8 +87,8 @@ def draw_NASA_present_day_temperature_map():
 
 
 def draw_NASA_present_day_precipitation_map():
-    data = np.genfromtxt('../data/SurfacePrecipitation_NASA.xyz')
-    topo_data = np.genfromtxt('../data/topo_grids/0Ma_smooth.xyz')
+    data = np.genfromtxt(ATOM_HOME + 'data/SurfacePrecipitation_NASA.xyz')
+    topo_data = np.genfromtxt(ATOM_HOME + 'data/topo_grids/0Ma_smooth.xyz')
 
     x = data[:,0]
     y = data[:,1]
@@ -206,13 +209,13 @@ def draw_precipitation_map(time):
     plt.show()
 
 import sys
-sys.path.append('../reconstruction')
-sys.path.append('../utils')
+sys.path.append(ATOM_HOME + 'reconstruction')
+sys.path.append(ATOM_HOME + 'utils')
 
 from reconstruct_atom_data import *
 from pyatom import Atmosphere, Hydrosphere
 
-def run_model(start_time, end_time, time_step, av, ap, hv, hp):
+def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
     #create the models
     atm_model = Atmosphere()
     hyd_model = Hydrosphere()
@@ -265,9 +268,10 @@ def draw_surfacre_wind_velocity_map(time):
     #    mask = np.isclose(vm_0,zeros)
     
     vm = np.sqrt(v**2+w**2)
+    vm[vm==0] = 1
     v = v/vm
     w = w/vm
-
+    
     x = np.linspace(-180, 180, 361)
     y = np.linspace(-90, 90, 181)
     xv, yv = np.meshgrid(x, y)
@@ -418,10 +422,10 @@ def draw_upwelling_map(time):
 
     plt.show()
 
-def draw_plot_through_time(lon, lat, start_time, end_time, time_step):
+def draw_plot_through_time(property_name, lon, lat, start_time, end_time, time_step):
     #reconstruct the location
     import pygplates
-    rotation_dir = '../reconstruction/data'
+    rotation_dir = ATOM_HOME + 'reconstruction/data'
     rotation_model = pygplates.RotationModel(
             rotation_dir + '/Rotations/Global_EarthByte_230-0Ma_GK07_AREPS.rot' )
     static_polygon_features = pygplates.FeatureCollection(
@@ -443,7 +447,20 @@ def draw_plot_through_time(lon, lat, start_time, end_time, time_step):
     reconstructed_feature_geometries = []
 
     for time in range(start_time, end_time+1, time_step):
-        d = np.fromfile('./output/bin_data/t_{0}_n_0.bin'.format(time),'<f8')
+        if property_name == 'precipitation':
+            d = np.fromfile('./output/bin_data/p_{0}_n.bin'.format(time),'<f8')
+            d = d * 365
+        elif property_name == 'air_velocity':
+            w = np.fromfile('./output/bin_data/w_{0}_n_0.bin'.format(time),'<f8')
+            v = np.fromfile('./output/bin_data/v_{0}_n_0.bin'.format(time),'<f8')
+            d = np.sqrt(w**2+v**2)
+        elif property_name == 'ocean_velocity': 
+            w = np.fromfile('./output/bin_data/hyd_w_{0}_n_40.bin'.format(time),'<f8')
+            v = np.fromfile('./output/bin_data/hyd_v_{0}_n_40.bin'.format(time),'<f8')
+            d = np.sqrt(w**2+v**2)
+        else:
+            d = np.fromfile('./output/bin_data/t_{0}_n_0.bin'.format(time),'<f8')
+            
         d = d.reshape((181, 361))
         pygplates.reconstruct(
                 assigned_point_feature,
@@ -457,6 +474,41 @@ def draw_plot_through_time(lon, lat, start_time, end_time, time_step):
             data.append(d[int(p[0])+90, int(p[1])+180])  
     
     plt.plot(range(start_time, end_time+1, time_step), data)
-    plt.ylabel("Temperature (Celsius)")
+    if property_name == 'precipitation':
+        plt.ylabel("Precipitation (mm/yr)")
+    elif property_name == 'air_velocity':
+        plt.ylabel("Surface Wind Velocity (m/s)")
+    elif property_name == 'ocean_velocity':
+        plt.ylabel("Ocean Current Velocity (m/s)")
+    else:
+        plt.ylabel("Temperature (Celsius)")
     plt.xlabel("Time (millon years)")
     plt.show()
+    
+def draw_transects(property_name, time, lon):
+    if property_name == 'salinity':
+        d = np.fromfile('./output/bin_data/hyd_s_{0}_n_40.bin'.format(time),'<f8')
+    elif property_name == 'ocean_velocity':
+        w = np.fromfile('./output/bin_data/hyd_w_{0}_n_40.bin'.format(time),'<f8')
+        v = np.fromfile('./output/bin_data/hyd_v_{0}_n_40.bin'.format(time),'<f8')
+        d = np.sqrt(w**2+v**2)
+    elif property_name == 'ocean_temperature':
+        d = np.fromfile('./output/bin_data/hyd_t_{0}_n_40.bin'.format(time),'<f8')
+    else:
+        d = np.fromfile('./output/bin_data/t_{0}_n_0.bin'.format(time),'<f8')
+        
+        
+    d = d.reshape((181, 361))
+    plt.plot(np.arange(90,-91,-1), d[:,lon+180][::-1])
+    
+    if property_name == 'salinity':
+        plt.ylabel("Salinity (psu)")
+    elif property_name == 'ocean_velocity':
+        plt.ylabel("Ocean Current Velocity (m/s)")
+    else:
+        plt.ylabel("Temperature (Celsius)")
+    plt.xticks(np.arange(90,-91,-20))
+    plt.xlabel("Latitude")
+    plt.show()
+        
+        
