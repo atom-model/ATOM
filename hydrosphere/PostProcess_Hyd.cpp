@@ -463,7 +463,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
                                                     Array_2D &SaltFinger, Array_2D &SaltDiffusion,
                                                     Array_2D &BuoyancyForce, Array_2D &BottomWater,
                                                     Array_2D &Evaporation_Dalton, Array_2D &Precipitation,
-                                                    Array_2D &Bathymetry ){
+                                                    Array_2D &Bathymetry, Array_2D &salinity_evaporation ){
     double x, y, z, dx, dy;
 
     j_max = jm;
@@ -539,6 +539,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     dump_radial_2d("BottomWater", BottomWater, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Precipitation", Precipitation, 1., Hydrosphere_vtk_radial_File);
+    dump_radial_2d("salinity_evaporation", salinity_evaporation, c_0, Hydrosphere_vtk_radial_File);
     dump_radial("Evap-Precip", aux_v, 1., i_radial, Hydrosphere_vtk_radial_File);
 
     Hydrosphere_vtk_radial_File <<  "VECTORS v-w-Cell float" << endl;

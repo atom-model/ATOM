@@ -164,6 +164,9 @@ class BC_Thermo
 
         void IC_Temperature_WestEastCoast ( Array &, Array & );
 
+        void BC_Evaporation ( Array_2D &vapour_evaporation, Array_2D &Evaporation_Dalton, 
+             Array_2D &Precipitation, Array &h, Array &c, Array &cn );
+
         void Value_Limitation_Atm ( Array &, Array &, Array &, Array &, Array &,
             Array &, Array &, Array &, Array &, Array & );
 

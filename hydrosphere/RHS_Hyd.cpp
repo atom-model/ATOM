@@ -447,7 +447,7 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
 //  2D surface iterations
     im = 41;
     double k_Force = 1.;// factor for accelleration of convergence processes inside the immersed boundary conditions
-    double cc = 1.;
+    double cc = 1.; 
     double dist_coeff = 1.;
 
 // collection of coefficients

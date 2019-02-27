@@ -3220,6 +3220,61 @@ void BC_Thermo::IC_Temperature_WestEastCoast ( Array &h, Array &t ){
 
 
 
+void BC_Thermo::BC_Evaporation ( Array_2D &vapour_evaporation, Array_2D &Evaporation_Dalton, 
+                     Array_2D &Precipitation, Array &h, Array &c, Array &cn ){
+// mass flux of water vapour follows the same rules as given for the salinity flux in oceans
+// preparations for salinity increase due to evaporation and precipitation differences
+// procedure given in Rui Xin Huang, Ocean Circulation, p. 165
+
+    double vapour_surface = 0.;
+    double evap_precip = 0.;
+    double coeff_vapour = 1.1574e-5 * L_atm / u_0;
+                          // 1.1574-5 is the conversion from (Evap-Prec) in mm/d to m/s
+                          // 1.e-3 * c_0 stands for the transformation 
+                          // from non-dimensional water vapour to water vapour mass fraction
+
+// additional water vapour as a source term due to evaporation at ocean surface ( i = 0 )
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
+/*
+            if ( evap_precip >= 6. ){
+                evap_precip = 6.;     // vapour gradient causes values too high at shelf corners
+            }
+            if ( evap_precip <= - 6. ){
+                evap_precip = - 6.;         // vapour gradient causes values too high at shelf corners
+            }
+*/
+    // this formula contains a 2. order accurate gradient of 1. order, needs 3 points
+            vapour_surface = ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / 
+                             ( 2. * dr ) * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;     // 2. ord.
+    // this formula contains a 1. order accurate gradient of 1. order, needs 2 points
+//          vapour_surface = ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;
+//          vapour_surface = ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;
+
+//            vapour_evaporation.y[ j ][ k ] = + coeff_vapour * vapour_surface;
+            vapour_evaporation.y[ j ][ k ] = - coeff_vapour * vapour_surface;
+
+            if ( is_land ( h, 0, j, k ) ){
+//                vapour_evaporation.y[ j ][ k ] = 0.;
+            }
+//            vapour_evaporation.y[ j ][ k ] = 0.; //  test case
+
+//            c.x[ 0 ][ j ][ k ] = cn.x[ 0 ][ j ][ k ] + vapour_evaporation.y[ j ][ k ];
+
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   vapour_evaporation = " << vapour_evaporation.y[ j ][ k ] << "   coeff_vapour = " << coeff_vapour << "   vapour_surface = " << vapour_surface << "   c [g/kg] = " << c.x[ 0 ][ j ][ k ] << "   c_0 = " << c_0 << "   c [kg/kg] = " << c.x[ 0 ][ j ][ k ] * 1000. << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) /   ( 2. * dr ) << endl;
+
+        }
+     }
+ }
+
+
+
+
+
 void BC_Thermo::Value_Limitation_Atm ( Array &h, Array &u, Array &v, Array &w,
                 Array &p_dyn, Array &t, Array &c, Array &cloud, Array &ice, Array &co2 ){
 // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities

@@ -64,7 +64,7 @@ class PostProcess_Hydrosphere{
         void paraview_vtk_radial ( const string &, int, int, double &, double &, double &, double &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &,
-            Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+            Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
         void paraview_vtk_longal ( const string &, int, int, double &, double &, double &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,

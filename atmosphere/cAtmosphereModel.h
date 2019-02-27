@@ -169,6 +169,7 @@ private:
     Array_2D Q_sensible; // sensible heat from bottom values by the energy transport equation
     Array_2D Q_bottom; // difference by Q_radiation - Q_latent - Q_sensible
 
+    Array_2D vapour_evaporation; // water vapour by evaporation in [mm/d]
     Array_2D Evaporation_Dalton; // evaporation by Dalton in [mm/d]
     Array_2D Evaporation_Penman; // evaporation by Penman in [mm/d]
 

@@ -394,6 +394,8 @@ void cAtmosphereModel::reset_arrays()
     precipitable_water.initArray_2D(jm, km, 0.); // areas of precipitable water in the air
     precipitation_NASA.initArray_2D(jm, km, 0.); // surface precipitation from NASA
 
+    vapour_evaporation.initArray_2D(jm, km, 0.); // additional water vapour by evaporation
+
     radiation_surface.initArray_2D(jm, km, 0.); // direct sun radiation, short wave
 
     temperature_NASA.initArray_2D(jm, km, 0.); // surface temperature from NASA
@@ -607,7 +609,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
                                      Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, 
                                      Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, 
                                      Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, 
-                                     Precipitation, Topography, temp_NASA );
+                                     Precipitation, Topography, temp_NASA, vapour_evaporation );
 
     //  londitudinal data along constant latitudes
     int j_longal = 62;          // Mount Everest/Himalaya
@@ -787,6 +789,10 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                       t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
                                       co2_tropopause, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
                                       ice, co2, radiation_3D, Vegetation );
+
+//            // preparations for water vapour increase due to evaporation and precipitation differences
+//            circulation.BC_Evaporation ( Evaporation_Dalton, Precipitation, h, c, t );
+
 /*
         logger() << "§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§   global iteration n = " << iter_cnt << "   §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§" << std::endl << std::endl;
 
@@ -850,6 +856,9 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                          temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, 
                                          Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Dalton, Vegetation, 
                                          albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
+
+            // preparations for water vapour increase due to evaporation and precipitation differences
+            circulation.BC_Evaporation ( vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, cn );
 
             //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
             //  resulting the precipitation distribution formed of rain and snow

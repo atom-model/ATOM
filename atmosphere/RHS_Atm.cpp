@@ -453,7 +453,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     double coeff_vapour = 1.1574e-5 * L_atm / u_0;
                           // 1.1574e-5 is the conversion from (Evap-Prec) in mm/d to m/s
 // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
-    double r_humid = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
+    double r_humid = r_dry * ( 1. + c.x[ 0 ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ 0 ][ j ][ k ] );
 
     double RS_buoyancy_Momentum = coeff_buoy * Buoyancy * ( r_humid - r_dry ) / r_dry * g; // any humid air is less dense than dry air
 //    double RS_buoyancy_Momentum = 0.;  // test case
@@ -464,7 +464,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
         BuoyancyForce.x[ i ][ j ][ k ] = 0.;
     }
 
-
+/*
 // additional water vapour as a source term due to evaporation at ocean surface ( i = 0 )
     if ( i == 1 ){
         evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
@@ -491,7 +491,7 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
         vapour_evaporation = 0.; //  test case
 
     c.x[ 0 ][ j ][ k ] = c.x[ 0 ][ j ][ k ] + vapour_evaporation;
-
+*/
 
     // Right Hand Side of the time derivative ot temperature, pressure, water vapour concentration and velocity components
     rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm

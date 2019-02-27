@@ -65,7 +65,7 @@ public:
                                     Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
                                     Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &,
                                     Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &,
-                                    Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
+                                    Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
     void Atmosphere_v_w_Transfer ( string &, double, Array &, Array &, Array &, Array &,
                                     Array_2D &, Array_2D & );
