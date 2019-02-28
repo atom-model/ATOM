@@ -217,14 +217,14 @@ sys.path.append(ATOM_HOME + 'utils')
 from reconstruct_atom_data import *
 from pyatom import Atmosphere, Hydrosphere
 
-def run_model(start_time, end_time, time_step, av=2, ap=2, hv=8, hp=8):
+def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
     #create the models
     atm_model = Atmosphere()
     hyd_model = Hydrosphere()
 
     #load configurations
-    atm_model.load_config( './config_atm.xml' )
-    hyd_model.load_config( './config_hyd.xml' )
+    atm_model.load_config( './config_atm_GEOS2115.xml' )
+    hyd_model.load_config( './config_hyd_GEOS2115.xml' )
 
     #set the iteration number
     atm_model.velocity_iter_max = av
