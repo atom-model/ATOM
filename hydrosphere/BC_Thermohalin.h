@@ -22,7 +22,7 @@ using namespace std;
 class BC_Thermohalin{
     private:
         int j, k, im, jm, km, m, i_beg, j_max, i_max, j_half, i_bottom, i_deep, i_middle,
-            i_EIC_o, i_EIC_u, i_SCC_o, i_SCC_u, i_ECC_o, i_ECC_u;
+            i_EIC_o, i_EIC_u, i_SCC_o, i_SCC_u, i_ECC_o, i_ECC_u, i_EUC_o, i_EUC_u;
         int i_half, j_beg, j_end, j_run, j_step, k_beg, k_end, k_run, k_step, k_exp, j_z,
             j_n, k_z, k_n, k_w;
         int k_a, k_b, flip, k_grad;

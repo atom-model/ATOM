@@ -141,7 +141,7 @@ def main():
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 
-            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 1000 m compares to 40 steps times 25 m', 'double', 1000.0 ),
+            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 1000 m compares to 40 steps times 25 m', 'double', 200.0 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 10.0 ),
             ( 'sc', 'Schmidt number for salt water', 'double', 1.7329 ),

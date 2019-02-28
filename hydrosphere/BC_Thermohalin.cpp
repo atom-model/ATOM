@@ -313,7 +313,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
         }
     }
 
-    double i_Ekman_layer = 500.;                                    // assumed Ekman-layer depth of 500m
+    double i_Ekman_layer = 100.;// assumed Ekman-layer depth of 100m
     double coeff = i_Ekman_layer / L_hyd;
 
     int i_Ekman = ( im - 1 ) * ( 1. - coeff );
@@ -680,6 +680,7 @@ void BC_Thermohalin::IC_Equatorial_Currents
     double IC_water = 1.5;  // no dimension, ( average velocity compares to   u_0 * IC_water = 0,25 * IC_water = 0,375 m/s )
 
 // one grid step compares to a depth of 25 m for L_hyd = 1000m   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    /*
     i_EIC_u = i_beg; // 1000m depth
     i_EIC_o = 28; // 0m depth
     i_SCC_u = 8; // 800m depth
@@ -688,6 +689,17 @@ void BC_Thermohalin::IC_Equatorial_Currents
     i_ECC_o = im; // 0m depth
     float i_EUC_u = 32; // 200m depth
     float i_EUC_o = 36; // 100m depth
+    */
+
+    // one grid step compares to a depth of 5 m for L_hyd = 200m   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    i_EIC_u = i_beg; // 200m depth
+    i_EIC_o = 0; // 0m depth
+    i_SCC_u = 0; // 800m depth
+    i_SCC_o = 0; // 300m depth
+    i_ECC_u = 0; // 200m depth
+    i_ECC_o = im; // 0m depth
+    i_EUC_u = 0; // 200m depth
+    i_EUC_o = 20; // 100m depth
 
 // equatorial currents and counter-currents
 

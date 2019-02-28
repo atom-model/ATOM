@@ -812,10 +812,10 @@ void  cHydrosphereModel::save_data(){
     }
     v_t.save(path + std::string("hyd_v")+postfix_str, im-1);
     w_t.save(path + std::string("hyd_w")+postfix_str, im-1);
-    v_t.save(path + std::string("hyd_v")+postfix_str, im-5);
-    w_t.save(path + std::string("hyd_w")+postfix_str, im-5);
-    v_t.save(path + std::string("hyd_v")+postfix_str, im-10);
-    w_t.save(path + std::string("hyd_w")+postfix_str, im-10);
+    v_t.save(path + std::string("hyd_v")+postfix_str, im-11);
+    w_t.save(path + std::string("hyd_w")+postfix_str, im-11);
+    v_t.save(path + std::string("hyd_v")+postfix_str, im-21);
+    w_t.save(path + std::string("hyd_w")+postfix_str, im-21);
     c_t.save(path + std::string("hyd_s")+postfix_str, im-1);
     t_t.save(path + std::string("hyd_t")+postfix_str, im-1);
 }
