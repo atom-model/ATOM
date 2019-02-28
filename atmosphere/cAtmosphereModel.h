@@ -154,7 +154,12 @@ public:
     void solveRungeKutta_3D_Atmosphere();
 private:
     void load_temperature_curve();
+
     std::map<float,float> m_temperature_curve;
+
+    bool is_temperature_curve_loaded(){
+        return !m_temperature_curve.empty();
+    }
 
     void calculate_node_weights();
     float calculate_mean_temperature(){

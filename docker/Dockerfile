@@ -56,21 +56,21 @@ WORKDIR /build/ATOM
 RUN make
 RUN pip install -e /build/ATOM/python
 
-RUN mkdir /build/ATOM/workspace
+RUN mkdir /home/workspace
 
 # Copy test files to workspace
-RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb /build/ATOM/workspace/
-RUN cp -av /build/ATOM/benchmark/GEOS2115_utils.py /build/ATOM/workspace/GEOS2115_utils.py
-RUN cp -av /build/ATOM/benchmark/create_maps.ipynb /build/ATOM/workspace/
-RUN cp -av /build/ATOM/benchmark/config_atm.xml /build/ATOM/workspace/config_atm.xml
-RUN cp -av /build/ATOM/benchmark/config_hyd.xml /build/ATOM/workspace/config_hyd.xml
+RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb \
+           /build/ATOM/benchmark/GEOS2115_utils.py \
+           /build/ATOM/benchmark/create_maps.ipynb \
+           /build/ATOM/benchmark/config_atm_GEOS2115.xml \
+           /build/ATOM/benchmark/config_hyd_GEOS2115.xml /home/workspace/
 
 RUN apt-get update; apt-get install -y curl \
     && curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/Paleotopography_Grids/topo_grids.tar.gz \
     | tar -xvC /build/ATOM/data 
 
 # setup space for working in
-VOLUME /build/ATOM/workspace/output
+VOLUME /home/workspace/output
 
 RUN chmod a+x /build/ATOM/docker/notebook.sh
 
@@ -80,6 +80,6 @@ CMD ["/build/ATOM/docker/notebook.sh"]
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR /build/ATOM/workspace
+WORKDIR /home/workspace
 
 EXPOSE 8888

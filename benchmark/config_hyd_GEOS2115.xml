@@ -1,0 +1,53 @@
+<!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. --><atom>    <common>
+        <bathymetry_path>/build/ATOM/data/topo_grids</bathymetry_path>  <!--  (string ) -->
+        <BathymetrySuffix>Ma_smooth.xyz</BathymetrySuffix>  <!--  (string ) -->
+        <verbose>false</verbose>  <!--  (bool ) -->
+        <output_path>output/</output_path>  <!-- directory where model outputs should be placed ( must end in / ) (string ) -->
+        <paraview_panorama_vts>false</paraview_panorama_vts>  <!-- flag to control if create paraview panorama (bool ) -->
+        <debug>false</debug>  <!-- flag to control if the program is running in debug mode (bool ) -->
+        <temperature_file>/build/ATOM/data/SurfaceTemperature_NASA.xyz</temperature_file>  <!--  (string ) -->
+        <precipitation_file>/build/ATOM/data/SurfacePrecipitation_NASA.xyz</precipitation_file>  <!--  (string ) -->
+        <salinity_file>/build/ATOM/data/SurfaceSalinity_NASA.xyz</salinity_file>  <!--  (string ) -->
+        <temperature_curve_file>/build/ATOM/data/Lenton_etal_COPSE_time_temp.txt</temperature_curve_file>  <!--  (string ) -->
+        <reconstruction_script_path>/build/ATOM/reconstruction/reconstruct_atom_data.py</reconstruction_script_path>  <!--  (string ) -->
+        <use_earthbyte_reconstruction>true</use_earthbyte_reconstruction>  <!-- control whether use earthbyte method to recontruct grids (bool ) -->
+        <time_start>0</time_start>  <!-- start time (int ) -->
+        <time_end>60</time_end>  <!-- end time (int ) -->
+        <time_step>5</time_step>  <!-- step size between timeslices (int ) -->
+    </common>
+    <hydrosphere>
+        <input_path>output</input_path>  <!-- directory where Atmosphere output can be read (must end in /) (string ) -->
+        <velocity_iter_max_2D>2</velocity_iter_max_2D>  <!-- the number of velocity iterations  (int ) -->
+        <pressure_iter_max_2D>10</pressure_iter_max_2D>  <!-- the number of pressure iterations (int ) -->
+        <velocity_iter_max>2</velocity_iter_max>  <!-- the number of velocity iterations (int ) -->
+        <pressure_iter_max>2</pressure_iter_max>  <!-- the number of pressure iterations (int ) -->
+        <checkpoint>1</checkpoint>  <!-- control when to write output files(every how many pressure iterations) (int ) -->
+        <Buoyancy>1.0</Buoyancy>  <!-- buoyancy effect on the vertical velocity (double ) -->
+        <L_hyd>200.0</L_hyd>  <!-- extension of the hydrosphere shell in m, assumption of maximum depth of sea 1000 m compares to 40 steps times 25 m (double ) -->
+        <re>10.0</re>  <!-- Reynolds number: ratio viscous to inertia forces, Re = u * L / nue (double ) -->
+        <sc>1.7329</sc>  <!-- Schmidt number for salt water (double ) -->
+        <pr>6.957</pr>  <!-- Prandtl number for water (double ) -->
+        <g>9.8066</g>  <!-- gravitational acceleration of the earth (double ) -->
+        <cp_w>4182.0</cp_w>  <!-- specific heat capacity of water at constant pressure and 20°C in J/( kg K ) (double ) -->
+        <p_0>1013.25</p_0>  <!-- pressure at sea level in hPa (double ) -->
+        <t_0>273.15</t_0>  <!-- temperature in K compares to 0°C (double ) -->
+        <c_0>34.6</c_0>  <!-- rate of salt in psu at temperature t_0 (double ) -->
+        <u_0>0.25</u_0>  <!-- annual mean of surface water velocity in m/s (double ) -->
+        <r_0_water>1000.0</r_0_water>  <!-- reference density of fresh water in kg/m3 (double ) -->
+        <epsres>0.0005</epsres>  <!-- accuracy for relative and absolute errors0,988571429 (double ) -->
+        <ua>0.0</ua>  <!-- initial velocity component in r-direction (double ) -->
+        <va>0.0</va>  <!-- initial velocity component in theta-direction (double ) -->
+        <wa>0.0</wa>  <!-- initial velocity component in phi-direction (double ) -->
+        <pa>0.0</pa>  <!-- initial value for the pressure field (double ) -->
+        <ta>0.9963</ta>  <!-- compares to -1°C (double ) -->
+        <ca>0.95</ca>  <!-- c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C ) (double ) -->
+        <ca_max>1.0983</ca_max>  <!-- c = 1.0983 compares to a salinity of 38.00 psu  used for deep flow initialization (double ) -->
+        <t_cretaceous_max>10.0</t_cretaceous_max>  <!-- maximum add of mean temperature during cretaceous (double ) -->
+        <r0>1.0</r0>  <!-- Earth's radius is r_earth = 6731 km compares to 6.731 [ / ] (double ) -->
+        <the0>0.0</the0>  <!-- North Pole (double ) -->
+        <phi0>0.0</phi0>  <!-- zero meridian in Greenwich (double ) -->
+        <t_average>15.0</t_average>  <!-- mean temperature of the modern earth (double ) -->
+        <t_equator>1.1355</t_equator>  <!-- temperature t_0 = 1.1355 compares to 37° C compares to 310 K (double ) -->
+        <t_pole>1.0146</t_pole>  <!-- compares to 4°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect (double ) -->
+    </hydrosphere>
+</atom>

@@ -91,8 +91,6 @@ cAtmosphereModel::cAtmosphereModel() :
     
     m_model = this;
 
-    load_temperature_curve();
-
     //  Coordinate system in form of a spherical shell
     //  rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
     rad.initArray_1D(im, 0); // radial coordinate direction
@@ -158,6 +156,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO); //not platform independent, bad, very bad, I know
     }
 //    logger() << "RunTimeSlice: " << Ma << " Ma"<< std::endl <<std::endl;
+
+    if(!is_temperature_curve_loaded()) 
+        load_temperature_curve();
 
     reset_arrays();    
 
