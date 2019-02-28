@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
-ATOM_HOME = '../'
-#ATOM_HOME = '/build/ATOM/'
+#ATOM_HOME = '../'
+ATOM_HOME = '/build/ATOM/'
+
+OUTPUT_DIR = './output/'
 
 def draw_topography_map(time):
     #the location and naming convention of topography files
@@ -129,7 +131,7 @@ def draw_temperature_map(time, air_or_ocean="air"):
         postfix = 'Atm'
     else:
         postfix = 'Hyd'
-    data = np.genfromtxt('./output/[{0}Ma_smooth.xyz]_PlotData_{1}.xyz'.format(time, postfix), skip_header=1)
+    data = np.genfromtxt(OUTPUT_DIR + '[{0}Ma_smooth.xyz]_PlotData_{1}.xyz'.format(time, postfix), skip_header=1)
         
     x = data[:,0]
     y = data[:,1]
@@ -171,7 +173,7 @@ def draw_temperature_map(time, air_or_ocean="air"):
 
 
 def draw_precipitation_map(time):
-    data = np.genfromtxt('./output/[{0}Ma_smooth.xyz]_PlotData_Atm.xyz'.format(time), skip_header=1)
+    data = np.genfromtxt(OUTPUT_DIR + '[{0}Ma_smooth.xyz]_PlotData_Atm.xyz'.format(time), skip_header=1)
         
     x = data[:,0]
     y = data[:,1]
@@ -215,7 +217,7 @@ sys.path.append(ATOM_HOME + 'utils')
 from reconstruct_atom_data import *
 from pyatom import Atmosphere, Hydrosphere
 
-def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
+def run_model(start_time, end_time, time_step, av=2, ap=2, hv=8, hp=8):
     #create the models
     atm_model = Atmosphere()
     hyd_model = Hydrosphere()
@@ -251,9 +253,9 @@ def draw_surfacre_wind_velocity_map(time):
         return tmp[3::4]
 
     #zeros = np.zeros(181*361)
-    v = np.fromfile('./output/bin_data/v_{}_n_0.bin'.format(time),'<f8')
-    w = np.fromfile('./output/bin_data/w_{}_n_0.bin'.format(time),'<f8')
-    h = np.fromfile('./output/bin_data/h_{}_n_0.bin'.format(time),'<f8')
+    v = np.fromfile(OUTPUT_DIR + 'bin_data/v_{}_n_0.bin'.format(time),'<f8')
+    w = np.fromfile(OUTPUT_DIR + 'bin_data/w_{}_n_0.bin'.format(time),'<f8')
+    h = np.fromfile(OUTPUT_DIR + 'bin_data/h_{}_n_0.bin'.format(time),'<f8')
 
     #mask = np.isclose(v_0,zeros)
 
@@ -314,7 +316,7 @@ def draw_ocean_current_velocity_map(time):
             tmp.append(t[3::4])
         return tmp[3::4]
 
-    data = np.genfromtxt('./output/[{0}Ma_smooth.xyz]_PlotData_Hyd.xyz'.format(time), skip_header=1)
+    data = np.genfromtxt(OUTPUT_DIR + '[{0}Ma_smooth.xyz]_PlotData_Hyd.xyz'.format(time), skip_header=1)
     x = data[:,0]
     y = data[:,1]
     z = data[:,6]
@@ -350,7 +352,7 @@ def draw_ocean_current_velocity_map(time):
     plt.show()
 
 def draw_salinity_map(time):
-    data = np.genfromtxt('./output/[{0}Ma_smooth.xyz]_PlotData_Hyd.xyz'.format(time), skip_header=1)
+    data = np.genfromtxt(OUTPUT_DIR + '[{0}Ma_smooth.xyz]_PlotData_Hyd.xyz'.format(time), skip_header=1)
         
     x = data[:,0]
     y = data[:,1]
@@ -386,7 +388,7 @@ def draw_salinity_map(time):
     plt.show()
 
 def draw_upwelling_map(time):
-    data = np.genfromtxt('./output/[{0}Ma_smooth.xyz]_PlotData_Hyd.xyz'.format(time), skip_header=1)
+    data = np.genfromtxt(OUTPUT_DIR + '[{0}Ma_smooth.xyz]_PlotData_Hyd.xyz'.format(time), skip_header=1)
         
     x = data[:,0]
     y = data[:,1]
@@ -448,18 +450,18 @@ def draw_plot_through_time(property_name, lon, lat, start_time, end_time, time_s
 
     for time in range(start_time, end_time+1, time_step):
         if property_name == 'precipitation':
-            d = np.fromfile('./output/bin_data/p_{0}_n.bin'.format(time),'<f8')
+            d = np.fromfile(OUTPUT_DIR + 'bin_data/p_{0}_n.bin'.format(time),'<f8')
             d = d * 365
         elif property_name == 'air_velocity':
-            w = np.fromfile('./output/bin_data/w_{0}_n_0.bin'.format(time),'<f8')
-            v = np.fromfile('./output/bin_data/v_{0}_n_0.bin'.format(time),'<f8')
+            w = np.fromfile(OUTPUT_DIR + 'bin_data/w_{0}_n_0.bin'.format(time),'<f8')
+            v = np.fromfile(OUTPUT_DIR + 'bin_data/v_{0}_n_0.bin'.format(time),'<f8')
             d = np.sqrt(w**2+v**2)
         elif property_name == 'ocean_velocity': 
-            w = np.fromfile('./output/bin_data/hyd_w_{0}_n_40.bin'.format(time),'<f8')
-            v = np.fromfile('./output/bin_data/hyd_v_{0}_n_40.bin'.format(time),'<f8')
+            w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_{0}_n_40.bin'.format(time),'<f8')
+            v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_{0}_n_40.bin'.format(time),'<f8')
             d = np.sqrt(w**2+v**2)
         else:
-            d = np.fromfile('./output/bin_data/t_{0}_n_0.bin'.format(time),'<f8')
+            d = np.fromfile(OUTPUT_DIR + 'bin_data/t_{0}_n_0.bin'.format(time),'<f8')
             
         d = d.reshape((181, 361))
         pygplates.reconstruct(
@@ -487,15 +489,15 @@ def draw_plot_through_time(property_name, lon, lat, start_time, end_time, time_s
     
 def draw_transects(property_name, time, lon):
     if property_name == 'salinity':
-        d = np.fromfile('./output/bin_data/hyd_s_{0}_n_40.bin'.format(time),'<f8')
+        d = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_s_{0}_n_40.bin'.format(time),'<f8')
     elif property_name == 'ocean_velocity':
-        w = np.fromfile('./output/bin_data/hyd_w_{0}_n_40.bin'.format(time),'<f8')
-        v = np.fromfile('./output/bin_data/hyd_v_{0}_n_40.bin'.format(time),'<f8')
+        w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_{0}_n_40.bin'.format(time),'<f8')
+        v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_{0}_n_40.bin'.format(time),'<f8')
         d = np.sqrt(w**2+v**2)
     elif property_name == 'ocean_temperature':
-        d = np.fromfile('./output/bin_data/hyd_t_{0}_n_40.bin'.format(time),'<f8')
+        d = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_t_{0}_n_40.bin'.format(time),'<f8')
     else:
-        d = np.fromfile('./output/bin_data/t_{0}_n_0.bin'.format(time),'<f8')
+        d = np.fromfile(OUTPUT_DIR + 'bin_data/t_{0}_n_0.bin'.format(time),'<f8')
         
         
     d = d.reshape((181, 361))
@@ -510,5 +512,53 @@ def draw_transects(property_name, time, lon):
     plt.xticks(np.arange(90,-91,-20))
     plt.xlabel("Latitude")
     plt.show()
+    
         
+def draw_velocity_at_depth(time):
+    def down_sample(a):
+        tmp=[]   
+        for t in a:
+            tmp.append(t[3::4])
+        return tmp[3::4]
+
+    time = 0
+    for layer_idx in [40,30,20]:
+        v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
+        w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
+        h = np.fromfile(OUTPUT_DIR + 'bin_data/h_{0}_n_0.bin'.format(time),'<f8')
         
+        vm = np.sqrt(v**2+w**2)
+        vm[vm == 0] = 1
+        x = np.linspace(-180, 180, 361)
+        y = np.linspace(-90, 90, 181)
+        xv, yv = np.meshgrid(x, y)
+
+        figure = plt.figure(figsize=(15, 8))
+        m = Basemap(llcrnrlon=-180,llcrnrlat=-90,urcrnrlon=180,urcrnrlat=90,projection='cyl', lon_0=0)
+
+        xi, yi = m(xv.flatten(), yv.flatten())
+
+        xi = xi.reshape((181,361)) 
+        yi = yi.reshape((181,361)) 
+        vm = vm.reshape((181,361)) 
+        w = w.reshape((181,361)) 
+        v = v.reshape((181,361)) 
+        h = h.reshape((181,361)) 
+
+        wn = down_sample(w) 
+        vn = down_sample(-v)
+
+        cs = m.quiver(down_sample(xi), down_sample(yi), wn, vn, down_sample(vm), width=0.001,
+                 headlength=7, headwidth=5, pivot='tail', clim=[0, 0.04], cmap='jet')
+
+        m.contour( xi, yi, h, colors ='k', linewidths= 0.3 )
+        m.drawparallels(np.arange(-90., 90., 10.), labels=[1,0,0,0], fontsize=10)
+        m.drawmeridians(np.arange(-180., 180., 45.), labels=[0,0,0,1], fontsize=10)
+        #m.drawcoastlines()   
+
+        depth = (40 - layer_idx) * 5
+        cbar = m.colorbar(cs, location='bottom', pad="10%", label='Velocity (m/s)')
+        plt.title("Ocean Current Velocity at {0}Ma ({1}m depth)".format(time, depth))
+        plt.show()
+        
+
