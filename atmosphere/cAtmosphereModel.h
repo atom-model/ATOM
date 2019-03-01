@@ -224,6 +224,8 @@ private:
 
     void BC_Pressure();
 
+    void Latent_Heat();
+    
     static cAtmosphereModel* m_model;
 
     PythonStream ps;

@@ -802,8 +802,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
             // 3D_fields
 
             //  class element for the initial conditions the latent heat
-            circulation.Latent_Heat ( rad, the, phi, h, t, tn, u, v, w, p_dyn, p_stat, c, ice, Q_Latent, Q_Sensible, 
-                                      radiation_3D, Q_radiation, Q_latent, Q_sensible, Q_bottom );
+            Latent_Heat(); 
 
             print_min_max_values();
 
