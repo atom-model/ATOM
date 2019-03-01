@@ -61,6 +61,7 @@ RUN mkdir /home/workspace
 # Copy test files to workspace
 RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb \
            /build/ATOM/benchmark/GEOS2115.py \
+           /build/ATOM/benchmark/GEOS2115_cfg.py \
            /build/ATOM/benchmark/create_all_maps.py \
            /build/ATOM/benchmark/config_atm_GEOS2115.xml \
            /build/ATOM/benchmark/config_hyd_GEOS2115.xml /home/workspace/

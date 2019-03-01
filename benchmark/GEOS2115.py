@@ -240,6 +240,18 @@ def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
             reconstruct_temperature(time,times[idx+1]) 
             reconstruct_precipitation(time,times[idx+1])
             reconstruct_salinity(time,times[idx+1])
+        os.system('rm {0}{1}Ma_Atm_Precipitation.xyz'.format(OUTPUT_DIR, time))
+        os.system('rm {0}{1}Ma_Atm_Temperature.xyz'.format(OUTPUT_DIR, time))
+        os.system('rm {0}{1}Ma_Hyd_Salinity.xyz'.format(OUTPUT_DIR, time))
+        if time > start_time:
+            os.system('rm {0}{1}Ma_Reconstructed_Precipitation.xyz'.format(OUTPUT_DIR, time))
+            os.system('rm {0}{1}Ma_Reconstructed_Temperature.xyz'.format(OUTPUT_DIR, time))
+            os.system('rm {0}{1}Ma_Reconstructed_Salinity.xyz'.format(OUTPUT_DIR, time))
+        os.system('rm {0}[{1}Ma_smooth.xyz]_Transfer_Atm.vw'.format(OUTPUT_DIR, time))
+    os.system('rm -f *.pyc')
+    os.system('rm buffer_land_tmp.nc buffer_land_tmp.xyz buffer_ocean_tmp.xyz buffer_tmp.xyz fill_ocean_tmp.nc gmt.history')
+    os.system('rm gmt_grdblend_clobber.nc gmt_surface_fill_the_gap.nc gmt_surface_fill_the_gap_filter.nc tmp.xyz')
+    os.system('rm nearest_neighbour_fill_the_gap.nc')
 
 
 def draw_surfacre_wind_velocity_map(time):
