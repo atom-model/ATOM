@@ -677,28 +677,26 @@ void BC_Thermohalin::IC_Equatorial_Currents
 // nothern and southern equatorial subsurface counter-currents, NSCC und SSCC
 // nothern and southern equatorial counter-currents, NECC und SECC
 
-    double IC_water = 1.5;  // no dimension, ( average velocity compares to   u_0 * IC_water = 0,25 * IC_water = 0,375 m/s )
-
+    double IC_water = 1.;  // no dimension, ( average velocity compares to   u_0 * IC_water = 0,25 )
+/*
 // one grid step compares to a depth of 25 m for L_hyd = 1000m   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    /*
-    i_EIC_u = i_beg; // 1000m depth
+    i_EIC_u = i_beg; // 1000m depth  // westward equatorial intermediate current, max 0.1 m/s
     i_EIC_o = 28; // 0m depth
-    i_SCC_u = 8; // 800m depth
+    i_SCC_u = 8; // 800m depth  // eastward subsurface counter current, max 0.05 m/s
     i_SCC_o = 28; // 300m depth
-    i_ECC_u = 28; // 400m depth
+    i_ECC_u = 28; // 400m depth  // eastward equatorial counter current, max 0.2 m/s
     i_ECC_o = im; // 0m depth
-    float i_EUC_u = 32; // 200m depth
-    float i_EUC_o = 36; // 100m depth
-    */
-
-    // one grid step compares to a depth of 5 m for L_hyd = 200m   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    i_EIC_u = i_beg; // 200m depth
+    i_EUC_u = 32; // 200m depth  // eastward equatorial under current ( Cromwell current ), max 0.8 m/s
+    i_EUC_o = 36; // 100m depth
+*/
+// one grid step compares to a depth of 5 m for L_hyd = 200m   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    i_EIC_u = i_beg; // 200m depth  // westward equatorial intermediate current, max 0.1 m/s
     i_EIC_o = 0; // 0m depth
-    i_SCC_u = 0; // 800m depth
+    i_SCC_u = 0; // 800m depth  // eastward subsurface counter current, max 0.05 m/s
     i_SCC_o = 0; // 300m depth
-    i_ECC_u = 0; // 200m depth
+    i_ECC_u = 0; // 200m depth  // eastward equatorial counter current, max 0.2 m/s
     i_ECC_o = im; // 0m depth
-    i_EUC_u = 0; // 200m depth
+    i_EUC_u = 0; // 200m depth  // eastward equatorial under current ( Cromwell current ), max 0.8 m/s
     i_EUC_o = 20; // 100m depth
 
 // equatorial currents and counter-currents
@@ -733,7 +731,7 @@ void BC_Thermohalin::IC_Equatorial_Currents
                     for ( int k = k_beg; k <= k_end; k++ ){
                         if ( is_water( h, i, j, k ) ){
                             v.x[ i ][ j ][ k ] = 0.;
-                            w.x[ i ][ j ][ k ] = + .05 * IC_water 
+                            w.x[ i ][ j ][ k ] = + .01 * IC_water 
                                 * ( double ) ( i - i_ECC_u ) 
                                 / ( double ) ( i_ECC_o - i_ECC_u );
                         }
@@ -748,7 +746,7 @@ void BC_Thermohalin::IC_Equatorial_Currents
                     for ( int k = k_beg; k <= k_end; k++ ){
                         if ( is_water( h, i, j, k ) ){
                             v.x[ i ][ j ][ k ] = 0.;
-                            w.x[ i ][ j ][ k ] = + .05 * IC_water 
+                            w.x[ i ][ j ][ k ] = + .01 * IC_water 
                                 * ( double ) ( i - i_ECC_u ) 
                                 / ( double ) ( i_ECC_o - i_ECC_u );
                         }
@@ -763,7 +761,7 @@ void BC_Thermohalin::IC_Equatorial_Currents
                     for ( int k = k_beg; k <= k_end; k++ ){
                         if ( is_water( h, i, j, k ) ){
                             v.x[ i ][ j ][ k ] = 0.;
-                            w.x[ i ][ j ][ k ] = + .05 * IC_water;
+                            w.x[ i ][ j ][ k ] = + .4 * IC_water;
                         }
                     }
                 }
@@ -792,7 +790,7 @@ void BC_Thermohalin::IC_Equatorial_Currents
                     for ( int k = k_beg; k <= k_end; k++ ){
                         if ( is_water( h, i, j, k ) ){
                             v.x[ i ][ j ][ k ] = 0.;
-                            w.x[ i ][ j ][ k ] = .05 * IC_water 
+                            w.x[ i ][ j ][ k ] = .025 * IC_water 
                                 * ( double ) ( i - i_SCC_u ) 
                                 / ( double ) ( i_SCC_o - i_SCC_u );
                         }
@@ -807,7 +805,7 @@ void BC_Thermohalin::IC_Equatorial_Currents
                     for ( int k = k_beg; k <= k_end; k++ ){
                         if ( is_water( h, i, j, k ) ){
                             v.x[ i ][ j ][ k ] = 0.;
-                            w.x[ i ][ j ][ k ] = .05 * IC_water 
+                            w.x[ i ][ j ][ k ] = .025 * IC_water 
                                 * ( double ) ( i - i_SCC_u ) 
                                 / ( double ) ( i_SCC_o - i_SCC_u );
                         }
