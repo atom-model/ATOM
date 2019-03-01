@@ -5,10 +5,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
-#ATOM_HOME = '../'
-ATOM_HOME = '/build/ATOM/'
-
-OUTPUT_DIR = './output/'
+from GEOS2115_cfg import *
 
 def draw_topography_map(time):
     #the location and naming convention of topography files
@@ -223,8 +220,8 @@ def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
     hyd_model = Hydrosphere()
 
     #load configurations
-    atm_model.load_config( './config_atm_GEOS2115.xml' )
-    hyd_model.load_config( './config_hyd_GEOS2115.xml' )
+    atm_model.load_config( ATM_CFG_FILE_NAME )
+    hyd_model.load_config( HYD_CFG_FILE_NAME )
 
     #set the iteration number
     atm_model.velocity_iter_max = av
