@@ -274,7 +274,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     oceanflow.IC_u_WestEastCoast ( rad, h, u, v, w, un, vn, wn );
 
     //  initial conditions for the equatorial currents
-    oceanflow.IC_Equatorial_Currents ( h, u, v, w );
+//    oceanflow.IC_Equatorial_Currents ( h, u, v, w );
 
     //  initial conditions for u, v and w velocity components in the circumpolar current
 //    if ( Ma <= 41 )     oceanflow.IC_CircumPolar_Current ( h, u, v, w, c ); // Drake passage closed 41 Ma ago
@@ -615,7 +615,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
-//    Printout:
+    Printout:
 
     write_file(bathymetry_name, output_path, true);
 
