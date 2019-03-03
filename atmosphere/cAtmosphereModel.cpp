@@ -260,6 +260,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class element for the initial conditions for u-v-w-velocity components
     circulation.IC_CellStructure ( rad, h, u, v, w );
 
+    //  initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
+    circulation.IC_v_w_WestEastCoast ( h, u, v, w );
+
+//    goto Printout;
+
     //  class element for the surface temperature from NASA for comparison
     //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
     circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
@@ -321,6 +326,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     cout << endl << endl;
 
     restrain_temperature();
+
+//    Printout:
 
     //write the ouput files
     write_file(bathymetry_name, output_path, true);
