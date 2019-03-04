@@ -1074,7 +1074,7 @@ void BC_Thermohalin::BC_Evaporation ( Array_2D &Evaporation_Dalton,
 
             if ( is_land( h, im-1, j, k) )    salinity_evaporation = 0.;
 
-//            salinity_evaporation = 0.;    // test case
+            salinity_evaporation = 0.;    // test case
 
             c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + salinity_evaporation;
 

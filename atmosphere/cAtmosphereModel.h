@@ -78,10 +78,6 @@ public:
 
     float get_mean_temperature_from_curve(float time) const;
 
-    int* get_tropopause() const{
-        return im_tropopause;
-    }
-
     /*
      * Given a latitude, return the layer index of tropopause
     */
@@ -240,8 +236,6 @@ private:
     int iter_cnt, iter_cnt_3d, iter_cnt_2d; // iteration count
 
     string bathymetry_name, bathymetry_filepath;
-
-    int *im_tropopause;// location of the tropopaus
 
     double coeff_mmWS;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     double max_Precipitation;

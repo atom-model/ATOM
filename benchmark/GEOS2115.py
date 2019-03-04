@@ -333,6 +333,11 @@ def draw_ocean_current_velocity_map(time):
     vx=-data[:,3]
     vy=data[:,4]
     magitude = data[:,5]
+    
+    magitude[magitude==0] = 1
+    vx = vx/magitude
+    vy = vy/magitude
+    
     topo = data[:,2]
 
     figure = plt.figure(figsize=(15, 8))
@@ -538,6 +543,8 @@ def draw_velocity_at_depth(time):
         
         vm = np.sqrt(v**2+w**2)
         vm[vm == 0] = 1
+        v = v/vm
+        w = w/vm
         x = np.linspace(-180, 180, 361)
         y = np.linspace(-90, 90, 181)
         xv, yv = np.meshgrid(x, y)

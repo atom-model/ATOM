@@ -41,6 +41,10 @@ def draw_velocity(time, output_dir, data_dir, topo_suffix, atm = 'Atm'):
     magitude = data[:,5]
     topo = data[:,2]
 
+    magitude[magitude==0] = 1
+    vx = vx/magitude
+    vy = vy/magitude
+
     plt.figure(figsize=(15, 8))
 
     m = Basemap(llcrnrlon=-180,llcrnrlat=-90,urcrnrlon=180,urcrnrlat=90,projection='cyl', lon_0=0)  

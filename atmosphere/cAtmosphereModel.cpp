@@ -59,7 +59,6 @@ const double cAtmosphereModel::r0 = 1.;
 
 cAtmosphereModel::cAtmosphereModel() :
     i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0))),
-    im_tropopause(NULL),
     is_node_weights_initialised(false), 
     old_arrays_3d {&u,  &v,  &w,  &t,  &p_dyn,  &c,  &cloud,  &ice,  &co2 },
     new_arrays_3d {&un, &vn, &wn, &tn, &p_dynn, &cn, &cloudn, &icen, &co2n},
@@ -85,8 +84,6 @@ cAtmosphereModel::cAtmosphereModel() :
 
     coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 
-    im_tropopause = new int [ jm ];// location of the tropopaus
-
     emin = epsres * 100.;
     
     m_model = this;
@@ -108,8 +105,6 @@ cAtmosphereModel::~cAtmosphereModel() {
         std::cout.rdbuf(backup);
     }
 
-    delete [] im_tropopause;
-    im_tropopause = NULL;
     m_model = NULL;
     logger().close();
 }
@@ -258,9 +253,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  class element calls for the preparation of initial conditions for the flow properties
 
-    //  class element for the tropopause location as a parabolic distribution from pole to pole 
-    circulation.TropopauseLocation ();
-
     //  class element for the initial conditions for u-v-w-velocity components
     //circulation.IC_CellStructure ( h, u, v, w );
     init_velocities();
@@ -283,7 +275,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     init_water_vapour();
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-    circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
+    //circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
+    init_co2();
 
     // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){
