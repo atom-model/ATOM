@@ -3282,46 +3282,41 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w ){
 // search for east coasts and associated velocity components to close the circulations
 // transition between coast flows and open sea flows included
 
-// northern hemisphere: east coast
+// northern and southern hemisphere: east coast
     double k_water = 0;
-    int i_max = 11;
+    int i_max = 11;                                                     // max extension of the vertical smoothing
     d_i_max = ( double ) i_max;
-//    k_grad = 10;                                                        // extension of velocity change
     k_grad = 20;                                                        // extension of velocity change
     k_a = k_grad;                                                       // left distance
-    k_b = 0;                                                            // right distance
+    k_b = 1;                                                            // right distance
     k_water = 0;                                                        // on water closest to coast
     k_sequel = 1;                                                       // on solid ground
-    for ( int j = 0; j < 91; j++ ){                                     // outer loop: latitude
+    for ( int j = 0; j < jm; j++ ){                                     // outer loop: latitude
         for ( int k = 0; k < km; k++ ){                                 // inner loop: longitude
-            if ( h.x[ 0 ][ j ][ k ] == 1. ) k_sequel = 0;               // if solid ground: k_sequel = 0
-            if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;// if water and and k_sequel = 0 then is water closest to coast
+            if ( is_land ( h, 0, j, k ) ) k_sequel = 0;                 // if solid ground: k_sequel = 0
+            if ( ( is_air ( h, 0, j, k ) ) && ( k_sequel == 0 ) ) k_water = 0;// if water and and k_sequel = 0 then is water closest to coast
             else k_water = 1;                                           // somewhere on water
-            if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) ){    // if water is closest to coast, change of velocity components begins
-                for ( int l = 0; l < k_grad; l++ ){                     // extension of change, sign change in v-velocity and distribution of u-velocity with depth
+            if ( ( is_air ( h, 0, j, k ) ) && ( k_water == 0 ) ){       // if water is closest to coast, change of velocity components begins
+                for ( int l = 0; l <= k_grad; l++ ){                    // extension of change, sign change in v-velocity and distribution of u-velocity with depth
                     v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];  // existing velocity changes sign
-//                    w.x[ 0 ][ j ][ k + l ] = - w.x[ 0 ][ j ][ k + l ];  // existing velocity changes sign
-//                    w.x[ 0 ][ j ][ k + l ] = + w.x[ 0 ][ j ][ k + l ];  // existing velocity changes sign
-//                    v.x[ 0 ][ j ][ k + l ] = 0.;                        // existing velocity changes sign
+//                    w.x[ 0 ][ j ][ k + l ] = - w.x[ 0 ][ j ][ k + l ];  // existing velocity changes sign, too strong control
                     w.x[ 0 ][ j ][ k + l ] = 0.;                        // existing velocity changes sign
                 }
-                for ( int l = ( k + k_grad - k_a ); l < ( k + k_grad + k_b + 1 ); l++ ){ 
-                // starting at local longitude + max extension - begin of smoothing k_a  until ending at  + k_b
+                for ( int l = ( k + k_grad - k_a ); l <= ( k + k_grad + k_b ); l++ ){ 
+                // starting at local longitude + max extension - begin of smoothing k_a  until ending at k_b
                     v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] 
-                        - v.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) 
-                        - ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) 
-                        + v.x[ 0 ][ j ][ k + k_grad - k_a ];            // extension of v-velocity, smoothing algorithm by a linear equation 
-
+                        - v.x[ 0 ][ j ][ k ] ) / ( double )( ( k + k_grad + k_b ) - k ) 
+                        * ( double )( l - k ) + v.x[ 0 ][ j ][ k ];     // extension of v-velocity, smoothing algorithm by a linear equation 
                     w.x[ 0 ][ j ][ l ] = ( w.x[ 0 ][ j ][ k + k_grad + k_b ] 
-                        - w.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) 
-                        - ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) 
-                        + w.x[ 0 ][ j ][ k + k_grad - k_a ];            // extension of v-velocity, smoothing algorithm by a linear equation 
-
-                    for ( int i = 1; i <= i_max; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
+                        - w.x[ 0 ][ j ][ k ] ) / ( double )( ( k + k_grad + k_b ) - k ) 
+                        * ( double )( l - k ) + w.x[ 0 ][ j ][ k ];     // extension of w-velocity, smoothing algorithm by a linear equation 
+                    for ( int i = 1; i <= i_max; i++ ){                 // loop in radial direction, extension for u -velocity component, downwelling here
                         d_i = ( double ) i;
-                        v.x[ i ][ j ][ l ] = ( v.x[ i_max ][ j ][ l ] - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i 
+                        v.x[ i ][ j ][ l ] = ( v.x[ i_max ][ j ][ l ] 
+                            - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i 
                             + v.x[ 0 ][ j ][ l ];                       // radial distribution approximated by a straight line
-                        w.x[ i ][ j ][ l ] = ( w.x[ i_max ][ j ][ l ] - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i 
+                        w.x[ i ][ j ][ l ] = ( w.x[ i_max ][ j ][ l ] 
+                            - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i 
                             + w.x[ 0 ][ j ][ l ];                       // radial distribution approximated by a straight line
                     }
                 }
@@ -3331,59 +3326,18 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w ){
         k_water = 0;                                                    // starting at another latitude
     }                                                                   // end of latitudinal loop
 
-
-// southern hemisphere: east coast
-    k_water = 0;
-    k_sequel = 1;
-    for ( int j = 91; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            if ( h.x[ 0 ][ j ][ k ] == 1. ) k_sequel = 0;
-            if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_sequel == 0 ) ) k_water = 0;
-            else k_water = 1;
-            if ( ( h.x[ 0 ][ j ][ k ] == 0. ) && ( k_water == 0 ) ){
-                for ( int l = 0; l < k_grad; l++ ){
-                    v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];
-//                    w.x[ 0 ][ j ][ k + l ] = - w.x[ 0 ][ j ][ k + l ];
-//                    w.x[ 0 ][ j ][ k + l ] = + w.x[ 0 ][ j ][ k + l ];
-//                    v.x[ 0 ][ j ][ k + l ] = 0.;
-                    w.x[ 0 ][ j ][ k + l ] = 0.;
-                }
-                for ( int l = ( k + k_grad - k_a ); l < ( k + k_grad + k_b + 1 ); l++ ){
-                    v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] 
-                        - v.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) 
-                        - ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) 
-                        + v.x[ 0 ][ j ][ k + k_grad - k_a ];
-                    w.x[ 0 ][ j ][ l ] = ( w.x[ 0 ][ j ][ k + k_grad + k_b ] 
-                        - w.x[ 0 ][ j ][ k + k_grad - k_a ] ) / ( double )( ( k + k_grad + k_b ) 
-                        - ( k + k_grad - k_a ) ) * ( double )( l -  ( k + k_grad - k_a ) ) 
-                        + w.x[ 0 ][ j ][ k + k_grad - k_a ];
-                    for ( int i = 1; i <= i_max; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
-                        d_i = ( double ) i;
-                        v.x[ i ][ j ][ l ] = ( v.x[ i_max ][ j ][ l ] - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i 
-                            + v.x[ 0 ][ j ][ l ];                       // radial distribution approximated by a straight line
-                        w.x[ i ][ j ][ l ] = ( w.x[ i_max ][ j ][ l ] - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i 
-                            + w.x[ 0 ][ j ][ l ];                       // radial distribution approximated by a straight line
-                    }
-                }
-                k_sequel = 1;
-            }
-        }
-        k_water = 0;
-    }
-
-
 // search for west coasts and associated velocity components to close the circulations
 // transition between coast flows and open sea flows included
-
-// northern hemisphere: west coast
+// TODO revision in case needed
+// northern and southern hemisphere: west coast
 /*
     k_grad = 6;                                                         // extension of velocity change
     k_a = 0;                                                            // left distance
     k_water = 0;                                                        // somewhere on water
     flip = 0;                                                           // somewhere on water
-    for ( int j = 0; j < 91; j++ ){                                     // outer loop: latitude
+    for ( int j = 0; j < jm; j++ ){                                     // outer loop: latitude
         for ( int k = 0; k < km; k++ ){                                 // inner loop: longitude
-            if ( h.x[ 0 ][ j ][ k ] == 0. ){                            // if somewhere on water
+            if ( is_air ( h, 0, j, k ) ){                               // if somewhere on water
                 k_water = 0;                                            // somewhere on water: k_water = 0
                 flip = 0;                                               // somewhere on water: flip = 0
             }
@@ -3393,57 +3347,25 @@ void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w ){
                     w.x[ 0 ][ j ][ l ] = - w.x[ 0 ][ j ][ l ];
                 }
                 for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- ){   // smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
-                    v.x[ 0 ][ j ][ l ] = v.x[ 0 ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k ); // extension of v-velocity
+                    v.x[ 0 ][ j ][ l ] = v.x[ 0 ][ j ][ k - k_grad - k_a ] 
+                        / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k ); // extension of v-velocity
 
-                    for ( int i = 1; i <= 11; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
+                    for ( int i = 1; i <= i_max; i++ ){                 // loop in radial direction, extension for u -velocity component, downwelling here
                         d_i = ( double ) i;
-                        v.x[ i ][ j ][ k ] = - ( 0. - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - v.x[ 0 ][ j ][ l ];  // radial distribution approximated by a straight line
+                        v.x[ i ][ j ][ k ] = - ( 0. - v.x[ 0 ][ j ][ l ] ) 
+                            / d_i_max * d_i - v.x[ 0 ][ j ][ l ];  // radial distribution approximated by a straight line
                     }
                 }
                 for ( int l = ( k - k_grad - 3 ); l < ( k - k_grad + 3 ); l++ ){  // smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
-                    w.x[ 0 ][ j ][ l ] = (  - w.x[ 0 ][ j ][ k - k_grad - 3 ] + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ 0 ][ j ][ k - k_grad + 3 ];
-
-                    for ( int i = 1; i <= 11; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
+                    w.x[ 0 ][ j ][ l ] = (  - w.x[ 0 ][ j ][ k - k_grad - 3 ] 
+                        + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) 
+                        * ( double ) ( l - ( k - k_grad - 3 ) ) 
+                        / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) 
+                        - w.x[ 0 ][ j ][ k - k_grad + 3 ];
+                    for ( int i = 1; i <= i_max; i++ ){                 // loop in radial direction, extension for u -velocity component, downwelling here
                         d_i = ( double ) i;
-                        w.x[ i ][ j ][ k ] = - ( 0. - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - w.x[ 0 ][ j ][ l ];  // radial distribution approximated by a straight line
-                    }
-                }
-                flip = 1;
-            }
-        }
-        flip = 0;
-    }
-
-
-// southern hemisphere: west coast
-    k_water = 0;
-    flip = 0;
-    for ( int j = 91; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            if ( h.x[ 0 ][ j ][ k ] == 0. ){
-                k_water = 0;
-                flip = 0;
-            }
-            else k_water = 1;
-            if ( ( flip == 0 ) && ( k_water == 1 ) ){
-                for ( int l = k; l > ( k - k_grad + 1 ); l-- ){
-                    w.x[ 0 ][ j ][ l ] = - w.x[ 0 ][ j ][ l ];
-                }
-                for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- ){
-                    v.x[ 0 ][ j ][ l ] = v.x[ 0 ][ j ][ k - k_grad - k_a ] / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k );
-
-                    for ( int i = 1; i <= 11; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
-                        d_i = ( double ) i;
-                        v.x[ i ][ j ][ k ] = - ( 0. - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - v.x[ 0 ][ j ][ l ];  // radial distribution approximated by a straight line
-                    }
-
-                }
-                for ( int l = ( k - k_grad - 3 ); l < ( k - k_grad + 3 ); l++ ){  // smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
-                    w.x[ 0 ][ j ][ l ] = ( - w.x[ 0 ][ j ][ k - k_grad - 3 ] + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) * ( double ) ( l - ( k - k_grad - 3 ) ) / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) - w.x[ 0 ][ j ][ k - k_grad + 3 ];
-
-                    for ( int i = 1; i <= 11; i++ ){                    // loop in radial direction, extension for u -velocity component, downwelling here
-                        d_i = ( double ) i;
-                        w.x[ i ][ j ][ k ] = - ( 0. - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i - w.x[ 0 ][ j ][ l ];  // radial distribution approximated by a straight line
+                        w.x[ i ][ j ][ k ] = - ( 0. - w.x[ 0 ][ j ][ l ] ) 
+                            / d_i_max * d_i - w.x[ 0 ][ j ][ l ];  // radial distribution approximated by a straight line
                     }
                 }
                 flip = 1;
