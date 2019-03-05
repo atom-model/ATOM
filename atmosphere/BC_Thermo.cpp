@@ -1095,7 +1095,37 @@ void cAtmosphereModel::Value_Limitation_Atm(){
     }
 }
 
-void cAtmosphereModel::IC_v_w_WestEastCoast(){}
+/*
+ initial conditions for v and w velocity components at the sea surface close to east or west coasts
+ reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
+ w component unchanged
+
+ search for east coasts and associated velocity components to close the circulations
+ transition between coast flows and open sea flows included
+*/
+void cAtmosphereModel::IC_v_w_WestEastCoast(){
+    // northern and southern hemisphere: east coast
+    int i_max = 11;       // max extension of the vertical smoothing
+    int k_grad = 20;      // extension of velocity change
+    for ( int j = 0; j < jm; j++ ){               //latitude
+        for ( int k = 0; k < km; k++ ){       //longitude        
+            if(is_east_coast(h, j, k)){
+                int begin = k;
+                int end = (k+k_grad) < km ? (k+k_grad) : (km-1);
+                for(; k < end; k++){
+                    v.x[ 0 ][ j ][ k ] = -( (v.x[ 0 ][ j ][ end ] - v.x[ 0 ][ j ][ begin ]) * 
+                        ((k-begin)/(float)(end-begin)) + v.x[ 0 ][ j ][ begin ] );
+                    w.x[ 0 ][ j ][ k ] = 0.;  
+                
+                    for ( int i = 1; i <= i_max; i++ ){ 
+                        v.x[ i ][ j ][ k ] = ( v.x[ i_max ][ j ][ k ] - v.x[ 0 ][ j ][ k ] ) * (i/(float)i_max) + v.x[ 0 ][ j ][ k ];
+                        w.x[ i ][ j ][ k ] = ( w.x[ i_max ][ j ][ k ] - w.x[ 0 ][ j ][ k ] ) * (i/(float)i_max) + w.x[ 0 ][ j ][ k ];
+                    }
+                }
+            }
+        }
+    }
+}
 
 void cAtmosphereModel::Pressure_Limitation_Atm(){
     // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
