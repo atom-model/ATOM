@@ -62,6 +62,10 @@ public:
     void printArray( int im, int jm, int km );
     void initArray( int im, int jm, int km, double value);
 
+    int get_im() const {return im;}
+    int get_jm() const {return jm;}
+    int get_km() const {return km;}
+
     friend Array operator* (double coeff, const Array &a);
 
     //overload 

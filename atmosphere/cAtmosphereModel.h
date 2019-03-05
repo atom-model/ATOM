@@ -135,12 +135,11 @@ private:
 
     void run_2D_loop( BC_Atmosphere &boundary,
                       BC_Bathymetry_Atmosphere &LandArea,
-                      Pressure_Atm &startPressure, BC_Thermo &circulation);
+                      Pressure_Atm &startPressure);
 
     void run_3D_loop( BC_Atmosphere &boundary,
                       BC_Bathymetry_Atmosphere &LandArea,
-                      Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL, 
-                      BC_Thermo &circulation);
+                      Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL);
 
     void run_MSL_data();
 public:
@@ -165,7 +164,8 @@ private:
     std::vector<std::vector<int> > i_topography;
 
     void restrain_temperature();
-
+    void Pressure_Limitation_Atm();
+    void Value_Limitation_Atm();
     /*
      * initialize co2 Array co2
     */
@@ -221,7 +221,13 @@ private:
     void BC_Pressure();
 
     void Latent_Heat();
+
+    void IC_v_w_WestEastCoast();   
+
+    void read_NASA_temperature(const string &fn);
     
+    void read_NASA_precipitation(const string&);
+ 
     static cAtmosphereModel* m_model;
 
     PythonStream ps;

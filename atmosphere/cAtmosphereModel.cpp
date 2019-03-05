@@ -20,7 +20,6 @@
 
 #include "BC_Atm.h"
 #include "BC_Bath_Atm.h"
-#include "BC_Thermo.h"
 #include "Accuracy_Atm.h"
 #include "RHS_Atm.h"
 #include "RungeKutta_Atm.h"
@@ -248,21 +247,20 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class Pressure for the subsequent computation of the pressure by a separate Euler equation
     Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
 
-    //  class BC_Thermo for the initial and boundary conditions of the flow properties
-    BC_Thermo  circulation (this, im, jm, km, h ); 
-
     //  class element calls for the preparation of initial conditions for the flow properties
 
     //  class element for the initial conditions for u-v-w-velocity components
     //circulation.IC_CellStructure ( h, u, v, w );
     init_velocities();
 
+    IC_v_w_WestEastCoast();//adjust east coast velocities.
+
     //  class element for the surface temperature from NASA for comparison
     //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
-    circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
+    read_NASA_temperature(Name_SurfaceTemperature_File);
 
     //  class element for the surface precipitation from NASA for comparison
-    circulation.BC_Surface_Precipitation_NASA ( Name_SurfacePrecipitation_File, precipitation_NASA );
+    read_NASA_precipitation(Name_SurfacePrecipitation_File);
 
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
     init_temperature();
@@ -291,11 +289,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     // ***********************************   start of pressure and velocity iterations ***********************************
 
-    run_2D_loop(boundary, LandArea, startPressure, circulation);
+    run_2D_loop(boundary, LandArea, startPressure);
     
     cout << endl << endl;
 
-    run_3D_loop( boundary, LandArea, startPressure, calculate_MSL, circulation);
+    run_3D_loop( boundary, LandArea, startPressure, calculate_MSL);
 
     cout << endl << endl;
 
@@ -640,7 +638,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
 
 void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
                                     BC_Bathymetry_Atmosphere &LandArea, 
-                                    Pressure_Atm &startPressure, BC_Thermo &circulation){
+                                    Pressure_Atm &startPressure){
     int switch_2D = 0;    
     iter_cnt = 1;
     int Ma = int(round(*get_current_time())); 
@@ -676,7 +674,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
                 Accuracy_Atm        min_Residuum_2D ( im, jm, km, dthe, dphi );
                 double residuum_old = std::get<0>(min_Residuum_2D.residuumQuery_2D ( rad, the, v, w , residuum_2d));
 
-                circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
+                Value_Limitation_Atm( );
 
                 LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, 
                                           t_equator, t_pole, 
@@ -720,8 +718,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
 
 void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
                                     BC_Bathymetry_Atmosphere &LandArea,
-                                    Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL,                  
-                                    BC_Thermo &circulation){
+                                    Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL){ 
     
     iter_cnt = 1;
     iter_cnt_3d = 0;
@@ -767,7 +764,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
                 Ice_Water_Saturation_Adjustment();
             }
 
-            circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
+            Value_Limitation_Atm();
 
             LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, t_equator, 
                                       t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
@@ -777,7 +774,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
             // class RungeKutta for the solution of the differential equations describing the flow properties
             solveRungeKutta_3D_Atmosphere(); 
             
-            circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
+            Value_Limitation_Atm();
 
             // class element for the surface temperature computation by radiation flux density
             if ( RadiationModel == 1 ){

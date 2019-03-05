@@ -49,6 +49,26 @@ namespace AtomUtils{
         return x*x - 2*x;
     }
 
+    inline bool is_east_coast(const Array& h, int j, int k){
+        if(k == h.get_km()-1 ) return false;//on grid boundary
+        return is_land(h, 0, j, k) && !is_land(h, 0, j, k+1);
+    }
+
+    inline bool is_west_coast(const Array& h, int j, int k){
+        if( k == 0 ) return false;//on grid boundary
+        return is_land(h, 0, j, k) && !is_land(h, 0, j, k-1);
+    }
+
+    inline bool is_north_coast(const Array& h, int j, int k){
+        if( j == 0 ) return false;//on grid boundary
+        return is_land(h, 0, j, k) && !is_land(h, 0, j-1, k);
+    }
+
+    inline bool is_south_coast(const Array& h, int j, int k){
+        if(j == h.get_jm()-1 ) return false;//on grid boundary
+        return is_land(h, 0, j, k) && !is_land(h, 0, j+1, k);
+    }
+
     //change data coordinate system from -180° _ 0° _ +180° to 0°- 360°
     void move_data(double* data, int len);
     void move_data(std::vector<int>& data, int len);

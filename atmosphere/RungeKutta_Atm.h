@@ -11,7 +11,6 @@
 #include "Array.h"
 #include "Array_1D.h"
 #include "RHS_Atm.h"
-#include "BC_Thermo.h"
 
 #ifndef _RUNGEKUTTA_ATMOSPHERE_
 #define _RUNGEKUTTA_ATMOSPHERE_
