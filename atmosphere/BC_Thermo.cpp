@@ -14,7 +14,6 @@
 #include <iomanip>
 #include <algorithm>
 
-#include "BC_Thermo.h"
 #include "Array.h"
 #include "Array_2D.h"
 #include "cAtmosphereModel.h"
@@ -25,136 +24,6 @@ using namespace std;
 using namespace AtomUtils;
 
 double get_pole_temperature(int Ma, const std::map<int, double> &pole_temp_map);
-
-BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, Array& h): 
-        m_model(model),
-        im(im),
-        jm(jm),
-        km(km),
-        h(h),
-        i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0)))
-{
-    this-> tropopause_equator = model->tropopause_equator;
-    this-> tropopause_pole = model->tropopause_pole;
-    this-> L_atm = model->L_atm;
-    this-> dt = model->dt;
-    this-> dr = model->dr;
-    this-> dthe = model->dthe;
-    this-> dphi = model->dphi;
-    this-> RadiationModel = model->RadiationModel;
-    this-> NASATemperature = model->NASATemperature;
-    this-> sun = model->sun;
-    this-> g = model->g;
-    this-> ep = model->ep;
-    this-> hp = model->hp;
-    this-> u_0 = model->u_0;
-    this-> p_0 = model->p_0;
-    this-> t_0 = model->t_0;
-    this-> sigma = model->sigma;
-    this-> albedo_equator = model->albedo_equator;
-    this-> albedo_pole = model->albedo_pole;
-    this-> gam = model->gam;
-    this-> lv = model->lv;
-    this-> ls = model->ls;
-    this-> cp_l = model->cp_l;
-    this-> r_air = model->r_air;
-    this-> R_Air = model->R_Air;
-    this-> r_water_vapour = model->r_water_vapour;
-    this-> R_WaterVapour = model->R_WaterVapour;
-    this-> co2_cretaceous = model->co2_cretaceous;
-    this-> co2_vegetation = model->co2_vegetation;
-    this-> co2_ocean = model->co2_ocean;
-    this-> co2_land = model->co2_land;
-    this-> co2_factor = model->co2_factor;
-    this-> rad_equator = model->rad_equator;
-    this-> rad_pole = model->rad_pole;
-    this-> epsilon_pole = model->epsilon_pole;
-    this-> epsilon_tropopause = model->epsilon_tropopause;
-    this-> epsilon_equator = model->epsilon_equator;
-    this-> c_tropopause = model->c_tropopause;
-    this-> co2_tropopause = model->co2_tropopause;
-    this-> c_ocean = model->c_ocean;
-    this-> t_average = model->t_average;
-    this-> co2_average = model->co2_average;
-    this-> co2_pole = model->co2_pole;
-    this-> co2_equator = model->co2_equator;
-    this-> t_tropopause = model->t_tropopause;
-    this-> t_equator = model->t_equator;
-    this-> t_pole = model->t_pole;
-    this-> declination = model->declination;
-    this-> sun_position_lat = model->sun_position_lat;
-    this-> sun_position_lon = model->sun_position_lon;
-
-    Ma = int(round(*m_model->get_current_time()));
-
-    t_cretaceous = m_model->get_mean_temperature_from_curve(Ma) -
-        m_model->get_mean_temperature_from_curve(0);
-
-    coeff_mmWS = r_air / r_water_vapour;// coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
-    // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_lv = 9.1069 in [ / ]
-    coeff_lv = lv / ( cp_l * t_0 );
-    // coefficient for the specific latent Evaporation heat ( Condensation heat ), coeff_ls = 10.3091 in [ / ]
-    coeff_ls = ls / ( cp_l * t_0 );
-
-    c43 = 4./3.;
-    c13 = 1./3.;
-
-    pi180 = 180./M_PI;
-
-    // fall velocity for water droplets of 0.1 mm compares to 0.012 m/s
-    // fall velocity for water droplets of 0.01 mm compares to 0.8 m/s
-    // fall velocity for water droplets of 0.3 mm compares to 2.4 m/s
-    // fall velocity for water droplets of 1.0 mm compares to 6.3 m/s
-    // fall velocity for water droplets of 5.0 mm compares to 14.1 m/s
-
-    dt_rain_dim = 250.;// dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
-
-    // fall velocity for snow flakes of 1.0 mm compares to 0.9 m/s
-    // fall velocity for snow flakes of 2.0 mm compares to 1.2 m/s
-    // fall velocity for snow flakes of 4.0 mm compares to 1.4 m/s
-
-    dt_snow_dim = 417.;// dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
-
-    dt_dim = L_atm / u_0 * dt;// dimensional time step of the system in s == 0.02 s
-
-    dr_dim = dr * L_atm;  // = 0.025 * 16000 = 400
-
-    cout.precision ( 8 );
-    cout.setf ( ios::fixed );
-
-    // Array "i_topography" integer field for mapping the topography
-    // land surface in a 2D field
-    for ( int j = 0; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = im-2; i >= 0; i-- ){
-                if ( is_land ( h, i, j, k ) ){
-                    i_topography[ j ][ k ] = i;
-                    break;
-                }
-            }
-        }
-    }
-
-    i_half = ( im -1 ) / 2;
-    i_max = im - 1;
-
-    d_i_half = ( double ) i_half ;
-    d_i_max = ( double ) i_max;
-
-    j_half = ( jm -1 ) / 2;  // position of the sun at 0°S
-    j_max = jm - 1;
-
-    d_j_half = ( double ) j_half;
-    d_j_max = ( double ) j_max;
-
-    k_half = ( km -1 ) / 2;  // position of the sun at 0° oder 180° ( Greenwich )
-    k_max = km - 1;
-
-    d_k_half = ( double ) k_half;
-    d_k_max = ( double ) k_max;
-}
-
-BC_Thermo::~BC_Thermo(){}
 
 void cAtmosphereModel::BC_Radiation_multi_layer(){
     // class element for the computation of the radiation and the temperature distribution
@@ -567,40 +436,24 @@ void cAtmosphereModel::init_temperature()
 }
 
 
-void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperature_File,
-                             Array_2D &temperature_NASA, Array &t ){
-// initial conditions for the Name_SurfaceTemperature_File at the sea surface
-
-    cout.precision ( 3 );
-    cout.setf ( ios::fixed );
-
-    ifstream Name_SurfaceTemperature_File_Read(Name_SurfaceTemperature_File);
-
-    if (!Name_SurfaceTemperature_File_Read.is_open()) {
-        cerr << "ERROR: could not open SurfaceTemperature_File file at "
-        << Name_SurfaceTemperature_File << "\n";
+void cAtmosphereModel::read_NASA_temperature(const string &fn){
+    // initial conditions for the Name_SurfaceTemperature_File at the sea surface
+    ifstream ifs(fn);
+    if (!ifs.is_open()) {
+        cerr << "ERROR: unable to open SurfaceTemperature_File file: "<< fn << "\n";
         abort();
     }
 
-    k_half = ( km -1 ) / 2;                                                             // position at 180°E ( Greenwich )
-    int j = 0;
-    int k = 0;
-
-    while ( ( k < km ) && !Name_SurfaceTemperature_File_Read.eof() ){
-        while ( j < jm ){
-            double lat, lon, temperature;
-            Name_SurfaceTemperature_File_Read >> lat;
-            Name_SurfaceTemperature_File_Read >> lon;
-            Name_SurfaceTemperature_File_Read >> temperature;
-
+    float lat, lon, temperature;
+    for(int k=0; k < km && !ifs.eof(); k++ ){
+        for(int j=0; j < jm; j++ ){
+            ifs >> lat >> lon >> temperature;
             t.x[ 0 ][ j ][ k ] = temperature_NASA.y[ j ][ k ] = ( temperature + t_0 ) / t_0;
-            j++;
         }
-    j = 0;
-    k++;
     }
 
     // correction of surface temperature around 180°E
+    int k_half = ( km -1 ) / 2;
     for ( int j = 0; j < jm; j++ ){
         t.x[ 0 ][ j ][ k_half ] = ( t.x[ 0 ][ j ][ k_half + 1 ] + t.x[ 0 ][ j ][ k_half - 1 ] ) / 2.;
         temperature_NASA.y[ j ][ k_half ] = ( temperature_NASA.y[ j ][ k_half + 1 ] +
@@ -609,46 +462,28 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
 }
 
 
-void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecipitation_File,
-                             Array_2D &precipitation_NASA ){
+void cAtmosphereModel::read_NASA_precipitation(const string &fn){
     // initial conditions for the Name_SurfacePrecipitation_File at the sea surface
-    cout.precision ( 3 );
-    cout.setf ( ios::fixed );
-
-    ifstream Name_SurfacePrecipitation_File_Read(Name_SurfacePrecipitation_File);
-
-    if (!Name_SurfacePrecipitation_File_Read.is_open()) {
-        cerr << "ERROR: could not open SurfacePrecipitation_File file at "
-        << Name_SurfacePrecipitation_File << "\n";
+    ifstream ifs(fn);
+    if (!ifs.is_open()) {
+        cerr << "ERROR: unable to open SurfacePrecipitation_File file: " << fn << "\n";
         abort();
     }
 
-    int j = 0;
-    int k = 0;
-
-    while ( ( k < km ) && !Name_SurfacePrecipitation_File_Read.eof() ){
-        while ( j < jm ){
-            double lat, lon, precipitation;
-            Name_SurfacePrecipitation_File_Read >> lat;
-            Name_SurfacePrecipitation_File_Read >> lon;
-            Name_SurfacePrecipitation_File_Read >> precipitation;
-
+    double lat, lon, precipitation;
+    for(int k=0; k < km && !ifs.eof(); k++ ){
+        for(int j=0; j < jm; j++ ){
+            ifs >> lat >> lon >> precipitation;
             precipitation_NASA.y[ j ][ k ] = precipitation;
-            j++;
         }
-    j = 0;
-    k++;
     }
 }
-
-
-
 
 void cAtmosphereModel::BC_Pressure()
 {
     float exp_pressure = g / ( 1.e-2 * gam * R_Air );
 
-// boundary condition of surface pressure given by surface temperature through gas equation
+    // boundary condition of surface pressure given by surface temperature through gas equation
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             p_stat.x[ 0 ][ j ][ k ] =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );      // given in hPa
@@ -1219,98 +1054,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
     }  // end if true
 }
 
-
-
-
-
-
-
-void BC_Thermo::IC_Temperature_WestEastCoast ( Array &h, Array &t ){
-// initial conditions for the temperature close to coast sides to damp out shades of preceeding timeslices
-    j_grad = 7;                                                                             // extension for temperature change in zonal direction
-    k_grad = 7;                                                                             // extension for temperature change in longitudinal direction
-
-// search for north coasts to smooth the temperature
-
-// northern and southern hemisphere: north coast
-    j_air = 0;                                                                            // somewhere on air
-    flip = 0;                                                                                   // somewhere on air
-    for ( int k = 1; k < km-1; k++ ){                                            // outer loop: longitude
-        for ( int j = j_grad; j < jm-1; j++ ){                                   // inner loop: latitude
-            if ( is_air ( h, 0, j, k ) ){                                             // if somewhere on air
-                j_air = 0;                                                                // somewhere on air: j_air = 0
-                flip = 0;                                                                       // somewhere on air: flip = 0
-            }
-            else j_air = 1;                                                           // first time on land
-            if ( ( flip == 0 ) && ( j_air == 1 ) ){                            // on air closest to land
-                ll = j - j_grad;                                                                // starting point of temperature smoothing
-                for ( int l = ll; l < j; l++ )      t.x[ 0 ][ l ][ k ] = t.x[ 0 ][ ll ][ k ];       // replacement of temperature values
-                flip = 1;                                                                       // somewhere on land: flip = 1
-            }
-        }                                                                                           // end of latitudinal loop
-        flip = 0;                                                                               // somewhere on air: flip = 0
-    }                                                                                               // end of longitudinal loop
-
-// northern and southern hemisphere: south coast
-    j_air = 0;                                                                            // on air closest to coast
-    j_sequel = 1;                                                                           // on solid ground
-    for ( int k = 1; k < km-1; k++ ){                                           // outer loop: latitude
-        for ( int j = 0; j < jm - j_grad; j++ ){                                 // inner loop: longitude
-            if ( is_land ( h, 0, j, k ) ) j_sequel = 0;                       // if solid ground: j_sequel = 0
-            if ( ( is_air ( h, 0, j, k ) ) && ( j_sequel == 0 ) ) j_air = 0;   // if air and and j_sequel = 0 then is air closest to coast
-            else j_air = 1;                                                           // somewhere on air
-            if ( ( is_air ( h, 0, j, k ) ) && ( j_air == 0 ) ){     // if air is closest to coast, change of velocity components begins
-                ll = j + j_grad;                                                            // starting point of temperature smoothing
-                for ( int l = ll; l > j; l-- )      t.x[ 0 ][ l ][ k ] = t.x[ 0 ][ ll ][ k ];       // replacement of temperature values
-                j_sequel = 1;                                                               // looking for another south coast
-            }
-        }                                                                                           // end of longitudinal loop
-        j_air = 0;                                                                        // starting at another latitude
-    }                                                                                               // end of latitudinal loop
-
-// northern and southern hemisphere: east coast
-    k_air = 0;                                                                            // on air closest to coast
-    k_sequel = 1;                                                                           // on solid ground
-    for ( int j = 1; j < jm-1; j++ ){                                                // outer loop: latitude
-        for ( int k = k_grad; k < km-k_grad; k++ ){                      // inner loop: longitude
-            if ( is_land ( h, 0, j, k ) ) k_sequel = 0;                       // if solid ground: k_sequel = 0
-            if ( ( is_air ( h, 0, j, k ) ) && ( k_sequel == 0 ) ) k_air = 0;        // if air and and k_sequel = 0 then air lies closest to a coast
-            else k_air = 1;                                                           // somewhere on air
-            if ( ( is_air ( h, 0, j, k ) ) && ( k_air == 0 ) ){     // if air is closest to coast, change of velocity components begins
-                ll = k + k_grad;                                                            // starting point of temperature smoothing
-                for ( int l = ll; l > k; l-- )      t.x[ 0 ][ j ][ l ] = t.x[ 0 ][ j ][ ll ];       // replacement of temperature values
-                k_sequel = 1;                                                               // looking for another east coast
-            }
-        }                                                                                           // end of longitudinal loop
-        k_air = 0;                                                                        // starting at another longitude
-    }                                                                                               // end of latitudinal loop
-
-// northern and southern hemisphere: west coast
-    k_air = 0;                                                                            // somewhere on air
-    flip = 0;                                                                                   // somewhere on air
-    for ( int j = 1; j < jm-1; j++ ){                                                // outer loop: latitude
-        for ( int k = k_grad; k < km-1; k++ ){                               // inner loop: longitude
-            if ( is_air ( h, 0, j, k ) ){                                             // if somewhere on air
-                k_air = 0;                                                                // somewhere on air: k_air = 0
-                flip = 0;                                                                       // somewhere on air: flip = 0
-            }
-            else k_air = 1;                                                           // first time on land
-            if ( ( flip == 0 ) && ( k_air == 1 ) ){                            // on air closest to land
-                ll = k - k_grad;                                                            // starting point of temperature smoothing
-                for ( int l = ll; l < k; l++ )      t.x[ 0 ][ j ][ l ] = t.x[ 0 ][ j ][ ll ];       // replacement of temperature values
-                flip = 1;                                                                       // somewhere on land: flip = 1
-            }
-        }                                                                                           // end of longitudinal loop
-        flip = 0;                                                                               // somewhere on air: flip = 0
-    }                                                                                               // end of latitudinal loop
-}
-
-
-
-
-
-void BC_Thermo::Value_Limitation_Atm ( Array &h, Array &u, Array &v, Array &w,
-                            Array &p_dyn, Array &t, Array &c, Array &cloud, Array &ice, Array &co2 ){
+void cAtmosphereModel::Value_Limitation_Atm(){
 // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
@@ -1351,11 +1095,10 @@ void BC_Thermo::Value_Limitation_Atm ( Array &h, Array &u, Array &v, Array &w,
     }
 }
 
+void cAtmosphereModel::IC_v_w_WestEastCoast(){}
 
-
-
-void BC_Thermo::Pressure_Limitation_Atm ( Array &p_dyn, Array &p_dynn ){
-// class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
+void cAtmosphereModel::Pressure_Limitation_Atm(){
+    // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
@@ -1370,15 +1113,6 @@ void BC_Thermo::Pressure_Limitation_Atm ( Array &p_dyn, Array &p_dynn ){
         }
     }
 }
-
-
-
-int BC_Thermo::GetTropopauseHightAdd(double t_cret){
-    double d_i_h_round = round((t_cret * t_0) / 2.6);
-        // adiabatic slope of radial temperature 0.65/100m, stepsize 400m => 2.6/400m
-    return ( int ) d_i_h_round;
-}
-
 
 double get_pole_temperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
     return (t_2 - t_1) / (double) (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
