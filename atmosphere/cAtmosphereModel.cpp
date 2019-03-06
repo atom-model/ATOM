@@ -62,9 +62,7 @@ cAtmosphereModel::cAtmosphereModel() :
     old_arrays_3d {&u,  &v,  &w,  &t,  &p_dyn,  &c,  &cloud,  &ice,  &co2 },
     new_arrays_3d {&un, &vn, &wn, &tn, &p_dynn, &cn, &cloudn, &icen, &co2n},
     old_arrays_2d {&v,  &w,  &p_dyn }, 
-    new_arrays_2d {&vn, &wn, &p_dynn},
-    residuum_2d(1, jm, km),
-    residuum_3d(im, jm, km)
+    new_arrays_2d {&vn, &wn, &p_dynn}
 {
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
@@ -628,12 +626,6 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
     ppa.Atmosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, t_0, h, v, w, t, c, 
                               Precipitation, precipitable_water );
 
-    if(debug){
-        ppa.save(output_path+"/residuum_"+std::to_string(iter_cnt-1)+".dat", 
-                std::vector<std::string>{"residuum"},
-                std::vector<Vector3D<>* >{&residuum_3d},
-                1);
-    }
 }
 
 void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
@@ -670,10 +662,6 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
                 boundary.BC_theta ( t, u, v, w, p_dyn, c, cn, cloud, ice, co2 );
                 boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
                 
-                //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-                Accuracy_Atm        min_Residuum_2D ( im, jm, km, dthe, dphi );
-                double residuum_old = std::get<0>(min_Residuum_2D.residuumQuery_2D ( rad, the, v, w , residuum_2d));
-
                 Value_Limitation_Atm( );
 
                 LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, 
@@ -685,14 +673,6 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
                 solveRungeKutta_2D_Atmosphere();
                 
-                //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-                double residuum = std::get<0>(min_Residuum_2D.residuumQuery_2D ( rad, the, v, w, residuum_2d ));
-
-                emin = fabs ( ( residuum - residuum_old ) / residuum_old );
-                
-                //  state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
-                min_Residuum_2D.steadyQuery_2D ( v, vn, w, wn, p_dyn, p_dynn );
-
                 move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d);
 
                 iter_cnt++;
@@ -748,12 +728,6 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
                 "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << pressure_iter << endl;
 
-            //  old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-            Accuracy_Atm        min_Residuum ( im, jm, km, dr, dthe, dphi );
-            double residuum_old = std::get<0>(min_Residuum.residuumQuery_3D ( rad, the, u, v, w, residuum_3d ));
-            
-            //logger() <<  residuum_3d(1, 30, 150) << " residuum_mchin" <<Ma<<std::endl;
-            
             //  class BC_Atmosphaere for the geometry of a shell of a sphere
             boundary.BC_radius ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
             boundary.BC_theta ( t, u, v, w, p_dyn, c, cn, cloud, ice, co2 );
@@ -780,17 +754,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
             if ( RadiationModel == 1 ){
                 BC_Radiation_multi_layer(); 
             }
-            //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
-            double residuum = std::get<0>(min_Residuum.residuumQuery_3D ( rad, the, u, v, w, residuum_3d ));
-
-            emin = fabs ( ( residuum - residuum_old ) / residuum_old );
-
-            //  statements on the convergence und iterational process
-            min_Residuum.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, cloud, cloudn, ice, icen, co2, co2n, p_dyn, 
-                                          p_dynn, L_atm);
-
-            // 3D_fields
-
+            
             //  class element for the initial conditions the latent heat
             Latent_Heat(); 
 
