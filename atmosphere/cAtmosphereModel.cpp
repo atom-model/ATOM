@@ -19,7 +19,6 @@
 #include <sys/types.h>
 
 #include "BC_Atm.h"
-#include "BC_Bath_Atm.h"
 #include "Accuracy_Atm.h"
 #include "RHS_Atm.h"
 #include "RungeKutta_Atm.h"
@@ -160,10 +159,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     if( stat( output_path.c_str(), &info ) != 0 ){
         mkdir(output_path.c_str(), 0777);
     }
-    // maximum numbers of grid points in r-, theta- and phi-direction ( im, jm, km )
-    // maximum number of overall iterations ( n )
-    // maximum number of inner velocity loop iterations ( velocity_iter_max )
-    // maximum number of outer pressure loop iterations ( pressure_iter_max )
 
     cout.precision ( 6 );
     cout.setf ( ios::fixed );
@@ -219,17 +214,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     }
 
     //  initialization of the bathymetry/topography
-
-    //  class BC_Bathymetry_Atmosphere for the geometrical boundary condition of the computational area
-    BC_Bathymetry_Atmosphere LandArea(this, NASATemperature, im, jm, km, co2_vegetation, co2_land, co2_ocean);
-
     //  topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
-    //LandArea.BC_MountainSurface ( bathymetry_filepath, Topography, h );
     init_topography(bathymetry_filepath);
-    //  class element for the computation of the ratio ocean to land areas, also supply and removal of CO2 on land, ocean and by vegetation
-    LandArea.land_oceanFraction ( h );
-
-    //  class calls for the solution of the flow properties
 
     //  class BC_Atmosphere for the boundary conditions for the variables at the spherical shell surfaces and the meridional interface
     BC_Atmosphere  boundary ( im, jm, km, t_tropopause );
@@ -283,15 +269,13 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
     move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d);
 
-
-
     // ***********************************   start of pressure and velocity iterations ***********************************
 
-    run_2D_loop(boundary, LandArea, startPressure);
+    run_2D_loop(boundary, startPressure);
     
     cout << endl << endl;
 
-    run_3D_loop( boundary, LandArea, startPressure, calculate_MSL);
+    run_3D_loop( boundary, startPressure, calculate_MSL);
 
     cout << endl << endl;
 
@@ -305,9 +289,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  final remarks
     cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
-    if ( emin <= epsres ){
-        cout << "***** steady solution reached! *****" << endl;
-    }
 
     if(debug){
         fedisableexcept(FE_INVALID | FE_OVERFLOW |FE_DIVBYZERO); //not platform independent(bad, very bad, I know)
@@ -629,7 +610,6 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
 }
 
 void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
-                                    BC_Bathymetry_Atmosphere &LandArea, 
                                     Pressure_Atm &startPressure){
     int switch_2D = 0;    
     iter_cnt = 1;
@@ -664,11 +644,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
                 
                 Value_Limitation_Atm( );
 
-                LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, 
-                                          t_equator, t_pole, 
-                                          t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
-                                          pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
-                                          radiation_3D, Vegetation );
+                BC_SolidGround(); 
                 
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
                 solveRungeKutta_2D_Atmosphere();
@@ -697,7 +673,6 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
 
 
 void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
-                                    BC_Bathymetry_Atmosphere &LandArea,
                                     Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL){ 
     
     iter_cnt = 1;
@@ -740,10 +715,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
 
             Value_Limitation_Atm();
 
-            LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, t_equator, 
-                                      t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
-                                      co2_tropopause, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
-                                      ice, co2, radiation_3D, Vegetation );
+            BC_SolidGround(); 
             
             // class RungeKutta for the solution of the differential equations describing the flow properties
             solveRungeKutta_3D_Atmosphere(); 
@@ -761,8 +733,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
             print_min_max_values();
 
             //  computation of vegetation areas
-            LandArea.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
-
+            vegetationDistribution();
 
             //  composition of results
             run_MSL_data(); 
@@ -1008,10 +979,6 @@ void cAtmosphereModel::init_water_vapour(){
 *
 */
 void cAtmosphereModel::init_topography(string &topo_filename){
-    // default adjustment, h must be 0 everywhere
-    h.initArray(im, jm, km, 0.);
-
-    // reading data from file Name_Bathymetry_File_Read
     ifstream ifile(topo_filename);
     if ( ! ifile.is_open()) {
         std::cerr << "ERROR: could not open Name_Bathymetry_File file: " <<  topo_filename << std::endl;
@@ -1418,3 +1385,44 @@ void  cAtmosphereModel::save_data(){
     //save_array(path + string("p") + postfix_str, p_dyn);
     Precipitation.save(path + string("p") + postfix_str);
 }
+
+/*
+*
+*/
+void cAtmosphereModel::BC_SolidGround(){
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            for ( int i = im-2; i >= 0; i-- ){
+                if ( is_land ( h, i, j, k ) ){
+                    u.x[ i ][ j ][ k ] = 0.;
+                    v.x[ i ][ j ][ k ] = 0.;
+                    w.x[ i ][ j ][ k ] = 0.;
+                    //t.x[ i ][ j ][ k ] = 1.;  // = 273.15 K
+                    //c.x[ i ][ j ][ k ] = c_tropopause;  // = 1 g/kg water vapour
+                    //c.x[ i ][ j ][ k ] = 0.; 
+                    cloud.x[ i ][ j ][ k ] = 0.;
+                    ice.x[ i ][ j ][ k ] = 0.;
+                    co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
+                    p_dyn.x[ i ][ j ][ k ] = 0.;
+                }// is_land
+            } // i
+        } // k
+    } // j
+}
+
+/*
+*
+*/
+void cAtmosphereModel::vegetationDistribution(){
+    // description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            if ( max_Precipitation > 0 && is_land( h, 0, j, k ) && !(t.x[ 0 ][ j ][ k ] < 1.) ){
+                Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation; // actual vegetation areas
+            }else{
+                Vegetation.y[ j ][ k ] = 0.;
+            }
+        }
+    }
+}
+

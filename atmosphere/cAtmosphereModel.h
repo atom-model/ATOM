@@ -134,11 +134,9 @@ private:
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
 
     void run_2D_loop( BC_Atmosphere &boundary,
-                      BC_Bathymetry_Atmosphere &LandArea,
                       Pressure_Atm &startPressure);
 
     void run_3D_loop( BC_Atmosphere &boundary,
-                      BC_Bathymetry_Atmosphere &LandArea,
                       Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL);
 
     void run_MSL_data();
@@ -166,6 +164,9 @@ private:
     void restrain_temperature();
     void Pressure_Limitation_Atm();
     void Value_Limitation_Atm();
+    void vegetationDistribution();
+    void BC_SolidGround(); 
+
     /*
      * initialize co2 Array co2
     */
