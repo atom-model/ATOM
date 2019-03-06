@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "BC_Atm.h"
 #include "Accuracy_Atm.h"
 #include "RHS_Atm.h"
 #include "RungeKutta_Atm.h"
@@ -216,12 +215,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
     init_topography(bathymetry_filepath);
 
-    //  class BC_Atmosphere for the boundary conditions for the variables at the spherical shell surfaces and the meridional interface
-    BC_Atmosphere  boundary ( im, jm, km, t_tropopause );
-
-    //  class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-    //  class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
-
     //  class Pressure for the subsequent computation of the pressure by a separate Euler equation
     Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
 
@@ -265,11 +258,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     // ***********************************   start of pressure and velocity iterations ***********************************
 
-    run_2D_loop(boundary, startPressure);
+    run_2D_loop(startPressure);
     
     cout << endl << endl;
 
-    run_3D_loop( boundary, startPressure);
+    run_3D_loop(startPressure);
 
     cout << endl << endl;
 
@@ -603,8 +596,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
 
 }
 
-void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
-                                    Pressure_Atm &startPressure){
+void cAtmosphereModel::run_2D_loop(Pressure_Atm &startPressure){
     int switch_2D = 0;    
     iter_cnt = 1;
     int Ma = int(round(*get_current_time())); 
@@ -633,8 +625,8 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
                     "    pressure_iter_2D = " << pressure_iter_2D << endl;
 
                 //  class BC_Atmosphaere for the geometry of a shell of a sphere
-                boundary.BC_theta ( t, u, v, w, p_dyn, c, cn, cloud, ice, co2 );
-                boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
+                BC_theta();
+                BC_phi();
                 
                 Value_Limitation_Atm( );
 
@@ -666,7 +658,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
 }
 
 
-void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, Pressure_Atm &startPressure){ 
+void cAtmosphereModel::run_3D_loop(Pressure_Atm &startPressure){ 
     iter_cnt = 1;
     iter_cnt_3d = 0;
     emin = epsres * 100.;
@@ -696,9 +688,9 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, Pressure_Atm &start
                 "    pressure_iter = " << pressure_iter << endl;
 
             //  class BC_Atmosphaere for the geometry of a shell of a sphere
-            boundary.BC_radius ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
-            boundary.BC_theta ( t, u, v, w, p_dyn, c, cn, cloud, ice, co2 );
-            boundary.BC_phi ( t, u, v, w, p_dyn, c, cloud, ice, co2 );
+            BC_radius();
+            BC_theta();
+            BC_phi();
 
             //Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
             if ( velocity_iter % 2 == 0 ){

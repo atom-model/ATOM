@@ -133,9 +133,9 @@ private:
     void print_min_max_values();
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
 
-    void run_2D_loop( BC_Atmosphere &boundary, Pressure_Atm &startPressure);
+    void run_2D_loop(Pressure_Atm &startPressure);
 
-    void run_3D_loop( BC_Atmosphere &boundary, Pressure_Atm &startPressure);
+    void run_3D_loop(Pressure_Atm &startPressure);
 
     void run_MSL_data();
 public:
@@ -226,6 +226,12 @@ private:
     void read_NASA_temperature(const string &fn);
     
     void read_NASA_precipitation(const string&);
+
+    void BC_radius();
+
+    void BC_theta();
+
+    void BC_phi();
  
     static cAtmosphereModel* m_model;
 

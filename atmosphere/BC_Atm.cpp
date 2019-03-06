@@ -7,63 +7,41 @@
  * 
  * class to prepare the coordinate system
 */
-
-
 #include <iostream>
 #include <cmath>
-
-#include "BC_Atm.h"
-
+#include "cAtmosphereModel.h"
 using namespace std;
 
+const  int c43 = 4./3., c13 = 1./3.;
 
-
-
-BC_Atmosphere::BC_Atmosphere ( int im, int jm, int km, double t_tropopause )
+void cAtmosphereModel::BC_radius()
 {
-    this -> im = im;
-    this -> jm = jm;
-    this -> km = km;
-    this -> t_tropopause = t_tropopause;
-
-    c43 = 4./3.;
-    c13 = 1./3.;
-}
-
-
-BC_Atmosphere::~BC_Atmosphere() {}
-
-
-
-
-void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn,
-                                                        Array &c, Array &cloud, Array &ice, Array &co2 ){
-// boundary conditions for the r-direction, loop index i
+    // boundary conditions for the r-direction
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
-/******** grid bottom values ***************/
+            /******** grid bottom values ***************/
             u.x[ 0 ][ j ][ k ] = 0.;
             v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
             w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
-//            p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];
-//            c.x[ 0 ][ j ][ k ] = c.x[ 3 ][ j ][ k ] - 3. * c.x[ 2 ][ j ][ k ] + 3. * c.x[ 1 ][ j ][ k ];        // extrapolation
-//            cloud.x[ 0 ][ j ][ k ] = cloud.x[ 3 ][ j ][ k ] - 3. * cloud.x[ 2 ][ j ][ k ] + 3. * cloud.x[ 1 ][ j ][ k ];        // extrapolation
-//            ice.x[ 0 ][ j ][ k ] = ice.x[ 3 ][ j ][ k ] - 3. * ice.x[ 2 ][ j ][ k ] + 3. * ice.x[ 1 ][ j ][ k ];        // extrapolation
+            //p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];
+            //c.x[ 0 ][ j ][ k ] = c.x[ 3 ][ j ][ k ] - 3. * c.x[ 2 ][ j ][ k ] + 3. * c.x[ 1 ][ j ][ k ]; 
+            //cloud.x[ 0 ][ j ][ k ] = cloud.x[ 3 ][ j ][ k ] - 3. * cloud.x[ 2 ][ j ][ k ] + 3. * cloud.x[ 1 ][ j ][ k ];
+            //ice.x[ 0 ][ j ][ k ] = ice.x[ 3 ][ j ][ k ] - 3. * ice.x[ 2 ][ j ][ k ] + 3. * ice.x[ 1 ][ j ][ k ];
 
-/******** grid top values ***************/
+            /******** grid top values ***************/
             t.x[ im-1 ][ j ][ k ] = t_tropopause;
             p_dyn.x[ im-1 ][ j ][ k ] = 0.;
             u.x[ im-1 ][ j ][ k ] = 0.;
             v.x[ im-1 ][ j ][ k ] = 0.;
             w.x[ im-1 ][ j ][ k ] = 0.;
-//            t.x[ im-1 ][ j ][ k ] = t.x[ im-4 ][ j ][ k ] - 3. * t.x[ im-3 ][ j ][ k ] + 3. * t.x[ im-2 ][ j ][ k ];        // extrapolation
-            p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 3. * p_dyn.x[ im-2 ][ j ][ k ];        // extrapolation
-            c.x[ im-1 ][ j ][ k ] = c.x[ im-4 ][ j ][ k ] - 3. * c.x[ im-3 ][ j ][ k ] + 3. * c.x[ im-2 ][ j ][ k ];        // extrapolation
+            //t.x[ im-1 ][ j ][ k ] = t.x[ im-4 ][ j ][ k ] - 3. * t.x[ im-3 ][ j ][ k ] + 3. * t.x[ im-2 ][ j ][ k ];
+            p_dyn.x[ im-1 ][ j ][ k ] = p_dyn.x[ im-4 ][ j ][ k ] - 3. * p_dyn.x[ im-3 ][ j ][ k ] + 3. * p_dyn.x[ im-2 ][ j ][ k ];
+            c.x[ im-1 ][ j ][ k ] = c.x[ im-4 ][ j ][ k ] - 3. * c.x[ im-3 ][ j ][ k ] + 3. * c.x[ im-2 ][ j ][ k ];
             cloud.x[ im-1 ][ j ][ k ] = cloud.x[ im-4 ][ j ][ k ] - 3. * cloud.x[ im-3 ][ j ][ k ] + 3. * cloud.x[ im-2 ][ j ][ k ];
             ice.x[ im-1 ][ j ][ k ] = ice.x[ im-4 ][ j ][ k ] - 3. * ice.x[ im-3 ][ j ][ k ] + 3. * ice.x[ im-2 ][ j ][ k ];
             co2.x[ im-1 ][ j ][ k ] = co2.x[ im-4 ][ j ][ k ] - 3. * co2.x[ im-3 ][ j ][ k ] + 3. * co2.x[ im-2 ][ j ][ k ];
 /*
-            c.x[ im-1 ][ j ][ k ] = c43 * c.x[ im-2 ][ j ][ k ] - c13 * c.x[ im-3 ][ j ][ k ];                                    // normal gradient
+            c.x[ im-1 ][ j ][ k ] = c43 * c.x[ im-2 ][ j ][ k ] - c13 * c.x[ im-3 ][ j ][ k ];     // normal gradient
             cloud.x[ im-1 ][ j ][ k ] = c43 * cloud.x[ im-2 ][ j ][ k ] - c13 * cloud.x[ im-3 ][ j ][ k ];
             ice.x[ im-1 ][ j ][ k ] = c43 * ice.x[ im-2 ][ j ][ k ] - c13 * ice.x[ im-3 ][ j ][ k ];
             co2.x[ im-1 ][ j ][ k ] = c43 * co2.x[ im-2 ][ j ][ k ] - c13 * co2.x[ im-3 ][ j ][ k ];
@@ -73,19 +51,14 @@ void BC_Atmosphere::BC_radius ( Array &t, Array &u, Array &v, Array &w, Array &p
 }
 
 
-
-
-
-
-void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn,
-                                     Array &c, Array &cn, Array &cloud, Array &ice, Array &co2 ){
-// boundary conditions for the the-direction, loop index j
+void cAtmosphereModel::BC_theta(){
+    // boundary conditions for the the-direction
     for ( int k = 0; k < km; k++ ){
         for ( int i = 0; i < im; i++ ){
-// zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
+            // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
             t.x[ i ][ 0 ][ k ] = c43 * t.x[ i ][ 1 ][ k ] - c13 * t.x[ i ][ 2 ][ k ];
             t.x[ i ][ jm-1 ][ k ] = c43 * t.x[ i ][ jm-2 ][ k ] - c13 * t.x[ i ][ jm-3 ][ k ];
-//            t.x[ i ][ jm-1 ][ k ] = t.x[ i ][ jm-4 ][ k ] - 3. * t.x[ i ][ jm-3 ][ k ] + 3. * t.x[ i ][ jm-2 ][ k ];        // extrapolation
+            //t.x[ i ][ jm-1 ][ k ] = t.x[ i ][ jm-4 ][ k ] - 3. * t.x[ i ][ jm-3 ][ k ] + 3. * t.x[ i ][ jm-2 ][ k ];
             u.x[ i ][ 0 ][ k ] = c43 * u.x[ i ][ 1 ][ k ] - c13 * u.x[ i ][ 2 ][ k ];
             u.x[ i ][ jm-1 ][ k ] = c43 * u.x[ i ][ jm-2 ][ k ] - c13 * u.x[ i ][ jm-3 ][ k ];
             v.x[ i ][ 0 ][ k ] = 0.;
@@ -108,18 +81,11 @@ void BC_Atmosphere::BC_theta ( Array &t, Array &u, Array &v, Array &w, Array &p_
     }
 }
 
-
-
-
-
-
-
-void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p_dyn,
-                                                   Array &c, Array &cloud, Array &ice, Array &co2 ){
-// boundary conditions for the phi-direction, loop index k
+void cAtmosphereModel::BC_phi(){
+    // boundary conditions for the phi-direction
     for ( int i = 0; i < im; i++ ){
         for ( int j = 1; j < jm-1; j++ ){
-// zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
+            // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
             t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
             t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];
             t.x[ i ][ j ][ 0 ] = t.x[ i ][ j ][ km-1 ] = ( t.x[ i ][ j ][ 0 ] + t.x[ i ][ j ][ km-1 ] ) / 2.;
@@ -150,3 +116,5 @@ void BC_Atmosphere::BC_phi ( Array &t, Array &u, Array &v, Array &w, Array &p_dy
         }
     }
 }
+
+

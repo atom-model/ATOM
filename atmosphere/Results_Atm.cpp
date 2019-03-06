@@ -14,7 +14,6 @@
 #include <algorithm>
 
 #include <cAtmosphereModel.h>
-#include "Results_Atm.h"
 #include "Utils.h"
 
 using namespace std;
