@@ -133,9 +133,9 @@ private:
     void print_min_max_values();
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
 
-    void run_2D_loop(Pressure_Atm &startPressure);
+    void run_2D_loop();
 
-    void run_3D_loop(Pressure_Atm &startPressure);
+    void run_3D_loop();
 
     void run_MSL_data();
 public:
@@ -232,6 +232,10 @@ private:
     void BC_theta();
 
     void BC_phi();
+
+    void computePressure_3D();
+
+    void computePressure_2D();
  
     static cAtmosphereModel* m_model;
 

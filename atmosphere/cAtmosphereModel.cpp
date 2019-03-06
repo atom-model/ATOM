@@ -22,7 +22,6 @@
 #include "RHS_Atm.h"
 #include "RungeKutta_Atm.h"
 #include "PostProcess_Atm.h"
-#include "Pressure_Atm.h"
 #include "MinMax_Atm.h"
 #include "Utils.h"
 #include "Config.h"
@@ -215,11 +214,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
     init_topography(bathymetry_filepath);
 
-    //  class Pressure for the subsequent computation of the pressure by a separate Euler equation
-    Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
-
     //  class element calls for the preparation of initial conditions for the flow properties
-
     //  class element for the initial conditions for u-v-w-velocity components
     //circulation.IC_CellStructure ( h, u, v, w );
     init_velocities();
@@ -258,11 +253,11 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     // ***********************************   start of pressure and velocity iterations ***********************************
 
-    run_2D_loop(startPressure);
+    run_2D_loop();
     
     cout << endl << endl;
 
-    run_3D_loop(startPressure);
+    run_3D_loop();
 
     cout << endl << endl;
 
@@ -596,7 +591,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
 
 }
 
-void cAtmosphereModel::run_2D_loop(Pressure_Atm &startPressure){
+void cAtmosphereModel::run_2D_loop(){
     int switch_2D = 0;    
     iter_cnt = 1;
     int Ma = int(round(*get_current_time())); 
@@ -643,7 +638,7 @@ void cAtmosphereModel::run_2D_loop(Pressure_Atm &startPressure){
 
 
             //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-            startPressure.computePressure_2D ( u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
+            computePressure_2D();
 
             // limit of the computation in the sense of time steps
             if ( iter_cnt > nm )
@@ -658,7 +653,7 @@ void cAtmosphereModel::run_2D_loop(Pressure_Atm &startPressure){
 }
 
 
-void cAtmosphereModel::run_3D_loop(Pressure_Atm &startPressure){ 
+void cAtmosphereModel::run_3D_loop(){ 
     iter_cnt = 1;
     iter_cnt_3d = 0;
     emin = epsres * 100.;
@@ -737,7 +732,7 @@ void cAtmosphereModel::run_3D_loop(Pressure_Atm &startPressure){
         /**  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::::::: **/
         
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
-        startPressure.computePressure_3D ( u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
+        computePressure_3D();
 /*
         //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
         //  resulting the precipitation formed of rain and snow

@@ -11,39 +11,22 @@
 #include <iostream>
 #include <cmath>
 
-#include "Pressure_Atm.h"
 #include "Array.h"
 #include "Array_2D.h"
 #include "MinMax_Atm.h"
 #include "Utils.h"
+#include "cAtmosphereModel.h"
 
 using namespace std;
 using namespace AtomUtils;
 
-
-Pressure_Atm::Pressure_Atm ( int im, int jm, int km, double dr, double dthe, double dphi ){
-    this-> im = im;
-    this-> jm = jm;
-    this-> km = km;
-    this-> dr = dr;
-    this-> dthe = dthe;
-    this-> dphi = dphi;
-
-    c43 = 4./3.;
-    c13 = 1./3.;
-}
-
-Pressure_Atm::~Pressure_Atm (){}
-
-
-void Pressure_Atm::computePressure_3D ( double u_0, double r_air,
-                        Array_1D &rad, Array_1D &the, Array &p_dyn, Array &p_dynn, Array &h,
-                        Array &aux_u, Array &aux_v, Array &aux_w ){
-// boundary conditions for the r-direction, loop index i
+void cAtmosphereModel::computePressure_3D (){
+    const  int c43 = 4./3., c13 = 1./3.;
+    // boundary conditions for the r-direction, loop index i
 
     logger() << "enter $$$$$$$$$$$$$$$$$ Pressure_Atm::computePressure_3D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
 
-// boundary conditions for the r-direction, loop index i
+    // boundary conditions for the r-direction, loop index i
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
             aux_u.x[ 0 ][ j ][ k ] = 0.;
@@ -61,7 +44,7 @@ void Pressure_Atm::computePressure_3D ( double u_0, double r_air,
     double exp_2_rm = 0.;
     double exp_2_rm_2 = 0.;
 
-// boundary conditions for the the-direction, loop index j
+    // boundary conditions for the the-direction, loop index j
     for ( int k = 0; k < km; k++ ){
         for ( int i = 0; i < im; i++ ){
 // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
@@ -202,10 +185,11 @@ void Pressure_Atm::computePressure_3D ( double u_0, double r_air,
 //    circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }
 
-
-void Pressure_Atm::computePressure_2D ( double u_0, double r_air,
-                                 Array_1D &rad, Array_1D &the, Array &p_dyn,
-                                 Array &p_dynn, Array &h, Array &aux_v, Array &aux_w ){
+/*
+*
+*/
+void cAtmosphereModel::computePressure_2D(){
+    const  int c43 = 4./3., c13 = 1./3.;
     logger() << "enter &&&&&&&&&&&& computePressure_2D: p_dyn: " << p_dyn.max() * u_0 * u_0 * r_air *.01 << std::endl;
 
     // Pressure using Euler equation ( 2. derivative of pressure added to the Poisson-right-hand-side )
@@ -310,3 +294,5 @@ void Pressure_Atm::computePressure_2D ( double u_0, double r_air,
 
     //    circulation.Pressure_Limitation_Atm ( p_dyn, p_dynn );
 }
+
+
