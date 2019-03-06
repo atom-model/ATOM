@@ -24,7 +24,6 @@
 #include "RungeKutta_Atm.h"
 #include "PostProcess_Atm.h"
 #include "Pressure_Atm.h"
-#include "Results_Atm.h"
 #include "MinMax_Atm.h"
 #include "Utils.h"
 #include "Config.h"
@@ -223,11 +222,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
     //  class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
 
-    //  class Results_MSL_Atm to compute and show results on the mean sea level, MSL
-    Results_MSL_Atm  calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_equator, lv, ls, 
-                                     cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water_vapour, R_WaterVapour, 
-                                     co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous, t_average );
-
     //  class Pressure for the subsequent computation of the pressure by a separate Euler equation
     Pressure_Atm  startPressure ( im, jm, km, dr, dthe, dphi );
 
@@ -275,7 +269,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     
     cout << endl << endl;
 
-    run_3D_loop( boundary, startPressure, calculate_MSL);
+    run_3D_loop( boundary, startPressure);
 
     cout << endl << endl;
 
@@ -672,9 +666,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary,
 }
 
 
-void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary,
-                                    Pressure_Atm &startPressure, Results_MSL_Atm &calculate_MSL){ 
-    
+void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, Pressure_Atm &startPressure){ 
     iter_cnt = 1;
     iter_cnt_3d = 0;
     emin = epsres * 100.;
@@ -1328,18 +1320,6 @@ void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, i
     }
 }
 
-void cAtmosphereModel::save_array(const string& fn, const Array& a){
-    for(int i=0; i<im; i++){
-        if(!debug && i>0) break;
-        std::ofstream os(fn + "_" + to_string(i) + ".bin", std::ios::binary | std::ios::out);
-        for(int j=jm-1; j>=0; j--){
-            os.write(reinterpret_cast<const char*>(a.x[i][j]+(km/2)), std::streamsize((km/2)*sizeof(double)));
-            os.write(reinterpret_cast<const char*>(a.x[i][j]), std::streamsize((km/2+1)*sizeof(double)));
-        }
-        os.close();
-    }
-}
-
 /*
 *
 */
@@ -1369,8 +1349,6 @@ void  cAtmosphereModel::save_data(){
                     v_t.x[ 0 ][ j ][ k ] = v_t.x[ i ][ j ][ k ];
                 if(fabs(w_t.x[ i ][ j ][ k ]) > 0 && !(fabs(w_t.x[ 0 ][ j ][ k ]) > 0))
                     w_t.x[ 0 ][ j ][ k ] = w_t.x[ i ][ j ][ k ];
-
-                //u_t.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] * u_0;
             }
         }
     }
@@ -1378,11 +1356,7 @@ void  cAtmosphereModel::save_data(){
     t_t.save(path + string("t") + postfix_str, 0);
     v_t.save(path + string("v") + postfix_str, 0);
     w_t.save(path + string("w") + postfix_str, 0);
-    //save_array(path + string("u") + postfix_str, u_t);
-    //save_array(path + string("m") + postfix_str, m_t);
     h.save(path + string("h") + postfix_str, 0);
-    //save_array(path + string("c") + postfix_str, c);
-    //save_array(path + string("p") + postfix_str, p_dyn);
     Precipitation.save(path + string("p") + postfix_str);
 }
 
