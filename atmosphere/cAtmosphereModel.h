@@ -193,7 +193,7 @@ private:
         return;
     }
 
-    void init_topography(string &topo_filename);
+    void init_topography(const string &topo_filename);
 
     void init_u(Array &u, int lat_1, int lat_2, double coefficient);
 
@@ -236,6 +236,10 @@ private:
     void computePressure_3D();
 
     void computePressure_2D();
+
+    void print_welcome_msg();
+
+    void print_final_remarks();
  
     static cAtmosphereModel* m_model;
 
@@ -250,7 +254,7 @@ private:
 
     int iter_cnt, iter_cnt_3d, iter_cnt_2d; // iteration count
 
-    string bathymetry_name, bathymetry_filepath;
+    string bathymetry_name;
 
     double coeff_mmWS;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     double max_Precipitation;
@@ -258,6 +262,9 @@ private:
     double emin;
 
     bool is_node_weights_initialised;
+    
+    bool has_welcome_msg_printed;
+
     std::vector<std::vector<double> > m_node_weights;
 
     std::vector<Array*> old_arrays_3d, new_arrays_3d, old_arrays_2d, new_arrays_2d; 

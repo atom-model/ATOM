@@ -1,8 +1,8 @@
 <!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. --><atom>    <common>
         <bathymetry_path>/build/ATOM/data/topo_grids</bathymetry_path>  <!--  (string ) -->
         <BathymetrySuffix>Ma_smooth.xyz</BathymetrySuffix>  <!--  (string ) -->
-        <verbose>false</verbose>  <!--  (bool ) -->
-        <output_path>output/</output_path>  <!-- directory where model outputs should be placed ( must end in / ) (string ) -->
+        <verbose>true</verbose>  <!--  (bool ) -->
+        <output_path>/tmp/atom/</output_path>  <!-- directory where model outputs should be placed ( must end in / ) (string ) -->
         <paraview_panorama_vts>false</paraview_panorama_vts>  <!-- flag to control if create paraview panorama (bool ) -->
         <debug>false</debug>  <!-- flag to control if the program is running in debug mode (bool ) -->
         <temperature_file>/build/ATOM/data/SurfaceTemperature_NASA.xyz</temperature_file>  <!--  (string ) -->

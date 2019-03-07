@@ -71,6 +71,7 @@ using namespace AtomUtils;
 // for c = 1.0983 compares to a salinity of 38.0 psu
 
 cHydrosphereModel::cHydrosphereModel() :
+    has_printed_welcome_msg(false),
     old_arrays_3d {&t,  &u,  &v,  &w,  &c,  &p_dyn },
     new_arrays_3d {&tn, &un, &vn, &wn, &cn, &p_dynn},
     old_arrays_2d {&v,  &w,  &p_dyn },
@@ -136,8 +137,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     mkdir(output_path.c_str(), 0777);
 
-    int j_res = 0.0, k_res = 0.0;
-
     int Ma_max = 300;   // parabolic temperature distribution 300 Ma back
     int Ma_max_half = 150;  // half of time scale
 
@@ -163,19 +162,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     the.Coordinates ( jm, the0, dthe );
     phi.Coordinates ( km, phi0, dphi );
 
-
-    //  cout << endl << " ***** printout of 3D-field temperature ***** " << endl << endl;
-    //  t.printArray( im, jm, km );
-    //  cout << endl << " ***** printout of 2D-field vegetation ***** " << endl << endl;
-    //  Vegetation.printArray_2D( jm, km );
-
-    //  cout << endl << " ***** printout of 1D-field radius ***** " << endl << endl;
-    //  rad.printArray_1D( im );
-
-    //  initial values for the number of computed steps and the time
     int switch_2D = 0;
-    double residuum;
-    double residuum_old = 0.;
 
     // radial expansion of the computational field for the computation of initial values
     int i_max = im - 1;   // corresponds to sea level
@@ -203,33 +190,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     }
 
     string bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
-    string bathymetry_filepath = bathymetry_path + "/" + bathymetry_name;
-    string input_path = output_path;
 
-    cout << "\n   Input is being read from " << input_path << "\n";
-    cout << "\n   Output is being written to " << output_path << "\n";
-    cout << "   Ma = " << Ma << "\n";
-    cout << "   bathymetry_path = " << bathymetry_path << "\n";
-    cout << "   bathymetry_filepath = " << bathymetry_filepath << "\n\n";
-
-
-    if (verbose) {
-        cout << endl << endl << endl;
-        cout << "***** Hydrosphere General Circulation Model ( OGCM ) applied to laminar flow" << endl;
-        cout << "***** program for the computation of geo-atmospherical circulating flows in a spherical shell" << endl;
-        cout << "***** finite difference scheme for the solution of the 3D Navier-Stokes equations" << endl;
-        cout << "***** with 1 additional transport equations to describe the salinity" << endl;
-        cout << "***** 4th order Runge-Kutta scheme to solve 2nd order differential equations inside an inner iterational loop" << endl;
-        cout << "***** Poisson equation for the pressure solution in an outer iterational loop" << endl;
-        cout << "***** multi-layer and two-layer radiation model for the computation of the surface temperature" << endl;
-        cout << "***** temperature distribution given as a parabolic distribution from pole to pole, zonaly constant" << endl;
-        cout << "***** salinity is part of the Boussinesq approximation" << endl;
-        cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )" << endl << endl;
-
-        cout << "***** original program name:  " << __FILE__ << endl;
-        cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
-    }
-
+    if(!has_printed_welcome_msg)
+        print_welcome_msg();
 
 
     //  class PostProcess for data transport, read and write
@@ -247,7 +210,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     //  class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of the continents 
     //  and the ocean ground
-    depth.BC_SeaGround(bathymetry_filepath, L_hyd, h, Bathymetry);
+    depth.BC_SeaGround(bathymetry_path + "/" + bathymetry_name, L_hyd, h, Bathymetry);
 
     // class BC_Hydrosphere for the boundary conditions for the variables at the spherical shell surfaces and the 
     // meridional interface
@@ -269,7 +232,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     // class BC_Thermohalin for the initial and boundary conditions of the flow properties
     BC_Thermohalin      oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, 
                                     ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, 
-                                    t_pole, input_path );
+                                    t_pole, output_path );
 
     //  surface temperature from World Ocean Atlas 2009 given as boundary condition
     if ( Ma == 0 || use_earthbyte_reconstruction) 
@@ -339,57 +302,15 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                 boundary.RB_theta ( t, u, v, w, p_dyn, c );
                 boundary.RB_phi ( t, u, v, w, p_dyn, c );
 
-                // old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
-                Accuracy_Hyd        min_Residuum_old_2D ( im, jm, km, dthe, dphi );
-                min_Residuum_old_2D.residuumQuery_2D ( rad, the, v, w );
-                emin = min_Residuum_old_2D.out_min (  );
-
-                residuum_old = emin;
-
                 oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
                 // composition of results
                 calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 
                     Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, 
                     Salt_total, BottomWater );
 
-        logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
-        logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-
                 // class RungeKutta for the solution of the differential equations describing the flow properties
                 result.solveRungeKutta_2D_Hydrosphere ( prepare_2D, iter_cnt, r_0_water,
                           rad, the, phi, rhs_v, rhs_w, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
-
-        logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
-        logger() << "end cHydrosphereModel solveRungeKutta_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-/*
-      cout << endl << " ***** nach RK  printout of 3D-field v-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
-
-      cout << endl << " ***** nach RK  printout of 3D-field w-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
-
-      cout << endl << " ***** nach RK  printout of 3D-field vn-component ***** " << endl << endl;
-      v.printArray( im, jm, km );
-
-      cout << endl << " ***** nach RK  printout of 3D-field wn-component ***** " << endl << endl;
-      w.printArray( im, jm, km );
-*/
-                // new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
-                Accuracy_Hyd        min_Residuum_2D ( im, jm, km, dthe, dphi );
-                min_Residuum_2D.residuumQuery_2D ( rad, the, v, w );
-                emin = min_Residuum_2D.out_min (  );
-                j_res = min_Residuum_2D.out_j_res (  );
-                k_res = min_Residuum_2D.out_k_res (  );
-
-                residuum = emin;
-                emin = fabs ( ( residuum - residuum_old ) / residuum_old );
-
-                //state of a steady solution resulting from the pressure equation ( min_p ) for pn from the actual solution step
-                Accuracy_Hyd        min_Stationary_2D ( iter_cnt, nm, Ma, im, jm, km, emin, j_res, k_res, velocity_iter_2D, 
-                                        pressure_iter_2D, velocity_iter_max_2D, pressure_iter_max_2D );
-                min_Stationary_2D.steadyQuery_2D ( h, v, vn, w, wn, p_dyn, p_dynn );
 
                 move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d, im-1);
 
@@ -432,13 +353,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                 "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << pressure_iter << endl;
 
-            //old value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
-            Accuracy_Hyd        min_Residuum_old ( im, jm, km, dr, dthe, dphi );
-            min_Residuum_old.residuumQuery_3D ( rad, the, u, v, w );
-            emin = min_Residuum_old.out_min (  );
-
-            residuum_old = emin;
-
             // class RB_Hydrosphaere for the geometry of a shell of a sphere
             boundary.RB_radius ( ca, ta, pa, dr, rad, t, u, v, w, p_dyn, c );
             boundary.RB_theta ( t, u, v, w, p_dyn, c );
@@ -457,148 +371,17 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             // limiting the increase of flow properties around geometrical peaks and corners
             oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
-        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
-
-        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
-        logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-
-
             // class RungeKutta for the solution of the differential equations describing the flow properties
             result.solveRungeKutta_3D_Hydrosphere ( prepare, iter_cnt, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, 
                 rad, the, phi, Evaporation_Dalton, Precipitation, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, 
                 p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, 
                 Salt_Balance, p_stat, r_water, r_salt_water, Bathymetry );
 
-        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
-
-        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
-        logger() << "end cHydrosphereModel solveRungeKutta_3D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-
             // class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
             // the continents and the ocean ground
             depth.BC_SolidGround ( ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn );
 
-            // new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( emin )
-            Accuracy_Hyd        min_Residuum ( im, jm, km, dr, dthe, dphi );
-            min_Residuum.residuumQuery_3D ( rad, the, u, v, w );
-            emin = min_Residuum.out_min (  );
-            int i_res = min_Residuum.out_i_res (  );
-            j_res = min_Residuum.out_j_res (  );
-            k_res = min_Residuum.out_k_res (  );
-
-            residuum = emin;
-            emin = fabs ( ( residuum - residuum_old ) / residuum_old );
-
-            // statements on the convergence und iterational process
-            Accuracy_Hyd        min_Stationary ( iter_cnt, nm, Ma, im, jm, km, emin, i_res, j_res, k_res, velocity_iter, 
-                                    pressure_iter, velocity_iter_max, pressure_iter_max, L_hyd );
-            min_Stationary.steadyQuery_3D ( u, un, v, vn, w, wn, t, tn, c, cn, p_dyn, p_dynn );
-
-            // 3D_fields
-
-            //      searching of maximum and minimum values of temperature
-            string str_max_temperature = " max temperature ", str_min_temperature = " min temperature ", str_unit_temperature = "C";
-            MinMax_Hyd      minmaxTemperature ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxTemperature.searchMinMax_3D ( str_max_temperature, str_min_temperature, str_unit_temperature, t, h );
-
-            //  searching of maximum and minimum values of u-component
-            string str_max_u = " max 3D u-component ", str_min_u = " min 3D u-component ", str_unit_u = "mm/s";
-            MinMax_Hyd      minmax_u ( im, jm, km, u_0, c_0, L_hyd );
-            minmax_u.searchMinMax_3D ( str_max_u, str_min_u, str_unit_u, u, h );
-
-            //  searching of maximum and minimum values of v-component
-            string str_max_v = " max 3D v-component ", str_min_v = " min 3D v-component ", str_unit_v = "m/s";
-            MinMax_Hyd      minmax_v ( im, jm, km, u_0, c_0, L_hyd );
-            minmax_v.searchMinMax_3D ( str_max_v, str_min_v, str_unit_v, v, h );
-
-            //  searching of maximum and minimum values of w-component
-            string str_max_w = " max 3D w-component ", str_min_w = " min 3D w-component ", str_unit_w = "m/s";
-            MinMax_Hyd      minmax_w ( im, jm, km, u_0, c_0, L_hyd );
-            minmax_w.searchMinMax_3D ( str_max_w, str_min_w, str_unit_w, w, h );
-
-            //      searching of maximum and minimum values of pressure
-            string str_max_pressure = " max pressure dynamic ", str_min_pressure = " min pressure dynamic ", str_unit_pressure = "hPa";
-            MinMax_Hyd      minmaxPressure ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxPressure.searchMinMax_3D ( str_max_pressure, str_min_pressure, str_unit_pressure, p_dyn, h );
-
-            //      searching of maximum and minimum values of static pressure
-            string str_max_pressure_stat = " max pressure static ", str_min_pressure_stat = " min pressure static ", str_unit_pressure_stat = "bar";
-            MinMax_Hyd      minmaxPressure_stat ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxPressure_stat.searchMinMax_3D ( str_max_pressure_stat, str_min_pressure_stat, str_unit_pressure_stat, p_stat, h );
-
-            cout << endl << " salinity based results in the three dimensional space: " << endl << endl;
-
-            //  searching of maximum and minimum values of salt concentration
-            string str_max_salt_concentration = " max salt concentration ", str_min_salt_concentration = " min salt concentration ", str_unit_salt_concentration = "psu";
-            MinMax_Hyd      minmaxSalt ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxSalt.searchMinMax_3D ( str_max_salt_concentration, str_min_salt_concentration, str_unit_salt_concentration, c, h );
-
-            //  searching of maximum and minimum values of salt balance
-            string str_max_salt_balance = " max salt balance ", str_min_salt_balance = " min salt balance ", str_unit_salt_balance = "psu";
-            MinMax_Hyd      minmaxSaltBalance ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxSaltBalance.searchMinMax_3D ( str_max_salt_balance, str_min_salt_balance, str_unit_salt_balance, Salt_Balance, h );
-
-            //  searching of maximum and minimum values of salt finger
-            string str_max_salt_finger = " max salt finger ", str_min_salt_finger = " min salt finger ", str_unit_salt_finger = "psu";
-            MinMax_Hyd      minmaxSaltFinger ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxSaltFinger.searchMinMax_3D ( str_max_salt_finger, str_min_salt_finger, str_unit_salt_finger, Salt_Finger, h );
-
-            //  searching of maximum and minimum values of salt diffusion
-            string str_max_salt_diffusion = " max salt diffusion ", str_min_salt_diffusion = " min salt diffusion ", str_unit_salt_diffusion = "psu";
-            MinMax_Hyd      minmaxSaltDiffusion ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxSaltDiffusion.searchMinMax_3D ( str_max_salt_diffusion, str_min_salt_diffusion, str_unit_salt_diffusion, Salt_Diffusion, h );
-
-            //  searching of maximum and minimum values of buoyancy force
-            string str_max_BuoyancyForce_3D = " max buoyancy force ", str_min_BuoyancyForce_3D = " min buoyancy force ", str_unit_BuoyancyForce_3D = "kN/m2";
-            MinMax_Hyd      minmaxBuoyancyForce_3D ( im, jm, km, u_0, c_0, L_hyd );
-            minmaxBuoyancyForce_3D.searchMinMax_3D ( str_max_BuoyancyForce_3D, str_min_BuoyancyForce_3D, str_unit_BuoyancyForce_3D, BuoyancyForce_3D, h );
-
-            // 2D_fields
-
-            //  searching of maximum and minimum values of total salt volume in a column
-            string str_max_salt_total = " max salt total ", str_min_salt_total = " min salt total ", str_unit_salt_total = "psu";
-            MinMax_Hyd      minmaxSalt_total ( jm, km, c_0 );
-            minmaxSalt_total.searchMinMax_2D ( str_max_salt_total, str_min_salt_total, str_unit_salt_total, Salt_total, h );
-
-            //  searching of maximum and minimum values of salt finger volume in a column
-            string str_max_Salt_Finger = " max Salt_Finger ", str_min_Salt_Finger = " min Salt_Finger ", str_unit_Salt_Finger = "psu";
-            MinMax_Hyd      minmaxSalt_finger ( jm, km, c_0 );
-            minmaxSalt_finger.searchMinMax_2D ( str_max_Salt_Finger, str_min_Salt_Finger, str_unit_Salt_Finger, SaltFinger, h );
-
-            //  searching of maximum and minimum values of salt diffusion volume in a column
-            string str_max_Salt_Diffusion = " max Salt_Diffusion ", str_min_Salt_Diffusion = " min Salt_Diffusion ", str_unit_Salt_Diffusion = "psu";
-            MinMax_Hyd      minmaxSalt_diffusion ( jm, km, c_0 );
-            minmaxSalt_diffusion.searchMinMax_2D ( str_max_Salt_Diffusion, str_min_Salt_Diffusion, str_unit_Salt_Diffusion, SaltDiffusion, h );
-
-            //  searching of maximum and minimum values of salt diffusion volume in a column
-            string str_max_BuoyancyForce_2D = " max BuoyancyForce_2D ", str_min_BuoyancyForce_2D = " min BuoyancyForce_2D ", str_unit_BuoyancyForce_2D = "N";
-            MinMax_Hyd      minmaxBuoyancyForce_2D ( jm, km, c_0 );
-            minmaxBuoyancyForce_2D.searchMinMax_2D ( str_max_BuoyancyForce_2D, str_min_BuoyancyForce_2D, str_unit_BuoyancyForce_2D, BuoyancyForce_2D, h );
-
-            cout << endl << " deep currents averaged for a two dimensional plane: " << endl << endl;
-
-            //  searching of maximum and minimum values of upwelling volume in a column
-            string str_max_upwelling = " max upwelling ", str_min_upwelling = " min upwelling ", str_unit_upwelling = "m/s";
-            MinMax_Hyd      minmaxUpwelling ( jm, km, c_0 );
-            minmaxUpwelling.searchMinMax_2D ( str_max_upwelling, str_min_upwelling, str_unit_upwelling, Upwelling, h );
-
-            //  searching of maximum and minimum values of downwelling volume in a column
-            string str_max_downwelling = " max downwelling ", str_min_downwelling = " min downwelling ", str_unit_downwelling = "m/s";
-            MinMax_Hyd      minmaxDownwelling ( jm, km, c_0 );
-            minmaxDownwelling.searchMinMax_2D ( str_max_downwelling, str_min_downwelling, str_unit_downwelling, Downwelling, h );
-
-            //  searching of maximum and minimum values of bottom water volume in a column
-            string str_max_bottom_water = " max bottom water ", str_min_bottom_water = " min bottom water ", str_unit_bottom_water = "m/s";
-            MinMax_Hyd      minmaxBottom_water ( jm, km, c_0 );
-            minmaxBottom_water.searchMinMax_2D ( str_max_bottom_water, str_min_bottom_water, str_unit_bottom_water, BottomWater, h );
-
-            //  searching of maximum and minimum values of the bathymetry
-            string str_max_bathymetry = " max bathymetry ", str_min_bathymetry = " min bathymetry ", str_unit_bathymetry = "m";
-            MinMax_Hyd      minmaxBathymetry ( jm, km, c_0 );
-            minmaxBathymetry.searchMinMax_2D ( str_max_bathymetry, str_min_bathymetry, str_unit_bathymetry, Bathymetry, h );
-
+            print_min_max();
 
             // composition of results
             calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 

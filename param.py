@@ -10,7 +10,7 @@ def main():
         'common': [
             ( 'bathymetry_path', '', 'string', '../data/topo_grids' ),
             ( 'BathymetrySuffix', '', 'string', 'Ma_smooth.xyz' ),
-            ( 'verbose', '', 'bool', False ),
+            ( 'verbose', '', 'bool', True ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output/' ),
             ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', False),
             ( 'debug','flag to control if the program is running in debug mode', 'bool', False),
