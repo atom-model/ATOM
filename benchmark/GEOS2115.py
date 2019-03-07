@@ -211,7 +211,7 @@ import sys
 sys.path.append(ATOM_HOME + 'reconstruction')
 sys.path.append(ATOM_HOME + 'utils')
 
-from reconstruct_atom_data import *
+import reconstruct_atom_data as r_tool
 from pyatom import Atmosphere, Hydrosphere
 
 def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
@@ -222,6 +222,10 @@ def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
     #load configurations
     atm_model.load_config( ATM_CFG_FILE_NAME )
     hyd_model.load_config( HYD_CFG_FILE_NAME )
+    
+    atm_model.output_path = OUTPUT_DIR
+    hyd_model.output_path = OUTPUT_DIR
+    r_tool.DATA_DIR = OUTPUT_DIR
 
     #set the iteration number
     atm_model.velocity_iter_max = av
@@ -237,9 +241,9 @@ def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
         atm_model.run_time_slice(time)
         hyd_model.run_time_slice(time)#hyd model depends on atm model. must run atm model before hyd model
         if idx < len(times)-1:
-            reconstruct_temperature(time,times[idx+1]) 
-            reconstruct_precipitation(time,times[idx+1])
-            reconstruct_salinity(time,times[idx+1])
+            r_tool.reconstruct_temperature(time,times[idx+1]) 
+            r_tool.reconstruct_precipitation(time,times[idx+1])
+            r_tool.reconstruct_salinity(time,times[idx+1])
         os.system('rm {0}{1}Ma_Atm_Precipitation.xyz'.format(OUTPUT_DIR, time))
         os.system('rm {0}{1}Ma_Atm_Temperature.xyz'.format(OUTPUT_DIR, time))
         os.system('rm {0}{1}Ma_Hyd_Salinity.xyz'.format(OUTPUT_DIR, time))

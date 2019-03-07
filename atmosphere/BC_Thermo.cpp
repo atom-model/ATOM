@@ -869,7 +869,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
     /******************* main part for rain and snow calculation *********************/
 
     if ( true ){
-        for(int iter_prec = 1; iter_prec < 25; iter_prec++ ){
+        for(int iter_prec = 1; iter_prec < 2; iter_prec++ ){
             for ( int k = 0; k < km; k++ ){
                 for ( int j = 0; j < jm; j++ ){
                     P_rain.x[ im-1 ][ j ][ k ] = 0.;
