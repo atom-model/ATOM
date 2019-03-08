@@ -240,6 +240,9 @@ private:
     void print_welcome_msg();
 
     void print_final_remarks();
+
+    void store_intermediate_data_2D(float coeff=1);
+    void store_intermediate_data_3D(float coeff=1);
  
     static cAtmosphereModel* m_model;
 
@@ -259,17 +262,11 @@ private:
     double coeff_mmWS;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
     double max_Precipitation;
 
-    double emin;
-
     bool is_node_weights_initialised;
     
     bool has_welcome_msg_printed;
 
     std::vector<std::vector<double> > m_node_weights;
-
-    std::vector<Array*> old_arrays_3d, new_arrays_3d, old_arrays_2d, new_arrays_2d; 
-
-    std::map<int, std::vector<Array> > m_t_s; // keep intermediate temperature results
 
     //  class Array for 1-D, 2-D and 3-D field declarations
     // 1D arrays

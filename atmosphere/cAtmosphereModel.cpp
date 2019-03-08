@@ -54,11 +54,7 @@ const double cAtmosphereModel::r0 = 1.;
 cAtmosphereModel::cAtmosphereModel() :
     i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0))),
     is_node_weights_initialised(false), 
-    has_welcome_msg_printed(false),
-    old_arrays_3d {&u,  &v,  &w,  &t,  &p_dyn,  &c,  &cloud,  &ice,  &co2 },
-    new_arrays_3d {&un, &vn, &wn, &tn, &p_dynn, &cn, &cloudn, &icen, &co2n},
-    old_arrays_2d {&v,  &w,  &p_dyn }, 
-    new_arrays_2d {&vn, &wn, &p_dynn}
+    has_welcome_msg_printed(false)
 {
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
@@ -77,8 +73,6 @@ cAtmosphereModel::cAtmosphereModel() :
 
     coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
 
-    emin = epsres * 100.;
-    
     m_model = this;
 
     //  Coordinate system in form of a spherical shell
@@ -218,8 +212,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     }
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
-    move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
-    move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d);
+    store_intermediate_data_2D();
+    store_intermediate_data_3D();
 
     run_2D_loop();
     
@@ -446,7 +440,7 @@ void cAtmosphereModel::run_2D_loop(){
                 //  class RungeKutta for the solution of the differential equations describing the flow properties
                 solveRungeKutta_2D_Atmosphere();
                 
-                move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d);
+                store_intermediate_data_2D();
 
                 iter_cnt++;
             }
@@ -472,11 +466,11 @@ void cAtmosphereModel::run_2D_loop(){
 void cAtmosphereModel::run_3D_loop(){ 
     iter_cnt = 1;
     iter_cnt_3d = 0;
-    emin = epsres * 100.;
 
     int Ma = int(round(*get_current_time()));
 
-    move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+    store_intermediate_data_3D();
+    
     if(debug) save_data();
     /** ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   :::::::::::::::: **/
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
@@ -539,7 +533,7 @@ void cAtmosphereModel::run_3D_loop(){
                 Two_Category_Ice_Scheme(); 
             }
 
-            move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+            store_intermediate_data_3D();
             
             iter_cnt++;
             iter_cnt_3d++;
@@ -1203,3 +1197,38 @@ void cAtmosphereModel::vegetationDistribution(){
     }
 }
 
+void cAtmosphereModel::store_intermediate_data_2D(float coeff)
+{
+    for ( int j = 0; j < jm; j++ )
+    {
+        for ( int k = 0; k < km; k++ )
+        {
+            vn.x[ 0 ][ j ][ k ] = coeff * v.x[ 0 ][ j ][ k ];
+            wn.x[ 0 ][ j ][ k ] = coeff * w.x[ 0 ][ j ][ k ];
+            p_dynn.x[ 0 ][ j ][ k ] = coeff * p_dyn.x[ 0 ][ j ][ k ];
+        }
+    }
+}
+
+void cAtmosphereModel::store_intermediate_data_3D(float coeff)
+{ 
+    for ( int i = 0; i < im; i++ )
+    {
+        for ( int j = 0; j < jm; j++ )
+        {
+            for ( int k = 0; k < km; k++ )
+            {
+                un.x[ i ][ j ][ k ] = coeff * u.x[ i ][ j ][ k ];
+                vn.x[ i ][ j ][ k ] = coeff * v.x[ i ][ j ][ k ];
+                wn.x[ i ][ j ][ k ] = coeff * w.x[ i ][ j ][ k ];
+                p_dynn.x[ i ][ j ][ k ] = coeff * p_dyn.x[ i ][ j ][ k ];
+                tn.x[ i ][ j ][ k ] = coeff * t.x[ i ][ j ][ k ];
+                cn.x[ i ][ j ][ k ] = coeff * c.x[ i ][ j ][ k ];
+                cloudn.x[ i ][ j ][ k ] = coeff * cloud.x[ i ][ j ][ k ];
+                icen.x[ i ][ j ][ k ] = coeff * ice.x[ i ][ j ][ k ];
+                co2n.x[ i ][ j ][ k ] = coeff * co2.x[ i ][ j ][ k ];
+
+            }
+        }
+    }
+}
