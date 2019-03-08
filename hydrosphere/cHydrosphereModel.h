@@ -31,19 +31,28 @@ private:
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
     void save_data();
 
+    void solveRungeKutta_2D_Hydrosphere();
+    void solveRungeKutta_3D_Hydrosphere();
+
+    void RK_RHS_3D_Hydrosphere(int i, int j, int k);
+    void RK_RHS_2D_Hydrosphere(int j, int k);
+
+    void store_intermediate_data_2D(float coeff=1);
+    void store_intermediate_data_3D(float coeff=1);
+
     void print_welcome_msg();
     
     void print_min_max();
     
     const int im = 41, jm = 181, km = 361, nm = 200;
 
+    static const float dr, dt, pi180, the_degree, phi_degree, dthe, dphi;
+
     int iter_cnt, iter_cnt_3d;
     int m_current_time;
 
     bool has_printed_welcome_msg;
     
-    std::vector<Array*> old_arrays_3d, new_arrays_3d, old_arrays_2d, new_arrays_2d;
-
     // 1D arrays
     Array_1D rad; // radial coordinate direction
     Array_1D the; // lateral coordinate direction

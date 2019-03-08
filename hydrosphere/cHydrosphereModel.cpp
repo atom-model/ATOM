@@ -30,8 +30,6 @@
 #include "BC_Bath_Hyd.h"
 #include "BC_Thermohalin.h"
 #include "Accuracy_Hyd.h"
-#include "RHS_Hyd.h"
-#include "RungeKutta_Hyd.h"
 #include "PostProcess_Hyd.h"
 #include "Pressure_Hyd.h"
 #include "MinMax_Hyd.h"
@@ -70,12 +68,18 @@ using namespace AtomUtils;
 // for c = 1.0000 compares to a salinity of 34.6 psu
 // for c = 1.0983 compares to a salinity of 38.0 psu
 
+const float cHydrosphereModel::dr = 0.025;  // 0.025 x 40 = 1.0 compares to 16 km : 40 = 150 m for 1 radial step
+const float cHydrosphereModel::dt = 0.000001; // time step satisfies the CFL condition
+
+const float cHydrosphereModel::pi180 = 180./ M_PI;  // pi180 = 57.3
+const float cHydrosphereModel::the_degree = 1.;   // compares to 1° step size laterally
+const float cHydrosphereModel::phi_degree = 1.;  // compares to 1° step size longitudinally
+
+const float cHydrosphereModel::dthe = the_degree / pi180; // dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
+const float cHydrosphereModel::dphi = phi_degree / pi180; // dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
+
 cHydrosphereModel::cHydrosphereModel() :
-    has_printed_welcome_msg(false),
-    old_arrays_3d {&t,  &u,  &v,  &w,  &c,  &p_dyn },
-    new_arrays_3d {&tn, &un, &vn, &wn, &cn, &p_dynn},
-    old_arrays_2d {&v,  &w,  &p_dyn },
-    new_arrays_2d {&vn, &wn, &p_dynn}
+    has_printed_welcome_msg(false)
 {
     // Python and Notebooks can't capture stdout from this module. We override
     // cout's streambuf with a class that redirects stdout out to Python.
@@ -140,19 +144,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     int Ma_max = 300;   // parabolic temperature distribution 300 Ma back
     int Ma_max_half = 150;  // half of time scale
 
-    const double pi180 = 180./ M_PI;  // pi180 = 57.3
-    const double the_degree = 1.;   // compares to 1° step size laterally
-    const double phi_degree = 1.;  // compares to 1° step size longitudinally
-
-    double dthe = the_degree / pi180; // dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
-    double dphi = phi_degree / pi180; // dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
-    double dr = 0.025;  // 0.025 x 40 = 1.0 compares to 16 km : 40 = 150 m for 1 radial step
-    double dt = 0.000001; // time step satisfies the CFL condition
-
-    const double the0 = 0.; // North Pole
-    const double phi0 = 0.; // zero meridian in Greenwich
-    const double r0 = 1.;// earth's radius is r_earth = 6731 km, here it is assumed to be infinity, circumference of the earth 40074 km
-
     cout.precision ( 6 );
     cout.setf ( ios::fixed );
 
@@ -216,13 +207,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     // meridional interface
     BC_Hydrosphere      boundary ( im, jm, km );
 
-    // class RHS_Hydrosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-    RHS_Hydrosphere     prepare ( im, jm, km, dt, dr, dthe, dphi, re, sc, g, pr, Buoyancy );
-    RHS_Hydrosphere     prepare_2D ( jm, km, dthe, dphi, re );
-
-    // class RungeKutta_Hydrosphere for the explicit solution of the Navier-Stokes equations
-    RungeKutta_Hydrosphere      result ( im, jm, km, dt );
-
     // class Pressure for the subsequent computation of the pressure by a separat Euler equation
     Pressure_Hyd        startPressure ( im, jm, km, dr, dthe, dphi );
 
@@ -264,8 +248,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
     //  storing of velocity components, pressure and temperature for iteration start
-    move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
-    move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d, im-1);
+    store_intermediate_data_2D();
+    store_intermediate_data_3D();
 
     // computation of the ratio ocean to land areas
     calculate_MSL.land_oceanFraction ( h );
@@ -309,10 +293,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                     Salt_total, BottomWater );
 
                 // class RungeKutta for the solution of the differential equations describing the flow properties
-                result.solveRungeKutta_2D_Hydrosphere ( prepare_2D, iter_cnt, r_0_water,
-                          rad, the, phi, rhs_v, rhs_w, h, v, w, p_dyn, vn, wn, p_dynn, aux_v, aux_w );
+                solveRungeKutta_2D_Hydrosphere();
 
-                move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d, im-1);
+                store_intermediate_data_2D();
 
                 iter_cnt++;
             }
@@ -372,10 +355,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
 
             // class RungeKutta for the solution of the differential equations describing the flow properties
-            result.solveRungeKutta_3D_Hydrosphere ( prepare, iter_cnt, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, 
-                rad, the, phi, Evaporation_Dalton, Precipitation, h, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, t, u, v, w, 
-                p_dyn, c, tn, un, vn, wn, p_dynn, cn, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, 
-                Salt_Balance, p_stat, r_water, r_salt_water, Bathymetry );
+            solveRungeKutta_3D_Hydrosphere(); 
 
             // class RB_Bathymetrie for the topography and bathymetry as boundary conditions for the structures of 
             // the continents and the ocean ground
@@ -389,7 +369,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                     Salt_total, BottomWater );
 
             //  restoring the velocity component and the temperature for the new time step
-            move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
+            store_intermediate_data_3D();
 
             iter_cnt++;
             iter_cnt_3d++;
@@ -602,3 +582,36 @@ void  cHydrosphereModel::save_data(){
     c_t.save(path + std::string("hyd_s")+postfix_str, im-1);
     t_t.save(path + std::string("hyd_t")+postfix_str, im-1);
 }
+
+void cHydrosphereModel::store_intermediate_data_3D(float coeff)
+{
+    for ( int i = 0; i < im; i++ )
+    {
+        for ( int j = 0; j < jm; j++ )
+        {
+            for ( int k = 0; k < km; k++ )
+            {
+                un.x[ i ][ j ][ k ] = coeff * u.x[ i ][ j ][ k ];
+                vn.x[ i ][ j ][ k ] = coeff * v.x[ i ][ j ][ k ];
+                wn.x[ i ][ j ][ k ] = coeff * w.x[ i ][ j ][ k ];
+                p_dynn.x[ i ][ j ][ k ] = coeff * p_dyn.x[ i ][ j ][ k ];
+                tn.x[ i ][ j ][ k ] = coeff * t.x[ i ][ j ][ k ];
+                cn.x[ i ][ j ][ k ] = coeff * c.x[ i ][ j ][ k ];
+            }
+        }
+    }
+}
+
+void cHydrosphereModel::store_intermediate_data_2D(float coeff)
+{   
+    for ( int j = 0; j < jm; j++ )
+    {   
+        for ( int k = 0; k < km; k++ )
+        {   
+            vn.x[ im - 1 ][ j ][ k ] = coeff * v.x[ im - 1 ][ j ][ k ];
+            wn.x[ im - 1 ][ j ][ k ] = coeff * w.x[ im - 1 ][ j ][ k ]; 
+            p_dynn.x[ im - 1 ][ j ][ k ] = coeff * p_dyn.x[ im - 1 ][ j ][ k ];
+        }
+    }
+}
+

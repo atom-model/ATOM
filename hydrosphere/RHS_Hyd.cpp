@@ -11,80 +11,34 @@
 #include <iostream>
 #include <cmath>
 
-#include "RHS_Hyd.h"
+#include "cHydrosphereModel.h"
 #include "Utils.h"
 
 using namespace std;
 using namespace AtomUtils;
 
 
-
-RHS_Hydrosphere::RHS_Hydrosphere ( int jm_, int km_, double dthe_, double dphi_, double re_ ):
-    im(0), 
-    jm(jm_), 
-    km(km_),
-    dt(0), 
-    dr(0), 
-    dthe(dthe_), 
-    dphi(dphi_), 
-    re(re_), 
-    pr(0), 
-    sc(0), 
-    m_g(0),
-    Buoyancy(0)
+void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k)
 {
-}
-
-
-RHS_Hydrosphere::RHS_Hydrosphere ( int im_, int jm_, int km_, double dt_, double dr_,
-        double dthe_, double dphi_, double re_, double sc_, double g_, double pr_, double Buoyancy_ ):
-    im(im_), 
-    jm(jm_), 
-    km(km_),
-    dt(dt_), 
-    dr(dr_), 
-    dthe(dthe_),
-    dphi(dphi_),
-    re(re_), 
-    pr(pr_), 
-    sc(sc_), 
-    m_g(g_),
-    Buoyancy(Buoyancy_)
-{
-}
-
-
-RHS_Hydrosphere::~RHS_Hydrosphere() {}
-
-
-void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
-            double g, double cp_w, double u_0, double t_0, double c_0,
-            double r_0_water, double ta, double pa, double ca, Array_1D &rad,
-            Array_1D &the, Array_1D &phi, Array &h, Array &t, Array &u, Array &v, Array &w,
-            Array &p_dyn, Array &c, Array &rhs_t, Array &rhs_u, Array &rhs_v,
-            Array &rhs_w, Array &rhs_c, Array &aux_u, Array &aux_v, Array &aux_w,
-            Array &Salt_Finger, Array &Salt_Diffusion, Array &BuoyancyForce_3D,
-            Array &Salt_Balance, Array &p_stat, Array &r_water, Array &r_salt_water,
-            Array_2D &Evaporation_Dalton, Array_2D &Precipitation, Array_2D &Bathymetry ){
-// collection of coefficients for phase transformation
+    // collection of coefficients for phase transformation
 
     double k_Force = 1.;// factor for accelleration of convergence processes inside the immersed boundary conditions
     double cc = 1.;
     double dist_coeff = 1.;
     double h_d_i = 0;
 
-// 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
+    // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
 
-// collection of coefficients
+    // collection of coefficients
     double dr2 = dr * dr;
     double dthe2 = dthe * dthe;
     double dphi2 = dphi * dphi;
 
-// collection of coefficients
+    // collection of coefficients
     double rm = rad.z[ i ];
     double rm2 = rm * rm;
 
-// collection of coefficients
+    // collection of coefficients
     double sinthe = sin( the.z[ j ] );
     double sinthe2 = sinthe * sinthe;
     double costhe = cos( the.z[ j ] );
@@ -99,7 +53,8 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     double height = ( double ) i * topo_step;
     double topo_diff = fabs ( height - Bathymetry.y[ j ][ k ] );
     double h_0_i = topo_diff / topo_step;  // hat distribution function
-//    double h_0_i = cc * ( .5 * ( acos ( topo_diff * 3.14 / L_hyd ) + 1. ) );   // cosine distribution function, better results for benchmark case
+    // cosine distribution function, better results for benchmark case
+    //    double h_0_i = cc * ( .5 * ( acos ( topo_diff * 3.14 / L_hyd ) + 1. ) ); 
 
     if ( ( topo_diff <= topo_step ) && ( ( is_water ( h, i, j, k ) ) 
         && ( is_land ( h, i-1, j, k ) ) ) ){
@@ -177,12 +132,12 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
         r_salt_water.x[ i ][ j ][ k ] = 1032.;
     }
 
-// 2. order derivative for temperature, pressure, salt concentrations and velocity components
+    // 2. order derivative for temperature, pressure, salt concentrations and velocity components
 
-// computation of initial and boundary conditions for the v and w velocity component
-// computation at the surface
+    // computation of initial and boundary conditions for the v and w velocity component
+    // computation at the surface
 
-//  3D volume iterations
+    //  3D volume iterations
 
     // 1st order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
     double dudr = h_d_i * ( u.x[ i+1 ][ j ][ k ] - u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
@@ -418,24 +373,10 @@ void RHS_Hydrosphere::RK_RHS_3D_Hydrosphere ( int i, int j, int k, double L_hyd,
     }
 }
 
-
-
-
-
-void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
-            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w, Array &p_dyn,
-            Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w ){
-
-    /********************* logger **********************/
-
-    if ( ( j == 90 ) && ( k == 180 ) ){
-        logger() << "enter RK_RHS_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "enter RK_RHS_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
-        logger() << "enter RK_RHS_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-    }
+void cHydrosphereModel::RK_RHS_2D_Hydrosphere( int j, int k)
+{
 
     //  2D surface iterations
-    im = 41;
     double k_Force = 1.;// factor for accelleration of convergence processes inside the immersed boundary conditions
     double cc = 1.;
     double dist_coeff = 1.;
@@ -616,13 +557,6 @@ void RHS_Hydrosphere::RK_RHS_2D_Hydrosphere ( int j, int k, double r_0_water,
 
     aux_v.x[ im-1 ][ j ][ k ] = rhs_v.x[ im-1 ][ j ][ k ] + h_d_j * dpdthe / rm / r_0_water;
     aux_w.x[ im-1 ][ j ][ k ] = rhs_w.x[ im-1 ][ j ][ k ] + h_d_k * dpdphi / rmsinthe / r_0_water;
-
-    if ( ( j == 90 ) && ( k == 180 ) ){
-        logger() << "end RK_RHS_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
-        logger() << "end RK_RHS_2D_Hydrosphere: v-velocity max: " << v.max() << std::endl;
-        logger() << "end RK_RHS_2D_Hydrosphere: w-velocity max: " << w.max() << std::endl << std::endl;
-    }
-
 }
 
 
