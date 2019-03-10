@@ -173,7 +173,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     double t_cretaceous = 0.;
 
     //Prepare the temperature and precipitation data file
-    string Name_SurfaceTemperature_File  = temperature_file;
+    string Name_v_surface_File = velocity_v_file;
+    string Name_w_surface_File = velocity_w_file;
+    string Name_SurfaceTemperature_File = temperature_file;
     string Name_SurfacePrecipitation_File = precipitation_file;
 
     if(Ma != 0 && use_earthbyte_reconstruction){
@@ -257,13 +259,21 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class element for the tropopause location as a parabolic distribution from pole to pole 
     circulation.TropopauseLocation ();
 
+    //  class element for the surface v-velocity by measurement
+    //  if ( Ma == 0 ) circulation.BC_Surface_v_Velocity ( Name_v_surface_File, v );
+    circulation.BC_Surface_v_Velocity ( Name_v_surface_File, v );
+
+    //  class element for the surface w-velocity by measurement
+    //  if ( Ma == 0 ) circulation.BC_Surface_w_Velocity ( Name_w_surface_File, w );
+    circulation.BC_Surface_w_Velocity ( Name_w_surface_File, w );
+
+//    goto Printout;
+
     //  class element for the initial conditions for u-v-w-velocity components
     circulation.IC_CellStructure ( rad, h, u, v, w );
 
     //  initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
-    circulation.IC_v_w_WestEastCoast ( h, u, v, w );
-
-//    goto Printout;
+//    circulation.IC_v_w_WestEastCoast ( h, u, v, w );
 
     //  class element for the surface temperature from NASA for comparison
     //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
@@ -301,6 +311,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
     move_data_to_new_arrays(jm, km, 1., old_arrays_2d, new_arrays_2d);
 
+
+//    goto Printout;
 
 
     // ***********************************   start of pressure and velocity iterations ***********************************

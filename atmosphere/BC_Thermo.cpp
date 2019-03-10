@@ -874,36 +874,36 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
 
 // velocity assumptions at the equator 0°
     ua_00 = 1.;  // in m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this class elemen
-    va_equator_SL =  0.000;
+//    va_equator_SL =  0.000;
     va_equator_Tropopause = 0.000;
-    wa_equator_SL = - 1.;
+//    wa_equator_SL = - 1.;
     wa_equator_Tropopause = - 7.5;
 
 // velocity assumptions for latitude at 15° and 30° in the Hadley cell
     ua_30 = + 1.;
-    va_Hadley_SL = .25;
+//    va_Hadley_SL = .25;
     va_Hadley_Tropopause = - 1.;
-    va_Hadley_SL_15 = 1.;
+//    va_Hadley_SL_15 = 1.;
     va_Hadley_Tropopause_15 = - 1.;
-    wa_Hadley_SL = 1.;                                                                  // at surface
-    wa_Hadley_Tropopause = 30.;                                                 // subtropic jet in m/s compares to 108 km/h
+//    wa_Hadley_SL = 1.;                                                // at surface
+    wa_Hadley_Tropopause = 30.;                                         // subtropic jet in m/s compares to 108 km/h
 
 // velocity assumptions for latitude at 45° and 60° in the Ferrel cell
     ua_60 = .5;
-    va_Ferrel_SL = 0.5;
+//    va_Ferrel_SL = 0.5;
     va_Ferrel_Tropopause = 1.;
-    va_Ferrel_SL_45 = - .1;
+//    va_Ferrel_SL_45 = - .1;
     va_Ferrel_Tropopause_45 = 1.;
-    wa_Ferrel_SL = -.2;                                                                 // subpolar jet
-    wa_Ferrel_Tropopause = 10.;                                                     // subpolar jet in m/s compares to 36 km/h
+//    wa_Ferrel_SL = -.2;                                               // subpolar jet
+    wa_Ferrel_Tropopause = 10.;                                         // subpolar jet in m/s compares to 36 km/h
 
 // velocity assumptions for latitude 90° in the Polar cell
     ua_90 = .5;
-    va_Polar_SL = 0.;
+//    va_Polar_SL = 0.;
     va_Polar_Tropopause = 0.;
-    va_Polar_SL_75 = .5;
+//    va_Polar_SL_75 = .5;
     va_Polar_Tropopause_75 = - 1.;
-    wa_Polar_SL = - 0.01;
+//    wa_Polar_SL = - 0.01;
     wa_Polar_Tropopause = 0.;
 
 // preparations for diagonal velocity value connections
@@ -966,6 +966,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
             for ( int i = 0; i < i_max; i++ ){
+                va_equator_SL = v.x[ 0 ][ j ][ k ];
+                wa_equator_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_equator_Tropopause - va_equator_SL ) *
                     d_i / d_i_max + va_equator_SL;
@@ -1035,6 +1037,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
             for ( int i = 0; i < i_max; i++ ){
+                va_Polar_SL = v.x[ 0 ][ j ][ k ];
+                wa_Polar_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Polar_Tropopause - va_Polar_SL ) *
                     d_i / d_i_max + va_Polar_SL;
@@ -1065,6 +1069,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
             for ( int i = 0; i < i_max; i++ ){
+                va_Polar_SL_75 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Polar_Tropopause_75 - va_Polar_SL_75 ) *
                     d_i / d_i_max + va_Polar_SL_75;
@@ -1125,6 +1130,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
             for ( int i = 0; i < i_max; i++ ){
+                va_Ferrel_SL = v.x[ 0 ][ j ][ k ];
+                wa_Ferrel_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause - va_Ferrel_SL ) *
                     d_i / d_i_max + va_Ferrel_SL;   // replacement for forming diagonals
@@ -1155,6 +1162,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
             for ( int i = 0; i < i_max; i++ ){
+                va_Ferrel_SL_45 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause_45 - va_Ferrel_SL_45 ) *
                     d_i / d_i_max + va_Ferrel_SL_45;
@@ -1214,6 +1222,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
             for ( int i = 0; i < i_max; i++ ){
+                va_Hadley_SL = v.x[ 0 ][ j ][ k ];
+                wa_Hadley_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause - va_Hadley_SL ) *
                     d_i / d_i_max + va_Hadley_SL;    // replacement for forming diagonals
@@ -1243,6 +1253,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
             for ( int i = 0; i < i_max; i++ ){
+                va_Hadley_SL_15 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause_15 - va_Hadley_SL_15 ) *
                     d_i / d_i_max + va_Hadley_SL_15;
@@ -1312,6 +1323,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
             for ( int i = 0; i < i_max; i++ ){
+                va_Hadley_SL = v.x[ 0 ][ j ][ k ];
+                wa_Hadley_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause - va_Hadley_SL ) *
                     d_i / d_i_max + va_Hadley_SL;    // replacement for forming diagonals
@@ -1340,6 +1353,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
             for ( int i = 0; i < i_max; i++ ){
+                va_Hadley_SL_15 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause_15 - va_Hadley_SL_15 ) *
                     d_i / d_i_max + va_Hadley_SL_15;
@@ -1398,6 +1412,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
             for ( int i = 0; i < i_max; i++ ){
+                va_Ferrel_SL = v.x[ 0 ][ j ][ k ];
+                wa_Ferrel_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause - va_Ferrel_SL ) *
                     d_i / d_i_max + va_Ferrel_SL;    // replacement for forming diagonals
@@ -1426,6 +1442,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
             for ( int i = 0; i < i_max; i++ ){
+                va_Ferrel_SL_45 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause_45 - va_Ferrel_SL_45 ) *
                     d_i / d_i_max + va_Ferrel_SL_45;
@@ -1496,6 +1513,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
             for ( int i = 0; i < i_max; i++ ){
+                va_Polar_SL = v.x[ 0 ][ j ][ k ];
+                wa_Polar_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( ( va_Polar_Tropopause - va_Polar_SL ) *
                     d_i / d_i_max + va_Polar_SL );
@@ -1525,6 +1544,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
             for ( int i = 0; i < i_max; i++ ){
+                va_Polar_SL_75 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Polar_Tropopause_75 - va_Polar_SL_75 ) *
                     d_i / d_i_max + va_Polar_SL_75;
@@ -2336,25 +2356,80 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
 
 
 
+void BC_Thermo::BC_Surface_v_Velocity ( const string &Name_v_surface_File, Array &v ){
+// initial conditions for the Name_v_surface_File at the sea surface
+    cout.precision ( 3 );
+    cout.setf ( ios::fixed );
+    ifstream Name_v_surface_File_Read(Name_v_surface_File);
+    if (!Name_v_surface_File_Read.is_open()){
+        cerr << "ERROR: could not open Name_v_surface_File file at "
+        << Name_v_surface_File << "\n";
+        abort();
+    }
+    k_half = ( km -1 ) / 2;  // position at 180°E ( Greenwich )
+    j = 0;
+    k = 0;
+    while ( ( k < km ) && !Name_v_surface_File_Read.eof() ){
+        while ( j < jm ){
+            double lat, lon, v_velocity;
+            Name_v_surface_File_Read >> lat;
+            Name_v_surface_File_Read >> lon;
+            Name_v_surface_File_Read >> v_velocity;
+            v.x[ 0 ][ j ][ k ] = v_velocity;
+            j++;
+        }
+    j = 0;
+    k++;
+    }
+}
+
+
+
+
+void BC_Thermo::BC_Surface_w_Velocity ( const string &Name_w_surface_File, Array &w ){
+// initial conditions for the Name_w_surface_File at the sea surface
+    cout.precision ( 3 );
+    cout.setf ( ios::fixed );
+    ifstream Name_w_surface_File_Read(Name_w_surface_File);
+    if (!Name_w_surface_File_Read.is_open()){
+        cerr << "ERROR: could not open Name_w_surface_File file at "
+        << Name_w_surface_File << "\n";
+        abort();
+    }
+    k_half = ( km -1 ) / 2;  // position at 180°E ( Greenwich )
+    j = 0;
+    k = 0;
+    while ( ( k < km ) && !Name_w_surface_File_Read.eof() ){
+        while ( j < jm ){
+            double lat, lon, w_velocity;
+            Name_w_surface_File_Read >> lat;
+            Name_w_surface_File_Read >> lon;
+            Name_w_surface_File_Read >> w_velocity;
+            w.x[ 0 ][ j ][ k ] = w_velocity;
+            j++;
+        }
+    j = 0;
+    k++;
+    }
+}
+
+
+
+
 void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperature_File,
                              Array_2D &temperature_NASA, Array &t ){
 // initial conditions for the Name_SurfaceTemperature_File at the sea surface
-
     cout.precision ( 3 );
     cout.setf ( ios::fixed );
-
     ifstream Name_SurfaceTemperature_File_Read(Name_SurfaceTemperature_File);
-
     if (!Name_SurfaceTemperature_File_Read.is_open()) {
         cerr << "ERROR: could not open SurfaceTemperature_File file at "
         << Name_SurfaceTemperature_File << "\n";
         abort();
     }
-
-    k_half = ( km -1 ) / 2;                                                             // position at 180°E ( Greenwich )
+    k_half = ( km -1 ) / 2;                                             // position at 180°E ( Greenwich )
     j = 0;
     k = 0;
-
     while ( ( k < km ) && !Name_SurfaceTemperature_File_Read.eof() ){
         while ( j < jm ){
             double lat, lon, temperature;
@@ -2368,7 +2443,6 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
     j = 0;
     k++;
     }
-
     // correction of surface temperature around 180°E
     for ( int j = 0; j < jm; j++ ){
         t.x[ 0 ][ j ][ k_half ] = ( t.x[ 0 ][ j ][ k_half + 1 ] + t.x[ 0 ][ j ][ k_half - 1 ] ) / 2.;
@@ -2376,6 +2450,7 @@ void BC_Thermo::BC_Surface_Temperature_NASA ( const string &Name_SurfaceTemperat
             temperature_NASA.y[ j ][ k_half - 1 ] ) / 2.;
     }
 }
+
 
 
 void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecipitation_File,

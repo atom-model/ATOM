@@ -152,6 +152,10 @@ class BC_Thermo
 
         void BC_CO2( double L_atm, Array_1D &rad, Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 );
 
+        void BC_Surface_v_Velocity ( const string &Name_v_surface_File, Array &v );
+
+        void BC_Surface_w_Velocity ( const string &Name_w_surface_File, Array &w );
+
         void BC_Surface_Temperature_NASA ( const string &, Array_2D &, Array & );
 
         void BC_Surface_Precipitation_NASA ( const string &, Array_2D & );
