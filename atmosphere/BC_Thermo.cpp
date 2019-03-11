@@ -1010,7 +1010,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
                                 // immersion freezing and contact nucleation, < XVII >
                         else  S_r_frz = 0.;
 
-                        S_s_melt=0; // this thing causes problem.
+                        //S_s_melt=0; // this thing causes problem.
                         // sinks and sources
                         S_v.x[ i ][ j ][ k ] = - S_c_c.x[ i ][ j ][ k ] + S_ev - S_i_dep -
                             S_s_dep - S_nuc;
