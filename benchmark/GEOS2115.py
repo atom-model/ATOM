@@ -581,4 +581,52 @@ def draw_velocity_at_depth(time):
         plt.title("Ocean Current Velocity at {0}Ma ({1}m depth)".format(time, depth))
         plt.show()
         
+def draw_ocean_current_velocity_map_100(time):
+    def down_sample(a):
+        tmp=[]   
+        for t in a:
+            tmp.append(t[3::4])
+        return tmp[3::4]
 
+    layer_idx = 20
+    v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
+    w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
+    h = np.fromfile(OUTPUT_DIR + 'bin_data/h_{0}_n_0.bin'.format(time),'<f8')
+
+    vm = np.sqrt(v**2+w**2)
+    vm[vm == 0] = 1
+    v = v/vm
+    w = w/vm
+    x = np.linspace(-180, 180, 361)
+    y = np.linspace(-90, 90, 181)
+    xv, yv = np.meshgrid(x, y)
+
+    figure = plt.figure(figsize=(15, 8))
+    m = Basemap(llcrnrlon=-180,llcrnrlat=-90,urcrnrlon=180,urcrnrlat=90,projection='cyl', lon_0=0)
+
+    xi, yi = m(xv.flatten(), yv.flatten())
+
+    xi = xi.reshape((181,361)) 
+    yi = yi.reshape((181,361)) 
+    vm = vm.reshape((181,361)) 
+    w = w.reshape((181,361)) 
+    v = v.reshape((181,361)) 
+    h = h.reshape((181,361)) 
+
+    wn = down_sample(w) 
+    vn = down_sample(-v)
+    
+    #print vm.mean()
+
+    cs = m.quiver(down_sample(xi), down_sample(yi), wn, vn, down_sample(vm), width=0.001,
+             headlength=7, headwidth=5, pivot='tail', clim=[0, 0.00000035], cmap='jet')
+
+    m.contour( xi, yi, h, colors ='k', linewidths= 0.3 )
+    m.drawparallels(np.arange(-90., 90., 10.), labels=[1,0,0,0], fontsize=10)
+    m.drawmeridians(np.arange(-180., 180., 45.), labels=[0,0,0,1], fontsize=10)
+    #m.drawcoastlines()   
+
+    depth = (40 - layer_idx) * 5
+    cbar = m.colorbar(cs, location='bottom', pad="10%", label='Velocity (m/s)')
+    plt.title("Ocean Current Velocity at {0}Ma ".format(time))
+    plt.show()

@@ -58,9 +58,12 @@ RUN pip install -e /build/ATOM/python
 
 RUN mkdir /home/workspace
 RUN mkdir /build/ATOM/benchmark/output
+RUN mkdir /build/ATOM/data/topo_grids
 
 # Copy test files to workspace
-RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb \
+RUN cp -av /build/ATOM/benchmark/GEOS2115_run.ipynb \
+           /build/ATOM/benchmark/GEOS2115_present_day.ipynb \
+           /build/ATOM/benchmark/GEOS2115_past.ipynb \
            /build/ATOM/benchmark/GEOS2115.py \
            /build/ATOM/benchmark/GEOS2115_cfg.py \
            /build/ATOM/benchmark/create_all_maps.py \
@@ -69,10 +72,10 @@ RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb \
 
 RUN apt-get update; apt-get install -y curl \
     && curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/ATOM_data/topo_grids.tar.gz \
-    | tar -xvC /build/ATOM/data 
+    | tar -xzvC /build/ATOM/data/topo_grids 
 
 RUN curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/ATOM_data/atom_data.tar.gz \
-    | tar -xvC /build/ATOM/benchmark/output
+    | tar -xzvC /build/ATOM/benchmark/output
 
 # setup space for working in
 VOLUME /home/workspace/output
