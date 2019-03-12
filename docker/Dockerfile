@@ -57,6 +57,7 @@ RUN make
 RUN pip install -e /build/ATOM/python
 
 RUN mkdir /home/workspace
+RUN mkdir /build/ATOM/benchmark/output
 
 # Copy test files to workspace
 RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb \
@@ -67,8 +68,11 @@ RUN cp -av /build/ATOM/benchmark/GEOS2115.ipynb \
            /build/ATOM/benchmark/config_hyd_GEOS2115.xml /home/workspace/
 
 RUN apt-get update; apt-get install -y curl \
-    && curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/Paleotopography_Grids/topo_grids.tar.gz \
+    && curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/ATOM_data/topo_grids.tar.gz \
     | tar -xvC /build/ATOM/data 
+
+RUN curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/ATOM_data/atom_data.tar.gz \
+    | tar -xvC /build/ATOM/benchmark/output
 
 # setup space for working in
 VOLUME /home/workspace/output

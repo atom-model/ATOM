@@ -1,7 +1,6 @@
 #include <iostream>
 #include "AtomMath.h"
 #include "cAtmosphereModel.h"
-#include "BC_Thermo.h"
 
 class AtomTest
 {
