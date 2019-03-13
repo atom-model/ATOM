@@ -175,7 +175,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     string Name_v_w_Transfer_File;
     stringstream ssName_v_w_Transfer_File;
 
-    //Prepare the v-, w-velocity, temperature and precipitation data file
+    // Prepare the v-, w-velocity, temperature and precipitation data file
 //    string Name_v_surface_ocean_File = velocity_v_ocean_file;
 //    string Name_w_surface_ocean_File = velocity_w_ocean_file;
     string Name_v_surface_ocean_File = velocity_v_file;
@@ -273,11 +273,11 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     }
 
     //  class element for the ocean surface v-velocity by measurement
-    if ( Ma == 0 ) oceanflow.BC_Surface_v_Velocity_Ocean ( Name_v_surface_File, v );
+    if ( Ma == 0 ) oceanflow.BC_Surface_v_Velocity_Ocean ( Name_v_surface_ocean_File, v );
 //    oceanflow.BC_Surface_v_Velocity_Ocean ( Name_v_surface_ocean_File, v );
 
     //  class element for the ocean surface w-velocity by measurement
-    if ( Ma == 0 ) oceanflow.BC_Surface_w_Velocity_Ocean ( Name_w_surface_File, w );
+    if ( Ma == 0 ) oceanflow.BC_Surface_w_Velocity_Ocean ( Name_w_surface_ocean_File, w );
 //    oceanflow.BC_Surface_w_Velocity_Ocean ( Name_w_surface_ocean_File, w );
 
     //  initial conditions for v-w-velocity components following the Ekman spiral
@@ -628,7 +628,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
-    Printout:
+//    Printout:
 
     write_file(bathymetry_name, output_path, true);
 
