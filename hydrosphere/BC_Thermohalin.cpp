@@ -59,15 +59,6 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max,
     this -> input_path = input_path;
 
     j_half = ( jm - 1 ) / 2;
-
-// ocean surface velocity is about 3% of the wind velocity at the surface
-    water_wind = .03;
-
-    pi180 = 180./M_PI;
-
-// Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
-// a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
-    Ekman_angle = 45.0 / pi180;
 }
 
 
@@ -81,7 +72,19 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
     int j_90 = 90;
     int j_120 = 120;
     int j_150 = 150;
+
+    pi180 = 180./M_PI;
+    water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
+//    water_wind = 1.;  // ocean surface velocity is about 3% of the wind velocity at the surface
+
+// Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
+// a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
+
+//    Ekman_angle = 45.0 / pi180;
+    Ekman_angle = 0.0;
+
 // initial conditions for v and w velocity components at the sea surface
+// ocean surface velocity is about 3% of the wind velocity at the surface
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
             if ( is_water( h, im-1, j, k ) ){
@@ -91,6 +94,10 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
         }
     }
 
+
+// Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
+// a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
+/*
 // north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° )
     for ( int j = 0; j < j_30; j++ ){
         for ( int k = 0; k < km; k++ ){
@@ -312,7 +319,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
             }
         }
     }
-
+*/
 //    double i_Ekman_layer = 500.;                                    // assumed Ekman-layer depth of 500m
 //    double i_Ekman_layer = 200.;                                    // assumed Ekman-layer depth of 200m
     double i_Ekman_layer = 100.;                                    // assumed Ekman-layer depth of 100m
@@ -336,12 +343,10 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
             exp_gam_z = exp ( - gam_z );
             sin_gam_z = sin ( gam_z );
             cos_gam_z = cos ( gam_z );
-
             for ( int k = 0; k < km; k++ ){
                 if ( is_water( h, i, j, k) ){
                     v_g = v.x[ i + 1 ][ j ][ k ];
                     w_g = w.x[ i + 1 ][ j ][ k ];
-
                     if ( j <= j_half ){
                         v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z 
                             + v_g * ( 1. - exp_gam_z * cos_gam_z );
@@ -694,6 +699,67 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA
     }
 
     Name_SurfaceSalinity_File_Read.close();
+}
+
+
+
+
+
+void BC_Thermohalin::BC_Surface_v_Velocity_Ocean ( const string &Name_v_surface_ocean_File, Array &v ){
+// initial conditions for the Name_v_surface_ocean_File at the sea surface
+    cout.precision ( 3 );
+    cout.setf ( ios::fixed );
+    ifstream Name_v_surface_ocean_File_Read(Name_v_surface_ocean_File);
+    if (!Name_v_surface_ocean_File_Read.is_open()){
+        cerr << "ERROR: could not open Name_v_surface_ocean_File file at "
+        << Name_v_surface_ocean_File << "\n";
+        abort();
+    }
+    int k_half = ( km - 1 ) / 2;  // position at 180°E ( Greenwich )
+    j = 0;
+    k = 0;
+    while ( ( k < km ) && !Name_v_surface_ocean_File_Read.eof() ){
+        while ( j < jm ){
+            double lat, lon, v_velocity;
+            Name_v_surface_ocean_File_Read >> lat;
+            Name_v_surface_ocean_File_Read >> lon;
+            Name_v_surface_ocean_File_Read >> v_velocity;
+            v.x[ im-1 ][ j ][ k ] = v_velocity;
+            j++;
+        }
+    j = 0;
+    k++;
+    }
+}
+
+
+
+
+void BC_Thermohalin::BC_Surface_w_Velocity_Ocean ( const string &Name_w_surface_ocean_File, Array &w ){
+// initial conditions for the Name_w_surface_ocean_File at the sea surface
+    cout.precision ( 3 );
+    cout.setf ( ios::fixed );
+    ifstream Name_w_surface_ocean_File_Read(Name_w_surface_ocean_File);
+    if (!Name_w_surface_ocean_File_Read.is_open()){
+        cerr << "ERROR: could not open Name_w_surface_ocean_File file at "
+        << Name_w_surface_ocean_File << "\n";
+        abort();
+    }
+    int k_half = ( km - 1 ) / 2;  // position at 180°E ( Greenwich )
+    j = 0;
+    k = 0;
+    while ( ( k < km ) && !Name_w_surface_ocean_File_Read.eof() ){
+        while ( j < jm ){
+            double lat, lon, w_velocity;
+            Name_w_surface_ocean_File_Read >> lat;
+            Name_w_surface_ocean_File_Read >> lon;
+            Name_w_surface_ocean_File_Read >> w_velocity;
+            w.x[ im-1 ][ j ][ k ] = w_velocity;
+            j++;
+        }
+    j = 0;
+    k++;
+    }
 }
 
 
@@ -1117,7 +1183,7 @@ void BC_Thermohalin::BC_Evaporation ( Array_2D &salinity_evaporation, Array_2D &
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
 
-    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation.y[ j ][ k ] << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   c = " << c.x[ im-1 ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ im-1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] ) << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ im - 2 ][ j ][ k ] + 4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) << endl;
+//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation.y[ j ][ k ] << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   c = " << c.x[ im-1 ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ im-1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] ) << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ im - 2 ][ j ][ k ] + 4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) << endl;
 
         }
     }

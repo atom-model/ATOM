@@ -175,7 +175,11 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     string Name_v_w_Transfer_File;
     stringstream ssName_v_w_Transfer_File;
 
-    //Prepare the temperature and precipitation data file
+    //Prepare the v-, w-velocity, temperature and precipitation data file
+//    string Name_v_surface_ocean_File = velocity_v_ocean_file;
+//    string Name_w_surface_ocean_File = velocity_w_ocean_file;
+    string Name_v_surface_ocean_File = velocity_v_file;
+    string Name_w_surface_ocean_File = velocity_w_file;
     string Name_SurfaceTemperature_File  = temperature_file;
     string Name_SurfaceSalinity_File = salinity_file;
 
@@ -262,11 +266,20 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     {
         //oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
     }
+
     //  surface salinity from World Ocean Atlas 2009 given as boundary condition
-    if ( Ma == 0 || use_earthbyte_reconstruction) 
-    {
+    if ( Ma == 0 || use_earthbyte_reconstruction){
         oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
     }
+
+    //  class element for the ocean surface v-velocity by measurement
+    if ( Ma == 0 ) oceanflow.BC_Surface_v_Velocity_Ocean ( Name_v_surface_File, v );
+//    oceanflow.BC_Surface_v_Velocity_Ocean ( Name_v_surface_ocean_File, v );
+
+    //  class element for the ocean surface w-velocity by measurement
+    if ( Ma == 0 ) oceanflow.BC_Surface_w_Velocity_Ocean ( Name_w_surface_File, w );
+//    oceanflow.BC_Surface_w_Velocity_Ocean ( Name_w_surface_ocean_File, w );
+
     //  initial conditions for v-w-velocity components following the Ekman spiral
     oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
 

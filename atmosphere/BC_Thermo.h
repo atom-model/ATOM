@@ -120,7 +120,7 @@ class BC_Thermo
 
         ~BC_Thermo();
 
-        void IC_CellStructure ( Array_1D &rad, Array &, Array &, Array &, Array & );
+        void IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, Array &w );
 
         void BC_Temperature( Array_1D &rad, Array_2D &temperature_NASA, Array &h, Array &t,
             Array &tn, Array &p_dyn, Array &p_stat );

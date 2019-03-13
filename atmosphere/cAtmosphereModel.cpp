@@ -260,17 +260,19 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     circulation.TropopauseLocation ();
 
     //  class element for the surface v-velocity by measurement
-    //  if ( Ma == 0 ) circulation.BC_Surface_v_Velocity ( Name_v_surface_File, v );
-    circulation.BC_Surface_v_Velocity ( Name_v_surface_File, v );
+    if ( Ma == 0 ) circulation.BC_Surface_v_Velocity ( Name_v_surface_File, v );
+//    circulation.BC_Surface_v_Velocity ( Name_v_surface_File, v );
 
     //  class element for the surface w-velocity by measurement
-    //  if ( Ma == 0 ) circulation.BC_Surface_w_Velocity ( Name_w_surface_File, w );
-    circulation.BC_Surface_w_Velocity ( Name_w_surface_File, w );
+    if ( Ma == 0 ) circulation.BC_Surface_w_Velocity ( Name_w_surface_File, w );
+//    circulation.BC_Surface_w_Velocity ( Name_w_surface_File, w );
 
 //    goto Printout;
 
     //  class element for the initial conditions for u-v-w-velocity components
     circulation.IC_CellStructure ( rad, h, u, v, w );
+
+//    goto Printout;
 
     //  initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
 //    circulation.IC_v_w_WestEastCoast ( h, u, v, w );
@@ -339,7 +341,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     restrain_temperature();
 
-//    Printout:
+    Printout:
 
     //write the ouput files
     write_file(bathymetry_name, output_path, true);

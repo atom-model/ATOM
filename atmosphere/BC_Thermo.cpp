@@ -679,7 +679,7 @@ void BC_Thermo::BC_WaterVapour ( Array_1D &rad, Array &h, Array &p_stat, Array &
         for ( int k = 0; k < km; k++ ){
 //            i_mount = i_topography[ j ][ k ];
             i_mount = 0;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 if ( i < i_trop ){
 //                    d_i = ( double ) i;
                     height = ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
@@ -878,6 +878,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     va_equator_Tropopause = 0.000;
 //    wa_equator_SL = - 1.;
     wa_equator_Tropopause = - 7.5;
+    double va_equator_SL_land =  0.000;
+    double wa_equator_SL_land = - 1.;
 
 // velocity assumptions for latitude at 15° and 30° in the Hadley cell
     ua_30 = + 1.;
@@ -887,15 +889,21 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     va_Hadley_Tropopause_15 = - 1.;
 //    wa_Hadley_SL = 1.;                                                // at surface
     wa_Hadley_Tropopause = 30.;                                         // subtropic jet in m/s compares to 108 km/h
+    double va_Hadley_SL_land = .25;
+    double va_Hadley_SL_15_land = 1.;
+    double wa_Hadley_SL_land = 1.;                                                // at surface
 
 // velocity assumptions for latitude at 45° and 60° in the Ferrel cell
     ua_60 = .5;
 //    va_Ferrel_SL = 0.5;
     va_Ferrel_Tropopause = 1.;
-//    va_Ferrel_SL_45 = - .1;
+//    va_Ferrel_SL_45 = -.1;
     va_Ferrel_Tropopause_45 = 1.;
 //    wa_Ferrel_SL = -.2;                                               // subpolar jet
     wa_Ferrel_Tropopause = 10.;                                         // subpolar jet in m/s compares to 36 km/h
+    double va_Ferrel_SL_land = 0.5;
+    double va_Ferrel_SL_45_land = -.1;
+    double wa_Ferrel_SL_land = -.2;                                               // subpolar jet
 
 // velocity assumptions for latitude 90° in the Polar cell
     ua_90 = .5;
@@ -905,6 +913,9 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     va_Polar_Tropopause_75 = - 1.;
 //    wa_Polar_SL = - 0.01;
     wa_Polar_Tropopause = 0.;
+    double va_Polar_SL_land = 0.;
+    double va_Polar_SL_75_land = .5;
+    double wa_Polar_SL_land = - 0.01;
 
 // preparations for diagonal velocity value connections
     im_1 = im - 1;
@@ -945,7 +956,6 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             height_tropo = ( exp( zeta * ( rad.z[ i_half ] - 1. ) ) - 1 ) 
                 * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
             d_i_half = height_tropo;
-
             for ( int i = 0; i < i_half; i++ ){
                 height = ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
                 d_i = height;
@@ -965,9 +975,13 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
+            va_equator_SL = v.x[ 0 ][ j ][ k ];
+            wa_equator_SL = w.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_equator_SL = va_equator_SL_land;
+                wa_equator_SL = wa_equator_SL_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_equator_SL = v.x[ 0 ][ j ][ k ];
-                wa_equator_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_equator_Tropopause - va_equator_SL ) *
                     d_i / d_i_max + va_equator_SL;
@@ -988,6 +1002,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             }
         }
     }
+
+//    goto Printout;
 
 /////////////////////////////////////// end equator ///////////////////////////////////////
 
@@ -1036,9 +1052,13 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         for ( int j = j_pol_n; j < j_fer_n + 1; j++ ){
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
+            va_Polar_SL = v.x[ 0 ][ j ][ k ];
+            wa_Polar_SL = w.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Polar_SL = va_Polar_SL_land;
+                wa_Polar_SL = wa_Polar_SL_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Polar_SL = v.x[ 0 ][ j ][ k ];
-                wa_Polar_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Polar_Tropopause - va_Polar_SL ) *
                     d_i / d_i_max + va_Polar_SL;
@@ -1068,8 +1088,11 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         for ( int j = j_pol_v_n; j <  j_pol_v_n + 1; j++ ){
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
+            va_Polar_SL_75 = v.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Polar_SL_75 = va_Polar_SL_75_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Polar_SL_75 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Polar_Tropopause_75 - va_Polar_SL_75 ) *
                     d_i / d_i_max + va_Polar_SL_75;
@@ -1087,6 +1110,9 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             }
         }
     }
+
+//    goto Printout;
+
 
 /////////////////////////////////// end northern polar cell /////////////////////////////////////////
 
@@ -1129,9 +1155,13 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
+            va_Ferrel_SL = v.x[ 0 ][ j ][ k ];
+            wa_Ferrel_SL = w.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Ferrel_SL = va_Ferrel_SL;
+                wa_Ferrel_SL = wa_Ferrel_SL_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Ferrel_SL = v.x[ 0 ][ j ][ k ];
-                wa_Ferrel_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause - va_Ferrel_SL ) *
                     d_i / d_i_max + va_Ferrel_SL;   // replacement for forming diagonals
@@ -1161,8 +1191,11 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         for ( int j = j_fer_v_n; j <  j_fer_v_n + 1; j++ ){
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
+            va_Ferrel_SL_45 = v.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Ferrel_SL_45 = va_Ferrel_SL_45_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Ferrel_SL_45 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause_45 - va_Ferrel_SL_45 ) *
                     d_i / d_i_max + va_Ferrel_SL_45;
@@ -1221,9 +1254,13 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
+            va_Hadley_SL = v.x[ 0 ][ j ][ k ];
+            wa_Hadley_SL = w.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Hadley_SL = va_Hadley_SL;
+                wa_Hadley_SL = wa_Hadley_SL_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Hadley_SL = v.x[ 0 ][ j ][ k ];
-                wa_Hadley_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause - va_Hadley_SL ) *
                     d_i / d_i_max + va_Hadley_SL;    // replacement for forming diagonals
@@ -1252,8 +1289,11 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         for ( int j = j_had_v_n; j <  j_had_v_n + 1; j++ ){
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
+            va_Hadley_SL_15 = v.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Hadley_SL_15 = va_Hadley_SL_15_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Hadley_SL_15 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause_15 - va_Hadley_SL_15 ) *
                     d_i / d_i_max + va_Hadley_SL_15;
@@ -1271,6 +1311,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             }
         }
     }
+
+//    goto Printout;
 
 ////////////////////////////////// end northern Hadley cell ////////////////////////////////////////
 
@@ -1322,9 +1364,13 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
+            va_Hadley_SL = v.x[ 0 ][ j ][ k ];
+            wa_Hadley_SL = w.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Hadley_SL = va_Hadley_SL_land;
+                wa_Hadley_SL = wa_Hadley_SL_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Hadley_SL = v.x[ 0 ][ j ][ k ];
-                wa_Hadley_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause - va_Hadley_SL ) *
                     d_i / d_i_max + va_Hadley_SL;    // replacement for forming diagonals
@@ -1345,6 +1391,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         }
     }
 
+//     goto Printout;
+
 // extension around 30° southern latitude ( from j=119 till j=121 compares to 29° till 31° southern latitude )
 // v-component up to tropopause and stratosphere above
 // v-component at 15°S
@@ -1352,8 +1400,11 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         for ( int j = j_had_v_s; j <  j_had_v_s + 1; j++ ){
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
+            va_Hadley_SL_15 = v.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Hadley_SL_15 = va_Hadley_SL_15_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Hadley_SL_15 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Hadley_Tropopause_15 - va_Hadley_SL_15 ) *
                     d_i / d_i_max + va_Hadley_SL_15;
@@ -1373,6 +1424,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     }
 
 ////////////////////////////// end southern Hadley cell ////////////////////////////////////////////
+
+//    goto Printout;
 
 ////////////////////////////// southern Ferrel cell ////////////////////////////////////////////
 
@@ -1411,9 +1464,13 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
         d_i_max = ( double ) i_max;
         for ( int k = 0; k < km; k++ ){
+            va_Ferrel_SL = v.x[ 0 ][ j ][ k ];
+            wa_Ferrel_SL = w.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Ferrel_SL = va_Ferrel_SL_land;
+                wa_Ferrel_SL = wa_Ferrel_SL_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Ferrel_SL = v.x[ 0 ][ j ][ k ];
-                wa_Ferrel_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause - va_Ferrel_SL ) *
                     d_i / d_i_max + va_Ferrel_SL;    // replacement for forming diagonals
@@ -1441,8 +1498,11 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         for ( int j = j_fer_v_s; j <  j_fer_v_s + 1; j++ ){
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
+            va_Ferrel_SL_45 = v.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Ferrel_SL_45 = va_Ferrel_SL_45_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Ferrel_SL_45 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Ferrel_Tropopause_45 - va_Ferrel_SL_45 ) *
                     d_i / d_i_max + va_Ferrel_SL_45;
@@ -1460,6 +1520,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             }
         }
     }
+
+//    goto Printout;
 
 ///////////////////////////// end southern Ferrel cell /////////////////////////////////////////////
 
@@ -1512,9 +1574,13 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         for ( int j = j_fer_s + 1; j < j_pol_s + 1; j++ ){
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
+            va_Polar_SL = v.x[ 0 ][ j ][ k ];
+            wa_Polar_SL = w.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Polar_SL = va_Polar_SL_land;
+                wa_Polar_SL = wa_Polar_SL_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Polar_SL = v.x[ 0 ][ j ][ k ];
-                wa_Polar_SL = w.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( ( va_Polar_Tropopause - va_Polar_SL ) *
                     d_i / d_i_max + va_Polar_SL );
@@ -1543,8 +1609,11 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         for ( int j = j_pol_v_s; j <  j_pol_v_s + 1; j++ ){
             i_max = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
             d_i_max = ( double ) i_max;
+            va_Polar_SL_75 = v.x[ 0 ][ j ][ k ];
+            if ( is_land ( h, 0, j, k ) ){
+                va_Polar_SL_75 = va_Polar_SL_75_land;
+                }
             for ( int i = 0; i < i_max; i++ ){
-                va_Polar_SL_75 = v.x[ 0 ][ j ][ k ];
                 d_i = ( double ) i;
                 v.x[ i ][ j ][ k ] = ( va_Polar_Tropopause_75 - va_Polar_SL_75 ) *
                     d_i / d_i_max + va_Polar_SL_75;
@@ -1562,6 +1631,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
             }
         }
     }
+
+//    goto Printout;
 
 ///////////////////////////////////////// end southern polar cell ///////////////////////////////////
 
@@ -1581,7 +1652,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_pol_n; j < j_fer_n + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_fer_n ][ k ] - u.x[ i ][ j_pol_n ][ k ] ) *
                     ( d_j - d_j_90n ) / d_diff + u.x[ i ][ j_pol_n ][ k ];
                 w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_fer_n ][ k ] - w.x[ i ][ j_pol_n ][ k ] ) *
@@ -1601,7 +1672,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_pol_n; j < j_pol_v_n + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_pol_v_n ][ k ] - v.x[ i ][ j_pol_n ][ k ] ) *
                     ( d_j - d_j_90n ) / d_diff + v.x[ i ][ j_pol_n ][ k ];
             }
@@ -1619,12 +1690,14 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_pol_v_n; j < j_fer_n + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_fer_n ][ k ] - v.x[ i ][ j_pol_v_n ][ k ] ) *
                     ( d_j - d_j_75n ) / d_diff + v.x[ i ][ j_pol_v_n ][ k ];
             }
         }
     }
+
+//    goto Printout;
 
 /////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
 
@@ -1636,7 +1709,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_fer_n + 1; j < j_had_n + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_had_n ][ k ] - u.x[ i ][ j_fer_n ][ k ] ) *
                     ( d_j - d_j_60n ) / d_diff + u.x[ i ][ j_fer_n ][ k ];
                 w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_had_n ][ k ] - w.x[ i ][ j_fer_n ][ k ] ) *
@@ -1655,7 +1728,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_fer_n; j < j_fer_v_n + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_fer_v_n ][ k ] - v.x[ i ][ j_fer_n ][ k ] ) *
                     ( d_j - d_j_60n ) / d_diff + v.x[ i ][ j_fer_n ][ k ];
             }
@@ -1672,12 +1745,14 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_fer_v_n; j < j_had_n + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_had_n ][ k ] - v.x[ i ][ j_fer_v_n ][ k ] ) *
                     ( d_j - d_j_45n ) / d_diff + v.x[ i ][ j_fer_v_n ][ k ];
             }
         }
     }
+
+//    goto Printout;
 
 /////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
 
@@ -1689,12 +1764,14 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_fer_v_s; j > j_had_s  - 1; j-- ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_fer_v_s ][ k ] - v.x[ i ][ j_had_s ][ k ] ) *
                     ( d_j - d_j_30s ) / d_diff + v.x[ i ][ j_had_s ][ k ];
             }
         }
     }
+
+//    goto Printout;
 
 /////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
 
@@ -1706,7 +1783,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_had_n; j < j_aeq + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_aeq ][ k ] - u.x[ i ][ j_had_n ][ k ] ) *
                     ( d_j - d_j_30n ) / d_diff + u.x[ i ][ j_had_n ][ k ];
                 w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_aeq ][ k ] - w.x[ i ][ j_had_n ][ k ] ) *
@@ -1725,7 +1802,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_had_v_n; j < j_aeq + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_aeq ][ k ] - v.x[ i ][ j_had_v_n ][ k ] ) *
                     ( d_j - d_j_15n ) / d_diff + v.x[ i ][ j_had_v_n ][ k ];
             }
@@ -1742,7 +1819,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_had_n; j < j_had_v_n + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_had_v_n ][ k ] - v.x[ i ][ j_had_n ][ k ] ) *
                     ( d_j - d_j_30n ) / d_diff + v.x[ i ][ j_had_n ][ k ];
             }
@@ -1750,6 +1827,8 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     }
 
 /////////////////////////////////////////// change in j-direction in southern hemisphere //////////////////////////////////////////////
+
+//    goto Printout;
 
 /////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
 
@@ -1761,7 +1840,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_fer_s; j < j_pol_s + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_fer_s ][ k ] - u.x[ i ][ j_pol_s ][ k ] ) *
                     ( d_j - d_j_90s ) / d_diff + u.x[ i ][ j_pol_s ][ k ];
                 w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_fer_s ][ k ] - w.x[ i ][ j_pol_s ][ k ] ) *
@@ -1780,7 +1859,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_pol_s; j > j_pol_v_s - 1; j-- ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_pol_s ][ k ] - v.x[ i ][ j_pol_v_s ][ k ] ) *
                     ( d_j - d_j_75s ) / d_diff + v.x[ i ][ j_pol_v_s ][ k ];
             }
@@ -1797,12 +1876,14 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_pol_v_s; j > j_fer_s - 1; j-- ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_pol_v_s ][ k ] - v.x[ i ][ j_fer_s ][ k ] ) *
                     ( d_j - d_j_60s ) / d_diff + v.x[ i ][ j_fer_s ][ k ];
             }
         }
     }
+
+//    goto Printout;
 
 /////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////////
 
@@ -1814,7 +1895,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_had_s; j < j_fer_s + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_had_s ][ k ] - u.x[ i ][ j_fer_s ][ k ] ) *
                     ( d_j - d_j_60s ) / d_diff + u.x[ i ][ j_fer_s ][ k ];
                 w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_had_s ][ k ] - w.x[ i ][ j_fer_s ][ k ] ) *
@@ -1833,12 +1914,14 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_fer_s; j > j_fer_v_s - 1; j-- ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_fer_s ][ k ] - v.x[ i ][ j_fer_v_s ][ k ] ) *
                     ( d_j - d_j_45s ) / d_diff + v.x[ i ][ j_fer_v_s ][ k ];
             }
         }
     }
+
+//    goto Printout;
 
 ///////////// forming diagonals ///////////////////////////////////////////////////////
 
@@ -1850,7 +1933,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_aeq; j < j_had_s + 1; j++ ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_aeq ][ k ] - u.x[ i ][ j_had_s ][ k ] ) *
                     ( d_j - d_j_30s ) / d_diff + u.x[ i ][ j_had_s ][ k ];
                 w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_aeq ][ k ] - w.x[ i ][ j_had_s ][ k ] ) *
@@ -1869,7 +1952,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_had_s; j > j_had_v_s - 1; j-- ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_had_s ][ k ] - v.x[ i ][ j_had_v_s ][ k ] ) *
                     ( d_j - d_j_15s ) / d_diff + v.x[ i ][ j_had_v_s ][ k ];
             }
@@ -1886,455 +1969,30 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
     for ( int k = 0; k < km; k++ ){
         for ( int j = j_had_v_s; j > j_aeq - 1; j-- ){
             d_j = ( double ) j;
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_had_v_s ][ k ] - v.x[ i ][ j_aeq ][ k ] ) *
                     ( d_j - d_j_5s ) / d_diff + v.x[ i ][ j_aeq ][ k ];
             }
         }
     }
 
+//    goto Printout;
+/*
 ///////////////////////////////////////////////// change in sign of v-component /////////////////////////////////////////////////
 ///////////////////////////////////////////////// values identical with the northern hemisphere //////////////////////////////////////////////////
-    for ( int i = 0; i < im; i++ ){
+    for ( int i = 1; i < im; i++ ){
         for ( int j = j_aeq + 1; j < jm; j++ ){
             for ( int k = 0; k < km; k++ ){
                 v.x[ i ][ j ][ k ] = - v.x[ i ][ j ][ k ];
             }
         }
     }
-
+*/
 /////////////////////////////////////////////// end forming diagonals ///////////////////////////////////////////////////
 
-/*
-/////////////////////////////////////////// forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
-/////////////////////////////////////////// forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
+//    goto Printout;
 
-///////////////////////////////////////////////// Pacific ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// North Pacific
-///////////////////////////////////////////////// change in sign of v-component in the northern hemisphere //////////////////////////
-//  ua_00 = .03;  // in m/s compares to 1.08 km/h, non-dimensionalized by u_0 below
-//  d_i_half = ( double ) i_half;
-
-    j_had_n_end = j_had_n - 8;
-
-    k_w = 120;
-    k_w_end = k_w - 5;
-    k_e = 240;
-
-    d_j_w = ( double ) j_aeq;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-/////////////////////////////////////////////// forming diagonals ///////////////////////////////////////////////////
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-///////////////////////////////////////////// smoothing transitions /////////////////////////////////////////////////
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w_end + 1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-///////////////////////////////////////////////// Pacific ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// South Pacific
-///////////////////////////////////////////////// change in sign of v-component in the southern hemisphere /////////////////////////////////////////////////
-
-
-    j_had_s_end = j_had_s + 8;
-
-    k_w = 130;
-    k_w_end = k_w - 5;
-    k_e = 260;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-
-
-///////////////////////////////////////////////// Indic ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// North Indic .......................................................................... only on land
-///////////////////////////////////////////////// change in sign of v-component in the northern hemisphere //////////////////////////
-
-    j_had_n_end = j_had_n - 5;
-    j_had_s_end = j_had_s + 5;
-
-    k_w = 30;
-    k_w_end = k_w - 10;
-    k_e = 90;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-///////////////////////////////////////////////// Indicic ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// South Indic
-///////////////////////////////////////////////// change in sign of v-component in the southern hemisphere /////////////////////////////////////////////////
-
-    j_had_n_end = j_had_n - 5;
-    j_had_s_end = j_had_s + 5;
-
-    k_w = 35;
-    k_w_end = k_w - 3;
-    k_e = 90;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-///////////////////////////////////////////////// Atlantic ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// North Altlantic
-///////////////////////////////////////////////// change in sign of v-component in the northern hemisphere //////////////////////////
-
-    j_had_n_end = j_had_n - 5;
-    j_had_s_end = j_had_s + 5;
-
-    k_w = 280;
-    k_w_end = k_w - 5;
-    k_e = 330;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_had_n_end; j < j_aeq; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-
-
-///////////////////////////////////////////////// Atlantic ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// South Atlantic
-///////////////////////////////////////////////// change in sign of v-component in the southern hemisphere /////////////////////////////////////////////////
-
-    j_had_n_end = j_had_n - 5;
-    j_had_s_end = j_had_s + 5;
-
-    k_w = 320;
-    k_w_end = k_w - 5;
-    k_e = 360;
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            v.x[ i ][ j ][ k_w ] = - .5 * v.x[ i ][ j ][ k_w ];
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w; k <= k_e; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_e ] - v.x[ i ][ j ][ k_w ] ) / ( ( double ) ( k_e - k_w ) ) * ( double ) ( k - k_w ) + v.x[ i ][ j ][ k_w ];
-            }
-        }
-    }
-
-
-    for ( int i = 0; i <= i_half; i++ )
-    {
-        for ( int j = j_aeq+1; j <= j_had_s_end; j++ )
-        {
-            for ( int k = k_w_end+1; k <= k_w; k++ )
-            {
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j ][ k_w ] - v.x[ i ][ j ][ k_w_end ] ) / ( ( double ) ( k_w - k_w_end ) ) * ( double ) ( k - k_w_end ) + v.x[ i ][ j ][ k_w_end ];
-            }
-        }
-    }
-
-/////////////////////////////////////////// end of forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
-/////////////////////////////////////////// end of forming diagonals to simulate thermic highs ///////////////////////////////////////////////////////
-*/
-
-///////////////////////////////////////////////// smoothing transitions from cell to cell //////////////////////////
-///////////////////////////////////////////////// smoothing transitions from cell to cell //////////////////////////
-
-///////////////////////////////////////////////// Northern hemisphere ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Northern hemisphere
-///////////////////////////////////////////////// smoothing transitions from Headley to Ferrel to Polar cells //////////////////////////
-
-    j_s = j_had_n - 3;
-    j_n = j_had_n + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-    j_s = j_fer_n - 3;
-    j_n = j_fer_n + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-
-// Northern hemisphere
-///////////////////////////////////////////////// smoothing transitions around jets /////////////////////////////////////////////////////
-    j_s = j_had_v_n - 3;
-    j_n = j_had_v_n + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-    j_s = j_fer_v_n - 3;
-    j_n = j_fer_v_n + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-
-///////////////////////////////////////////////// smoothing transitions around equator //////////////////////////
-    j_s = j_aeq - 3;
-    j_n = j_aeq + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-
-///////////////////////////////////////////////// Southern hemisphere ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Southern hemisphere
-///////////////////////////////////////////////// smoothing transitions from Headley to Ferrel to Polar cells //////////////////////////
-
-    j_s = j_had_s - 3;
-    j_n = j_had_s + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-    j_s = j_fer_s - 3;
-    j_n = j_fer_s + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-
-// Southern hemisphere
-///////////////////////////////////////////////// smoothing transitions around jets /////////////////////////////////////////////////////
-
-    j_s = j_had_v_s - 3;
-    j_n = j_had_v_s + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
-    j_s = j_fer_v_s - 3;
-    j_n = j_fer_v_s + 3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = j_s; j <= j_n; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ j_n ][ k ] - u.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + u.x[ i ][ j_s ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ j_n ][ k ] - v.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + v.x[ i ][ j_s ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ j_n ][ k ] - w.x[ i ][ j_s ][ k ] ) /
-                    ( ( int ) ( j_n - j_s ) ) * ( int ) ( j - j_s ) + w.x[ i ][ j_s ][ k ];
-            }
-        }
-    }
+//    Printout:
 
 // non dimensionalization by u_0
     for ( int i = 0; i < im; i++ ){
@@ -2348,6 +2006,9 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         }
     }
 
+    Printout:
+                    va_equator_SL = va_equator_SL;
+    
 ///////////////////////////////////////////////// end of smoothing transitions from cell to cell //////////////////////////
 ///////////////////////////////////////////////// end of smoothing transitions from cell to cell //////////////////////////
 }
@@ -2366,7 +2027,7 @@ void BC_Thermo::BC_Surface_v_Velocity ( const string &Name_v_surface_File, Array
         << Name_v_surface_File << "\n";
         abort();
     }
-    k_half = ( km -1 ) / 2;  // position at 180°E ( Greenwich )
+    k_half = ( km - 1 ) / 2;  // position at 180°E ( Greenwich )
     j = 0;
     k = 0;
     while ( ( k < km ) && !Name_v_surface_File_Read.eof() ){
@@ -2396,7 +2057,7 @@ void BC_Thermo::BC_Surface_w_Velocity ( const string &Name_w_surface_File, Array
         << Name_w_surface_File << "\n";
         abort();
     }
-    k_half = ( km -1 ) / 2;  // position at 180°E ( Greenwich )
+    k_half = ( km - 1 ) / 2;  // position at 180°E ( Greenwich )
     j = 0;
     k = 0;
     while ( ( k < km ) && !Name_w_surface_File_Read.eof() ){
@@ -3339,7 +3000,7 @@ void BC_Thermo::BC_Evaporation ( Array_2D &vapour_evaporation, Array_2D &Evapora
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
 
-    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   vapour_evaporation = " << vapour_evaporation.y[ j ][ k ] << "   coeff_vapour = " << coeff_vapour << "   vapour_surface = " << vapour_surface << "   c [g/kg] = " << c.x[ 0 ][ j ][ k ] << "   c_0 = " << c_0 << "   c [kg/kg] = " << c.x[ 0 ][ j ][ k ] * 1000. << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) /   ( 2. * dr ) << endl;
+//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   vapour_evaporation = " << vapour_evaporation.y[ j ][ k ] << "   coeff_vapour = " << coeff_vapour << "   vapour_surface = " << vapour_surface << "   c [g/kg] = " << c.x[ 0 ][ j ][ k ] << "   c_0 = " << c_0 << "   c [kg/kg] = " << c.x[ 0 ][ j ][ k ] * 1000. << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) /   ( 2. * dr ) << endl;
 
         }
      }
