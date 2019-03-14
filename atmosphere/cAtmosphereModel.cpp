@@ -178,20 +178,23 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
     init_topography(bathymetry_path + "/" + bathymetry_name);
 
-    //  class element calls for the preparation of initial conditions for the flow properties
+    if(Ma==0) read_IC(velocity_v_file, v.x[0], jm, km);
+    if(Ma==0) read_IC(velocity_w_file, w.x[0], jm, km);    
+
     //  class element for the initial conditions for u-v-w-velocity components
     //circulation.IC_CellStructure ( h, u, v, w );
     init_velocities();
 
-    IC_v_w_WestEastCoast();//adjust east coast velocities.
+    //IC_v_w_WestEastCoast();//adjust east coast velocities.
 
     //  class element for the surface temperature from NASA for comparison
     //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
-    read_NASA_temperature(Name_SurfaceTemperature_File);
-
+    //read_NASA_temperature(Name_SurfaceTemperature_File);
+    read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
+    adjust_temperature_IC(t.x[0], jm, km);
     //  class element for the surface precipitation from NASA for comparison
-    read_NASA_precipitation(Name_SurfacePrecipitation_File);
-
+    //read_NASA_precipitation(Name_SurfacePrecipitation_File);
+    read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
     init_temperature();
 
@@ -1230,5 +1233,22 @@ void cAtmosphereModel::store_intermediate_data_3D(float coeff)
 
             }
         }
+    }
+}
+
+void cAtmosphereModel::adjust_temperature_IC(double** t, int jm, int km)
+{
+    for(int k=0; k < km; k++ ){
+        for(int j=0; j < jm; j++ ){
+            t[ j ][ k ] = temperature_NASA.y[ j ][ k ] = ( t[ j ][ k ] + t_0 ) / t_0;
+        }
+    }
+
+    // correction of surface temperature around 180°E
+    int k_half = ( km -1 ) / 2;
+    for ( int j = 0; j < jm; j++ ){
+        t[ j ][ k_half ] = ( t[ j ][ k_half + 1 ] + t[ j ][ k_half - 1 ] ) / 2.;
+        temperature_NASA.y[ j ][ k_half ] = ( temperature_NASA.y[ j ][ k_half + 1 ] +
+            temperature_NASA.y[ j ][ k_half - 1 ] ) / 2.;
     }
 }

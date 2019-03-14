@@ -228,6 +228,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     {
         oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
     }
+
+    if(Ma == 0) read_IC(velocity_v_file, v.x[im-1], jm, km);
+    if(Ma == 0) read_IC(velocity_w_file, w.x[im-1], jm, km);
+
     //  initial conditions for u-v-w-velocity components following the Ekman spiral
     oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
 

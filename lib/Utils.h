@@ -109,6 +109,7 @@ namespace AtomUtils{
 
     double C_Dalton ( double u_0, double v, double w );
 
+    void read_IC(const string& fn, double** a, int jm, int km);
 }
 
 #endif

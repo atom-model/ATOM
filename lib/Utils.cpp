@@ -132,3 +132,18 @@ double AtomUtils::C_Dalton ( double u_0, double v, double w )
     return sqrt ( C_max * C_max / v_max * vel_magnitude ) / fac;  // result in mm/h
 }
 
+void AtomUtils::read_IC(const string& fn, double** a, int jm, int km){
+    ifstream ifs(fn);
+    if (!ifs.is_open()) {
+        cerr << "ERROR: unable to open " << fn << "\n";
+        abort();
+    }
+
+    double lat, lon, d;
+    for(int k=0; k < km && !ifs.eof(); k++ ){
+        for(int j=0; j < jm; j++ ){
+            ifs >> lat >> lon >> d;
+            a[ j ][ k ] = d;
+        }
+    }
+}

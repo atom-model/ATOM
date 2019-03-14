@@ -16,6 +16,8 @@ def main():
             ( 'debug','flag to control if the program is running in debug mode', 'bool', False),
         
             #parameters for data reconstruction
+            ( 'velocity_w_file',"",'string','../data/w_surface.txt'),
+            ( 'velocity_v_file',"",'string','../data/v_surface.txt'),
             ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
             ( 'precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
             ( 'salinity_file', '', 'string', '../data/SurfaceSalinity_NASA.xyz'),

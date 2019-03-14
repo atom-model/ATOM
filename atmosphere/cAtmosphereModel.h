@@ -243,6 +243,8 @@ private:
 
     void store_intermediate_data_2D(float coeff=1);
     void store_intermediate_data_3D(float coeff=1);
+
+    void adjust_temperature_IC(double** t, int jm, int km);
  
     static cAtmosphereModel* m_model;
 
