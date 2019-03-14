@@ -60,15 +60,6 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max,
 
 
     j_half = ( jm - 1 ) / 2;
-
-// ocean surface velocity is about 3% of the wind velocity at the surface
-    water_wind = .03;
-
-    pi180 = 180./M_PI;
-
-// Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
-// a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
-    Ekman_angle = 45.0 / pi180;
 }
 
 
@@ -82,7 +73,19 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
     int j_90 = 90;
     int j_120 = 120;
     int j_150 = 150;
+
+    pi180 = 180./M_PI;
+    water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
+//    water_wind = 1.;  // ocean surface velocity is about 3% of the wind velocity at the surface
+
+// Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
+// a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
+
+//    Ekman_angle = 45.0 / pi180;
+    Ekman_angle = 0.0;
+
 // initial conditions for v and w velocity components at the sea surface
+// ocean surface velocity is about 3% of the wind velocity at the surface
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
             if ( is_water( h, im-1, j, k ) ){
@@ -92,6 +95,9 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
         }
     }
 
+// Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
+// a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
+/*
 // north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° )
     for ( int j = 0; j < j_30; j++ ){
         for ( int k = 0; k < km; k++ ){
@@ -312,7 +318,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
             }
         }
     }
-
+*/
     double i_Ekman_layer = 100.;// assumed Ekman-layer depth of 100m
     double coeff = i_Ekman_layer / L_hyd;
 

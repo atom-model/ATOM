@@ -308,7 +308,7 @@ def draw_surfacre_wind_velocity_map(time):
     wn = down_sample(w) 
     vn = down_sample(-v)
     cs = m.quiver(down_sample(xi), down_sample(yi), wn, vn, down_sample(vm), width=0.001,
-             headlength=7, headwidth=5, pivot='tail', clim=[0, 1.2], cmap='jet')
+             headlength=7, headwidth=5, pivot='tail', clim=[0, 6], cmap='jet')
 
 
     m.contour( xi, yi, h, colors ='k', linewidths= 0.3 )
@@ -357,7 +357,7 @@ def draw_ocean_current_velocity_map(time):
     xi, yi = m(x, y)
     
     cs = m.quiver(down_sample(xi), down_sample(yi), down_sample(vy), down_sample(vx), down_sample(magitude), width=0.001,
-             headlength=7, headwidth=5, pivot='tail', clim=[0, 0.04], cmap='jet')
+             headlength=7, headwidth=5, pivot='tail', clim=[0, 0.2], cmap='jet')
    
     m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
                         colors ='k', linewidths= 0.3 )

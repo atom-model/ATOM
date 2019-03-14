@@ -750,7 +750,7 @@ void cAtmosphereModel::init_water_vapour(){
         for ( int k = 0; k < km; k++ ){
             int i_mount = get_surface_layer(j, k);
 
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 if ( i < i_trop ){
                     if(i>i_mount){
 			            double x = (get_layer_height(i) - get_layer_height(i_mount)) / 
@@ -902,7 +902,7 @@ void cAtmosphereModel::init_velocities(){
     init_v_or_w(w,90,90,wa_equator_Tropopause,wa_equator_SL);
     
     //polar cell
-    double ua_90 = - 0.5;
+    double ua_90 = 0.5;
     double va_Polar_SL = 0.;
     double va_Polar_Tropopause = 0.;
     double va_Polar_SL_75 = .5;
@@ -948,7 +948,7 @@ void cAtmosphereModel::init_velocities(){
     init_v_or_w(v,135,135,va_Ferrel_Tropopause_45,va_Ferrel_SL_45); //lat: -45   
  
     // Hadley cell
-    double ua_30 = - 1.;
+    double ua_30 = 1.;
     double va_Hadley_SL = .25;
     double va_Hadley_Tropopause = - 1.;
     double va_Hadley_SL_15 = 1.;
@@ -1004,16 +1004,16 @@ void cAtmosphereModel::init_velocities(){
     form_diagonals(v, 165, 180);
 
     //change the direction for southen hemisphere
-    for ( int i = 0; i < im; i++ ){
+    /*for ( int i = 0; i < im; i++ ){
         for ( int j = 91; j < jm; j++ ){
             for ( int k = 0; k < km; k++ ){
                 v.x[ i ][ j ][ k ] = - v.x[ i ][ j ][ k ];
             }
         }
-    }
+    }*/
 
     //smoothing transitions from cell to cell
-    smooth_transition(u,v,w,60); 
+    /*smooth_transition(u,v,w,60); 
     smooth_transition(u,v,w,30);    
     smooth_transition(u,v,w,75);
     smooth_transition(u,v,w,45);
@@ -1024,7 +1024,7 @@ void cAtmosphereModel::init_velocities(){
     smooth_transition(u,v,w,150);
     smooth_transition(u,v,w,105);
     smooth_transition(u,v,w,135);
-
+    */
     // non dimensionalization by u_0
     for ( int i = 0; i < im; i++ ){
         for ( int k = 0; k < km; k++ ){
@@ -1062,7 +1062,7 @@ void cAtmosphereModel::smooth_transition(Array &u, Array &v, Array &w, int lat){
 void cAtmosphereModel::form_diagonals(Array &a, int start, int end){
     for ( int k = 0; k < km; k++ ){
         for ( int j = start; j < end; j++ ){
-            for ( int i = 0; i < im; i++ ){
+            for ( int i = 1; i < im; i++ ){
                 a.x[ i ][ j ][ k ] = ( a.x[ i ][ end ][ k ] - a.x[ i ][ start ][ k ] ) *
                     ( j - start ) / (double)(end - start) + a.x[ i ][ start ][ k ];
             }
@@ -1094,6 +1094,10 @@ void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double 
         int tropopause_layer = get_tropopause_layer(j);
         double tropopause_height = get_layer_height(tropopause_layer);
         for( int k = 0; k < km; k++ ){
+            if(is_ocean_surface(h, 0, j, k))
+            {
+                coeff_sl = v_or_w.x[0][j][k];
+            }
             for( int i = 0; i < tropopause_layer; i++ ){
                 v_or_w.x[ i ][ j ][ k ] = ( coeff_trop - coeff_sl ) *
                     get_layer_height(i)/tropopause_height + coeff_sl;
