@@ -12,10 +12,14 @@ def main():
             ( 'BathymetrySuffix', '', 'string', 'Ma_Simon.xyz' ),
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
-            ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', False),
+            ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', True),
             ( 'debug','flag to control if the program is running in debug mode', 'bool', False),
         
             #parameters for data reconstruction
+            ( 'velocity_v_file', '', 'string', '../data/v_surface.txt'),
+            ( 'velocity_w_file', '', 'string', '../data/w_surface.txt'),
+            ( 'velocity_v_ocean_file', '', 'string', '../data/v_surface_ocean.txt'),
+            ( 'velocity_w_ocean_file', '', 'string', '../data/w_surface_ocean.txt'),
             ( 'temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
             ( 'precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
             ( 'salinity_file', '', 'string', '../data/SurfaceSalinity_NASA.xyz'),
@@ -33,8 +37,8 @@ def main():
             ( 'velocity_iter_max_2D', 'the number of velocity iterations', 'int',2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
-            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2 ),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 8 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 4 ),
 
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
@@ -131,12 +135,14 @@ def main():
             ( 'velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
-            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2 ),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 8 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 4 ),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 
-            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 1000 m compares to 40 steps times 25 m', 'double', 1000.0 ),
+#            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 1000 m compares to 40 steps times 25 m', 'double', 1000.0 ),
+#            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 500 m compares to 40 steps times 12.5 m', 'double', 500.0 ),
+            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 200 m compares to 40 steps times 5 m', 'double', 200.0 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 10.0 ),
             ( 'sc', 'Schmidt number for salt water', 'double', 1.7329 ),
@@ -146,7 +152,7 @@ def main():
 
             ( 'p_0', 'pressure at sea level in hPa', 'double', 1013.25 ),
             ( 't_0', 'temperature in K compares to 0°C', 'double', 273.15 ),
-            ( 'c_0', 'rate of salt in psu at temperature t_0', 'double', 34.6 ),
+            ( 'c_0', 'rate of salt in psu at temperature t_0 in g/kg or psu', 'double', 34.6 ),
             ( 'u_0', 'annual mean of surface water velocity in m/s', 'double', 0.25 ),
             ( 'r_0_water', 'reference density of fresh water in kg/m3', 'double', 1000.0 ),
 
