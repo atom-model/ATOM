@@ -65,7 +65,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max,
 BC_Thermohalin::~BC_Thermohalin(){}
 
 
-void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
+void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & the,
                                     Array &h, Array &v, Array &w ){
     int j_30 = 30;
     int j_60 = 60;
@@ -74,8 +74,8 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
     int j_150 = 150;
 
     pi180 = 180./M_PI;
-    water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
-//    water_wind = 1.;  // ocean surface velocity is about 3% of the wind velocity at the surface
+    if ( Ma = 0 )  water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
+    else           water_wind = 1.;
 
 // Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
 // a further turning downwards until the end of the shear layer such that finally 90° of turning are reached

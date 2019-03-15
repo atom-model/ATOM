@@ -61,7 +61,7 @@ class BC_Thermohalin{
 
         void BC_Surface_w_Velocity_Ocean ( const string &Name_w_surface_File, Array &w );
 
-        void IC_v_w_EkmanSpiral ( Array_1D &, Array_1D &, Array &, Array &, Array & );
+        void IC_v_w_EkmanSpiral ( double Ma, Array_1D &, Array_1D &, Array &, Array &, Array & );
 
         void IC_u_WestEastCoast ( Array_1D &rad, Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn );
 

@@ -281,7 +281,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //    oceanflow.BC_Surface_w_Velocity_Ocean ( Name_w_surface_ocean_File, w );
 
     //  initial conditions for v-w-velocity components following the Ekman spiral
-    oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
+    oceanflow.IC_v_w_EkmanSpiral ( Ma, rad, the, h, v, w );
 
     //  initial conditions for u-velocity component
     oceanflow.IC_u_WestEastCoast ( rad, h, u, v, w, un, vn, wn );
@@ -318,7 +318,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     double emin = epsres * 100.;
     iter_cnt = 1;
 
-//    goto Printout;
+    goto Printout;
 
 
     // ::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::::
@@ -628,7 +628,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
-//    Printout:
+    Printout:
 
     write_file(bathymetry_name, output_path, true);
 
