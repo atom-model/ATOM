@@ -74,7 +74,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
     int j_150 = 150;
 
     pi180 = 180./M_PI;
-    if ( Ma = 0 )  water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
+    if ( Ma == 0 )  water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
     else           water_wind = 1.;
 
 // Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
