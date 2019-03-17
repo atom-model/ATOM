@@ -159,9 +159,13 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     if(Ma != 0 && use_earthbyte_reconstruction){
         Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Temperature.xyz";
         Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Precipitation.xyz";    
+        velocity_v_file = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_wind_v.xyz";
+        velocity_w_file = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_wind_w.xyz";
     
         if( stat( Name_SurfaceTemperature_File.c_str(), &info ) != 0 || 
-            stat( Name_SurfacePrecipitation_File.c_str(), &info ) != 0 )
+            stat( Name_SurfacePrecipitation_File.c_str(), &info ) != 0 ||
+            stat( velocity_v_file.c_str(), &info ) != 0 ||
+            stat( velocity_w_file.c_str(), &info ) != 0 )
         {
             std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - time_step) + " " + 
                 std::to_string(Ma) + " " + output_path + " " + BathymetrySuffix + " atm";
@@ -178,8 +182,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
     init_topography(bathymetry_path + "/" + bathymetry_name);
 
-    if(Ma==0) read_IC(velocity_v_file, v.x[0], jm, km);
-    if(Ma==0) read_IC(velocity_w_file, w.x[0], jm, km);    
+    read_IC(velocity_v_file, v.x[0], jm, km);
+    read_IC(velocity_w_file, w.x[0], jm, km);    
 
     //  class element for the initial conditions for u-v-w-velocity components
     //circulation.IC_CellStructure ( h, u, v, w );
@@ -750,7 +754,7 @@ void cAtmosphereModel::init_water_vapour(){
         for ( int k = 0; k < km; k++ ){
             int i_mount = get_surface_layer(j, k);
 
-            for ( int i = 1; i < im; i++ ){
+            for ( int i = 0; i < im; i++ ){
                 if ( i < i_trop ){
                     if(i>i_mount){
 			            double x = (get_layer_height(i) - get_layer_height(i_mount)) / 

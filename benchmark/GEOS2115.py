@@ -244,13 +244,19 @@ def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
             r_tool.reconstruct_temperature(time,times[idx+1]) 
             r_tool.reconstruct_precipitation(time,times[idx+1])
             r_tool.reconstruct_salinity(time,times[idx+1])
+            r_tool.reconstruct_wind_v(time,times[idx+1])
+            r_tool.reconstruct_wind_w(time,times[idx+1])
         os.system('rm {0}{1}Ma_Atm_Precipitation.xyz'.format(OUTPUT_DIR, time))
         os.system('rm {0}{1}Ma_Atm_Temperature.xyz'.format(OUTPUT_DIR, time))
         os.system('rm {0}{1}Ma_Hyd_Salinity.xyz'.format(OUTPUT_DIR, time))
+        os.system('rm {0}{1}Ma_Atm_v.xyz'.format(OUTPUT_DIR, time))
+        os.system('rm {0}{1}Ma_Atm_w.xyz'.format(OUTPUT_DIR, time))
         if time > start_time:
             os.system('rm {0}{1}Ma_Reconstructed_Precipitation.xyz'.format(OUTPUT_DIR, time))
             os.system('rm {0}{1}Ma_Reconstructed_Temperature.xyz'.format(OUTPUT_DIR, time))
             os.system('rm {0}{1}Ma_Reconstructed_Salinity.xyz'.format(OUTPUT_DIR, time))
+            os.system('rm {0}{1}Ma_Reconstructed_wind_v.xyz'.format(OUTPUT_DIR, time))
+            os.system('rm {0}{1}Ma_Reconstructed_wind_w.xyz'.format(OUTPUT_DIR, time))
         os.system('rm {0}[{1}Ma_smooth.xyz]_Transfer_Atm.vw'.format(OUTPUT_DIR, time))
     os.system('rm -f *.pyc')
     os.system('rm buffer_land_tmp.nc buffer_land_tmp.xyz buffer_ocean_tmp.xyz buffer_tmp.xyz fill_ocean_tmp.nc gmt.history')
@@ -326,8 +332,8 @@ def draw_ocean_current_velocity_map(time):
         aa = a.reshape((361,181))
         tmp=[]
         for t in aa:
-            tmp.append(t[3::4])
-        return tmp[3::4]
+            tmp.append(t[3::3])
+        return tmp[3::3]
 
     data = np.genfromtxt(OUTPUT_DIR + '[{0}Ma_smooth.xyz]_PlotData_Hyd.xyz'.format(time), skip_header=1)
     x = data[:,0]
@@ -569,7 +575,7 @@ def draw_velocity_at_depth(time):
         vn = down_sample(-v)
 
         cs = m.quiver(down_sample(xi), down_sample(yi), wn, vn, down_sample(vm), width=0.001,
-                 headlength=7, headwidth=5, pivot='tail', clim=[0, 0.04], cmap='jet')
+                 headlength=7, headwidth=5, pivot='tail', clim=[0, 0.2], cmap='jet')
 
         m.contour( xi, yi, h, colors ='k', linewidths= 0.3 )
         m.drawparallels(np.arange(-90., 90., 10.), labels=[1,0,0,0], fontsize=10)
