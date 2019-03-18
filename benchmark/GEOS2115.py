@@ -272,9 +272,9 @@ def draw_surfacre_wind_velocity_map(time):
         return tmp[3::4]
 
     #zeros = np.zeros(181*361)
-    v = np.fromfile(OUTPUT_DIR + 'bin_data/v_{}_n_0.bin'.format(time),'<f8')
-    w = np.fromfile(OUTPUT_DIR + 'bin_data/w_{}_n_0.bin'.format(time),'<f8')
-    h = np.fromfile(OUTPUT_DIR + 'bin_data/h_{}_n_0.bin'.format(time),'<f8')
+    v = np.fromfile(OUTPUT_DIR + 'bin_data/atm_v_time_{}_iter_n_layer_0.bin'.format(time),'<f8')
+    w = np.fromfile(OUTPUT_DIR + 'bin_data/atm_w_time_{}_iter_n_layer_0.bin'.format(time),'<f8')
+    h = np.fromfile(OUTPUT_DIR + 'bin_data/atm_h_time_{}_iter_n_layer_0.bin'.format(time),'<f8')
 
     #mask = np.isclose(v_0,zeros)
 
@@ -474,18 +474,18 @@ def draw_plot_through_time(property_name, lon, lat, start_time, end_time, time_s
 
     for time in range(start_time, end_time+1, time_step):
         if property_name == 'precipitation':
-            d = np.fromfile(OUTPUT_DIR + 'bin_data/p_{0}_n.bin'.format(time),'<f8')
+            d = np.fromfile(OUTPUT_DIR + 'bin_data/atm_p_time_{0}_iter_n.bin'.format(time),'<f8')
             d = d * 365
         elif property_name == 'air_velocity':
-            w = np.fromfile(OUTPUT_DIR + 'bin_data/w_{0}_n_0.bin'.format(time),'<f8')
-            v = np.fromfile(OUTPUT_DIR + 'bin_data/v_{0}_n_0.bin'.format(time),'<f8')
+            w = np.fromfile(OUTPUT_DIR + 'bin_data/atm_w_time_{0}_iter_n_layer_0.bin'.format(time),'<f8')
+            v = np.fromfile(OUTPUT_DIR + 'bin_data/atm_v_time_{0}_iter_n_layer_0.bin'.format(time),'<f8')
             d = np.sqrt(w**2+v**2)
         elif property_name == 'ocean_velocity': 
-            w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_{0}_n_40.bin'.format(time),'<f8')
-            v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_{0}_n_40.bin'.format(time),'<f8')
+            w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_time_{0}_iter_n_layer_40.bin'.format(time),'<f8')
+            v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_time_{0}_iter_n_layer_40.bin'.format(time),'<f8')
             d = np.sqrt(w**2+v**2)
         else:
-            d = np.fromfile(OUTPUT_DIR + 'bin_data/t_{0}_n_0.bin'.format(time),'<f8')
+            d = np.fromfile(OUTPUT_DIR + 'bin_data/atm_t_time_{0}_iter_n_layer_0.bin'.format(time),'<f8')
             
         d = d.reshape((181, 361))
         pygplates.reconstruct(
@@ -513,15 +513,15 @@ def draw_plot_through_time(property_name, lon, lat, start_time, end_time, time_s
     
 def draw_transects(property_name, time, lon):
     if property_name == 'salinity':
-        d = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_s_{0}_n_40.bin'.format(time),'<f8')
+        d = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_s_time_{0}_iter_n_layer_40.bin'.format(time),'<f8')
     elif property_name == 'ocean_velocity':
-        w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_{0}_n_40.bin'.format(time),'<f8')
-        v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_{0}_n_40.bin'.format(time),'<f8')
+        w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_time_{0}_iter_n_layer_40.bin'.format(time),'<f8')
+        v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_time_{0}_iter_n_layer_40.bin'.format(time),'<f8')
         d = np.sqrt(w**2+v**2)
     elif property_name == 'ocean_temperature':
-        d = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_t_{0}_n_40.bin'.format(time),'<f8')
+        d = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_t_time_{0}_iter_n_layer_40.bin'.format(time),'<f8')
     else:
-        d = np.fromfile(OUTPUT_DIR + 'bin_data/t_{0}_n_0.bin'.format(time),'<f8')
+        d = np.fromfile(OUTPUT_DIR + 'bin_data/atm_t_time_{0}_iter_n_layer_0.bin'.format(time),'<f8')
         
         
     d = d.reshape((181, 361))
@@ -547,9 +547,9 @@ def draw_velocity_at_depth(time):
 
     time = 0
     for layer_idx in [40,30,20]:
-        v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
-        w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
-        h = np.fromfile(OUTPUT_DIR + 'bin_data/h_{0}_n_0.bin'.format(time),'<f8')
+        v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_time_{0}_iter_n_layer_{1}.bin'.format(time,layer_idx),'<f8')
+        w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_time_{0}_iter_n_layer_{1}.bin'.format(time,layer_idx),'<f8')
+        h = np.fromfile(OUTPUT_DIR + 'bin_data/atm_h_time_{0}_iter_n_layer_0.bin'.format(time),'<f8')
         
         vm = np.sqrt(v**2+w**2)
         vm[vm == 0] = 1
@@ -595,9 +595,9 @@ def draw_ocean_current_velocity_map_100(time):
         return tmp[3::4]
 
     layer_idx = 20
-    v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
-    w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_{0}_n_{1}.bin'.format(time,layer_idx),'<f8')
-    h = np.fromfile(OUTPUT_DIR + 'bin_data/h_{0}_n_0.bin'.format(time),'<f8')
+    v = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_v_time_{0}_iter_n_layer_{1}.bin'.format(time,layer_idx),'<f8')
+    w = np.fromfile(OUTPUT_DIR + 'bin_data/hyd_w_time_{0}_iter_n_layer_{1}.bin'.format(time,layer_idx),'<f8')
+    h = np.fromfile(OUTPUT_DIR + 'bin_data/atm_h_time_{0}_iter_n_layer_0.bin'.format(time),'<f8')
 
     vm = np.sqrt(v**2+w**2)
     vm[vm == 0] = 1

@@ -561,9 +561,9 @@ void  cHydrosphereModel::save_data(){
     }
     std::ostringstream ss;
     if(iter_cnt_3d == pressure_iter_max * velocity_iter_max + 1)
-        ss << "_" << m_current_time << "_n";
+        ss << "_time_" << m_current_time << "_iter_n";
     else
-        ss << "_" << m_current_time << "_" << iter_cnt_3d;
+        ss << "_time_" << m_current_time << "_iter_" << iter_cnt_3d;
     std::string postfix_str = ss.str();
 
     Array  v_t(im, jm, km, 0), w_t(im, jm, km, 0), c_t(im, jm, km, 0), t_t(im, jm, km, 0);

@@ -642,9 +642,9 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            double vel_mag = sqrt ( pow ( v.x[ 13 ][ j ][ k ] * u_0, 2 ) + pow ( w.x[ 13 ][ j ][ k ] * u_0, 2 ) );
-            PlotData_File << k << " " << 90-j << " " << h.x[ 0 ][ j ][ k ] << " " << v.x[ 13 ][ j ][ k ] * u_0 << " " 
-                << w.x[ 13 ][ j ][ k ] * u_0 << " " << vel_mag << " " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << " " 
+            double vel_mag = sqrt ( pow ( v.x[ 0 ][ j ][ k ] * u_0, 2 ) + pow ( w.x[ 0 ][ j ][ k ] * u_0, 2 ) );
+            PlotData_File << k << " " << 90-j << " " << h.x[ 0 ][ j ][ k ] << " " << v.x[ 0 ][ j ][ k ] * u_0 << " " 
+                << w.x[ 0 ][ j ][ k ] * u_0 << " " << vel_mag << " " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << " " 
                 << c.x[ 0 ][ j ][ k ] * 1000. << " " << Precipitation.y[ j ][ k ] << " " << precipitable_water.y[ j ][ k ] 
                 << " " <<  endl;
         }

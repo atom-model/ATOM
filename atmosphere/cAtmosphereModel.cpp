@@ -1033,10 +1033,13 @@ void cAtmosphereModel::init_velocities(){
     for ( int i = 0; i < im; i++ ){
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
-                u.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] / u_0;
-                v.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] / u_0;
-                w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] / u_0;
-                if ( is_land ( h, i, j, k ) )     u.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] = 0.;
+                if ( is_land ( h, i, j, k ) )     
+                    u.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] = 0.;
+                else{
+                    u.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] / u_0;
+                    v.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] / u_0;
+                    w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] / u_0;
+                }
             }
         }
     }
@@ -1137,11 +1140,19 @@ void  cAtmosphereModel::save_data(){
     if( stat( path.c_str(), &info ) != 0 ){
         mkdir(path.c_str(), 0777);
     }
+    bool last_iter = false;
     std::ostringstream ss;
-    if(iter_cnt_3d == pressure_iter_max * velocity_iter_max + 1)
-        ss << "_" << (int)(*get_current_time()) << "_n";
+    if(iter_cnt_3d == pressure_iter_max * velocity_iter_max + 1){
+        last_iter = true;
+    }
+    if(last_iter)
+    {
+        ss << "_time_" << (int)(*get_current_time()) << "_iter_n";
+    }
     else
-        ss << "_" << (int)(*get_current_time()) << "_" << iter_cnt_3d;
+    {
+        ss << "_time_" << (int)(*get_current_time()) << "_iter_" << iter_cnt_3d;
+    }
     std::string postfix_str = ss.str();
 
     Array t_t(im, jm, km, 0),  v_t(im, jm, km, 0), w_t(im, jm, km, 0), m_t(im, jm, km, 0), u_t(im, jm, km, 0);
@@ -1153,19 +1164,21 @@ void  cAtmosphereModel::save_data(){
                 v_t.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] * u_0;
                 w_t.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] * u_0;
 
-                if(fabs(v_t.x[ i ][ j ][ k ]) > 0 && !(fabs(v_t.x[ 0 ][ j ][ k ]) > 0))
-                    v_t.x[ 0 ][ j ][ k ] = v_t.x[ i ][ j ][ k ];
-                if(fabs(w_t.x[ i ][ j ][ k ]) > 0 && !(fabs(w_t.x[ 0 ][ j ][ k ]) > 0))
-                    w_t.x[ 0 ][ j ][ k ] = w_t.x[ i ][ j ][ k ];
+                if(last_iter){
+                    if(fabs(v_t.x[ i ][ j ][ k ]) > 0 && !(fabs(v_t.x[ 0 ][ j ][ k ]) > 0))
+                        v_t.x[ 0 ][ j ][ k ] = v_t.x[ i ][ j ][ k ];
+                    if(fabs(w_t.x[ i ][ j ][ k ]) > 0 && !(fabs(w_t.x[ 0 ][ j ][ k ]) > 0))
+                        w_t.x[ 0 ][ j ][ k ] = w_t.x[ i ][ j ][ k ];
+                }
             }
         }
     }
 
-    t_t.save(path + string("t") + postfix_str, 0);
-    v_t.save(path + string("v") + postfix_str, 0);
-    w_t.save(path + string("w") + postfix_str, 0);
-    h.save(path + string("h") + postfix_str, 0);
-    Precipitation.save(path + string("p") + postfix_str);
+    t_t.save(path + string("atm_t") + postfix_str, 0);
+    v_t.save(path + string("atm_v") + postfix_str, 0);
+    w_t.save(path + string("atm_w") + postfix_str, 0);
+    h.save(path + string("atm_h") + postfix_str, 0);
+    Precipitation.save(path + string("atm_p") + postfix_str);
 }
 
 /*
