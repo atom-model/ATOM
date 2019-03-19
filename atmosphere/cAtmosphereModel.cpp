@@ -184,6 +184,12 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     read_IC(velocity_v_file, v.x[0], jm, km);
     read_IC(velocity_w_file, w.x[0], jm, km);    
+    read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
+    read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
+
+    iter_cnt_3d = -1;
+    if(debug) save_data();
+    iter_cnt_3d++;
 
     //  class element for the initial conditions for u-v-w-velocity components
     //circulation.IC_CellStructure ( h, u, v, w );
@@ -191,15 +197,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //IC_v_w_WestEastCoast();//adjust east coast velocities.
 
-    //  class element for the surface temperature from NASA for comparison
-    //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
-    //read_NASA_temperature(Name_SurfaceTemperature_File);
-    read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
     adjust_temperature_IC(t.x[0], jm, km);
-    //  class element for the surface precipitation from NASA for comparison
-    //read_NASA_precipitation(Name_SurfacePrecipitation_File);
-    read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
-    //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
     init_temperature();
 
     //  class element for the surface pressure computed by surface temperature with gas equation
@@ -474,20 +472,16 @@ void cAtmosphereModel::run_3D_loop(){
     iter_cnt = 1;
     iter_cnt_3d = 0;
 
-    int Ma = int(round(*get_current_time()));
-
     store_intermediate_data_3D();
     
     if(debug) save_data();
-    /** ::::::::::::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   :::::::::::::::: **/
+    
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
-        /** ::::::::::::   begin of 3D velocity loop : if ( velocity_iter > velocity_iter_max )   ::::::::::::::::::: **/
         for ( int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ )
         {
-            Array tmp = (t-1)*t_0;
-            tmp.inspect();
-            //  query to realize zero divergence of the continuity equation ( div c = 0 )
+            if(debug){ Array tmp = (t-1)*t_0; tmp.inspect(); }
+            
             cout << endl << endl;
             cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
             cout << " 3D AGCM iterational process" << endl;
@@ -495,7 +489,7 @@ void cAtmosphereModel::run_3D_loop(){
 
             cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum "
                 << "and current number of velocity iterations, maximum and current number of pressure iterations " << endl << 
-                endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max = " << velocity_iter_max << 
+                endl << " Ma = " << *get_current_time() << "     n = " << iter_cnt << "    velocity_iter_max = " << velocity_iter_max << 
                 "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << pressure_iter << endl;
 
@@ -545,22 +539,11 @@ void cAtmosphereModel::run_3D_loop(){
             iter_cnt++;
             iter_cnt_3d++;
             if(debug) save_data();
-        }
-        /**  ::::::::::::   end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::::::: **/
+        }//end of velocity loop
         
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
         computePressure_3D();
-/*
-        //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
-        //  resulting the precipitation formed of rain and snow
-        if(iter_cnt >= 2){
-            circulation.Two_Category_Ice_Scheme ( h, c, t, p_stat, cloud, ice, 
-                                              P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
-        }
-*/
-        //logger() << fabs ( p_dyn.x[ 20 ][ 30 ][ 150 ] - p_dynn.x[ 20 ][ 30 ][ 150 ] ) << " pressure_mchin" <<Ma<<std::endl;
-        //logger() << std::get<0>(max_diff( im, jm, km, p_dyn, p_dynn)) << " pressure_max_diff" <<Ma<<std::endl;
-
+        
         if( debug && pressure_iter % checkpoint == 0 ){
             write_file(bathymetry_name, output_path);
         }
@@ -571,8 +554,7 @@ void cAtmosphereModel::run_3D_loop(){
             cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
             break;
         }
-    }
-    /**  :::::   end of pressure loop_3D: if ( pressure_iter > pressure_iter_max )   ::::::::::::::::::::::::::::: **/
+    }//end of pressure loop
 }
 
 

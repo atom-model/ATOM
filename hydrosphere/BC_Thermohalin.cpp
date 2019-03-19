@@ -338,7 +338,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
             gam_z = M_PI * ( double ) ( i - i_Ekman ) 
                 / ( double ) ( im - 1 - i_Ekman );
             exp_gam_z = exp ( - gam_z );
-            sin_gam_z = sin ( gam_z );
+            sin_gam_z =  j <= j_half ? sin ( gam_z ) : - sin ( gam_z );            
             cos_gam_z = cos ( gam_z );
 
             for ( int k = 0; k < km; k++ ){
@@ -347,14 +347,8 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( Array_1D & rad, Array_1D & the,
                     v_g = v.x[ i + 1 ][ j ][ k ];
                     w_g = w.x[ i + 1 ][ j ][ k ];
 
-                    if ( j <= j_half ){
-                        v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
-                        w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
-                    }else{
-                        sin_gam_z = - sin ( gam_z );
-                        v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
-                        w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
-                    }
+                    v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z + v_g * ( 1. - exp_gam_z * cos_gam_z );
+                    w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) - v_g * exp_gam_z * sin_gam_z;
                 }
             }
         }

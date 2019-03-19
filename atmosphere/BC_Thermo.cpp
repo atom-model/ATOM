@@ -1061,10 +1061,10 @@ void cAtmosphereModel::Value_Limitation_Atm(){
             for ( int i = 0; i < im; i++ ){
                 if ( u.x[ i ][ j ][ k ] >= .106 )  u.x[ i ][ j ][ k ] = .106;
                 if ( u.x[ i ][ j ][ k ] <= - .106 )  u.x[ i ][ j ][ k ] = - .106;
-                if ( v.x[ i ][ j ][ k ] >= .125 )  v.x[ i ][ j ][ k ] = .125;
-                if ( v.x[ i ][ j ][ k ] <= - .125 )  v.x[ i ][ j ][ k ] = - .125;
-                if ( w.x[ i ][ j ][ k ] >= 3.5 )  w.x[ i ][ j ][ k ] = 3.5;
-                if ( w.x[ i ][ j ][ k ] <= - .469 )  w.x[ i ][ j ][ k ] = - .469;
+                //if ( v.x[ i ][ j ][ k ] >= .125 )  v.x[ i ][ j ][ k ] = .125;
+                //if ( v.x[ i ][ j ][ k ] <= - .125 )  v.x[ i ][ j ][ k ] = - .125;
+                //if ( w.x[ i ][ j ][ k ] >= 3.5 )  w.x[ i ][ j ][ k ] = 3.5;
+                //if ( w.x[ i ][ j ][ k ] <= - .469 )  w.x[ i ][ j ][ k ] = - .469;
                 if ( t.x[ i ][ j ][ k ] >= 1.165 )  t.x[ i ][ j ][ k ] = 1.165;  // == 45 °C
                 if ( t.x[ i ][ j ][ k ] <= - .78 )  t.x[ i ][ j ][ k ] = - .78;  // == 59.82 °C
 //                if ( c.x[ i ][ j ][ k ] >= .022 )  c.x[ i ][ j ][ k ] = .022;
