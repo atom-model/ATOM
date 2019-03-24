@@ -232,6 +232,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     if(Ma == 0) read_IC(velocity_v_file, v.x[im-1], jm, km);
     if(Ma == 0) read_IC(velocity_w_file, w.x[im-1], jm, km);
 
+    iter_cnt_3d = -1;
+    if(debug) save_data();
+    iter_cnt_3d++;
+
     //  initial conditions for u-v-w-velocity components following the Ekman spiral
     oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
 
@@ -324,6 +328,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     cout << endl << endl;
 
     iter_cnt_3d = 0;
+    if(debug) save_data();
     // ::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::::::::::
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
@@ -377,6 +382,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
             iter_cnt++;
             iter_cnt_3d++;
+            if(debug) save_data();
         }
         //  ::::::  end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::
 
