@@ -38,10 +38,14 @@ class Results_Hyd{
 
         ~Results_Hyd (  );
 
-        void run_data ( int, double, double, double, double, double, Array_1D &,
-            Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-            Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &,
-            Array_2D &, Array_2D &, Array_2D & );
+        void run_data ( int i_beg, double dr, double dthe, double dphi, double L_hyd, double u_0,
+                        double c_0, Array_1D &rad, Array_1D &the, Array &h, Array &u, Array &v,
+                        Array &w, Array &c, Array &Salt_Balance, Array &Salt_Finger,
+                        Array &Salt_Diffusion, Array &Buoyancy_Force_3D, Array_2D &Upwelling,
+                        Array_2D &Downwelling, Array_2D &SaltFinger, Array_2D &SaltDiffusion,
+                        Array_2D &BuoyancyForce_2D, Array_2D &Salt_total,
+                        Array_2D &EkmanPumping, Array_1D &aux_grad_v, Array_1D &aux_grad_w, 
+                        Array &aux_v, Array &aux_w );
 
         void land_oceanFraction ( Array & );
 };

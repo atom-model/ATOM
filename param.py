@@ -12,7 +12,7 @@ def main():
             ( 'BathymetrySuffix', '', 'string', 'Ma_Simon.xyz' ),
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output' ),
-            ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', True),
+            ( 'paraview_panorama_vts','flag to control if create paraview panorama', 'bool', False),
             ( 'debug','flag to control if the program is running in debug mode', 'bool', False),
         
             #parameters for data reconstruction
@@ -135,8 +135,8 @@ def main():
             ( 'velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
-            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 8 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 4 ),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 4 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2 ),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 

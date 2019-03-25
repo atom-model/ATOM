@@ -36,6 +36,7 @@ void RungeKutta_Hydrosphere::solveRungeKutta_3D_Hydrosphere ( RHS_Hydrosphere &p
                    Array &aux_u, Array &aux_v, Array &aux_w, Array &Salt_Finger, Array &Salt_Diffusion,
                    Array &BuoyancyForce_3D, Array &Salt_Balance, Array &p_stat,
                    Array &r_water, Array &r_salt_water, Array_2D &Bathymetry ){
+
 //  3D volume iterations
 // Runge-Kutta 4. order for u, v and w component, temperature and salt concentration
     for ( int i = 1; i < im-1; i++ ){

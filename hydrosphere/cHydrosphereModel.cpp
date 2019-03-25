@@ -318,7 +318,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     double emin = epsres * 100.;
     iter_cnt = 1;
 
-    goto Printout;
+//    goto Printout;
 
 
     // ::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::::
@@ -353,9 +353,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
                 oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
             // composition of results
-            calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 
+            calculate_MSL.run_data ( i_beg, dr, dthe, dphi, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 
                     Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, 
-                    Salt_total, BottomWater );
+                    Salt_total, EkmanPumping, aux_grad_v, aux_grad_w, aux_v, aux_w );
 
 
         logger() << "enter cHydrosphereModel solveRungeKutta_2D_Hydrosphere: p_dyn max: " << p_dyn.max() << std::endl;
@@ -459,7 +459,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: p_dyn min: " << p_dyn.min() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: v-velocity min: " << v.min() << std::endl;
         logger() << "enter cHydrosphereModel solveRungeKutta_3D_Hydrosphere: w-velocity min: " << w.min() << std::endl << std::endl;
-
 
             // class RungeKutta for the solution of the differential equations describing the flow properties
             result.solveRungeKutta_3D_Hydrosphere ( prepare, iter_cnt, L_hyd, g, cp_w, u_0, t_0, c_0, r_0_water, ta, pa, ca, 
@@ -580,19 +579,19 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             cout << endl << " deep currents averaged for a two dimensional plane: " << endl << endl;
 
             //  searching of maximum and minimum values of upwelling volume in a column
-            string str_max_upwelling = " max upwelling ", str_min_upwelling = " min upwelling ", str_unit_upwelling = "m/s";
+            string str_max_upwelling = " max upwelling ", str_min_upwelling = " min upwelling ", str_unit_upwelling = "m/y";
             MinMax_Hyd      minmaxUpwelling ( jm, km, c_0 );
             minmaxUpwelling.searchMinMax_2D ( str_max_upwelling, str_min_upwelling, str_unit_upwelling, Upwelling, h );
 
             //  searching of maximum and minimum values of downwelling volume in a column
-            string str_max_downwelling = " max downwelling ", str_min_downwelling = " min downwelling ", str_unit_downwelling = "m/s";
+            string str_max_downwelling = " max downwelling ", str_min_downwelling = " min downwelling ", str_unit_downwelling = "m/y";
             MinMax_Hyd      minmaxDownwelling ( jm, km, c_0 );
             minmaxDownwelling.searchMinMax_2D ( str_max_downwelling, str_min_downwelling, str_unit_downwelling, Downwelling, h );
 
-            //  searching of maximum and minimum values of bottom water volume in a column
-            string str_max_bottom_water = " max bottom water ", str_min_bottom_water = " min bottom water ", str_unit_bottom_water = "m/s";
-            MinMax_Hyd      minmaxBottom_water ( jm, km, c_0 );
-            minmaxBottom_water.searchMinMax_2D ( str_max_bottom_water, str_min_bottom_water, str_unit_bottom_water, BottomWater, h );
+            //  searching of maximum and minimum values of Ekman pumping volume in a column
+            string str_max_Ekman_pumping = " max Ekman pumping ", str_min_Ekman_pumping = " min Ekman pumping ", str_unit_Ekman_pumping = "m/y";
+            MinMax_Hyd      minmaxEkman_pumping ( jm, km, c_0 );
+            minmaxEkman_pumping.searchMinMax_2D ( str_max_Ekman_pumping, str_min_Ekman_pumping, str_unit_Ekman_pumping, EkmanPumping, h );
 
             //  searching of maximum and minimum values of the bathymetry
             string str_max_bathymetry = " max bathymetry ", str_min_bathymetry = " min bathymetry ", str_unit_bathymetry = "m";
@@ -601,9 +600,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
 
             // composition of results
-            calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 
+            calculate_MSL.run_data ( i_beg, dr, dthe, dphi, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 
                     Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, 
-                    Salt_total, BottomWater );
+                    Salt_total, EkmanPumping, aux_grad_v, aux_grad_w, aux_v, aux_w );
+//    goto  Printout;
 
             //  restoring the velocity component and the temperature for the new time step
             move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
@@ -619,6 +619,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             write_file(bathymetry_name, output_path);
         }
 
+//    goto  Printout;
+
         //  limit of the computation in the sense of time steps
         if ( iter_cnt > nm ){
             cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
@@ -628,7 +630,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
-    Printout:
+//    Printout:
 
     write_file(bathymetry_name, output_path, true);
 
@@ -645,13 +647,15 @@ void cHydrosphereModel::reset_arrays()
     rad.initArray_1D(im, 1.); // radial coordinate direction
     the.initArray_1D(jm, 2.); // lateral coordinate direction
     phi.initArray_1D(km, 3.); // longitudinal coordinate direction
+    aux_grad_v.initArray_1D(km, 4.); // auxilliar array
+    aux_grad_w.initArray_1D(km, 5.); // auxilliar array
 
     // 2D arrays
     Bathymetry.initArray_2D(jm, km, 0.); // Bathymetry in m
 
     Upwelling.initArray_2D(jm, km, 0.); // upwelling
     Downwelling.initArray_2D(jm, km, 0.); // downwelling
-    BottomWater.initArray_2D(jm, km, 0.); // 2D bottom water summed up in a vertical column
+    EkmanPumping.initArray_2D(jm, km, 0.); // 2D bottom water summed up in a vertical column
 
     SaltFinger.initArray_2D(jm, km, 0.);      // salt bulge of higher density
     SaltDiffusion.initArray_2D(jm, km, 0.);   // salt bulge of lower density
@@ -767,7 +771,7 @@ void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepa
     //  int i_radial = 39;
     write_File.paraview_vtk_radial ( bathymetry_name, i_radial, iter_cnt-1, u_0, t_0, c_0, r_0_water, h, p_dyn, p_stat, r_water, 
         r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, 
-        Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, 
+        Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, EkmanPumping, Evaporation_Dalton, 
         Precipitation, Bathymetry, salinity_evaporation );
 
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
@@ -777,6 +781,6 @@ void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepa
     }
     //  writing of plot data in the PlotData file
     PostProcess_Hydrosphere     ppa ( im, jm, km, output_path );
-    ppa.Hydrosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, h, v, w, t, c, BottomWater, Upwelling, Downwelling );
+    ppa.Hydrosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, h, v, w, t, c, EkmanPumping, Upwelling, Downwelling );
 
 }

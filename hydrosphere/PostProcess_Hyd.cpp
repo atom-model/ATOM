@@ -461,7 +461,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
                                                     Array &Salt_Diffusion, Array &Buoyancy_Force,
                                                     Array &Salt_Balance, Array_2D &Upwelling, Array_2D &Downwelling,
                                                     Array_2D &SaltFinger, Array_2D &SaltDiffusion,
-                                                    Array_2D &BuoyancyForce, Array_2D &BottomWater,
+                                                    Array_2D &BuoyancyForce, Array_2D &EkmanPumping,
                                                     Array_2D &Evaporation_Dalton, Array_2D &Precipitation,
                                                     Array_2D &Bathymetry, Array_2D &salinity_evaporation ){
     double x, y, z, dx, dy;
@@ -536,7 +536,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     dump_radial("BuoyancyForce", Buoyancy_Force, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial_2d("Upwelling", Upwelling, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Downwelling", Downwelling, 1., Hydrosphere_vtk_radial_File);
-    dump_radial_2d("BottomWater", BottomWater, 1., Hydrosphere_vtk_radial_File);
+    dump_radial_2d("EkmanPumping", EkmanPumping, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Precipitation", Precipitation, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("salinity_evaporation", salinity_evaporation, c_0, Hydrosphere_vtk_radial_File);
@@ -676,7 +676,7 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 
 void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymetry_File,
                                                     int iter_cnt, double &u_0, Array &h, Array &v, Array &w,
-                                                    Array &t, Array &c, Array_2D &BottomWater,
+                                                    Array &t, Array &c, Array_2D &EkmanPumping,
                                                     Array_2D & Upwelling, Array_2D & Downwelling ){
     string path = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Hyd"+
         (iter_cnt > 0 ? "_"+to_string(iter_cnt) : "")+".xyz";
@@ -699,7 +699,7 @@ void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymet
 			double vel_mag = sqrt ( pow ( v.x[ im-1 ][ j ][ k ] * u_0 , 2 ) + pow ( w.x[ im-1 ][ j ][ k ] * u_0, 2 ) );
 			PlotData_File << k << " " << 90-j << " " << h.x[ im-1 ][ j ][ k ] << " " << v.x[ im-1 ][ j ][ k ] * u_0 
             << " " << w.x[ im-1 ][ j ][ k ] * u_0 << " " << vel_mag << " " << t.x[ im-1 ][ j ][ k ] * 273.15 - 273.15 
-            << " " << c.x[ im-1 ][ j ][ k ] * 35. << " " << BottomWater.y[ j ][ k ] << " " << Upwelling.y[ j ][ k ] 
+            << " " << c.x[ im-1 ][ j ][ k ] * 35. << " " << EkmanPumping.y[ j ][ k ] << " " << Upwelling.y[ j ][ k ] 
             << "   " << Downwelling.y[ j ][ k ] << " " <<  endl;
 		}
 	}

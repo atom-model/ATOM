@@ -75,7 +75,7 @@ class PostProcess_Hydrosphere{
             Array &, Array &, Array &, Array & );
         
         void Hydrosphere_PlotData ( const string &Name_Bathymetry_File, int iter_cnt, double &u_0,
-            Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &BottomWater, Array_2D & Upwelling,
+            Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &EkmanPumping, Array_2D & Upwelling,
             Array_2D & Downwelling );
 };
 #endif
