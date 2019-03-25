@@ -17,6 +17,7 @@
 #include <Utils.h>
 
 #include "PostProcess_Hyd.h"
+#include "cHydrosphereModel.h"
 
 using namespace std;
 using namespace AtomUtils;
@@ -673,10 +674,8 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 
 
 
-void PostProcess_Hydrosphere::Hydrosphere_PlotData ( const string &Name_Bathymetry_File,
-                                                    int iter_cnt, double &u_0, Array &h, Array &v, Array &w,
-                                                    Array &t, Array &c, Array_2D &BottomWater,
-                                                    Array_2D & Upwelling, Array_2D & Downwelling ){
+void cHydrosphereModel::Hydrosphere_PlotData(const string &Name_Bathymetry_File, int iter_cnt)
+{
     string path = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Hyd"+
         (iter_cnt > 0 ? "_"+to_string(iter_cnt) : "")+".xyz";
 

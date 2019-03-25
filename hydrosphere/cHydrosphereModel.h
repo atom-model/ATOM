@@ -43,6 +43,8 @@ private:
     void print_welcome_msg();
     
     void print_min_max();
+
+    void Hydrosphere_PlotData(const string &Name_Bathymetry_File, int iter_cnt);
     
     const int im = 41, jm = 181, km = 361, nm = 200;
 

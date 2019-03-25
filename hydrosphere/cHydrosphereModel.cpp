@@ -554,7 +554,7 @@ void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepa
 */
     //  writing of plot data in the PlotData file
     PostProcess_Hydrosphere     ppa ( im, jm, km, output_path );
-    ppa.Hydrosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, h, v, w, t, c, BottomWater, Upwelling, Downwelling );
+    Hydrosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1));
 
 }
 

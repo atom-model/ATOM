@@ -10,13 +10,44 @@ DATA_DIR = './output'
 BATHYMETRY_SUFFIX = 'Ma_smooth.xyz'
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
+
+def convert_atom_to_gmt(data):
+    new_data = np.zeros((181, 361))
+    atom_data = data.flatten()
+    for i in range(181):
+        for j in range(361):
+            if j>179:
+                j1=j-180
+            else:
+                j1=j+180
+            new_data[i][j] = atom_data[j1*181+180-i]
+    return new_data
+
+def convert_gmt_to_atom(data):
+    new_data = np.zeros((361, 181))
+    for lon in range(0,361):
+        for lat in range(90,-91,-1):
+            if lon<180:
+                l=lon+180
+            else:
+                l=lon-180
+            new_data[lon][90-lat] = data[lat+90][l]
+    return new_data
+
+
 def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction_dir=script_dir):
     print(from_time)
     print(to_time)
     print(input_grid)
     print(output_grid)
     data = np.genfromtxt(input_grid)
-    
+    data = convert_atom_to_gmt(data[:,2])
+
+    lat = np.linspace(-90,90,181)
+    lon = np.linspace(-180,180,361)
+    X, Y = np.meshgrid(lon,lat)
+    data = np.stack((X, Y, data),axis=-1)
+
     static_polygon_features = pygplates.FeatureCollection(
             reconstruction_dir+'/data/ContinentalPolygons/Matthews_etal_GPC_2016_ContinentalPolygons.gpmlz' )
     rotation_files = [reconstruction_dir + '/data/Rotations/Global_EarthByte_230-0Ma_GK07_AREPS.rot']
@@ -29,7 +60,7 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
     pygplates.reconstruct(static_polygon_features, rotation_model, static_polygon_features_to_time, to_time)
     pygplates.reconstruct(static_polygon_features, rotation_model, static_polygon_features_from_time, from_time)
     
-    print('reconstructing continetal polygons...')
+    print('reconstructing continental polygons...')
     polygon_features_to_time = []
     polygon_features_from_time = []
     for p in static_polygon_features_to_time:
@@ -50,6 +81,7 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
     #the reason of using these two properties is I don't know how to store data in a feature in other way
     #if you know better way to store data in a feature, you may change the code below
     points = []
+    data = data.reshape((181*361,3))
     for idx, point in enumerate(data):
         f = pygplates.Feature()
         f.set_geometry(pygplates.PointOnSphere(float(point[1]),float(point[0])))
@@ -102,18 +134,16 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
     for f in assigned_point_features:
         i = f.get_integer(pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'))
         masked_points.add(i)
-    for f in partitioned_features:
-        i = f.get_integer(pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'))
-        masked_points.add(i)
 
+    tmp = []
     for p in points:
         i = p.get_integer(pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'))
         if i not in masked_points:
             ll = p.get_geometry().to_lat_lon()
             v = p.get_double(pygplates.PropertyName.create_gpml('subductionZoneDepth'))
-            new_data.append([ll[1], ll[0], v])  
-    
-    d = np.array(new_data)
+            tmp.append([ll[1], ll[0], v])  
+
+    d = np.array(tmp)
     x=d[:,0]
     y=d[:,1]
     z=d[:,2]
@@ -122,21 +152,46 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
     X, Y = np.meshgrid(lon,lat)
     #print lat, lon
     #print z.max(), z.min()
-    grid_data = griddata((x, y), z, (X, Y), method='cubic',fill_value=0)
+    grid_data = griddata((x, y), z, (X, Y), method='nearest',fill_value=0)
+
     zmax = z.max()
     zmin = z.min()
     grid_data[grid_data>zmax] = zmax
-    grid_data[grid_data<zmin] = zmin    
+    grid_data[grid_data<zmin] = zmin
+    
+    masked_points = set()
+    for f in partitioned_features:
+        i = f.get_integer(pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'))
+        masked_points.add(i)
 
-    output_data=[]
-    for lon in range(0,361):
-        for lat in range(90,-91,-1):
-            if lon<180:
-                l=lon+180
-            else:
-                l=lon-180
-            output_data.append([float(lon),float(lat),grid_data[lat+90][l]])
-                
+    grid_data = np.stack((X, Y, grid_data),axis=-1)
+
+    grid_data = grid_data.reshape((181*361,3))
+    print len(new_data)
+    #print new_data
+    for idx, row in enumerate(grid_data):
+        if idx not in masked_points:
+            new_data.append(list(row))
+    
+    d = np.array(new_data)
+    print d.shape
+    x=d[:,0]
+    y=d[:,1]
+    z=d[:,2]
+    grid_data = griddata((x, y), z, (X, Y), method='nearest',fill_value=0)
+
+    zmax = z.max()
+    zmin = z.min()
+    grid_data[grid_data>zmax] = zmax
+    grid_data[grid_data<zmin] = zmin
+
+    output_data = convert_gmt_to_atom(grid_data)
+    lat = np.linspace(90,-90,181)
+    lon = np.linspace(0,360,361)
+    X, Y = np.meshgrid(lat,lon)
+    
+    output_data = np.stack((Y, X, output_data),axis=-1)
+    output_data = output_data.reshape((361*181,3))
 
     np.savetxt(output_grid,output_data,fmt='%1.2f') 
 
@@ -223,9 +278,21 @@ def reconstruct_wind_w(time_0, time_1, suffix='Ma_smooth.xyz'):
         time_1,
         DATA_DIR + '/{0}Ma_Reconstructed_wind_w.xyz'.format(time_1))
 
+def test(filename):
+    from_time = 0
+    from_file = filename
+    for t in range(10,60,10):
+        to_file = '{}Ma.xyz'.format(t)
+        reconstruct_grid(from_time, from_file, t, to_file)
+        from_time = t
+        from_file = to_file
+
 
 def main():
     try:
+        if len(sys.argv) == 2:
+            test(sys.argv[1])
+            return
         global DATA_DIR
         global BATHYMETRY_SUFFIX 
         time_0 = int(sys.argv[1])
