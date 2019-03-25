@@ -34,19 +34,46 @@ def convert_gmt_to_atom(data):
             new_data[lon][90-lat] = data[lat+90][l]
     return new_data
 
+def add_lon_lat_to_gmt_data(data):
+    lat = np.linspace(-90,90,181)
+    lon = np.linspace(-180,180,361)
+    X, Y = np.meshgrid(lon,lat)
+    return np.stack((X, Y, data),axis=-1)
+
+def add_lon_lat_to_atom_data(data):
+    lat = np.linspace(90,-90,181)
+    lon = np.linspace(0,360,361)
+    Y, X = np.meshgrid(lat,lon)
+    return np.stack((X, Y, data),axis=-1)
+
+def interp_grid(a):
+    d = np.array(a)
+    x=d[:,0]
+    y=d[:,1]
+    z=d[:,2]
+    lat = np.linspace(-90,90,181)
+    lon = np.linspace(-180,180,361)
+    X, Y = np.meshgrid(lon,lat)
+    
+    grid_data = griddata((x, y), z, (X, Y), method='nearest',fill_value=0)
+
+    zmax = z.max()
+    zmin = z.min()
+    grid_data[grid_data>zmax] = zmax
+    grid_data[grid_data<zmin] = zmin
+    
+    return grid_data
+    
 
 def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction_dir=script_dir):
     print(from_time)
     print(to_time)
     print(input_grid)
     print(output_grid)
+    
     data = np.genfromtxt(input_grid)
     data = convert_atom_to_gmt(data[:,2])
-
-    lat = np.linspace(-90,90,181)
-    lon = np.linspace(-180,180,361)
-    X, Y = np.meshgrid(lon,lat)
-    data = np.stack((X, Y, data),axis=-1)
+    data = add_lon_lat_to_gmt_data(data)
 
     static_polygon_features = pygplates.FeatureCollection(
             reconstruction_dir+'/data/ContinentalPolygons/Matthews_etal_GPC_2016_ContinentalPolygons.gpmlz' )
@@ -68,7 +95,6 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
         f.set_geometry(pygplates.PolygonOnSphere(p.get_reconstructed_geometry()))
         f.set_reconstruction_plate_id(p.get_feature().get_reconstruction_plate_id())
         polygon_features_to_time.append(f)
-    #    #print bound.get_feature().get_reconstruction_plate_id()
 
     for p in static_polygon_features_from_time:
         f = pygplates.Feature()
@@ -95,6 +121,7 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
 
     #assign plate id to the point features
     #we only reconstruct the points on continents
+    #get all points on continents at from_time with plate ids
     print('assigning plate ids...')
     assigned_point_features, unpartitioned_features = pygplates.partition_into_plates(
             polygon_features_from_time,
@@ -116,9 +143,9 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
             ll = (fr * f.get_geometry()).to_lat_lon()
             v = f.get_double(pygplates.PropertyName.create_gpml('subductionZoneDepth'))
             new_data.append([ll[1], ll[0], v])
-    #print len(new_data)   
 
     #this step is for removing the data on continents later
+    #get all points on continents at to_time with plate ids
     partitioned_features, unpartitioned_features = pygplates.partition_into_plates(
             polygon_features_to_time,
             rotation_files,
@@ -128,7 +155,7 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
             partition_return = pygplates.PartitionReturn.separate_partitioned_and_unpartitioned
             )
 
-    #mask out the points inside the polygons at from_time and to_time
+    #mask out the points inside the polygons at from_time 
     print('merging grid data...')
     masked_points = set()
     for f in assigned_point_features:
@@ -143,57 +170,28 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
             v = p.get_double(pygplates.PropertyName.create_gpml('subductionZoneDepth'))
             tmp.append([ll[1], ll[0], v])  
 
-    d = np.array(tmp)
-    x=d[:,0]
-    y=d[:,1]
-    z=d[:,2]
-    lat = np.linspace(-90,90,181)
-    lon = np.linspace(-180,180,361)
-    X, Y = np.meshgrid(lon,lat)
-    #print lat, lon
-    #print z.max(), z.min()
-    grid_data = griddata((x, y), z, (X, Y), method='nearest',fill_value=0)
-
-    zmax = z.max()
-    zmin = z.min()
-    grid_data[grid_data>zmax] = zmax
-    grid_data[grid_data<zmin] = zmin
+    grid_data = interp_grid(tmp)#fill the gaps in the grid
     
     masked_points = set()
     for f in partitioned_features:
         i = f.get_integer(pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'))
         masked_points.add(i)
 
-    grid_data = np.stack((X, Y, grid_data),axis=-1)
-
+    grid_data = add_lon_lat_to_gmt_data(grid_data)
     grid_data = grid_data.reshape((181*361,3))
-    print len(new_data)
-    #print new_data
+    
     for idx, row in enumerate(grid_data):
         if idx not in masked_points:
-            new_data.append(list(row))
+            new_data.append(row)
     
-    d = np.array(new_data)
-    print d.shape
-    x=d[:,0]
-    y=d[:,1]
-    z=d[:,2]
-    grid_data = griddata((x, y), z, (X, Y), method='nearest',fill_value=0)
-
-    zmax = z.max()
-    zmin = z.min()
-    grid_data[grid_data>zmax] = zmax
-    grid_data[grid_data<zmin] = zmin
+    grid_data = interp_grid(new_data)#fill the gaps in the grid
 
     output_data = convert_gmt_to_atom(grid_data)
-    lat = np.linspace(90,-90,181)
-    lon = np.linspace(0,360,361)
-    X, Y = np.meshgrid(lat,lon)
-    
-    output_data = np.stack((Y, X, output_data),axis=-1)
+    output_data = add_lon_lat_to_atom_data(output_data)
     output_data = output_data.reshape((361*181,3))
 
     np.savetxt(output_grid,output_data,fmt='%1.2f') 
+    
 
 def reconstruct_temperature(time_0, time_1, suffix='Ma_smooth.xyz'):
     st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, suffix),skip_header=1)
