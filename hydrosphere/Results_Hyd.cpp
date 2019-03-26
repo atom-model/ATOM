@@ -61,7 +61,7 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double dphi, dou
     double i_Ekman_layer = 100.;  // assumed Ekman-layer depth of 100m
     double coeff = i_Ekman_layer / L_hyd;
     double rmsinthe = 0.;
-    double coeff_EkmanPumping = u_0 * ( L_hyd /(double)(im-1) * dr ) 
+    double coeff_EkmanPumping = 0.03 * u_0 * ( L_hyd /(double)(im-1) * dr ) 
                                     / ( 111000 * dthe ) * ( 84600 * 365 ); // = 513.201
     // dimensional units: 111000 m for 1°, 84600 * 365 for m/y from m/s
 
@@ -76,8 +76,10 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double dphi, dou
             for ( int i = 1; i < im; i++ ){
                 if ( is_land( h, i-1, j, k) && is_land( h, i, j, k) ){
                     i_beg = i;
+                    i_diff = i_max - i_beg;
                 }else{
                     i_beg = i_Ekman;
+                    i_diff = i_max - i_beg;
                 }
             } 
             for ( int i = i_beg; i < im; i++ ){
@@ -101,14 +103,12 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double dphi, dou
         }
     }
 
-
     for ( int k = 1; k < km-1; k++ ){
         for ( int j = 1; j < j_half-1; j++ ){
             rmsinthe = rad.z[ im-1 ] * sin( the.z[ j ] );
             EkmanPumping.y[ j ][ k ] = - ( ( aux_v.x[ im-1 ][ j + 1 ][ k ] - aux_v.x[ im-1 ][ j - 1 ][ k ] ) /
                 ( 2. * rad.z[ im-1 ] * dthe ) + ( aux_w.x[ im-1 ][ j ][ k + 1 ] - aux_w.x[ im-1 ][ j ][ k - 1 ] )
                 / ( 2. * rmsinthe * dphi ) ) * coeff_EkmanPumping;
-//            EkmanPumping.y[ j ][ k ] = - EkmanPumping.y[ j ][ k ] * coeff_EkmanPumping;
         }
         for ( int j = j_half+2; j < jm-1; j++ ){
             rmsinthe = rad.z[ im-1 ] * sin( the.z[ j ] );
@@ -116,7 +116,6 @@ void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double dphi, dou
                 ( 2. * rad.z[ im-1 ] * dthe )
                 + ( aux_w.x[ im-1 ][ j ][ k + 1 ] - aux_w.x[ im-1 ][ j ][ k - 1 ] ) /
                 ( 2. * rmsinthe * dphi ) ) * coeff_EkmanPumping;
-//            EkmanPumping.y[ j ][ k ] = - EkmanPumping.y[ j ][ k ] * coeff_EkmanPumping;
         }
         for ( int j = 1; j < jm-1; j++ ){
             if ( EkmanPumping.y[ j ][ k ] >= 0. )  Upwelling.y[ j ][ k ] = EkmanPumping.y[ j ][ k ];

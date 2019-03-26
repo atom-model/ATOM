@@ -321,8 +321,6 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
     }
 */
 
-//    double i_Ekman_layer = 500.;                                    // assumed Ekman-layer depth of 500m
-//    double i_Ekman_layer = 200.;                                    // assumed Ekman-layer depth of 200m
     double i_Ekman_layer = 100.;                                    // assumed Ekman-layer depth of 100m
     double coeff = i_Ekman_layer / L_hyd;
 
@@ -347,12 +345,15 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
             cos_gam_z = cos ( gam_z );
             for ( int k = 0; k < km; k++ ){
                 if ( is_water( h, i, j, k) ){
-                    v_g = v.x[ i + 1 ][ j ][ k ];
-                    w_g = w.x[ i + 1 ][ j ][ k ];
+                    v_g = v.x[ im-1 ][ j ][ k ];
+                    w_g = w.x[ im-1 ][ j ][ k ];
                     v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z 
                         + v_g * ( 1. - exp_gam_z * cos_gam_z );
                     w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) 
                         - v_g * exp_gam_z * sin_gam_z;
+                }else{
+                    v.x[ i ][ j ][ k ] = 0.;
+                    w.x[ i ][ j ][ k ] = 0.;
                 }
             }
         }
