@@ -39,7 +39,7 @@ Env PYTHONPATH ${PYTHONPATH}:/usr/lib:/usr/lib/pygplates/revision12/
 RUN apt-get install -y gcc python-pip
 RUN pip install --upgrade pip
 RUN pip install numpy scipy matplotlib jupyter pandas sympy nose
-RUN pip install ipyparallel pyproj pyshp Pillow
+RUN pip install ipyparallel pyproj==1.9.6 pyshp Pillow
 RUN pip install cython
 
 RUN wget https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
