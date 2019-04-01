@@ -630,7 +630,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
-//    Printout:
+    Printout:
 
     write_file(bathymetry_name, output_path, true);
 

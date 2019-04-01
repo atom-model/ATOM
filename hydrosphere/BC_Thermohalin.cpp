@@ -81,7 +81,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
 // a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
 
 //    Ekman_angle = 45.0 / pi180;
-    Ekman_angle = 0.0;
+    Ekman_angle = 0.0;  // in case the surface ocean velocities are imported
 
 // initial conditions for v and w velocity components at the sea surface
 // ocean surface velocity is about 3% of the wind velocity at the surface
@@ -321,29 +321,39 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
     }
 */
 
-    double i_Ekman_layer = 100.;                                    // assumed Ekman-layer depth of 100m
+    double i_Ekman_layer = 100.;  // assumed Ekman-layer depth of 100m
     double coeff = i_Ekman_layer / L_hyd;
 
     int i_Ekman = ( im - 1 ) * ( 1. - coeff );
 
 // surface wind vector driving the Ekman spiral in the Ekman layer
-// northern hemisphere
+// northern and southern hemisphere
     double gam_z = 0.;
     double exp_gam_z = 0.;
     double sin_gam_z = 0;
     double cos_gam_z = 0;
     double v_g = 0.;
     double w_g = 0.;
+    double DE = 0.;
 
     for ( int j = 0; j < jm; j++ ){
-        for ( int i = im-2; i >= i_Ekman; i-- ){
-            gam_z = M_PI * ( double ) ( i - i_Ekman ) 
-                / ( double ) ( im - 1 - i_Ekman );
-            exp_gam_z = exp ( - gam_z );
-            if ( j <= j_half ) sin_gam_z = sin ( gam_z );
-            else               sin_gam_z = - sin ( gam_z );
-            cos_gam_z = cos ( gam_z );
-            for ( int k = 0; k < km; k++ ){
+        for ( int k = 0; k < km; k++ ){
+/* this part is stil in testing
+            DE = 3.2 / sqrt ( fabs ( sin ( M_PI / 2. ) ) ) 
+                    * sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] 
+                    + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+
+//            cout << "   j = " << j << "   k = " << k << "   DE = " << DE << "   the = " << the.z[ j ] 
+//                 << "   W = " << sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] ) << endl;
+*/
+            for ( int i = im-2; i >= i_Ekman; i-- ){
+//                gam_z =  DE * M_PI * ( double ) ( i - i_Ekman ) 
+                gam_z =  M_PI * ( double ) ( i - i_Ekman ) 
+                    / ( double ) ( im-1 - i_Ekman );
+                exp_gam_z = exp ( - gam_z );
+                if ( j <= j_half ) sin_gam_z = sin ( gam_z );  // northern hemisphere
+                else               sin_gam_z = - sin ( gam_z );  // southern hemisphere
+                cos_gam_z = cos ( gam_z );
                 if ( is_water( h, i, j, k) ){
                     v_g = v.x[ im-1 ][ j ][ k ];
                     w_g = w.x[ im-1 ][ j ][ k ];
@@ -359,7 +369,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
         }
     }
 
-    for ( int i = 0; i <= i_Ekman; i++ ){
+    for ( int i = 0; i < i_Ekman; i++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int k = 0; k < km; k++ ){
                 v.x[ i ][ j ][ k ] = 0.;
