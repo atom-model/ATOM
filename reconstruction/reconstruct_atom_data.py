@@ -4,12 +4,20 @@ import os, sys
 import pygplates
 import numpy as np
 from scipy.interpolate import griddata
+from scipy.ndimage import gaussian_filter
+
+import matplotlib
+matplotlib.use('Agg')
+from mpl_toolkits.basemap import Basemap
+from shapely import geometry
 
 ROTATION_DIR = os.path.dirname(os.path.realpath(__file__)) + '/data'
 DATA_DIR = './output'
 BATHYMETRY_SUFFIX = 'Ma_smooth.xyz'
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
+ATOM_HOME = script_dir + '/../'
+TOPO_DIR = ATOM_HOME + '/data/topo_grids/'
 
 def convert_atom_to_gmt(data):
     new_data = np.zeros((181, 361))
@@ -20,7 +28,7 @@ def convert_atom_to_gmt(data):
                 j1=j-180
             else:
                 j1=j+180
-            new_data[i][j] = atom_data[j1*181+180-i]
+            new_data[i][j] = atom_data[j1*181+i]
     return new_data
 
 def convert_gmt_to_atom(data):
@@ -31,13 +39,14 @@ def convert_gmt_to_atom(data):
                 l=lon+180
             else:
                 l=lon-180
-            new_data[lon][90-lat] = data[lat+90][l]
+            new_data[lon][90-lat] = data[90-lat][l]
     return new_data
 
 def add_lon_lat_to_gmt_data(data):
-    lat = np.linspace(-90,90,181)
+    lat = np.linspace(90,-90,181)
     lon = np.linspace(-180,180,361)
     X, Y = np.meshgrid(lon,lat)
+    data = data.reshape((181,361))
     return np.stack((X, Y, data),axis=-1)
 
 def add_lon_lat_to_atom_data(data):
@@ -51,11 +60,11 @@ def interp_grid(a):
     x=d[:,0]
     y=d[:,1]
     z=d[:,2]
-    lat = np.linspace(-90,90,181)
+    lat = np.linspace(90,-90,181)
     lon = np.linspace(-180,180,361)
     X, Y = np.meshgrid(lon,lat)
     
-    grid_data = griddata((x, y), z, (X, Y), method='nearest',fill_value=0)
+    grid_data = griddata((x, y), z, (X, Y), method='cubic', fill_value=0)
 
     zmax = z.max()
     zmin = z.min()
@@ -63,7 +72,81 @@ def interp_grid(a):
     grid_data[grid_data<zmin] = zmin
     
     return grid_data
+
+def interp_grid_gmt(a):
+    data = np.array(a)
+    gmt_cmd = 'gmt'
+    if not os.path.isdir("/tmp/atom/"):
+        os.mkdir('/tmp/atom/')
+    with open('/tmp/atom/no_land.xyz', 'w') as of:
+        for line in data:
+            of.write(' '.join(str(l) for l in line) + '\n')
     
+    zmax = data[:,2].max()
+    zmin = data[:,2].min()
+            
+    os.system(gmt_cmd + 
+        ' surface /tmp/atom/no_land.xyz -G/tmp/atom/fill_land_gap.nc -Rd -I1. -T0.8 -Ll{0} -Lu{1}'.format(zmin,zmax))        
+  
+    os.system(gmt_cmd + ' grd2xyz /tmp/atom/fill_land_gap.nc > /tmp/atom/fill_land_gap.xyz')
+    
+    data = np.genfromtxt('/tmp/atom/fill_land_gap.xyz')   
+    
+    return data[:,2] 
+
+def gmt_filter(a):
+    data = np.array(a)
+    gmt_cmd = 'gmt'
+    with open('/tmp/atom/result.xyz', 'w') as of:
+        for line in data:
+            of.write(' '.join(str(l) for l in line) + '\n')
+    
+    os.system(gmt_cmd + ' grdfilter /tmp/atom/result.xyz -G/tmp/atom/result.nc -Fg1000 -D4 -Vl')
+    
+    os.system(gmt_cmd + ' grd2xyz /tmp/atom/result.nc > /tmp/atom/result_filtered.xyz')
+              
+    data = np.genfromtxt('/tmp/atom/result_filtered.xyz')   
+    
+    return data[:,2]
+
+def get_coastline_polygons_from_topography(filename):
+    data = np.genfromtxt(filename)   
+    m = Basemap(llcrnrlon=-180,llcrnrlat=-90,urcrnrlon=180,urcrnrlat=90,projection='cyl')
+    x = data[:,0]
+    y = data[:,1]
+    topo = data[:,2]
+    topo[topo>0]=1
+    topo[topo<0]=0
+    
+    xi, yi = m(x,y)
+    xi = xi.reshape((181,361)) 
+    yi = yi.reshape((181,361)) 
+    topo = topo.reshape((181,361)) 
+
+    cs = m.contourf( xi, yi, topo ,levels=[0,0.9,1.1])
+    
+    polygons=[]
+    for col in cs.collections[1:2]:
+        for contour_path in col.get_paths(): 
+            for ncp,cp in enumerate(contour_path.to_polygons()):
+                x = cp[:,0]
+                y = cp[:,1]
+                lons, lats = m(x,y,inverse=True)
+                new_shape = geometry.Polygon([(i[0], i[1]) for i in zip(lons, lats)])
+                if ncp == 0:
+                    poly = new_shape
+                else:
+                    poly = poly.difference(new_shape)
+            polygons.append(poly)
+ 
+    polygon_features = []
+    for p in polygons:
+        x,y = p.exterior.xy
+        f = pygplates.Feature()
+        f.set_geometry(pygplates.PolygonOnSphere(zip(y,x)))
+        polygon_features.append(f)
+        
+    return polygon_features
 
 def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction_dir=script_dir):
     print(from_time)
@@ -75,117 +158,104 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
     data = convert_atom_to_gmt(data[:,2])
     data = add_lon_lat_to_gmt_data(data)
 
-    static_polygon_features = pygplates.FeatureCollection(
-            reconstruction_dir+'/data/ContinentalPolygons/Matthews_etal_GPC_2016_ContinentalPolygons.gpmlz' )
+    static_polygons = pygplates.FeatureCollection(
+        reconstruction_dir+'/data/Muller_etal_AREPS_2016_StaticPolygons.gpmlz' )
+        
     rotation_files = [reconstruction_dir + '/data/Rotations/Global_EarthByte_230-0Ma_GK07_AREPS.rot']
     rotation_model = pygplates.RotationModel(rotation_files)
 
-    #reconstruct static continental polygons
-    #the polygons will be used to mask grid data and partition the grid
-    static_polygon_features_to_time = []
-    static_polygon_features_from_time = []
-    pygplates.reconstruct(static_polygon_features, rotation_model, static_polygon_features_to_time, to_time)
-    pygplates.reconstruct(static_polygon_features, rotation_model, static_polygon_features_from_time, from_time)
-    
-    print('reconstructing continental polygons...')
-    polygon_features_to_time = []
-    polygon_features_from_time = []
-    for p in static_polygon_features_to_time:
-        f = pygplates.Feature()
-        f.set_geometry(pygplates.PolygonOnSphere(p.get_reconstructed_geometry()))
-        f.set_reconstruction_plate_id(p.get_feature().get_reconstruction_plate_id())
-        polygon_features_to_time.append(f)
-
-    for p in static_polygon_features_from_time:
-        f = pygplates.Feature()
-        f.set_geometry(pygplates.PolygonOnSphere(p.get_reconstructed_geometry()))
-        f.set_reconstruction_plate_id(p.get_feature().get_reconstruction_plate_id())
-        polygon_features_from_time.append(f)
-
+    #use matplotlib contour function to extract polygons from topography data
+    coastline_polygons_to_time = get_coastline_polygons_from_topography(TOPO_DIR+'/{}Ma_smooth.xyz'.format(to_time))
+    coastline_polygons_from_time = get_coastline_polygons_from_topography(TOPO_DIR+'/{}Ma_smooth.xyz'.format(from_time))
+   
     #turn grid data into point feature
     #use subductionZoneDepth and subductionZoneSystemOrder properties to keep grid data and point index
     #the reason of using these two properties is I don't know how to store data in a feature in other way
     #if you know better way to store data in a feature, you may change the code below
-    points = []
+    points_in_ocean = []
+    points_on_land = []
     data = data.reshape((181*361,3))
-    for idx, point in enumerate(data):
-        f = pygplates.Feature()
-        f.set_geometry(pygplates.PointOnSphere(float(point[1]),float(point[0])))
-        f.set_double(
-            pygplates.PropertyName.create_gpml('subductionZoneDepth'),
-            point[2])
-        f.set_integer(
-            pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'),
-            idx)
-        points.append(f)
+    for idx, point in enumerate(data):        
+        on_land = False
+        for p in coastline_polygons_from_time: 
+            if p.get_geometry().is_point_in_polygon((float(point[1]),float(point[0]))):
+                f = pygplates.Feature()
+                f.set_geometry(pygplates.PointOnSphere(float(point[1]),float(point[0])))
+                f.set_double(
+                    pygplates.PropertyName.create_gpml('subductionZoneDepth'),
+                    point[2])
+                f.set_integer(
+                    pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'),
+                    idx)
+                points_on_land.append(f)
+                on_land=True
+                break
+        if not on_land:
+            points_in_ocean.append(point)
 
-    #assign plate id to the point features
+
+    #assign plate id to the points_on_land features
     #we only reconstruct the points on continents
-    #get all points on continents at from_time with plate ids
     print('assigning plate ids...')
-    assigned_point_features, unpartitioned_features = pygplates.partition_into_plates(
-            polygon_features_from_time,
+    partitioned_features, unpartitioned_features = pygplates.partition_into_plates(
+            static_polygons,
             rotation_files,
-            points,
+            points_on_land,
             properties_to_copy = [
                 pygplates.PartitionProperty.reconstruction_plate_id],
+            reconstruction_time = from_time,
             partition_return = pygplates.PartitionReturn.separate_partitioned_and_unpartitioned
             )
 
     #use equivalent stage rotation to reconstruct the points and save the data 
-    new_data=[]
+    new_points_on_land=[]
     print('reconstructing grid data...')
-    fs = sorted(assigned_point_features,key=lambda x: x.get_reconstruction_plate_id())
+    fs = sorted(partitioned_features, key=lambda x: x.get_reconstruction_plate_id())
     from itertools import groupby
     for key, group in groupby(fs, lambda x: x.get_reconstruction_plate_id()):
-        fr = rotation_model.get_rotation(to_time, key, from_time)
+        #print key
+        fr = rotation_model.get_rotation(to_time, key)
         for f in group:
             ll = (fr * f.get_geometry()).to_lat_lon()
             v = f.get_double(pygplates.PropertyName.create_gpml('subductionZoneDepth'))
-            new_data.append([ll[1], ll[0], v])
+            new_points_on_land.append([ll[1], ll[0], v])
 
-    #this step is for removing the data on continents later
-    #get all points on continents at to_time with plate ids
-    partitioned_features, unpartitioned_features = pygplates.partition_into_plates(
-            polygon_features_to_time,
-            rotation_files,
-            points,
-            properties_to_copy = [
-                pygplates.PartitionProperty.reconstruction_plate_id],
-            partition_return = pygplates.PartitionReturn.separate_partitioned_and_unpartitioned
-            )
+    grid_data = interp_grid_gmt(points_in_ocean)#fill the gaps in the grid
+    grid_data = grid_data.reshape((181,361))
 
-    #mask out the points inside the polygons at from_time 
-    print('merging grid data...')
-    masked_points = set()
-    for f in assigned_point_features:
-        i = f.get_integer(pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'))
-        masked_points.add(i)
-
-    tmp = []
-    for p in points:
-        i = p.get_integer(pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'))
-        if i not in masked_points:
-            ll = p.get_geometry().to_lat_lon()
-            v = p.get_double(pygplates.PropertyName.create_gpml('subductionZoneDepth'))
-            tmp.append([ll[1], ll[0], v])  
-
-    grid_data = interp_grid(tmp)#fill the gaps in the grid
     
-    masked_points = set()
-    for f in partitioned_features:
-        i = f.get_integer(pygplates.PropertyName.create_gpml('subductionZoneSystemOrder'))
-        masked_points.add(i)
-
-    grid_data = add_lon_lat_to_gmt_data(grid_data)
-    grid_data = grid_data.reshape((181*361,3))
+    points_in_ocean_to_time = []
+    data = add_lon_lat_to_gmt_data(grid_data)
+    data = data.reshape((181*361,3))
+    for idx, point in enumerate(data):        
+        on_land = False
+        for p in coastline_polygons_to_time: 
+            if p.get_geometry().is_point_in_polygon((float(point[1]),float(point[0]))):
+                on_land=True
+                break
+        if not on_land:
+            points_in_ocean_to_time.append(point)
     
-    for idx, row in enumerate(grid_data):
-        if idx not in masked_points:
-            new_data.append(row)
+    new_grid_data = points_in_ocean_to_time
+    #only keep points which are inside the to_time polygons. 
+    #prevent info on continent leaking into oceans
+    for row in new_points_on_land: 
+        for f in coastline_polygons_to_time:
+            if f.get_geometry().is_point_in_polygon((row[1], row[0])):
+                new_grid_data.append(row)
+                continue
     
-    grid_data = interp_grid(new_data)#fill the gaps in the grid
-
+    grid_data = interp_grid_gmt(new_grid_data)#fill the gaps in the grid
+    
+    #grid_data = add_lon_lat_to_gmt_data(grid_data)
+    #grid_data = grid_data.reshape((181*361,3))
+    #grid_data = gmt_filter(grid_data)
+    
+    grid_data = grid_data.reshape((181,361))
+    
+    #grid_data = gaussian_filter(grid_data, sigma=1.5)
+    
+    
     output_data = convert_gmt_to_atom(grid_data)
     output_data = add_lon_lat_to_atom_data(output_data)
     output_data = output_data.reshape((361*181,3))
@@ -279,7 +349,7 @@ def reconstruct_wind_w(time_0, time_1, suffix='Ma_smooth.xyz'):
 def test(filename):
     from_time = 0
     from_file = filename
-    for t in range(10,60,10):
+    for t in range(5,100,5):
         to_file = '{}Ma.xyz'.format(t)
         reconstruct_grid(from_time, from_file, t, to_file)
         from_time = t
