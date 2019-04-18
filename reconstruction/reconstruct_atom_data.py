@@ -101,7 +101,7 @@ def gmt_filter(a):
         for line in data:
             of.write(' '.join(str(l) for l in line) + '\n')
     
-    os.system(gmt_cmd + ' grdfilter /tmp/atom/result.xyz -G/tmp/atom/result.nc -Fg1000 -D4 -Vl')
+    os.system(gmt_cmd + ' grdfilter /tmp/atom/result.xyz -G/tmp/atom/result.nc -Fm7 -Dp -Vl')
     
     os.system(gmt_cmd + ' grd2xyz /tmp/atom/result.nc > /tmp/atom/result_filtered.xyz')
               
@@ -148,6 +148,38 @@ def get_coastline_polygons_from_topography(filename):
         
     return polygon_features
 
+
+def remove_data_nearby_coastline(data, topo, len_to_remove=3):
+    data = data.reshape((181,361))
+    topo = topo.reshape((181,361))
+    for i in range(0,181):
+        for j in range(0,361):
+            if topo[i][j] and i > 0 and (not topo[i-1][j]): #south coast
+                for k in range(1, len_to_remove):
+                    if i-k >= 0 and (not topo[i-k][j]):
+                        data[i-k][j] = np.nan
+                    else:
+                        break
+            if topo[i][j] and i <180 and (not topo[i+1][j]): #north coast
+                for k in range(1, len_to_remove):
+                    if i+k <= 180 and (not topo[i+k][j]):
+                        data[i+k][j] = np.nan
+                    else:
+                        break
+            if topo[i][j] and j > 0 and (not topo[i][j-1]): #west coast
+                for k in range(1, len_to_remove):
+                    if j-k >= 0 and (not topo[i][j-k]):
+                        data[i][j-k] = np.nan
+                    else:
+                        break
+            if topo[i][j] and j < 360 and (not topo[i][j+1]): #east coast
+                for k in range(1, len_to_remove):
+                    if j+k < 360 and (not topo[i][j+k]):
+                        data[i][j+k] = np.nan
+                    else:
+                        break
+                        
+
 def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction_dir=script_dir):
     print(from_time)
     print(to_time)
@@ -156,6 +188,14 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
     
     data = np.genfromtxt(input_grid)
     data = convert_atom_to_gmt(data[:,2])
+    
+    if from_time == 0:
+        topo = np.genfromtxt(TOPO_DIR+'/0Ma_smooth.xyz')   
+        topo = topo[:,2]
+        topo[topo>0] = True
+        topo[topo<=0] = False
+        remove_data_nearby_coastline(data, topo, 5)
+        
     data = add_lon_lat_to_gmt_data(data)
 
     static_polygons = pygplates.FeatureCollection(
@@ -190,7 +230,7 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
                 points_on_land.append(f)
                 on_land=True
                 break
-        if not on_land:
+        if not on_land and (not np.isnan(point[2])):
             points_in_ocean.append(point)
 
 
@@ -220,9 +260,9 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
             v = f.get_double(pygplates.PropertyName.create_gpml('subductionZoneDepth'))
             new_points_on_land.append([ll[1], ll[0], v])
 
+    #gmt_filter(points_in_ocean)
     grid_data = interp_grid_gmt(points_in_ocean)#fill the gaps in the grid
     grid_data = grid_data.reshape((181,361))
-
     
     points_in_ocean_to_time = []
     data = add_lon_lat_to_gmt_data(grid_data)
@@ -261,7 +301,70 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
     output_data = output_data.reshape((361*181,3))
 
     np.savetxt(output_grid,output_data,fmt='%1.2f') 
+
+def reconstruct_velocity_grid(from_time, input_grid, to_time, output_grid, reconstruction_dir=script_dir):
+    print(from_time)
+    print(to_time)
+    print(input_grid)
+    print(output_grid)
     
+    data = np.genfromtxt(input_grid)
+    data = convert_atom_to_gmt(data[:,2])
+    
+    #if from_time == 0:
+    if True:
+        topo = np.genfromtxt('../data/topo_grids/{}Ma_smooth.xyz'.format(from_time))   
+        topo = topo[:,2]
+        topo[topo>0] = True
+        topo[topo<=0] = False
+        remove_data_nearby_coastline(data, topo, 5)
+        
+    data = add_lon_lat_to_gmt_data(data)
+
+    #use matplotlib contour function to extract polygons from topography data
+    coastline_polygons_to_time = get_coastline_polygons_from_topography(TOPO_DIR+'/{}Ma_smooth.xyz'.format(to_time))
+    coastline_polygons_from_time = get_coastline_polygons_from_topography(TOPO_DIR+'/{}Ma_smooth.xyz'.format(from_time))
+   
+    #get points in ocean
+    points_in_ocean = []
+    data = data.reshape((181*361,3))
+    for idx, point in enumerate(data):        
+        on_land = False
+        for p in coastline_polygons_from_time: 
+            if p.get_geometry().is_point_in_polygon((float(point[1]),float(point[0]))):
+                on_land=True
+                break
+        if not on_land and (not np.isnan(point[2])):
+            points_in_ocean.append(point)
+
+    #gmt_filter(points_in_ocean)
+
+    grid_data = interp_grid_gmt(points_in_ocean)#fill the gaps in the grid
+    grid_data = grid_data.reshape((181,361))
+
+    new_grid_data = []
+    data = add_lon_lat_to_gmt_data(grid_data)
+    data = data.reshape((181*361,3))
+    for idx, point in enumerate(data):        
+        for p in coastline_polygons_to_time: 
+            if p.get_geometry().is_point_in_polygon((float(point[1]),float(point[0]))):
+                point[2]=0
+                break
+        new_grid_data.append(point[2])
+    
+    #grid_data = add_lon_lat_to_gmt_data(grid_data)
+    #grid_data = grid_data.reshape((181*361,3))
+    #grid_data = gmt_filter(grid_data)
+    
+    grid_data = np.array(new_grid_data).reshape((181,361))
+    
+    #grid_data = gaussian_filter(grid_data, sigma=1.5)
+    
+    output_data = convert_gmt_to_atom(grid_data)
+    output_data = add_lon_lat_to_atom_data(output_data)
+    output_data = output_data.reshape((361*181,3))
+
+    np.savetxt(output_grid,output_data,fmt='%1.2f')     
 
 def reconstruct_temperature(time_0, time_1, suffix='Ma_smooth.xyz'):
     st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Atm.xyz'.format(time_0, suffix),skip_header=1)
@@ -324,7 +427,7 @@ def reconstruct_wind_v(time_0, time_1, suffix='Ma_smooth.xyz'):
         for l in data[ind]:
             of.write(' '.join(str(item) for item in l) + '\n')
 
-    reconstruct_grid(
+    reconstruct_velocity_grid(
         time_0,
         DATA_DIR + '/{0}Ma_Atm_v.xyz'.format(time_0),
         time_1,
@@ -340,7 +443,7 @@ def reconstruct_wind_w(time_0, time_1, suffix='Ma_smooth.xyz'):
         for l in data[ind]:
             of.write(' '.join(str(item) for item in l) + '\n')
 
-    reconstruct_grid(
+    reconstruct_velocity_grid(
         time_0,
         DATA_DIR + '/{0}Ma_Atm_w.xyz'.format(time_0),
         time_1,
