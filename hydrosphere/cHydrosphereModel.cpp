@@ -237,7 +237,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     iter_cnt_3d++;
 
     //  initial conditions for u-v-w-velocity components following the Ekman spiral
-    oceanflow.IC_v_w_EkmanSpiral ( rad, the, h, v, w );
+    IC_v_w_EkmanSpiral();
 
     //  initial conditions for u-velocity component
     oceanflow.IC_u_WestEastCoast ( rad, h, u, v, w, un, vn, wn );
