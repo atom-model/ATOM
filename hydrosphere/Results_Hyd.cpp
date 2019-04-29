@@ -18,7 +18,6 @@
 using namespace std;
 using namespace AtomUtils;
 
-
 Results_Hyd::Results_Hyd ( int im, int jm, int km ){
     this-> im = im;
     this-> jm = jm;
@@ -26,78 +25,10 @@ Results_Hyd::Results_Hyd ( int im, int jm, int km ){
 
     c43 = 4./3.;
     c13 = 1./3.;
-
-// array "aux_grad_v" for for the computation of Ekman pumping
-    aux_grad_v = 0L;
-
-    aux_grad_v = new double[ im ];
-
-    for ( int l = 0; l < im; l++ ){
-        aux_grad_v[ l ] = 0.;
-    }
-
-// array "aux_grad_w" for for the computation of Ekman pumping
-    aux_grad_w = 0L;
-
-    aux_grad_w = new double[ im ];
-
-    for ( int l = 0; l < im; l++ ){
-        aux_grad_w[ l ] = 0.;
-    }
-
-
-// auxiliar 2D Array "aux_v" for the computation of Ekman pumping
-    aux_v = 0L;
-
-    aux_v = new double*[ jm ];
-
-    for ( int l = 0; l < jm; l++ ){
-        aux_v[ l ] = new double[ km ];
-    }
-
-// default values
-    for ( int l = 0; l < jm; l++ ){
-        for ( int n = 0; n < km; n++ )
-        {
-            aux_v[ l ][ n ] = 0.;
-        }
-    }
-
-
-// auxiliar 2D Array "aux_w" for the computation of Ekman pumping
-    aux_w = 0L;
-
-    aux_w = new double*[ jm ];
-
-    for ( int l = 0; l < jm; l++ ){
-        aux_w[ l ] = new double[ km ];
-    }
-
-// default values
-    for ( int l = 0; l < jm; l++ ){
-        for ( int n = 0; n < km; n++ ){
-            aux_w[ l ][ n ] = 0.;
-        }
-    }
 }
-
 
 Results_Hyd::~Results_Hyd (){
-    for ( int j = 0; j < jm; j++ ){
-        delete [  ] aux_v[ j ];
-    }
-
-    delete [  ] aux_v;
-
-    for ( int j = 0; j < jm; j++ ){
-        delete [  ] aux_w[ j ];
-    }
-
-    delete [  ] aux_w;
 }
-
-
-
 
 void Results_Hyd::run_data ( int i_beg, double dr, double dthe, double L_hyd, double u_0,
                             double c_0, Array_1D &rad, Array_1D &the, Array &h, Array &u, Array &v,

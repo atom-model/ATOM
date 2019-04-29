@@ -31,6 +31,8 @@ private:
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
     void save_data();
 
+    void IC_v_w_EkmanSpiral();
+
     void solveRungeKutta_2D_Hydrosphere();
     void solveRungeKutta_3D_Hydrosphere();
 
