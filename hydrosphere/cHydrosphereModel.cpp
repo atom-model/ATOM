@@ -284,7 +284,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     oceanflow.IC_v_w_EkmanSpiral ( Ma, rad, the, h, v, w );
 
     //  initial conditions for u-velocity component
-    oceanflow.IC_u_WestEastCoast ( rad, h, u, v, w, un, vn, wn );
+//    oceanflow.IC_u_WestEastCoast ( rad, h, u, v, w, un, vn, wn );
 
     //  initial conditions for the equatorial currents
 //    oceanflow.IC_Equatorial_Currents ( h, u, v, w );

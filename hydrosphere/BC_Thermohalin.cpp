@@ -321,33 +321,38 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
     }
 */
 
-    double i_Ekman_layer = 100.;  // assumed Ekman-layer depth of 100m
-    double coeff = i_Ekman_layer / L_hyd;
 
-    int i_Ekman = ( im - 1 ) * ( 1. - coeff );
 
 // surface wind vector driving the Ekman spiral in the Ekman layer
 // northern and southern hemisphere
+    int i_Ekman = 0;
+    double sinthe = 0.;
+    double vel_magnitude = 0.;
+    double i_Ekman_layer = 0.;
+    double coeff = 0.;
     double gam_z = 0.;
     double exp_gam_z = 0.;
     double sin_gam_z = 0;
     double cos_gam_z = 0;
     double v_g = 0.;
     double w_g = 0.;
-    double DE = 0.;
 
-    for ( int j = 0; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
-/* this part is stil in testing
-            DE = 3.2 / sqrt ( fabs ( sin ( M_PI / 2. ) ) ) 
-                    * sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] 
-                    + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+    for ( int j = 1; j < jm-1; j++ ){
+        for ( int k = 1; k < km-1; k++ ){
+            sinthe = sin( the.z[ j ] );
+            vel_magnitude = sqrt ( v.x[ im - 1 ][ j ][ k ] * v.x[ im - 1 ][ j ][ k ] 
+                         + w.x[ im - 1 ][ j ][ k ] * w.x[ im - 1 ][ j ][ k ] ) / 0.03 * u_0;
+//            i_Ekman_layer = 100.;  // assumed constant Ekman-layer depth of 100m
+//            i_Ekman_layer = 7.6 / sqrt( fabs( sinthe ) ) * vel_magnitude;
+//            original law by Robert H. Stewart, Introduction to Physical Oceanography, p. 139, eq. 9.16
+            i_Ekman_layer = 3. * 7.6 / sqrt( sinthe ) * vel_magnitude; // adjusted with factor
+            coeff = i_Ekman_layer / L_hyd;
+            if ( coeff >= 1. ) coeff = 1.;
+            i_Ekman = ( im - 1 ) * ( 1. - coeff );
 
-//            cout << "   j = " << j << "   k = " << k << "   DE = " << DE << "   the = " << the.z[ j ] 
-//                 << "   W = " << sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] ) << endl;
-*/
+//    cout << "   j = " << j << "   k = " << k << "   sinthe = " << sinthe << "   vel_magnitude = " << vel_magnitude << "   i_Ekman_layer = " << i_Ekman_layer << "   coeff = " << //coeff << "   i_Ekman = " << i_Ekman << endl;
+
             for ( int i = im-2; i >= i_Ekman; i-- ){
-//                gam_z =  DE * M_PI * ( double ) ( i - i_Ekman ) 
                 gam_z =  M_PI * ( double ) ( i - i_Ekman ) 
                     / ( double ) ( im-1 - i_Ekman );
                 exp_gam_z = exp ( - gam_z );
@@ -366,17 +371,16 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
                     w.x[ i ][ j ][ k ] = 0.;
                 }
             }
-        }
-    }
-
-    for ( int i = 0; i < i_Ekman; i++ ){
-        for ( int j = 0; j < jm; j++ ){
-            for ( int k = 0; k < km; k++ ){
-                v.x[ i ][ j ][ k ] = 0.;
-                w.x[ i ][ j ][ k ] = 0.;
+            for ( int i = 0; i < i_Ekman; i++ ){
+                for ( int j = 0; j < jm; j++ ){
+                    for ( int k = 0; k < km; k++ ){
+                        v.x[ i ][ j ][ k ] = 0.;
+                        w.x[ i ][ j ][ k ] = 0.;
+                    }
                 }
             }
         }
+    }
 
     for ( int i = 0; i <= im-1; i++ ){
         for ( int j = 0; j < jm; j++ ){
@@ -1151,7 +1155,8 @@ void BC_Thermohalin::BC_Evaporation ( Array_2D &salinity_evaporation, Array_2D &
 // preparations for salinity increase due to evaporation and precipitation differences
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
     double salinity_surface = 0.;
-    double coeff_salinity = 1.1574e-5 * L_hyd / u_0 * 1.e-3 * c_0;
+//    double coeff_salinity = 1.1574e-5 * L_hyd / u_0 * 1.e-3 * c_0;
+    double coeff_salinity = 1.1574e-5 * L_hyd / u_0 * c_0;
                           // 1.1574-5 is the conversion from (Evap-Prec) in mm/d to m/s
                           // 1.e-3 * c_0 stands for the transformation 
                           // from non-dimensional salinity to salt mass fraction
@@ -1179,7 +1184,7 @@ void BC_Thermohalin::BC_Evaporation ( Array_2D &salinity_evaporation, Array_2D &
 
 //            salinity_evaporation.y[ j ][ k ] = 0.;    // test case
 
-//            c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + salinity_evaporation.y[ j ][ k ];
+            c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + salinity_evaporation.y[ j ][ k ];
 
             if ( c.x[ im-1 ][ j ][ k ] >= 1.156 )  c.x[ im-1 ][ j ][ k ] = 1.156;  // 40.0 psu
             if ( c.x[ im-1 ][ j ][ k ] <= .95 )  c.x[ im-1 ][ j ][ k ] = .95;      // 32.0 psu
