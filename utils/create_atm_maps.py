@@ -12,11 +12,12 @@ from draw_topo import draw_topography
 
 map_cfg = {
     'temperature': (6, -60, 40, u'Temperature (Celsius °C)'),
-    'v_velocity': (3, -1, 1, 'v_velocity (m/s)'),
-    'w_velocity': (4, -1, 2, 'w_velocity (m/s)'),
+    'v_velocity': (3, -7, 7, 'v_velocity (m/s)'),
+    'w_velocity': (4, -8, 9, 'w_velocity (m/s)'),
     'water_vapour': (7, 0, 20, 'Water Vapour (g/kg)'),
     'precipitation': (8, 0, 1200, 'Precipitation (mm/yr)'),
     'precipitable_water': (9, 0, 30, 'Precipitable Water (mm)'),
+    'evaporation' : (10, 0, 7, 'Evaporation (mm/d)')
 }
 
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
@@ -130,7 +131,7 @@ if  __name__ == "__main__":
     # v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), 
     # precipitation(mm), precipitable water(mm)
     sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 
-        'precipitation', 'precipitable_water', 'topography', 'velocity']
+        'precipitation', 'precipitable_water', 'topography', 'velocity', 'evaporation']
 
     try:
         start_time = int(sys.argv[1])
@@ -144,4 +145,4 @@ if  __name__ == "__main__":
 
     create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
 
-    print("Use './create_atm_maps.py 0 100 5 ../cli/output Ma_Golonka' to override the default settings")
+    print("Use './create_atm_maps.py 0 100 5 ../benchmark/output Ma_smooth' to override the default settings")

@@ -11,7 +11,7 @@ def create_all_maps(start_time, end_time, time_step, ATOM_HOME, DATA_DIR):
         hyd_map_output_dir = DATA_DIR + 'hyd_maps'
 
         atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 'precipitation', 
-                    'precipitable_water', 'topography', 'velocity']
+                    'precipitable_water', 'topography', 'velocity', 'evaporation']
 
         create_atm_maps.create_all_maps(atm_sub_dirs, start_time, end_time, time_step, atm_map_output_dir, 
                 DATA_DIR, topo_dir, topo_suffix)

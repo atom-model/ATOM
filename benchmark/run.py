@@ -37,7 +37,8 @@ for t in range(len(times)):
         reconstruct_temperature(time,times[t+1], BATHYMETRY_SUFFIX) 
         reconstruct_precipitation(time,times[t+1], BATHYMETRY_SUFFIX)
         reconstruct_salinity(time,times[t+1], BATHYMETRY_SUFFIX)
-
+        reconstruct_wind_v(time,times[t+1], BATHYMETRY_SUFFIX)
+        reconstruct_wind_w(time,times[t+1], BATHYMETRY_SUFFIX)
 try:
     topo_dir = '../data/topo_grids/'
     topo_suffix = 'smooth'
@@ -48,7 +49,7 @@ try:
     # v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), 
     # precipitation(mm), precipitable water(mm)
     atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 'precipitation', 
-                'precipitable_water', 'topography', 'velocity']
+                'precipitable_water', 'topography', 'velocity', 'evaporation']
 
     create_atm_maps.create_all_maps(atm_sub_dirs, start_time, end_time, time_step, atm_map_output_dir, 
             atom_output_dir, topo_dir, topo_suffix)
