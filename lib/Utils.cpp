@@ -147,3 +147,25 @@ void AtomUtils::read_IC(const string& fn, double** a, int jm, int km){
         }
     }
 }
+
+double AtomUtils::simpson(int n1, int n2, double dstep, Array_1D &value){
+        double sum_even=0, sum_odd=0;
+        if (n2 % 2 == 0){
+            for (int i = n1 + 1; i < n2; i+=2){sum_odd += 4*value.z[i];}
+            for (int i = n1 + 2; i < n2; i+=2){sum_even += 2*value.z[i];}
+        }else cout << "       n2    must be an even number to use the Simpson integration method" << endl;
+    return dstep/3 * (value.z[n1] + sum_odd + sum_even + value.z[n2]); // Simpson Rule integration
+}
+
+
+double AtomUtils::trapezoidal(int n1, int n2, double dstep, Array_1D &value){
+        double sum=0;
+        for (int i = n1+1; i < n2; i++){sum += 2*value.z[i];}
+        return dstep/2 * (value.z[n1] + sum + value.z[n2]);  // Trapezoidal Rule integration
+}
+
+double AtomUtils::rectangular(int n1, int n2, double dstep, Array_1D &value){
+        double sum = 0;
+        for (int i = n1; i <= n2; i++){sum += value.z[i];}
+        return dstep * sum;  // Rectangular Rule integration
+}

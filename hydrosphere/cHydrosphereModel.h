@@ -30,6 +30,7 @@ private:
     void reset_arrays();
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
     void save_data();
+    void run_data();
 
     void IC_v_w_EkmanSpiral();
 
@@ -61,6 +62,8 @@ private:
     Array_1D rad; // radial coordinate direction
     Array_1D the; // lateral coordinate direction
     Array_1D phi; // longitudinal coordinate direction
+    Array_1D aux_grad_v; // auxilliar array
+    Array_1D aux_grad_w; // auxilliar array
 
     // 2D arrays
     Array_2D Bathymetry; // Bathymetry in m
@@ -68,7 +71,7 @@ private:
 
     Array_2D Upwelling; // upwelling
     Array_2D Downwelling; // downwelling
-    Array_2D BottomWater; // 2D bottom water summed up in a vertical column
+    Array_2D EkmanPumping; // 2D bottom water summed up in a vertical column
 
     Array_2D SaltFinger;   // salt bulge of higher density
     Array_2D SaltDiffusion; // salt bulge of lower density

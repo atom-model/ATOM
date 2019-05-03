@@ -296,9 +296,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
                 oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
                 // composition of results
-                calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 
-                    Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, 
-                    Salt_total, BottomWater );
+                run_data(); 
 
                 // class RungeKutta for the solution of the differential equations describing the flow properties
                 solveRungeKutta_2D_Hydrosphere();
@@ -373,9 +371,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             print_min_max();
 
             // composition of results
-            calculate_MSL.run_data ( i_beg, dr, dthe, L_hyd, u_0, c_0, rad, the, h, u, v, w, c, Salt_Balance, Salt_Finger, 
-                    Salt_Diffusion, BuoyancyForce_3D, Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, 
-                    Salt_total, BottomWater );
+            run_data(); 
 
             //  restoring the velocity component and the temperature for the new time step
             store_intermediate_data_3D();
@@ -422,13 +418,15 @@ void cHydrosphereModel::reset_arrays()
     rad.initArray_1D(im, 1.); // radial coordinate direction
     the.initArray_1D(jm, 2.); // lateral coordinate direction
     phi.initArray_1D(km, 3.); // longitudinal coordinate direction
+    aux_grad_v.initArray_1D(km, 4.); // auxilliar array
+    aux_grad_w.initArray_1D(km, 5.); // auxilliar array
 
     // 2D arrays
     Bathymetry.initArray_2D(jm, km, 0.); // Bathymetry in m
 
     Upwelling.initArray_2D(jm, km, 0.); // upwelling
     Downwelling.initArray_2D(jm, km, 0.); // downwelling
-    BottomWater.initArray_2D(jm, km, 0.); // 2D bottom water summed up in a vertical column
+    EkmanPumping.initArray_2D(jm, km, 0.); // 2D bottom water summed up in a vertical column
 
     SaltFinger.initArray_2D(jm, km, 0.);      // salt bulge of higher density
     SaltDiffusion.initArray_2D(jm, km, 0.);   // salt bulge of lower density
@@ -543,7 +541,7 @@ void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepa
     //  int i_radial = 39;
     write_File.paraview_vtk_radial ( bathymetry_name, i_radial, iter_cnt-1, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, 
         r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, 
-        Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, BottomWater, Evaporation_Dalton, 
+        Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, EkmanPumping, Evaporation_Dalton, 
         Precipitation, Bathymetry );
 
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
@@ -583,12 +581,12 @@ void  cHydrosphereModel::save_data(){
             }
         }
     }
-    v_t.save(path + std::string("hyd_v")+postfix_str, im-1);
-    w_t.save(path + std::string("hyd_w")+postfix_str, im-1);
-    v_t.save(path + std::string("hyd_v")+postfix_str, im-11);
-    w_t.save(path + std::string("hyd_w")+postfix_str, im-11);
-    v_t.save(path + std::string("hyd_v")+postfix_str, im-21);
-    w_t.save(path + std::string("hyd_w")+postfix_str, im-21);
+
+    for(int i=im-1; i>19; i--){
+        v_t.save(path + std::string("hyd_v")+postfix_str, i);
+        w_t.save(path + std::string("hyd_w")+postfix_str, i);
+    }
+
     c_t.save(path + std::string("hyd_s")+postfix_str, im-1);
     t_t.save(path + std::string("hyd_t")+postfix_str, im-1);
 }

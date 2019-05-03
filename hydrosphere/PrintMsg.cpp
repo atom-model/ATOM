@@ -116,7 +116,7 @@ void cHydrosphereModel::print_min_max()
     //  searching of maximum and minimum values of bottom water volume in a column
     string str_max_bottom_water = " max bottom water ", str_min_bottom_water = " min bottom water ", str_unit_bottom_water = "m/s";
     MinMax_Hyd      minmaxBottom_water ( jm, km, c_0 );
-    minmaxBottom_water.searchMinMax_2D ( str_max_bottom_water, str_min_bottom_water, str_unit_bottom_water, BottomWater, h );
+    minmaxBottom_water.searchMinMax_2D ( str_max_bottom_water, str_min_bottom_water, str_unit_bottom_water, EkmanPumping, h );
 
     //  searching of maximum and minimum values of the bathymetry
     string str_max_bathymetry = " max bathymetry ", str_min_bathymetry = " min bathymetry ", str_unit_bathymetry = "m";

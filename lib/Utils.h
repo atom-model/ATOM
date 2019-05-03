@@ -6,6 +6,7 @@
 #include <limits>
 
 #include "Array.h"
+#include "Array_1D.h"
 
 #define logger() \
 if (false) ; \
@@ -82,26 +83,10 @@ namespace AtomUtils{
     std::tuple<double, int, int, int>
     max_diff(int i, int j, int k, const Array &a1, const Array &a2);
 
-    inline double simpson(int & n, double &dstep, double *value){
-        double sum_even=0, sum_odd=0;
-        if (n % 2 == 0){
-            for (int i = 1; i < n; i+=2){sum_odd += 4*value[i];}
-            for (int i = 2; i < n; i+=2){sum_even += 2*value[i];}
-        }else cout << "       n    must be an even number to use the Simpson integration method" << endl;
-        return dstep/3 * (value[0] + sum_odd + sum_even + value[n]);             // Simpson Rule integration
-    }
-
-    inline double trapezoidal(int n, double dstep, double *value){
-        double sum=0;
-        for (int i = 1; i < n; i++){sum += 2*value[i];}
-		return dstep/2 * (value[0] + sum + value[n]);                 // Trapezoidal Rule integration
-    }
-
-    inline double rectangular(int n, double dstep, double *value){
-        double sum = 0;
-        for (int i = 0; i <= n; i++){sum += value[i];}
-        return dstep * sum;                // Rectangular Rule integration
-    }
+    // integration tools
+    double simpson(int n1, int n2, double dstep, Array_1D &value);
+    double trapezoidal(int n1, int n2, double dstep, Array_1D &value);
+    double rectangular(int n1, int n2, double dstep, Array_1D &value);
 
     inline double exp_func(double T_K, const double co_1, const double co_2){
         return exp(co_1 * (T_K - 273.15) / (T_K - co_2));                        // temperature in °K
@@ -110,6 +95,60 @@ namespace AtomUtils{
     double C_Dalton ( double u_0, double v, double w );
 
     void read_IC(const string& fn, double** a, int jm, int km);
+
+    template<class T>
+    void set_values(T* a, T value, int len){
+        for(int i = 0 ; i < len; i++){
+            a[i] = value;
+        }
+    }
+
+    template<class T>
+    void chessboard_grid(T** a, int j, int k, int jm, int km)
+    {
+        T value_1 = 0.9, value_2 = 1.1;
+        T* line_1 = new T[km];
+        T* line_2 = new T[km];
+        int i = 0;
+        bool flip = true;
+        while(i+k < km){
+            if(flip){
+                set_values(line_1+i, value_1, k);
+                set_values(line_2+i, value_2, k);
+            }else{
+                set_values(line_1+i, value_2, k);
+                set_values(line_2+i, value_1, k);
+            }
+            i+=k;
+            flip = !flip;
+        }
+        if(i<km-1){
+            if(flip){
+                set_values(line_1+i, value_1, km-1-i);
+                set_values(line_2+i, value_2, km-1-i);
+            }else{
+                set_values(line_1+i, value_2, km-1-i);
+                set_values(line_2+i, value_1, km-1-i);
+            }
+        }
+        int cnt=0;
+        flip = true;
+        for(i = 0; i<jm; i++){
+            if(flip)
+                memcpy(a[i], line_1, km*sizeof(T));
+            else
+                memcpy(a[i], line_2, km*sizeof(T));
+            cnt++;
+            if(cnt==j){
+                flip = !flip;
+                cnt = 0;
+            }
+        }
+
+        delete[] line_1;
+        delete[] line_2;
+        return;
+    }
 }
 
 #endif
