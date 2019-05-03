@@ -245,6 +245,9 @@ private:
     void store_intermediate_data_3D(float coeff=1);
 
     void adjust_temperature_IC(double** t, int jm, int km);
+
+    void check_data();
+    void check_data(Array& a, Array&an, const std::string& name);
  
     static cAtmosphereModel* m_model;
 

@@ -44,6 +44,7 @@ const double cAtmosphereModel::dphi = phi_degree / pi180;
     
 const double cAtmosphereModel::dr = 0.025;    // 0.025 x 40 = 1.0 compares to 16 km : 40 = 400 m for 1 radial step
 const double cAtmosphereModel::dt = 0.00001;  // time step coincides with the CFL condition
+//const double cAtmosphereModel::dt = 0.0001;
     
 const double cAtmosphereModel::the0 = 0.;             // North Pole
 const double cAtmosphereModel::phi0 = 0.;             // zero meridian in Greenwich
@@ -398,11 +399,12 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
                                            Q_Sensible, epsilon_3D, P_rain, P_snow );
     }
 */
+    Value_Limitation_Atm();
     //  writing of v-w-data in the v_w_transfer file
     PostProcess_Atmosphere ppa ( im, jm, km, output_path );
     ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
     ppa.Atmosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, t_0, h, v, w, t, c, 
-                              Precipitation, precipitable_water );
+                              Precipitation, precipitable_water, Evaporation_Dalton );
 
 }
 
@@ -472,9 +474,13 @@ void cAtmosphereModel::run_3D_loop(){
     iter_cnt = 1;
     iter_cnt_3d = 0;
 
+    if(debug)
+    {   
+        save_data();
+        //chessboard_grid(t.x[0], 30, 30, jm, km);
+    }
+
     store_intermediate_data_3D();
-    
-    if(debug) save_data();
     
     for ( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ )
     {
@@ -508,7 +514,9 @@ void cAtmosphereModel::run_3D_loop(){
             BC_SolidGround(); 
             
             // class RungeKutta for the solution of the differential equations describing the flow properties
-            solveRungeKutta_3D_Atmosphere(); 
+            solveRungeKutta_3D_Atmosphere();
+
+            if(debug)check_data(); 
             
             Value_Limitation_Atm();
 
@@ -654,7 +662,7 @@ void cAtmosphereModel::restrain_temperature(){
     for(int j=0;j<jm;j++){
         for(int k=0; k<km; k++){
             if(t.x[0][j][k] - 1 > 0){
-                t.x[0][j][k] -= exp((t.x[0][j][k] - 1) * t_0 / 4) / exp(10) * 5 / t_0;
+                t.x[0][j][k] -= exp((t.x[0][j][k] - 1) * t_0 / 4 - 10) * 6 / t_0;
             }
         }
     }
@@ -664,9 +672,8 @@ void cAtmosphereModel::restrain_temperature(){
     for(int j=0;j<jm;j++){
         for(int k=0; k<km; k++){
             t.x[0][j][k] -= diff/t_0;
-            if(t.x[0][j][k] > (1+40/t_0)){
-                t.x[0][j][k] = 1 + 40/t_0;//don't allow temperature to exceed 40 degrees.
-                //logger() << "temperature is restraint " << (t.x[0][j][k] - 1)*t_0 << std::endl;
+            if(t.x[0][j][k] > (1 + 38/t_0)){
+                t.x[0][j][k] = 1 + 38/t_0;//don't allow temperature to exceed 38 degrees.
             }
         }
     }
@@ -1157,6 +1164,7 @@ void  cAtmosphereModel::save_data(){
     }
 
     t_t.save(path + string("atm_t") + postfix_str, 0);
+    t_t.save(path + string("atm_t") + postfix_str, 1);
     v_t.save(path + string("atm_v") + postfix_str, 0);
     w_t.save(path + string("atm_w") + postfix_str, 0);
     h.save(path + string("atm_h") + postfix_str, 0);
@@ -1254,4 +1262,44 @@ void cAtmosphereModel::adjust_temperature_IC(double** t, int jm, int km)
         temperature_NASA.y[ j ][ k_half ] = ( temperature_NASA.y[ j ][ k_half + 1 ] +
             temperature_NASA.y[ j ][ k_half - 1 ] ) / 2.;
     }
+}
+
+void cAtmosphereModel::check_data(Array& a, Array&an, const std::string& name){
+    float t_diff_min, t_diff_max, t_diff_mean, t_min, t_max;
+    for ( int i = 0; i < im; i++ )
+    {
+        t_diff_min = t_diff_max = t_diff_mean = 0; 
+        t_min = t_max = a.x[i][0][0];
+        for ( int j = 0; j < jm; j++ )
+        {
+            for ( int k = 0; k < km; k++ )
+            {
+                float t_diff = fabs(an.x[i][j][k]-a.x[i][j][k]);
+                float tt = an.x[i][j][k];
+
+                if(tt < t_min) t_min = tt;
+                if(tt > t_max) t_max = tt;
+
+                if(t_diff < t_diff_min) t_diff_min = t_diff;
+                if(t_diff > t_diff_max) t_diff_max = t_diff;
+                t_diff_mean += t_diff;
+            }
+        }
+        logger() << "layer: " << i << std::endl;
+        logger() << name << " min: " << t_min << std::endl;
+        logger() << name << " max: " << t_max << std::endl;
+        logger() << name << " diff min: " << t_diff_min << std::endl;
+        logger() << name << " diff max: " << t_diff_max << std::endl;
+        logger() << name << " diff mean: " << t_diff_mean << "   " << (double)t_diff_mean / (jm*km) << std::endl;
+    }
+}
+void cAtmosphereModel::check_data(){
+    check_data(t,tn,"t");
+    check_data(u,un,"u");
+    check_data(v,vn,"v");
+    check_data(w,wn,"w");
+    check_data(c,cn,"c");
+    check_data(cloud,cloudn,"cloud");
+    check_data(ice,icen,"ice");
+    check_data(co2,co2n,"c02");
 }
