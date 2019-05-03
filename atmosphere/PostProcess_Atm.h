@@ -71,7 +71,8 @@ public:
                                     Array_2D &, Array_2D & );
 
     void Atmosphere_PlotData ( string &Name_Bathymetry_File, int iter_cnt, double u_0, double t_0,
-        Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water );
+        Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water, 
+        Array_2D &Evaporation_Dalton  );
 
     double exp_func ( double &, const double &, const double & );
 

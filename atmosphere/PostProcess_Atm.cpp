@@ -622,7 +622,8 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
 
 
 void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File, int iter_cnt, double u_0, double t_0, 
-        Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water )
+        Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water, 
+        Array_2D &Evaporation_Dalton )
 {
     string Name_PlotData_File = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Atm"+
         (iter_cnt > 0 ? "_"+to_string(iter_cnt) : "") + ".xyz";
@@ -638,7 +639,8 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
 
     PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " 
         << "w-velocity(m/s)" << ", " << "velocity-mag(m/s)" << ", " << "temperature(Celsius)" << ", " 
-        << "water_vapour(g/kg)" << ", " << "precipitation(mm)" << ", " <<  "precipitable water(mm)" << endl;
+        << "water_vapour(g/kg)" << ", " << "precipitation(mm)" << ", " <<  "precipitable water(mm)" << ", " 
+        << "Evaporation_Dalton (mm/day) " <<endl;
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
@@ -646,7 +648,7 @@ void PostProcess_Atmosphere::Atmosphere_PlotData ( string &Name_Bathymetry_File,
             PlotData_File << k << " " << 90-j << " " << h.x[ 0 ][ j ][ k ] << " " << v.x[ 0 ][ j ][ k ] * u_0 << " " 
                 << w.x[ 0 ][ j ][ k ] * u_0 << " " << vel_mag << " " << t.x[ 0 ][ j ][ k ] * t_0 - t_0 << " " 
                 << c.x[ 0 ][ j ][ k ] * 1000. << " " << Precipitation.y[ j ][ k ] << " " << precipitable_water.y[ j ][ k ] 
-                << " " <<  endl;
+                << " " <<  Evaporation_Dalton.y[ j ][ k ] << " " << endl;
         }
     }
 }
