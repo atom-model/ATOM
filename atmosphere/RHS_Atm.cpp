@@ -447,11 +447,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     double coeff_energy = L_atm / ( cp_l * t_0 * u_0 ); // coefficient for the source terms = .00729
     double coeff_buoy =  L_atm / ( u_0 * u_0 ); // coefficient for bouancy term = 208.333
     double coeff_trans = L_atm / u_0;   // coefficient for the concentration terms = 2000.
-    double vapour_evaporation = 0.;
-    double vapour_surface = 0.;
-    double evap_precip = 0.;
-    double coeff_vapour = 1.1574e-5 * L_atm / u_0;
-                          // 1.1574e-5 is the conversion from (Evap-Prec) in mm/d to m/s
 // Boussineq-approximation for the buoyancy force caused by humid air lighter than dry air
     double r_humid = r_dry * ( 1. + c.x[ 0 ][ j ][ k ] ) / ( 1. + R_WaterVapour / R_Air * c.x[ 0 ][ j ][ k ] );
 
@@ -526,7 +521,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
             + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe ) + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2
             + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
             + S_v.x[ i ][ j ][ k ] * coeff_trans;
-//            + vapour_evaporation;
 //            - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_cloud.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dclouddr + v.x[ i ][ j ][ k ] * dclouddthe / rm

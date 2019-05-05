@@ -229,7 +229,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << "***** time slice for the Oceanic Global Circulation Modell ( OGCM ) is:    Ma = " << Ma << " million years" 
         << endl << endl;
-    cout << "***** bathymetry/topography given y the x-y-z data set:    " << bathymetry_name.c_str() << endl << endl;
+    cout << "***** bathymetry/topography given by the x-y-z data set:    " << bathymetry_name.c_str() << endl << endl;
 
 
     // class BC_Bathymetry_Hydrosphere for the geometrical boundary condition of the computational area
@@ -262,10 +262,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                                     t_pole, input_path );
 
     //  surface temperature from World Ocean Atlas 2009 given as boundary condition
-    if ( Ma == 0 || use_earthbyte_reconstruction) 
-    {
+//    if ( Ma == 0 || use_earthbyte_reconstruction) 
+//    {
         //oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
-    }
+//    }
 
     //  surface salinity from World Ocean Atlas 2009 given as boundary condition
     if ( Ma == 0 || use_earthbyte_reconstruction){
@@ -446,7 +446,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             oceanflow.BC_Pressure_Density ( rad, p_stat, r_water, r_salt_water, t, c, h );
 
             // preparations for salinity increase due to evaporation and precipitation differences
-            oceanflow.BC_Evaporation ( salinity_evaporation, Evaporation_Dalton, Precipitation, h, c, r_water );
+            oceanflow.BC_Evaporation ( rad, salinity_evaporation, Evaporation_Dalton, Precipitation, h, c, r_water );
 
             // limiting the increase of flow properties around geometrical peaks and corners
             oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
@@ -630,7 +630,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     cout << endl << endl;
 
-    Printout:
+//    Printout:
 
     write_file(bathymetry_name, output_path, true);
 

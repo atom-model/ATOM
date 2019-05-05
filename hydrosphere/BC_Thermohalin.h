@@ -74,7 +74,7 @@ class BC_Thermohalin{
         void BC_Pressure_Density ( Array_1D &rad, Array &p_stat, Array &r_water,
                                    Array &r_salt_water, Array &t, Array &c, Array &h );
 
-        void BC_Evaporation ( Array_2D &salinity_evaporation, Array_2D &Evaporation_Dalton, 
+        void BC_Evaporation ( Array_1D &rad, Array_2D &salinity_evaporation, Array_2D &Evaporation_Dalton, 
                               Array_2D &Precipitation, Array &h, Array &c, Array &r_water );
 
         void IC_CircumPolar_Current ( Array &, Array &, Array &, Array &, Array & );

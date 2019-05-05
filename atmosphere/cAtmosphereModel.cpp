@@ -300,6 +300,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
     circulation.BC_WaterVapour ( rad, h, p_stat, t, c, v, w );
 
+//    goto Printout;
+
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     circulation.BC_CO2 ( L_atm, rad, Vegetation, h, t, p_dyn, co2 );
 
@@ -341,7 +343,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     restrain_temperature();
 
-    Printout:
+//    Printout:
 
     //write the ouput files
     write_file(bathymetry_name, output_path, true);
@@ -812,7 +814,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                       ice, co2, radiation_3D, Vegetation );
 
 //            // preparations for water vapour increase due to evaporation and precipitation differences
-//            circulation.BC_Evaporation ( Evaporation_Dalton, Precipitation, h, c, t );
+            circulation.BC_Evaporation ( rad, vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, t );
 
 /*
         logger() << "§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§   global iteration n = " << iter_cnt << "   §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§" << std::endl << std::endl;
@@ -879,7 +881,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                          albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
             // preparations for water vapour increase due to evaporation and precipitation differences
-            circulation.BC_Evaporation ( vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, cn );
+//            circulation.BC_Evaporation ( vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, cn );
 
             //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
             //  resulting the precipitation distribution formed of rain and snow

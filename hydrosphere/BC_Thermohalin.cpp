@@ -67,12 +67,6 @@ BC_Thermohalin::~BC_Thermohalin(){}
 
 void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & the,
                                     Array &h, Array &v, Array &w ){
-    int j_30 = 30;
-    int j_60 = 60;
-    int j_90 = 90;
-    int j_120 = 120;
-    int j_150 = 150;
-
     pi180 = 180./M_PI;
     if ( Ma == 0 )  water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
     else           water_wind = 1.;
@@ -341,7 +335,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
         for ( int k = 1; k < km-1; k++ ){
             sinthe = sin( the.z[ j ] );
             vel_magnitude = sqrt ( v.x[ im - 1 ][ j ][ k ] * v.x[ im - 1 ][ j ][ k ] 
-                         + w.x[ im - 1 ][ j ][ k ] * w.x[ im - 1 ][ j ][ k ] ) / 0.03 * u_0;
+                         + w.x[ im - 1 ][ j ][ k ] * w.x[ im - 1 ][ j ][ k ] ) / 0.03 * u_0; // dimensional surface wind velocity
 //            i_Ekman_layer = 100.;  // assumed constant Ekman-layer depth of 100m
 //            i_Ekman_layer = 7.6 / sqrt( fabs( sinthe ) ) * vel_magnitude;
 //            original law by Robert H. Stewart, Introduction to Physical Oceanography, p. 139, eq. 9.16
@@ -350,7 +344,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
             if ( coeff >= 1. ) coeff = 1.;
             i_Ekman = ( im - 1 ) * ( 1. - coeff );
 
-//    cout << "   j = " << j << "   k = " << k << "   sinthe = " << sinthe << "   vel_magnitude = " << vel_magnitude << "   i_Ekman_layer = " << i_Ekman_layer << "   coeff = " << //coeff << "   i_Ekman = " << i_Ekman << endl;
+//    cout << "   j = " << j << "   k = " << k << "   sinthe = " << sinthe << "   vel_magnitude = " << vel_magnitude << "   i_Ekman_layer = " << i_Ekman_layer << "   coeff = " << coeff << "   i_Ekman = " << i_Ekman << endl;
 
             for ( int i = im-2; i >= i_Ekman; i-- ){
                 gam_z =  M_PI * ( double ) ( i - i_Ekman ) 
@@ -359,6 +353,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
                 if ( j <= j_half ) sin_gam_z = sin ( gam_z );  // northern hemisphere
                 else               sin_gam_z = - sin ( gam_z );  // southern hemisphere
                 cos_gam_z = cos ( gam_z );
+
                 if ( is_water( h, i, j, k) ){
                     v_g = v.x[ im-1 ][ j ][ k ];
                     w_g = w.x[ im-1 ][ j ][ k ];
@@ -366,17 +361,6 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
                         + v_g * ( 1. - exp_gam_z * cos_gam_z );
                     w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) 
                         - v_g * exp_gam_z * sin_gam_z;
-                }else{
-                    v.x[ i ][ j ][ k ] = 0.;
-                    w.x[ i ][ j ][ k ] = 0.;
-                }
-            }
-            for ( int i = 0; i < i_Ekman; i++ ){
-                for ( int j = 0; j < jm; j++ ){
-                    for ( int k = 0; k < km; k++ ){
-                        v.x[ i ][ j ][ k ] = 0.;
-                        w.x[ i ][ j ][ k ] = 0.;
-                    }
                 }
             }
         }
@@ -724,7 +708,6 @@ void BC_Thermohalin::BC_Surface_v_Velocity_Ocean ( const string &Name_v_surface_
         << Name_v_surface_ocean_File << "\n";
         abort();
     }
-    int k_half = ( km - 1 ) / 2;  // position at 180°E ( Greenwich )
     j = 0;
     k = 0;
     while ( ( k < km ) && !Name_v_surface_ocean_File_Read.eof() ){
@@ -754,7 +737,6 @@ void BC_Thermohalin::BC_Surface_w_Velocity_Ocean ( const string &Name_w_surface_
         << Name_w_surface_ocean_File << "\n";
         abort();
     }
-    int k_half = ( km - 1 ) / 2;  // position at 180°E ( Greenwich )
     j = 0;
     k = 0;
     while ( ( k < km ) && !Name_w_surface_ocean_File_Read.eof() ){
@@ -1150,51 +1132,43 @@ void BC_Thermohalin::Pressure_Limitation_Hyd ( Array &p_dyn, Array &p_dynn ){
 
 
 
-void BC_Thermohalin::BC_Evaporation ( Array_2D &salinity_evaporation, Array_2D &Evaporation_Dalton, 
+void BC_Thermohalin::BC_Evaporation ( Array_1D &rad, Array_2D &salinity_evaporation, Array_2D &Evaporation_Dalton, 
                      Array_2D &Precipitation, Array &h, Array &c, Array &r_water ){
 // preparations for salinity increase due to evaporation and precipitation differences
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
     double salinity_surface = 0.;
-//    double coeff_salinity = 1.1574e-5 * L_hyd / u_0 * 1.e-3 * c_0;
-    double coeff_salinity = 1.1574e-5 * L_hyd / u_0 * c_0;
-                          // 1.1574-5 is the conversion from (Evap-Prec) in mm/d to m/s
-                          // 1.e-3 * c_0 stands for the transformation 
-                          // from non-dimensional salinity to salt mass fraction
+    double coeff_salinity = 1.1574e-8;  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
+//    double coeff_salinity = 1.1574e-8 * 2000.;
+//                                      2000. is fantasy, but it produces a small increase 
+//                                      of surface salinity due to evaporation, TODO
+    double evap_precip = 0.;
+    double zeta = 3.715;
+    double rm = rad.z[ im-1 ];
+    double exp_rm = 1. / exp( zeta * rm );
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
     // the 1. order gradients are built at 1 level below sea surface, at sea level values diverge
     // this formula contains a 2. order accurate gradient of 1. order, needs 3 points, not always available along coasts
     // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
-//            salinity_surface = - ( - 3. * c.x[ im - 2 ][ j ][ k ] +
-//                               4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) *
-//                               ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * 
-//                               ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );
-
+            evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
+            salinity_surface = ( - 3. * c.x[ im - 2 ][ j ][ k ] +
+                               4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr * exp_rm ) *
+                               ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * evap_precip;
     // the 1. order gradients are built at 1 level below sea surface, at sea level values diverge
     // this formula contains a 1. order accurate gradient of 1. order, needs 2 points, in general available along coasts
     // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
-            salinity_surface = - ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr *
-                       ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * 
-                       ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );
+//            salinity_surface = - ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( dr * exp_rm ) *
+//                       ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * evap_precip;
 
             salinity_evaporation.y[ j ][ k ] = coeff_salinity * salinity_surface;
-
             if ( is_land( h, im-1, j, k) )    salinity_evaporation.y[ j ][ k ] = 0.;
-
-//            salinity_evaporation.y[ j ][ k ] = 0.;    // test case
-
             c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + salinity_evaporation.y[ j ][ k ];
-
-            if ( c.x[ im-1 ][ j ][ k ] >= 1.156 )  c.x[ im-1 ][ j ][ k ] = 1.156;  // 40.0 psu
-            if ( c.x[ im-1 ][ j ][ k ] <= .95 )  c.x[ im-1 ][ j ][ k ] = .95;      // 32.0 psu
-
-
+/*
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
-
-//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation.y[ j ][ k ] << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   c = " << c.x[ im-1 ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ im-1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] ) << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ im - 2 ][ j ][ k ] + 4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) << endl;
-
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation.y[ j ][ k ] << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   c = " << c.x[ im-1 ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ im-1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ im - 2 ][ j ][ k ] + 4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) << endl;
+*/
         }
     }
 }

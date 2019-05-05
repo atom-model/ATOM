@@ -624,47 +624,25 @@ void BC_Thermo::BC_WaterVapour ( Array_1D &rad, Array &h, Array &p_stat, Array &
 
     double zeta = 3.715;
 
-    double t_u = 0.;  // not air but ocean surface temperature should be used
-    double sat_difference = 0.;  // not air but ocean surface temperature
-    // should be involved in water vapour saturation difference, it is not the saturation deficit
-    double Dalton_Evaporation = 0;  // ocean surface evaporation
-
     // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-//            i_mount = i_topography[ j ][ k ];
-            i_mount = 0;
+            i_mount = i_topography[ j ][ k ];
 
             if ( is_air ( h, 0, j, k ) ){
-                c.x[ i_mount ][ j ][ k ] = hp * ep *exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
+                i_mount = 0;
+                c.x[ i_mount ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
                     ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01 );
                 // saturation of relative water vapour in kg/kg
                 c.x[ i_mount ][ j ][ k ] = c_ocean * c.x[ i_mount ][ j ][ k ];
                 // relativ water vapour contents on ocean surface reduced by factor
-
-                p_stat.x[ i_mount ][ j ][ k ] = ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01;  // given in hPa
-                t_u = t.x[ i_mount ][ j ][ k ] * t_0; // in K
-                r_dry = 100. * p_stat.x[ i_mount ][ j ][ k ] / ( R_Air * t.x[ i_mount ][ j ][ k ] * t_0 );
-                r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i_mount ][ j ][ k ] );
-                e = c.x[ i_mount ][ j ][ k ] * p_stat.x[ i_mount ][ j ][ k ] / ep;  // water vapour pressure in hPa
-                E = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                sat_difference = ( E - e );  // saturation difference in hPa/K
-                Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) *
-                    sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
-//                Dalton_Evaporation = C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) *
-//                    sat_difference * 24.;  // mm/h in mm/d
-                c.x[ i_mount ][ j ][ k ] = Dalton_Evaporation + c.x[ i_mount ][ j ][ k ]; // kg/kg_air
             }
             if ( is_land ( h, 0, j, k ) ){
+                i_mount = 0;
                 c.x[ i_mount ][ j ][ k ] = hp * ep * exp ( 17.0809 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) / ( 234.175 + 
                     ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) ) ) / ( ( r_air * R_Air * t.x[ i_mount ][ j ][ k ] * t_0 ) * .01 );
                 c.x[ i_mount ][ j ][ k ] = c_land * c.x[ i_mount ][ j ][ k ];
                 // relativ water vapour contents on land reduced by factor
-//                Dalton_Evaporation = 8.46e-4 * C_Dalton ( u_0, v.x[ i_mount + 1 ][ j ][ k ], w.x[ i_mount + 1 ][ j ][ k ] ) *
-//                    sat_difference * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
-//                Dalton_Evaporation = C_Dalton ( u_0, v.x[ i_mount ][ j ][ k ], w.x[ i_mount ][ j ][ k ] ) *
-//                    sat_difference * 24.;  // mm/h in mm/d
-                c.x[ i_mount ][ j ][ k ] = Dalton_Evaporation + c.x[ i_mount ][ j ][ k ]; // kg/kg_air
             }
         }
     }
@@ -2006,7 +1984,7 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
         }
     }
 
-    Printout:
+//    Printout:
                     va_equator_SL = va_equator_SL;
     
 ///////////////////////////////////////////////// end of smoothing transitions from cell to cell //////////////////////////
@@ -2955,7 +2933,7 @@ void BC_Thermo::IC_Temperature_WestEastCoast ( Array &h, Array &t ){
 
 
 
-void BC_Thermo::BC_Evaporation ( Array_2D &vapour_evaporation, Array_2D &Evaporation_Dalton, 
+void BC_Thermo::BC_Evaporation ( Array_1D &rad, Array_2D &vapour_evaporation, Array_2D &Evaporation_Dalton, 
                      Array_2D &Precipitation, Array &h, Array &c, Array &cn ){
 // mass flux of water vapour follows the same rules as given for the salinity flux in oceans
 // preparations for salinity increase due to evaporation and precipitation differences
@@ -2963,45 +2941,32 @@ void BC_Thermo::BC_Evaporation ( Array_2D &vapour_evaporation, Array_2D &Evapora
 
     double vapour_surface = 0.;
     double evap_precip = 0.;
-    double coeff_vapour = 1.1574e-5 * L_atm / u_0;
-                          // 1.1574-5 is the conversion from (Evap-Prec) in mm/d to m/s
-                          // 1.e-3 * c_0 stands for the transformation 
-                          // from non-dimensional water vapour to water vapour mass fraction
+    double coeff_vapour = 1.1574e-8;  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
+//    double coeff_vapour = 1.1574e-8 * 2000.;  
+//                                      2000. is fantasy, but it produces a small increase 
+//                                      of surface water vapour due to evaporation, TODO
+    double zeta = 3.715;
+    double rm = rad.z[ 0 ];
+    double exp_rm = 1. / exp( zeta * rm );
 
 // additional water vapour as a source term due to evaporation at ocean surface ( i = 0 )
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
-/*
-            if ( evap_precip >= 6. ){
-                evap_precip = 6.;     // vapour gradient causes values too high at shelf corners
-            }
-            if ( evap_precip <= - 6. ){
-                evap_precip = - 6.;         // vapour gradient causes values too high at shelf corners
-            }
-*/
+
     // this formula contains a 2. order accurate gradient of 1. order, needs 3 points
             vapour_surface = ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / 
-                             ( 2. * dr ) * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;     // 2. ord.
+                             ( 2. * dr * exp_rm ) * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;     // 2. ord.
     // this formula contains a 1. order accurate gradient of 1. order, needs 2 points
-//          vapour_surface = ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;
-//          vapour_surface = ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;
+//          vapour_surface = ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / ( dr * exp_rm ) * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;
 
-//            vapour_evaporation.y[ j ][ k ] = + coeff_vapour * vapour_surface;
             vapour_evaporation.y[ j ][ k ] = - coeff_vapour * vapour_surface;
-
-            if ( is_land ( h, 0, j, k ) ){
-//                vapour_evaporation.y[ j ][ k ] = 0.;
-            }
-//            vapour_evaporation.y[ j ][ k ] = 0.; //  test case
-
-//            c.x[ 0 ][ j ][ k ] = cn.x[ 0 ][ j ][ k ] + vapour_evaporation.y[ j ][ k ];
-
+            c.x[ 0 ][ j ][ k ] = c.x[ 0 ][ j ][ k ] + vapour_evaporation.y[ j ][ k ];
+/*
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
-
-//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   vapour_evaporation = " << vapour_evaporation.y[ j ][ k ] << "   coeff_vapour = " << coeff_vapour << "   vapour_surface = " << vapour_surface << "   c [g/kg] = " << c.x[ 0 ][ j ][ k ] << "   c_0 = " << c_0 << "   c [kg/kg] = " << c.x[ 0 ][ j ][ k ] * 1000. << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) /   ( 2. * dr ) << endl;
-
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   vapour_evaporation = " << vapour_evaporation.y[ j ][ k ] << "   coeff_vapour = " << coeff_vapour << "   vapour_surface = " << vapour_surface << "   c [g/kg] = " << c.x[ 0 ][ j ][ k ] << "   c_0 = " << c_0 << "   c [kg/kg] = " << c.x[ 0 ][ j ][ k ] * 1000. << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / ( 2. * dr ) << endl;
+*/
         }
      }
  }
@@ -3224,7 +3189,7 @@ double BC_Thermo::C_Dalton ( double u_0, double v, double w ){
     double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
     // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
     double v_max = 10.;
-    double fac = 4.4;  // factor to adjust the ratio of NASA precipitation 
+    double fac = 10.;  // factor to adjust the ratio of NASA precipitation 
                        // to Dalton evaporation for the modern world, 
                        // relative difference between global precipitation and evaporation is 10%
     double vel_magnitude = sqrt ( v * v + w * w ) * u_0;

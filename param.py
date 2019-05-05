@@ -37,8 +37,8 @@ def main():
             ( 'velocity_iter_max_2D', 'the number of velocity iterations', 'int',2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
-            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 8 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 4 ),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2 ),
 
             ( 'WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0 ),
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
@@ -113,7 +113,8 @@ def main():
             ( 't_equator', 'temperature t_0 = 1.11 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.945 compares to -15.0°C compares to 258.15 K', 'double', 0.945 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
-            ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
+#            ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
+            ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.014644 ),
 
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
             ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.64 ),
@@ -135,7 +136,7 @@ def main():
             ( 'velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
-            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 4 ),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
             ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2 ),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),

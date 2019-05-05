@@ -35,7 +35,7 @@ class Results_MSL_Atm
         double Evaporation_Penman_average, Evaporation_Dalton_average;
         double ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_extra, lv, ls, cp_l, r_air, dt, dr;
         double L_atm, c13, c43;
-        double R_Air;
+        double R_Air, height;
         double r_water_vapour, R_WaterVapour, precipitablewater_average, precipitation_average, precipitation_NASA_average, co2_vegetation_average;
         double coeff_mmWS, coeff_lv, coeff_ls, coeff_Diffusion_latent, coeff_Diffusion_sensibel, f_Haude, f_Penman, co2_vegetation, co2_ocean, co2_land;
         double r_humid, r_dry, lat_av_loc, sen_av_loc;
