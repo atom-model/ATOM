@@ -356,7 +356,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             oceanflow.BC_Pressure_Density ( p_stat, r_water, r_salt_water, t, c, h );
 
             // preparations for salinity increase due to evaporation and precipitation differences
-            oceanflow.BC_Evaporation ( Evaporation_Dalton, Precipitation, h, c, r_water );
+            BC_Evaporation();
 
             // limiting the increase of flow properties around geometrical peaks and corners
             oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
@@ -434,6 +434,7 @@ void cHydrosphereModel::reset_arrays()
 
     BuoyancyForce_2D.initArray_2D(jm, km, 0.); // radiation balance at the surface
 
+    salinity_evaporation.initArray_2D(jm, km, 0.); // additional salinity by evaporation
     Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Penman in [mm/d]
     Precipitation.initArray_2D(jm, km, 0.); // areas of higher precipitation
 

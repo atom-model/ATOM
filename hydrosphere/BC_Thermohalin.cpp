@@ -793,46 +793,42 @@ void BC_Thermohalin::Pressure_Limitation_Hyd ( Array &p_dyn, Array &p_dynn ){
 }
 
 
-void BC_Thermohalin::BC_Evaporation ( Array_2D &Evaporation_Dalton, 
-                     Array_2D &Precipitation, Array &h, Array &c, Array &r_water ){
-    // preparations for salinity increase due to evaporation and precipitation differences
-    // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
-    double salinity_evaporation = 0.;
+void cHydrosphereModel::BC_Evaporation(){ 
+// preparations for salinity increase due to evaporation and precipitation differences
+// procedure given in Rui Xin Huang, Ocean Circulation, p. 165
     double salinity_surface = 0.;
-    double coeff_salinity = 1.1574e-5 * L_hyd / u_0 * c_0;
-                          // 1.1574-5 is the conversion from (Evap-Prec) in mm/d to m/s
-                          // 1.e-3 * c_0 stands for the transformation 
-                          // from non-dimensional salinity to salt mass fraction
+    double coeff_salinity = 1.1574e-8;  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
+//    double coeff_salinity = 1.1574e-8 * 2000.;
+//                                      2000. is fantasy, but it produces a small increase 
+//                                      of surface salinity due to evaporation, TODO
+    double evap_precip = 0.;
+    double zeta = 3.715;
+    double rm = rad.z[ im-1 ];
+    double exp_rm = 1. / exp( zeta * rm );
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-/*
     // the 1. order gradients are built at 1 level below sea surface, at sea level values diverge
     // this formula contains a 2. order accurate gradient of 1. order, needs 3 points, not always available along coasts
     // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
-        salinity_surface = salt_water_ref * ( - 3. * c.x[ im - 2 ][ j ][ k ] +
-                           4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) *
-                           ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * 
-                           ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );
-*/
+            evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
+            salinity_surface = ( - 3. * c.x[ im - 2 ][ j ][ k ] +
+                               4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr * exp_rm ) *
+                               ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * evap_precip;
     // the 1. order gradients are built at 1 level below sea surface, at sea level values diverge
     // this formula contains a 1. order accurate gradient of 1. order, needs 2 points, in general available along coasts
     // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
-//    salinity_surface = - salt_water_ref * ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr *
-            salinity_surface = - ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr *
-                       ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * 
-                       ( Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ] );
+//            salinity_surface = - ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( dr * exp_rm ) *
+//                       ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * evap_precip;
 
-            salinity_evaporation = coeff_salinity * salinity_surface;
-
-            if ( is_land( h, im-1, j, k) )    salinity_evaporation = 0.;
-
-            //salinity_evaporation = 0.;    // test case
-
-            c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + salinity_evaporation;
-
-            if ( c.x[ im-1 ][ j ][ k ] >= 1.156 )  c.x[ im-1 ][ j ][ k ] = 1.156;  // 40.0 psu
-            if ( c.x[ im-1 ][ j ][ k ] <= .95 )  c.x[ im-1 ][ j ][ k ] = .95;      // 32.0 psu
+            salinity_evaporation.y[ j ][ k ] = coeff_salinity * salinity_surface;
+            if ( is_land( h, im-1, j, k) )    salinity_evaporation.y[ j ][ k ] = 0.;
+            c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + salinity_evaporation.y[ j ][ k ];
+/*
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation.y[ j ][ k ] << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   c = " << c.x[ im-1 ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ im-1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ im - 2 ][ j ][ k ] + 4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) << endl;
+*/
         }
     }
 }

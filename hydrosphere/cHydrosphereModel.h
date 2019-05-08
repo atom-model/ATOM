@@ -49,6 +49,8 @@ private:
 
     void Hydrosphere_PlotData(const string &Name_Bathymetry_File, int iter_cnt);
     
+    void BC_Evaporation();
+    
     const int im = 41, jm = 181, km = 361, nm = 200;
 
     static const float dr, dt, pi180, the_degree, phi_degree, dthe, dphi;
@@ -79,6 +81,7 @@ private:
 
     Array_2D BuoyancyForce_2D; // radiation balance at the surface
 
+    Array_2D salinity_evaporation; // additional salinity by evaporation
     Array_2D Evaporation_Dalton; // evaporation by Penman in [mm/d]
     Array_2D Precipitation; // areas of higher precipitation
 
