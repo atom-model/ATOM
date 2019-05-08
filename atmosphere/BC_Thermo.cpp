@@ -1127,6 +1127,40 @@ void cAtmosphereModel::IC_v_w_WestEastCoast(){
     }
 }
 
+
+void cAtmosphereModel::BC_Evaporation(){ 
+// mass flux of water vapour follows the same rules as given for the salinity flux in oceans
+// preparations for salinity increase due to evaporation and precipitation differences
+// procedure given in Rui Xin Huang, Ocean Circulation, p. 165
+
+    double vapour_surface = 0.;
+    double evap_precip = 0.;
+    double coeff_vapour = 1.1574e-8;  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
+//    double coeff_vapour = 1.1574e-8 * 2000.;  
+//                                      2000. is fantasy, but it produces a small increase 
+//                                      of surface water vapour due to evaporation, TODO
+    double zeta = 3.715;
+    double rm = rad.z[ 0 ];
+    double exp_rm = 1. / exp( zeta * rm );
+
+// additional water vapour as a source term due to evaporation at ocean surface ( i = 0 )
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
+
+    // this formula contains a 2. order accurate gradient of 1. order, needs 3 points
+            vapour_surface = ( - 3. * c.x[ 0 ][ j ][ k ] + 4. * c.x[ 1 ][ j ][ k ] - c.x[ 2 ][ j ][ k ] ) / 
+                             ( 2. * dr * exp_rm ) * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;     // 2. ord.
+    // this formula contains a 1. order accurate gradient of 1. order, needs 2 points
+//          vapour_surface = ( c.x[ 0 ][ j ][ k ] - c.x[ 1 ][ j ][ k ] ) / ( dr * exp_rm ) * ( 1. - 2. * c.x[ 0 ][ j ][ k ] ) * evap_precip;
+
+            vapour_evaporation.y[ j ][ k ] = - coeff_vapour * vapour_surface;
+            c.x[ 0 ][ j ][ k ] = c.x[ 0 ][ j ][ k ] + vapour_evaporation.y[ j ][ k ];
+        }
+     }
+}
+
+
 void cAtmosphereModel::Pressure_Limitation_Atm(){
     // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
     for ( int k = 0; k < km; k++ ){

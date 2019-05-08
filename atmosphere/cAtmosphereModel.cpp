@@ -295,6 +295,7 @@ void cAtmosphereModel::reset_arrays()
     Q_sensible.initArray_2D(jm, km, 0.); // sensible heat from bottom values by the energy transport equation
     Q_bottom.initArray_2D(jm, km, 0.); // difference by Q_Radiation - Q_latent - Q_sensible
 
+    vapour_evaporation.initArray_2D(jm, km, 0.); // additional water vapour by evaporation
     Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Dalton in [mm/d]
     Evaporation_Penman.initArray_2D(jm, km, 0.); // evaporation by Penman in [mm/d]
 
@@ -511,7 +512,9 @@ void cAtmosphereModel::run_3D_loop(){
 
             Value_Limitation_Atm();
 
-            BC_SolidGround(); 
+            BC_SolidGround();
+
+            BC_Evaporation(); 
             
             // class RungeKutta for the solution of the differential equations describing the flow properties
             solveRungeKutta_3D_Atmosphere();
