@@ -87,23 +87,33 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
         }
     }
 
-    float i_Ekman_layer = 100.;// assumed Ekman-layer depth of 100m
-    float coeff = i_Ekman_layer / L_hyd;
-
-    int i_Ekman = ( im - 1 ) * ( 1. - coeff );
-
     // surface wind vector driving the Ekman spiral in the Ekman layer
     // northern hemisphere
+    int i_Ekman = 0;
+    double sinthe = 0.;
+    double vel_magnitude = 0.;
+    double i_Ekman_layer = 0.;
+    double coeff = 0.;
+
     double gam_z = 0.;
     double exp_gam_z = 0.;
     double sin_gam_z = 0;
     double cos_gam_z = 0;
 
     int j_half = ( jm - 1 ) / 2;
-    for ( int j = 0; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
+    for ( int j = 1; j < jm-1; j++ ){
+        for ( int k = 1; k < km-1; k++ ){
             float v_g = v.x[ im-1 ][ j ][ k ];
             float w_g = w.x[ im-1 ][ j ][ k ];
+            sinthe = sin( the.z[ j ] );
+            vel_magnitude = sqrt ( v.x[ im - 1 ][ j ][ k ] * v.x[ im - 1 ][ j ][ k ] 
+                         + w.x[ im - 1 ][ j ][ k ] * w.x[ im - 1 ][ j ][ k ] ) / 0.03 * u_0;
+            //original law by Robert H. Stewart, Introduction to Physical Oceanography, p. 139, eq. 9.16
+            i_Ekman_layer = 3. * 7.6 / sqrt( sinthe ) * vel_magnitude; // adjusted with factor
+            coeff = i_Ekman_layer / L_hyd;
+            if ( coeff >= 1. ) coeff = 1.;
+            i_Ekman = ( im - 1 ) * ( 1. - coeff );
+
             for ( int i = im-2; i >= i_Ekman; i-- ){
                 gam_z =  M_PI * ( i - i_Ekman ) / ( im-1 - i_Ekman );
                 exp_gam_z = exp ( - gam_z );
@@ -115,26 +125,11 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
                         + v_g * ( 1. - exp_gam_z * cos_gam_z );
                     w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) 
                         - v_g * exp_gam_z * sin_gam_z;
-                }else{
-                    v.x[ i ][ j ][ k ] = 0.;
-                    w.x[ i ][ j ][ k ] = 0.;
                 }
             }
         }
     }
-
-    for ( int i = 0; i < i_Ekman; i++ ){
-        for ( int j = 0; j < jm; j++ ){
-            for ( int k = 0; k < km; k++ ){
-                v.x[ i ][ j ][ k ] = 0.;
-                w.x[ i ][ j ][ k ] = 0.;
-            }
-        }
-    }
 }
-
-
-
 
 
 void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Array &p_dyn ){
@@ -804,7 +799,7 @@ void BC_Thermohalin::BC_Evaporation ( Array_2D &Evaporation_Dalton,
     // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
     double salinity_evaporation = 0.;
     double salinity_surface = 0.;
-    double coeff_salinity = 1.1574e-5 * L_hyd / u_0 * 1.e-3 * c_0;
+    double coeff_salinity = 1.1574e-5 * L_hyd / u_0 * c_0;
                           // 1.1574-5 is the conversion from (Evap-Prec) in mm/d to m/s
                           // 1.e-3 * c_0 stands for the transformation 
                           // from non-dimensional salinity to salt mass fraction
@@ -832,7 +827,7 @@ void BC_Thermohalin::BC_Evaporation ( Array_2D &Evaporation_Dalton,
 
             if ( is_land( h, im-1, j, k) )    salinity_evaporation = 0.;
 
-            salinity_evaporation = 0.;    // test case
+            //salinity_evaporation = 0.;    // test case
 
             c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + salinity_evaporation;
 
