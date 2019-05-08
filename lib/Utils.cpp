@@ -124,7 +124,7 @@ double AtomUtils::C_Dalton ( double u_0, double v, double w )
     double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
     // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
     double v_max = 10.;  // Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
-    double fac = 4.4;  // factor to adjust the ratio of NASA precipitation 
+    double fac = 10;  // factor to adjust the ratio of NASA precipitation 
                        // to Dalton evaporation for the modern world, 
                        // relative difference between global precipitation and evaporation is 10%
     
