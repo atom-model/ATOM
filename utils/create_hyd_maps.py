@@ -10,7 +10,7 @@ import numpy as np
 from draw_vectors import draw_velocity
 
 map_cfg = {
-    'temperature': (6, -60, 40, u'Temperature (Celsius °C)'),
+    'temperature': (6, -20, 40, u'Temperature (Celsius °C)'),
     'v_velocity': (3, -0.05, 0.05, 'v_velocity (m/s)'),
     'w_velocity': (4, -0.03, 0.1, 'w_velocity (m/s)'),
     'salinity': (7, 34, 39, 'Salinity (psu)'),
