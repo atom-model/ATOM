@@ -74,8 +74,7 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
 // Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
 // a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
 
-//    Ekman_angle = 45.0 / pi180;
-    Ekman_angle = 0.0;  // in case the surface ocean velocities are imported
+    Ekman_angle = 45.0 / pi180;
 
 // initial conditions for v and w velocity components at the sea surface
 // ocean surface velocity is about 3% of the wind velocity at the surface
@@ -88,280 +87,88 @@ void BC_Thermohalin::IC_v_w_EkmanSpiral ( double Ma, Array_1D & rad, Array_1D & 
         }
     }
 
-
-// Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
-// a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
-/*
-// north equatorial polar cell ( from j=0 till j=30 compares to 60° till 90° )
-    for ( int j = 0; j < j_30; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            if ( is_water( h, im-1, j, k ) ){
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
-                    w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
-
-                if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
-
-                alfa = asin ( fabs ( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. ){
-                    angle = + alfa - Ekman_angle;
-                }else{
-                    angle = - alfa - Ekman_angle;
-                }
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-            }
-        }
-    }
-
-// north equatorial Ferrel cell ( from j=30 till j=60 compares to 30° till 60° )
-    for ( int j = j_30; j < j_60; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            if ( is_water( h, im-1, j, k ) ){
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
-                    w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
-
-                if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
-
-                alfa = asin ( fabs ( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
-
-                if ( v.x[ im-1 ][ j ][ k ] >= 0. ){
-                    angle = + alfa - Ekman_angle;
-                }else{
-                    angle = - alfa - Ekman_angle;
-                }
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
-                }
-
-                if (  v.x[ im-1 ][ j ][ k ] <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
-                }
-            }
-        }
-    }
-
-// north equatorial Hadley cell ( from j=60 till j=90 compares to 0° till 30° )
-    for ( int j = j_60; j < j_90; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            if ( is_water( h, im-1, j, k ) ){
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
-                     w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
-
-                if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
-
-                alfa = asin ( fabs ( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. ){
-                    angle = + alfa - Ekman_angle;
-                }else{
-                    angle = - alfa - Ekman_angle;
-                }
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-            }
-        }
-    }
-
-// south equatorial Hadley cell ( from j=90 till j=120 compares to 0° till 30° )
-    for ( int j = j_90; j < j_120; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            if ( is_water( h, im-1, j, k ) ){
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
-                    w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
-
-                if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
-
-                beta = asin ( fabs( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. ){
-                    angle = beta - Ekman_angle;
-                }else{
-                    angle = - beta - Ekman_angle;
-                }
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-            }
-        }
-    }
-
-// south equatorial Ferrel cell ( from j=120 till j=150 compares to 30° till 60° )
-    for ( int j = j_120; j < j_150; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            if ( is_water( h, im-1, j, k ) ){
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] +
-                    w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
-
-                if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
-
-                beta = asin ( fabs( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
-
-                if ( v.x[ im-1 ][ j ][ k ] <= 0. ){
-                    angle = beta - Ekman_angle;
-                }else{
-                    angle = - beta - Ekman_angle;
-                }
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
-                }
-
-                if (  v.x[ im-1 ][ j ][ k ] >= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = + vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = - vel_magnitude * sin ( angle );
-                }
-            }
-        }
-    }
-
-// south equatorial polar cell ( from j=150 till j=180 compares to 60° till 90° )
-    for ( int j = j_150; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            if ( is_water( h, im-1, j, k ) ){
-                vel_magnitude = sqrt ( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] 
-                    + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
-
-                if ( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
-                if ( vel_magnitude == 0. ) vel_magnitude = 1.e-6;
-
-                beta = asin ( fabs( w.x[ im-1 ][ j ][ k ] ) / vel_magnitude );
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. ){
-                    angle = beta - Ekman_angle;
-                }else{
-                    angle = - beta - Ekman_angle;
-                }
-
-                if ( w.x[ im-1 ][ j ][ k ] >= 0. && angle >= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] >= 0. && angle <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-
-                if (  w.x[ im-1 ][ j ][ k ] <= 0. ){
-                    v.x[ im-1 ][ j ][ k ] = - vel_magnitude * cos ( angle );
-                    w.x[ im-1 ][ j ][ k ] = + vel_magnitude * sin ( angle );
-                }
-            }
-        }
-    }
-*/
-
-
-
 // surface wind vector driving the Ekman spiral in the Ekman layer
 // northern and southern hemisphere
     int i_Ekman = 0;
     double sinthe = 0.;
-    double vel_magnitude = 0.;
+    double vel_magnit = 0.;
+    double vel_mag = 0.;
     double i_Ekman_layer = 0.;
     double coeff = 0.;
     double gam_z = 0.;
     double exp_gam_z = 0.;
     double sin_gam_z = 0;
     double cos_gam_z = 0;
-    double v_g = 0.;
-    double w_g = 0.;
+    double alfa = 0;
 
     for ( int j = 1; j < jm-1; j++ ){
         for ( int k = 1; k < km-1; k++ ){
-            sinthe = sin( the.z[ j ] );
-            vel_magnitude = sqrt ( v.x[ im - 1 ][ j ][ k ] * v.x[ im - 1 ][ j ][ k ] 
-                         + w.x[ im - 1 ][ j ][ k ] * w.x[ im - 1 ][ j ][ k ] ) / 0.03 * u_0; // dimensional surface wind velocity
-//            i_Ekman_layer = 100.;  // assumed constant Ekman-layer depth of 100m
-//            i_Ekman_layer = 7.6 / sqrt( fabs( sinthe ) ) * vel_magnitude;
-//            original law by Robert H. Stewart, Introduction to Physical Oceanography, p. 139, eq. 9.16
-            i_Ekman_layer = 3. * 7.6 / sqrt( sinthe ) * vel_magnitude; // adjusted with factor
+            sinthe = sin( fabs( the.z[ j ] - M_PI / 2. ) );
+            vel_magnit = sqrt( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] 
+                         + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] ) 
+                         / water_wind * u_0; // dimensional surface wind velocity U_10
+//          original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 139, eq. 9.16
+            i_Ekman_layer = 3. * 7.6 / sqrt( sinthe ) * vel_magnit;
+                        // assumed depth at i_Ekman = 3 x pi / gam, velocity opposit plus pi to surface velocity
             coeff = i_Ekman_layer / L_hyd;
-            if ( coeff >= 1. ) coeff = 1.;
+            if( coeff >= 1. ) coeff = 1.;
             i_Ekman = ( im - 1 ) * ( 1. - coeff );
 
-//    cout << "   j = " << j << "   k = " << k << "   sinthe = " << sinthe << "   vel_magnitude = " << vel_magnitude << "   i_Ekman_layer = " << i_Ekman_layer << "   coeff = " << coeff << "   i_Ekman = " << i_Ekman << endl;
+//          prevention of singular values
+            if( w.x[ im-1 ][ j ][ k ] == 0. ) w.x[ im-1 ][ j ][ k ] = 1.e-6;
+            if( v.x[ im-1 ][ j ][ k ] == 0. ) v.x[ im-1 ][ j ][ k ] = 1.e-6;
+            if( vel_magnit == 0. ) vel_magnit = 1.e-6;
 
-            for ( int i = im-2; i >= i_Ekman; i-- ){
-                gam_z =  M_PI * ( double ) ( i - i_Ekman ) 
-                    / ( double ) ( im-1 - i_Ekman );
-                exp_gam_z = exp ( - gam_z );
-                if ( j <= j_half ) sin_gam_z = sin ( gam_z );  // northern hemisphere
-                else               sin_gam_z = - sin ( gam_z );  // southern hemisphere
-                cos_gam_z = cos ( gam_z );
-
-                if ( is_water( h, i, j, k) ){
-                    v_g = v.x[ im-1 ][ j ][ k ];
-                    w_g = w.x[ im-1 ][ j ][ k ];
-                    v.x[ i ][ j ][ k ] = w_g * exp_gam_z * sin_gam_z 
-                        + v_g * ( 1. - exp_gam_z * cos_gam_z );
-                    w.x[ i ][ j ][ k ] = w_g * ( 1. - exp_gam_z * cos_gam_z ) 
-                        - v_g * exp_gam_z * sin_gam_z;
+//          turning the wind velocities to water velocities along the surface, local angle +/- Ekman_angle
+            alfa = atan( fabs( v.x[ im-1 ][ j ][ k ] / w.x[ im-1 ][ j ][ k ] ));
+            if( j <= j_half ){
+                if(( w.x[ im-1 ][ j ][ k ] >= 0. ) && ( v.x[ im-1 ][ j ][ k ] >= 0. )){
+                    angle = alfa - Ekman_angle;
                 }
+                if(( w.x[ im-1 ][ j ][ k ] <= 0. ) && ( v.x[ im-1 ][ j ][ k ] >= 0. )){
+                    angle = .5 * M_PI - ( alfa + Ekman_angle ) + .5 * M_PI;
+                }
+                if(( w.x[ im-1 ][ j ][ k ] <= 0. ) && ( v.x[ im-1 ][ j ][ k ] <= 0. )){
+                    angle = alfa - Ekman_angle + M_PI;
+                }
+                if(( w.x[ im-1 ][ j ][ k ] >= 0. ) && ( v.x[ im-1 ][ j ][ k ] <= 0. )){
+                    angle = .5 * M_PI - ( alfa + Ekman_angle ) + 1.5 * M_PI;
+                }
+            }else{
+                if(( w.x[ im-1 ][ j ][ k ] >= 0. ) && ( v.x[ im-1 ][ j ][ k ] >= 0. )){
+                    angle = alfa + Ekman_angle;
+                }
+                if(( w.x[ im-1 ][ j ][ k ] <= 0. ) && ( v.x[ im-1 ][ j ][ k ] >= 0. )){
+                    angle = .5 * M_PI - alfa + Ekman_angle + .5 * M_PI;
+                }
+                if(( w.x[ im-1 ][ j ][ k ] <= 0. ) && ( v.x[ im-1 ][ j ][ k ] <= 0. )){
+                    angle = alfa + Ekman_angle + M_PI;
+                }
+                if(( w.x[ im-1 ][ j ][ k ] >= 0. ) && ( v.x[ im-1 ][ j ][ k ] <= 0. )){
+                    angle = .5 * M_PI - ( alfa - Ekman_angle ) + 1.5 * M_PI;
+                }
+            }
+
+//          original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 138, eq. 9.11a/b
+            v.x[ im-1 ][ j ][ k ] = v.x[ im-1 ][ j ][ k ] * water_wind / u_0; // non-dimensional surface water velocity V_0
+            w.x[ im-1 ][ j ][ k ] = w.x[ im-1 ][ j ][ k ] * water_wind / u_0; // non-dimensional surface water velocity V_0
+            vel_mag = sqrt( v.x[ im-1 ][ j ][ k ] * v.x[ im-1 ][ j ][ k ] 
+                          + w.x[ im-1 ][ j ][ k ] * w.x[ im-1 ][ j ][ k ] );
+            v.x[ im-1 ][ j ][ k ] = vel_mag * cos( angle );
+            w.x[ im-1 ][ j ][ k ] = vel_mag * sin( angle );
+
+            for ( int i = im-1; i >= i_Ekman; i-- ){
+//            for ( int i = im-2; i >= i_Ekman; i-- ){
+//          original laws in Robert H. Stewart, Introduction to Physical Oceanography, p. 137, eq. 9.9a/b
+                gam_z = - 3. * M_PI * ( double ) ( i - im-1 ) 
+                    / ( double ) ( i_Ekman - im-1 );
+                exp_gam_z = exp ( gam_z );
+                sin_gam_z = - sin( angle + gam_z );
+                cos_gam_z = cos( angle + gam_z );
+                v.x[ i ][ j ][ k ] = vel_mag * exp_gam_z * sin_gam_z; 
+                w.x[ i ][ j ][ k ] = vel_mag * exp_gam_z * cos_gam_z;
+
+//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   gam_z = " << gam_z << "   exp_gam_z = " << exp_gam_z << "   sin_gam_z = " << sin_gam_z << "   cos_gam_z = " << cos_gam_z << "   i_Ekman = " << i_Ekman << "   v = " << v.x[ i ][ j ][ k ] << "   w = " << w.x[ i ][ j ][ k ] << "   vel_mag = " << vel_mag << "   vel_magnit = " << vel_magnit << endl;
             }
         }
     }
