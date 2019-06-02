@@ -182,21 +182,8 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                         Q_sensible.y[ j ][ k ] );    // difference understood as heat into the ground
 
                     if ( t_Celsius >= 0. ){
-/*
-                        double vau = .5 * ( v.x[ i ][ j ][ k ] + v.x[ i + 1 ][ j ][ k ] );
-                        double weh = .5 * ( w.x[ i ][ j ][ k ] + w.x[ i + 1 ][ j ][ k ] );
-                        Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, vau, weh ) * sat_deficit * 24.;
-*/
                         Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ i + 1 ][ j ][ k ],
                             w.x[ i + 1 ][ j ][ k ] ) * sat_deficit * 24.;
-
-//                        Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ i ][ j ][ k ],
-//                            w.x[ i ][ j ][ k ] ) * sat_deficit * 24.;  // mm/h in mm/d
-
-//                        Evaporation_Dalton.y[ j ][ k ] = 8.46e-4 * C_Dalton ( u_0, v.x[ i+1 ][ j ][ k ], w.x[ i+1 ][ j ][ k ] ) *
-//                        sat_deficit * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
-//                        Evaporation_Dalton.y[ j ][ k ] = 8.46e-4 * C_Dalton ( u_0, v.x[ i+1 ][ j ][ k ], w.x[ i+1 ][ j ][ k ] ) *
-//                        sat_deficit * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
                         // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
                         if ( Evaporation_Dalton.y[ j ][ k ] <= 0. )  Evaporation_Dalton.y[ j ][ k ] = 0.;
 
@@ -238,14 +225,12 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                     if ( t_Celsius >= 0. ){
                         Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ 0 ][ j ][ k ], w.x[ 0 ][ j ][ k ] ) *
                             sat_deficit * 24.;  // ocean surface evaporation, mm/h in mm/d
-//                        Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ 0 ][ j ][ k ], w.x[ 0 ][ j ][ k ] ) *
-//                        sat_deficit * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
-//                        Evaporation_Dalton.y[ j ][ k ] = 8.46e-4 * C_Dalton ( u_0, v.x[ 0 ][ j ][ k ], w.x[ 0 ][ j ][ k ] ) *
-//                        sat_deficit * dt_dim / ( r_humid * dr_dim ) * 24.;  // mm/h in mm/d
                       // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
                       // not air but ocean surface temperature
                       // should be involved in water vapour saturation difference, it is not the saturation deficit
                         if ( Evaporation_Dalton.y[ j ][ k ] <= 0. )  Evaporation_Dalton.y[ j ][ k ] = 0.;
+
+//    cout << "   i = " << i << "   j = " << j << "   k = " << k << "   Evaporation_Dalton = " << Evaporation_Dalton.y[ j ][ k ] << "   c = " << c.x[ i ][ j ][ k ] << "   v = " << v.x[ i ][ j ][ k ] << "   w = " << w.x[ i ][ j ][ k ] << "   v1 = " << v.x[ i+1 ][ j ][ k ] << "   w1 = " << w.x[ i+1 ][ j ][ k ] << "   p = " << p_stat.x[ i ][ j ][ k ] << "   p1 = " << p_stat.x[ i+1 ][ j ][ k ] << "   sat_deficit = " << sat_deficit << "   t_Celsius = " << t_Celsius << endl;
                     }else   Evaporation_Dalton.y[ j ][ k ] = 0.;
 
 
@@ -716,7 +701,7 @@ double Results_MSL_Atm::C_Dalton ( double u_0, double v, double w ){
     double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
     // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
     double v_max = 10.;
-    double fac = 10.;  // factor to adjust the ratio of NASA precipitation 
+    double fac = 1.105;  // factor to adjust the ratio of NASA precipitation 
                        // to Dalton evaporation for the modern world, 
                        // relative difference between global precipitation and evaporation is 10%
     double vel_magnitude = sqrt ( v * v + w * w ) * u_0;

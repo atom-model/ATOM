@@ -103,8 +103,8 @@ void Array::printArray ( int im, int jm, int km )
     cout.setf ( ios::fixed );
 
 //      for ( int i = 0; i < im; i++ )
-//      for ( int i = 0; i <= 0; i++ )
-      for ( int i = im-1; i <= im-1; i++ )
+      for ( int i = 0; i <= 0; i++ )
+//      for ( int i = im-1; i <= im-1; i++ )
 //      for ( int i = 1; i <= 1; i++ )
     {
         cout << "printout at i = " << i << endl;

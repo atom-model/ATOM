@@ -272,13 +272,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class element for the initial conditions for u-v-w-velocity components
     circulation.IC_CellStructure ( rad, h, u, v, w );
 
-//    goto Printout;
-
-    //  initial conditions for v and w velocity components at the sea surface close to east or west coasts, to close gyres
-//    circulation.IC_v_w_WestEastCoast ( h, u, v, w );
-
     //  class element for the surface temperature from NASA for comparison
-    //  if ( Ma == 0 ) circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
     circulation.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, temperature_NASA, t );
 
     //  class element for the surface precipitation from NASA for comparison
@@ -286,13 +280,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  class element for the parabolic temperature distribution from pol to pol, maximum temperature at equator
     circulation.BC_Temperature ( rad, temperature_NASA, h, t, tn, p_dyn, p_stat );
-
-/*
-    //  class element for the correction of the temperature initial distribution around coasts
-    if ( ( NASATemperature == 1 ) && ( Ma > 0 ) && !use_earthbyte_reconstruction){
-        circulation.IC_Temperature_WestEastCoast ( h, t );
-    }
-*/
 
     //  class element for the surface pressure computed by surface temperature with gas equation
     circulation.BC_Pressure ( L_atm, rad, p_stat, p_dyn, t, h );
@@ -814,7 +801,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                       ice, co2, radiation_3D, Vegetation );
 
 //            // preparations for water vapour increase due to evaporation and precipitation differences
-            circulation.BC_Evaporation ( rad, vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, t );
+//            circulation.BC_Evaporation ( rad, vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, t );
 
 /*
         logger() << "§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§   global iteration n = " << iter_cnt << "   §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§" << std::endl << std::endl;
@@ -851,6 +838,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                  circulation.BC_Radiation_multi_layer ( rad, albedo, epsilon, radiation_surface, 
                                                         p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
             }
+
             //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             double residuum = std::get<0>(min_Residuum.residuumQuery_3D ( rad, the, u, v, w, residuum_3d ));
 
@@ -881,8 +869,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                          albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
             // preparations for water vapour increase due to evaporation and precipitation differences
-//            circulation.BC_Evaporation ( vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, cn );
-
+            circulation.BC_Evaporation ( rad, vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, t );
             //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
             //  resulting the precipitation distribution formed of rain and snow
             if ( velocity_iter % 2 == 0){
@@ -897,14 +884,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         
         //  pressure from the Euler equation ( 2. order derivatives of the pressure by adding the Poisson right hand sides )
         startPressure.computePressure_3D ( u_0, r_air, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w );
-/*
-        //  Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
-        //  resulting the precipitation formed of rain and snow
-        if(iter_cnt >= 2){
-            circulation.Two_Category_Ice_Scheme ( rad, h, c, t, p_stat, cloud, ice, 
-                                              P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
-        }
-*/
+
         //logger() << fabs ( p_dyn.x[ 20 ][ 30 ][ 150 ] - p_dynn.x[ 20 ][ 30 ][ 150 ] ) << " pressure_mchin" <<Ma<<std::endl;
         //logger() << std::get<0>(max_diff( im, jm, km, p_dyn, p_dynn)) << " pressure_max_diff" <<Ma<<std::endl;
 
@@ -928,6 +908,7 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 */
 void cAtmosphereModel::load_temperature_curve()
 {
+//  Lenton_etal_COPSE_time_temp, mean temperature ( Ma )
     std::string line;
     std::ifstream f(temperature_curve_file);
     
@@ -948,6 +929,7 @@ void cAtmosphereModel::load_temperature_curve()
 */
 float cAtmosphereModel::get_mean_temperature_from_curve(float time) const
 {
+//  Lenton_etal_COPSE_time_temp, mean temperature ( Ma )
     if(time<m_temperature_curve.begin()->first || time>(--m_temperature_curve.end())->first){
         std::cout << "Input time out of range: " <<time<< std::endl;    
         return NAN;

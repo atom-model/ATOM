@@ -249,7 +249,12 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_1D &rad, Array_2D &albedo, Arra
                     co2_coeff = 1.;
                 }
 
-                // dependency given by Häckel ( F. Baur and H. Philips, 1934 )
+                // dependency given by Häckel, Meteorologie, p. 205 ( law by F. Baur and H. Philips, 1934 )
+                // co2_coeff * epsilon_eff describe the effect in the emissivity computation of other gases like CO2
+                // in the original formula this value is 0.594, for reasons of adjustment to the modern atmosphere,
+                // this constant became a variable in zonal direction
+                // this variable reacts very sensitive and changes the temperature field extremely
+                // the second term describes the influence of water vapour only
                 if( i >= i_mount ){ //start from the mountain top
                     epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );
                     radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
@@ -379,24 +384,16 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_1D &rad, Array_2D &albedo, Arra
 
 void BC_Thermo::BC_Temperature( Array_1D &rad, Array_2D &temperature_NASA, Array &h,
                              Array &t, Array &tn, Array &p_dyn, Array &p_stat ){
-    // boundary condition of  temperature on land 
-    // parabolic distribution from pole to pole accepted
-    // temperature on land at equator t_max = 1.055 compares to 15° C compared to 288 K
-    // temperature at tropopause t_min = 0.77 compares to -62° C compares to 211 K
-    // temperature at tropopause t_min = 0.89 compares to -30° C compares to 243 K
-    // temperature difference from equator to pole   18°C compares to  t_delta = 0.0659  compares to  18 K
-
 //    logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
 //    logger() << "enter BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
     double zeta = 3.715;
-
-    double t_cretaceous_add = 0;  // Lenton_etal_COPSE_time_temp, constant cretaceous mean temperature, added to the surface initial temperature
-                                                       // difference between mean temperature ( Ma ) and mean temperature ( previous Ma ) == t_cretaceous_add
-
+    double t_cretaceous_add = 0;
+// Lenton_etal_COPSE_time_temp, constant cretaceous mean temperature, added to the surface initial temperature
+// difference between mean temperature ( Ma ) and mean temperature ( previous Ma ) == t_cretaceous_add
     if(!m_model->is_first_time_slice()){
         t_cretaceous_add = m_model->get_mean_temperature_from_curve(Ma) -  
             m_model->get_mean_temperature_from_curve(*m_model->get_previous_time());
-        t_cretaceous_add /= t_0; 
+        t_cretaceous_add /= t_0;  // non-dimensional
     }
 
     cout.precision ( 3 );
@@ -426,7 +423,7 @@ void BC_Thermo::BC_Temperature( Array_1D &rad, Array_2D &temperature_NASA, Array
         temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average + t_cretaceous << setw ( 5 ) << 
         temperature_unit << endl;
 
-    // temperatur distribution at aa prescribed sun position
+    // temperatur distribution at a prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
     // sun_position_lon = 180, position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
     // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
@@ -487,18 +484,20 @@ void BC_Thermo::BC_Temperature( Array_1D &rad, Array_2D &temperature_NASA, Array
 
 // pole temperature adjustment, combination of linear time dependent functions 
     double t_pole_ma = 0.;  // Stein/Rüdiger/Parish locally constant pole temperature
-                                             // difference between pole temperature ( Ma ) and pole temperature ( previous Ma ) == t_pole_ma
+                            // difference between pole temperature ( Ma ) and pole temperature ( previous Ma ) == t_pole_ma
 
     std::map<int, double> pole_temp_map{  // Stein/Rüdiger/Parish linear pole temperature ( Ma ) distribution
-        {0, 0.},
-        {40, 22. },
-        {45, 23.5 },
-        {50, 24.1 },
-        {55, 24.3 },
-        {60, 22.4 },
-        {70, 24.2 },
-        {80, 23.7 },
-        {90, 22.8 },
+
+//        {0, 0.},
+        {0, -15.4},
+        {40, 22.},
+        {45, 23.5},
+        {50, 24.1},
+        {55, 24.3},
+        {60, 22.4},
+        {70, 24.2},
+        {80, 23.7},
+        {90, 22.8},
         {100, 21.8},
         {120, 19.},
         {130, 17.8},
@@ -508,59 +507,66 @@ void BC_Thermo::BC_Temperature( Array_1D &rad, Array_2D &temperature_NASA, Array
         {340, 16.}
     }; 
 
-//    int i_h = 0;
-    double d_j_half = ( double ) ( jm -1 ) / 2.0;
+    double d_j_half = ( double ) ( jm-1 ) / 2.;
     // temperature initial conditions along the surface
-
-    if ( RadiationModel == 1 ){
-        t_pole_ma = GetPoleTemperature ( Ma, pole_temp_map );
-        // in °C, constant local pole temperature as function of Ma for hothouse climates 
-
-        t_eff = t_pole - t_equator;  // coefficient for the zonal parabolic temperature distribution
-//        t_eff = ( t_pole_ma + t_0 ) / t_0 - t_equator;  // coefficient for the zonal parabolic temperature distribution
-
+    if ( RadiationModel == 1 ){  // Multi-Layer-Radiation Model is active
+        t_pole_ma = ( GetPoleTemperature ( Ma, pole_temp_map ) + t_0 ) / t_0;
+    // non-dimensional, constant local pole temperature as function of Ma for hothouse climates, Stein/Rüdiger/Parish pole temperature 
+        t_eff = t_pole - t_equator;
+          // non-dimensional, coefficient for the zonal parabolic temperature distribution
         for ( int k = 0; k < km; k++ ){
-            for ( int j = 0; j < jm; j++ ){
+            for ( int j = 1; j < jm-1; j++ ){
 //                i_mount = i_topography[ j ][ k ];  // data along the topography
-                i_mount = 0;  // data along the topography
-
+                i_mount = 0;  // data along the suface
                 d_j = ( double ) j;
                 if ( NASATemperature == 0 ){  // parabolic ocean surface temperature assumed
                     t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole + t_cretaceous_add;
-                                                                      // increasing pole and mean temperature ( Ma ) incorporated
-
+                              //  constant pole and increasing mean temperature( Ma ) incorporated
                     if ( is_land ( h, 0, j, k ) ){  // parabolic land surface temperature assumed
                         t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
                             + t_cretaceous_add + t_land;
-                                                                      // increasing pole and mean temperature ( Ma ) incorporated
-                                                                      // in case land temperature is assumed to be
-                                                                      // globally higher than ocean temperature, t_land is added too
+                              //  constant pole and increasing mean temperature( Ma ) incorporated
+                              // t_land, if mean land temperature is higher
                     }
-                }else{  // if ( NASATemperature == 1 ) ocean surface temperature based on NASA temperature distribution
-                             // transported for later time slices Ma by use_earthbyte_reconstruction
-                    if ( is_land (h, 0, j, k ) ){  // on land a parabolic distribution assumed, no NASA based data transportable
+                }else{  // for ( NASATemperature == 1 ) surface temperature by NASA applied
+                        // transported for later time slices Ma by use_earthbyte_reconstruction
+                    if ( is_land (h, 0, j, k ) ){  // on land a parabolic distribution is assumed, no NASA based data transportable
                         t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
-//                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + ( t_pole_ma + t_0 ) / t_0
                             + t_cretaceous_add + t_land;
-
+                              //  constant pole and increasing mean temperature( Ma ) incorporated
+                              // t_land, if mean land temperature is higher
                         if ( t.x[ i_mount ][ 0 ][ k ] < t_pole_ma )
                             t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ]
-                            + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
-                                                                      // Stein/Rüdiger/Parish pole temperature decreasing equator wards
+                                + ( t_pole_ma - t.x[ i_mount ][ 0 ][ k ] ) * fabs( parabola( d_j / d_j_half ) + 1. );
+                                  // Stein/Rüdiger/Parish pole temperature decreasing parabolically equator wards
+                        if ( Ma == 0 )  t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];  // initial temperature by NASA for Ma=0
                     }
                     if ( is_air ( h, 0, j, k ) ){  // NASA based ocean surface temperature by use_earthbyte_reconstruction
                         if( Ma == 0 ){
                             t.x[ i_mount ][ j ][ k ] = temperature_NASA.y[ j ][ k ];  // initial temperature by NASA for Ma=0
+/*
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+    cout << "   i_mount = " << i_mount << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_pole_ma = " << t_pole_ma * t_0 - t_0 << "   t_cretaceous = " << t_cretaceous * t_0 << "   t_cretaceous_add = " << t_cretaceous_add * t_0 << "   fabs_parabola = " << parabola( d_j / d_j_half ) + 1. << "   t_pole_ma-fabs_parabola = " << ( t_pole_ma - temperature_NASA.y[ 0 ][ k ] ) * fabs( parabola( d_j / d_j_half ) + 1. ) * t_0 << "   temperature_NASA = " << temperature_NASA.y[ 0 ][ k ] * t_0 - t_0 << "   t = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << endl;
+*/
                         }else{
+/*
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+    if ( ( j == 0 ) && ( k == 180 ) ) cout << "   i_mount = " << i_mount << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_pole_ma = " << t_pole_ma * t_0 - t_0 << "   t_cretaceous = " << t_cretaceous << "   t_cretaceous_add = " << t_cretaceous_add * t_0 << "   fabs_parabola = " << parabola( d_j / d_j_half ) + 1. << "   t_pole_ma-fabs_parabola = " << ( t_pole_ma - t.x[ i_mount ][ 0 ][ k ] ) * fabs( parabola( d_j / d_j_half ) + 1. ) * t_0 << "   temperature_NASA = " << temperature_NASA.y[ 0 ][ k ] * t_0 - t_0 << "   t = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << endl;
+*/
                             t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ] + t_cretaceous_add;
                             if ( t.x[ i_mount ][ 0 ][ k ] < t_pole_ma )
                                 t.x[ i_mount ][ j ][ k ] = t.x[ i_mount ][ j ][ k ]
-                                + t_pole_ma * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
-                                                                      // ocean surface temperature increased by mean t_cretaceous_add
-                                                                      // and by a zonally equator wards decreasing temperature difference is added
-                                                                      // Stein/Rüdiger/Parish pole temperature decreasing equator wards
-                        }
-                    }
+                                + ( t_pole_ma - t.x[ i_mount ][ 0 ][ k ] ) * fabs( parabola( d_j / d_j_half ) + 1. );
+                                  // Stein/Rüdiger/Parish pole temperature decreasing parabolically equator wards
+/*
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+    if ( ( j == 0 ) && ( k == 180 ) ) cout << "   i_mount = " << i_mount << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_pole_ma = " << t_pole_ma * t_0 - t_0 << "   t_cretaceous = " << t_cretaceous << "   t_cretaceous_add = " << t_cretaceous_add * t_0 << "   fabs_parabola = " << parabola( d_j / d_j_half ) + 1. << "   t_pole_ma-fabs_parabola = " << ( t_pole_ma - t.x[ i_mount ][ 0 ][ k ] ) * fabs( parabola( d_j / d_j_half ) + 1. ) * t_0 << "   temperature_NASA = " << temperature_NASA.y[ 0 ][ k ] * t_0 - t_0 << "   t = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << endl;
+*/
+                        }// Ma > 0
+                    }// is_air
                 }// else ( NASATemperature == 1 )
             }// for j
         }// for k
@@ -571,29 +577,26 @@ void BC_Thermo::BC_Temperature( Array_1D &rad, Array_2D &temperature_NASA, Array
     t_tropopause_pole = t_tropopause + t_tropopause_pole / t_0;
     t_eff_tropo = t_tropopause_pole - t_tropopause;
 
-    // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
+    // temperature approaching the tropopause given by the Standard Atmosphere, above temperature is constant
     for ( int j = 0; j < jm; j++ ){
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+//        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous_add );
         d_j = ( double ) j;
         height_tropo = ( exp( zeta * ( rad.z[ i_trop ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
         d_i_max = height_tropo;
-
         double temp_tropopause =  t_eff_tropo * parabola( d_j / d_j_half ) +
                 t_tropopause_pole + t_cretaceous_add;        
 
         for ( int k = 0; k < km; k++ ){
 //            i_mount = i_topography[ j ][ k ];
             i_mount = 0;
-
             for ( int i = 0; i < im; i++ ){
                 if ( i <= i_trop ){
                     height = ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
                     d_i = height;
-//                    t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ i_mount ][ j ][ k ] ) * ( (double) i / i_trop ) + 
-//                        t.x[ i_mount ][ j ][ k ];// linear temperature decay up to tropopause, privat  approximation
                     t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ i_mount ][ j ][ k ] ) * ( d_i / d_i_max ) + 
-                        t.x[ i_mount ][ j ][ k ];// linear temperature decay up to tropopause, privat  approximation
-                }else{ // above tropopause
+                        t.x[ i_mount ][ j ][ k ];  // linear temperature decay up to tropopause, privat  approximation
+                }else{ // above the tropopause
                     t.x[ i ][ j ][ k ] = temp_tropopause;
                 }
             }
@@ -2846,93 +2849,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array_1D &rad, Array &h, Array &c, Arr
 
 
 
-
-
-
-void BC_Thermo::IC_Temperature_WestEastCoast ( Array &h, Array &t ){
-// initial conditions for the temperature close to coast sides to damp out shades of preceeding timeslices
-    j_grad = 7;                                                                             // extension for temperature change in zonal direction
-    k_grad = 7;                                                                             // extension for temperature change in longitudinal direction
-
-// search for north coasts to smooth the temperature
-
-// northern and southern hemisphere: north coast
-    j_air = 0;                                                                            // somewhere on air
-    flip = 0;                                                                                   // somewhere on air
-    for ( int k = 1; k < km-1; k++ ){                                            // outer loop: longitude
-        for ( int j = j_grad; j < jm-1; j++ ){                                   // inner loop: latitude
-            if ( is_air ( h, 0, j, k ) ){                                             // if somewhere on air
-                j_air = 0;                                                                // somewhere on air: j_air = 0
-                flip = 0;                                                                       // somewhere on air: flip = 0
-            }
-            else j_air = 1;                                                           // first time on land
-            if ( ( flip == 0 ) && ( j_air == 1 ) ){                            // on air closest to land
-                ll = j - j_grad;                                                                // starting point of temperature smoothing
-                for ( int l = ll; l < j; l++ )      t.x[ 0 ][ l ][ k ] = t.x[ 0 ][ ll ][ k ];       // replacement of temperature values
-                flip = 1;                                                                       // somewhere on land: flip = 1
-            }
-        }                                                                                           // end of latitudinal loop
-        flip = 0;                                                                               // somewhere on air: flip = 0
-    }                                                                                               // end of longitudinal loop
-
-// northern and southern hemisphere: south coast
-    j_air = 0;                                                                            // on air closest to coast
-    j_sequel = 1;                                                                           // on solid ground
-    for ( int k = 1; k < km-1; k++ ){                                           // outer loop: latitude
-        for ( int j = 0; j < jm - j_grad; j++ ){                                 // inner loop: longitude
-            if ( is_land ( h, 0, j, k ) ) j_sequel = 0;                       // if solid ground: j_sequel = 0
-            if ( ( is_air ( h, 0, j, k ) ) && ( j_sequel == 0 ) ) j_air = 0;   // if air and and j_sequel = 0 then is air closest to coast
-            else j_air = 1;                                                           // somewhere on air
-            if ( ( is_air ( h, 0, j, k ) ) && ( j_air == 0 ) ){     // if air is closest to coast, change of velocity components begins
-                ll = j + j_grad;                                                            // starting point of temperature smoothing
-                for ( int l = ll; l > j; l-- )      t.x[ 0 ][ l ][ k ] = t.x[ 0 ][ ll ][ k ];       // replacement of temperature values
-                j_sequel = 1;                                                               // looking for another south coast
-            }
-        }                                                                                           // end of longitudinal loop
-        j_air = 0;                                                                        // starting at another latitude
-    }                                                                                               // end of latitudinal loop
-
-// northern and southern hemisphere: east coast
-    k_air = 0;                                                                            // on air closest to coast
-    k_sequel = 1;                                                                           // on solid ground
-    for ( int j = 1; j < jm-1; j++ ){                                                // outer loop: latitude
-        for ( int k = k_grad; k < km-k_grad; k++ ){                      // inner loop: longitude
-            if ( is_land ( h, 0, j, k ) ) k_sequel = 0;                       // if solid ground: k_sequel = 0
-            if ( ( is_air ( h, 0, j, k ) ) && ( k_sequel == 0 ) ) k_air = 0;        // if air and and k_sequel = 0 then air lies closest to a coast
-            else k_air = 1;                                                           // somewhere on air
-            if ( ( is_air ( h, 0, j, k ) ) && ( k_air == 0 ) ){     // if air is closest to coast, change of velocity components begins
-                ll = k + k_grad;                                                            // starting point of temperature smoothing
-                for ( int l = ll; l > k; l-- )      t.x[ 0 ][ j ][ l ] = t.x[ 0 ][ j ][ ll ];       // replacement of temperature values
-                k_sequel = 1;                                                               // looking for another east coast
-            }
-        }                                                                                           // end of longitudinal loop
-        k_air = 0;                                                                        // starting at another longitude
-    }                                                                                               // end of latitudinal loop
-
-// northern and southern hemisphere: west coast
-    k_air = 0;                                                                            // somewhere on air
-    flip = 0;                                                                                   // somewhere on air
-    for ( int j = 1; j < jm-1; j++ ){                                                // outer loop: latitude
-        for ( int k = k_grad; k < km-1; k++ ){                               // inner loop: longitude
-            if ( is_air ( h, 0, j, k ) ){                                             // if somewhere on air
-                k_air = 0;                                                                // somewhere on air: k_air = 0
-                flip = 0;                                                                       // somewhere on air: flip = 0
-            }
-            else k_air = 1;                                                           // first time on land
-            if ( ( flip == 0 ) && ( k_air == 1 ) ){                            // on air closest to land
-                ll = k - k_grad;                                                            // starting point of temperature smoothing
-                for ( int l = ll; l < k; l++ )      t.x[ 0 ][ j ][ l ] = t.x[ 0 ][ j ][ ll ];       // replacement of temperature values
-                flip = 1;                                                                       // somewhere on land: flip = 1
-            }
-        }                                                                                           // end of longitudinal loop
-        flip = 0;                                                                               // somewhere on air: flip = 0
-    }                                                                                               // end of latitudinal loop
-}
-
-
-
-
-
 void BC_Thermo::BC_Evaporation ( Array_1D &rad, Array_2D &vapour_evaporation, Array_2D &Evaporation_Dalton, 
                      Array_2D &Precipitation, Array &h, Array &c, Array &cn ){
 // mass flux of water vapour follows the same rules as given for the salinity flux in oceans
@@ -2970,115 +2886,6 @@ void BC_Thermo::BC_Evaporation ( Array_1D &rad, Array_2D &vapour_evaporation, Ar
         }
      }
  }
-
-
-
-
-
-void BC_Thermo::IC_v_w_WestEastCoast ( Array &h, Array &u, Array &v, Array &w ){
-// initial conditions for v and w velocity components at the sea surface close to east or west coasts
-// reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
-// w component unchanged
-
-// search for east coasts and associated velocity components to close the circulations
-// transition between coast flows and open sea flows included
-
-// northern and southern hemisphere: east coast
-    double k_water = 0;
-    int i_max = 11;                                                     // max extension of the vertical smoothing
-    d_i_max = ( double ) i_max;
-    k_grad = 20;                                                        // extension of velocity change
-    k_a = k_grad;                                                       // left distance
-    k_b = 1;                                                            // right distance
-    k_water = 0;                                                        // on water closest to coast
-    k_sequel = 1;                                                       // on solid ground
-    for ( int j = 0; j < jm; j++ ){                                     // outer loop: latitude
-        for ( int k = 0; k < km; k++ ){                                 // inner loop: longitude
-            if ( is_land ( h, 0, j, k ) ) k_sequel = 0;                 // if solid ground: k_sequel = 0
-            if ( ( is_air ( h, 0, j, k ) ) && ( k_sequel == 0 ) ) k_water = 0;// if water and and k_sequel = 0 then is water closest to coast
-            else k_water = 1;                                           // somewhere on water
-            if ( ( is_air ( h, 0, j, k ) ) && ( k_water == 0 ) ){       // if water is closest to coast, change of velocity components begins
-                for ( int l = 0; l <= k_grad; l++ ){                    // extension of change, sign change in v-velocity and distribution of u-velocity with depth
-                    v.x[ 0 ][ j ][ k + l ] = - v.x[ 0 ][ j ][ k + l ];  // existing velocity changes sign
-//                    w.x[ 0 ][ j ][ k + l ] = - w.x[ 0 ][ j ][ k + l ];  // existing velocity changes sign, too strong control
-                    w.x[ 0 ][ j ][ k + l ] = 0.;                        // existing velocity changes sign
-                }
-                for ( int l = ( k + k_grad - k_a ); l <= ( k + k_grad + k_b ); l++ ){ 
-                // starting at local longitude + max extension - begin of smoothing k_a  until ending at k_b
-                    v.x[ 0 ][ j ][ l ] = ( v.x[ 0 ][ j ][ k + k_grad + k_b ] 
-                        - v.x[ 0 ][ j ][ k ] ) / ( double )( ( k + k_grad + k_b ) - k ) 
-                        * ( double )( l - k ) + v.x[ 0 ][ j ][ k ];     // extension of v-velocity, smoothing algorithm by a linear equation 
-                    w.x[ 0 ][ j ][ l ] = ( w.x[ 0 ][ j ][ k + k_grad + k_b ] 
-                        - w.x[ 0 ][ j ][ k ] ) / ( double )( ( k + k_grad + k_b ) - k ) 
-                        * ( double )( l - k ) + w.x[ 0 ][ j ][ k ];     // extension of w-velocity, smoothing algorithm by a linear equation 
-                    for ( int i = 1; i <= i_max; i++ ){                 // loop in radial direction, extension for u -velocity component, downwelling here
-                        d_i = ( double ) i;
-                        v.x[ i ][ j ][ l ] = ( v.x[ i_max ][ j ][ l ] 
-                            - v.x[ 0 ][ j ][ l ] ) / d_i_max * d_i 
-                            + v.x[ 0 ][ j ][ l ];                       // radial distribution approximated by a straight line
-                        w.x[ i ][ j ][ l ] = ( w.x[ i_max ][ j ][ l ] 
-                            - w.x[ 0 ][ j ][ l ] ) / d_i_max * d_i 
-                            + w.x[ 0 ][ j ][ l ];                       // radial distribution approximated by a straight line
-                    }
-                }
-                k_sequel = 1;                                           // looking for another east coast
-            }
-        }                                                               // end of longitudinal loop
-        k_water = 0;                                                    // starting at another latitude
-    }                                                                   // end of latitudinal loop
-
-// search for west coasts and associated velocity components to close the circulations
-// transition between coast flows and open sea flows included
-// TODO revision in case needed
-// northern and southern hemisphere: west coast
-/*
-    k_grad = 6;                                                         // extension of velocity change
-    k_a = 0;                                                            // left distance
-    k_water = 0;                                                        // somewhere on water
-    flip = 0;                                                           // somewhere on water
-    for ( int j = 0; j < jm; j++ ){                                     // outer loop: latitude
-        for ( int k = 0; k < km; k++ ){                                 // inner loop: longitude
-            if ( is_air ( h, 0, j, k ) ){                               // if somewhere on water
-                k_water = 0;                                            // somewhere on water: k_water = 0
-                flip = 0;                                               // somewhere on water: flip = 0
-            }
-            else k_water = 1;                                           // first time on land
-            if ( ( flip == 0 ) && ( k_water == 1 ) ){                   // on water closest to land
-                for ( int l = k; l > ( k - k_grad + 1 ); l-- ){         // backward extention of velocity change: nothing changes
-                    w.x[ 0 ][ j ][ l ] = - w.x[ 0 ][ j ][ l ];
-                }
-                for ( int l = k; l > ( k - k_grad - k_a - 1 ); l-- ){   // smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
-                    v.x[ 0 ][ j ][ l ] = v.x[ 0 ][ j ][ k - k_grad - k_a ] 
-                        / ( double )( ( k - k_grad - k_a ) - k ) * ( double )( l - k ); // extension of v-velocity
-
-                    for ( int i = 1; i <= i_max; i++ ){                 // loop in radial direction, extension for u -velocity component, downwelling here
-                        d_i = ( double ) i;
-                        v.x[ i ][ j ][ k ] = - ( 0. - v.x[ 0 ][ j ][ l ] ) 
-                            / d_i_max * d_i - v.x[ 0 ][ j ][ l ];  // radial distribution approximated by a straight line
-                    }
-                }
-                for ( int l = ( k - k_grad - 3 ); l < ( k - k_grad + 3 ); l++ ){  // smoothing algorithm by a linear equation, starting at local longitude until ending at max extension + k_b
-                    w.x[ 0 ][ j ][ l ] = (  - w.x[ 0 ][ j ][ k - k_grad - 3 ] 
-                        + w.x[ 0 ][ j ][ k - k_grad + 3 ] ) 
-                        * ( double ) ( l - ( k - k_grad - 3 ) ) 
-                        / ( double ) ( ( k - k_grad + 3 ) - ( k - k_grad - 3 ) ) 
-                        - w.x[ 0 ][ j ][ k - k_grad + 3 ];
-                    for ( int i = 1; i <= i_max; i++ ){                 // loop in radial direction, extension for u -velocity component, downwelling here
-                        d_i = ( double ) i;
-                        w.x[ i ][ j ][ k ] = - ( 0. - w.x[ 0 ][ j ][ l ] ) 
-                            / d_i_max * d_i - w.x[ 0 ][ j ][ l ];  // radial distribution approximated by a straight line
-                    }
-                }
-                flip = 1;
-            }
-        }
-        flip = 0;
-    }
-*/
-}
-
-
-
 
 
 
@@ -3162,12 +2969,36 @@ int BC_Thermo::GetTropopauseHightAdd(double t_cret){
 double BC_Thermo::GetPoleTemperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
     return (t_2 - t_1) / (double) (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
 }
-
+/*
 double BC_Thermo::GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map){
     assert(pole_temp_map.size()>1);
     std::pair<int, double> up = *pole_temp_map.begin(), bottom = *++pole_temp_map.begin();
     if(Ma <= pole_temp_map.begin()->first || Ma > (--pole_temp_map.end())->first){
         return t_pole; // when Ma out of boundary
+    }
+
+    for( const auto& pair : pole_temp_map ){
+        if(pair.first>=Ma){
+            bottom = pair;
+            break;
+        }else{
+            up = pair;
+        }
+    }
+    return GetPoleTemperature(Ma, up.first, bottom.first, up.second, bottom.second);
+}
+*/
+
+double BC_Thermo::GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map){
+    assert(pole_temp_map.size()>1);
+    
+    std::pair<int, double> up = *pole_temp_map.begin(), bottom = *++pole_temp_map.begin();
+    
+    // when Ma out of boundary
+    if(Ma <= pole_temp_map.begin()->first){
+        return pole_temp_map.begin()->second; 
+    }else if(Ma > (--pole_temp_map.end())->first){
+        return (--pole_temp_map.end())->second;
     }
 
     for( const auto& pair : pole_temp_map ){
@@ -3189,7 +3020,7 @@ double BC_Thermo::C_Dalton ( double u_0, double v, double w ){
     double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
     // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
     double v_max = 10.;
-    double fac = 10.;  // factor to adjust the ratio of NASA precipitation 
+    double fac = 1.105;  // factor to adjust the ratio of NASA precipitation 
                        // to Dalton evaporation for the modern world, 
                        // relative difference between global precipitation and evaporation is 10%
     double vel_magnitude = sqrt ( v * v + w * w ) * u_0;

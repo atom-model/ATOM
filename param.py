@@ -48,6 +48,7 @@ def main():
 
             ( 'sun', 'while no variable sun position wanted', 'int', 0 ),
             ( 'NASATemperature', 'surface temperature given by NASA', 'int', 1 ),
+#            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 0 ),
             ( 'RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1 ),
 
             ( 'declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0 ),
@@ -69,9 +70,11 @@ def main():
             ( 'albedo_pole', 'albedo around the poles', 'double', 0.7 ),
             ( 'albedo_equator', 'albedo around the equator', 'double', 0.15 ),
 
-            ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.594 ),
-            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.59 ),
-            ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),
+#            ( 'epsilon_equator', 'emissivity and absorptivity assumption at equator', 'double', 0.594 ),
+            ( 'epsilon_equator', 'emissivity and absorptivity assumption at equator', 'double', 0.525 ),
+#            ( 'epsilon_pole', 'emissivity and absorptivity assumption at poles', 'double', 0.59 ),
+            ( 'epsilon_pole', 'emissivity and absorptivity assumption at poles', 'double', 0.570 ),
+            ( 'epsilon_tropopause', 'emissivity and absorptivity assumption at tropopause', 'double', 0.001 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
             ( 'sc_WaterVapour', 'Schmidt number of water vapour, Sc = nue / D', 'double', 0.61 ),
@@ -109,9 +112,9 @@ def main():
             ( 't_cretaceous_max', 'maximum add of mean temperature in °C during cretaceous times', 'double', 10.0 ),
             ( 't_cretaceous', 'value at modern times', 'double', 0.0 ),
 
-            ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
-            ( 't_equator', 'temperature t_0 = 1.11 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
-            ( 't_pole', 'temperature at the poles t_pole = 0.945 compares to -15.0°C compares to 258.15 K', 'double', 0.945 ),
+            ( 't_average', 'mean temperature of the modern earth', 'double', 15.4 ),
+            ( 't_equator', 'temperature t_0 = 1.0842 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
+            ( 't_pole', 'temperature at the poles t_pole = 0.9436 compares to -15.4°C compares to 258.15 K', 'double', 0.9436 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
 #            ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
             ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.014644 ),
@@ -136,13 +139,11 @@ def main():
             ( 'velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
-            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2 ),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 8 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 8 ),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 
-#            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 1000 m compares to 40 steps times 25 m', 'double', 1000.0 ),
-#            ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 500 m compares to 40 steps times 12.5 m', 'double', 500.0 ),
             ( 'L_hyd', 'extension of the hydrosphere shell in m, assumption of maximum depth of sea 200 m compares to 40 steps times 5 m', 'double', 200.0 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 10.0 ),
@@ -165,8 +166,6 @@ def main():
             ( 'pa', 'initial value for the pressure field', 'double', 0.0 ),
 #            ( 'ta', 'compares to 4°C', 'double', 1.01464 ),
             ( 'ta', 'compares to -1°C', 'double', 0.9963 ),
-#            ( 'ta', 'compares to -4°C', 'double', 0.9853 ),
-#            ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 1.0 ),
             ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 0.95 ),
 #            ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 0.867 ),
 

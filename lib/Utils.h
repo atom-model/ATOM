@@ -37,7 +37,7 @@ namespace AtomUtils{
     }
 
     inline double parabola(double x){
-        return x*x - 2*x;
+        return x*x - 2.*x;
     }
 
     //change data coordinate system from -180° _ 0° _ +180° to 0°- 360°

@@ -166,10 +166,6 @@ class BC_Thermo
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
             Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
-        void IC_Temperature_WestEastCoast ( Array &, Array & );
-
-        void IC_v_w_WestEastCoast ( Array &, Array &, Array &, Array & );
-
         void BC_Evaporation ( Array_1D &rad, Array_2D &vapour_evaporation, Array_2D &Evaporation_Dalton, 
              Array_2D &Precipitation, Array &h, Array &c, Array &cn );
 
