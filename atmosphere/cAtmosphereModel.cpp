@@ -574,19 +574,7 @@ void cAtmosphereModel::run_3D_loop(){
 */
 void cAtmosphereModel::load_temperature_curve()
 {
-    std::string line;
-    std::ifstream f(temperature_curve_file);
-    
-    if (!f.is_open()){
-        std::cout << "error while opening file: "<< temperature_curve_file << std::endl;
-    }
-
-    float time=0.,temperature=0;
-    while(getline(f, line)) {
-        std::stringstream(line) >> time >> temperature;
-        m_temperature_curve.insert(std::pair<float,float>(time, temperature));
-        //std::cout << time <<"  " <<temperature<< std::endl;
-    }
+    load_map_from_file(temperature_curve_file, m_temperature_curve);
 }
 
 /*

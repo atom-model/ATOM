@@ -22,6 +22,7 @@ def main():
             ( 'precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
             ( 'salinity_file', '', 'string', '../data/SurfaceSalinity_NASA.xyz'),
             ( 'temperature_curve_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
+            ( 'pole_temperature_file', '', 'string', '../data/pole_temperature.txt'),
             ( 'reconstruction_script_path', '', 'string', '../reconstruction/reconstruct_atom_data.py'),
             ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True ),
         
@@ -45,7 +46,7 @@ def main():
             ( 'epsres', 'accuracy of relative and absolute errors', 'double', 0.00001 ),
 
             ( 'sun', 'while no variable sun position wanted', 'int', 0 ),
-            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 1 ),
+            ( 'NASATemperature', 'surface temperature given by NASA', 'int', 0 ),
             ( 'RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1 ),
 
             ( 'declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0 ),

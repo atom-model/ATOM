@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include <Utils.h>
 
 using namespace AtomUtils;
@@ -132,6 +134,7 @@ double AtomUtils::C_Dalton ( double u_0, double v, double w )
     return sqrt ( C_max * C_max / v_max * vel_magnitude ) / fac;  // result in mm/h
 }
 
+
 void AtomUtils::read_IC(const string& fn, double** a, int jm, int km){
     ifstream ifs(fn);
     if (!ifs.is_open()) {
@@ -147,6 +150,7 @@ void AtomUtils::read_IC(const string& fn, double** a, int jm, int km){
         }
     }
 }
+
 
 double AtomUtils::simpson(int n1, int n2, double dstep, Array_1D &value){
         double sum_even=0, sum_odd=0;
@@ -164,8 +168,27 @@ double AtomUtils::trapezoidal(int n1, int n2, double dstep, Array_1D &value){
         return dstep/2 * (value.z[n1] + sum + value.z[n2]);  // Trapezoidal Rule integration
 }
 
+
 double AtomUtils::rectangular(int n1, int n2, double dstep, Array_1D &value){
         double sum = 0;
         for (int i = n1; i <= n2; i++){sum += value.z[i];}
         return dstep * sum;  // Rectangular Rule integration
+}
+
+
+void AtomUtils::load_map_from_file(const std::string& fn, std::map<float, float>& m){
+    std::string line;
+    std::ifstream f(fn);
+    
+    if (!f.is_open()){
+        std::cout << "error occurred while opening file: "<< fn << std::endl;
+    }
+
+    float key=0, val=0;
+    while(getline(f, line)) {
+        if(line.find("#")==0) continue;
+        std::stringstream(line) >> key >> val;
+        m.insert(std::pair<float,float>(key, val));
+        //std::cout << key <<"  " << val << std::endl;
+    }
 }

@@ -43,13 +43,6 @@ void cAtmosphereModel::run_MSL_data()
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             int i = get_surface_layer(j,k);
-            if ( i == 0 )     
-                p_stat.x[ 0 ][ j ][ k ] = ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01; // given in hPa
-            else     
-                p_stat.x[ i ][ j ][ k ] = exp ( - g * i * ( L_atm /( double ) ( im-1 ) ) / 
-                            ( R_Air * t.x[ i ][ j ][ k ] * t_0 ) ) * p_stat.x[ 0 ][ j ][ k ];    // given in hPa
-                // current air pressure, step size in 500 m, from a polytropic atmosphere in hPa
-
             float t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
 
             //float r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );
@@ -86,9 +79,14 @@ void cAtmosphereModel::run_MSL_data()
             Q_bottom.y[ j ][ k ] = - ( Q_radiation.y[ j ][ k ] - Q_latent.y[ j ][ k ] - Q_sensible.y[ j ][ k ] );    
                 // difference understood as heat into the ground
 
-            Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ i ][ j ][ k ], w.x[ i ][ j ][ k ] ) * sat_deficit * 24.;  // mm/h in mm/d
-            // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/( m² * d )
-            if ( Evaporation_Dalton.y[ j ][ k ] <= 0. )  Evaporation_Dalton.y[ j ][ k ] = 0.;
+                 if ( t_Celsius >= 0. ){
+                        Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ i + 1 ][ j ][ k ],
+                            w.x[ i + 1 ][ j ][ k ] ) * sat_deficit * 24.;
+
+                        // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
+                        if ( Evaporation_Dalton.y[ j ][ k ] <= 0. )  Evaporation_Dalton.y[ j ][ k ] = 0.;
+
+                    }else   Evaporation_Dalton.y[ j ][ k ] = 0.;
 
             Evaporation_Penman.y[ j ][ k ] = f_Penman * .0346 * ( ( Q_radiation.y[ j ][ k ] +
                         Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );

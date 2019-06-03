@@ -23,7 +23,7 @@
 using namespace std;
 using namespace AtomUtils;
 
-double get_pole_temperature(int Ma, const std::map<int, double> &pole_temp_map);
+double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map);
 
 void cAtmosphereModel::BC_Radiation_multi_layer(){
     // class element for the computation of the radiation and the temperature distribution
@@ -309,36 +309,14 @@ void cAtmosphereModel::init_temperature()
     // difference between pole temperature ( Ma ) and pole temperature ( previous Ma )
     double t_pole_diff_ocean = 0., t_pole_diff_land;
 
-    std::map<int, double> pole_temp_map{  // Stein/Rüdiger/Parish linear pole temperature ( Ma ) distribution
-        {0, 0.},
-        {40, 22. },
-        {45, 23.5 },
-        {50, 24.1 },
-        {55, 24.3 },
-        {60, 22.4 },
-        {70, 24.2 },
-        {80, 23.7 },
-        {90, 22.8 },
-        {100, 21.8},
-        {120, 19.},
-        {130, 17.8},
-        {140, 16.9},
-        {150, 16.4},
-        {160, 16.},
-        {340, 16.}
-    }; 
+    std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature ( Ma ) distribution
+    load_map_from_file(pole_temperature_file, pole_temp_map); 
 
     double d_j_half = ( double ) ( jm -1 ) / 2.0;
     int i_mount = 0;
 
     // temperature initial conditions along the surface
-
     if ( RadiationModel == 1 ){
-
-//    logger() << "RadiationModel BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
-//    logger() << "   RadiationModel = " << RadiationModel << endl;
-//    logger() << "   temperature in RadiationModel == 1 " << endl << "RadiationModel BC_Temperature: temperature = " <<  t.x[ 0 ][ 0 ][ 0 ] << endl;
-
         //the t_pole_diff_ocean should be the difference between this time slice and the previous one, right? -- mchin
         if(!is_first_time_slice()){
             t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map) - 
@@ -349,22 +327,22 @@ void cAtmosphereModel::init_temperature()
         t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map );
         // in °C, constant local pole temperature as function of Ma for hothouse climates 
 
-        double t_eff = t_pole - t_equator;  // coefficient for the zonal parabolic temperature distribution
-//        t_eff = ( t_pole_ma + t_0 ) / t_0 - t_equator;  // coefficient for the zonal parabolic temperature distribution
-
+        float pole_temperature = 1 + get_pole_temperature(*get_current_time(), pole_temp_map ) / t_0;
+        float t_eff = t_equator - pole_temperature;  // coefficient for the zonal parabolic temperature distribution
         for ( int k = 0; k < km; k++ ){
             for ( int j = 0; j < jm; j++ ){
                 double d_j = ( double ) j;
                 if ( NASATemperature == 0 ){  // parabolic ocean surface temperature assumed
-                    t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole + t_cretaceous_add;
-                                                                      // increasing pole and mean temperature ( Ma ) incorporated
+                    t.x[ 0 ][ j ][ k ] = -t_eff * parabola( d_j / d_j_half ) + pole_temperature + t_cretaceous_add;
+                    srand (time(NULL));
+                    t.x[ 0 ][ j ][ k ] += (rand() % 10 - 5) / 50. / t_0;
 
+                    // increasing pole and mean temperature ( Ma ) incorporated
                     if ( is_land ( h, 0, j, k ) ){  // parabolic land surface temperature assumed
-                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
-                            + t_cretaceous_add + m_model->t_land;
-                                                                      // increasing pole and mean temperature ( Ma ) incorporated
-                                                                      // in case land temperature is assumed to be
-                                                                      // globally higher than ocean temperature, t_land is added too
+                        t.x[ 0 ][ j ][ k ] += t_land;
+                        // increasing pole and mean temperature ( Ma ) incorporated
+                        // in case land temperature is assumed to be
+                        // globally higher than ocean temperature, t_land is added too
                     }
                 }else{  // if ( NASATemperature == 1 ) ocean surface temperature based on NASA temperature distribution
                     // transported for later time slices Ma by use_earthbyte_reconstruction
@@ -1182,7 +1160,7 @@ double get_pole_temperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
     return (t_2 - t_1) / (double) (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
 }
 
-double get_pole_temperature(int Ma, const std::map<int, double> &pole_temp_map){
+double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map){
     assert(pole_temp_map.size()>1);
     
     std::pair<int, double> up = *pole_temp_map.begin(), bottom = *++pole_temp_map.begin();

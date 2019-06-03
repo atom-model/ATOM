@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits>
+#include <map>
 
 #include "Array.h"
 #include "Array_1D.h"
@@ -82,6 +83,8 @@ namespace AtomUtils{
 
     std::tuple<double, int, int, int>
     max_diff(int i, int j, int k, const Array &a1, const Array &a2);
+
+    void load_map_from_file(const std::string& fn, std::map<float, float>& m);
 
     // integration tools
     double simpson(int n1, int n2, double dstep, Array_1D &value);

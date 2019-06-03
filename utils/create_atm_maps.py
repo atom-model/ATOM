@@ -11,11 +11,11 @@ from draw_atm_velocities  import draw_velocity
 from draw_topo import draw_topography
 
 map_cfg = {
-    'temperature': (6, -20, 40, u'Temperature (Celsius °C)'),
+    'temperature': (6, -20, 30, u'Temperature (Celsius °C)'),
     'v_velocity': (3, -7, 7, 'v_velocity (m/s)'),
     'w_velocity': (4, -8, 9, 'w_velocity (m/s)'),
     'water_vapour': (7, 0, 20, 'Water Vapour (g/kg)'),
-    'precipitation': (8, 0, 1200, 'Precipitation (mm/yr)'),
+    'precipitation': (8, 0, 800, 'Precipitation (mm/yr)'),
     'precipitable_water': (9, 0, 30, 'Precipitable Water (mm)'),
     'evaporation' : (10, 0, 7, 'Evaporation (mm/d)')
 }
