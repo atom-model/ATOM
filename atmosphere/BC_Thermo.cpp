@@ -85,7 +85,12 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                     co2_coeff = co2_factor * ( co2_equator / co2_tropopause );
                 }
 
-                // dependency given by Häckel ( F. Baur and H. Philips, 1934 )
+                // dependency given by Häckel, Meteorologie, p. 205 ( law by F. Baur and H. Philips, 1934 )
+                // co2_coeff * epsilon_eff describe the effect in the emissivity computation of other gases like CO2
+                // in the original formula this value is 0.594, for reasons of adjustment to the modern atmosphere,
+                // this constant became a variable in zonal direction
+                // this variable reacts very sensitive and changes the temperature field extremely
+                // the second term describes the influence of water vapour only 
                 if( i >= i_mount ){ //start from the mountain top
                     epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );
                     radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
@@ -227,13 +232,6 @@ void cAtmosphereModel::init_temperature()
         logger()<<"20180912: Enter BCT ... "<<std::endl;
         tmp.inspect("20180912: ");
     }
-    // boundary condition of  temperature on land 
-    // parabolic distribution from pole to pole accepted
-    // temperature on land at equator t_max = 1.055 compares to 15° C compared to 288 K
-    // temperature at tropopause t_min = 0.77 compares to -62° C compares to 211 K
-    // temperature at tropopause t_min = 0.89 compares to -30° C compares to 243 K
-    // temperature difference from equator to pole   18°C compares to  t_delta = 0.0659  compares to  18 K
-
     // logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
     // logger() << "enter BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
 
@@ -243,10 +241,10 @@ void cAtmosphereModel::init_temperature()
     if(!is_first_time_slice()){
         t_cretaceous_add = get_mean_temperature_from_curve(*get_current_time()) - 
             get_mean_temperature_from_curve(*get_previous_time());
-        t_cretaceous_add /= t_0; 
+        t_cretaceous_add /= t_0; // non-dimensional 
     }
 
-    // temperatur distribution at aa prescribed sun position
+    // temperatur distribution at a prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
     // sun_position_lon = 180, position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
     // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )

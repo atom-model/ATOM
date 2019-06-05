@@ -68,8 +68,8 @@ def main():
             ( 'albedo_pole', 'albedo around the poles', 'double', 0.7 ),
             ( 'albedo_equator', 'albedo around the equator', 'double', 0.15 ),
 
-            ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.594 ),
-            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.59 ),
+            ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.525 ),
+            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.570 ),
             ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
@@ -108,10 +108,10 @@ def main():
             ( 't_cretaceous_max', 'maximum add of mean temperature in °C during cretaceous times', 'double', 10.0 ),
             ( 't_cretaceous', 'value at modern times', 'double', 0.0 ),
 
-            ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
-            ( 't_equator', 'temperature t_0 = 1.11 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
+            ( 't_average', 'mean temperature of the modern earth', 'double', 15.4 ),
+            ( 't_equator', 'temperature t_0 = 1.0842 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
 #            ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
-            ( 't_pole', 'temperature at the poles t_pole = 0.945 compares to -15.0°C compares to 258.15 K', 'double', 0.945 ),
+            ( 't_pole', 'temperature at the poles t_pole = 0.9436 compares to -15.4°C compares to 258.15 K', 'double', 0.9436 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
             ( 't_tropopause_pole', 'temperature in the tropopause at the pole, t = 0.784 compares to -59°C compares to 214.15 K', 'double', 0.784 ),
             ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
