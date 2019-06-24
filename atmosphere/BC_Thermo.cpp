@@ -64,11 +64,12 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_
     this-> R_Air =  model->R_Air;
     this-> r_water_vapour =  model->r_water_vapour;
     this-> R_WaterVapour =  model->R_WaterVapour;
+    this-> R_co2 =  model->R_co2;
     this-> co2_cretaceous =  model->co2_cretaceous;
     this-> co2_vegetation =  model->co2_vegetation;
     this-> co2_ocean =  model->co2_ocean;
     this-> co2_land =  model->co2_land;
-    this-> co2_factor =  model->co2_factor;
+    this-> emissivity_add =  model->emissivity_add;
     this-> rad_equator =  model->rad_equator;
     this-> rad_pole =  model->rad_pole;
     this-> epsilon_pole =  model->epsilon_pole;
@@ -210,6 +211,12 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_1D &rad, Array_2D &albedo, Arra
     epsilon_eff_max = .594; // constant  given by Häckel ( F. Baur and H. Philips, 1934 )
     // constant value stands for other non-condensable gases than water vapour in the equation for epsilon
     epsilon_eff_2D = epsilon_pole - epsilon_equator;
+    double co2max = co2.max();
+    double x_c = 0.;
+    double u_c = 0.;
+    double eps_co2 = 0.;
+    double P_c = 0.;
+    double step = 0.;
 
     for ( int j = 0; j < jm; j++ ){
         i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0);
@@ -223,7 +230,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_1D &rad, Array_2D &albedo, Arra
         for ( int k = 0; k < km; k++ ){
 //            i_mount = i_topography[ j ][ k ];
             i_mount = 0;
-//            d_i_max = ( double ) ( im - 1 );
 
             // in W/m², assumption of parabolic surface radiation at zero level
             radiation_surface.y[ j ][ k ] = rad_eff * parabola( j / j_max_half ) + rad_pole;
@@ -242,13 +248,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_1D &rad, Array_2D &albedo, Arra
                     epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) *
                         ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );// radial distribution approximated by a parabola
 
-                if ( fabs(m_model->CO2 - 1) < std::numeric_limits<double>::epsilon() ){
-                    // influence of co2 in the atmosphere, co2_coeff = 1. means no influence
-                    co2_coeff = co2_factor * ( co2_equator / co2_tropopause );
-                }else{
-                    co2_coeff = 1.;
-                }
-
                 // dependency given by Häckel, Meteorologie, p. 205 ( law by F. Baur and H. Philips, 1934 )
                 // co2_coeff * epsilon_eff describe the effect in the emissivity computation of other gases like CO2
                 // in the original formula this value is 0.594, for reasons of adjustment to the modern atmosphere,
@@ -256,12 +255,42 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_1D &rad, Array_2D &albedo, Arra
                 // this variable reacts very sensitive and changes the temperature field extremely
                 // the second term describes the influence of water vapour only
                 if( i >= i_mount ){ //start from the mountain top
-                    epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );
+                    step = ( ( exp( zeta * ( rad.z[ i + 1 ] - 1. ) ) - 1 ) 
+                             - ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) ) 
+                             * ( L_atm / ( double ) ( im-1 ) ); // local atmospheric shell thickness
+                    P_c = ( 1.e-6 * p_stat.x[ i ][ j ][ k ] * co2.x[ i ][ j ][ k ] * co2_0 / p_0 );
+                    u_c = P_c * step * 100.; // model by Atwater and Ball
+//                    u_c = 300. / 0.9869 * P_c * step * 100. / ( t.x[ i ][ j ][ k ] * t_0 ); 
+                            // modell by Yamamoto and Sasamori
+
+                 // influence on the emissivity by carbon dioxcide by the law by Bliss
+                    x_c = 10. * P_c / ( R_co2 * t.x[ i ][ j ][ k ] * t_0 ) * step * p_0;
+                  // coefficient in the Bliss law, 10. => conversion from kg/m² to g/cm²
+//                    eps_co2 = .185 * ( 1. - exp ( - 50. * x_c ) ); // modell by Bliss
+                    eps_co2 = .185 * ( 1. - exp ( - 0.3919 * pow ( u_c, 0.4 ) ) ); // model by Atwater and Ball
+                    eps_co2 = .5 * eps_co2; // model by Atwater and Ball, 
+                                            // factor .5 fits the Atwater and Ball results to Yamamoto and Sasamori,
+                                            // which fit best to HITRAN band data
+//                    eps_co2 = 0.; // Test
+
+                    epsilon_3D.x[ i ][ j ][ k ] = emissivity_add * epsilon_eff + .0416 * sqrt ( e ) + eps_co2;
                     radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
                                     pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
                 }
                 if ( epsilon_3D.x[ i ][ j ][ k ] > 1. )  epsilon_3D.x[ i ][ j ][ k ] = 1.;
+/*
+if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_cretaceous = " << t_cretaceous << "   t_average = " << t_average << "   t = " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "   co2_coeff = " << co2_coeff << "   co2_eff = " << ( co2_pole - co2_equator ) << "   co2_pole = " << co2_pole << "   co2_equator = " << co2_equator << "   co2_cretaceous = " << co2_cretaceous << "   co2_average = " << co2_average << "   co2 = " << co2.x[ i ][ j ][ k ] * co2_0 << "   epsilon_3D = " << epsilon_3D.x[ i ][ j ][ k ] << "   epsilon_eff = " << epsilon_eff << "   co2max = " << co2max * co2_0 << "   x_c = " << x_c << "   u_c = " << u_c << "   eps_co2 = " << eps_co2 << "   p_stat_co2 = " << 1.e-6 * p_stat.x[ i ][ j ][ k ] * co2.x[ i ][ j ][ k ] * co2_0 << "   p_stat = " << p_stat.x[ i ][ j ][ k ] << "   step = " << step << "   PcL = " << P_c * step * 100. << endl;
+*/
             }
+
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+/*
+    if ( k == 180 ) cout << "   i_mount = " << i_mount << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_cretaceous = " << t_cretaceous << "   t_average = " << t_average << "   t = " << t.x[ i_mount ][ j ][ k ] * t_0 - t_0 << "   co2_coeff = " << co2_coeff << "   co2_eff = " << ( co2_pole - co2_equator ) << "   co2_pole = " << co2_pole << "   co2_equator = " << co2_equator << "   co2_cretaceous = " << co2_cretaceous << "   co2_average = " << co2_average << "   co2 = " << co2.x[ i_mount ][ j ][ k ] * co2_0 << "   epsilon_3D = " << epsilon_3D.x[ i_mount ][ j ][ k ] << "   epsilon_eff = " << epsilon_eff << "   co2max = " << co2max * co2_0 << "   x_c = " << x_c << "   u_c = " << u_c << "   eps_co2 = " << eps_co2 << "   p_stat_co2 = " << 1.e-6 * p_stat.x[ i_mount ][ j ][ k ] * co2.x[ i ][ j ][ k ] * co2_0 << "   p_stat = " << p_stat.x[ i_mount ][ j ][ k ] << "   step = " << step << "   PcL = " << P_c * step * 100. << endl;
+*/
+/*
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i_mount = " << i_mount << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_cretaceous = " << t_cretaceous << "   t_average = " << t_average << "   t = " << t.x[ i_mount ][ j ][ k ] * t_0 - t_0 << "   co2_coeff = " << co2_coeff << "   co2_eff = " << ( co2_pole - co2_equator ) << "   co2_pole = " << co2_pole << "   co2_equator = " << co2_equator << "   co2_cretaceous = " << co2_cretaceous << "   co2_average = " << co2_average << "   co2 = " << co2.x[ i_mount ][ j ][ k ] * co2_0 << "   epsilon_3D = " << epsilon_3D.x[ i_mount ][ j ][ k ] << "   epsilon_eff = " << epsilon_eff << "   co2max = " << co2max * co2_0 << "   x_c = " << x_c << "   u_c = " << u_c << "   eps_co2 = " << eps_co2 << "   p_stat_co2 = " << 1.e-6 * p_stat.x[ i_mount ][ j ][ k ] * co2.x[ i_mount ][ j ][ k ] * co2_0 << "   p_stat = " << p_stat.x[ i_mount ][ j ][ k ] << "   step = " << step << "   PcL = " << P_c * step * 100. << endl;
+*/
 /*
             // inside mountains
             for ( int i = i_mount - 1; i >= 0; i-- ){
@@ -683,18 +712,12 @@ void BC_Thermo::BC_WaterVapour ( Array_1D &rad, Array &h, Array &p_stat, Array &
 
 
 
-
-void BC_Thermo::BC_CO2( double L_atm, Array_1D &rad, Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 ){
+void BC_Thermo::BC_CO2( int Ma, double L_atm, Array_1D &rad, Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 ){
     // initial and boundary conditions of CO2 content on water and land surfaces
     // parabolic CO2 content distribution from pole to pole accepted
     double zeta = 3.715;
 
     j_half = j_max / 2;
-
-    // temperature-distribution by Ruddiman approximated by a parabola
-    //t_cretaceous_eff = t_cretaceous_max / ( ( double ) Ma_max_half - ( double ) ( Ma_max_half * Ma_max_half / ( double ) Ma_max ) );   // in °C
-    //t_cretaceous = t_cretaceous_eff * ( double ) ( - ( Ma * Ma ) / ( double ) Ma_max + Ma );   // in °C
-    //if ( Ma == 0 )  t_cretaceous = t_cretaceous_prev = 0.;
 
     // CO2-distribution by Ruddiman approximated by a parabola
     co2_cretaceous = 3.2886 * pow ( ( t_cretaceous + t_average ), 2 ) - 32.8859 *
@@ -732,7 +755,147 @@ void BC_Thermo::BC_CO2( double L_atm, Array_1D &rad, Array_2D &Vegetation, Array
     co2_cretaceous = co2_cretaceous / co2_0;
     co2_land = co2_land / co2_0;
     co2_ocean = co2_ocean / co2_0;
-    co2_vegetation = co2_vegetation / co2_0;
+    co2_tropopause = co2_tropopause / co2_0;
+    co2_eff = co2_pole - co2_equator;
+
+    double emittancy_total = 0.423; // in W/m²
+    double coeff_em = 5.6697e-8; // in W/(m² K)
+    double delta_T = 0.02; // in K
+
+    // CO2-content as initial solution
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+//            i_mount = i_topography[ j ][ k ];
+            i_mount = 0;
+            if ( is_air ( h, i_mount, j, k ) ){
+                d_j = ( double ) j;
+/*
+                co2.x[ i_mount ][ j ][ k ] = co2_eff * ( d_j * d_j 
+                    / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+                    co2_pole + co2_cretaceous + co2_ocean; // non-dimensional, parabolic assumption
+*/
+                co2.x[ i_mount ][ j ][ k ] = exp ( 4. * delta_T * coeff_em 
+                     * pow( ( t.x[ i_mount ][ j ][ k ] * t_0 ), 3 ) / emittancy_total )
+                     + co2_cretaceous + co2_ocean;
+                     // reciprocal formula for the temperature increase by co2, 
+                     // Temp_co2_add by Nasif Nahle Sabag in PostProcess_Atm.cpp
+
+                // taken over from Ruddiman, p 86, effect of co2 on global temperature
+//                co2.x[ i_mount ][ j ][ k ] = ( 3.2886 * pow ( ( t.x[ i_mount ][ j ][ k ] 
+//                    * t_0 - t_0 ), 2 ) - 32.8859 * ( t.x[ i_mount ][ j ][ k ] 
+//                    * t_0 - t_0 ) + 102.2148 + co2_ocean ) / co2_0;  // non-dimensional
+/*
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i_mount = " << i_mount << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_cretaceous = " << t_cretaceous << "   t_average = " << t_average << "   t = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << "   co2_eff = " << ( co2_pole - co2_equator ) * co2_0 << "   co2_pole = " << co2_pole * co2_0 << "   co2_equator = " << co2_equator * co2_0 << "   co2_cretaceous = " << co2_cretaceous * co2_0 << "   co2_average = " << co2_average << "   co2 = " << co2.x[ i_mount ][ 0 ][ k ] * co2_0 << endl;
+*/
+            }
+            if ( is_land ( h, i_mount, j, k ) ){
+                d_j = ( double ) j;
+/*
+                co2.x[ i_mount ][ j ][ k ] = co2_eff * ( d_j * d_j 
+                    / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
+                    co2_pole + co2_cretaceous + co2_land + co2_vegetation 
+                    * Vegetation.y[ j ][ k ] / co2_0;  // parabolic distribution from pole to pole
+*/
+                co2.x[ i_mount ][ j ][ k ] = exp ( 4. * delta_T * coeff_em 
+                     * pow( ( t.x[ i_mount ][ j ][ k ] * t_0 ), 3 ) / emittancy_total )
+                     + co2_cretaceous + co2_land + co2_vegetation
+                    * Vegetation.y[ j ][ k ] / co2_0;
+                     // reciprocal formula for the temperature increase by co2, 
+                     // Temp_co2_add by Nasif Nahle Sabag in PostProcess_Atm.cpp
+
+
+
+
+                // taken over from Ruddiman, p 86, effect of co2 on global temperature
+//                co2.x[ i_mount ][ j ][ k ] = ( 3.2886 * pow ( ( t.x[ i_mount ][ j ][ k ] 
+//                    * t_0 - t_0 ), 2 ) - 32.8859 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) 
+//                    + 102.2148 + co2_land - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;  // non-dimensional
+/*
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+    if ( ( j == 90 ) && ( k == 30 ) ) cout << "   i_mount = " << i_mount << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_cretaceous = " << t_cretaceous << "   t_average = " << t_average << "   t = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << "   co2_eff = " << ( co2_pole - co2_equator ) * co2_0 << "   co2_pole = " << co2_pole * co2_0 << "   co2_equator = " << co2_equator * co2_0 << "   co2_cretaceous = " << co2_cretaceous * co2_0 << "   co2_average = " << co2_average << "   co2 = " << co2.x[ i_mount ][ 0 ][ k ] * co2_0 << "   co2_vegetation = " << co2_vegetation << "   Vegetation = " << Vegetation.y[ j ][ k ] << endl;
+*/
+            }
+        }
+    }
+
+    // co2 distribution decreasing approaching tropopause, above no co2
+    for ( int j = 0; j < jm; j++ ){
+        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
+//        d_i_max = ( double ) i_trop;
+        height_tropo = ( exp( zeta * ( rad.z[ i_trop ] - 1. ) ) - 1 ) 
+            * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
+        d_i_max = height_tropo;
+
+        for ( int k = 0; k < km; k++ ){
+//            i_mount = i_topography[ j ][ k ];
+            i_mount = 0;
+            for ( int i = 0; i <= im - 1; i++ ){
+                if ( i <= i_trop ){
+                    height = ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) 
+                        * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
+                    d_i = height;
+                    co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ] 
+                        - ( co2_tropopause - co2.x[ i_mount ][ j ][ k ] ) 
+                        * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );
+                        // radial distribution approximated by a parabola
+                }
+                else  co2.x[ i ][ j ][ k ] = co2_tropopause;
+            }
+        }
+    }
+}
+
+
+
+
+
+void BC_Thermo::BC_CO2_Iter( int Ma, double L_atm, Array_1D &rad, Array_2D &Vegetation,
+                Array_2D &Topography, Array &h, Array &t, Array &p_dyn, Array &co2 ){
+    // initial and boundary conditions of CO2 content on water and land surfaces
+    // parabolic CO2 content distribution from pole to pole accepted
+    double zeta = 3.715;
+
+    j_half = j_max / 2;
+
+    // CO2-distribution by Ruddiman approximated by a parabola
+    co2_cretaceous = 3.2886 * pow ( ( t_cretaceous + t_average ), 2 ) - 32.8859 *
+        ( t_cretaceous + t_average ) + 102.2148;  // in ppm
+    co2_average = 3.2886 * pow ( t_average, 2 ) - 32.8859 * t_average + 102.2148;  // in ppm
+    co2_cretaceous = co2_cretaceous - co2_average;
+
+    cout.precision ( 3 );
+
+    co_comment = "      co2 increase at cretaceous times: ";
+    co_gain = " co2 increase";
+    co_modern = "      mean co2 at modern times: ";
+    co_cretaceous_str = "      mean co2 at cretaceous times: ";
+    co_average_str = " co2 modern";
+    co_average_cret = " co2 cretaceous";
+    co_unit =  "ppm ";
+
+    cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) <<
+        co_comment << resetiosflags ( ios::left )         << setw ( 12 ) << co_gain << " = "
+        << setw ( 7 ) << setfill ( ' ' ) << co2_cretaceous << setw ( 5 ) << co_unit << 
+        endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co_modern
+        << resetiosflags ( ios::left ) << setw ( 13 ) << co_average_str  << " = "
+        << setw ( 7 )  << setfill ( ' ' ) << co2_average << setw ( 5 ) << co_unit 
+        << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left )
+        << co_cretaceous_str << resetiosflags ( ios::left ) << setw ( 13 ) << co_average_cret
+        << " = "  << setw ( 7 )  << setfill ( ' ' ) << co2_average + co2_cretaceous
+        << setw ( 5 ) << co_unit << endl;
+    cout << endl;
+
+    d_i_max = ( double ) i_max;
+    d_j_half = ( double ) j_half;
+
+    co2_equator = co2_equator / co2_0;
+    co2_pole = co2_pole / co2_0;
+    co2_cretaceous = co2_cretaceous / co2_0;
+    co2_land = co2_land / co2_0;
+    co2_ocean = co2_ocean / co2_0;
     co2_tropopause = co2_tropopause / co2_0;
 
     co2_eff = co2_pole - co2_equator;
@@ -742,50 +905,50 @@ void BC_Thermo::BC_CO2( double L_atm, Array_1D &rad, Array_2D &Vegetation, Array
         for ( int j = 0; j < jm; j++ ){
 //            i_mount = i_topography[ j ][ k ];
             i_mount = 0;
-
-            if ( is_air ( h, i_mount, j, k ) ){
-                d_j = ( double ) j;
-                co2.x[ i_mount ][ j ][ k ] = co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                    co2_pole + co2_cretaceous + co2_ocean; // non-dimensional
-            }
-            if ( is_land ( h, i_mount, j, k ) ){
-                d_j = ( double ) j;
-                co2.x[ i_mount ][ j ][ k ] = co2_eff * ( d_j * d_j / ( d_j_half * d_j_half ) - 2. * d_j / d_j_half ) + 
-                    co2_pole + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ];  // parabolic distribution from pole to pole
-            }
+            if ( ( Ma > 0 ) && ( is_land ( h, i_mount, j, k ) ) ) 
+                co2.x[ i_mount ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ]
+                    + co2_vegetation * Vegetation.y[ j ][ k ] / co2_0; 
         }
     }
 
-
     // co2 distribution decreasing approaching tropopause, above no co2
     for ( int j = 0; j < jm; j++ ){
-        i_trop = im_tropopause[ j ] + GetTropopauseHightAdd ( t_cretaceous / t_0 );
-//        d_i_max = ( double ) i_trop;
-        height_tropo = ( exp( zeta * ( rad.z[ i_trop ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
-        d_i_max = height_tropo;
-
         for ( int k = 0; k < km; k++ ){
+            height_tropo = Topography.y[ j ][ k ];
+            d_i_max = height_tropo;
+
+            for ( int i = 0; i <= im - 1; i++ ){
+                height = ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) 
+                    * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
+                if ( height <= height_tropo ) i_trop = i;
+            }
+
 //            i_mount = i_topography[ j ][ k ];
             i_mount = 0;
-            for ( int i = 1; i <= im - 1; i++ ){
-                if ( i <= i_trop ){
-//                    d_i = ( double ) i;
-                    height = ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
-                    d_i = height;
-                    co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ] - ( co2_tropopause - co2.x[ i_mount ][ j ][ k ] ) * 
-                        ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );// radial distribution approximated by a parabola
-                }
-                //else co2.x[ i ][ j ][ k ] = co2.x[ i_trop ][ j ][ k ];
-                else  co2.x[ i ][ j ][ k ] = co2_tropopause;
-            }
-            for ( int i = i_trop - 1; i >= 0; i-- ){
-                if ( ( is_land ( h, i, j, k ) ) != ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i+1, j, k ) ) ) ){
-                    co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ];
+            if ( Ma > 0 ){
+                for ( int i = 0; i <= im - 1; i++ ){
+                    if ( is_land ( h, i, j, k ) ){
+                        height = ( exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) 
+                            * ( L_atm / ( double ) ( im-1 ) );  // coordinate stretching
+                        d_i = height;
+                        co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ] 
+                            - ( co2.x[ i_trop ][ j ][ k ] - co2.x[ i_mount ][ j ][ k ] ) 
+                            * ( d_i / d_i_max * ( d_i / d_i_max - 2. ) );
+                            // radial distribution approximated by a parabola
+/*
+    cout.precision ( 2 );
+    cout.setf ( ios::fixed );
+    if ( ( j == 60 ) && ( k == 87 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   i_trop = " << i_trop << "   Topography = " << Topography.y[ j ][ k ] << "   height_tropo = " << height_tropo << "   height = " << height << "   t = " << t.x[ i ][ 0 ][ k ] * t_0 - t_0 << "   co2_cretaceous = " << co2_cretaceous * co2_0 << "   co2_tropopause = " << co2_tropopause << "   co2_mount = " << co2.x[ i_mount ][ j ][ k ] * co2_0 << "   co2 = " << co2.x[ i ][ j ][ k ] * co2_0 << endl;
+*/
+                    }
                 }
             }
         }
     }
 }
+
+
+
 
 
 void BC_Thermo::TropopauseLocation(){
@@ -2148,7 +2311,6 @@ void BC_Thermo::BC_Pressure ( double L_atm, Array_1D &rad, Array &p_stat, Array 
                     ( t.x[ 0 ][ j ][ k ] * t_0 ) ), exp_pressure ) * p_stat.x[ 0 ][ j ][ k ];
                 // international standard athmosphere formula in hPa
                 // linear temperature distribution T = T0 - gam * height
-                // current air pressure, step size in 500 m, from politropic formula in hPa
             }
         }
     }
@@ -2912,8 +3074,8 @@ void BC_Thermo::Value_Limitation_Atm ( Array &h, Array &u, Array &v, Array &w,
 //                if ( ice.x[ i ][ j ][ k ] >= .0025 )  ice.x[ i ][ j ][ k ] = .0025;
                 if ( ice.x[ i ][ j ][ k ] >= .0005 )  ice.x[ i ][ j ][ k ] = .0005;
                 if ( ice.x[ i ][ j ][ k ] < 0. )  ice.x[ i ][ j ][ k ] = 0.;
-                if ( co2.x[ i ][ j ][ k ] >= 5.36 )  co2.x[ i ][ j ][ k ] = 5.36;
-                if ( co2.x[ i ][ j ][ k ] <= 1. )  co2.x[ i ][ j ][ k ] = 1.;
+                if ( co2.x[ i ][ j ][ k ] >= 8.92 )  co2.x[ i ][ j ][ k ] = 8.92; // == 2500 ppm
+                if ( co2.x[ i ][ j ][ k ] <= 1. )  co2.x[ i ][ j ][ k ] = 1.; // == 280 ppm
 
                 if ( is_land ( h, i, j, k ) ){
                     u.x[ i ][ j ][ k ] = 0.;
@@ -2929,7 +3091,7 @@ void BC_Thermo::Value_Limitation_Atm ( Array &h, Array &u, Array &v, Array &w,
 */
                     cloud.x[ i ][ j ][ k ] = 0.;
                     ice.x[ i ][ j ][ k ] = 0.;
-                    co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
+//                    co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
                     p_dyn.x[ i ][ j ][ k ] = 0.;
                 }
             }

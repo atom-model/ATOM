@@ -295,10 +295,15 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
         }
     }
 
+    double emittancy_total = 0.423; // in W/m²
+    double coeff_em = 5.6697e-8; // in W/(m² K)
+
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             aux_w.x[ 0 ][ j ][ k ] = Evaporation_Dalton.y[ j ][ k ] - 
-                    Precipitation.y[ j ][ k ];
+                                     Precipitation.y[ j ][ k ];
+            aux_u.x[ 0 ][ j ][ k ] = emittancy_total * log( co2.x[ 0 ][ j ][ k ] ) 
+                                     / ( 4. * coeff_em * pow( ( t.x[ 0 ][ j ][ k ] * t_0 ), 3 ) );
         }
     }
 
@@ -368,6 +373,8 @@ void PostProcess_Atmosphere::paraview_vtk_radial( string &Name_Bathymetry_File, 
     dump_radial("Evap-Precip", aux_w, 1., i_radial, Atmosphere_vtk_radial_File);
 
     dump_radial_2d("Vegetation", Vegetation, 1., Atmosphere_vtk_radial_File);
+
+    dump_radial("Temp_co2_add", aux_u, 1., i_radial, Atmosphere_vtk_radial_File);
 
     dump_radial("CO2-Concentration", co2, co2_0, i_radial, Atmosphere_vtk_radial_File);
 
@@ -442,6 +449,9 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
 //    double height = 0.;
 //    double exp_pressure = g / ( 1.e-2 * gam * R_Air );
 
+    double emittancy_total = 0.423; // in W/m²
+    double coeff_em = 5.6697e-8; // in W/(m² K)
+
     for ( int i = 0; i < im; i++ ){
         for ( int j = 0; j < jm; j++ ){
             aux_w.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] + cloud.x[ i ][ j ][ k_zonal ] + ice.x[ i ][ j ][ k_zonal ];
@@ -474,6 +484,10 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
                 aux_v.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] / q_Ice;
             }
             else  aux_v.x[ i ][ j ][ k_zonal ] = 0.;
+
+// aux_v is also used for Temp_co2_add, Saturation_Ice is overwritten
+            aux_v.x[ i ][ j ][ k_zonal ] = emittancy_total * log( co2.x[ i ][ j ][ k_zonal ] ) 
+                                     / ( 4. * coeff_em * pow( ( t.x[ i ][ j ][ k_zonal ] * t_0 ), 3 ) );
         }
     }
 
@@ -502,6 +516,7 @@ void PostProcess_Atmosphere::paraview_vtk_zonal ( string &Name_Bathymetry_File, 
     dump_zonal("Epsilon_3D", epsilon_3D, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Q_Latent", Q_Latent, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Q_Sensible", Q_Sensible, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("Temp_co2_add", aux_v, 1., k_zonal, Atmosphere_vtk_zonal_File);
 
 // writing zonal u-v cell structure
     Atmosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
@@ -571,9 +586,14 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
         }
     }
 
+    double emittancy_total = 0.423; // in W/m²
+    double coeff_em = 5.6697e-8; // in W/(m² K)
+
     for ( int i = 0; i < im; i++ ){
         for ( int k = 0; k < km; k++ ){
             aux_w.x[ i ][ j_longal ][ k ] = c.x[ i ][ j_longal ][ k ] + cloud.x[ i ][ j_longal ][ k ] + ice.x[ i ][ j_longal ][ k ];
+            aux_u.x[ i ][ j_longal ][ k ] = emittancy_total * log( co2.x[ i ][ j_longal ][ k ] ) 
+                                     / ( 4. * coeff_em * pow( ( t.x[ i ][ j_longal ][ k ] * t_0 ), 3 ) );
         }
     }
 
@@ -593,6 +613,7 @@ void PostProcess_Atmosphere::paraview_vtk_longal (string &Name_Bathymetry_File, 
     dump_longal("Q_Sensible", Q_Sensible, 1., j_longal, Atmosphere_vtk_longal_File);
     dump_longal("Epsilon_3D", epsilon_3D, 1., j_longal, Atmosphere_vtk_longal_File);
     dump_longal("CO2-Concentration", co2, co2_0, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("Temp_co2_add", aux_u, 1., j_longal, Atmosphere_vtk_longal_File);
 
 // writing longitudinal u-v cell structure
     Atmosphere_vtk_longal_File <<  "VECTORS u-w-Cell float" << endl;

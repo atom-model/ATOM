@@ -42,7 +42,8 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
             Array &co2n, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent,
             Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow,
             Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c,
-            Array_2D &Topography, Array_2D &Evaporation_Dalton, Array_2D &Precipitation ){
+            Array_2D &Topography, Array_2D &Evaporation_Dalton,
+            Array_2D &Precipitation ){
 
 // Runge-Kutta 4. order for u, v and w component, temperature, water vapour and co2 content
     for ( int i = 1; i < im-1; i++ ){

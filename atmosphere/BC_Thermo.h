@@ -66,7 +66,7 @@ class BC_Thermo
         double t_cretaceous, t_cretaceous_eff;
         double j_par_f, j_pol_f, e, a, j_d, t_dd, k_par_f, k_pol_f;
         double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
-        double R_Air, r_h, r_water_vapour, R_WaterVapour, precipitablewater_average,
+        double R_Air, r_h, r_water_vapour, R_WaterVapour, R_co2, precipitablewater_average,
             precipitation_average, precipitation_NASA_average;
         double eps, c_ocean, t_land, c_land, c_coeff, t_average, co2_average,
             co2_equator, co2_pole, gam, t_Ik, atmospheric_window, rad_surf_diff;
@@ -89,7 +89,7 @@ class BC_Thermo
         double t_equator, t_tropopause, t_eff, t_pole, t_eff_tropo, t_tropopause_pole,
             c_equator, c_tropopause, coeff_mmWS;
         double co2_tropopause, co2_eff, co2_coeff, co_pol, co2_vegetation,
-            co2_ocean, co2_land, co2_cretaceous, co2_factor;
+            co2_ocean, co2_land, co2_cretaceous, emissivity_add;
         double *jm_temp_asym;
 
         double S_c_c, S_au, S_nuc, S_ac, S_rim, S_shed, S_ev, S_dep, S_i_dep,
@@ -150,7 +150,11 @@ class BC_Thermo
             Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v,
             Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c );
 
-        void BC_CO2( double L_atm, Array_1D &rad, Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 );
+        void BC_CO2( int Ma, double L_atm, Array_1D &rad, Array_2D &Vegetation, 
+            Array &h, Array &t, Array &p_dyn, Array &co2 );
+
+        void BC_CO2_Iter( int Ma, double L_atm, Array_1D &rad, Array_2D &Vegetation, 
+            Array_2D &Topography, Array &h, Array &t, Array &p_dyn, Array &co2 );
 
         void BC_Surface_v_Velocity ( const string &Name_v_surface_File, Array &v );
 

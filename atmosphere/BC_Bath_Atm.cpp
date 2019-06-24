@@ -119,7 +119,7 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
 //                    c.x[ i ][ j ][ k ] = 0.; 
                     cloud.x[ i ][ j ][ k ] = 0.;
                     ice.x[ i ][ j ][ k ] = 0.;
-                    co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
+//                    co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
                     p_dyn.x[ i ][ j ][ k ] = 0.;
                 }// is_land
             } // i

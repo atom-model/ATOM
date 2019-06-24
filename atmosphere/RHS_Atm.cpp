@@ -520,8 +520,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
     rhs_c.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe / rm
             + w.x[ i ][ j ][ k ] * dcdphi / rmsinthe ) + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2
             + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc_WaterVapour * re )
-            + S_v.x[ i ][ j ][ k ] * coeff_trans;
-//            - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
+            + S_v.x[ i ][ j ][ k ] * coeff_trans
+            - h_0_i * c.x[ i ][ j ][ k ] * k_Force / dr2;
 
     rhs_cloud.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dclouddr + v.x[ i ][ j ][ k ] * dclouddthe / rm
             + w.x[ i ][ j ][ k ] * dclouddphi / rmsinthe ) + ( d2clouddr2 + dclouddr * 2. / rm + d2clouddthe2 / rm2
@@ -537,8 +537,8 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
 
     rhs_co2.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dcodr + v.x[ i ][ j ][ k ] * dcodthe / rm
             + w.x[ i ][ j ][ k ] * dcodphi / rmsinthe ) + ( d2codr2 + dcodr * 2. / rm + d2codthe2 / rm2
-            + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re )
-            - h_0_i * co2.x[ i ][ j ][ k ] * k_Force / dr2;
+            + dcodthe * costhe / rm2sinthe + d2codphi2 / rm2sinthe2 ) / ( sc_CO2 * re );
+//            - h_0_i * co2.x[ i ][ j ][ k ] * k_Force / dr2;
 
     // for the Poisson equation to solve for the pressure, pressure gradient substracted from the above RHS
     aux_u.x[ i ][ j ][ k ] = rhs_u.x[ i ][ j ][ k ] + h_d_i * dpdr / r_air;

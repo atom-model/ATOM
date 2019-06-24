@@ -70,10 +70,8 @@ def main():
             ( 'albedo_pole', 'albedo around the poles', 'double', 0.7 ),
             ( 'albedo_equator', 'albedo around the equator', 'double', 0.15 ),
 
-#            ( 'epsilon_equator', 'emissivity and absorptivity assumption at equator', 'double', 0.594 ),
-            ( 'epsilon_equator', 'emissivity and absorptivity assumption at equator', 'double', 0.525 ),
-#            ( 'epsilon_pole', 'emissivity and absorptivity assumption at poles', 'double', 0.59 ),
-            ( 'epsilon_pole', 'emissivity and absorptivity assumption at poles', 'double', 0.570 ),
+            ( 'epsilon_equator', 'emissivity and absorptivity assumption at equator', 'double', 0.52 ),
+            ( 'epsilon_pole', 'emissivity and absorptivity assumption at poles', 'double', 0.50 ),
             ( 'epsilon_tropopause', 'emissivity and absorptivity assumption at tropopause', 'double', 0.001 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
@@ -87,7 +85,7 @@ def main():
             ( 'r_air', 'density of dry air in kg/m³ at 20°C', 'double', 1.2041 ),
             ( 'R_WaterVapour', 'specific gas constant of water vapour in J/( kg*K )', 'double', 461.6 ),
             ( 'r_water_vapour', 'density of saturated water vapour in kg/m³ at 10°C', 'double', 0.0094),
-            ( 'R_co2', 'specific gas constant of CO2 in J/( kg*4.5K )', 'double', 188.91 ),
+            ( 'R_co2', 'specific gas constant of CO2 in J/( kg*K )', 'double', 188.91 ),
             ( 'lv', 'specific latent evaporation heat ( Condensation heat ) in J/kg', 'double', 2.52e6 ),
             ( 'ls', 'specific latent vaporisation heat ( sublimation heat ) in J/kg', 'double', 2.83e6 ),
             ( 'cp_l', 'specific heat capacity of dry air at constant pressure and 20°C in J/( kg K )', 'double', 1005. ),
@@ -120,18 +118,18 @@ def main():
             ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.014644 ),
 
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
-            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.64 ),
-            ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.64 ),
+            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.54 ),
+            ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.54 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0 ),
-            ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0 ),
+            ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 380.0 ),
             ( 'co2_tropopause', 'minimum rate CO2 at tropopause 0 ppm', 'double', 320.0 ),
-            ( 'co2_pole', 'maximum rate of CO2 of the sea surface at poles', 'double', 320.0 ),
+            ( 'co2_pole', 'maximum rate of CO2 of the sea surface at poles', 'double', 370.0 ),
             ( 'co2_cretaceous', 'value at modern times', 'double', 330.0 ),
-            ( 'co2_vegetation', 'value compares to 100/600Gt per year on the global surface by vegetation', 'double', 3.0 ),
+            ( 'co2_vegetation', 'value compares to 100/600Gt per year on the global surface by vegetation', 'double', 1.0 ),
             ( 'co2_ocean', 'value compares to 0.6/600Gt per year on the sea surface', 'double', 0.0 ),
-            ( 'co2_land', 'value compares to 0.2/600Gt per year on land', 'double', 0. ),
-            ( 'co2_factor', 'adjusts the ratio of co2_equator/co2_tropopause and the influence of co2 in the atmosphere', 'double', .98 ),
+            ( 'co2_land', 'value compares to 0.2/600Gt per year on land', 'double', 0.0 ),
+            ( 'emissivity_add', 'adjusts the influence of other gases in the atmosphere, emissivity_add = 1 => no influence', 'double', 1.0 ),
         ],
 
         'hydrosphere': [

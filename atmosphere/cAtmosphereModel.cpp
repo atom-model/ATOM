@@ -290,13 +290,16 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 //    goto Printout;
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-    circulation.BC_CO2 ( L_atm, rad, Vegetation, h, t, p_dyn, co2 );
+//    circulation.BC_CO2 ( Ma, L_atm, rad, Vegetation, h, t, p_dyn, co2 );
 
     // class element for the surface temperature computation by radiation flux density
     if ( RadiationModel == 1 ){
         circulation.BC_Radiation_multi_layer ( rad, albedo, epsilon, radiation_surface,  
                                                p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
     }
+
+    //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
+    circulation.BC_CO2 ( Ma, L_atm, rad, Vegetation, h, t, p_dyn, co2 );
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
     move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
@@ -832,12 +835,15 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: ice max: " << ice.max() * 1000. << std::endl << std::endl;
 */
             circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
-
+/*
             // class element for the surface temperature computation by radiation flux density
             if ( RadiationModel == 1 ){
                  circulation.BC_Radiation_multi_layer ( rad, albedo, epsilon, radiation_surface, 
                                                         p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
             }
+*/
+            //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
+            //circulation.BC_CO2 ( L_atm, rad, Vegetation, h, t, p_dyn, co2 );
 
             //  new value of the residuum ( div c = 0 ) for the computation of the continuity equation ( min )
             double residuum = std::get<0>(min_Residuum.residuumQuery_3D ( rad, the, u, v, w, residuum_3d ));
@@ -856,9 +862,19 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             print_min_max_values();
 
+            if ( pressure_iter % 2 == 0){
             //  computation of vegetation areas
-            LandArea.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
+                LandArea.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
 
+            //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
+                circulation.BC_CO2_Iter ( Ma, L_atm, rad, Vegetation, Topography, h, t, p_dyn, co2 );
+            }
+
+            // class element for the surface temperature computation by radiation flux density
+            if ( RadiationModel == 1 ){
+                 circulation.BC_Radiation_multi_layer ( rad, albedo, epsilon, radiation_surface, 
+                             p_stat, t, c, h, epsilon_3D, radiation_3D, cloud, ice, co2 );
+            }
 
             //  composition of results
             calculate_MSL.run_MSL_data ( iter_cnt, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, 
