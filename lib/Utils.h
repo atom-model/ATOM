@@ -57,6 +57,8 @@ namespace AtomUtils{
     double trapezoidal(int &n1, int &n2, double &dstep, Array_1D &value);
     double rectangular(int &n1, int &n2, double &dstep, Array_1D &value);
 
+    double C_Dalton( double u_0, double v, double w );
+
     inline double exp_func(double &T_K, const double &co_1, const double &co_2){
         return exp(co_1 * (T_K - 273.15) / (T_K - co_2));                        // temperature in °K
     }

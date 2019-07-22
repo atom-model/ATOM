@@ -101,7 +101,7 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface( string &topo_filename,
 
 
 void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, double g, double hp, double ep, double r_air, 
-                                                double R_Air, double t_0, double c_0, double t_land, double t_cretaceous, double t_equator,     
+                                                double R_Air, double t_0, double c_0, double t_land, double t_paleo, double t_equator,     
                                                 double t_pole, double t_tropopause, double c_land, double c_tropopause, 
                                                 double co2_0, double co2_equator, double co2_pole, double co2_tropopause, 
                                                 double pa, double gam, double sigma, Array &h, Array &u, 
@@ -135,14 +135,16 @@ void BC_Bathymetry_Atmosphere::BC_SolidGround ( int RadiationModel, int Ma, doub
 
 
 
-void BC_Bathymetry_Atmosphere::vegetationDistribution ( double max_Precipitation,
+void BC_Bathymetry_Atmosphere::vegetationDistribution ( double t_0, double max_Precipitation,
                                                         Array_2D &Precipitation, Array_2D &Vegetation, 
                                                         Array &t, Array &h ){
     // description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
-            if ( max_Precipitation > 0 && is_land( h, 0, j, k ) && !(t.x[ 0 ][ j ][ k ] < 1.) ){ 
-                Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation; // actual vegetation areas
+            if ( max_Precipitation > 0 && is_land( h, 0, j, k ) 
+                && !( ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) < - 10. ) ){ 
+                Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] 
+                / max_Precipitation; // actual vegetation areas including boreal forests
             }else{
                 Vegetation.y[ j ][ k ] = 0.;
             }

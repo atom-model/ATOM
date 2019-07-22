@@ -27,7 +27,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max,
                             double r_0_water, double ua, double va, double wa, double ta,
                             double ca, double pa, double u_0, double p_0, double t_0,
                             double c_0, double cp_w, double L_hyd, double t_average,
-                            double t_cretaceous_max, double t_equator, double t_pole,
+                            double t_paleo_max, double t_equator, double t_pole,
                             const string &input_path ){
     this -> im = im;
     this -> jm = jm;
@@ -53,7 +53,7 @@ BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max,
     this -> cp_w = cp_w;
     this -> L_hyd = L_hyd;
     this -> t_average = t_average;
-    this -> t_cretaceous_max = t_cretaceous_max;
+    this -> t_paleo_max = t_paleo_max;
     this -> t_equator = t_equator;
     this -> t_pole = t_pole;
     this -> input_path = input_path;
@@ -208,12 +208,12 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array_1D &rad, Array &h, Array &t
 
     // temperature-distribution by Ruddiman approximated by a parabola
     t_coeff = t_pole - t_equator;
-    t_cretaceous_coeff = t_cretaceous_max / ( ( double ) Ma_max_half -
+    t_paleo_coeff = t_paleo_max / ( ( double ) Ma_max_half -
         ( double ) ( Ma_max_half * Ma_max_half / Ma_max ) );   // in °C
-    t_cretaceous = t_cretaceous_coeff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
-    if ( Ma == 0 )  t_cretaceous = 0.;
+    t_paleo = t_paleo_coeff * ( double ) ( - ( Ma * Ma ) / Ma_max + Ma );   // in °C
+    if ( Ma == 0 )  t_paleo = 0.;
 
-    t_cretaceous = 0.;
+    t_paleo = 0.;
 
     cout.precision ( 3 );
 
@@ -226,60 +226,57 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array_1D &rad, Array &h, Array &t
         << time_slice_number << setw ( 3 ) << Ma << setw ( 12 ) << time_slice_unit 
         << endl << endl;
 
-    temperature_comment = "      temperature increase at cretaceous times: ";
+    temperature_comment = "      temperature increase at paleo times: ";
     temperature_gain = " t increase";
     temperature_modern = "      mean temperature at modern times: ";
-    temperature_cretaceous = "      mean temperature at cretaceous times: ";
+    temperature_paleo = "      mean temperature at paleo times: ";
     temperature_average = " t modern";
-    temperature_average_cret = " t cretaceous";
+    temperature_average_pal = " t paleo";
     temperature_unit =  "°C ";
 
     cout << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << temperature_comment << 
         resetiosflags ( ios::left ) << setw ( 12 ) << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << 
-        t_cretaceous << setw ( 5 ) << temperature_unit << endl << setw ( 50 ) << setfill ( '.' )  << 
+        t_paleo << setw ( 5 ) << temperature_unit << endl << setw ( 50 ) << setfill ( '.' )  << 
         setiosflags ( ios::left ) << temperature_modern << resetiosflags ( ios::left ) << setw ( 13 ) << 
         temperature_average  << " = "  << setw ( 7 )  << setfill ( ' ' ) << t_average << setw ( 5 ) << temperature_unit << 
-        endl << setw ( 50 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_cretaceous << 
-        resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' )
-        << t_average + t_cretaceous << setw ( 5 ) << temperature_unit << endl;
+        endl << setw ( 50 ) << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_paleo << 
+        resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average_pal  << " = "  << setw ( 7 )  << setfill ( ' ' )
+        << t_average + t_paleo << setw ( 5 ) << temperature_unit << endl;
 
 
     c_average = ( t_average + 346. ) / 10.;// in psu, relation taken from "Ocean Circulation, The Open University"
-    c_cretaceous = ( t_average + t_cretaceous + 346. ) / 10.;// in psu
-    c_cretaceous = c_cretaceous - c_average;
-    if ( Ma == 0 )  c_cretaceous = 0.;
+    c_paleo = ( t_average + t_paleo + 346. ) / 10.;// in psu
+    c_paleo = c_paleo - c_average;
+    if ( Ma == 0 )  c_paleo = 0.;
 
-    salinity_comment = "      salinity increase at cretaceous times: ";
+    salinity_comment = "      salinity increase at paleo times: ";
     salinity_gain = " c increase";
     salinity_modern = "      mean salinity at modern times: ";
-    salinity_cretaceous = "      mean salinity at cretaceous times: ";
+    salinity_paleo = "      mean salinity at paleo times: ";
     salinity_average = " c modern";
-    salinity_average_cret = " c cretaceous";
+    salinity_average_pal = " c paleo";
     salinity_unit =  "psu ";
 
     cout << endl << setiosflags ( ios::left ) << setw ( 50 ) << setfill ( '.' ) << salinity_comment << 
         resetiosflags ( ios::left ) << setw ( 12 ) << salinity_gain << " = " << setw ( 7 ) << setfill ( ' ' ) << 
-        c_cretaceous << setw ( 5 ) << salinity_unit << endl << setw ( 50 ) << setfill ( '.' )  << setiosflags ( ios::left ) 
+        c_paleo << setw ( 5 ) << salinity_unit << endl << setw ( 50 ) << setfill ( '.' )  << setiosflags ( ios::left ) 
         << salinity_modern << resetiosflags ( ios::left ) << setw ( 13 ) << salinity_average  << " = "  << setw ( 7 )  << 
         setfill ( ' ' ) << c_average << setw ( 5 ) << salinity_unit << endl << setw ( 50 ) << setfill ( '.' )  << 
-        setiosflags ( ios::left ) << salinity_cretaceous << resetiosflags ( ios::left ) << setw ( 13 ) << 
-        salinity_average_cret  << " = "  << setw ( 7 )  << setfill ( ' ' ) << c_average + c_cretaceous << setw ( 5 ) << 
+        setiosflags ( ios::left ) << salinity_paleo << resetiosflags ( ios::left ) << setw ( 13 ) << 
+        salinity_average_pal  << " = "  << setw ( 7 )  << setfill ( ' ' ) << c_average + c_paleo << setw ( 5 ) << 
         salinity_unit << endl;
     cout << endl;
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             if ( is_water( h, im-1, j, k ) ){
-                t.x[ im-1 ][ j ][ k ] = t.x[ im-1 ][ j ][ k ] + t_cretaceous; // paleo surface temperature
-                c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + c_cretaceous / c_0;  // non-dimensional
-
+                d_j = ( double ) j;
                 t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
-/*
-                if ( t_Celsius <= ( ta * t_0 - t_0 ) ){ // water temperature not below -1°C
-                    t.x[ im-1 ][ j ][ k ] = ta;
-                    c.x[ im-1 ][ j ][ k ] = ca;
-                }
-*/
+                if ( t_Celsius <= 0. ) t_Celsius = 0.;
+                c.x[ im-1 ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
+                if ( c.x[ im-1 ][ j ][ k ] <= ca ) c.x[ im-1 ][ j ][ k ] = ca;
+            }else{
+                c.x[ im-1 ][ j ][ k ] = ca;
             }
         }
     }
@@ -944,38 +941,32 @@ void BC_Thermohalin::BC_Evaporation ( Array_1D &rad, Array_2D &salinity_evaporat
 // preparations for salinity increase due to evaporation and precipitation differences
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
     double salinity_surface = 0.;
-    double coeff_salinity = 1.1574e-8;  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
-//    double coeff_salinity = 1.1574e-8 * 2000.;
-//                                      2000. is fantasy, but it produces a small increase 
-//                                      of surface salinity due to evaporation, TODO
+//    double coeff_salinity = 1.1574e-8;  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
+    double coeff_salinity = 1.;
     double evap_precip = 0.;
-    double zeta = 3.715;
-    double rm = rad.z[ im-1 ];
-    double exp_rm = 1. / exp( zeta * rm );
+    double sal_flux = 0.;
+    double step = L_hyd/(double)(im-1);  // in m, 200/40 = 5m
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-    // the 1. order gradients are built at 1 level below sea surface, at sea level values diverge
-    // this formula contains a 2. order accurate gradient of 1. order, needs 3 points, not always available along coasts
-    // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
-            evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
-            salinity_surface = ( - 3. * c.x[ im - 2 ][ j ][ k ] +
-                               4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr * exp_rm ) *
-                               ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * evap_precip;
-    // the 1. order gradients are built at 1 level below sea surface, at sea level values diverge
-    // this formula contains a 1. order accurate gradient of 1. order, needs 2 points, in general available along coasts
-    // gradient formed 1 point below surface, causes problems when formed at the surface, which normally is correct
-//            salinity_surface = - ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / ( dr * exp_rm ) *
-//                       ( 1. - 2. * c.x[ im - 2 ][ j ][ k ] ) * evap_precip;
-
+            evap_precip = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];  // in mm/d
+//            sal_flux = - ( - 3. * c.x[ im - 1 ][ j ][ k ] + 4. * c.x[ im - 2 ][ j ][ k ] 
+//                       - c.x[ im - 3 ][ j ][ k ] ) / ( 2. * step ) *
+//                       ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] );
+            sal_flux = ( c.x[ im - 1 ][ j ][ k ] - c.x[ im - 2 ][ j ][ k ] ) / step *
+                       ( 1. - 2. * c.x[ im - 1 ][ j ][ k ] );
+            if( sal_flux >= .0 )  sal_flux = .005;
+            if( sal_flux <= .0 )  sal_flux = -.005;
+            salinity_surface = sal_flux * evap_precip;
             salinity_evaporation.y[ j ][ k ] = coeff_salinity * salinity_surface;
-            if ( is_land( h, im-1, j, k) )    salinity_evaporation.y[ j ][ k ] = 0.;
-            c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] + salinity_evaporation.y[ j ][ k ];
-/*
+            if ( is_land( h, im-1, j, k) )  salinity_evaporation.y[ j ][ k ] = 0.;
+            c.x[ im-1 ][ j ][ k ] = c.x[ im-1 ][ j ][ k ] 
+                                    + salinity_evaporation.y[ j ][ k ] / c_0;
+
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
-    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation.y[ j ][ k ] << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   c = " << c.x[ im-1 ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ im-1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   c_grad_1 = " << ( c.x[ im - 2 ][ j ][ k ] - c.x[ im - 3 ][ j ][ k ] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[ im - 2 ][ j ][ k ] + 4. * c.x[ im - 3 ][ j ][ k ] - c.x[ im - 4 ][ j ][ k ] ) / ( 2. * dr ) << endl;
-*/
+    if ( ( j == 104 ) && ( k == 136 ) ) cout << "   j = " << j << "   k = " << k << "   salinity_evaporation = " << salinity_evaporation.y[ j ][ k ] << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface << "   c = " << c.x[ im-1 ][ j ][ k ] << "   c_0 = " << c_0 << "   r_0_water = " << r_0_water << "   c * c_0 = " << c.x[ im-1 ][ j ][ k ] * c_0 << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[ j ][ k ] << "   Prec = " << Precipitation.y[ j ][ k ] << "   sal_flux = " << sal_flux << endl;
+
         }
     }
 }

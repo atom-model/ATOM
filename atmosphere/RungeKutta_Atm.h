@@ -33,17 +33,27 @@ class RungeKutta_Atmosphere
         ~RungeKutta_Atmosphere ();
 
 
-        void solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &, int &, double, double,
-                 double, double, double, double, double, double, double, double, double,
-                 double, double, double, double, double, double,
-                 Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &,
-                 Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                 Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                 Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                 Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
+        void solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prepare,
+            int &n, double lv, double ls, double ep, double hp, double u_0,
+            double t_0, double c_0, double co2_0, double p_0, double r_air,
+            double r_water_vapour, double r_co2, double L_atm, double cp_l,
+            double R_Air, double R_WaterVapour, double R_co2,
+            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &rhs_t, Array &rhs_u,
+            Array &rhs_v, Array &rhs_w, Array &rhs_c, Array &rhs_cloud, Array &rhs_ice,
+            Array &rhs_co2, Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn,
+            Array &p_stat, Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un,
+            Array &vn, Array &wn, Array &p_dynn, Array &cn, Array &cloudn, Array &icen,
+            Array &co2n, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent,
+            Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow,
+            Array &MC_s,Array &MC_q,Array &MC_v,Array &MC_w,
+            Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c, Array &radiation_3D,
+            Array_2D &Topography, Array_2D &Evaporation_Dalton,
+            Array_2D &Precipitation, Array_2D &albedo );
 
-        void solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &, int &,
-                double, double, double, double, Array_1D &, Array_1D &, Array_1D &,
-                Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void solveRungeKutta_2D_Atmosphere ( RHS_Atmosphere &prepare_2D,
+            int &n, double r_air, double u_0, double p_0, double L_atm, 
+            Array_1D &rad, Array_1D &the, Array_1D &phi, Array &rhs_v, 
+            Array &rhs_w, Array &h, Array &v, Array &w, Array &p_dyn, 
+            Array &vn, Array &wn, Array &p_dynn, Array &aux_v, Array &aux_w );
 };
 #endif

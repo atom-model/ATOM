@@ -67,11 +67,13 @@ def main():
 
             ( 'sigma', 'Stefan-Boltzmann constant W/( m²*K4 )', 'double', 5.670280e-8 ),
 
-            ( 'albedo_pole', 'albedo around the poles', 'double', 0.7 ),
-            ( 'albedo_equator', 'albedo around the equator', 'double', 0.15 ),
+            ( 'albedo_pole', 'albedo around the poles', 'double', 0.8 ),
+            ( 'albedo_equator', 'albedo around the equator', 'double', 0.4 ),
 
             ( 'epsilon_equator', 'emissivity and absorptivity assumption at equator', 'double', 0.52 ),
             ( 'epsilon_pole', 'emissivity and absorptivity assumption at poles', 'double', 0.50 ),
+#            ( 'epsilon_equator', 'emissivity and absorptivity assumption at equator', 'double', 0.49 ),
+#            ( 'epsilon_pole', 'emissivity and absorptivity assumption at poles', 'double', 0.47 ),
             ( 'epsilon_tropopause', 'emissivity and absorptivity assumption at tropopause', 'double', 0.001 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
@@ -89,9 +91,10 @@ def main():
             ( 'lv', 'specific latent evaporation heat ( Condensation heat ) in J/kg', 'double', 2.52e6 ),
             ( 'ls', 'specific latent vaporisation heat ( sublimation heat ) in J/kg', 'double', 2.83e6 ),
             ( 'cp_l', 'specific heat capacity of dry air at constant pressure and 20°C in J/( kg K )', 'double', 1005. ),
-            ( 'lamda', 'heat transfer coefficient of air in W/m² K )', 'double', 0.0262 ),
+            ( 'lamda', 'heat transfer coefficient of air in J/(m s K)', 'double', 0.0262 ),
             ( 'r_co2', 'density of CO2 in kg/m³ at 25°C', 'double', 0.0019767 ),
             ( 'gam', 'constant slope of temperature    gam = 0.65 K/100 m', 'double', 0.65 ),
+            ( 'irr', 'solar constant == irradiation i W/m²', 'double', 1366. ),
 
             ( 'u_0', 'annual mean of surface wind velocity in m/s, 8 m/s compare to 28.8 km/h', 'double', 8.0 ),
             ( 'p_0', 'pressure at sea level in hPa', 'double', 1013.25 ),
@@ -107,25 +110,26 @@ def main():
             ( 'ta', 'initial value for the temperature field, 1.0 compares to 0° C compares to 273.15 K', 'double', 1.0 ),
             ( 'coa', 'initial value of co2 = 1.0 compares to 280 ppm in pre-industrial times', 'double', 1.0 ),
 
-            ( 't_cretaceous_max', 'maximum add of mean temperature in °C during cretaceous times', 'double', 10.0 ),
-            ( 't_cretaceous', 'value at modern times', 'double', 0.0 ),
+            ( 't_paleo_max', 'maximum add of mean temperature in °C during paleo times', 'double', 10.0 ),
+            ( 't_paleo', 'value at modern times', 'double', 0.0 ),
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.4 ),
             ( 't_equator', 'temperature t_0 = 1.0842 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.9436 compares to -15.4°C compares to 258.15 K', 'double', 0.9436 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
-#            ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
-            ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.014644 ),
+            ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
+#            ( 't_land', 'temperature increase on land by 0°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.014644 ),
 
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
-            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.54 ),
-            ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.54 ),
+            ( 'c_ocean', 'water vapour reduction on sea surface ( 54% of the saturation value )', 'double', 0.54 ),
+#            ( 'c_land', 'water vapour reduction on land ( 54% of the saturation value )', 'double', 0.54 ),
+            ( 'c_land', 'water vapour reduction on land ( 50% of the saturation value )', 'double', 0.50 ),
 
             ( 'co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0 ),
             ( 'co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 380.0 ),
             ( 'co2_tropopause', 'minimum rate CO2 at tropopause 0 ppm', 'double', 320.0 ),
             ( 'co2_pole', 'maximum rate of CO2 of the sea surface at poles', 'double', 370.0 ),
-            ( 'co2_cretaceous', 'value at modern times', 'double', 330.0 ),
+            ( 'co2_paleo', 'value at modern times', 'double', 330.0 ),
             ( 'co2_vegetation', 'value compares to 100/600Gt per year on the global surface by vegetation', 'double', 1.0 ),
             ( 'co2_ocean', 'value compares to 0.6/600Gt per year on the sea surface', 'double', 0.0 ),
             ( 'co2_land', 'value compares to 0.2/600Gt per year on land', 'double', 0.0 ),
@@ -137,8 +141,8 @@ def main():
             ( 'velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
             ( 'velocity_iter_max', 'the number of velocity iterations', 'int', 2 ),
-            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 8 ),
-            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 8 ),
+            ( 'pressure_iter_max', 'the number of pressure iterations', 'int', 2 ),
+            ( 'checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2 ),
 
             ( 'Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0 ),
 
@@ -169,7 +173,7 @@ def main():
 
             ( 'ca_max', 'c = 1.0983 compares to a salinity of 38.00 psu  used for deep flow initialization', 'double', 1.0983 ),
 
-            ( 't_cretaceous_max', 'maximum add of mean temperature during cretaceous', 'double', 10.0 ),
+            ( 't_paleo_max', 'maximum add of mean temperature during paleo', 'double', 10.0 ),
 
             ( 'r0', 'Earth\'s radius is r_earth = 6731 km compares to 6.731 [ / ]', 'double', 1.0 ),
             ( 'the0', 'North Pole', 'double', 0.0 ),

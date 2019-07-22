@@ -221,12 +221,20 @@ private:
 
     Array P_rain; // rain precipitation mass rate
     Array P_snow; // snow precipitation mass rate
+    Array P_conv; // rain formation by cloud convection
     Array S_v; // water vapour mass rate due to category two ice scheme
     Array S_c; // cloud water mass rate due to category two ice scheme
     Array S_i; // cloud ice mass rate due to category two ice scheme
     Array S_r; // rain mass rate due to category two ice scheme
     Array S_s; // snow mass rate due to category two ice scheme
     Array S_c_c; // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
+
+    Array M_u; // moist convection within the updraft
+    Array M_d; // moist convection within the downdraft
+    Array MC_s; // moist convection acting on dry static energy
+    Array MC_q; // moist convection acting on water vapour development
+    Array MC_v; // moist convection acting on v-velocity component
+    Array MC_w; // moist convection acting on w-velocity component
 
     Vector3D<> residuum_2d, residuum_3d; 
 

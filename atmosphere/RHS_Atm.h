@@ -29,12 +29,12 @@ class RHS_Atmosphere
         int im, jm, km;
 
         double dt, dr, dthe, dphi, zeta;
-        double re, sc_WaterVapour, sc_CO2, g, pr, gam, WaterVapour, Buoyancy, CO2, sigma;
+        double re, sc_WaterVapour, sc_CO2, g, pr, gam, WaterVapour, Buoyancy, CO2, sigma, irr;
 
     public:
         RHS_Atmosphere ( int, int, double, double, double );
         RHS_Atmosphere ( cAtmosphereModel* model, int, int, int, double, double, double, double, double, double,
-                                       double, double, double, double, double, double, double, double, double );
+                                       double, double, double, double, double, double, double, double, double, double );
         ~RHS_Atmosphere ();
 
         void RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double lv, double ls, double ep,
@@ -49,6 +49,8 @@ class RHS_Atmosphere
                                             Array &aux_v, Array &aux_w, Array &Q_Latent, Array &BuoyancyForce,
                                             Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v,
                                             Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c,
+                                            Array &radiation_3D, Array_2D &albedo, 
+                                            Array &MC_s,Array &MC_q,Array &MC_v,Array &MC_w,
                                             Array_2D &Topography, Array_2D &Evaporation_Dalton,
                                             Array_2D &Precipitation );
 

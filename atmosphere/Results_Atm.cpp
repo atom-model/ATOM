@@ -25,7 +25,7 @@ Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, do
                             double L_atm, double dt, double dr, double dthe, double dphi, double r_air,
                             double R_Air, double r_water_vapour, double R_WaterVapour,
                             double co2_vegetation, double co2_ocean, double co2_land,
-                            double gam, double t_pole, double t_cretaceous, double t_average ):
+                            double gam, double t_pole, double t_paleo, double t_average ):
 f_Penman ( 2. ){
     this-> im = im;
     this-> jm = jm;
@@ -58,7 +58,7 @@ f_Penman ( 2. ){
     this-> co2_ocean = co2_ocean;
     this-> co2_land = co2_land;
     this-> t_pole = t_pole;
-    this-> t_cretaceous = t_cretaceous;
+    this-> t_paleo = t_paleo;
     this-> t_average = t_average;
 
 // array "vel_av" for velocity averaging
@@ -116,19 +116,18 @@ Results_MSL_Atm::~Results_MSL_Atm (){
 
 
 void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int RadiationModel,
-                                    double &t_cretaceous, Array_1D &rad, Array_1D &the, Array_1D &phi,
-                                    Array &h, Array &c, Array &cn, Array &co2, Array &co2n, Array &t,
-                                    Array &tn, Array &p_dyn, Array &p_stat, Array &BuoyancyForce,
-                                    Array &u, Array &v, Array &w, Array &Q_Latent, Array &Q_Sensible,
-                                    Array &radiation_3D, Array &cloud, Array &cloudn, Array &ice,
-                                    Array &icen, Array &P_rain, Array &P_snow, Array &aux_u,
-                                    Array &aux_v, Array &aux_w, Array_2D &temperature_NASA,
-                                    Array_2D &precipitation_NASA, Array_2D &precipitable_water,
-                                    Array_2D &Q_radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent,
-                                    Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman,
-                                    Array_2D &Evaporation_Dalton, Array_2D &Vegetation, Array_2D &albedo,
-                                    Array_2D &co2_total, Array_2D &Precipitation, Array &S_v, Array &S_c,
-                                    Array &S_i, Array &S_r, Array &S_s, Array &S_c_c ){
+    double &t_paleo, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, 
+    Array &c, Array &cn, Array &co2, Array &co2n, Array &t, Array &tn, Array &p_dyn, 
+    Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Q_Latent, 
+    Array &Q_Sensible, Array &radiation_3D, Array &cloud, Array &cloudn, Array &ice,
+    Array &icen, Array &P_rain, Array &P_snow, Array &P_conv, Array &aux_u,
+    Array &aux_v, Array &aux_w, Array_2D &temperature_NASA,
+    Array_2D &precipitation_NASA, Array_2D &precipitable_water,
+    Array_2D &Q_radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent,
+    Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman,
+    Array_2D &Evaporation_Dalton, Array_2D &Vegetation, Array_2D &albedo,
+    Array_2D &co2_total, Array_2D &Precipitation, Array &S_v, Array &S_c,
+    Array &S_i, Array &S_r, Array &S_s, Array &S_c_c ){
 // determination of temperature and pressure by the law of Clausius-Clapeyron for water vapour concentration
 // reaching saturation of water vapour pressure leads to formation of rain or ice
 // precipitation and cloud formation by formulas from Häckel
@@ -182,12 +181,12 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                         Q_sensible.y[ j ][ k ] );    // difference understood as heat into the ground
 
                     if ( t_Celsius >= 0. ){
-                        Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ i + 1 ][ j ][ k ],
+                        Evaporation_Dalton.y[ j ][ k ] = AtomUtils::C_Dalton( u_0, v.x[ i + 1 ][ j ][ k ],
                             w.x[ i + 1 ][ j ][ k ] ) * sat_deficit * 24.;
                         // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
                         if ( Evaporation_Dalton.y[ j ][ k ] <= 0. )  Evaporation_Dalton.y[ j ][ k ] = 0.;
 
-//    cout << "   i = " << i << "   j = " << j << "   k = " << k << "   Evaporation_Dalton = " << Evaporation_Dalton.y[ j ][ k ] << "   c = " << c.x[ i ][ j ][ k ] << "   v = " << v.x[ i ][ j ][ k ] << "   w = " << w.x[ i ][ j ][ k ] << "   v1 = " << v.x[ i+1 ][ j ][ k ] << "   w1 = " << w.x[ i+1 ][ j ][ k ] << "   p = " << p_stat.x[ i ][ j ][ k ] << "   p1 = " << p_stat.x[ i+1 ][ j ][ k ] << "   sat_deficit = " << sat_deficit << "   t_Celsius = " << t_Celsius << endl;
+//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   Evaporation_Dalton = " << Evaporation_Dalton.y[ j ][ k ] << "   c = " << c.x[ i ][ j ][ k ] << "   v = " << v.x[ i ][ j ][ k ] << "   w = " << w.x[ i ][ j ][ k ] << "   v1 = " << v.x[ i+1 ][ j ][ k ] << "   w1 = " << w.x[ i+1 ][ j ][ k ] << "   p = " << p_stat.x[ i ][ j ][ k ] << "   p1 = " << p_stat.x[ i+1 ][ j ][ k ] << "   sat_deficit = " << sat_deficit << "   t_Celsius = " << t_Celsius << "   Q_Latent = " << Q_Latent.x[ i ][ j ][ k ] << "   Q_Sensible = " << Q_Sensible.x[ i ][ j ][ k ] << endl;
                     }else   Evaporation_Dalton.y[ j ][ k ] = 0.;
 
 
@@ -223,16 +222,15 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                         Q_sensible.y[ j ][ k ] );  // difference understood as heat of the ground
 
                     if ( t_Celsius >= 0. ){
-                        Evaporation_Dalton.y[ j ][ k ] = C_Dalton ( u_0, v.x[ 0 ][ j ][ k ], w.x[ 0 ][ j ][ k ] ) *
+                        Evaporation_Dalton.y[ j ][ k ] = AtomUtils::C_Dalton( u_0, v.x[ 0 ][ j ][ k ], w.x[ 0 ][ j ][ k ] ) *
                             sat_deficit * 24.;  // ocean surface evaporation, mm/h in mm/d
                       // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
                       // not air but ocean surface temperature
                       // should be involved in water vapour saturation difference, it is not the saturation deficit
                         if ( Evaporation_Dalton.y[ j ][ k ] <= 0. )  Evaporation_Dalton.y[ j ][ k ] = 0.;
 
-//    cout << "   i = " << i << "   j = " << j << "   k = " << k << "   Evaporation_Dalton = " << Evaporation_Dalton.y[ j ][ k ] << "   c = " << c.x[ i ][ j ][ k ] << "   v = " << v.x[ i ][ j ][ k ] << "   w = " << w.x[ i ][ j ][ k ] << "   v1 = " << v.x[ i+1 ][ j ][ k ] << "   w1 = " << w.x[ i+1 ][ j ][ k ] << "   p = " << p_stat.x[ i ][ j ][ k ] << "   p1 = " << p_stat.x[ i+1 ][ j ][ k ] << "   sat_deficit = " << sat_deficit << "   t_Celsius = " << t_Celsius << endl;
+//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   Evaporation_Dalton = " << Evaporation_Dalton.y[ j ][ k ] << "   c = " << c.x[ 0 ][ j ][ k ] << "   v = " << v.x[ 0 ][ j ][ k ] << "   w = " << w.x[ 0 ][ j ][ k ] << "   v1 = " << v.x[ 1 ][ j ][ k ] << "   w1 = " << w.x[ 1 ][ j ][ k ] << "   p = " << p_stat.x[ 0 ][ j ][ k ] << "   p1 = " << p_stat.x[ 1 ][ j ][ k ] << "   sat_deficit = " << sat_deficit << "   t_Celsius = " << t_Celsius << "   Q_Latent = " << Q_Latent.x[ i ][ j ][ k ] << "   Q_Sensible = " << Q_Sensible.x[ 0 ][ j ][ k ] << endl;
                     }else   Evaporation_Dalton.y[ j ][ k ] = 0.;
-
 
                     Evaporation_Penman.y[ j ][ k ] = f_Penman * .0346 * ( ( Q_radiation.y[ j ][ k ] +
                         Q_bottom.y[ j ][ k ] ) * Delta + gamma * E_a ) / ( Delta + gamma );
@@ -262,7 +260,14 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                  c13 * BuoyancyForce.x[ i ][ 2 ][ k ];
             BuoyancyForce.x[ i ][ jm-1 ][ k ] = c43 * BuoyancyForce.x[ i ][ jm-2 ][ k ] -
                  c13 * BuoyancyForce.x[ i ][ jm-3 ][ k ];
-//            if ( h.x[ i ][ 0 ][ k ] == 1. )     BuoyancyForce.x[ i ][ 0 ][ k ] = 0.;
+            Q_Latent.x[ i ][ 0 ][ k ] = c43 * Q_Latent.x[ i ][ 1 ][ k ] -
+                 c13 * Q_Latent.x[ i ][ 2 ][ k ];
+            Q_Latent.x[ i ][ jm-1 ][ k ] = c43 * Q_Latent.x[ i ][ jm-2 ][ k ] -
+                 c13 * Q_Latent.x[ i ][ jm-3 ][ k ];
+            Q_Sensible.x[ i ][ 0 ][ k ] = c43 * Q_Sensible.x[ i ][ 1 ][ k ] -
+                 c13 * Q_Sensible.x[ i ][ 2 ][ k ];
+            Q_Sensible.x[ i ][ jm-1 ][ k ] = c43 * Q_Sensible.x[ i ][ jm-2 ][ k ] -
+                 c13 * Q_Sensible.x[ i ][ jm-3 ][ k ];
         }
     }
 
@@ -274,7 +279,18 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                 c13 * BuoyancyForce.x[ i ][ j ][ km-3 ];
             BuoyancyForce.x[ i ][ j ][ 0 ] = BuoyancyForce.x[ i ][ j ][ km-1 ] =
                 ( BuoyancyForce.x[ i ][ j ][ 0 ] + BuoyancyForce.x[ i ][ j ][ km-1 ] ) / 2.;
-//            if ( h.x[ i ][ j ][ 0 ] == 1. )     BuoyancyForce.x[ i ][ j ][ 0 ] = 0.;
+            Q_Latent.x[ i ][ j ][ 0 ] = c43 * Q_Latent.x[ i ][ j ][ 1 ] -
+                c13 * Q_Latent.x[ i ][ j ][ 2 ];
+            Q_Latent.x[ i ][ j ][ km-1 ] = c43 * Q_Latent.x[ i ][ j ][ km-2 ] -
+                c13 * Q_Latent.x[ i ][ j ][ km-3 ];
+            Q_Latent.x[ i ][ j ][ 0 ] = Q_Latent.x[ i ][ j ][ km-1 ] =
+                ( Q_Latent.x[ i ][ j ][ 0 ] + Q_Latent.x[ i ][ j ][ km-1 ] ) / 2.;
+            Q_Sensible.x[ i ][ j ][ 0 ] = c43 * Q_Sensible.x[ i ][ j ][ 1 ] -
+                c13 * Q_Sensible.x[ i ][ j ][ 2 ];
+            Q_Sensible.x[ i ][ j ][ km-1 ] = c43 * Q_Sensible.x[ i ][ j ][ km-2 ] -
+                c13 * Q_Sensible.x[ i ][ j ][ km-3 ];
+            Q_Sensible.x[ i ][ j ][ 0 ] = Q_Sensible.x[ i ][ j ][ km-1 ] =
+                ( Q_Sensible.x[ i ][ j ][ 0 ] + Q_Sensible.x[ i ][ j ][ km-1 ] ) / 2.;
         }
     }
 
@@ -347,20 +363,17 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
     }
 
     double coeff_prec = 8.64e+4;  // dimensions see below
-//    double coeff_rain_snow = dr * ( L_atm / ( double ) ( im-1 ) );  // dimensionsional in kg/(m²*s) == mm/s
 
 // surface values of precipitation and precipitable water
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-//            P_rain.x[ 0 ][ j ][ k ] = coeff_rain_snow * P_rain.x[ 0 ][ j ][ k ];
-//            P_snow.x[ 0 ][ j ][ k ] = coeff_rain_snow * P_snow.x[ 0 ][ j ][ k ];
-//            Precipitation.y[ j ][ k ] = coeff_prec * coeff_rain_snow * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );
-            Precipitation.y[ j ][ k ] = coeff_prec * ( P_rain.x[ 0 ][ j ][ k ] + P_snow.x[ 0 ][ j ][ k ] );
+            Precipitation.y[ j ][ k ] = coeff_prec * ( P_rain.x[ 0 ][ j ][ k ] 
+                                        + P_snow.x[ 0 ][ j ][ k ] );
             // 60 s * 60 min * 24 h = 86400 s == 1 d
             // Precipitation, P_rain and P_snow in kg/ ( m² * s ) = mm/s
             // Precipitation in 86400. * kg/ ( m² * d ) = 86400 mm/d
             // kg/ ( m² * s ) == mm/s ( Kraus, p. 94 )
-            if ( Precipitation.y[ j ][ k ] >= 25. )  Precipitation.y[ j ][ k ] = 25.;
+            if ( Precipitation.y[ j ][ k ] >= 20. )  Precipitation.y[ j ][ k ] = 20.;
             if ( Precipitation.y[ j ][ k ] <= 0 )  Precipitation.y[ j ][ k ] = 0.;
         }
     }
@@ -624,7 +637,7 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
 
     Value_25 = ( GetMean_2D(jm, km, temperature_NASA) - 1. ) * t_0;
     Value_26 = temperature_surf_average;
-    Value_27 = t_average + t_cretaceous * t_0;
+    Value_27 = t_average + t_paleo * t_0;
 
     cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' )
         << name_Value_25 << " = " << resetiosflags ( ios::left ) << setw ( 7 )
@@ -691,20 +704,5 @@ void Results_MSL_Atm::CalculateNodeWeights(int jm, int km){
         m_node_weights[i].resize(km, weight);
     }
     return;
-}
-
-
-
-double Results_MSL_Atm::C_Dalton ( double u_0, double v, double w ){
-    // variation of the heat transfer coefficient in Dalton's evaporation law, parabola
-    // air velocity measured 2m above sea level
-    double C_max = - .053;  // for v_max = 10 m/s, but C is function of v, should be included
-    // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
-    double v_max = 10.;
-    double fac = 1.105;  // factor to adjust the ratio of NASA precipitation 
-                       // to Dalton evaporation for the modern world, 
-                       // relative difference between global precipitation and evaporation is 10%
-    double vel_magnitude = sqrt ( v * v + w * w ) * u_0;
-    return sqrt ( C_max * C_max / v_max * vel_magnitude ) / fac;  // result in mm/h
 }
 

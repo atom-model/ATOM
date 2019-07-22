@@ -60,7 +60,7 @@ class BC_Bathymetry_Atmosphere
                                             Array &c, Array &cloud, Array &ice, Array &co2, Array &radiation_3D,
                                             Array_2D &Vegetation );
 
-        void vegetationDistribution ( double, Array_2D &, Array_2D &, Array &, Array & );
+        void vegetationDistribution ( double, double, Array_2D &, Array_2D &, Array &, Array & );
 
         void land_oceanFraction ( Array & );
 };

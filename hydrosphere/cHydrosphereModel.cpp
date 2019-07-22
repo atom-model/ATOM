@@ -258,7 +258,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     // class BC_Thermohalin for the initial and boundary conditions of the flow properties
     BC_Thermohalin      oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, 
-                                    ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, 
+                                    ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_paleo_max, t_equator, 
                                     t_pole, input_path );
 
     //  surface temperature from World Ocean Atlas 2009 given as boundary condition
@@ -268,9 +268,9 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 //    }
 
     //  surface salinity from World Ocean Atlas 2009 given as boundary condition
-    if ( Ma == 0 || use_earthbyte_reconstruction){
-        oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
-    }
+//    if ( Ma == 0 || use_earthbyte_reconstruction){
+//        oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
+//    }
 
     //  class element for the ocean surface v-velocity by measurement
     if ( Ma == 0 ) oceanflow.BC_Surface_v_Velocity_Ocean ( Name_v_surface_ocean_File, v );
@@ -292,12 +292,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     //  initial conditions for u, v and w velocity components in the circumpolar current
 //    if ( Ma <= 41 )     oceanflow.IC_CircumPolar_Current ( h, u, v, w, c ); // Drake passage closed 41 Ma ago
 
-
-
 //    double emin = epsres * 100.;
 //    goto Printout;
-
-
 
     //  salinity distribution as initial condition in 3 dimensions
     oceanflow.BC_Temperature_Salinity ( rad, h, t, c, p_dyn );

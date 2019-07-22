@@ -25,7 +25,7 @@ class Results_MSL_Atm
         int j_loc, k_loc, i_loc_level, j_loc_deg, k_loc_deg;
         int iter_prec;
 
-        double E;
+        double E, zeta;
         double E_Rain, E_Rain_super, E_Ice, q_Rain, q_Rain_n, q_Rain_super, q_Ice, q_Ice_n;
         double e, a, e_SL, a_SL, p_SL;
         double t_dew_SL, t_Celsius_SL;
@@ -59,7 +59,7 @@ class Results_MSL_Atm
         double T, T_nue, T_tilda_h;
         double q_v_hyp, q_v_hyp_n;
         double T_t_in;
-        double T_t_in0, T_t_in1, DEP, CND,d_q_v, d_q_c, d_q_i, d_t, p_t_in, t_Celsius_0, E_Rain_t_in, q_Rain_t_in, t_pole, t_cretaceous, temperature_surf_average, t_average, velocity_average, temperature_average, latent_heat_average, sensible_heat_average;
+        double T_t_in0, T_t_in1, DEP, CND,d_q_v, d_q_c, d_q_i, d_t, p_t_in, t_Celsius_0, E_Rain_t_in, q_Rain_t_in, t_pole, t_paleo, temperature_surf_average, t_average, velocity_average, temperature_average, latent_heat_average, sensible_heat_average;
         double *e_d, *e_l, *e_p, *g_p, *c_u, *r_humid_u, *r_humid_u_parc, *r_dry_u, *r_dry_u_parc, *vel_av, *temp_av, *lat_av, *sen_av;
 
         string name_Value_1, name_Value_2, name_Value_3, name_Value_4, name_Value_5, name_Value_6, name_Value_7, name_Value_8, name_Value_9, name_Value_10, name_Value_11, name_Value_12, name_Value_13, name_Value_14, name_Value_15, name_Value_16, name_Value_17, name_Value_18, name_Value_19, name_Value_20, name_Value_21, name_Value_22, name_Value_23, name_Value_24, name_Value_25, name_Value_26, name_Value_27, name_unit_wm2, name_unit_mm, name_unit_mmd, name_unit_mma, name_unit_ppm, name_unit_t;
@@ -71,7 +71,19 @@ class Results_MSL_Atm
 
         ~Results_MSL_Atm (  );
 
-        void run_MSL_data ( int, int, int, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void run_MSL_data ( int n, int velocity_iter_max, int RadiationModel,
+            double &t_paleo, Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, 
+            Array &c, Array &cn, Array &co2, Array &co2n, Array &t, Array &tn, Array &p_dyn, 
+            Array &p_stat, Array &BuoyancyForce, Array &u, Array &v, Array &w, Array &Q_Latent, 
+            Array &Q_Sensible, Array &radiation_3D, Array &cloud, Array &cloudn, Array &ice,
+            Array &icen, Array &P_rain, Array &P_snow, Array &P_conv, Array &aux_u,
+            Array &aux_v, Array &aux_w, Array_2D &temperature_NASA,
+            Array_2D &precipitation_NASA, Array_2D &precipitable_water,
+            Array_2D &Q_radiation, Array_2D &Q_Evaporation, Array_2D &Q_latent,
+            Array_2D &Q_sensible, Array_2D &Q_bottom, Array_2D &Evaporation_Penman,
+            Array_2D &Evaporation_Dalton, Array_2D &Vegetation, Array_2D &albedo,
+            Array_2D &co2_total, Array_2D &Precipitation, Array &S_v, Array &S_c,
+            Array &S_i, Array &S_r, Array &S_s, Array &S_c_c );
 
         std::vector<std::vector<double> > m_node_weights;
 
@@ -79,7 +91,5 @@ class Results_MSL_Atm
         float GetMean_2D(int jm, int km, Array_2D &val_2D);
 
         void CalculateNodeWeights(int jm, int km);
-
-        double C_Dalton ( double u_0, double v, double w );
 };
 #endif

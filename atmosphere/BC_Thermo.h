@@ -49,6 +49,7 @@ class BC_Thermo
         
         int *im_tropopause;
         std::vector<std::vector<int> > i_topography;
+        std::vector<double> t_pal;
 
         double zeta, trop_pole, trop_equator; 
         double d_k_half, d_k_max; 
@@ -63,7 +64,7 @@ class BC_Thermo
         double d_i, d_i_max, d_i_half, d_j, d_j_half, d_j_max, d_k, pi180, d_j_w, d_j_infl;
         double d_j_5n, d_j_15n, d_j_45n, d_j_75n, d_j_30n, d_j_5s, d_j_15s, d_j_45s,
             d_j_75s, d_j_30s, d_j_60n, d_j_60s, d_j_90n, d_j_90s, d_diff;
-        double t_cretaceous, t_cretaceous_eff;
+        double t_paleo, t_paleo_eff;
         double j_par_f, j_pol_f, e, a, j_d, t_dd, k_par_f, k_pol_f;
         double g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, cp_l, r_air, L_atm, c13, c43;
         double R_Air, r_h, r_water_vapour, R_WaterVapour, R_co2, precipitablewater_average,
@@ -71,7 +72,7 @@ class BC_Thermo
         double eps, c_ocean, t_land, c_land, c_coeff, t_average, co2_average,
             co2_equator, co2_pole, gam, t_Ik, atmospheric_window, rad_surf_diff;
         double albedo_co2_eff, albedo_equator, albedo_pole;
-        double rad_eff, rad_equator, rad_pole, rad_surf;
+        double rad_eff, rad_equator, rad_pole, rad_surf, irr;
         double aa, bb, cc, dd, f;
         double epsilon_eff_2D, epsilon_eff, epsilon_pole, epsilon_equator,
             epsilon_tropopause, epsilon_eff_max;
@@ -89,7 +90,7 @@ class BC_Thermo
         double t_equator, t_tropopause, t_eff, t_pole, t_eff_tropo, t_tropopause_pole,
             c_equator, c_tropopause, coeff_mmWS;
         double co2_tropopause, co2_eff, co2_coeff, co_pol, co2_vegetation,
-            co2_ocean, co2_land, co2_cretaceous, emissivity_add;
+            co2_ocean, co2_land, co2_paleo, emissivity_add;
         double *jm_temp_asym;
 
         double S_c_c, S_au, S_nuc, S_ac, S_rim, S_shed, S_ev, S_dep, S_i_dep,
@@ -109,9 +110,9 @@ class BC_Thermo
  
         string time_slice_comment, time_slice_number, time_slice_unit;
         string temperature_comment, temperature_gain, temperature_modern,
-            temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
-        string co_comment, co_gain, co_modern, co_av, co_unit, co_cretaceous_str,
-            co_average_cret, co_average_str;
+            temperature_average, temperature_unit, temperature_paleo, temperature_average_pal;
+        string co_comment, co_gain, co_modern, co_av, co_unit, co_paleo_str,
+            co_average_pal, co_average_str;
 
 
     public:
@@ -150,6 +151,13 @@ class BC_Thermo
             Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v,
             Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c );
 
+        void Moist_Convection ( Array_1D &rad, Array_1D &the, Array_1D &phi, 
+            Array &h, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &p_stat, 
+            Array &c, Array &cloud, Array &ice, Array &co2, Array &tn, Array &un, 
+            Array &vn, Array &wn, Array &cn, Array &cloudn, Array &icen, Array &co2n, 
+            Array &P_rain, Array &P_snow, Array &P_conv, Array &M_u, Array &M_d, 
+            Array &MC_s, Array &MC_q, Array &MC_v, Array &MC_w );
+        
         void BC_CO2( int Ma, double L_atm, Array_1D &rad, Array_2D &Vegetation, 
             Array &h, Array &t, Array &p_dyn, Array &co2 );
 
@@ -183,7 +191,5 @@ class BC_Thermo
         double GetPoleTemperature ( int, int, int, double, double );
 
         double GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map);
-
-        double C_Dalton ( double u_0, double v, double w );
 };
 #endif

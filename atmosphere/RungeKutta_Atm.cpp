@@ -41,9 +41,10 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
             Array &vn, Array &wn, Array &p_dynn, Array &cn, Array &cloudn, Array &icen,
             Array &co2n, Array &aux_u, Array &aux_v, Array &aux_w, Array &Q_Latent,
             Array &BuoyancyForce, Array &Q_Sensible, Array &P_rain, Array &P_snow,
-            Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c,
+            Array &MC_s,Array &MC_q,Array &MC_v,Array &MC_w,
+            Array &S_v, Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c, Array &radiation_3D,
             Array_2D &Topography, Array_2D &Evaporation_Dalton,
-            Array_2D &Precipitation ){
+            Array_2D &Precipitation, Array_2D &albedo ){
 
 // Runge-Kutta 4. order for u, v and w component, temperature, water vapour and co2 content
     for ( int i = 1; i < im-1; i++ ){
@@ -58,8 +59,9 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                         cloud, ice, co2, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, 
                         rhs_cloud, rhs_ice, rhs_co2, aux_u, aux_v, aux_w, 
                         Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, 
-                        S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
-                        Evaporation_Dalton, Precipitation );
+                        S_v, S_c, S_i, S_r, S_s, S_c_c, radiation_3D, albedo, 
+                        MC_s, MC_q, MC_v, MC_w,
+                        Topography, Evaporation_Dalton, Precipitation );
 
                 kt1 = rhs_t.x[ i ][ j ][ k ];
                 ku1 = rhs_u.x[ i ][ j ][ k ];
@@ -87,8 +89,9 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                         cloud, ice, co2, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, 
                         rhs_cloud, rhs_ice, rhs_co2, aux_u, aux_v, aux_w, 
                         Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, 
-                        S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
-                        Evaporation_Dalton, Precipitation );
+                        S_v, S_c, S_i, S_r, S_s, S_c_c, radiation_3D, albedo, 
+                        MC_s, MC_q, MC_v, MC_w,
+                        Topography, Evaporation_Dalton, Precipitation );
 
                 kt2 = rhs_t.x[ i ][ j ][ k ];
                 ku2 = rhs_u.x[ i ][ j ][ k ];
@@ -116,8 +119,9 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                         cloud, ice, co2, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, 
                         rhs_cloud, rhs_ice, rhs_co2, aux_u, aux_v, aux_w, 
                         Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, 
-                        S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
-                        Evaporation_Dalton, Precipitation );
+                        S_v, S_c, S_i, S_r, S_s, S_c_c, radiation_3D, albedo, 
+                        MC_s, MC_q, MC_v, MC_w,
+                        Topography, Evaporation_Dalton, Precipitation );
 
                 kt3 = rhs_t.x[ i ][ j ][ k ];
                 ku3 = rhs_u.x[ i ][ j ][ k ];
@@ -145,8 +149,9 @@ void RungeKutta_Atmosphere::solveRungeKutta_3D_Atmosphere ( RHS_Atmosphere &prep
                         cloud, ice, co2, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, 
                         rhs_cloud, rhs_ice, rhs_co2, aux_u, aux_v, aux_w, 
                         Q_Latent, BuoyancyForce, Q_Sensible, P_rain, P_snow, 
-                        S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
-                        Evaporation_Dalton, Precipitation );
+                        S_v, S_c, S_i, S_r, S_s, S_c_c, radiation_3D, albedo, 
+                        MC_s, MC_q, MC_v, MC_w,
+                        Topography, Evaporation_Dalton, Precipitation );
 
                 kt4 = rhs_t.x[ i ][ j ][ k ];
                 ku4 = rhs_u.x[ i ][ j ][ k ];

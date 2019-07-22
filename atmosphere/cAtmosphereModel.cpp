@@ -170,7 +170,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
 
     //  initial values for the number of computed steps and the time
-    double t_cretaceous = 0.;
+    double t_paleo = 0.;
 
     //Prepare the temperature and precipitation data file
     string Name_v_surface_File = velocity_v_file;
@@ -237,7 +237,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
     RHS_Atmosphere  prepare ( this, im, jm, km, dt, dr, dthe, dphi, re, sc_WaterVapour, sc_CO2, g, pr, 
-                              WaterVapour, Buoyancy, CO2, gam, sigma, lamda );
+                              WaterVapour, Buoyancy, CO2, gam, sigma, lamda, irr );
     RHS_Atmosphere  prepare_2D ( jm, km, dthe, dphi, re );
 
     //  class RungeKutta_Atmosphere for the explicit solution of the Navier-Stokes equations
@@ -246,7 +246,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //  class Results_MSL_Atm to compute and show results on the mean sea level, MSL
     Results_MSL_Atm  calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_equator, lv, ls, 
                                      cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water_vapour, R_WaterVapour, 
-                                     co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_cretaceous, t_average );
+                                     co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_paleo, t_average );
 
     //  class Pressure for the subsequent computation of the pressure by a separate Euler equation
     Pressure_Atm  startPressure ( this, im, jm, km, dr, dthe, dphi );
@@ -300,6 +300,12 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     circulation.BC_CO2 ( Ma, L_atm, rad, Vegetation, h, t, p_dyn, co2 );
+/*
+// formation of cumulus clouds by moist convection taken from COSMO adapted from M. Tiedtke 
+            circulation.Moist_Convection ( rad, the, phi, h, t, u, v, w, 
+                p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, cn, cloudn, 
+                icen, co2n, P_rain, P_snow, P_conv, M_u, M_d, MC_s, MC_q, MC_v, MC_w );
+*/
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
     move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
@@ -474,12 +480,20 @@ void cAtmosphereModel::reset_arrays()
 
     P_rain.initArray(im, jm, km, 0.); // rain precipitation mass rate
     P_snow.initArray(im, jm, km, 0.); // snow precipitation mass rate
+    P_conv.initArray(im, jm, km, 0.); // rain formation by cloud convection
     S_v.initArray(im, jm, km, 0.); // water vapour mass rate due to category two ice scheme
     S_c.initArray(im, jm, km, 0.); // cloud water mass rate due to category two ice scheme
     S_i.initArray(im, jm, km, 0.); // cloud ice mass rate due to category two ice scheme
     S_r.initArray(im, jm, km, 0.); // rain mass rate due to category two ice scheme
     S_s.initArray(im, jm, km, 0.); // snow mass rate due to category two ice scheme
     S_c_c.initArray(im, jm, km, 0.); // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
+
+    M_u.initArray(im, jm, km, 0.); // moist convection within the updraft
+    M_d.initArray(im, jm, km, 0.); // moist convection within the downdraft
+    MC_s.initArray(im, jm, km, 0.); // moist convection  acting on dry static energy
+    MC_q.initArray(im, jm, km, 0.); // moist convection acting on water vapour development
+    MC_v.initArray(im, jm, km, 0.); // moist convection acting on v-velocity component
+    MC_w.initArray(im, jm, km, 0.); // moist convection acting on w-velocity component
 }
 
 
@@ -619,30 +633,30 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
     int i_radial = 0;
     write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
                                      BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, 
-                                     Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, 
+                                     Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, P_conv, M_u, M_d, MC_s, MC_q, MC_v, MC_w, precipitable_water, Q_bottom, 
                                      Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, 
                                      Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, 
-                                     Precipitation, Topography, temp_NASA, vapour_evaporation );
+                                     Precipitation, Topography, temp_NASA, vapour_evaporation, radiation_surface );
 
     //  londitudinal data along constant latitudes
     int j_longal = 62;          // Mount Everest/Himalaya
-    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
+    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, iter_cnt-1, L_atm, u_0, t_0, p_0, r_air, c_0, co2_0, rad, h, p_dyn, p_stat, 
                                      BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
-                                     Q_Sensible, epsilon_3D, P_rain, P_snow );
+                                     Q_Sensible, epsilon_3D, P_rain, P_snow, P_conv, M_u, M_d, MC_s, MC_q, MC_v, MC_w );
 
     int k_zonal = 87;           // Mount Everest/Himalaya
     write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, iter_cnt-1, gam, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, 
                                     r_air, c_0, co2_0, rad, 
                                     h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, 
-                                    Q_Latent, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, 
-                                    S_s, S_c_c );
+                                    Q_Latent, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, P_conv, S_v, S_c, S_i, S_r, 
+                                    S_s, S_c_c, M_u, M_d, MC_s, MC_q, MC_v, MC_w );
 
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
     if(paraview_panorama_vts) //This function creates a large file. Use a flag to control if it is wanted.
     {
         write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, 
                                            BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
-                                           Q_Sensible, epsilon_3D, P_rain, P_snow );
+                                           Q_Sensible, epsilon_3D, P_rain, P_snow, P_conv );
     }
 
     //  writing of v-w-data in the v_w_transfer file
@@ -700,7 +714,7 @@ void cAtmosphereModel::run_2D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                 circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
                 LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, 
-                                          t_land, t_cretaceous, t_equator, t_pole, t_tropopause, 
+                                          t_land, t_paleo, t_equator, t_pole, t_tropopause, 
                                           c_land, c_tropopause, co2_0, co2_equator, co2_pole, co2_tropopause, 
                                           pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, ice, co2, 
                                           radiation_3D, Vegetation );
@@ -798,13 +812,13 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             circulation.Value_Limitation_Atm ( h, u, v, w, p_dyn, t, c, cloud, ice, co2 );
 
-            LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_cretaceous, t_equator, 
+            LandArea.BC_SolidGround ( RadiationModel, Ma, g, hp, ep, r_air, R_Air, t_0, c_0, t_land, t_paleo, t_equator, 
                                       t_pole, t_tropopause, c_land, c_tropopause, co2_0, co2_equator, co2_pole, 
                                       co2_tropopause, pa, gam, sigma, h, u, v, w, t, p_dyn, c, cloud, 
                                       ice, co2, radiation_3D, Vegetation );
 
 //            // preparations for water vapour increase due to evaporation and precipitation differences
-//            circulation.BC_Evaporation ( rad, vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, t );
+            circulation.BC_Evaporation ( rad, vapour_evaporation, Evaporation_Dalton, Precipitation, h, c, t );
 
 /*
         logger() << "§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§   global iteration n = " << iter_cnt << "   §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§" << std::endl << std::endl;
@@ -823,8 +837,9 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                    the, phi, rhs_t, rhs_u, rhs_v, rhs_w, rhs_c, rhs_cloud, rhs_ice, rhs_co2, 
                                                    h, t, u, v, w, p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, p_dynn, 
                                                    cn, cloudn, icen, co2n, aux_u, aux_v, aux_w, Q_Latent, BuoyancyForce, 
-                                                   Q_Sensible, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c, Topography, 
-                                                   Evaporation_Dalton, Precipitation );
+                                                   Q_Sensible, P_rain, P_snow, MC_s, MC_q, MC_v, MC_w, S_v, S_c, S_i, S_r, 
+                                                   S_s, S_c_c, radiation_3D, Topography, 
+                                                   Evaporation_Dalton, Precipitation, albedo );
 /*
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: t max: " << (t.max() - 1)*t_0 << std::endl;
         logger() << "end cAtmosphereModel solveRungeKutta_3D_Atmosphere: p_dyn max: " << p_dyn.max() << std::endl;
@@ -864,10 +879,10 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
 
             if ( pressure_iter % 2 == 0){
             //  computation of vegetation areas
-                LandArea.vegetationDistribution ( max_Precipitation, Precipitation, Vegetation, t, h );
+                LandArea.vegetationDistribution ( t_0, max_Precipitation, Precipitation, Vegetation, t, h );
 
             //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
-                circulation.BC_CO2_Iter ( Ma, L_atm, rad, Vegetation, Topography, h, t, p_dyn, co2 );
+//                circulation.BC_CO2_Iter ( Ma, L_atm, rad, Vegetation, Topography, h, t, p_dyn, co2 );
             }
 
             // class element for the surface temperature computation by radiation flux density
@@ -877,9 +892,9 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             }
 
             //  composition of results
-            calculate_MSL.run_MSL_data ( iter_cnt, velocity_iter_max, RadiationModel, t_cretaceous, rad, the, phi, h, c, cn, 
+            calculate_MSL.run_MSL_data ( iter_cnt, velocity_iter_max, RadiationModel, t_paleo, rad, the, phi, h, c, cn, 
                                          co2, co2n, t, tn, p_dyn, p_stat, BuoyancyForce, u, v, w, Q_Latent, Q_Sensible, 
-                                         radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, aux_u, aux_v, aux_w, 
+                                         radiation_3D, cloud, cloudn, ice, icen, P_rain, P_snow, P_conv, aux_u, aux_v, aux_w, 
                                          temperature_NASA, precipitation_NASA, precipitable_water, Q_radiation, Q_Evaporation, 
                                          Q_latent, Q_sensible, Q_bottom, Evaporation_Penman, Evaporation_Dalton, Vegetation, 
                                          albedo, co2_total, Precipitation, S_v, S_c, S_i, S_r, S_s, S_c_c );
@@ -891,6 +906,11 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
             if ( velocity_iter % 2 == 0){
                 circulation.Two_Category_Ice_Scheme ( rad, h, c, t, p_stat, 
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
+
+// formation of cumulus clouds by moist convection taken from COSMO adapted from M. Tiedtke 
+//            circulation.Moist_Convection ( rad, the, phi, h, t, u, v, w, 
+//                p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, cn, cloudn, 
+//                icen, co2n, P_rain, P_snow, P_conv, M_u, M_d, MC_s, MC_q, MC_v, MC_w );
             }
 
             move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);
