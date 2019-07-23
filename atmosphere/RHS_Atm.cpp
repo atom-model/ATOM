@@ -39,7 +39,7 @@ RHS_Atmosphere::RHS_Atmosphere ( int jm, int km, double dthe, double dphi, doubl
 {}
 
 
-RHS_Atmosphere::RHS_Atmosphere ( cAtmosphereModel* model, int im, int jm, int km, double dt, double dr, double dthe, double dphi, 
+RHS_Atmosphere::RHS_Atmosphere ( cAtmosphereModel* model, int im, int jm, int km, double zeta, double dt, double dr, double dthe, double dphi, 
                                  double re, double sc_WaterVapour, double sc_CO2, double g, double pr, 
                                  double WaterVapour, double Buoyancy, double CO2, double gam, double sigma, 
                                  double lambda, double irr ):
@@ -61,7 +61,8 @@ RHS_Atmosphere::RHS_Atmosphere ( cAtmosphereModel* model, int im, int jm, int km
     Buoyancy(Buoyancy),
     CO2(CO2),
     sigma(sigma),
-    irr(irr)
+    irr(irr),
+    zeta(zeta)
 {}
 
 RHS_Atmosphere::~RHS_Atmosphere() 
@@ -85,8 +86,6 @@ void RHS_Atmosphere::RK_RHS_3D_Atmosphere ( int n, int i, int j, int k, double l
                                             Array_2D &Topography, Array_2D &Evaporation_Dalton, 
                                             Array_2D &Precipitation )
 {
-
-    double zeta = 3.715;
     cout.precision ( 8 );
     cout.setf ( ios::fixed );
 

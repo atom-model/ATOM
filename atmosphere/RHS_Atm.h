@@ -28,12 +28,13 @@ class RHS_Atmosphere
         cAtmosphereModel* m_model;
         int im, jm, km;
 
-        double dt, dr, dthe, dphi, zeta;
+        double dt, dr, dthe, dphi;
         double re, sc_WaterVapour, sc_CO2, g, pr, gam, WaterVapour, Buoyancy, CO2, sigma, irr;
 
     public:
+        double zeta;
         RHS_Atmosphere ( int, int, double, double, double );
-        RHS_Atmosphere ( cAtmosphereModel* model, int, int, int, double, double, double, double, double, double,
+        RHS_Atmosphere ( cAtmosphereModel* model, int, int, int, double, double, double, double, double, double, double,
                                        double, double, double, double, double, double, double, double, double, double );
         ~RHS_Atmosphere ();
 

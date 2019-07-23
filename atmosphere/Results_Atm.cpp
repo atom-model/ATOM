@@ -19,7 +19,7 @@
 using namespace std;
 using namespace AtomUtils;
 
-Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double g, double ep,
+Results_MSL_Atm::Results_MSL_Atm ( int im, int jm, int km, int sun, double zeta, double g, double ep,
                             double hp, double u_0, double p_0, double t_0, double c_0, double co2_0,
                             double sigma, double albedo_equator, double lv, double ls, double cp_l,
                             double L_atm, double dt, double dr, double dthe, double dphi, double r_air,
@@ -60,6 +60,7 @@ f_Penman ( 2. ){
     this-> t_pole = t_pole;
     this-> t_paleo = t_paleo;
     this-> t_average = t_average;
+    this-> zeta = zeta;
 
 // array "vel_av" for velocity averaging
     vel_av = 0L;
@@ -144,8 +145,6 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
             Evaporation_Dalton.y[ j ][ k ] = 0.;                                // Evaporation by Dalton
         }
     }
-
-    double zeta = 3.715;
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){

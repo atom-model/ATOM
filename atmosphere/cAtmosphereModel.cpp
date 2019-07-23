@@ -236,7 +236,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     BC_Atmosphere  boundary ( im, jm, km, t_tropopause );
 
     //  class RHS_Atmosphere for the preparation of the time independent right hand sides of the Navier-Stokes equations
-    RHS_Atmosphere  prepare ( this, im, jm, km, dt, dr, dthe, dphi, re, sc_WaterVapour, sc_CO2, g, pr, 
+    RHS_Atmosphere  prepare ( this, im, jm, km, zeta, dt, dr, dthe, dphi, re, sc_WaterVapour, sc_CO2, g, pr, 
                               WaterVapour, Buoyancy, CO2, gam, sigma, lamda, irr );
     RHS_Atmosphere  prepare_2D ( jm, km, dthe, dphi, re );
 
@@ -244,7 +244,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     RungeKutta_Atmosphere  result ( im, jm, km, dt, dr, dphi, dthe );
 
     //  class Results_MSL_Atm to compute and show results on the mean sea level, MSL
-    Results_MSL_Atm  calculate_MSL ( im, jm, km, sun, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_equator, lv, ls, 
+    Results_MSL_Atm  calculate_MSL ( im, jm, km, sun, zeta, g, ep, hp, u_0, p_0, t_0, c_0, co2_0, sigma, albedo_equator, lv, ls, 
                                      cp_l, L_atm, dt, dr, dthe, dphi, r_air, R_Air, r_water_vapour, R_WaterVapour, 
                                      co2_vegetation, co2_ocean, co2_land, gam, t_pole, t_paleo, t_average );
 
@@ -908,9 +908,9 @@ void cAtmosphereModel::run_3D_loop( BC_Atmosphere &boundary, RungeKutta_Atmosphe
                                                       cloud, ice, P_rain, P_snow, S_v, S_c, S_i, S_r, S_s, S_c_c );
 
 // formation of cumulus clouds by moist convection taken from COSMO adapted from M. Tiedtke 
-//            circulation.Moist_Convection ( rad, the, phi, h, t, u, v, w, 
-//                p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, cn, cloudn, 
-//                icen, co2n, P_rain, P_snow, P_conv, M_u, M_d, MC_s, MC_q, MC_v, MC_w );
+            circulation.Moist_Convection ( rad, the, phi, h, t, u, v, w, 
+                p_dyn, p_stat, c, cloud, ice, co2, tn, un, vn, wn, cn, cloudn, 
+                icen, co2n, P_rain, P_snow, P_conv, M_u, M_d, MC_s, MC_q, MC_v, MC_w );
             }
 
             move_data_to_new_arrays(im, jm, km, 1., old_arrays_3d, new_arrays_3d);

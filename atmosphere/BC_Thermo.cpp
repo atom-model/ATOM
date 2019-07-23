@@ -92,7 +92,7 @@ BC_Thermo::BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_
     this-> declination =  model->declination;
     this-> sun_position_lat =  model->sun_position_lat;
     this-> sun_position_lon =  model->sun_position_lon;
-    this-> zeta =  model->zeta;
+    this-> zeta = model->zeta;
 
     im_tropopause = model->get_tropopause();
 
@@ -180,7 +180,6 @@ void BC_Thermo::BC_Radiation_multi_layer ( Array_1D &rad, Array_2D &albedo, Arra
     // multi layer radiation model
     cout.precision ( 4 );
     cout.setf ( ios::fixed );
-    double zeta = 3.715;
 
     pi180 = 180./M_PI;
 
@@ -441,7 +440,6 @@ void BC_Thermo::BC_Temperature( Array_1D &rad, Array_2D &temperature_NASA, Array
                              Array &t, Array &tn, Array &p_dyn, Array &p_stat ){
 //    logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
 //    logger() << "enter BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
-    double zeta = 3.715;
     double t_paleo_add = 0;
 // Lenton_etal_COPSE_time_temp, constant paleo mean temperature, added to the surface initial temperature
 // difference between mean temperature ( Ma ) and mean temperature ( previous Ma ) == t_paleo_add
@@ -708,9 +706,6 @@ void BC_Thermo::BC_WaterVapour ( Array_1D &rad, Array &h, Array &p_stat, Array &
     // maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
     // minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
     // value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
-
-    double zeta = 3.715;
-
     // water vapour contents computed by Clausius-Clapeyron-formula
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
@@ -775,7 +770,7 @@ void BC_Thermo::BC_WaterVapour ( Array_1D &rad, Array &h, Array &p_stat, Array &
 
 void BC_Thermo::BC_CO2( int Ma, double L_atm, Array_1D &rad, Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 ){
     // initial and boundary conditions of CO2 content on water and land surfaces
-    // parabolic CO2 content distribution from pole to pole accepted    double zeta = 3.715;
+    // parabolic CO2 content distribution from pole to pole accepted
 
     j_half = j_max / 2;
 
@@ -916,8 +911,6 @@ void BC_Thermo::BC_CO2_Iter( int Ma, double L_atm, Array_1D &rad, Array_2D &Vege
                 Array_2D &Topography, Array &h, Array &t, Array &p_dyn, Array &co2 ){
     // initial and boundary conditions of CO2 content on water and land surfaces
     // parabolic CO2 content distribution from pole to pole accepted
-    double zeta = 3.715;
-
     j_half = j_max / 2;
 
     // CO2-distribution by Ruddiman approximated by a parabola
@@ -1012,7 +1005,6 @@ void BC_Thermo::BC_CO2_Iter( int Ma, double L_atm, Array_1D &rad, Array_2D &Vege
 
 
 void BC_Thermo::TropopauseLocation(){
-    double zeta = 3.715;
 // parabolic tropopause location distribution from pole to pole assumed
     j_max = jm - 1;
     j_half = ( jm -1 ) / 2;
@@ -1076,7 +1068,6 @@ void BC_Thermo::IC_CellStructure ( Array_1D &rad, Array &h, Array &u, Array &v, 
 
 // velocities given in m/s, 1 m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this class element
 // do not change the velocity initial conditions !!
-    double zeta = 3.715;
 
 // velocity assumptions at the equator 0°
     ua_00 = 1.;  // in m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this class elemen
@@ -2356,7 +2347,6 @@ void BC_Thermo::BC_Surface_Precipitation_NASA ( const string &Name_SurfacePrecip
 
 
 void BC_Thermo::BC_Pressure ( double L_atm, Array_1D &rad, Array &p_stat, Array &p_dyn, Array &t, Array &h ){
-    double zeta = 3.715;
     exp_pressure = g / ( 1.e-2 * gam * R_Air );
 // boundary condition of surface pressure given by surface temperature through gas equation
     for ( int k = 0; k < km; k++ ){
@@ -2401,7 +2391,6 @@ void BC_Thermo::Latent_Heat ( Array_1D &rad, Array_1D &the, Array_1D &phi,
     coeff_Q = cp_l * r_air * t_0 * u_0;  // coefficient for Q_Sensible
     double coeff_lat = 10.;  // arbitrary adjustment to fit Q_latent/ Q_sensible == 27%/5% of irradiance
     double coeff_sen = .12;
-    double zeta = 3.715;
 /*
     step = ( ( exp( zeta * ( rad.z[ 2 ] - 1. ) ) - 1 ) 
                   - ( exp( zeta * ( rad.z[ 0 ] - 1. ) ) - 1 ) ) 
@@ -2491,7 +2480,6 @@ void BC_Thermo::Ice_Water_Saturation_Adjustment ( Array_1D &rad, Array &h,
     cout.precision ( 6 );
 // Ice_Water_Saturation_Adjustment, distribution of cloud ice and cloud water dependent on water vapour amount and temperature
 // constant coefficients for the adjustment of cloud water and cloud ice amount vice versa
-    double zeta = 3.715;
     t_00 = 236.15;
     t_Celsius_2 = t_00 - t_0; // in Kelvin = -37 °C
 
@@ -2782,8 +2770,6 @@ void BC_Thermo::Two_Category_Ice_Scheme ( Array_1D &rad, Array &h, Array &c, Arr
     //So, I move it out of class.
     //I also don't see any reason the above horde of variables should stay as class members. -- mchin
     double m_i = m_i_max; //initialize m_i local variable. If uninitialized, the value in m_i can be anything(bad, very bad). 
-
-    double zeta = 3.715;
     double step = 0.;
 
 // rain and snow distribution based on parameterization schemes adopted from the COSMO code used by the German Weather Forecast
@@ -3109,7 +3095,6 @@ void BC_Thermo::BC_Evaporation ( Array_1D &rad, Array_2D &vapour_evaporation, Ar
 //    double coeff_vapour = 1.1574e-8 * 2000.;  
 //                                      2000. is fantasy, but it produces a small increase 
 //                                      of surface water vapour due to evaporation, TODO
-//    double zeta = 3.715;
     double rm = rad.z[ 0 ];
     double exp_rm = 1. / exp( zeta * rm );
 
@@ -3147,7 +3132,6 @@ void BC_Thermo::Moist_Convection ( Array_1D &rad, Array_1D &the, Array_1D &phi,
 // collection of coefficients for phase transformation
     int i_LFS = 0;
     int i_b = 0;
-    double zeta = 3.715;
     double b_u = .3;
     double alf_1 = 5.e-4;
     double alf_2 = .011;
