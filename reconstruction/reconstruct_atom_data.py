@@ -400,21 +400,21 @@ def reconstruct_precipitation(time_0, time_1, suffix='Ma_smooth.xyz'):
         DATA_DIR + '/{0}Ma_Reconstructed_Precipitation.xyz'.format(time_1))  
 
 
-def reconstruct_salinity(time_0, time_1, suffix='Ma_smooth.xyz'):
-    st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Hyd.xyz'.format(time_0, suffix),skip_header=1)
-    data = st[:,[0,1,7]]
-    ind = np.lexsort((-data[:,1],data[:,0]))
-    #print(data[ind])
+#def reconstruct_salinity(time_0, time_1, suffix='Ma_smooth.xyz'):
+#    st = np.genfromtxt(DATA_DIR + '/[{0}{1}]_PlotData_Hyd.xyz'.format(time_0, suffix),skip_header=1)
+#    data = st[:,[0,1,7]]
+#    ind = np.lexsort((-data[:,1],data[:,0]))
+#    #print(data[ind])
 
-    with open(DATA_DIR + '/{0}Ma_Hyd_Salinity.xyz'.format(time_0), 'w') as of:
-        for l in data[ind]:
-            of.write(' '.join(str(item) for item in l) + '\n')
+#    with open(DATA_DIR + '/{0}Ma_Hyd_Salinity.xyz'.format(time_0), 'w') as of:
+#        for l in data[ind]:
+#            of.write(' '.join(str(item) for item in l) + '\n')
 
-    reconstruct_grid(
-        time_0,
-        DATA_DIR + '/{0}Ma_Hyd_Salinity.xyz'.format(time_0),
-        time_1,
-        DATA_DIR + '/{0}Ma_Reconstructed_Salinity.xyz'.format(time_1))
+#    reconstruct_grid(
+#        time_0,
+#        DATA_DIR + '/{0}Ma_Hyd_Salinity.xyz'.format(time_0),
+#        time_1,
+#        DATA_DIR + '/{0}Ma_Reconstructed_Salinity.xyz'.format(time_1))
 
 
 def reconstruct_wind_v(time_0, time_1, suffix='Ma_smooth.xyz'):
@@ -478,8 +478,8 @@ def main():
             reconstruct_precipitation(time_0, time_1, BATHYMETRY_SUFFIX)
             reconstruct_wind_v(time_0, time_1, BATHYMETRY_SUFFIX)
             reconstruct_wind_w(time_0, time_1, BATHYMETRY_SUFFIX)
-        else:
-            reconstruct_salinity(time_0, time_1, BATHYMETRY_SUFFIX)
+#        else:
+#            reconstruct_salinity(time_0, time_1, BATHYMETRY_SUFFIX)
     except:
         print("Usage: python reconstruct_atom_data.py 0 10 ./output Ma_smooth.xyz atm/hyd") 
         import traceback
