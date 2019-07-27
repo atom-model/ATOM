@@ -215,7 +215,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
 
     // class BC_Thermohalin for the initial and boundary conditions of the flow properties
     BC_Thermohalin      oceanflow ( im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, dr, g, r_0_water, ua, va, wa, ta, 
-                                    ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_cretaceous_max, t_equator, 
+                                    ca, pa, u_0, p_0, t_0, c_0, cp_w, L_hyd, t_average, t_paleo_max, t_equator, 
                                     t_pole, output_path );
 
     //  surface temperature from World Ocean Atlas 2009 given as boundary condition
@@ -223,12 +223,13 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
     {
         //oceanflow.BC_Surface_Temperature_NASA ( Name_SurfaceTemperature_File, t );
     }
+/*
     //  surface salinity from World Ocean Atlas 2009 given as boundary condition
     if ( Ma == 0 || use_earthbyte_reconstruction) 
     {
         oceanflow.BC_Surface_Salinity_NASA ( Name_SurfaceSalinity_File, c );
     }
-
+*/
     if(Ma == 0) read_IC(velocity_v_file, v.x[im-1], jm, km);
     if(Ma == 0) read_IC(velocity_w_file, w.x[im-1], jm, km);
 
@@ -521,7 +522,7 @@ void cHydrosphereModel::Run()
 
 void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepath, bool is_final_result)
 {
-/*
+
     //  printout in ParaView and plot files
     //  class PostProcess_Hydrosphaere for the printing of results
     PostProcess_Hydrosphere     write_File ( im, jm, km, filepath );
@@ -550,7 +551,7 @@ void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepa
         write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
             u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
     }
-*/
+
     //  writing of plot data in the PlotData file
     PostProcess_Hydrosphere     ppa ( im, jm, km, output_path );
     Hydrosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1));
