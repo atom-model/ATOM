@@ -55,36 +55,38 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
     // constant value stands for other non-condensable gases than water vapour in the equation for epsilon
     double epsilon_eff_2D = epsilon_pole - epsilon_equator;
 
-    for ( int j = 0; j < jm; j++ ){
+    for ( int j = 0; j < jm; j++ )
+    {
         int i_trop = m_model->get_tropopause_layer(j);
-
         // on zero level, lateral parabolic distribution
         epsilon_eff_max = epsilon_eff_2D * parabola( j / j_max_half ) + epsilon_pole;
 
-        for ( int k = 0; k < km; k++ ){
+        for ( int k = 0; k < km; k++ )
+        {
             int i_mount = i_topography[ j ][ k ];
 
             // in W/m², assumption of parabolic surface radiation at zero level
             radiation_surface.y[ j ][ k ] = rad_eff * parabola( j / j_max_half ) + rad_pole;
 
-            for ( int i = 0; i <= i_trop; i++ ){
+            for ( int i = 0; i <= i_trop; i++ )
+            {
                 if ( c.x[ i ][ j ][ k ] < 0. )      c.x[ i ][ j ][ k ] = 0.;
                 if ( cloud.x[ i ][ j ][ k ] < 0. )  cloud.x[ i ][ j ][ k ] = 0.;
                 if ( ice.x[ i ][ j ][ k ] < 0. )    ice.x[ i ][ j ][ k ] = 0.;
 
                 // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
-                double e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep;
-                
+                double e = ( c.x[ i ][ j ][ k ] + cloud.x[ i ][ j ][ k ] 
+                           + ice.x[ i ][ j ][ k ] ) * p_stat.x[ i ][ j ][ k ] / ep;
                 // radial parabolic distribution, start on zero level
                 double epsilon_eff = epsilon_eff_max - ( epsilon_tropopause - epsilon_eff_max ) *
                     parabola( m_model->get_layer_height(i) / m_model->get_layer_height(i_trop) );
-                
+/*
                 double co2_coeff = 1.;
                 if ( fabs(m_model->CO2 - 1) < std::numeric_limits<double>::epsilon() ){
                     // influence of co2 in the atmosphere, co2_coeff = 1. means no influence
                     co2_coeff = co2_factor * ( co2_equator / co2_tropopause );
                 }
-
+*/
                 // dependency given by Häckel, Meteorologie, p. 205 ( law by F. Baur and H. Philips, 1934 )
                 // co2_coeff * epsilon_eff describe the effect in the emissivity computation of other gases like CO2
                 // in the original formula this value is 0.594, for reasons of adjustment to the modern atmosphere,
@@ -92,13 +94,37 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 // this variable reacts very sensitive and changes the temperature field extremely
                 // the second term describes the influence of water vapour only 
                 if( i >= i_mount ){ //start from the mountain top
-                    epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );
+                    double step = m_model->get_layer_height(i+1) 
+                                - m_model->get_layer_height(i); // local atmospheric shell thickness
+                    double P_c = ( 1.e-6 * p_stat.x[ i ][ j ][ k ] 
+                                 * co2.x[ i ][ j ][ k ] * co2_0 / p_0 );
+                    double u_c = P_c * step * 100. * ( L_atm / ( double ) ( im-1 ) ); // model by Atwater and Ball
+//                    u_c = 300. / 0.9869 * P_c * step * 100. / ( t.x[ i ][ j ][ k ] * t_0 ); 
+                            // modell by Yamamoto and Sasamori
+
+                 // influence on the emissivity by carbon dioxcide by the law by Bliss
+//                    x_c = 10. * P_c / ( R_co2 * t.x[ i ][ j ][ k ] * t_0 ) * step * p_0;
+                  // coefficient in the Bliss law, 10. => conversion from kg/m² to g/cm²
+//                    eps_co2 = .185 * ( 1. - exp ( - 50. * x_c ) ); // modell by Bliss
+                    double eps_co2 = .185 * ( 1. - exp ( - 0.3919 * pow ( u_c, 0.4 ) ) ); // model by Atwater and Ball
+                    eps_co2 = .5 * eps_co2; // model by Atwater and Ball, 
+                                            // factor .5 fits the Atwater and Ball results to Yamamoto and Sasamori,
+                                            // which fit best to HITRAN band data
+//                    eps_co2 = 0.; // Test
+
+                    epsilon_3D.x[ i ][ j ][ k ] = emissivity_add * epsilon_eff 
+                                                  + .0416 * sqrt ( e ) + eps_co2;
+
+                    // atmospheric emissivity by Vogel/Bliss, emissivity seems too high
+//                    epsilon_3D.x[ i ][ j ][ k ] = 0.98 * pow( ( e / ( t.x[ i ][ j ][ k ] * t_0 ) ), 0.0687 );
+
+//                    epsilon_3D.x[ i ][ j ][ k ] = co2_coeff * epsilon_eff + .0416 * sqrt ( e );
                     radiation_3D.x[ i ][ j ][ k ] = ( 1. - epsilon_3D.x[ i ][ j ][ k ] ) * sigma * 
                                     pow ( t.x[ i ][ j ][ k ] * t_0, 4. );
                 }
                 if ( epsilon_3D.x[ i ][ j ][ k ] > 1. )  epsilon_3D.x[ i ][ j ][ k ] = 1.;
             }
-            epsilon.y[ j ][ k ] = epsilon_3D.x[ i_trop ][ j ][ k ];
+            epsilon.y[ j ][ k ] = epsilon_3D.x[ 0 ][ j ][ k ];
 
             // inside mountains
             for ( int i = i_mount - 1; i >= 0; i-- ){
@@ -235,130 +261,153 @@ void cAtmosphereModel::init_temperature()
     // logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
     // logger() << "enter BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
 
-    // Lenton_etal_COPSE_time_temp, constant cretaceous mean temperature, added to the surface initial temperature
-    // difference between mean temperature ( Ma ) and mean temperature ( previous Ma ) == t_cretaceous_add
-    double t_cretaceous_add = 0; 
+    // Lenton_etal_COPSE_time_temp, constant paleo mean temperature, added to the surface initial temperature
+    // difference between mean temperature ( Ma ) and mean temperature ( previous Ma ) == t_paleo_add
+    double t_paleo_add = 0; 
     if(!is_first_time_slice()){
-        t_cretaceous_add = get_mean_temperature_from_curve(*get_current_time()) - 
+        t_paleo_add = get_mean_temperature_from_curve(*get_current_time()) - 
             get_mean_temperature_from_curve(*get_previous_time());
-        t_cretaceous_add /= t_0; // non-dimensional 
+        t_paleo_add /= t_0; // non-dimensional 
     }
+
+    cout.precision ( 3 );
+    int Ma = *get_current_time();
+    const char* time_slice_comment = "      time slice of Paleo-AGCM:";
+    const char* time_slice_number = " Ma = ";
+    const char* time_slice_unit = " million years";
+
+    cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) 
+        << time_slice_comment << resetiosflags ( ios::left ) << setw ( 6 ) 
+        << fixed << setfill ( ' ' ) << time_slice_number << setw ( 3 ) << Ma 
+        << setw ( 12 ) << time_slice_unit << endl << endl;
+
+    const char* temperature_comment = "      temperature increase at paleo times: ";
+    const char* temperature_gain = " t increase";
+    const char* temperature_modern = "      mean temperature at modern times: ";
+    const char* temperature_paleo = "      mean temperature at paleo times: ";
+    const char* temperature_average = " t modern";
+    const char* temperature_average_pal = " t paleo";
+    const char* temperature_unit =  "°C ";
+
+    cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) 
+        << temperature_comment << resetiosflags ( ios::left ) << setw ( 12 ) 
+        << temperature_gain << " = " << setw ( 7 ) << setfill ( ' ' ) 
+        << t_paleo << setw ( 5 ) << temperature_unit << endl << setw ( 55 ) 
+        << setfill ( '.' )  << setiosflags ( ios::left ) << temperature_modern 
+        << resetiosflags ( ios::left ) << setw ( 13 ) << temperature_average 
+        << " = "  << setw ( 7 ) << setfill ( ' ' ) << t_average << setw ( 5 ) 
+        << temperature_unit << endl << setw ( 55 ) << setfill ( '.' ) 
+        << setiosflags ( ios::left ) << temperature_paleo << resetiosflags( ios::left ) 
+        << setw ( 13 ) << temperature_average_pal  << " = "  << setw ( 7 ) 
+        << setfill ( ' ' ) << t_average + t_paleo << setw ( 5 ) 
+        << temperature_unit << endl;
 
     // temperatur distribution at a prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
     // sun_position_lon = 180, position of sun k = 180 means 0° or 180° E ( Greenwich, zero meridian )
     // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
-
-    if ( ( *get_current_time() > 0 ) && ( sun == 1 ) ){
+    if( ( *get_current_time() > 0 ) && ( sun == 1 ) ){
         double j_par = sun_position_lat; // position of maximum temperature, sun position
         j_par = j_par + declination; // angle of sun axis, declination = 23,4°
         double j_pol = jm - 1;
         double j_par_f = ( double ) j_par;
         double j_pol_f = ( double ) j_pol;
-
-        double aa = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) - ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * 
-            ( j_par_f - j_pol_f ) );
+        double aa = ( t_equator - t_pole ) / ( ( ( j_par_f * j_par_f ) 
+            - ( j_pol_f * j_pol_f ) ) - 2. * j_par_f * ( j_par_f - j_pol_f ) );
         double bb = - 2. * aa * j_par_f;
         double cc = t_equator + aa * j_par_f * j_par_f;
         double j_d = sqrt ( ( cc - t_pole ) / aa );
         double dd = 2. * aa * j_d + bb;
         double e = t_pole;
-
         // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature ( linear equation + parabola )
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = 0; j < jm; j++ ){
+        for( int k = 0; k < km; k++ ){
+            for( int j = 0; j < jm; j++ ){
                 double d_j = ( double ) j;
-                if ( d_j <= j_d ){
-                    t.x[ 0 ][ j ][ k ] = dd * d_j + e + t_cretaceous_add;
+                if( d_j <= j_d ){
+                    t.x[ 0 ][ j ][ k ] = dd * d_j + e + t_paleo_add;
                 }
-                if ( d_j > j_d ){
-                    t.x[ 0 ][ j ][ k ] = aa * d_j * d_j + bb * d_j + cc + t_cretaceous_add;
+                if( d_j > j_d ){
+                    t.x[ 0 ][ j ][ k ] = aa * d_j * d_j + bb * d_j 
+                        + cc + t_paleo_add;
                 }
             }
         }
-
         // longitudinally variable temperature distribution from west to east in parabolic form
         // communicates the impression of local sun radiation on the southern hemisphere
         double k_par = sun_position_lon;  // position of the sun at constant longitude
         double k_pol = km - 1;
-
         double t_360 = (  t_0 + 5. ) / t_0;
-
-        for ( int j = 0; j < jm; j++ ){
+        for( int j = 0; j < jm; j++ ){
             double jm_temp_asym = t.x[ 0 ][ j ][ 20 ];//transfer of zonal constant temperature into aa 1D-temperature field
-            for ( int k = 0; k < km; k++ ){
+            for( int k = 0; k < km; k++ ){
                 double k_par_f = ( double ) k_par;
                 double k_pol_f = ( double ) k_pol;
                 double d_k = ( double ) k;
-
-                aa = ( jm_temp_asym - t_360 ) / ( ( ( k_par_f * k_par_f ) - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * 
+                aa = ( jm_temp_asym - t_360 ) / ( ( ( k_par_f * k_par_f ) 
+                    - ( k_pol_f * k_pol_f ) ) - 2. * k_par_f * 
                     ( k_par_f - k_pol_f ) );
                 bb = - 2. * aa * k_par_f;
                 cc = jm_temp_asym + aa * k_par_f * k_par_f;
-
                 t.x[ 0 ][ j ][ k ] = aa * d_k * d_k + bb * d_k + cc;
             }
         }
     }// temperatur distribution at aa prescribed sun position
-
-
     // pole temperature adjustment, combination of linear time dependent functions 
     // Stein/Rüdiger/Parish locally constant pole temperature
     // difference between pole temperature ( Ma ) and pole temperature ( previous Ma )
     double t_pole_diff_ocean = 0., t_pole_diff_land;
-
     std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature ( Ma ) distribution
     load_map_from_file(pole_temperature_file, pole_temp_map); 
-
     double d_j_half = ( double ) ( jm -1 ) / 2.0;
-    int i_mount = 0;
-
     // temperature initial conditions along the surface
-    if ( RadiationModel == 1 ){
+    if( RadiationModel == 1 ){
         //the t_pole_diff_ocean should be the difference between this time slice and the previous one, right? -- mchin
         if(!is_first_time_slice()){
             t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map) - 
                 get_pole_temperature(*get_previous_time(), pole_temp_map);
+            t_pole_diff_land = t_pole_diff_ocean;
         }
         //on land, the difference is between this time slice and present day because 
         //the temperature data from previous time on land is not used.
-        t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map );
+//        t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map );
         // in °C, constant local pole temperature as function of Ma for hothouse climates 
-
-        float pole_temperature = 1 + get_pole_temperature(*get_current_time(), pole_temp_map ) / t_0;
-        float t_eff = t_equator - pole_temperature;  // coefficient for the zonal parabolic temperature distribution
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = 0; j < jm; j++ ){
+        float pole_temperature = 1 + get_pole_temperature(*get_current_time(), 
+            pole_temp_map ) / t_0;
+        float t_eff = pole_temperature - t_equator;  // coefficient for the zonal parabolic temperature distribution
+        for( int k = 0; k < km; k++ ){
+            for( int j = 0; j < jm; j++ ){
                 double d_j = ( double ) j;
-                if ( NASATemperature == 0 ){  // parabolic ocean surface temperature assumed
-                    t.x[ 0 ][ j ][ k ] = -t_eff * parabola( d_j / d_j_half ) + pole_temperature + t_cretaceous_add;
+                if( NASATemperature == 0 ){  // parabolic ocean surface temperature assumed
+                    t.x[ 0 ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) 
+                        + pole_temperature + t_paleo_add;
                     srand (time(NULL));
                     t.x[ 0 ][ j ][ k ] += (rand() % 10 - 5) / 50. / t_0;
-
                     // increasing pole and mean temperature ( Ma ) incorporated
-                    if ( is_land ( h, 0, j, k ) ){  // parabolic land surface temperature assumed
-                        t.x[ 0 ][ j ][ k ] += t_land;
+                    if( is_land ( h, 0, j, k ) ){  // parabolic land surface temperature assumed
+                        t.x[ 0 ][ j ][ k ] += m_model->t_land;
                         // increasing pole and mean temperature ( Ma ) incorporated
                         // in case land temperature is assumed to be
                         // globally higher than ocean temperature, t_land is added too
                     }
-                }else{  // if ( NASATemperature == 1 ) ocean surface temperature based on NASA temperature distribution
+                }else{  // if( NASATemperature == 1 ) ocean surface temperature based on NASA temperature distribution
                     // transported for later time slices Ma by use_earthbyte_reconstruction
-                    if ( is_land (h, 0, j, k ) ){  // on land a parabolic distribution assumed, no NASA based data transportable
-                        t.x[ 0 ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + t_pole
-//                        t.x[ i_mount ][ j ][ k ] = t_eff * parabola( d_j / d_j_half ) + ( t_pole_ma + t_0 ) / t_0
-                            + t_cretaceous_add + m_model->t_land;
-
+                    if( is_land (h, 0, j, k ) ){  // on land a parabolic distribution assumed, no NASA based data transportable
+                        t.x[ 0 ][ j ][ k ] = ( t_eff * parabola( d_j / d_j_half ) 
+                            + pole_temperature ) + t_paleo_add + m_model->t_land;
                             // Stein/Rüdiger/Parish pole temperature decreasing equator wards
-                            t.x[ 0 ][ j ][ k ] += t_pole_diff_land * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
-                    }else{ // if the this location is ocean
+                        t.x[ 0 ][ j ][ k ] += t_pole_diff_land 
+                            * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
+                        if(*get_current_time() == 0)
+                            t.x[ 0 ][ j ][ k ] = temperature_NASA.y[ j ][ k ];  // initial temperature by NASA for Ma=0
+                    }else{ // if the location is ocean
                         if(*get_current_time() > 0){//when the current time is 0, 
                                                     //the temperature data has already been read into t.x[ 0 ][ j ][ k ]        
-                            // ocean surface temperature increased by mean t_cretaceous_add
+                            // ocean surface temperature increased by mean t_paleo_add
                             // and by a zonally equator wards decreasing temperature difference is added
                             // Stein/Rüdiger/Parish pole temperature decreasing equator wards
-                            t.x[ 0 ][ j ][ k ] += t_cretaceous_add + 
-                                t_pole_diff_ocean * fabs ( parabola( d_j / d_j_half ) + 1. ) / t_0;
+                            t.x[ 0 ][ j ][ k ] += t_paleo_add + 
+                                t_pole_diff_ocean * fabs( parabola( d_j / d_j_half ) 
+                                + 1. ) / t_0;
                         }
                     }
                 }// else ( NASATemperature == 1 )
@@ -368,31 +417,28 @@ void cAtmosphereModel::init_temperature()
 
     // zonal temperature along tropopause
     double t_eff_tropo = t_tropopause_pole - t_tropopause;
-
     //use "linear temperature decay" to generate temperature data for layers between mountain top and tropopause
     //use "mountain top temperature" for the layers below mountain top
     //use "tropopause tempeature" for the layers above tropopause
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
-    for ( int j = 0; j < jm; j++ ){
-        double temp_tropopause =  t_eff_tropo * parabola( j / ((jm-1)/2.0) ) +
-                t_tropopause_pole + t_cretaceous_add;   //temperature at tropopause     
-
-        for ( int k = 0; k < km; k++ ){
+    for( int j = 0; j < jm; j++ ){
+        double temp_tropopause = t_eff_tropo * parabola( j / ((jm-1)/2.0) ) +
+            t_tropopause_pole;   //temperature at tropopause     
+        for( int k = 0; k < km; k++ ){
             int i_mount = i_topography[ j ][ k ];
             int i_trop = get_tropopause_layer(j);
-
             double t_mount_top = ( temp_tropopause - t.x[ 0 ][ j ][ k ] ) *
                 (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
                 t.x[ 0 ][ j ][ k ]; //temperature at mountain top
-
-            for ( int i = 1; i < im; i++ ){
-                if ( i < i_trop+1 ){
+            for( int i = 1; i < im; i++ ){
+                if( i < i_trop+1 ){
                     if(i>i_mount){
                         // linear temperature decay up to tropopause, privat  approximation
                         t.x[ i ][ j ][ k ] = ( temp_tropopause - t.x[ 0 ][ j ][ k ] ) * 
                             (get_layer_height(i) / get_layer_height(i_trop)) + 
                             t.x[ 0 ][ j ][ k ]; 
-                    }else{
+                    }
+                    else{
                         t.x[ i ][ j ][ k ] = t_mount_top; //inside mountain
                     }
                 }else{ // above tropopause
@@ -403,7 +449,8 @@ void cAtmosphereModel::init_temperature()
         }
     }
 
-    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl << std::endl;
+    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 
+        << std::endl << std::endl;
     if(debug){
         Array tmp = (t-1)*t_0;
         logger()<<"20180912: Exit BCT ... "<<std::endl;
@@ -520,6 +567,10 @@ void cAtmosphereModel::Latent_Heat()
         }
     }
 }
+
+
+
+
 
 //Tao, W.-K., Simpson, J., and McCumber, M.: 
 //An Ice-Water Saturation Adjustment, American Meteorological Society, Notes and 
@@ -685,12 +736,15 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
                     /** §§§§§§§§§§§§§   end iterations for mixed cloud phase     §§§§§§§**/
 
                     cn.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k ] = q_v_b;  // new values achieved after converged iterations
+                    cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = q_c_b;
                     icen.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k ] = q_i_b;
                     t.x[ i ][ j ][ k ] = T / t_0;
-                    if ( t_Celsius < t_Celsius_2 )     
+                    if ( t_Celsius < t_Celsius_2 ){     
                         cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = 0.;
-                    else
-                        cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ] = q_c_b;
+                        icen.x[ i ][ j ][ k ] = ice.x[ i ][ j ][ k ] = 0.;
+                    }
+                    if ( t_Celsius > 0. )           icen.x[ i ][ j ][ k ] = 
+                                                    ice.x[ i ][ j ][ k ] = 0.;
                 } // end ( ( t_Celsius < 0. ) && ( t_Celsius >= t_Celsius_2 ) )
             } // end i
         } // end j
@@ -712,8 +766,6 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment()
         assert(!t.has_nan());
     }
 }
-
-
 
 
 
@@ -1030,6 +1082,10 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
     }  // end if true
 }
 
+
+
+
+
 void cAtmosphereModel::Value_Limitation_Atm(){
 // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
     for ( int k = 0; k < km; k++ ){
@@ -1063,7 +1119,7 @@ void cAtmosphereModel::Value_Limitation_Atm(){
 //                    c.x[ i ][ j ][ k ] = 0.;
                     cloud.x[ i ][ j ][ k ] = 0.;
                     ice.x[ i ][ j ][ k ] = 0.;
-                    co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
+//                    co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
                     p_dyn.x[ i ][ j ][ k ] = 0.;
                 }
             }

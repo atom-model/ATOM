@@ -27,7 +27,7 @@ def main():
             ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True ),
         
             ( 'time_start', 'start time', 'int', 0 ),
-            ( 'time_end', 'end time', 'int', 5 ),
+            ( 'time_end', 'end time', 'int', 15 ),
             ( 'time_step', 'step size between timeslices', 'int', 5 ),
         ],
 
@@ -114,17 +114,16 @@ def main():
             ( 't_paleo', 'value at modern times', 'double', 0.0 ),
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.4 ),
-            ( 't_equator', 'temperature t_0 = 1.0842 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
+#            ( 't_equator', 'temperature t_0 = 1.0842 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
 #            ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
+            ( 't_equator', 'temperature t_0 = 1.1172 compares to 32.0° C compares to 305.15 K', 'double', 1.1172 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.9436 compares to -15.4°C compares to 258.15 K', 'double', 0.9436 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
             ( 't_tropopause_pole', 'temperature in the tropopause at the pole, t = 0.784 compares to -59°C compares to 214.15 K', 'double', 0.784 ),
             ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0. ),
-#            ( 't_land', 'temperature increase on land by 2°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.003661 ),
+#            ( 't_land', 'temperature increase on land by 12°C ( 1°C compares to t_land = 0.003661 )', 'double', 0.04393 ),
 
             ( 'c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001 ),
-#            ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.58 ),
-#            ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.64 ),
             ( 'c_ocean', 'water vapour reduction on sea surface ( 50% of the saturation value )', 'double', 0.54 ),
             ( 'c_land', 'water vapour reduction on land ( 55% of the saturation value )', 'double', 0.50 ),
 
