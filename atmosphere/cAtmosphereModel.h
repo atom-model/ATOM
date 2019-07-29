@@ -250,6 +250,8 @@ private:
 
     void check_data();
     void check_data(Array& a, Array&an, const std::string& name);
+
+    void paraview_panorama_vts (string &Name_Bathymetry_File, int n);
  
     static cAtmosphereModel* m_model;
 

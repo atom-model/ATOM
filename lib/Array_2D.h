@@ -19,7 +19,7 @@ using namespace std;
 
 class Array_2D
 {
-private:
+public:
     int jm, km;
 
 public:

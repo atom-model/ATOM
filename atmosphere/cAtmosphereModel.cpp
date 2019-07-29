@@ -393,13 +393,12 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
                                     S_s, S_c_c );
 
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-    if(paraview_panorama_vts) //This function creates a large file. Use a flag to control if it is wanted.
+    */
+    if(paraview_panorama_vts_flag) //This function creates a large file. Use a flag to control if it is wanted.
     {
-        write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, 
-                                           BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
-                                           Q_Sensible, epsilon_3D, P_rain, P_snow );
+        paraview_panorama_vts ( bathymetry_name, iter_cnt-1 ); 
     }
-*/
+
     Value_Limitation_Atm();
     //  writing of v-w-data in the v_w_transfer file
     PostProcess_Atmosphere ppa ( im, jm, km, output_path );
