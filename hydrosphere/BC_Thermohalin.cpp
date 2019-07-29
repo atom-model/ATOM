@@ -264,6 +264,59 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
         salinity_unit << endl;
     cout << endl;
 
+
+
+
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            if ( is_water( h, im-1, j, k ) ){
+                d_j = ( double ) j;
+                t_Celsius = t.x[ im-1 ][ j ][ k ] * t_0 - t_0;
+                if ( t_Celsius <= 0. ) t_Celsius = 0.;
+                c.x[ im-1 ][ j ][ k ] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
+                if ( c.x[ im-1 ][ j ][ k ] <= ca ) c.x[ im-1 ][ j ][ k ] = ca;
+            }else{
+                c.x[ im-1 ][ j ][ k ] = ca;
+            }
+        }
+    }
+
+    double tm_tbeg = 0.;
+    double cm_cbeg = 0.;
+    double d_i_max = ( double ) i_max;
+    double d_i_beg = ( double ) i_beg;
+    double d_i = 0.;
+
+// distribution of t and c with increasing depth till i_beg valid for all time slices including the modern world
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            tm_tbeg = ( t.x[ im-1 ][ j ][ k ] - ta ) 
+                / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
+            cm_cbeg = ( c.x[ im-1 ][ j ][ k ] - ca ) 
+                / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
+            for ( int i = i_beg; i < im-1; i++ ){
+                if ( is_water( h, i, j, k ) ){
+                    d_i = ( double ) i;
+                    t.x[ i ][ j ][ k ] = ta + tm_tbeg 
+                        * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
+                    t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
+                    c.x[ i ][ j ][ k ] = ca + cm_cbeg 
+                        * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
+/*
+                    if ( t_Celsius <= ( ta * t_0 - t_0 ) ){ // water temperature not below 4°C
+                        t.x[ i ][ j ][ k ] = ta;
+                        c.x[ i ][ j ][ k ] = ca;
+                    }
+*/
+                }else{
+                    t.x[ i ][ j ][ k ] = ta;
+                    c.x[ i ][ j ][ k ] = ca;
+                }
+            }
+        }
+    }
+
+/*
     for ( int k = 0; k < km; k++ )
     {
         for ( int j = 0; j < jm; j++ )
@@ -294,12 +347,12 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
 
                     t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
                     c.x[ i ][ j ][ k ] = ca + cm_cbeg * ( double ) ( i * i - i_beg * i_beg );// parabolic approach
-/*
-                    if ( t_Celsius <= ( ta * t_0 - t_0 ) ){ // water temperature not below 4°C
-                        t.x[ i ][ j ][ k ] = ta;
-                        c.x[ i ][ j ][ k ] = ca;
-                    }
-*/
+
+//                    if ( t_Celsius <= ( ta * t_0 - t_0 ) ){ // water temperature not below 4°C
+//                        t.x[ i ][ j ][ k ] = ta;
+//                        c.x[ i ][ j ][ k ] = ca;
+//                    }
+
                 }else{
                     t.x[ i ][ j ][ k ] = ta;
                     c.x[ i ][ j ][ k ] = ca;
@@ -307,7 +360,7 @@ void BC_Thermohalin::BC_Temperature_Salinity ( Array &h, Array &t, Array &c, Arr
             }
         }
     }
-
+*/
     for ( int i = 0; i < i_beg; i++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int k = 0; k < km; k++ ){

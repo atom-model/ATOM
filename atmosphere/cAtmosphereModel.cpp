@@ -151,7 +151,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
         mkdir(output_path.c_str(), 0777);
     }
 
-    double t_cretaceous = 0.;
 
     //Prepare the temperature and precipitation data file
     string Name_SurfaceTemperature_File  = temperature_file;
@@ -188,6 +187,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
     read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
 
+//    goto Printout;
+
     iter_cnt_3d = -1;
     if(debug) save_data();
     iter_cnt_3d++;
@@ -196,10 +197,14 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //circulation.IC_CellStructure ( h, u, v, w );
     init_velocities();
 
+//    goto Printout;
+
     //IC_v_w_WestEastCoast();//adjust east coast velocities.
 
     adjust_temperature_IC(t.x[0], jm, km);
     init_temperature();
+
+//    goto Printout;
 
     //  class element for the surface pressure computed by surface temperature with gas equation
     BC_Pressure();
@@ -207,6 +212,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     //parabolic water vapour distribution from pol to pol, maximum water vapour volume at equator
     //circulation.BC_WaterVapour ( h, p_stat, t, c, v, w );
     init_water_vapour();
+
+//    goto Printout;
 
     //  class element for the parabolic CO2 distribution from pol to pol, maximum CO2 volume at equator
     //circulation.BC_CO2 ( Vegetation, h, t, p_dyn, co2 );
@@ -216,6 +223,8 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     if ( RadiationModel == 1 ){
         BC_Radiation_multi_layer(); 
     }
+
+//    goto Printout;
 
     // class element for the storing of velocity components, pressure and temperature for iteration start
     store_intermediate_data_2D();
@@ -230,6 +239,9 @@ void cAtmosphereModel::RunTimeSlice ( int Ma )
     cout << endl << endl;
 
     restrain_temperature();
+
+
+//    Printout:
 
     //write the ouput files
     write_file(bathymetry_name, output_path, true);
@@ -372,7 +384,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
     //  radial data along constant hight above ground
     int i_radial = 0;
     //  int i_radial = 10;
-/*    write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
+    write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
                                      BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, 
                                      Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, 
                                      Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, 
@@ -542,6 +554,7 @@ void cAtmosphereModel::run_3D_loop(){
             //  resulting the precipitation distribution formed of rain and snow
             if ( velocity_iter % 2 == 0){
                 Two_Category_Ice_Scheme(); 
+//                Moist_Convection(); 
             }
 
             store_intermediate_data_3D();
@@ -707,7 +720,7 @@ void cAtmosphereModel::init_water_vapour(){
             for ( int i = 0; i < im; i++ ){
                 if ( i < i_trop ){
                     if(i>i_mount){
-			            double x = (get_layer_height(i) - get_layer_height(i_mount)) / 
+                        double x = (get_layer_height(i) - get_layer_height(i_mount)) / 
                             (get_layer_height(i_trop) - get_layer_height(i_mount));
                         c.x[ i ][ j ][ k ] = parabola_interp(c_tropopause, c.x[ i_mount ][ j ][ k ], x); 
                     }else{
@@ -780,46 +793,98 @@ void cAtmosphereModel::init_topography(const string &topo_filename){
 void cAtmosphereModel::init_co2(){
     // initial and boundary conditions of CO2 content on water and land surfaces
     // parabolic CO2 content distribution from pole to pole accepted
-
     // CO2-distribution by Ruddiman approximated by a parabola
-    double co2_cretaceous = 3.2886 * pow ( ( t_cretaceous + t_average ), 2 ) - 32.8859 *
-        ( t_cretaceous + t_average ) + 102.2148;  // in ppm
-    double co2_average = 3.2886 * pow ( t_average, 2 ) - 32.8859 * t_average + 102.2148;  // in ppm
-    co2_cretaceous = co2_cretaceous - co2_average;
+    co2_paleo = 3.2886 * pow ( ( t_paleo + t_average ), 2 ) - 32.8859 *
+        ( t_paleo + t_average ) + 102.2148;  // in ppm
+    co2_average = 3.2886 * pow ( t_average, 2 ) - 32.8859 * t_average + 102.2148;  // in ppm
+    co2_paleo = co2_paleo - co2_average;
 
-    //use parabolic distribution from pole to pole to initialize co2  
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = 0; j < jm; j++ ){
-            int i_mount = get_surface_layer(j, k);
+    cout.precision ( 3 );
 
-            if ( is_water ( h, 0, j, k ) ){
-                co2.x[ 0 ][ j ][ k ] = parabola_interp(co2_equator, co2_pole, 2*j/(jm-1)) + co2_cretaceous + co2_ocean; 
-            }else{
-                co2.x[ i_mount ][ j ][ k ] = parabola_interp(co2_equator, co2_pole, 2*j/(jm-1)) + 
-                    + co2_cretaceous + co2_land - co2_vegetation * Vegetation.y[ j ][ k ];
+    const char* co_comment = "      co2 increase at paleo times: ";
+    const char* co_gain = " co2 increase";
+    const char* co_modern = "      mean co2 at modern times: ";
+    const char* co_paleo_str = "      mean co2 at paleo times: ";
+    const char* co_average_str = " co2 modern";
+    const char* co_average_pal = " co2 paleo";
+    const char* co_unit =  "ppm ";
+
+    cout << endl << setiosflags ( ios::left ) << setw ( 55 ) << setfill ( '.' ) <<
+        co_comment << resetiosflags ( ios::left )         << setw ( 12 ) << co_gain << " = "
+        << setw ( 7 ) << setfill ( ' ' ) << co2_paleo << setw ( 5 ) << co_unit << 
+        endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left ) << co_modern
+        << resetiosflags ( ios::left ) << setw ( 13 ) << co_average_str  << " = "
+        << setw ( 7 )  << setfill ( ' ' ) << co2_average << setw ( 5 ) << co_unit 
+        << endl << setw ( 55 ) << setfill ( '.' )  << setiosflags ( ios::left )
+        << co_paleo_str << resetiosflags ( ios::left ) << setw ( 13 ) << co_average_pal
+        << " = "  << setw ( 7 )  << setfill ( ' ' ) << co2_average + co2_paleo
+        << setw ( 5 ) << co_unit << endl;
+    cout << endl;
+
+    co2_equator = co2_equator / co2_0;
+    co2_pole = co2_pole / co2_0;
+    co2_paleo = co2_paleo / co2_0;
+    co2_land = co2_land / co2_0;
+    co2_ocean = co2_ocean / co2_0;
+    co2_tropopause = co2_tropopause / co2_0;
+    double emittancy_total = 0.423; // in W/m²
+    double coeff_em = 5.6697e-8; // in W/(m² K)
+    double delta_T = 0.02; // in K
+    // CO2-content as initial solution
+    for( int k = 0; k < km; k++ ){
+        for( int j = 0; j < jm; j++ ){
+//            i_mount = i_topography[ j ][ k ];
+            int i_mount = 0;
+            if( is_air ( h, i_mount, j, k ) ){
+                co2.x[ i_mount ][ j ][ k ] = exp ( 4. * delta_T * coeff_em 
+                     * pow( ( t.x[ i_mount ][ j ][ k ] * t_0 ), 3 ) / emittancy_total )
+                     + co2_paleo + co2_ocean;
+                     // reciprocal formula for the temperature increase by co2, 
+                     // Temp_co2_add by Nasif Nahle Sabag in PostProcess_Atm.cpp
+                     // taken over from Ruddiman, p 86, effect of co2 on global temperature
+//                co2.x[ i_mount ][ j ][ k ] = ( 3.2886 * pow ( ( t.x[ i_mount ][ j ][ k ] 
+//                    * t_0 - t_0 ), 2 ) - 32.8859 * ( t.x[ i_mount ][ j ][ k ] 
+//                    * t_0 - t_0 ) + 102.2148 + co2_ocean ) / co2_0;  // non-dimensional
+/*
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i_mount = " << i_mount << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_paleo = " << t_paleo << "   t_average = " << t_average << "   t = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << "   co2_eff = " << ( co2_pole - co2_equator ) * co2_0 << "   co2_pole = " << co2_pole * co2_0 << "   co2_equator = " << co2_equator * co2_0 << "   co2_paleo = " << co2_paleo * co2_0 << "   co2_average = " << co2_average << "   co2 = " << co2.x[ i_mount ][ 0 ][ k ] * co2_0 << endl;
+*/
             }
-            co2.x[ 0 ][ j ][ k ] /= co2_0;// non-dimensional
+            if( is_land ( h, i_mount, j, k ) ){
+                co2.x[ i_mount ][ j ][ k ] = exp ( 4. * delta_T * coeff_em 
+                     * pow( ( t.x[ i_mount ][ j ][ k ] * t_0 ), 3 ) / emittancy_total )
+                     + co2_paleo + co2_land + co2_vegetation
+                    * Vegetation.y[ j ][ k ] / co2_0;
+                     // reciprocal formula for the temperature increase by co2, 
+                     // Temp_co2_add by Nasif Nahle Sabag in PostProcess_Atm.cpp
+                     // taken over from Ruddiman, p 86, effect of co2 on global temperature
+//                co2.x[ i_mount ][ j ][ k ] = ( 3.2886 * pow ( ( t.x[ i_mount ][ j ][ k ] 
+//                    * t_0 - t_0 ), 2 ) - 32.8859 * ( t.x[ i_mount ][ j ][ k ] * t_0 - t_0 ) 
+//                    + 102.2148 + co2_land - co2_vegetation * Vegetation.y[ j ][ k ] ) / co2_0;  // non-dimensional
+/*
+    cout.precision ( 8 );
+    cout.setf ( ios::fixed );
+    if ( ( j == 90 ) && ( k == 30 ) ) cout << "   i_mount = " << i_mount << "   j = " << j << "   k = " << k << "   t_eff = " << ( t_pole - t_equator ) * t_0 << "   t_pole = " << t_pole * t_0 - t_0 << "   t_equator = " << t_equator * t_0 - t_0 << "   t_paleo = " << t_paleo << "   t_average = " << t_average << "   t = " << t.x[ i_mount ][ 0 ][ k ] * t_0 - t_0 << "   co2_eff = " << ( co2_pole - co2_equator ) * co2_0 << "   co2_pole = " << co2_pole * co2_0 << "   co2_equator = " << co2_equator * co2_0 << "   co2_paleo = " << co2_paleo * co2_0 << "   co2_average = " << co2_average << "   co2 = " << co2.x[ i_mount ][ 0 ][ k ] * co2_0 << "   co2_vegetation = " << co2_vegetation << "   Vegetation = " << Vegetation.y[ j ][ k ] << endl;
+*/
+            }
         }
     }
-
     // co2 distribution decreasing approaching tropopause, above no co2
-    for ( int j = 0; j < jm; j++ ){
+    for( int j = 0; j < jm; j++ ){
         int i_trop = get_tropopause_layer(j);
-        for ( int k = 0; k < km; k++ ){
-            int i_mount = get_surface_layer(j, k);
-            
-            for ( int i = 1; i < im; i++ ){
-                if ( i < i_trop ){
-                    if(i>i_mount){
-                        double x = (get_layer_height(i) - get_layer_height(i_mount)) / 
-                            (get_layer_height(i_trop) - get_layer_height(i_mount));
-                        co2.x[ i ][ j ][ k ] = parabola_interp(co2_tropopause, co2.x[ i_mount ][ j ][ k ], x); 
-                    }else{
-                        c.x[ i ][ j ][ k ] = c.x[ i_mount ][ j ][ k ];
-                    }
-                }else{
-                    c.x[ i ][ j ][ k ] = c_tropopause;
+        for( int k = 0; k < km; k++ ){
+//             double i_mount = i_trop;
+            int i_mount = 0;
+            for( int i = 0; i < im; i++ ){
+                if( i <= i_trop ){
+                    co2.x[ i ][ j ][ k ] = co2.x[ i_mount ][ j ][ k ] 
+                        - ( co2_tropopause - co2.x[ i_mount ][ j ][ k ] ) 
+                        * ( get_layer_height(i) / get_layer_height(i_trop) 
+                        * ( get_layer_height(i) / get_layer_height(i_trop) - 2. ) );
+                        // radial distribution approximated by a parabola
                 }
+                else  co2.x[ i ][ j ][ k ] = co2_tropopause;
             }
         }
     }
@@ -1148,7 +1213,7 @@ void cAtmosphereModel::BC_SolidGround(){
                     //c.x[ i ][ j ][ k ] = 0.; 
                     cloud.x[ i ][ j ][ k ] = 0.;
                     ice.x[ i ][ j ][ k ] = 0.;
-                    co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
+//                    co2.x[ i ][ j ][ k ] = 1.;  // = 280 ppm
                     p_dyn.x[ i ][ j ][ k ] = 0.;
                 }// is_land
             } // i
@@ -1223,6 +1288,7 @@ void cAtmosphereModel::adjust_temperature_IC(double** t, int jm, int km)
         temperature_NASA.y[ j ][ k_half ] = ( temperature_NASA.y[ j ][ k_half + 1 ] +
             temperature_NASA.y[ j ][ k_half - 1 ] ) / 2.;
     }
+
 }
 
 void cAtmosphereModel::check_data(Array& a, Array&an, const std::string& name){

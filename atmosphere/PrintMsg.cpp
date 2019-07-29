@@ -1,3 +1,4 @@
+#include <iomanip>
 #include "cAtmosphereModel.h"
 #include "MinMax_Atm.h"
 
@@ -151,5 +152,342 @@ void cAtmosphereModel::print_min_max_values()
 
     //  searching of maximum and minimum values of topography
     min_max_2d.searchMinMax_2D ( " max 2D topography ", " min 2D topography ", "m", Topography, h );
+
+    int j_loc_Dresden = 39;
+    int k_loc_Dresden = 346;
+    int j_loc_Sydney = 123;
+    int k_loc_Sydney = 151;
+    int j_loc_Pacific = 90;
+    int k_loc_Pacific = 180;
+
+    double precipitation_NASA_average = 0.;
+    double precipitablewater_average = 0.;
+    double precipitation_average = 0.;
+    double temperature_surf_average = 0.;
+    double Evaporation_Penman_average = 0.;
+    double Evaporation_Dalton_average = 0.;
+    double co2_vegetation_average = 0.;
+
+
+// averaging of precipitation in mm/a and precipitable water in mm
+    for ( int j = 0; j < jm; j++ ){
+        for ( int k = 0; k < km; k++ ){
+            precipitation_NASA_average += precipitation_NASA.y[ j ][ k ];
+            precipitablewater_average += precipitable_water.y[ j ][ k ];
+            precipitation_average += Precipitation.y[ j ][ k ];
+            temperature_surf_average += t.x[ 0 ][ j ][ k ] * t_0 - t_0;
+            Evaporation_Penman_average += Evaporation_Penman.y[ j ][ k ];
+            Evaporation_Dalton_average += Evaporation_Dalton.y[ j ][ k ];
+            co2_vegetation_average += co2_total.y[ j ][ k ];
+        }
+    }
+
+    temperature_surf_average = ( GetMean_3D(jm, km, t) - 1. ) * t_0;
+    precipitablewater_average = GetMean_2D (jm, km, precipitable_water);
+    precipitation_average = 365. * GetMean_2D(jm, km, Precipitation);
+    precipitation_NASA_average = 365. * GetMean_2D(jm, km, precipitation_NASA);
+    co2_vegetation_average = GetMean_2D(jm, km, co2_total);
+    Evaporation_Penman_average = 365. * GetMean_2D (jm, km, Evaporation_Penman);
+    Evaporation_Dalton_average = 365. * GetMean_2D (jm, km, Evaporation_Dalton);
+
+    cout.precision ( 2 );
+
+    const char* level = "m";
+    const char* deg_north = "°N";
+    const char* deg_south = "°S";
+//    const char* deg_west = "°W";
+    const char* deg_east = "°E";
+
+    const char* name_Value_1 = " radiation emission";
+    const char* name_Value_2 = " latent heat ";
+    const char* name_Value_3 = " sensible heat ";
+    const char* name_Value_4 = " bottom heat ";
+    const char* name_Value_5 = " Evaporation Penman ";
+    const char* name_Value_6 = " Evaporation Dalton ";
+    const char* name_Value_7 = " precipitable water average ";
+    const char* name_Value_8 = " precipitation average per year ";
+    const char* name_Value_9 = " precipitation average per day ";
+    const char* name_Value_10 = " precipitation NASA average per year ";
+    const char* name_Value_11 = " precipitation NASA average per day ";
+    const char* name_Value_12 = " Evaporation_Penman_average per year ";
+    const char* name_Value_13 = " Evaporation_Penman_average per day ";
+    const char* name_Value_14 = " Evaporation_Dalton_average per year ";
+    const char* name_Value_15 = " Evaporation_Dalton_average per day ";
+    const char* name_Value_16 = " to fill ";
+    const char* name_Value_17 = " to fill ";
+    const char* name_Value_18 = " to fill ";
+    const char* name_Value_19 = " to fill ";
+    const char* name_Value_20 = " to fill ";
+    const char* name_Value_21 = " to fill ";
+    const char* name_Value_22 = " co2_average ";
+    const char* name_Value_23 = " precipitable water ";
+    const char* name_Value_24 = " precipitation ";
+    const char* name_Value_25 = " temperature_modern_average ";
+    const char* name_Value_26 = " temperature_surf_average ";
+    const char* name_Value_27 = " temperature_expected_average ";
+
+    const char* name_unit_wm2 = " W/m2";
+    const char* name_unit_mmd = " mm/d";
+    const char* name_unit_mm = " mm";
+    const char* name_unit_mma = " mm/a";
+    const char* name_unit_ppm = " ppm";
+    const char* name_unit_t = " C";
+
+    const char* heading = " printout of surface data at predefinded locations: level, latitude, longitude";
+    const char* heading_Dresden = " City of Dresden, Germany, Europe";
+    const char* heading_Sydney = " City of Sydney, New South Wales, Australia";
+    const char* heading_Pacific = " Equator in the central Pacific";
+
+    int i_loc_level = 0;
+    int j_loc = 0;
+    int k_loc = 0;
+    int j_loc_deg = 0;
+    int k_loc_deg = 0;
+    const char* deg_lat = 0;
+    const char* deg_lon = 0;
+/*
+    int deg_north = 0;
+    int deg_south = 0;
+    int deg_west = 0;
+    int deg_east = 0;
+
+*/
+    cout << endl << endl << heading << endl << endl;
+
+    int choice = { 1 };
+    preparation:
+    switch ( choice ){
+        case 1 :    cout << heading_Dresden << endl;
+                        i_loc_level = 0;  // sea level
+                        j_loc = j_loc_Dresden;  // 51°N, Dresden Germany
+                        k_loc = k_loc_Dresden;  // 14°W, Dresden Germany
+                        break;
+        case 2 :    cout << heading_Sydney << endl;
+                        i_loc_level = 0;  // sea level
+                        j_loc = j_loc_Sydney;  // 33°S, Dresden Germany
+                        k_loc = k_loc_Sydney;  // 151°E, Dresden Germany
+                        break;
+        case 3 :    cout << heading_Pacific << endl;
+                        i_loc_level = 0;  // sea level
+                        j_loc = j_loc_Pacific;  // 0°N, Equator
+                        k_loc = k_loc_Pacific;  // 180°E, central Pacific
+                        break;
+    default :     cout << choice << "error in iterationPrintout member function in class Accuracy" << endl;
+    }
+
+    if ( j_loc <= 90 ){
+        j_loc_deg = 90 - j_loc;
+        deg_lat = deg_north;
+    }
+
+    if ( j_loc > 90 ){
+        j_loc_deg = j_loc - 90;
+        deg_lat = deg_south;
+    }
+
+    if ( k_loc <= 180 ){
+        k_loc_deg = k_loc;
+        deg_lon = deg_east;
+    }
+
+    if ( k_loc > 180 ){
+        k_loc_deg = 360 - k_loc;
+        deg_lon = deg_east;
+    }
+
+    double Value_1 = Q_radiation.y[ j_loc ][ k_loc ];
+    double Value_2 = Q_latent.y[ j_loc ][ k_loc ];
+    double Value_3 = Q_sensible.y[ j_loc ][ k_loc ];
+    double Value_4 = Q_bottom.y[ j_loc ][ k_loc ];
+
+    cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg
+        << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon
+        << "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_1
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_1 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left )
+        << setw ( 25 ) << setfill ( '.' ) << name_Value_2 << " = " << resetiosflags ( ios::left )
+        << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_2 << setw ( 6 ) << name_unit_wm2
+        << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_3
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_3 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left )
+        << setw ( 25 ) << setfill ( '.' ) << name_Value_4 << " = " << resetiosflags ( ios::left )
+        << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_4 << setw ( 6 )
+        << name_unit_wm2 << endl;
+
+    double Value_17 = 0.;
+    double Value_18 = 0.;
+    double Value_19 = 0.;
+    double Value_23 = precipitable_water.y[ j_loc ][ k_loc ];
+
+    cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg
+        << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon
+        << "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_23
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_23 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left )
+        << setw ( 25 ) << setfill ( '.' ) << name_Value_19 << " = " << resetiosflags ( ios::left )
+        << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_17 << setw ( 6 ) << name_unit_wm2
+        << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_20
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_18 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left )
+        << setw ( 25 ) << setfill ( '.' ) << name_Value_21 << " = " << resetiosflags ( ios::left )
+        << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_19 << setw ( 6 )
+        << name_unit_wm2 << endl;
+
+    double Value_14 = 0.;
+    double Value_15 = 0.;
+    double Value_16 = 0.;
+    double Value_24 = Precipitation.y[ j_loc ][ k_loc ];
+
+    cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg
+        << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon
+        << "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_24
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_24 << setw ( 6 ) << name_unit_mmd << "   " << setiosflags ( ios::left )
+        << setw ( 25 ) << setfill ( '.' ) << name_Value_16 << " = " << resetiosflags ( ios::left )
+        << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_14 << setw ( 6 ) << name_unit_wm2
+        << "   " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_17
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_15 << setw ( 6 ) << name_unit_wm2 << "   " << setiosflags ( ios::left )
+        << setw ( 25 ) << setfill ( '.' ) << name_Value_18 << " = " << resetiosflags ( ios::left )
+        << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_16 << setw ( 6 )
+        << name_unit_wm2 << endl;
+
+    double Value_5 = Evaporation_Penman.y[ j_loc ][ k_loc ];
+    double Value_6 = Evaporation_Dalton.y[ j_loc ][ k_loc ];
+
+    cout << setw ( 6 ) << i_loc_level << setw ( 2 ) << level << setw ( 5 ) << j_loc_deg
+        << setw ( 3 ) << deg_lat << setw ( 4 ) << k_loc_deg << setw ( 3 ) << deg_lon
+        << "  " << setiosflags ( ios::left ) << setw ( 25 ) << setfill ( '.' ) << name_Value_5
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_5 << setw ( 6 ) << name_unit_mmd << "   " << setiosflags ( ios::left )
+        << setw ( 25 ) << setfill ( '.' ) << name_Value_6 << " = " << resetiosflags ( ios::left )
+        << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_6 << setw ( 6 )
+        << name_unit_mmd << endl << endl;
+
+    choice++;
+    if ( choice <= 3 ) goto preparation;
+
+    cout << endl;
+
+    double Value_7 = precipitablewater_average;
+    double Value_8 = precipitation_average;
+
+    cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' )
+        << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed
+        << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm << "   " << setiosflags ( ios::left )
+        << setw ( 40 ) << setfill ( '.' ) << name_Value_8 << " = " << resetiosflags ( ios::left )
+       << setw ( 7 ) << fixed << setfill ( ' ' ) << Value_8 << setw ( 6 ) << name_unit_mma
+        << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_9
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_8 / 365. << setw ( 6 ) << name_unit_mmd << endl;
+
+    double Value_10 = precipitation_NASA_average;
+
+    cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' )
+        << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 )
+        << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm
+        << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_10
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_10 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left )
+        << setw ( 40 ) << setfill ( '.' ) << name_Value_11 << " = "
+        << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_10 / 365. << setw ( 6 ) << name_unit_mmd << endl;
+
+    double Value_13 = Evaporation_Dalton_average;
+
+    cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' )
+        << name_Value_7 << " = " << resetiosflags ( ios::left ) << setw ( 7 )
+        << fixed << setfill ( ' ' ) << Value_7 << setw ( 6 ) << name_unit_mm
+        << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' )
+        << name_Value_14 << " = " << resetiosflags ( ios::left ) << setw ( 7 )
+        << fixed << setfill ( ' ' ) << Value_13 << setw ( 6 ) << name_unit_mma
+        << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' )
+        << name_Value_15 << " = " << resetiosflags ( ios::left ) << setw ( 7 )
+        << fixed << setfill ( ' ' ) << Value_13 / 365. << setw ( 6 )
+        << name_unit_mmd << endl;
+
+    double Value_9 = co2_vegetation_average * co2_0;
+    double Value_12 = Evaporation_Penman_average;
+
+    cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' )
+        << name_Value_22 << " = " << resetiosflags ( ios::left ) << setw ( 7 )
+        << fixed << setfill ( ' ' ) << Value_9 << setw ( 6 ) << name_unit_ppm
+        << "   " << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_12
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_12 << setw ( 6 ) << name_unit_mma << "   " << setiosflags ( ios::left )
+        << setw ( 40 ) << setfill ( '.' ) << name_Value_13 << " = "
+        << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_12 / 365. << setw ( 6 ) << name_unit_mmd
+        << endl << endl << endl;
+
+    double Value_25 = ( GetMean_2D(jm, km, temperature_NASA) - 1. ) * t_0;
+    double Value_26 = temperature_surf_average;
+    double Value_27 = t_average + t_paleo * t_0;
+
+    cout << setw ( 6 ) << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' )
+        << name_Value_25 << " = " << resetiosflags ( ios::left ) << setw ( 7 )
+        << fixed << setfill ( ' ' ) << Value_25 << setw ( 6 ) << name_unit_t << "   "
+        << setiosflags ( ios::left ) << setw ( 40 ) << setfill ( '.' ) << name_Value_26
+        << " = " << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_26 << setw ( 6 ) << name_unit_t << "   " << setiosflags ( ios::left )
+        << setw ( 40 ) << setfill ( '.' ) << name_Value_27 << " = "
+        << resetiosflags ( ios::left ) << setw ( 7 ) << fixed << setfill ( ' ' )
+        << Value_27 << setw ( 6 ) << name_unit_t << endl << endl << endl;
+
+
 }
+
+
+
+float cAtmosphereModel::GetMean_3D(int jm, int km, Array &val_3D){
+    if(m_node_weights.size() != (unsigned)jm){
+        CalculateNodeWeights(jm, km);
+    }
+    double ret=0., weight=0.;
+    for(int j=0; j<jm; j++){
+        for(int k=0; k<km; k++){
+            //std::cout << (val_3D.x[0][j][k]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
+            ret+=val_3D.x[0][j][k]*m_node_weights[j][k];
+            weight+=m_node_weights[j][k];
+        }
+    }
+    return ret/weight;
+}
+
+
+
+
+float cAtmosphereModel::GetMean_2D(int jm, int km, Array_2D &val_2D){
+    if(m_node_weights.size() != (unsigned)jm){
+        CalculateNodeWeights(jm, km);
+    }
+    double ret=0., weight=0.;
+    for(int j=0; j<jm; j++){
+        for(int k=0; k<km; k++){
+            //std::cout << (val_2D.y[ j ][ k ]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
+            ret+=val_2D.y[ j ][ k ]*m_node_weights[j][k];
+            weight+=m_node_weights[j][k];
+        }
+    }
+    return ret/weight;
+}
+
+
+void cAtmosphereModel::CalculateNodeWeights(int jm, int km){
+    //use cosine of latitude as weights for now
+    //longitudes: 0-360(km) latitudes: 90-(-90)(jm)
+    double weight = 0.;
+    m_node_weights.clear();
+    for(int i=0; i<jm; i++){
+        if(i<=90){
+            weight = cos((90-i) * M_PI / 180.0 );
+        }else{
+            weight = cos((i-90) * M_PI / 180.0 );
+        }
+        m_node_weights.push_back(std::vector<double>());
+        m_node_weights[i].resize(km, weight);
+    }
+    return;
+}
+
 

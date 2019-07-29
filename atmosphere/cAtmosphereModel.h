@@ -133,6 +133,9 @@ private:
     void print_min_max_values();
     void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
 
+    float GetMean_3D(int jm, int km, Array &val_3D);
+    float GetMean_2D(int jm, int km, Array_2D &val_2D);
+
     void run_2D_loop();
 
     void run_3D_loop();
@@ -153,6 +156,8 @@ private:
     }
 
     void calculate_node_weights();
+    void CalculateNodeWeights(int jm, int km);
+
     float calculate_mean_temperature(){
         return calculate_mean_temperature(t);
     }
@@ -242,6 +247,8 @@ private:
     void print_final_remarks();
 
     void BC_Evaporation();
+
+    void Moist_Convection();
 
     void store_intermediate_data_2D(float coeff=1);
     void store_intermediate_data_3D(float coeff=1);
