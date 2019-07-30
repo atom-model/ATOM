@@ -36,36 +36,6 @@ private:
 
 public:
     PostProcess_Atmosphere(int, int, int, string &output_path);
-    ~PostProcess_Atmosphere();
-
-    void paraview_vts ( string &, int iter_cnt, Array_1D &, Array_1D &, Array_1D &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
-    void paraview_panorama_vts ( string &, int iter_cnt, double &, double &, double &,
-                                    double &, double &, double &, Array &, Array &, Array &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
-    void paraview_vtk_zonal ( string &, int, int iter_cnt, double &, double &, double &,
-                                    double &, double &, double &, double &, double &, double &,
-                                    double &, double &, Array &, Array &, Array &, Array &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &,Array & );
-
-    void paraview_vtk_longal ( string &, int, int iter_cnt, double &, double &, double &,
-                                    double &, double &, double &, Array &, Array &, Array &, Array &,
-                                    Array &,Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-
-    void paraview_vtk_radial ( string &, int, int, int iter_cnt, double &, double &, double &,
-                                    double &, double &, double &, Array &, Array &, Array &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                                    Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                                    Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &,
-                                    Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &,
-                                    Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
     void Atmosphere_v_w_Transfer ( string &, double, Array &, Array &, Array &, Array &,
                                     Array_2D &, Array_2D & );
@@ -73,8 +43,6 @@ public:
     void Atmosphere_PlotData ( string &Name_Bathymetry_File, int iter_cnt, double u_0, double t_0,
         Array &h, Array &v, Array &w, Array &t, Array &c, Array_2D &Precipitation, Array_2D &precipitable_water, 
         Array_2D &Evaporation_Dalton  );
-
-    double exp_func ( double &, const double &, const double & );
 
     void save( const string &filename, const std::vector<string> &field_names,
                const std::vector<Vector3D<>* > &data, unsigned layer=0 );
