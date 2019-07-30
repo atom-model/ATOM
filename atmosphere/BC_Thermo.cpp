@@ -355,21 +355,21 @@ void cAtmosphereModel::init_temperature()
     // pole temperature adjustment, combination of linear time dependent functions 
     // Stein/Rüdiger/Parish locally constant pole temperature
     // difference between pole temperature ( Ma ) and pole temperature ( previous Ma )
-    double t_pole_diff_ocean = 0., t_pole_diff_land;
+    double t_pole_diff_ocean = 0.;
+    double t_pole_diff_land = 0.;
     std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature ( Ma ) distribution
     load_map_from_file(pole_temperature_file, pole_temp_map); 
     double d_j_half = ( double ) ( jm -1 ) / 2.0;
     // temperature initial conditions along the surface
     if( RadiationModel == 1 ){
-        //the t_pole_diff_ocean should be the difference between this time slice and the previous one, right? -- mchin
+        //the t_pole_diff_ocean should be the difference between this time slice and the previous one
         if(!is_first_time_slice()){
             t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map) - 
                 get_pole_temperature(*get_previous_time(), pole_temp_map);
-            t_pole_diff_land = t_pole_diff_ocean;
         }
         //on land, the difference is between this time slice and present day because 
         //the temperature data from previous time on land is not used.
-//        t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map );
+        t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map );
         // in °C, constant local pole temperature as function of Ma for hothouse climates 
         float pole_temperature = 1 + get_pole_temperature(*get_current_time(), 
             pole_temp_map ) / t_0;
@@ -387,7 +387,7 @@ void cAtmosphereModel::init_temperature()
                         t.x[ 0 ][ j ][ k ] += m_model->t_land;
                         // increasing pole and mean temperature ( Ma ) incorporated
                         // in case land temperature is assumed to be
-                        // globally higher than ocean temperature, t_land is added too
+                        // globally higher than ocean temperature, t_land is added
                     }
                 }else{  // if( NASATemperature == 1 ) ocean surface temperature based on NASA temperature distribution
                     // transported for later time slices Ma by use_earthbyte_reconstruction
@@ -405,10 +405,9 @@ void cAtmosphereModel::init_temperature()
                             // ocean surface temperature increased by mean t_paleo_add
                             // and by a zonally equator wards decreasing temperature difference is added
                             // Stein/Rüdiger/Parish pole temperature decreasing equator wards
-                            t.x[ 0 ][ j ][ k ] += t_paleo_add + 
-                                t_pole_diff_ocean * fabs( parabola( d_j / d_j_half ) 
-                                + 1. ) / t_0;
-                        }
+                            t.x[ 0 ][ j ][ k ] += t_paleo_add + t_pole_diff_ocean 
+                                * fabs( parabola( d_j / d_j_half ) + 1. ) / t_0;
+q                        }
                     }
                 }// else ( NASATemperature == 1 )
             }// for j
@@ -1082,6 +1081,424 @@ void cAtmosphereModel::Two_Category_Ice_Scheme()
     }  // end if true
 }
 
+
+
+
+
+
+void cAtmosphereModel::Moist_Convection(){
+// collection of coefficients for phase transformation
+    int i_LFS = 0;
+    int i_b = 0;
+    double b_u = .3;
+    double alf_1 = 5.e-4;
+    double alf_2 = .011;
+    double p_ps = .05;
+    double C_p = p_ps;
+    double bet_p = 2.e-3;  // in 1/s
+//    double eps_u = 1.e-4;  // in 1/m
+    double eps_u = 0.;  // in 1/m
+    double gam_d = - 0.3;  // negative from original paper by Tiedtke
+    double eps_d = eps_u;
+    double del_u = eps_u;
+    double del_d = eps_u;
+    double delta_i_c = 0.;
+    double K_p = 0.;
+    double E_u = 0.;
+    double E_d = 0.;
+    double D_u = 0.;
+    double D_d = 0.;
+    double humidity_rel = 0.;
+    double cloud_buoy = 0.;
+    double M_u_denom = 0.;
+    double M_d_denom = 0.;
+
+    std::vector<double> s(im, 0);
+    std::vector<double> c_u(im, 0);
+    std::vector<double> e_d(im, 0);
+    std::vector<double> e_l(im, 0);
+    std::vector<double> e_p(im, 0);
+    std::vector<double> g_p(im, 0);
+    std::vector<double> s_u(im, 0);
+    std::vector<double> s_d(im, 0);
+    std::vector<double> u_u(im, 0);
+    std::vector<double> u_d(im, 0);
+    std::vector<double> v_u(im, 0);
+    std::vector<double> v_d(im, 0);
+    std::vector<double> w_u(im, 0);
+    std::vector<double> w_d(im, 0);
+    std::vector<double> q_v_u(im, 0);
+    std::vector<double> q_v_d(im, 0);
+    std::vector<double> q_c_u(im, 0);
+    std::vector<double> r_humid(im, 0);
+    std::vector<double> step(im, 0);
+
+    double exp_pressure = g / ( 1.e-2 * gam * R_Air );
+    double c43 = 4./3.;
+    double c13 = 1./3.;
+    double p_SL = 0.;
+    double p_h = 0.;
+    double e_h = 0.;
+    double a_h = 0.;
+    double E_Rain = 0.;
+    double q_Rain = 0.;
+    double r_dry = 0.;
+    double q_T = 0.;
+    double T_it = 0.;
+    double height = 0.;
+    const float zeta = 3.715;
+
+// parameterisation of moist convection
+    for( int k = 1; k < km-1; k++ ){
+        for( int j = 1; j < jm-1; j++ ){
+            i_LFS = 0;
+            i_b = 0;
+            int i_mount = i_topography[ j ][ k ];
+            for( int i = 1; i < im-1; i++ ){
+                double rm = rad.z[ i ];
+                double exp_rm = 1. / exp( zeta * rm );
+                double sinthe = sin( the.z[ j ] );
+                double rmsinthe = rm * sinthe;
+                q_v_u[ i ] = q_v_d[ i ] = c.x[ i ][ j ][ k ]; 
+                q_c_u[ i ] = cloud.x[ i ][ j ][ k ]; 
+                double t_u = t.x[ i ][ j ][ k ] * t_0; // in K
+                if( i == 1 )  t_u = t.x[ i ][ j ][ k ] * t_0 + 1.; // in K
+//                if( i == 9 )  t_u = t.x[ i ][ j ][ k ] * t_0 + 10.; // in K
+// warm cloud phase in case water vapour is over-saturated
+                q_T = q_v_u[ i ] + q_c_u[ i ]; // total water content
+                p_SL = .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ); // given in hPa
+                double height = get_layer_height(i);  // coordinate stretching
+                step[ i ] = get_layer_height(i+1) - get_layer_height(i);  // local atmospheric shell thickness
+                if( i != 0 )  p_h = pow ( ( ( t.x[ i ][ j ][ k ] 
+                                     * t_0 - gam * height * 1.e-2 ) 
+                                     / ( t.x[ i ][ j ][ k ] * t_0 ) ), 
+                                     exp_pressure ) * p_SL;
+                else  p_h = p_SL;
+                r_dry = 100. * p_h / ( R_Air * t_u );
+                r_humid[ i ] = r_dry * ( 1. + c.x[ i ][ j ][ k ] ) 
+                    / ( 1. + R_WaterVapour / R_Air * c.x[ i ][ j ][ k ] );
+//                r_humid[ i ] = r_dry * ( 1. + q_v_u[ i ] ) 
+//                    / ( 1. + R_WaterVapour / R_Air * q_v_u[ i ] );
+                E_Rain = hp * exp_func ( t_u, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
+                double q_Rain_n = q_Rain;
+                if( q_T <= q_Rain ){ /**     subsaturated     **/
+                    q_v_u[ i ] = q_T; // total water amount as water vapour
+                    q_c_u[ i ] = 0.; // no cloud water available
+                    T_it = t_u;
+                }else{ /**     oversaturated     **/
+                    int iter_prec = 0;
+                    while( iter_prec <= 20 ){ // iter_prec may be varied
+                        ++iter_prec;
+                        T_it = ( t_u + lv / cp_l * q_v_u[ i ] 
+                               - lv / cp_l * q_Rain );
+                        e_h = q_v_u[ i ] * p_stat.x[ i ][ j ][ k ] / ep;  // water vapour pressure in hPa
+                        a_h = 216.6 * e_h / t_u; // absolute humidity in kg/m3
+                        E_Rain = hp * exp_func ( T_it, 17.2694, 35.86 ); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                        q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
+                        q_Rain = .5 * ( q_Rain_n + q_Rain );  // smoothing the iteration process
+                        q_v_u[ i ] = q_Rain; // water vapour restricted to saturated water vapour amount
+                        q_c_u[ i ] = q_T - q_v_u[ i ]; // cloud water amount
+                        q_T = q_v_u[ i ] + q_c_u[ i ];
+                        if ( q_v_u[ i ] < 0. )  q_v_u[ i ] = 0.;
+                        if ( q_c_u[ i ] < 0. )  q_c_u[ i ] = 0.;
+                        if( ( q_Rain_n ) > std::numeric_limits<double>::epsilon() &&
+                            fabs ( q_Rain / q_Rain_n - 1. ) <= 1.e-5 )    break;  // make sure q_Rain_n is not 0 divisor
+                        q_Rain_n = q_Rain;
+
+//    cout << "    in warm cloud   iter_prec = " << iter_prec << "   i = " << i << "   q_v_u = " << q_v_u[ i ] << "   q_c_u = " << q_c_u[ i ] << "   q_T = " << q_T << "   q_Rain = " << q_Rain << "   q_Rain_n = " << q_Rain_n << endl; 
+
+                    }  // end iter_prec
+                }  // end oversaturated
+
+//                cn.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k ];
+//                cloudn.x[ i ][ j ][ k ] = cloud.x[ i ][ j ][ k ];
+                t.x[ i ][ j ][ k ] = T_it / t_0;
+
+                if( q_v_u[ i ] < 0. )  q_v_u[ i ] = 0.;
+                if( q_c_u[ i ] < 0. )  q_c_u[ i ] = 0.;
+                humidity_rel = e_h / E_Rain * 100.;
+/** %%%%%%%%%%%%%%%%%%%%%%%%%%%     end          warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
+                double dcdr = ( c.x[ i+1 ][ j ][ k ] - c.x[ i-1 ][ j ][ k ] ) 
+                              / ( 2. * dr ) * exp_rm;  // Tiedtke included this term
+                double dcdthe = ( c.x[ i ][ j+1 ][ k ] - c.x[ i ][ j-1 ][ k ] ) 
+                                / ( 2. * dthe ) / rm;
+                double dcdphi = ( c.x[ i ][ j ][ k+1 ] - c.x[ i ][ j ][ k-1 ] ) 
+                                / ( 2. * dphi ) / rmsinthe;
+                dcdr = 0.;
+//                    dcdthe = 0.;
+//                    dcdphi = 0.;
+// dry static energy
+                s[ i ] = cp_l * t.x[ i ][ j ][ k ] * t_0 + g * height;
+// level of the cloud base ( level of free convection )
+                if( ( humidity_rel >= 90. ) 
+                    && ( u.x[ i ][ j ][ k ] >= 0. ) 
+//                    && ( u_u[ i ] >= 0. ) )
+                    && ( i_b == 0 ) )  i_b = i;
+//   if ( ( j == 90 ) && ( k == 180 ) )  cout << "   LCB    i = " << i << "   i_mount = " << i_mount << "   i_b = " << i_b << "   i_LFS = " << i_LFS << endl;
+// specification of entrainment in the updraft
+                if( ( i_b != 0 ) && ( i >= i_b )
+                    && ( u.x[ i ][ j ][ k ] >= 0. ) ){
+//                    && ( u_u[ i ] >= 0. ) ){
+//                    E_u = - r_humid[ i ] / c.x[ i ][ j ][ k ] 
+                    E_u = + r_humid[ i ] / c.x[ i ][ j ][ k ] 
+                        * ( u.x[ i ][ j ][ k ] * dcdr + v.x[ i ][ j ][ k ] * dcdthe 
+                        + w.x[ i ][ j ][ k ] * dcdphi )
+                        + eps_u * M_u.x[ i ][ j ][ k ];
+                    u_u[ i ] = u.x[ i ][ j ][ k ] + M_u.x[ i ][ j ][ k ] 
+                               / ( dthe / rm * dphi / rmsinthe );
+                    if( i == i_b ){
+                        M_u.x[ i_b ][ j ][ k ] = r_humid[ i_b ] * u.x[ i_b ][ j ][ k ];  // updraft at cloud base
+                        u_u[ i ] = u.x[ i ][ j ][ k ];
+                        q_v_u[ i ] = c.x[ i ][ j ][ k ];
+                    }
+                }else  E_u = 0.;
+// level of free sinking
+                cloud_buoy = ( q_v_u[ i ] + q_Rain );
+                if( ( cloud_buoy < c.x[ i ][ j ][ k ] ) 
+                    && ( i_LFS == 0 ) )  i_LFS = i;
+                // updraft at cloud base == downdraft at level of free sinking (LFS)
+                M_d.x[ i_LFS ][ j ][ k ] = gam_d * M_u.x[ i_b ][ j ][ k ];  // downdraft at cloud top
+                u_d[ i ] = u.x[ i ][ j ][ k ] + M_d.x[ i ][ j ][ k ] 
+                               / ( dthe / rm * dphi / rmsinthe );
+
+//   if ( ( j == 90 ) && ( k == 180 ) )  cout << "   LFS    i = " << i << "   i = " << i-1 << "   i_mount = " << i_mount << "   i_b = " << i_b << "   i_LFS = " << i_LFS << "   M_u = " << M_u.x[ i ][ j ][ k ] << "   E_u = " << E_u << "   M_d = " << M_d.x[ i ][ j ][ k ] << endl;
+
+// specification of detrainment in the updraft
+                if( i == i_LFS )  D_u = ( 1. - b_u ) * M_u.x[ i ][ j ][ k ] / step[ i ]
+                                        + del_u * M_u.x[ i ][ j ][ k ];
+                else               D_u = 0.;
+                if( i == i_LFS + 1 )  D_u = b_u * M_u.x[ i ][ j ][ k ] / step[ i ]
+                                           + del_u * M_u.x[ i ][ j ][ k ];
+                if( i > i_LFS + 1 )  D_u = 0.; 
+// specification of entrainment and detrainment in the udowndraft
+                eps_d = eps_u;
+                E_d = eps_d * fabs( M_d.x[ i ][ j ][ k ] );
+                D_d = del_d * fabs( M_d.x[ i ][ j ][ k ] );
+// evaporation of cloud water in the environment
+                e_l[ i ] = D_u / r_humid[ i ] * q_c_u[ i ];
+// evaporation of precipitation below cloud base
+                if( i <= i_b )
+                      e_p[ i ] = C_p * alf_1 * ( q_Rain - q_v_u[ i ] ) 
+                      * sqrt ( p_ps / alf_2 * P_conv.x[ i ][ j ][ k ] / C_p );
+                else  e_p[ i ] = 0.;
+// evaporation of precipitation within the downdraft
+                e_d[ i ] = q_v_d[ i ] - q_Rain;
+                if( e_d[ i ] > 0. )  q_v_d[ i ] = q_Rain;
+                if( e_d[ i ] < 0. )  e_d[ i ] = 0.;
+// condensation/deposition within the updraft
+                c_u[ i ] = q_c_u[ i ];
+//                c_u[ i ] = cloud.x[ i ][ j ][ k ] - q_Rain;
+                if( c_u[ i ] >= q_Rain )  q_v_u[ i ] = q_Rain;
+                if( c_u[ i ] < 0. )  c_u[ i ] = 0.;
+// formation of precipitation within the updraft
+                if( is_land( h, 0, j, k ) )  delta_i_c = 3000.;
+                else                          delta_i_c = 1500.;  // in m
+                double height_it = ( exp( zeta * ( rad.z[ i_LFS ] - 1. ) ) - 1 ) 
+                    * ( L_atm / ( double ) ( im-1 ) );  // in m
+                if( height > height_it + delta_i_c )  K_p = 0.;
+                else  K_p = bet_p;
+                g_p[ i ] = K_p * q_c_u[ i ];
+// convective updraft
+                if( ( i >= i_b ) && ( i_b != 0 ) && ( i_LFS == 0 )
+//                if ( ( i >= i_b ) && ( i_b != 0 )
+//                if ( ( i >= i_b )
+                    && ( u.x[ i ][ j ][ k ] >= 0. ) ){
+//                    && ( u_u[ i ] >= 0. ) ){
+                    M_u.x[ i+1 ][ j ][ k ] = M_u.x[ i ][ j ][ k ] 
+                                             + step[ i ] * ( E_u - D_u );  // integration from cloud base upwards
+//                                             - step[ i ] * ( E_u - D_u );  // integration from cloud base upwards
+                    M_u_denom = M_u.x[ i ][ j ][ k ] + step[ i ] * D_u;
+                    if ( M_u_denom == 0. )  M_u_denom = 1.e+6;
+                    s_u[ i ] = step[ i ] * ( E_u * s[ i ] + lv * r_humid[ i ] * c_u[ i ] ) / M_u_denom;
+                    q_v_u[ i ] = step[ i ] * ( E_u * c.x[ i ][ j ][ k ] - r_humid[ i ] * c_u[ i ] ) 
+                        / M_u_denom;
+//                    if ( q_v_u[ i ] < 0. )  q_v_u[ i ] = 0.;
+                    q_c_u[ i ] = step[ i ] * r_humid[ i ] *  ( c_u[ i ] - g_p[ i ] ) / M_u_denom;
+//                    if ( q_c_u[ i ] < 0. )  q_c_u[ i ] = 0.;
+                    v_u[ i ] = step[ i ] * ( E_u * v.x[ i ][ j ][ k ] ) / M_u_denom;
+                    w_u[ i ] = step[ i ] * ( E_u * w.x[ i ][ j ][ k ] ) / M_u_denom;
+                    if ( M_u.x[ i ][ j ][ k ] < 0. )  M_u.x[ i ][ j ][ k ] = 0.;
+                    if ( M_u.x[ i+1 ][ j ][ k ] < 0. )  M_u.x[ i+1 ][ j ][ k ] = 0.;
+
+    cout.precision ( 8 );
+    if ( ( j == 90 ) && ( k == 180 ) )  cout << "   updraft   i = " << i << "   i_mount = " << i_mount << "   i_b = " << i_b << "   i_LFS = " << i_LFS << "  s = " << s[ i ] << "  s_u = " << s_u[ i ] << "  s_d = " << s_d[ i ] << "  E_u = " << E_u << "  D_u = " << D_u << "  E_d = " << E_d << "  D_d = " << D_d << "  e_l = " << e_l[ i ] << "  e_p = " << e_p[ i ] << "  e_d = " << e_d[ i ] << "  c_u = " << c_u[ i ] << "  g_p = " << g_p[ i ] << "  M_u = " << M_u.x[ i ][ j ][ k ] << "  M_u_1 = " << M_u.x[ i+1 ][ j ][ k ] << "  M_d = " << M_d.x[ i ][ j ][ k ] << "  MC_s = " << MC_s.x[ i ][ j ][ k ] << "  MC_q = " << MC_q.x[ i ][ j ][ k ] << "  MC_v = " << MC_v.x[ i ][ j ][ k ] << "  MC_w = " << MC_w.x[ i ][ j ][ k ] << "  c = " << c.x[ i ][ j ][ k ] << "  q_Rain = " << q_Rain << "  cloud_buoy = " << cloud_buoy - c.x[ i ][ j ][ k ] << "  q_v_u = " << q_v_u[ i ] << "  q_v_d = " << q_v_d[ i ] << "  cloud = " << cloud.x[ i ][ j ][ k ] << "  q_c_u = " << q_c_u[ i ] << "  u = " << u.x[ i ][ j ][ k ] << "  u_u = " << u_u[ i ] << "  u_d = " << u_d[ i ] << "  v = " << v.x[ i ][ j ][ k ] << "  v_u = " << v_u[ i ] << "  v_d = " << v_d[ i ] << "  w = " << w.x[ i ][ j ][ k ] << "  w_u = " << w_u[ i ] << "  w_d = " << w_d[ i ] << "  t = " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "  T_it = " << T_it - t_0 << "  P_conv = " << P_conv.x[ i ][ j ][ k ] << "  e_h = " << e_h << "  E_Rain = " << E_Rain << "  humidity_rel = " << humidity_rel << "  r_dry = " << r_dry << "  r_humid = " << r_humid[ i ] << "  a_h = " << a_h << "  step = " << step[ i ] << "  height = " << height << "  dcdthe = " << dcdthe << "  dcdphi = " << dcdphi << endl;
+
+                    if( ( t.x[ i ][ j ][ k ] * t_0 - t_0 ) <= -37. )  M_u.x[ i ][ j ][ k ] = 0.;
+                }  // convective updraft
+            }  // end i-loop
+
+    if ( ( j == 90 ) && ( k == 180 ) )  cout << endl << endl;
+
+// convective downdraft
+            for( int i = im-1; i >= 1; i-- ){
+                if( i <= i_LFS ){
+                   if( ( t.x[ i ][ j ][ k ] * t_0 - t_0 ) <= -37. )  M_d.x[ i ][ j ][ k ] = 0.;
+                   M_d.x[ i-1 ][ j ][ k ] = M_d.x[ i ][ j ][ k ] + step[ i ] * ( E_d - D_d );  // integration from LFS downwards
+                   M_d_denom = M_d.x[ i ][ j ][ k ] + step[ i ] * D_d;
+                   if ( M_d_denom == 0. )  M_d_denom = 1.e+6;
+                   s_d[ i ] = step[ i ] * ( E_d * s[ i ] - lv * r_humid[ i ] * e_d[ i ] ) / M_d_denom;
+                   q_v_d[ i ] = step[ i ] * ( E_d * c.x[ i ][ j ][ k ] 
+                       + r_humid[ i ] * e_d[ i ] ) / M_d_denom;
+                   v_d[ i ] = step[ i ] * ( E_d * v.x[ i ][ j ][ k ] ) / M_d_denom;
+                   w_d[ i ] = step[ i ] * ( E_d * w.x[ i ][ j ][ k ] ) / M_d_denom;
+
+    cout.precision ( 8 );
+    if ( ( j == 90 ) && ( k == 180 ) )  cout << "   downdraft   i = " << i << "   i_mount = " << i_mount << "   i_b = " << i_b << "   i_LFS = " << i_LFS << "  s = " << s[ i ] << "  s_u = " << s_u[ i ] << "  s_d = " << s_d[ i ] << "  E_u = " << E_u << "  D_u = " << D_u << "  E_d = " << E_d << "  D_d = " << D_d << "  e_l = " << e_l[ i ] << "  e_p = " << e_p[ i ] << "  e_d = " << e_d[ i ] << "  c_u = " << c_u[ i ] << "  g_p = " << g_p[ i ] << "  M_u = " << M_u.x[ i ][ j ][ k ] << "  M_u_1 = " << M_u.x[ i+1 ][ j ][ k ] << "  M_d = " << M_d.x[ i ][ j ][ k ] << "  M_d_1 = " << M_d.x[ i-1 ][ j ][ k ] << "  MC_s = " << MC_s.x[ i ][ j ][ k ] << "  MC_q = " << MC_q.x[ i ][ j ][ k ] << "  MC_v = " << MC_v.x[ i ][ j ][ k ] << "  MC_w = " << MC_w.x[ i ][ j ][ k ] << "  c = " << c.x[ i ][ j ][ k ] << "  q_Rain = " << q_Rain << "  cloud_buoy = " << cloud_buoy - c.x[ i ][ j ][ k ] << "  q_v_u = " << q_v_u[ i ] << "  q_v_d = " << q_v_d[ i ] << "  cloud = " << cloud.x[ i ][ j ][ k ] << "  q_c_u = " << q_c_u[ i ] << "  u = " << u.x[ i ][ j ][ k ] << "  u_u = " << u_u[ i ] << "  u_d = " << u_d[ i ] << "  v = " << v.x[ i ][ j ][ k ] << "  v_u = " << v_u[ i ] << "  v_d = " << v_d[ i ] << "  w = " << w.x[ i ][ j ][ k ] << "  w_u = " << w_u[ i ] << "  w_d = " << w_d[ i ] << "  t = " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "  T_it = " << T_it - t_0 << "  P_conv = " << P_conv.x[ i ][ j ][ k ] << "  e_h = " << e_h << "  E_Rain = " << E_Rain << "  humidity_rel = " << humidity_rel << "  r_dry = " << r_dry << "  r_humid = " << r_humid[ i ] << "  a_h = " << a_h << "  step = " << step[ i ] << "  height = " << height << endl;
+
+// rain water formed by cloud convection
+                   P_conv.x[ i-1 ][ j ][ k ] = P_conv.x[ i ][ j ][ k ] 
+                       - step[ i ] * r_humid[ i ] * ( g_p[ i ] - e_d[ i ] - e_p[ i ] );
+                   if( P_conv.x[ i-1 ][ j ][ k ] < 0. )
+                        P_conv.x[ i-1 ][ j ][ k ] = 0.;
+                   if( is_land( h, i, j, k ) )  P_conv.x[ i-1 ][ j ][ k ] = 0.;
+               }  // convective downdraft
+           }  // end i-loop
+// RHS for thermodynamic forcing due to moist convection
+            for( int i = 1; i < im-1; i++ ){
+//                if( ( T_it - t_0 ) <= -37. )  M_u.x[ i ][ j ][ k ] = 
+//                    M_d.x[ i ][ j ][ k ] = M_u.x[ i+1 ][ j ][ k ] = 
+//                    M_d.x[ i+1 ][ j ][ k ] = 0.;
+                MC_s.x[ i ][ j ][ k ] = - ( ( M_u.x[ i + 1 ][ j ][ k ] 
+                    * ( s_u[ i ] - s[ i ] ) + M_d.x[ i + 1 ][ j ][ k ] * ( s_d[ i ] - s[ i ] ) ) 
+                    - ( M_u.x[ i ][ j ][ k ] * ( s_u[ i ] - s[ i ] ) 
+                    + M_d.x[ i ][ j ][ k ] * ( s_d[ i ] - s[ i ] ) ) ) 
+                    / ( cp_l * r_humid[ i ] * step[ i ] ) 
+                    + lv / cp_l * ( c_u[ i ] - e_d[ i ] - e_l[ i ] - e_p[ i ] );
+                MC_q.x[ i ][ j ][ k ] = - ( ( M_u.x[ i + 1 ][ j ][ k ] 
+                    * ( q_v_u[ i ] - c.x[ i + 1 ][ j ][ k ] ) 
+                    + M_d.x[ i + 1 ][ j ][ k ] * ( q_v_d[ i ] - c.x[ i + 1 ][ j ][ k ] ) ) 
+                    - ( M_u.x[ i ][ j ][ k ] * ( q_v_u[ i ] - c.x[ i ][ j ][ k ] ) 
+                    + M_d.x[ i ][ j ][ k ] * ( q_v_d[ i ] - c.x[ i ][ j ][ k ] ) ) ) 
+                    / ( r_humid[ i ] * step[ i ] ) - ( c_u[ i ] - e_d[ i ] - e_l[ i ] - e_p[ i ] );
+                MC_v.x[ i ][ j ][ k ] = - ( ( M_u.x[ i + 1 ][ j ][ k ] 
+                    * ( v_u[ i ] - v.x[ i + 1 ][ j ][ k ] ) 
+                    + M_d.x[ i + 1 ][ j ][ k ] * ( v_d[ i ] - v.x[ i + 1 ][ j ][ k ] ) ) 
+                    - ( M_u.x[ i ][ j ][ k ] * ( v_u[ i ] - v.x[ i ][ j ][ k ] ) 
+                    + M_d.x[ i ][ j ][ k ] * ( v_d[ i ] - v.x[ i ][ j ][ k ] ) ) ) 
+                    / ( r_humid[ i ] * step[ i ] );
+                MC_w.x[ i ][ j ][ k ] = - ( ( M_u.x[ i + 1 ][ j ][ k ] 
+                    * ( w_u[ i ] - w.x[ i + 1 ][ j ][ k ] ) 
+                    + M_d.x[ i + 1 ][ j ][ k ] * ( w_d[ i ] - w.x[ i + 1 ][ j ][ k ] ) ) 
+                    - ( M_u.x[ i ][ j ][ k ] * ( w_u[ i ] - w.x[ i ][ j ][ k ] ) 
+                    + M_d.x[ i ][ j ][ k ] * ( w_d[ i ] - w.x[ i ][ j ][ k ] ) ) ) 
+                    / ( r_humid[ i ] * step[ i ] );
+
+//    cout.precision ( 8 );
+//    if ( ( j == 90 ) && ( k == 180 ) )  cout << "   i = " << i << "   i_mount = " << i_mount << "   i_b = " << i_b << "   i_LFS = " << i_LFS << "  s = " << s[ i ] << "  s_u = " << s_u[ i ] << "  s_d = " << s_d[ i ] << "  E_u = " << E_u << "  D_u = " << D_u << "  E_d = " << E_d << "  D_d = " << D_d << "  e_l = " << e_l << "  e_p = " << e_p << "  e_d = " << e_d << "  c_u = " << c_u << "  g_p = " << g_p << "  M_u = " << M_u.x[ i ][ j ][ k ] << "  M_u_add = " << M_u_add << "  M_d = " << M_d.x[ ii ][ j ][ k ] << "  MC_s = " << MC_s.x[ i ][ j ][ k ] << "  MC_q = " << MC_q.x[ i ][ j ][ k ] << "  MC_v = " << MC_v.x[ i ][ j ][ k ] << "  MC_w = " << MC_w.x[ i ][ j ][ k ] << "  c = " << c.x[ i ][ j ][ k ] << "  q_Rain = " << q_Rain << "  cloud_buoy = " << cloud_buoy - c.x[ i ][ j ][ k ] << "  q_v_u = " << q_v_u[ i ] << "  q_v_d = " << q_v_d[ i ] << "  cloud = " << cloud.x[ i ][ j ][ k ] << "  q_c_u = " << q_c_u[ i ] << "  u = " << u.x[ i ][ j ][ k ] << "  v = " << v.x[ i ][ j ][ k ] << "  v_u = " << v_u[ i ] << "  v_d = " << v_d[ i ] << "  w = " << w.x[ i ][ j ][ k ] << "  w_u = " << w_u[ i ] << "  w_d = " << w_d[ i ] << "  t = " << t.x[ i ][ j ][ k ] * t_0 - t_0 << "  T_it = " << T_it - t_0 << "  P_conv = " << P_conv.x[ i ][ j ][ k ] << "  e_h = " << e_h << "  E_Rain = " << E_Rain << "  humidity_rel = " << humidity_rel << "  r_dry = " << r_dry << "  r_humid = " << r_humid[ i ] << "  a_h = " << a_h << "  step = " << step[ i ] << "  height = " << height << "  dcdthe = " << dcdthe << "  dcdphi = " << dcdphi << endl;
+
+            }  // end i-loop
+        }
+    }
+
+// boundaries of various variables
+    for( int k = 1; k < km-1; k++ ){
+        for( int j = 1; j < jm-1; j++ ){
+            M_u.x[ 0 ][ j ][ k ] = c43 * M_u.x[ 1 ][ j ][ k ] -
+                c13 * M_u.x[ 2 ][ j ][ k ];
+            M_u.x[ im-1 ][ j ][ k ] = c43 * M_u.x[ im-2 ][ j ][ k ] -
+                c13 * M_u.x[ im-3 ][ j ][ k ];
+            M_d.x[ 0 ][ j ][ k ] = c43 * M_d.x[ 1 ][ j ][ k ] -
+                c13 * M_d.x[ 2 ][ j ][ k ];
+            M_d.x[ im-1 ][ j ][ k ] = c43 * M_d.x[ im-2 ][ j ][ k ] -
+                c13 * M_d.x[ im-3 ][ j ][ k ];
+        }
+    }
+    for( int k = 0; k < km; k++ ){
+        for( int i = 0; i < im; i++ ){
+            M_u.x[ i ][ 0 ][ k ] = c43 * M_u.x[ i ][ 1 ][ k ] -
+                 c13 * M_u.x[ i ][ 2 ][ k ];
+            M_u.x[ i ][ jm-1 ][ k ] = c43 * M_u.x[ i ][ jm-2 ][ k ] -
+                 c13 * M_u.x[ i ][ jm-3 ][ k ];
+            M_d.x[ i ][ 0 ][ k ] = c43 * M_d.x[ i ][ 1 ][ k ] -
+                 c13 * M_d.x[ i ][ 2 ][ k ];
+            M_d.x[ i ][ jm-1 ][ k ] = c43 * M_d.x[ i ][ jm-2 ][ k ] -
+                 c13 * M_d.x[ i ][ jm-3 ][ k ];
+        }
+    }
+    for( int i = 0; i < im; i++ ){
+        for( int j = 1; j < jm-1; j++ ){
+            M_u.x[ i ][ j ][ 0 ] = c43 * M_u.x[ i ][ j ][ 1 ] -
+                c13 * M_u.x[ i ][ j ][ 2 ];
+            M_u.x[ i ][ j ][ km-1 ] = c43 * M_u.x[ i ][ j ][ km-2 ] -
+                c13 * M_u.x[ i ][ j ][ km-3 ];
+            M_u.x[ i ][ j ][ 0 ] = M_u.x[ i ][ j ][ km-1 ] =
+                ( M_u.x[ i ][ j ][ 0 ] + M_u.x[ i ][ j ][ km-1 ] ) / 2.;
+            M_d.x[ i ][ j ][ 0 ] = c43 * M_d.x[ i ][ j ][ 1 ] -
+                c13 * M_d.x[ i ][ j ][ 2 ];
+            M_d.x[ i ][ j ][ km-1 ] = c43 * M_d.x[ i ][ j ][ km-2 ] -
+                c13 * M_d.x[ i ][ j ][ km-3 ];
+            M_d.x[ i ][ j ][ 0 ] = M_d.x[ i ][ j ][ km-1 ] =
+                ( M_d.x[ i ][ j ][ 0 ] + M_d.x[ i ][ j ][ km-1 ] ) / 2.;
+        }
+    }
+
+/*
+// formation of water vapour gradients along mountain sides
+            // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in radial direction
+                if ( i < im - 2 ){
+                    if ( ( is_land ( h, i, j, k ) ) && ( ( is_air ( h, i+1, j, k ) ) && ( is_air ( h, i+2, j, k ) ) ) ){
+                        dcdr = ( - 3. * u.x[ i ][ j ][ k ] + 4. * u.x[ i + 1 ][ j ][ k ] - u.x[ i + 2 ][ j ][ k ] ) / ( 2. * dr ) * exp_rm;
+                    }
+                }
+
+            // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral southward direction
+                if ( ( j >= 2 ) && ( j <= jm - 3 ) ){
+                    if ( ( is_land ( h, i, j, k ) ) && ( ( is_air ( h, i, j+1, k ) ) && ( is_air ( h, i, j+2, k ) ) ) ){
+                        dcdthe = ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j + 1 ][ k ] - c.x[ i ][ j + 2 ][ k ] ) / ( 2. * dthe );
+                    }
+
+            // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral northward direction
+                    if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j-1, k ) ) && ( is_air ( h, i, j-2, k ) ) ){
+                        dcdthe = ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j - 1 ][ k ] - c.x[ i ][ j - 2 ][ k ] ) / ( 2. * dthe );
+                    }
+
+            // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral southward direction
+                    if ( ( ( is_land ( h, i, j, k ) ) 
+                        && ( ( is_air ( h, i, j+1, k ) ) && ( is_land ( h, i, j+2, k ) ) ) ) 
+                        || ( ( j == jm - 2 )
+                        && ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j+1, k ) ) ) ) ){
+                        dcdthe = ( c.x[ i ][ j + 1 ][ k ] - c.x[ i ][ j ][ k ] ) / dthe;
+                    }
+
+            // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral northward direction
+                    if ( ( ( is_land ( h, i, j, k ) ) 
+                        && ( ( is_air ( h, i, j-1, k ) ) && ( is_land ( h, i, j-2, k ) ) ) ) 
+                        || ( ( j == 1 )
+                        && ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j-1, k ) ) ) ) ){
+                        dcdthe = ( c.x[ i ][ j - 1 ][ k ] - c.x[ i ][ j ][ k ] ) / dthe;
+                    }
+                }
+
+            // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in longitudial eastward direction
+                if ( ( k >= 2 ) && ( k <= km - 3 ) ){
+                    if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k+1 ) ) && ( is_air ( h, i, j, k+2 ) ) ){
+                        dcdphi = ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j ][ k + 1 ] - c.x[ i ][ j ][ k + 2 ] ) / ( 2. * dphi );
+                    }
+
+            // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in longitudial westward direction
+                    if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k-1 ) ) && ( is_air ( h, i, j, k-2 ) ) ){
+                        dcdphi = ( - 3. * c.x[ i ][ j ][ k ] + 4. * c.x[ i ][ j ][ k - 1 ] - c.x[ i ][ j ][ k - 2 ] ) / ( 2. * dphi );
+                    }
+
+            // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral eastward direction
+                    if ( ( ( is_land ( h, i, j, k ) ) 
+                        && ( ( is_air ( h, i, j, k+1 ) ) && ( is_land ( h, i, j, k+2 ) ) ) ) 
+                        || ( ( k == km - 2 )
+                        && ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j, k+1 ) ) ) ) ){
+                        dcdphi = ( c.x[ i ][ j ][ k + 1 ] - c.x[ i ][ j ][ k ] ) / dphi;
+                    }
+
+            // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral westward direction
+                    if ( ( ( is_land ( h, i, j, k ) ) 
+                        && ( ( is_air ( h, i, j, k-1 ) ) && ( is_land ( h, i, j, k-2 ) ) ) ) 
+                        || ( ( k == 1 )
+                        && ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k-1 ) ) ) ) ){
+                        dcdphi = ( c.x[ i ][ j ][ k - 1 ] - c.x[ i ][ j ][ k ] ) / dphi;
+                    }
+                }
+*/
+}
 
 
 

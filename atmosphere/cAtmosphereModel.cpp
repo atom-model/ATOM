@@ -359,12 +359,20 @@ void cAtmosphereModel::reset_arrays()
 
     P_rain.initArray(im, jm, km, 0.); // rain precipitation mass rate
     P_snow.initArray(im, jm, km, 0.); // snow precipitation mass rate
+    P_conv.initArray(im, jm, km, 0.); // rain formation by cloud convection
     S_v.initArray(im, jm, km, 0.); // water vapour mass rate due to category two ice scheme
     S_c.initArray(im, jm, km, 0.); // cloud water mass rate due to category two ice scheme
     S_i.initArray(im, jm, km, 0.); // cloud ice mass rate due to category two ice scheme
     S_r.initArray(im, jm, km, 0.); // rain mass rate due to category two ice scheme
     S_s.initArray(im, jm, km, 0.); // snow mass rate due to category two ice scheme
     S_c_c.initArray(im, jm, km, 0.); // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
+
+    M_u.initArray(im, jm, km, 0.); // moist convection within the updraft
+    M_d.initArray(im, jm, km, 0.); // moist convection within the downdraft
+    MC_s.initArray(im, jm, km, 0.); // moist convection  acting on dry static energy
+    MC_q.initArray(im, jm, km, 0.); // moist convection acting on water vapour development
+    MC_v.initArray(im, jm, km, 0.); // moist convection acting on v-velocity component
+    MC_w.initArray(im, jm, km, 0.); // moist convection acting on w-velocity component
 
     for (auto &i : i_topography)
         std::fill(i.begin(), i.end(), 0);
