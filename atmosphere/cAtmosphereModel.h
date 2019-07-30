@@ -257,7 +257,12 @@ private:
 
     void check_data();
     void check_data(Array& a, Array&an, const std::string& name);
- 
+
+    void paraview_panorama_vts (string &Name_Bathymetry_File, int n);
+    void paraview_vtk_radial( string &Name_Bathymetry_File, int Ma, int i_radial, int n);
+    void paraview_vtk_zonal ( string &Name_Bathymetry_File, int k_zonal, int n);
+    void paraview_vtk_longal (string &Name_Bathymetry_File, int j_longal, int n); 
+
     static cAtmosphereModel* m_model;
 
     PythonStream ps;

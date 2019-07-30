@@ -24,7 +24,7 @@ using namespace std;
 
 class Array
 {
-private:
+public:
     int im, jm, km;
 
 public:

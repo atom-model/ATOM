@@ -381,43 +381,24 @@ void cAtmosphereModel::reset_arrays()
 
 void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &output_path, bool is_final_result){
     int Ma = int(round(*get_current_time()));
-    //  Printout:
-
     //  printout in ParaView files and sequel files
-
-    //  class PostProcess_Atmosphaere for the printing of results
-    PostProcess_Atmosphere write_File ( im, jm, km, output_path );
-
     //  writing of data in ParaView files
     //  radial data along constant hight above ground
     int i_radial = 0;
     //  int i_radial = 10;
-    write_File.paraview_vtk_radial ( bathymetry_name, Ma, i_radial, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
-                                     BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, radiation_3D, 
-                                     Q_Latent, Q_Sensible, epsilon_3D, P_rain, P_snow, precipitable_water, Q_bottom, 
-                                     Q_radiation, Q_latent, Q_sensible, Evaporation_Penman, Evaporation_Dalton, 
-                                     Q_Evaporation, temperature_NASA, precipitation_NASA, Vegetation, albedo, epsilon, 
-                                     Precipitation, Topography, temp_NASA );
+    paraview_vtk_radial ( bathymetry_name, Ma, i_radial, iter_cnt-1 ); 
 
     //  londitudinal data along constant latitudes
     int j_longal = 62;          // Mount Everest/Himalaya
-    write_File.paraview_vtk_longal ( bathymetry_name, j_longal, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, p_dyn, p_stat, 
-                                     BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
-                                     Q_Sensible, epsilon_3D, P_rain, P_snow );
+    paraview_vtk_longal ( bathymetry_name, j_longal, iter_cnt-1 ); 
 
     int k_zonal = 87;           // Mount Everest/Himalaya
-    write_File.paraview_vtk_zonal ( bathymetry_name, k_zonal, iter_cnt-1, hp, ep, R_Air, g, L_atm, u_0, t_0, p_0, 
-                                    r_air, c_0, co2_0, 
-                                    h, p_dyn, p_stat, BuoyancyForce, t, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, 
-                                    Q_Latent, Q_Sensible, radiation_3D, epsilon_3D, P_rain, P_snow, S_v, S_c, S_i, S_r, 
-                                    S_s, S_c_c );
+    paraview_vtk_zonal ( bathymetry_name, k_zonal, iter_cnt-1 ); 
 
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-    if(paraview_panorama_vts) //This function creates a large file. Use a flag to control if it is wanted.
+    if(paraview_panorama_vts_flag) //This function creates a large file. Use a flag to control if it is wanted.
     {
-        write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, t_0, p_0, r_air, c_0, co2_0, h, t, p_dyn, p_stat, 
-                                           BuoyancyForce, u, v, w, c, co2, cloud, ice, aux_u, aux_v, aux_w, Q_Latent, 
-                                           Q_Sensible, epsilon_3D, P_rain, P_snow );
+        paraview_panorama_vts ( bathymetry_name, iter_cnt-1 ); 
     }
 
     Value_Limitation_Atm();
