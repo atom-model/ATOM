@@ -547,7 +547,7 @@ void cHydrosphereModel::write_file( std::string &bathymetry_name, string& filepa
         Precipitation, Bathymetry );
 
     //  3-dimensional data in cartesian coordinate system for a streamline pattern in panorama view
-    if(paraview_panorama_vts){
+    if(paraview_panorama_vts_flag){
         write_File.paraview_panorama_vts ( bathymetry_name, iter_cnt-1, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
             u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance );
     }
