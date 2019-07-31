@@ -200,7 +200,7 @@ private:
 
     void init_topography(const string &topo_filename);
 
-    void init_u(Array &u, int lat_1, int lat_2, double coefficient);
+    void init_u(Array &u, int j);
 
     void init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl);
 
@@ -258,10 +258,15 @@ private:
     void check_data();
     void check_data(Array& a, Array&an, const std::string& name);
 
+    //paraview functions
     void paraview_panorama_vts (string &Name_Bathymetry_File, int n);
     void paraview_vtk_radial( string &Name_Bathymetry_File, int Ma, int i_radial, int n);
     void paraview_vtk_zonal ( string &Name_Bathymetry_File, int k_zonal, int n);
     void paraview_vtk_longal (string &Name_Bathymetry_File, int j_longal, int n); 
+
+    //file io funtions
+    void Atmosphere_v_w_Transfer ( string &Name_Bathymetry_File);
+    void Atmosphere_PlotData ( string &Name_Bathymetry_File, int iter_cnt );
 
     static cAtmosphereModel* m_model;
 
