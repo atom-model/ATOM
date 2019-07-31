@@ -21,7 +21,6 @@
 #include "Accuracy_Atm.h"
 #include "RHS_Atm.h"
 #include "RungeKutta_Atm.h"
-#include "PostProcess_Atm.h"
 #include "Utils.h"
 #include "Config.h"
 #include "AtomMath.h"
@@ -394,12 +393,10 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name, std::string &out
     }
 
     Value_Limitation_Atm();
+    
     //  writing of v-w-data in the v_w_transfer file
-    PostProcess_Atmosphere ppa ( im, jm, km, output_path );
-    ppa.Atmosphere_v_w_Transfer ( bathymetry_name, u_0, v, w, t, p_dyn, Evaporation_Dalton, Precipitation );
-    ppa.Atmosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1), u_0, t_0, h, v, w, t, c, 
-                              Precipitation, precipitable_water, Evaporation_Dalton );
-
+    Atmosphere_v_w_Transfer ( bathymetry_name );
+    Atmosphere_PlotData ( bathymetry_name, (is_final_result ? -1 : iter_cnt-1) );
 }
 
 void cAtmosphereModel::run_2D_loop(){
