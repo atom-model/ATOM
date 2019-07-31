@@ -887,20 +887,24 @@ void cAtmosphereModel::init_velocities(){
 
     // equator ( at j=90 compares to 0° latitude )
     // u-component up to tropopause and back on half distance (  i = 20 )
-    double ua_00 = 1.;  // in m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this function
     double va_equator_SL =  0.000;
     double va_equator_Tropopause = 0.000;
     double wa_equator_SL = - 1.;
     double wa_equator_Tropopause = - 7.5;
 
+    init_u(u,0);
+    init_u(u,30);
+    init_u(u,60);
+    init_u(u,90);
+    init_u(u,120);
+    init_u(u,150);
+    init_u(u,180);
+
     //equator
-    init_u(u,90,90,ua_00);//lat: 0
-    
     init_v_or_w(v,90,90,va_equator_Tropopause,va_equator_SL);
     init_v_or_w(w,90,90,wa_equator_Tropopause,wa_equator_SL);
     
     //polar cell
-    double ua_90 = 0.5;
     double va_Polar_SL = 0.;
     double va_Polar_Tropopause = 0.;
     double va_Polar_SL_75 = .5;
@@ -909,21 +913,16 @@ void cAtmosphereModel::init_velocities(){
     double wa_Polar_Tropopause = 0.;
 
     //northern polar cell
-    init_u(u, 0, 0, ua_90); //lat: 90
-
     init_v_or_w(v,0,30,va_Polar_Tropopause,va_Polar_SL); //lat: 90-60
     init_v_or_w(w,0,30,wa_Polar_Tropopause,wa_Polar_SL); //lat: 90-60
     init_v_or_w(v,15,15,va_Polar_Tropopause_75,va_Polar_SL_75); //lat: 75
 
     //southern polar cell
-    init_u(u, 180, 180, ua_90); //lat: -90
-
     init_v_or_w(v,150,180,va_Polar_Tropopause,va_Polar_SL); //lat: -90-(-60)
     init_v_or_w(w,150,180,wa_Polar_Tropopause,wa_Polar_SL); //lat: -90-(-60)
     init_v_or_w(v,165,165,va_Polar_Tropopause_75,va_Polar_SL_75); //lat: -75
 
     //Ferrel cell
-    double ua_60 = 0.5;
     double va_Ferrel_SL = 0.5;
     double va_Ferrel_Tropopause = 1.;
     double va_Ferrel_SL_45 = - 0.1;
@@ -932,21 +931,16 @@ void cAtmosphereModel::init_velocities(){
     double wa_Ferrel_Tropopause = 10.;           
 
     //northern Ferrel cell
-    init_u(u, 30, 30, ua_60); //lat: 60 
-
     init_v_or_w(v,30,30,va_Ferrel_Tropopause,va_Ferrel_SL); //lat: 60
     init_v_or_w(w,30,30,wa_Ferrel_Tropopause,wa_Ferrel_SL); //lat: 60
     init_v_or_w(v,45,45,va_Ferrel_Tropopause_45,va_Ferrel_SL_45); //lat: 45   
 
     //southern Ferrel cell
-    init_u(u, 150, 150, ua_60); //lat: -60 
-
     init_v_or_w(v,150,150,va_Ferrel_Tropopause,va_Ferrel_SL); //lat: -60
     init_v_or_w(w,150,150,wa_Ferrel_Tropopause,wa_Ferrel_SL); //lat: -60
     init_v_or_w(v,135,135,va_Ferrel_Tropopause_45,va_Ferrel_SL_45); //lat: -45   
  
     // Hadley cell
-    double ua_30 = 1.;
     double va_Hadley_SL = .25;
     double va_Hadley_Tropopause = - 1.;
     double va_Hadley_SL_15 = 1.;
@@ -955,15 +949,11 @@ void cAtmosphereModel::init_velocities(){
     double wa_Hadley_Tropopause = 30.;  // subtropic jet in m/s compares to 108 km/h
 
     //northern Hadley cell
-    init_u(u, 60, 60, ua_30); //lat: 30 
-
     init_v_or_w(v,60,60,va_Hadley_Tropopause,va_Hadley_SL); //lat: 30
     init_v_or_w(w,60,60,wa_Hadley_Tropopause,wa_Hadley_SL); //lat: 30
     init_v_or_w(v,75,75,va_Hadley_Tropopause_15,va_Hadley_SL_15); //lat: 15   
 
     //southern Hadley cell
-    init_u(u, 120, 120, ua_30); //lat: -30 
-
     init_v_or_w(v,120,120,va_Hadley_Tropopause,va_Hadley_SL); //lat: -30
     init_v_or_w(w,120,120,wa_Hadley_Tropopause,wa_Hadley_SL); //lat: -30
     init_v_or_w(v,105,105,va_Hadley_Tropopause_15,va_Hadley_SL_15); //lat: -15 
@@ -1074,14 +1064,39 @@ void cAtmosphereModel::form_diagonals(Array &a, int start, int end){
 /*
 *
 */
-void  cAtmosphereModel::init_u(Array &u, int lat_1, int lat_2, double coefficient){
-    for(int j = lat_1; j < lat_2+1; j++ ){
-        int tropopause_layer = get_tropopause_layer(j);             
-        double tropopause_height = get_layer_height(tropopause_layer);
-        for( int k = 0; k < km; k++ ){
-            for( int i = 0; i < tropopause_layer; i++ ){
-                u.x[ i ][ j ][ k ] = -coefficient * 
-                    parabola_interp(-1, 0, get_layer_height(i)*2/tropopause_height);
+void  cAtmosphereModel::init_u(Array &u, int j){
+    float ua_00 = 1,
+          ua_30 = 1,
+          ua_60 = 0.5,
+          ua_90 = 0.5;
+    int tropopause_layer = get_tropopause_layer(j);
+    float tropopause_height = get_layer_height(tropopause_layer);
+    for( int k = 0; k < km; k++ ){
+        for( int i = 0; i < tropopause_layer; i++ ){
+            float layer_height = get_layer_height(i), half_tropopause_height = tropopause_height/2.;
+            float ratio;
+            if(layer_height < half_tropopause_height){    
+                ratio = layer_height / half_tropopause_height; 
+                switch(j){
+                    case 90:  u.x[ i ][ 90 ][ k ] = ua_00 * ratio; break;
+                    case 60:  u.x[ i ][ 60 ][ k ] = - ua_30 * ratio; break;
+                    case 120: u.x[ i ][ 120 ][ k ] = - ua_30 * ratio; break;
+                    case 30:  u.x[ i ][ 30 ][ k ] = ua_60 * ratio; break;
+                    case 150: u.x[ i ][ 150 ][ k ] = ua_60 * ratio; break;                
+                    case 0:   u.x[ i ][ 0 ][ k ] = - ua_90 *  ratio ; break;
+                    case 180: u.x[ i ][ 180 ][ k ] = - ua_90 * ratio; break;
+                }
+            }else{
+                ratio = (tropopause_height-layer_height) / half_tropopause_height;
+                switch(j){
+                    case 90:  u.x[ i ][ 90 ][ k ] =  2 - ua_00 * ratio; break;
+                    case 60:  u.x[ i ][ 60 ][ k ] = ua_30 * ratio - 2; break;
+                    case 120: u.x[ i ][ 120 ][ k ] = ua_30 * ratio - 2 ; break;
+                    case 150: u.x[ i ][ 150 ][ k ] = ua_60 * (2. - ratio); break;
+                    case 30:  u.x[ i ][ 30 ][ k ] = ua_60 * (2. - ratio); break;
+                    case 0:   u.x[ i ][ 0 ][ k ] = - ua_90 * (2. - ratio); break;
+                    case 180: u.x[ i ][ 180 ][ k ] = - ua_90 * (2. - ratio); break;
+                }
             }
         }
     }

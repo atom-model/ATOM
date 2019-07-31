@@ -200,7 +200,7 @@ private:
 
     void init_topography(const string &topo_filename);
 
-    void init_u(Array &u, int lat_1, int lat_2, double coefficient);
+    void init_u(Array &u, int j);
 
     void init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl);
 
