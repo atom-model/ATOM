@@ -1,10 +1,8 @@
 # Given a parameter definition, generates necessary C++, Python and XML bindings
 # coding=utf-8
 
-
 def main():
     # read the input definition
-
     # name, description, datatype, default
     PARAMS = {
         'common': [
@@ -14,7 +12,6 @@ def main():
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output/' ),
             ( 'paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', False),
             ( 'debug','flag to control if the program is running in debug mode', 'bool', False),
-        
             #parameters for data reconstruction
             ( 'velocity_w_file',"",'string','../data/w_surface.txt'),
             ( 'velocity_v_file',"",'string','../data/v_surface.txt'),
@@ -27,11 +24,9 @@ def main():
             ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True ),
         
             ( 'time_start', 'start time', 'int', 0 ),
-            ( 'time_end', 'end time', 'int', 15 ),
+            ( 'time_end', 'end time', 'int', 60 ),
             ( 'time_step', 'step size between timeslices', 'int', 5 ),
         ],
-
-
         'atmosphere': [
             ( 'velocity_iter_max_2D', 'the number of velocity iterations', 'int',2 ),
             ( 'pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10 ),
@@ -58,23 +53,22 @@ def main():
 
             ( 'L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000. ),
             ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 24 steps = 9600 m', 'int', 24 ),
-            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 30 ),
+            ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 37 ),
 
             ( 'rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 230. ),
             ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 40. ),
+#            ( 'rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 240. ),
+#            ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 180. ),
 
             ( 'sigma', 'Stefan-Boltzmann constant W/( m²*K4 )', 'double', 5.670280e-8 ),
-
-#            ( 'albedo_pole', 'albedo around the poles', 'double', 0.7 ),
-#            ( 'albedo_equator', 'albedo around the equator', 'double', 0.15 ),
 
             ( 'albedo_pole', 'albedo around the poles', 'double', 0.8 ),
             ( 'albedo_equator', 'albedo around the equator', 'double', 0.4 ),
 
-#            ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.525 ),
-#            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.570 ),
-            ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.52 ),
-            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.50 ),
+            ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.54 ),
+            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.52 ),
+#            ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.48 ),
+#            ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.43 ),
             ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),
 
             ( 're', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000. ),
@@ -115,8 +109,8 @@ def main():
 
             ( 't_average', 'mean temperature of the modern earth', 'double', 15.4 ),
 #            ( 't_equator', 'temperature t_0 = 1.0842 compares to 23.0° C compares to 296.15 K', 'double', 1.0842 ),
-#            ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
-            ( 't_equator', 'temperature t_0 = 1.1172 compares to 32.0° C compares to 305.15 K', 'double', 1.1172 ),
+            ( 't_equator', 'temperature t_0 = 1.11 compares to 28.0° C compares to 301.15 K', 'double', 1.10 ),
+#            ( 't_equator', 'temperature t_0 = 1.1172 compares to 32.0° C compares to 305.15 K', 'double', 1.1172 ),
             ( 't_pole', 'temperature at the poles t_pole = 0.9436 compares to -15.4°C compares to 258.15 K', 'double', 0.9436 ),
             ( 't_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798 ),
             ( 't_tropopause_pole', 'temperature in the tropopause at the pole, t = 0.784 compares to -59°C compares to 214.15 K', 'double', 0.784 ),
@@ -140,7 +134,6 @@ def main():
             ( 'co2_factor', 'adjusts the ratio of co2_equator/co2_tropopause and the influence of co2 in the atmosphere', 'double', .98 ),
             ( 'emissivity_add', 'adjusts the influence of other gases in the atmosphere, emissivity_add = 1 => no influence', 'double', 1.0 ),
         ],
-
         'hydrosphere': [
             ( 'input_path', 'directory where Atmosphere output can be read (must end in /)', 'string', 'output' ),
             ( 'velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2 ),
@@ -186,14 +179,12 @@ def main():
             ( 't_pole', 'compares to 4°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect', 'double', 1.0146 ),
         ]
     }
-
     XML_READ_FUNCS = {
         "string": "FillStringWithElement",
         "double": "FillDoubleWithElement",
         "int": "FillIntWithElement",
         "bool": "FillBoolWithElement"
     }
-
 
 
     def write_cpp_defaults ( filename, classname, sections ):
@@ -203,10 +194,8 @@ def main():
             f.write ( "// ANY CHANGES WILL BE OVERWRITTEN AT COMPILE TIME\n" )
             f.write ( "\n" )
             f.write ( "void %s::SetDefaultConfig() {\n" % classname )
-
             for section in sections:
                 f.write ( '\n  // %s section\n' % section )
-
                 for slug, desc, ctype, default in PARAMS[section]:
                     rhs = default
                     if ctype == 'string':
@@ -216,12 +205,8 @@ def main():
                             rhs = 'true'
                         else:
                             rhs = 'false'
-
                     f.write ( '  %s = %s;\n' % ( slug, rhs ) )
-
             f.write ( "}" )
-
-
 
 
     def write_cpp_load_config ( filename, classname, sections ):
@@ -230,12 +215,10 @@ def main():
             f.write ( "// THIS FILE IS AUTOMATICALLY GENERATED BY param.py\n" )
             f.write ( "// ANY CHANGES WILL BE OVERWRITTEN AT COMPILE TIME\n" )
             f.write ( "\n" )
-
             for section in sections:
                 f.write ( '\n  // %s section\n' % section )
                 element_var_name = 'elem_%s' % section
                 f.write ( '\n  if (%s ) {\n' % ( element_var_name ) )
-
                 for slug, desc, ctype, default in PARAMS [ section ]:
                     func_name = XML_READ_FUNCS [ ctype ]
                     f.write( '    Config::%s(%s, "%s", %s );\n' % ( func_name, element_var_name, slug, slug ) )
@@ -252,21 +235,19 @@ def main():
             f.write ( "// THIS FILE IS AUTOMATICALLY GENERATED BY param.py\n" )
             f.write ( "// ANY CHANGES WILL BE OVERWRITTEN AT COMPILE TIME\n" )
             f.write ( "\n" )
-
             #if classname == 'cAtmosphereModel':
             #    f.write("#include\"AtmParameters.h\"\n")
             #    f.write("namespace AtmParameters{\n") 
             #else:
             #    f.write("#include\"HydParameters.h\"\n")
             #    f.write("namespace HydParameters{\n")
-
             for section in sections:
                 f.write ( '\n  // %s section\n' % section )
-
                 for slug, desc, ctype, default in PARAMS[section]:
                     f.write ( '  %s %s;\n' % ( ctype, slug ) )
-            
+           
             f.write("}\n")
+
 
     def write_cpp_headers ( filename, sections, is_extern=False ):
         with open ( filename, 'w' ) as f:
@@ -281,29 +262,25 @@ def main():
                 #    f.write("namespace AtmParameters{\n")
                 #else:
                 #    f.write("namespace HydParameters{\n")
-
             for section in sections:
                 f.write ( '\n// %s section\n' % section )
-
                 for slug, desc, ctype, default in PARAMS [ section ]:
                     if is_extern:
                         f.write('   extern %s %s;\n' % ( ctype, slug ) )
                     else:
                         f.write('%s %s;\n' % ( ctype, slug ) )
-            
+           
             if is_extern:
                 f.write("}\n")
 
+
     def write_pxi ( input_filename, output_filename, substitutions ):
         data = open ( input_filename, 'rb' ).read()
-
         indent = '    '
-
         for key, classname, sections in substitutions:
             rep = ''
             for section in sections:
                 rep += '%s# %s section\n' % ( indent, section )
-
                 for slug, desc, ctype, default in PARAMS[section]:
                     rep += '%sproperty %s:\n' % ( indent, slug )
                     rep += '%s    def __get__(%s self ):\n' % ( indent, classname )
@@ -314,17 +291,12 @@ def main():
                     rep += '%s        self._check_alive()\n' % indent
                     rep += '%s        self._thisptr.%s = <%s> value\n' % ( indent, slug, ctype )
                     rep += '%s\n' % indent
-
             data = data.replace ( '{{ %s }}' % key, rep )
-
         with open ( output_filename, 'w' ) as f:
             f.write ( """# pxi files\n""" )
             f.write("# THIS FILE IS AUTOMATICALLY GENERATED BY param.py\n")
             f.write("# ANY CHANGES WILL BE OVERWRITTEN AT COMPILE TIME\n")
-
             f.write ( data )
-
-
 
 
     def write_pxd ( filename, model, sections ):
@@ -342,39 +314,26 @@ cdef extern from "c%sModel.h":
         void RunTimeSlice ( int time_slice )
         vector[float] get_layer_heights()
 """ % ( model, model, model ) )
-
             for section in sections:
                 f.write ( '        # %s section\n' % section )
-
                 for slug, desc, ctype, default in PARAMS [ section ]:
                     f.write ( '        %s %s\n' % ( ctype, slug ) )
-
-
 
 
     def write_config_xml ( filename, sections ):
         with open ( filename, 'w' ) as f:
             f.write ( """<!-- THIS FILE IS GENERATED AUTOMATICALLY BY param.py. DO NOT EDIT. -->""" )
-
             f.write ( '<atom>' )
-
             for section in sections:
                 f.write ( '    <%s>\n' % section )
-
                 for slug, desc, ctype, default in PARAMS [ section ]:
                     if ctype == 'bool':
                         default = str ( default ).lower()  # Python uses True/False, C++, uses true/false
-
                     f.write ( '        <%s>%s</%s>  <!-- %s (%s ) -->\n' % ( slug, default, slug, desc, ctype ) )
-
                 f.write ( '    </%s>\n' % section )
             f.write ( '</atom>' )
-
-
-
     atmosphere_sections = [ 'common', 'atmosphere' ]
     hydrosphere_sections = [ 'common', 'hydrosphere' ]
-
 
     for filename, classname, sections in [
         ( 'atmosphere/cAtmosphereDefaults.cpp.inc', 'cAtmosphereModel', atmosphere_sections ),
@@ -382,14 +341,11 @@ cdef extern from "c%sModel.h":
     ]:
         write_cpp_defaults ( filename, classname, sections )
 
-
-
     for filename, classname, sections in [
         ( 'atmosphere/AtmosphereLoadConfig.cpp.inc', 'cAtmosphereModel', atmosphere_sections ),
         ( 'hydrosphere/HydrosphereLoadConfig.cpp.inc', 'cHydrosphereModel', hydrosphere_sections )
     ]:
         write_cpp_load_config ( filename, classname, sections )
-
 
     #for filename, classname, sections in [
     #    ( 'atmosphere/AtmParameters.cpp', 'cAtmosphereModel', atmosphere_sections ),
@@ -397,13 +353,11 @@ cdef extern from "c%sModel.h":
     #]:
     #    write_cpp_params ( filename, classname, sections )
 
-
     for filename, sections in [
         ( 'atmosphere/AtmosphereParams.h.inc', atmosphere_sections ),
         ( 'hydrosphere/HydrosphereParams.h.inc', hydrosphere_sections )
     ]:
         write_cpp_headers ( filename, sections )
-
 
     #for filename, sections in [
     #    ( 'atmosphere/AtmParameters.h', atmosphere_sections ), 
@@ -412,13 +366,10 @@ cdef extern from "c%sModel.h":
     #    write_cpp_headers ( filename, sections, True )
 
 
-
     write_pxi ('python/pyatom.pyx.template', 'python/pyatom.pyx', [
         ( 'atmosphere_params', 'Atmosphere', atmosphere_sections ),
         ( 'hydrosphere_params', 'Hydrosphere', hydrosphere_sections ) ]
     )
-
-
 
     for filename, model, sections in [
         ( 'python/atmosphere_pxd.pxi', 'Atmosphere', atmosphere_sections ),
@@ -426,13 +377,11 @@ cdef extern from "c%sModel.h":
     ]:
         write_pxd ( filename, model, sections )
 
-
     for  filename, sections in [
         ( 'python/config_atm.xml', atmosphere_sections ),
         ( 'python/config_hyd.xml', hydrosphere_sections )
     ]:
         write_config_xml ( filename, sections )
-
 
     for  filename, sections in [
         ( 'cli/config_atm.xml', atmosphere_sections ),
@@ -440,14 +389,11 @@ cdef extern from "c%sModel.h":
     ]:
         write_config_xml ( filename, sections )
 
-
     for  filename, sections in [
         ( 'benchmark/config_atm.xml', atmosphere_sections ),
         ( 'benchmark/config_hyd.xml', hydrosphere_sections )
     ]:
         write_config_xml ( filename, sections )
-
-
 
 
 if __name__ == '__main__':

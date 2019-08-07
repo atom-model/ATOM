@@ -56,8 +56,8 @@ void cAtmosphereModel::BC_theta(){
     for ( int k = 0; k < km; k++ ){
         for ( int i = 0; i < im; i++ ){
             // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
-            t.x[ i ][ 0 ][ k ] = c43 * t.x[ i ][ 1 ][ k ] - c13 * t.x[ i ][ 2 ][ k ];
-            t.x[ i ][ jm-1 ][ k ] = c43 * t.x[ i ][ jm-2 ][ k ] - c13 * t.x[ i ][ jm-3 ][ k ];
+//            t.x[ i ][ 0 ][ k ] = c43 * t.x[ i ][ 1 ][ k ] - c13 * t.x[ i ][ 2 ][ k ];
+//            t.x[ i ][ jm-1 ][ k ] = c43 * t.x[ i ][ jm-2 ][ k ] - c13 * t.x[ i ][ jm-3 ][ k ];
             //t.x[ i ][ jm-1 ][ k ] = t.x[ i ][ jm-4 ][ k ] - 3. * t.x[ i ][ jm-3 ][ k ] + 3. * t.x[ i ][ jm-2 ][ k ];
             u.x[ i ][ 0 ][ k ] = c43 * u.x[ i ][ 1 ][ k ] - c13 * u.x[ i ][ 2 ][ k ];
             u.x[ i ][ jm-1 ][ k ] = c43 * u.x[ i ][ jm-2 ][ k ] - c13 * u.x[ i ][ jm-3 ][ k ];
