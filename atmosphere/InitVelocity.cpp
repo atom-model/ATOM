@@ -220,13 +220,13 @@ void  cAtmosphereModel::init_u(Array &u, int j){
             }else{
                 ratio = (tropopause_height-layer_height) / half_tropopause_height;
                 switch(j){
-                    case 90:  u.x[ i ][ 90 ][ k ] =  2 - ua_00 * ratio; break;
-                    case 60:  u.x[ i ][ 60 ][ k ] = ua_30 * ratio - 2; break;
-                    case 120: u.x[ i ][ 120 ][ k ] = ua_30 * ratio - 2 ; break;
-                    case 150: u.x[ i ][ 150 ][ k ] = ua_60 * (2. - ratio); break;
-                    case 30:  u.x[ i ][ 30 ][ k ] = ua_60 * (2. - ratio); break;
-                    case 0:   u.x[ i ][ 0 ][ k ] = - ua_90 * (2. - ratio); break;
-                    case 180: u.x[ i ][ 180 ][ k ] = - ua_90 * (2. - ratio); break;
+                    case 90:  u.x[ i ][ 90 ][ k ] = ua_00 * ratio; break;
+                    case 60:  u.x[ i ][ 60 ][ k ] = -ua_30 * ratio; break;
+                    case 120: u.x[ i ][ 120 ][ k ] = -ua_30 * ratio; break;
+                    case 150: u.x[ i ][ 150 ][ k ] = ua_60 * ratio; break;
+                    case 30:  u.x[ i ][ 30 ][ k ] = ua_60 * ratio; break;
+                    case 0:   u.x[ i ][ 0 ][ k ] = - ua_90 * ratio; break;
+                    case 180: u.x[ i ][ 180 ][ k ] = - ua_90 * ratio; break;
                 }
             }
         }
