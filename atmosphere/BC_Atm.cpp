@@ -22,7 +22,7 @@ void cAtmosphereModel::BC_radius()
             /******** grid bottom values ***************/
             u.x[ 0 ][ j ][ k ] = 0.;
             //v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
-            //w.x[ 0 ][ j ][ k ] = c43 * w.x[ 1 ][ j ][ k ] - c13 * w.x[ 2 ][ j ][ k ];
+//            t.x[ 0 ][ j ][ k ] = c43 * t.x[ 1 ][ j ][ k ] - c13 * t.x[ 2 ][ j ][ k ];
             //p_dyn.x[ 0 ][ j ][ k ] = c43 * p_dyn.x[ 1 ][ j ][ k ] - c13 * p_dyn.x[ 2 ][ j ][ k ];
             //c.x[ 0 ][ j ][ k ] = c.x[ 3 ][ j ][ k ] - 3. * c.x[ 2 ][ j ][ k ] + 3. * c.x[ 1 ][ j ][ k ]; 
             //cloud.x[ 0 ][ j ][ k ] = cloud.x[ 3 ][ j ][ k ] - 3. * cloud.x[ 2 ][ j ][ k ] + 3. * cloud.x[ 1 ][ j ][ k ];
@@ -84,7 +84,7 @@ void cAtmosphereModel::BC_theta(){
 void cAtmosphereModel::BC_phi(){
     // boundary conditions for the phi-direction
     for ( int i = 0; i < im; i++ ){
-        for ( int j = 1; j < jm-1; j++ ){
+        for ( int j = 0; j < jm; j++ ){
             // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
             t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
             t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];
