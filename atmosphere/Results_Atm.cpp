@@ -171,8 +171,6 @@ void cAtmosphereModel::run_MSL_data()
             // Precipitation, P_rain and P_snow in kg/ ( m² * s ) = mm/s
             // Precipitation in 86400. * kg/ ( m² * d ) = 86400 mm/d
             // kg/ ( m² * s ) == mm/s ( Kraus, p. 94 )
-            if ( Precipitation.y[ j ][ k ] >= 25. )  Precipitation.y[ j ][ k ] = 25.;
-            if ( Precipitation.y[ j ][ k ] <= 0 )  Precipitation.y[ j ][ k ] = 0.;
         }
     }
 }

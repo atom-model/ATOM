@@ -280,6 +280,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
             // :::::  begin of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::
             for( int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++)
             {
+/*
                 cout << endl << endl;
                 cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
                 cout << " 2D OGCM iterational process" << endl;
@@ -290,7 +291,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma)
                     << endl << endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max_2D = " << 
                     velocity_iter_max_2D << "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " 
                     << pressure_iter_max_2D << "    pressure_iter_2D = " << pressure_iter_2D << endl;
-
+*/
                 // class BC_Atmosphaere for the geometry of a shell of a sphere
                 boundary.RB_theta ( t, u, v, w, p_dyn, c );
                 boundary.RB_phi ( t, u, v, w, p_dyn, c );

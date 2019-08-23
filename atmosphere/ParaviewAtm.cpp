@@ -312,8 +312,6 @@ void cAtmosphereModel::paraview_vtk_radial( string &Name_Bathymetry_File, int Ma
     dump_radial("CloudWater", cloud, 1000., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("CloudIce", ice, 1000., i_radial, Atmosphere_vtk_radial_File);
 
-//    dump_radial("PrecipitationRain", P_rain, 8.64e6, i_radial, Atmosphere_vtk_radial_File);
-//    dump_radial("PrecipitationSnow", P_snow, 8.64e6, i_radial, Atmosphere_vtk_radial_File);
     dump_radial("PrecipitationRain", P_rain, 86400., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("PrecipitationSnow", P_snow, 86400., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Precipitation", Precipitation, 1., Atmosphere_vtk_radial_File);
@@ -453,6 +451,9 @@ void cAtmosphereModel::paraview_vtk_zonal ( string &Name_Bathymetry_File, int k_
                 aux_v.x[ i ][ j ][ k_zonal ] = c.x[ i ][ j ][ k_zonal ] / q_Ice;
             }
             else         aux_v.x[ i ][ j ][ k_zonal ] = 0.;
+
+            float height = get_layer_height(i);
+            BuoyancyForce.x[ i ][ j ][ k_zonal ] = height;
         }
     }
 
@@ -481,6 +482,7 @@ void cAtmosphereModel::paraview_vtk_zonal ( string &Name_Bathymetry_File, int k_
     dump_zonal("PressureDynamic", p_dyn, u_0 * u_0 * r_air *.01, k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("PressureStatic", p_stat, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("CO2-Concentration", co2, co2_0, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("height", BuoyancyForce, .001, k_zonal, Atmosphere_vtk_zonal_File);
 
 // writing zonal u-v cell structure
     Atmosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
@@ -565,6 +567,8 @@ void cAtmosphereModel::paraview_vtk_longal (string &Name_Bathymetry_File, int j_
         for ( int k = 0; k < km; k++ )
         {
             aux_w.x[ i ][ j_longal ][ k ] = c.x[ i ][ j_longal ][ k ] + cloud.x[ i ][ j_longal ][ k ] + ice.x[ i ][ j_longal ][ k ];
+            float height = get_layer_height(i);
+            aux_v.x[ i ][ j_longal ][ k ] = height;
         }
     }
 
@@ -584,6 +588,7 @@ void cAtmosphereModel::paraview_vtk_longal (string &Name_Bathymetry_File, int j_
     dump_longal("Q_Sensible", Q_Sensible, 1., j_longal, Atmosphere_vtk_longal_File);
     dump_longal("Epsilon_3D", epsilon_3D, 1., j_longal, Atmosphere_vtk_longal_File);
     dump_longal("CO2-Concentration", co2, co2_0, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("height", aux_v, .001, j_longal, Atmosphere_vtk_longal_File);
 
 // writing longitudinal u-v cell structure
     Atmosphere_vtk_longal_File <<  "VECTORS u-w-Cell float" << endl;
