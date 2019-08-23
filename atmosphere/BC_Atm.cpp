@@ -14,11 +14,10 @@ using namespace std;
 
 const  int c43 = 4./3., c13 = 1./3.;
 
-void cAtmosphereModel::BC_radius()
-{
+void cAtmosphereModel::BC_radius(){
     // boundary conditions for the r-direction
-    for ( int j = 0; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
             /******** grid bottom values ***************/
             u.x[ 0 ][ j ][ k ] = 0.;
             //v.x[ 0 ][ j ][ k ] = c43 * v.x[ 1 ][ j ][ k ] - c13 * v.x[ 2 ][ j ][ k ];
@@ -53,8 +52,8 @@ void cAtmosphereModel::BC_radius()
 
 void cAtmosphereModel::BC_theta(){
     // boundary conditions for the the-direction
-    for ( int k = 0; k < km; k++ ){
-        for ( int i = 0; i < im; i++ ){
+    for(int k = 0; k < km; k++){
+        for(int i = 0; i < im; i++){
             // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
 //            t.x[ i ][ 0 ][ k ] = c43 * t.x[ i ][ 1 ][ k ] - c13 * t.x[ i ][ 2 ][ k ];
 //            t.x[ i ][ jm-1 ][ k ] = c43 * t.x[ i ][ jm-2 ][ k ] - c13 * t.x[ i ][ jm-3 ][ k ];
@@ -83,8 +82,8 @@ void cAtmosphereModel::BC_theta(){
 
 void cAtmosphereModel::BC_phi(){
     // boundary conditions for the phi-direction
-    for ( int i = 0; i < im; i++ ){
-        for ( int j = 0; j < jm; j++ ){
+    for(int i = 0; i < im; i++){
+        for(int j = 0; j < jm; j++){
             // zero tangent ( von Neumann condition ) or constant value ( Dirichlet condition )
             t.x[ i ][ j ][ 0 ] = c43 * t.x[ i ][ j ][ 1 ] - c13 * t.x[ i ][ j ][ 2 ];
             t.x[ i ][ j ][ km-1 ] = c43 * t.x[ i ][ j ][ km-2 ] - c13 * t.x[ i ][ j ][ km-3 ];

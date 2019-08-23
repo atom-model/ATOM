@@ -132,7 +132,7 @@ void cAtmosphereModel::LoadConfig ( const char *filename )
 
 
 
-void cAtmosphereModel::RunTimeSlice ( int Ma ){
+void cAtmosphereModel::RunTimeSlice(int Ma){
     if(debug){
         feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO); //not platform independent, bad, very bad, I know
     }
@@ -141,7 +141,7 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ){
     reset_arrays();    
     m_current_time = m_time_list.insert(float(Ma)).first;
     struct stat info;
-    if( stat( output_path.c_str(), &info ) != 0 ){
+    if(stat(output_path.c_str(), &info ) != 0){
         mkdir(output_path.c_str(), 0777);
     }
     //Prepare the temperature and precipitation data file
@@ -152,16 +152,14 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ){
         Name_SurfacePrecipitation_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Precipitation.xyz";    
         velocity_v_file = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_wind_v.xyz";
         velocity_w_file = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_wind_w.xyz";
-    
-        if( stat( Name_SurfaceTemperature_File.c_str(), &info ) != 0 || 
-            stat( Name_SurfacePrecipitation_File.c_str(), &info ) != 0 ||
-            stat( velocity_v_file.c_str(), &info ) != 0 ||
-            stat( velocity_w_file.c_str(), &info ) != 0 )
-        {
-            std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - time_step) + " " + 
-                std::to_string(Ma) + " " + output_path + " " + BathymetrySuffix + " atm";
-            int ret = system(cmd_str.c_str());
-            std::cout << " reconstruction script returned: " << ret << std::endl;
+        if(stat(Name_SurfaceTemperature_File.c_str(), &info) != 0 || 
+           stat(Name_SurfacePrecipitation_File.c_str(), &info) != 0 ||
+           stat(velocity_v_file.c_str(), &info) != 0 ||
+           stat(velocity_w_file.c_str(), &info) != 0){
+               std::string cmd_str = "python " + reconstruction_script_path + " " + std::to_string(Ma - time_step) + " " + 
+                   std::to_string(Ma) + " " + output_path + " " + BathymetrySuffix + " atm";
+               int ret = system(cmd_str.c_str());
+               std::cout << " reconstruction script returned: " << ret << std::endl;
         } 
     }
     if(!has_welcome_msg_printed)
@@ -186,7 +184,6 @@ void cAtmosphereModel::RunTimeSlice ( int Ma ){
     init_co2();
     Ice_Water_Saturation_Adjustment();
     BC_Radiation_multi_layer(); 
-//    goto Printout;
     store_intermediate_data_2D();
     store_intermediate_data_3D();
     run_2D_loop();
@@ -390,10 +387,10 @@ void cAtmosphereModel::run_3D_loop(){
         save_data();
         //chessboard_grid(t.x[0], 30, 30, jm, km);
     }
-    store_intermediate_data_3D();
-    for( int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++ ){
-        for( int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++ ){
-            if(debug){ Array tmp = (t-1)*t_0; tmp.inspect(); }
+//    store_intermediate_data_3D();
+    for(int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++){
+        for(int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++){
+            if(debug){ Array tmp = (t-1)*t_0; tmp.inspect();}
             cout << endl << endl;
             cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
             cout << " 3D AGCM iterational process" << endl;
@@ -408,15 +405,17 @@ void cAtmosphereModel::run_3D_loop(){
             BC_phi();
             BC_SolidGround();
             BC_Evaporation(); 
-            Ice_Water_Saturation_Adjustment();
+            if(velocity_iter % 2 == 0){
+                Ice_Water_Saturation_Adjustment();
 //            Moist_Convection(); // work in progress
-            Two_Category_Ice_Scheme(); 
-            BC_Radiation_multi_layer(); 
-            Value_Limitation_Atm();
+                Two_Category_Ice_Scheme(); 
+                Value_Limitation_Atm();
+            }
             solveRungeKutta_3D_Atmosphere();
             Value_Limitation_Atm();
             store_intermediate_data_3D();
             if(debug)check_data(); 
+            BC_Radiation_multi_layer(); 
             Latent_Heat(); 
             print_min_max_values();
             vegetationDistribution();
@@ -426,10 +425,10 @@ void cAtmosphereModel::run_3D_loop(){
             if(debug) save_data();
         }//end of velocity loop
         computePressure_3D();
-        if( debug && pressure_iter % checkpoint == 0 ){
+        if(debug && pressure_iter % checkpoint == 0){
             write_file(bathymetry_name, output_path);
         }
-        if( iter_cnt > nm ){
+        if(iter_cnt > nm){
             cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
             break;
         }
@@ -744,6 +743,7 @@ void cAtmosphereModel::init_co2(){
 /*
 *
 */
+/*
 void cAtmosphereModel::init_velocities(){
     // boundary condition for the velocity components in the circulation cells
 
@@ -863,16 +863,16 @@ void cAtmosphereModel::init_velocities(){
     form_diagonals(v, 165, 180);
 
     //change the direction for southen hemisphere
-    /*for ( int i = 0; i < im; i++ ){
+    for ( int i = 0; i < im; i++ ){
         for ( int j = 91; j < jm; j++ ){
             for ( int k = 0; k < km; k++ ){
                 v.x[ i ][ j ][ k ] = - v.x[ i ][ j ][ k ];
             }
         }
-    }*/
+    }
 
     //smoothing transitions from cell to cell
-    /*smooth_transition(u,v,w,60); 
+    smooth_transition(u,v,w,60); 
     smooth_transition(u,v,w,30);    
     smooth_transition(u,v,w,75);
     smooth_transition(u,v,w,45);
@@ -883,12 +883,12 @@ void cAtmosphereModel::init_velocities(){
     smooth_transition(u,v,w,150);
     smooth_transition(u,v,w,105);
     smooth_transition(u,v,w,135);
-    */
+    
     // non dimensionalization by u_0
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = 0; j < jm; j++ ){
-                if ( is_land ( h, i, j, k ) )     
+    for( int i = 0; i < im; i++ ){
+        for( int k = 0; k < km; k++ ){
+            for( int j = 0; j < jm; j++ ){
+                if( is_land ( h, i, j, k ) )     
                     u.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] = 0.;
                 else{
                     u.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] / u_0;
@@ -899,14 +899,16 @@ void cAtmosphereModel::init_velocities(){
         }
     }
 }
+*/
 /*
 *
 */
+/*
 void cAtmosphereModel::smooth_transition(Array &u, Array &v, Array &w, int lat){
     int start = lat-3, end = lat+3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = start; j <= end; j++ ){
+    for( int i = 0; i < im; i++ ){
+        for( int k = 0; k < km; k++ ){
+            for( int j = start; j <= end; j++ ){
                 u.x[ i ][ j ][ k ] = ( u.x[ i ][ end ][ k ] - u.x[ i ][ start ][ k ] ) *
                     ( ( double ) ( j - start )  / ( end - start ) ) + u.x[ i ][ start ][ k ];
                 v.x[ i ][ j ][ k ] = ( v.x[ i ][ end ][ k ] - v.x[ i ][ start ][ k ] ) *
@@ -917,24 +919,26 @@ void cAtmosphereModel::smooth_transition(Array &u, Array &v, Array &w, int lat){
         }
     }
 }
-
+*/
 /*
 *
 */
+/*
 void cAtmosphereModel::form_diagonals(Array &a, int start, int end){
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = start; j < end; j++ ){
-            for ( int i = 1; i < im; i++ ){
+    for( int k = 0; k < km; k++ ){
+        for( int j = start; j < end; j++ ){
+            for( int i = 1; i < im; i++ ){
                 a.x[ i ][ j ][ k ] = ( a.x[ i ][ end ][ k ] - a.x[ i ][ start ][ k ] ) *
                     ( j - start ) / (double)(end - start) + a.x[ i ][ start ][ k ];
             }
         }
     }
 }
-
+*/
 /*
 *
 */
+/*
 void  cAtmosphereModel::init_u(Array &u, int j){
     float ua_00 = 1,
           ua_30 = 1,
@@ -972,17 +976,17 @@ void  cAtmosphereModel::init_u(Array &u, int j){
         }
     }
 }
-
+*/
 /*
 *
 */
+/*
 void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl){
     for(int j = lat_1; j < lat_2+1; j++ ){
         int tropopause_layer = get_tropopause_layer(j);
         double tropopause_height = get_layer_height(tropopause_layer);
         for( int k = 0; k < km; k++ ){
-            if(is_ocean_surface(h, 0, j, k))
-            {
+            if(is_ocean_surface(h, 0, j, k)){
                 coeff_sl = v_or_w.x[0][j][k];
             }
             for( int i = 0; i < tropopause_layer; i++ ){
@@ -993,10 +997,11 @@ void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double 
     }
     init_v_or_w_above_tropopause(v_or_w, lat_1, lat_2, coeff_trop);
 }
-
+*/
 /*
 *
 */
+/*
 void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff){
     for(int j = lat_1; j < lat_2+1; j++ ){
         int tropopause_layer = get_tropopause_layer(j);
@@ -1010,7 +1015,7 @@ void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, i
         }
     }
 }
-
+*/
 /*
 *
 */
@@ -1025,16 +1030,12 @@ void  cAtmosphereModel::save_data(){
     if(iter_cnt_3d == pressure_iter_max * velocity_iter_max + 1){
         last_iter = true;
     }
-    if(last_iter)
-    {
+    if(last_iter){
         ss << "_time_" << (int)(*get_current_time()) << "_iter_n";
-    }
-    else
-    {
+    }else{
         ss << "_time_" << (int)(*get_current_time()) << "_iter_" << iter_cnt_3d;
     }
     std::string postfix_str = ss.str();
-
     Array t_t(im, jm, km, 0),  v_t(im, jm, km, 0), w_t(im, jm, km, 0), m_t(im, jm, km, 0), u_t(im, jm, km, 0);
     for(int i=0; i<im; i++){
         for(int j=0; j<jm; j++){
@@ -1043,7 +1044,6 @@ void  cAtmosphereModel::save_data(){
                 t_t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k ] * t_0 - t_0;
                 v_t.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] * u_0;
                 w_t.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] * u_0;
-
                 if(last_iter){
                     if(fabs(v_t.x[ i ][ j ][ k ]) > 0 && !(fabs(v_t.x[ 0 ][ j ][ k ]) > 0))
                         v_t.x[ 0 ][ j ][ k ] = v_t.x[ i ][ j ][ k ];
@@ -1053,7 +1053,6 @@ void  cAtmosphereModel::save_data(){
             }
         }
     }
-
     t_t.save(path + string("atm_t") + postfix_str, 0);
     t_t.save(path + string("atm_t") + postfix_str, 1);
     v_t.save(path + string("atm_v") + postfix_str, 0);
@@ -1066,10 +1065,10 @@ void  cAtmosphereModel::save_data(){
 *
 */
 void cAtmosphereModel::BC_SolidGround(){
-    for ( int j = 0; j < jm; j++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int i = im-2; i >= 0; i-- ){
-                if ( is_land ( h, i, j, k ) ){
+    for( int j = 0; j < jm; j++ ){
+        for( int k = 0; k < km; k++ ){
+            for( int i = im-2; i >= 0; i-- ){
+                if( is_land ( h, i, j, k ) ){
                     u.x[ i ][ j ][ k ] = 0.;
                     v.x[ i ][ j ][ k ] = 0.;
                     w.x[ i ][ j ][ k ] = 0.;
@@ -1091,9 +1090,9 @@ void cAtmosphereModel::BC_SolidGround(){
 */
 void cAtmosphereModel::vegetationDistribution(){
     // description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
-    for ( int j = 0; j < jm; j++ ){
+    for( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
-            if ( max_Precipitation > 0 && is_land( h, 0, j, k ) && !(t.x[ 0 ][ j ][ k ] < 1.) ){
+            if( max_Precipitation > 0 && is_land( h, 0, j, k ) && !(t.x[ 0 ][ j ][ k ] < 1.) ){
                 Vegetation.y[ j ][ k ] = Precipitation.y[ j ][ k ] / max_Precipitation; // actual vegetation areas
             }else{
                 Vegetation.y[ j ][ k ] = 0.;
@@ -1102,12 +1101,9 @@ void cAtmosphereModel::vegetationDistribution(){
     }
 }
 
-void cAtmosphereModel::store_intermediate_data_2D(float coeff)
-{
-    for ( int j = 0; j < jm; j++ )
-    {
-        for ( int k = 0; k < km; k++ )
-        {
+void cAtmosphereModel::store_intermediate_data_2D(float coeff){
+    for( int j = 0; j < jm; j++ ){
+        for( int k = 0; k < km; k++ ){
             vn.x[ 0 ][ j ][ k ] = coeff * v.x[ 0 ][ j ][ k ];
             wn.x[ 0 ][ j ][ k ] = coeff * w.x[ 0 ][ j ][ k ];
             p_dynn.x[ 0 ][ j ][ k ] = coeff * p_dyn.x[ 0 ][ j ][ k ];
@@ -1115,14 +1111,10 @@ void cAtmosphereModel::store_intermediate_data_2D(float coeff)
     }
 }
 
-void cAtmosphereModel::store_intermediate_data_3D(float coeff)
-{ 
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int k = 0; k < km; k++ )
-            {
+void cAtmosphereModel::store_intermediate_data_3D(float coeff){ 
+    for( int i = 0; i < im; i++ ){
+        for( int j = 0; j < jm; j++ ){
+            for( int k = 0; k < km; k++ ){
                 un.x[ i ][ j ][ k ] = coeff * u.x[ i ][ j ][ k ];
                 vn.x[ i ][ j ][ k ] = coeff * v.x[ i ][ j ][ k ];
                 wn.x[ i ][ j ][ k ] = coeff * w.x[ i ][ j ][ k ];
@@ -1132,46 +1124,37 @@ void cAtmosphereModel::store_intermediate_data_3D(float coeff)
                 cloudn.x[ i ][ j ][ k ] = coeff * cloud.x[ i ][ j ][ k ];
                 icen.x[ i ][ j ][ k ] = coeff * ice.x[ i ][ j ][ k ];
                 co2n.x[ i ][ j ][ k ] = coeff * co2.x[ i ][ j ][ k ];
-
             }
         }
     }
 }
 
-void cAtmosphereModel::adjust_temperature_IC(double** t, int jm, int km)
-{
+void cAtmosphereModel::adjust_temperature_IC(double** t, int jm, int km){
     for(int k=0; k < km; k++ ){
         for(int j=0; j < jm; j++ ){
             t[ j ][ k ] = temperature_NASA.y[ j ][ k ] = ( t[ j ][ k ] + t_0 ) / t_0;
         }
     }
-
     // correction of surface temperature around 180°E
     int k_half = ( km -1 ) / 2;
-    for ( int j = 0; j < jm; j++ ){
+    for( int j = 0; j < jm; j++ ){
         t[ j ][ k_half ] = ( t[ j ][ k_half + 1 ] + t[ j ][ k_half - 1 ] ) / 2.;
         temperature_NASA.y[ j ][ k_half ] = ( temperature_NASA.y[ j ][ k_half + 1 ] +
             temperature_NASA.y[ j ][ k_half - 1 ] ) / 2.;
     }
-
 }
 
 void cAtmosphereModel::check_data(Array& a, Array&an, const std::string& name){
     float t_diff_min, t_diff_max, t_diff_mean, t_min, t_max;
-    for ( int i = 0; i < im; i++ )
-    {
+    for( int i = 0; i < im; i++ ){
         t_diff_min = t_diff_max = t_diff_mean = 0; 
         t_min = t_max = a.x[i][0][0];
-        for ( int j = 0; j < jm; j++ )
-        {
-            for ( int k = 0; k < km; k++ )
-            {
+        for( int j = 0; j < jm; j++ ){
+            for( int k = 0; k < km; k++ ){
                 float t_diff = fabs(an.x[i][j][k]-a.x[i][j][k]);
                 float tt = an.x[i][j][k];
-
                 if(tt < t_min) t_min = tt;
                 if(tt > t_max) t_max = tt;
-
                 if(t_diff < t_diff_min) t_diff_min = t_diff;
                 if(t_diff > t_diff_max) t_diff_max = t_diff;
                 t_diff_mean += t_diff;
@@ -1185,6 +1168,7 @@ void cAtmosphereModel::check_data(Array& a, Array&an, const std::string& name){
         logger() << name << " diff mean: " << t_diff_mean << "   " << (double)t_diff_mean / (jm*km) << std::endl;
     }
 }
+
 void cAtmosphereModel::check_data(){
     check_data(t,tn,"t");
     check_data(u,un,"u");

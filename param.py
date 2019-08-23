@@ -8,7 +8,7 @@ def main():
         'common': [
             ( 'bathymetry_path', '', 'string', '../data/topo_grids' ),
             ( 'BathymetrySuffix', '', 'string', 'Ma_smooth.xyz' ),
-            ( 'verbose', '', 'bool', True ),
+            ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output/' ),
             ( 'paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', False),
             ( 'debug','flag to control if the program is running in debug mode', 'bool', False),
@@ -24,7 +24,7 @@ def main():
             ( 'use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True ),
         
             ( 'time_start', 'start time', 'int', 0 ),
-            ( 'time_end', 'end time', 'int', 60 ),
+            ( 'time_end', 'end time', 'int', 140 ),
             ( 'time_step', 'step size between timeslices', 'int', 5 ),
         ],
         'atmosphere': [
