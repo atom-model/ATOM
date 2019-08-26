@@ -35,8 +35,8 @@ for t in range(len(times)):
     #if False:
     if t<len(times)-1:
         reconstruct_temperature(time,times[t+1], BATHYMETRY_SUFFIX) 
-        reconstruct_precipitation(time,times[t+1], BATHYMETRY_SUFFIX)
-#        reconstruct_salinity(time,times[t+1], BATHYMETRY_SUFFIX)
+#        reconstruct_precipitation(time,times[t+1], BATHYMETRY_SUFFIX)
+        reconstruct_salinity(time,times[t+1], BATHYMETRY_SUFFIX)
         reconstruct_wind_v(time,times[t+1], BATHYMETRY_SUFFIX)
         reconstruct_wind_w(time,times[t+1], BATHYMETRY_SUFFIX)
 try:

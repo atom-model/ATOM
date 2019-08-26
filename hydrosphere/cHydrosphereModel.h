@@ -14,11 +14,8 @@ using namespace tinyxml2;
 
 class cHydrosphereModel{
 public:
-
     cHydrosphereModel();
     ~cHydrosphereModel();
-
-    // FUNCTIONS
     void LoadConfig(const char *filename);
     void Run();
     void RunTimeSlice(int time_slice);
@@ -28,66 +25,45 @@ public:
 private:
     void SetDefaultConfig();
     void reset_arrays();
-    void write_file( std::string &bathymetry_name, string& filepath, bool is_final_result = false);
+    void write_file(std::string &bathymetry_name, string& filepath, bool is_final_result = false);
     void save_data();
     void run_data();
-
     void IC_v_w_EkmanSpiral();
-
     void solveRungeKutta_2D_Hydrosphere();
     void solveRungeKutta_3D_Hydrosphere();
-
     void RK_RHS_3D_Hydrosphere(int i, int j, int k);
     void RK_RHS_2D_Hydrosphere(int j, int k);
-
     void store_intermediate_data_2D(float coeff=1);
     void store_intermediate_data_3D(float coeff=1);
-
     void print_welcome_msg();
-    
     void print_min_max();
-
     void Hydrosphere_PlotData(const string &Name_Bathymetry_File, int iter_cnt);
-    
     void BC_Evaporation();
-    
     const int im = 41, jm = 181, km = 361, nm = 200;
-
     static const float dr, dt, pi180, the_degree, phi_degree, dthe, dphi;
-
     int iter_cnt, iter_cnt_3d;
     int m_current_time;
-
     bool has_printed_welcome_msg;
-    
-    // 1D arrays
     Array_1D rad; // radial coordinate direction
     Array_1D the; // lateral coordinate direction
     Array_1D phi; // longitudinal coordinate direction
     Array_1D aux_grad_v; // auxilliar array
     Array_1D aux_grad_w; // auxilliar array
-
-    // 2D arrays
+    
     Array_2D Bathymetry; // Bathymetry in m
     Array_2D value_top; // auxiliar field for bathymetzry
-
     Array_2D Upwelling; // upwelling
     Array_2D Downwelling; // downwelling
     Array_2D EkmanPumping; // 2D bottom water summed up in a vertical column
-
     Array_2D SaltFinger;   // salt bulge of higher density
     Array_2D SaltDiffusion; // salt bulge of lower density
     Array_2D Salt_total;   // rate of salt summed up in a vertical column
-
     Array_2D BuoyancyForce_2D; // radiation balance at the surface
-
     Array_2D salinity_evaporation; // additional salinity by evaporation
     Array_2D Evaporation_Dalton; // evaporation by Penman in [mm/d]
     Array_2D Precipitation; // areas of higher precipitation
 
-    // 3D arrays
     Array h; // bathymetry, depth from sea level
-
     Array t; // temperature
     Array u; // u-component velocity component in r-direction
     Array v; // v-component velocity component in theta-direction

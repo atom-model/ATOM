@@ -10,7 +10,7 @@ def main():
             ( 'BathymetrySuffix', '', 'string', 'Ma_smooth.xyz' ),
             ( 'verbose', '', 'bool', False ),
             ( 'output_path', 'directory where model outputs should be placed ( must end in / )', 'string', 'output/' ),
-            ( 'paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', False),
+            ( 'paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', True),
             ( 'debug','flag to control if the program is running in debug mode', 'bool', False),
             #parameters for data reconstruction
             ( 'velocity_w_file',"",'string','../data/w_surface.txt'),
@@ -160,7 +160,7 @@ def main():
             ( 'wa', 'initial velocity component in phi-direction', 'double', 0.0 ),
             ( 'pa', 'initial value for the pressure field', 'double', 0.0 ),
             ( 'ta', 'compares to -1°C', 'double', 0.9963 ),
-            ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.01464  ( = 4°C )', 'double', 0.95 ),
+            ( 'ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.0  ( = 0°C )', 'double', 1.0 ),
             ( 'ca_max', 'c = 1.0983 compares to a salinity of 38.00 psu  used for deep flow initialization', 'double', 1.0983 ),
 
             ( 't_paleo_max', 'maximum add of mean temperature during paleo', 'double', 10.0 ),
@@ -169,9 +169,9 @@ def main():
             ( 'the0', 'North Pole', 'double', 0.0 ),
             ( 'phi0', 'zero meridian in Greenwich', 'double', 0.0 ),
 
-            ( 't_average', 'mean temperature of the modern earth', 'double', 15.0 ),
-            ( 't_equator', 'temperature t_0 = 1.1355 compares to 37° C compares to 310 K', 'double', 1.1355 ),
-            ( 't_pole', 'compares to 4°C, threshhold temperature for the Boussinesq-approximation concerning bouyancy effect', 'double', 1.0146 ),
+            ( 't_average', 'mean temperature of the modern earth', 'double', 15.4 ),
+            ( 't_equator', 'temperature t_0 = 1.1025 compares to 28.0° C compares to 301.15 K', 'double', 1.1025 ),
+            ( 't_pole', 'compares to -1.9°C, freezing temperature of sea water at poles', 'double', 0.9930 ),
         ]
     }
     XML_READ_FUNCS = {

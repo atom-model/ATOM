@@ -122,13 +122,13 @@ void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta,
                                                     Array &w, Array &p_dyn, Array &c, Array &tn,
                                                     Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn){
     // boundary conditions for the total solid ground
-    for ( int i = 0; i < im; i++ ){
-        for ( int j = 0; j < jm; j++ ){
-            for ( int k = 0; k < km; k++ ){
-                if ( is_land(h,  i,  j,  k ) ){
-                    p_dyn.x[ i ][ j ][ k ] =  p_dynn.x[ i ][ j ][ k ] = pa;
-                    t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ] = ta;
-                    c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ] = ca;
+    for(int i = 0; i < im; i++){
+        for(int j = 0; j < jm; j++){
+            for(int k = 0; k < km; k++){
+                if(is_land(h,  i,  j,  k )){
+                    p_dyn.x[ i ][ j ][ k ] = p_dynn.x[ i ][ j ][ k ];
+                    t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ];
+                    c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ];
                     u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
                     v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
                     w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
