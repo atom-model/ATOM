@@ -13,6 +13,8 @@ import numpy as np
 from reconstruct_atom_data import *
 from pyatom import Atmosphere, Hydrosphere
 import create_atm_maps, create_hyd_maps
+from draw_temperature_plot import draw_temperature_plot
+from draw_precipitation_map import draw_precipitation_map
 
 def main(maps_only=False):
     atm_model = Atmosphere()
@@ -46,12 +48,12 @@ def main(maps_only=False):
         topo_dir = '../data/topo_grids/'
         topo_suffix = 'smooth'
     
-        atm_map_output_dir = './atm_maps'
-        hyd_map_output_dir = './hyd_maps'
+        atm_map_output_dir = './output/atm_maps'
+        hyd_map_output_dir = './output/hyd_maps'
 
         # v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), 
         # precipitation(mm), precipitable water(mm)
-        atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 'precipitation', 
+        atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 
                 'precipitable_water', 'topography', 'velocity', 'evaporation']
 
         create_atm_maps.create_all_maps(atm_sub_dirs, start_time, end_time, time_step, atm_map_output_dir, 
@@ -62,6 +64,16 @@ def main(maps_only=False):
     
         create_hyd_maps.create_all_maps(hyd_sub_dirs, start_time, end_time, time_step, hyd_map_output_dir,
             atom_output_dir, topo_dir, topo_suffix)
+
+        if not os.path.isdir(atm_map_output_dir+'/precipitation/'):
+            os.mkdir(atm_map_output_dir+'/precipitation/')
+
+        for time in times:
+            draw_precipitation_map(time, './output/', output_dir=atm_map_output_dir+'/precipitation/', topo_suffix=topo_suffix)
+
+        if end_time >= 100:
+            draw_temperature_plot(lon=180,data_dir='./output/', output_dir='./output/')
+
     except:
         import traceback
         traceback.print_exc() 
