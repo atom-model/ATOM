@@ -592,7 +592,7 @@ void BC_Thermohalin::IC_u_WestEastCoast
     int i_half = 38;
     d_i_middle = (double)i_middle;
     d_i_half = (double)i_half;
-    d_i_max =  double)i_max;
+    d_i_max =  (double)i_max;
 // search for east coasts and associated velocity components to close the circulations
 // transition between coast flows and open sea flows included
 // northern hemisphere: east coast
