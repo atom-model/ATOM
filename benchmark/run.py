@@ -15,6 +15,7 @@ from pyatom import Atmosphere, Hydrosphere
 import create_atm_maps, create_hyd_maps
 from draw_temperature_plot import draw_temperature_plot
 from draw_precipitation_map import draw_precipitation_map
+from draw_precipitation_evaporation_ratio_map import draw_precipitation_evaporation_ratio_map
 
 def main(maps_only=False):
     atm_model = Atmosphere()
@@ -68,8 +69,13 @@ def main(maps_only=False):
         if not os.path.isdir(atm_map_output_dir+'/precipitation/'):
             os.mkdir(atm_map_output_dir+'/precipitation/')
 
+        if not os.path.isdir(atm_map_output_dir+'/precipitation_evaporation_ratio/'):
+            os.mkdir(atm_map_output_dir+'/precipitation_evaporation_ratio/')
+
         for time in times:
             draw_precipitation_map(time, './output/', output_dir=atm_map_output_dir+'/precipitation/', topo_suffix=topo_suffix)
+            draw_precipitation_evaporation_ratio_map(time, './output/', 
+                output_dir=atm_map_output_dir+'/precipitation_evaporation_ratio/', topo_suffix=topo_suffix)
 
         if end_time >= 100:
             draw_temperature_plot(lon=180,data_dir='./output/', output_dir='./output/')

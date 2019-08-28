@@ -10,6 +10,15 @@ import os
 import numpy as np
 from netCDF4 import Dataset
 
+def calculate_spherical_mean(values, latitudes):
+    lat_r=(np.absolute(latitudes))/90.0*np.pi/2
+    lat_c= np.cos(np.absolute(lat_r))
+    count=0
+    for n,l in zip(values, lat_c):
+        count+=n*l
+    return count/np.sum(lat_c)
+
+
 def convert_atom_to_gmt(data):
     new_data = np.zeros((181, 361))
     atom_data = data.flatten()
@@ -29,11 +38,14 @@ def add_lon_lat_to_gmt_data(data):
     data = data.reshape((181,361))
     return np.stack((X, Y, data),axis=-1)
 
-def draw_precipitation_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_suffix='smooth'):
+def draw_precipitation_evaporation_ratio_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_suffix='smooth'):
     gmt_cmd = 'gmt' 
     all_data = np.genfromtxt(data_dir + '/[{0}Ma_{1}.xyz]_PlotData_Atm.xyz'.format(time, topo_suffix), skip_header=1)
     data = all_data[:,8]
+    evapor_data = all_data[:,10]
     data = convert_atom_to_gmt(data)
+    evapor_data = convert_atom_to_gmt(evapor_data)
+    
     data = add_lon_lat_to_gmt_data(data)
     data=data.flatten()
     data=data.reshape((len(data)/3,3))
@@ -47,10 +59,17 @@ def draw_precipitation_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_
     #y = fh.variables['lat'][:]
     x = all_data[:,0]
     y = all_data[:,1]
+    yy = convert_atom_to_gmt(y)
     #x,y=np.meshgrid(x,y)
     data=fh.variables['z'][:]
     data=data*365
+    evapor_data=evapor_data*365
+    evapor_data = np.flipud(evapor_data)
+    evapor_data[evapor_data==0]=np.nan
+    data=data/evapor_data
 
+    mean_val = calculate_spherical_mean(data[~np.isnan(data)].flatten(), yy[~np.isnan(data)].flatten())
+    print(mean_val)
     topo= all_data[:,2]
     
     plt.figure(figsize=(15, 8))
@@ -60,7 +79,7 @@ def draw_precipitation_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_
 
     xi, yi = m(x, y)
     img_data = m.transform_scalar(data, np.arange(-180,180),np.arange(-90,90),361,181)
-    cs = m.imshow(img_data,alpha=0.5, vmin=0, vmax=2500, cmap='jet')
+    cs = m.imshow(img_data,alpha=0.5, vmin=0, vmax=2, cmap='jet_r')
 
     m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
                             colors ='k', linewidths= 0.3 )
@@ -68,11 +87,13 @@ def draw_precipitation_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_
     m.drawparallels(np.arange(-90., 90., 10.), labels=[1,0,0,0], fontsize=10)
     m.drawmeridians(np.arange(-180., 180., 45.), labels=[0,0,0,1], fontsize=10)
 
-    cbar = m.colorbar(cs, location='bottom', pad="10%", label='Precipitation (mm/yr)')
-    plt.title("{1} at {0}Ma".format(time, 'Precipitation'))
-    plt.savefig(output_dir+'/{0}_Ma_{1}.png'.format(time, 'precipitation'), bbox_inches='tight')
-    #print(output_dir+'/precipitation'+'/{0}_Ma_{1}.png has been saved!'.format(time, 'precipitation'))
+    cbar = m.colorbar(cs, location='bottom', pad="10%", label='Ratio of Precipitation to Evaporation')
+    plt.title("{1} at {0}Ma (global mean: {2:.2f})".format(time, 'Ratio of Precipitation to Evaporation', mean_val))
+    #plt.annotate('Jul-24-2012', xy=(0.5, 0), xycoords='figure fraction', xytext=(0.5, 0.15), textcoords='figure fraction')
+    plt.savefig(output_dir+'/{0}_Ma_{1}.png'.format(time, 'precipitation_evaporation_ratio'), bbox_inches='tight')
+   
+    print(output_dir+'/{0}_Ma_{1}.png has been saved!'.format(time, 'precipitation_evaporation_ratio'))
     plt.close()
 
 if __name__ == "__main__":
-    draw_precipitation_map(0,'../benchmark/output/')
+    draw_precipitation_evaporation_ratio_map(0,'../benchmark/output/')
