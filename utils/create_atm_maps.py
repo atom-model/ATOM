@@ -15,9 +15,9 @@ map_cfg = {
     'v_velocity': (3, -7, 7, 'v_velocity (m/s)'),
     'w_velocity': (4, -8, 9, 'w_velocity (m/s)'),
     'water_vapour': (7, 0, 20, 'Water Vapour (g/kg)'),
-    'precipitation': (8, 0, 800, 'Precipitation (mm/yr)'),
+    'precipitation': (8, 0, 2500, 'Precipitation (mm/yr)'),
     'precipitable_water': (9, 0, 30, 'Precipitable Water (mm)'),
-    'evaporation' : (10, 0, 7, 'Evaporation (mm/d)')
+    'evaporation' : (10, 0, 2500, 'Evaporation (mm/yr)')
 }
 
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
@@ -39,7 +39,7 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         x = data[:,0]
         y = data[:,1]
         z = data[:,index]
-        if directory == 'precipitation':
+        if directory in ['precipitation', 'evaporation']:
             z=z*365
 
         topo = data[:,2]

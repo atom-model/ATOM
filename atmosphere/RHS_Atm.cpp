@@ -367,19 +367,16 @@ void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
     double d2wdphi2 = h_d_k * ( w.x[ 0 ][ j ][ k+1 ] - 2. * w.x[ 0 ][ j ][ k ] 
         + w.x[ 0 ][ j ][ k-1 ] ) / dphi2;
     if( ( j >= 2 ) && ( j < jm - 3 ) ){
-        if((is_land(h, 0, j, k)) && ((is_air(h, 0, j+1, k)) 
-            && (is_air(h, 0, j+2, k)))){
-            dvdthe = h_d_j * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j + 1 ][ k ] 
-                - v.x[ 0 ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dwdthe = h_d_j * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j + 1 ][ k ] 
-                - w.x[ 0 ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            dpdthe = h_d_j * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] 
-                + 4. * p_dyn.x[ 0 ][ j + 1 ][ k ] - p_dyn.x[ 0 ][ j + 2 ][ k ] ) 
-                / ( 2. * dthe );
-            d2vdthe2 = h_d_j * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j + 1 ][ k ] 
-                + v.x[ 0 ][ j + 2 ][ k ] ) / dthe2;
-            d2wdthe2 = h_d_j * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j + 1 ][ k ] 
-                + w.x[ 0 ][ j + 2 ][ k ] ) / dthe2;
+
+        if( ( is_land(h, 0, j, k) ) && ( ( is_air(h, 0, j+1, k  ) && ( is_air(h, 0, j+2, k) ) ) )){
+            dvdthe = h_d_j * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j + 1 ][ k ] - v.x[ 0 ][ j + 2 ][ k ] ) 
+                        / ( 2. * dthe );
+            dwdthe = h_d_j * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j + 1 ][ k ] - w.x[ 0 ][ j + 2 ][ k ] ) 
+                        / ( 2. * dthe );
+            dpdthe = h_d_j * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] + 4. * p_dyn.x[ 0 ][ j + 1 ][ k ] - 
+                        p_dyn.x[ 0 ][ j + 2 ][ k ] ) / ( 2. * dthe );
+            d2vdthe2 = h_d_j * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j + 1 ][ k ] + v.x[ 0 ][ j + 2 ][ k ] ) / dthe2;
+            d2wdthe2 = h_d_j * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j + 1 ][ k ] + w.x[ 0 ][ j + 2 ][ k ] ) / dthe2;
         }
         if((is_land(h, 0, j, k)) && (is_air(h, 0, j-1, k)) && (is_air(h, 0, j-2, k))){
             dvdthe = h_d_j * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j - 1 ][ k ] 
