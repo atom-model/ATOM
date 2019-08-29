@@ -246,7 +246,6 @@ void cAtmosphereModel::reset_arrays(){
 
     vapour_evaporation.initArray_2D(jm, km, 0.); // additional water vapour by evaporation
     Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Dalton in [mm/d]
-    Evaporation_Penman.initArray_2D(jm, km, 0.); // evaporation by Penman in [mm/d]
 
     co2_total.initArray_2D(jm, km, 0.); // areas of higher co2 concentration
 

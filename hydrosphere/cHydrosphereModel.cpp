@@ -283,7 +283,7 @@ void cHydrosphereModel::reset_arrays(){
     Salt_total.initArray_2D(jm, km, 0.);     // rate of salt summed up in a vertical column
     BuoyancyForce_2D.initArray_2D(jm, km, 0.); // radiation balance at the surface
     salinity_evaporation.initArray_2D(jm, km, 0.); // additional salinity by evaporation
-    Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Penman in [mm/d]
+    Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Dalton in [mm/d]
     Precipitation.initArray_2D(jm, km, 0.); // areas of higher precipitation
 
     h.initArray(im, jm, km, 0.); // bathymetry, depth from sea level

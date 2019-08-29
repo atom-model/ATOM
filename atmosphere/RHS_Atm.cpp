@@ -16,21 +16,17 @@
 using namespace std;
 using namespace AtomUtils;
 
-//
+
 #define dxdr_a(X) \
     (h_d_i * ( X->x[ i+1 ][ j ][ k ] - X->x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * exp_rm)
 #define dxdr_b(X) \
     (h_d_i * ( - 3. * X->x[ i ][ j ][ k ] + 4. * X->x[ i + 1 ][ j ][ k ] - X->x[ i + 2 ][ j ][ k ] ) / ( 2. * dr ) * exp_rm)
-
-//
 #define d2xdr2_a(X) \
     (h_d_i * ( X->x[ i+1 ][ j ][ k ] - 2. * X->x[ i ][ j ][ k ] + X->x[ i-1 ][ j ][ k ] ) / dr2 * exp_2_rm \
     - h_d_i * ( X->x[ i+1 ][ j ][ k ] - X->x[ i-1 ][ j ][ k ] ) / ( 2. * dr ) * exp_2_rm_2)
 #define d2xdr2_b(X) \
     (h_d_i * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i + 1 ][ j ][ k ] + X->x[ i + 2 ][ j ][ k ] ) / dr2 * exp_2_rm \
     - h_d_i * ( - 3. * X->x[ i ][ j ][ k ] + 4. * X->x[ i + 1 ][ j ][ k ] - X->x[ i + 2 ][ j ][ k ] ) / ( 2. * dr ) * exp_2_rm_2)
-
-//
 #define dxdthe_a(X) \
     (h_d_j * ( X->x[ i ][ j+1 ][ k ] - X->x[ i ][ j-1 ][ k ] ) / ( 2. * dthe ))
 #define dxdthe_b(X) \
@@ -41,16 +37,12 @@ using namespace AtomUtils;
     (h_d_j * ( X->x[ i ][ j + 1 ][ k ] - X->x[ i ][ j ][ k ] ) / dthe)
 #define dxdthe_e(X) \
     (h_d_j * ( X->x[ i ][ j - 1 ][ k ] - X->x[ i ][ j ][ k ] ) / dthe)
-
-//
 #define d2xdthe2_a(X) \
     (h_d_j * ( X->x[ i ][ j+1 ][ k ] - 2. * X->x[ i ][ j ][ k ] + X->x[ i ][ j-1 ][ k ] ) / dthe2)
 #define d2xdthe2_b(X) \
     (h_d_j * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i ][ j + 1 ][ k ] + X->x[ i ][ j + 2 ][ k ] ) / dthe2)
 #define d2xdthe2_c(X) \
     (h_d_j * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i ][ j - 1 ][ k ] + X->x[ i ][ j - 2 ][ k ] ) / dthe2)
-
-//
 #define dxdphi_a(X) \
     (h_d_k * ( X->x[ i ][ j ][ k+1 ] - X->x[ i ][ j ][ k-1 ] ) / ( 2. * dphi ))
 #define dxdphi_b(X) \
@@ -61,8 +53,6 @@ using namespace AtomUtils;
     (h_d_k * ( X->x[ i ][ j ][ k + 1 ] - X->x[ i ][ j ][ k ] ) / dphi)
 #define dxdphi_e(X) \
     (h_d_k * ( X->x[ i ][ j ][ k - 1 ] - X->x[ i ][ j ][ k ] ) / dphi)
-
-//
 #define d2xdphi2_a(X) \
     (h_d_k * ( X->x[ i ][ j ][ k+1 ] - 2. * X->x[ i ][ j ][ k ] + X->x[ i ][ j ][ k-1 ] ) / dphi2)
 #define d2xdphi2_b(X) \
@@ -70,66 +60,46 @@ using namespace AtomUtils;
 #define d2xdphi2_c(X) \
     (h_d_k * ( X->x[ i ][ j ][ k ] - 2. * X->x[ i ][ j ][ k - 1 ] + X->x[ i ][ j ][ k - 2 ] ) / dphi2)
 
-void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k) 
-{
+void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
     double k_Force = 1.;// factor for acceleration of convergence processes inside the immersed boundary conditions
     double cc = 1.;
     double dist_coeff = 1.;
-
-    // 1. and 2. derivatives for 3 spacial directions and and time in Finite Difference Methods ( FDM )
-    // collection of coefficients9
     double dr2 = dr * dr;
     double dthe2 = dthe * dthe;
     double dphi2 = dphi * dphi;
-
-    // collection of coefficients
     double rm = rad.z[ i ];
     double rm2 = rm * rm;
-
-    // collection of coefficients for coordinate stretching
     double zeta = 3.715;
     double exp_rm = 1. / exp( zeta * rm );
     double exp_2_rm = 1. / exp( 2. * zeta * rm );
     double exp_2_rm_2 = 2. / exp( 2. * zeta * rm );
-
-    // collection of coefficients
     double sinthe = sin( the.z[ j ] );
     double sinthe2 = sinthe * sinthe;
     double costhe = cos( the.z[ j ] );
     double rmsinthe = rm * sinthe;
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
-
-    //  3D volume iterations in case 1. and 2. order derivatives at walls are needed >>>>>>>>>>>>>>>>>>>>>>>> 
-    // only in positive r-direction above ground 
     double topo_step = get_layer_height(i) - get_layer_height(i-1);
     double height = get_layer_height(i);
     double topo_diff = height - Topography.y[ j ][ k ];
     double h_0_i = topo_diff / topo_step;  // hat distribution function
 //    double h_0_i = cc * ( .5 * ( acos ( topo_diff * 3.14 / L_atm ) + 1. ) );   // cosine distribution function, better results for benchmark case
-    
     double h_d_i = 0;
-
-    if ( ( topo_diff <= topo_step ) && ( ( is_air ( h, i, j, k ) ) 
-        && ( is_land ( h, i-1, j, k ) ) ) ){
+    if((topo_diff <= topo_step) && ((is_air(h, i, j, k)) 
+        && (is_land(h, i-1, j, k)))){
         h_d_i = cc * ( 1. - h_0_i ); 
     }
-
-    if ( ( is_air ( h, i, j, k ) ) && ( is_air ( h, i-1, j, k ) ) ){
+    if((is_air(h, i, j, k)) && (is_air(h, i-1, j, k))){
         h_0_i = 0.;
         h_d_i = 1.;
     }
-    if ( ( is_land ( h, i, j, k ) ) && ( is_land ( h, i-1, j, k ) ) ){        
+    if((is_land(h, i, j, k)) && (is_land(h, i-1, j, k))){        
         h_0_i = 1.;
         h_d_i = 0; 
     }
-
-    // 3D adapted immersed boundary method >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    // only in positive the-direction along northerly boundaries 
-
     double dist = 0, h_0_j = 0, h_d_j = 0;
-    if ( ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j-1, k ) ) ) || 
-          ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j+1, k ) ) ) ){
+    if(((is_air(h, i, j, k)) && (is_land(h, i, j-1, k))) || 
+          ((is_air(h, i, j, k)) && (is_land(h, i, j+1, k)))){
         dist = dist_coeff * dthe;
         h_0_j = dist / dthe;
         h_d_j = cc * ( 1. - h_0_j ); 
@@ -137,10 +107,9 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k)
         h_0_j = 0.;
         h_d_j = cc * ( 1. - h_0_j ); 
     }
-
     double h_0_k = 0, h_d_k = 0;     
-    if ( ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j, k-1 ) ) ) || 
-          ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j, k+1 ) ) ) ){
+    if(((is_air(h, i, j, k)) && (is_land(h, i, j, k-1))) || 
+          ((is_air(h, i, j, k)) && (is_land(h, i, j, k+1)))){
         dist = dist_coeff * dphi;
         h_0_k = dist / dphi;
         h_d_k = cc * ( 1. - h_0_k ); 
@@ -148,23 +117,21 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k)
         h_0_k = 0.; 
         h_d_k = cc * ( 1. - h_0_k ); 
     }
-
     std::vector<Array*> arrays_1{&u, &v, &w, &t, &p_dyn, &c, &cloud, &ice, &co2};
     std::vector<Array*> arrays_2{&u, &v, &w, &t, &c, &cloud, &ice, &co2};
-    enum array_index_1 {i_u_1, i_v_1, i_w_1, i_t_1, i_p_1, i_c_1, i_cloud_1, i_ice_1, i_co_1, last_array_index_1};
-    enum array_index_2 {i_u_2, i_v_2, i_w_2, i_t_2, i_c_2, i_cloud_2, i_ice_2, i_co_2, last_array_index_2};
+    enum array_index_1{i_u_1, i_v_1, i_w_1, i_t_1, i_p_1, i_c_1, 
+                       i_cloud_1, i_ice_1, i_co_1, last_array_index_1};
+    enum array_index_2{i_u_2, i_v_2, i_w_2, i_t_2, i_c_2, i_cloud_2, 
+                       i_ice_2, i_co_2, last_array_index_2};
     std::vector<double> dxdr_vals(last_array_index_1), 
                         dxdthe_vals(last_array_index_1), 
                         dxdphi_vals(last_array_index_1),
-
                         d2xdr2_vals(last_array_index_2),
                         d2xdthe2_vals(last_array_index_2),
                         d2xdphi2_vals(last_array_index_2);
-    
     bool r_flag = false , the_flag = false, phi_flag = false;
-
-    if ( i < im - 2 ){
-        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i+1, j, k ) ) ){
+    if(i < im - 2){
+        if((is_land(h, i, j, k)) && (is_air(h, i+1, j, k))){
             for(int n=0; n<last_array_index_1; n++)
                 dxdr_vals[n] = dxdr_b(arrays_1[n]);
             for(int n=0; n<last_array_index_2; n++)
@@ -172,42 +139,37 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k)
             r_flag = true;
         }
     }
-
-    if ( ( j >= 2 ) && ( j < jm - 3 ) ){
-        // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral southward direction
-        if ( ( is_land ( h, i, j, k ) ) && ( ( is_air ( h, i, j+1, k ) ) && ( is_air ( h, i, j+2, k ) ) ) ){
+    if((j >= 2) && (j < jm - 3)){
+        if((is_land(h, i, j, k)) && ((is_air(h, i, j+1, k)) 
+            && (is_air(h, i, j+2, k)))){
             for(int n=0; n<last_array_index_1; n++)
                 dxdthe_vals[n] = dxdthe_b(arrays_1[n]);
             for(int n=0; n<last_array_index_2; n++)
                 d2xdthe2_vals[n] = d2xdthe2_b(arrays_2[n]);
             the_flag = true;
         }
-        // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral northward direction
-        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j-1, k ) ) && ( is_air ( h, i, j-2, k ) ) ){
+        if((is_land(h, i, j, k)) && (is_air(h, i, j-1, k)) 
+            && (is_air(h, i, j-2, k))){
             for(int n=0; n<last_array_index_1; n++)
                 dxdthe_vals[n] = dxdthe_c(arrays_1[n]);
             for(int n=0; n<last_array_index_2; n++)
                 d2xdthe2_vals[n] = d2xdthe2_c(arrays_2[n]);
             the_flag = true;
         }
-
-        // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral southward direction
-        if ( ( ( is_land ( h, i, j, k ) ) 
-                && ( ( is_air ( h, i, j+1, k ) ) && ( is_land ( h, i, j+2, k ) ) ) ) 
-                || ( ( j == jm - 2 )
-                && ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j+1, k ) ) ) ) ){
+        if(((is_land(h, i, j, k)) 
+                && ((is_air(h, i, j+1, k)) && (is_land(h, i, j+2, k)))) 
+                || ((j == jm - 2)
+                && ((is_air(h, i, j, k)) && (is_land(h, i, j+1, k))))){
             for(int n=0; n<last_array_index_1; n++)
                 dxdthe_vals[n] = dxdthe_d(arrays_1[n]);
             for(int n=0; n<last_array_index_2; n++)
                 d2xdthe2_vals[n] = 0.;
             the_flag = true;
         }
-
-        // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral northward direction
-        if ( ( ( is_land ( h, i, j, k ) ) 
-                && ( ( is_air ( h, i, j-1, k ) ) && ( is_land ( h, i, j-2, k ) ) ) ) 
-                || ( ( j == 1 )
-                && ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j-1, k ) ) ) ) ){
+        if(((is_land(h, i, j, k)) 
+                && ((is_air(h, i, j-1, k)) && (is_land(h, i, j-2, k)))) 
+                || ((j == 1) && ((is_land(h, i, j, k)) 
+                && (is_air(h, i, j-1, k))))){
             for(int n=0; n<last_array_index_1; n++)
                 dxdthe_vals[n] = dxdthe_e(arrays_1[n]);
             for(int n=0; n<last_array_index_2; n++)
@@ -215,44 +177,36 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k)
             the_flag = true;
         }
     }
-
-
-    if ( ( k >= 2 ) && ( k < km - 3 ) ){
-        // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in longitudial eastward direction
-        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k+1 ) ) && ( is_air ( h, i, j, k+2 ) ) ){
+    if((k >= 2) && (k < km - 3)){
+        if((is_land(h, i, j, k)) && (is_air(h, i, j, k+1)) 
+            && (is_air(h, i, j, k+2))){
             for(int n=0; n<last_array_index_1; n++)
                 dxdphi_vals[n] = dxdphi_b(arrays_1[n]);
             for(int n=0; n<last_array_index_2; n++)
                 d2xdphi2_vals[n] = d2xdphi2_b(arrays_2[n]);
             phi_flag = true;
         }
-        
-        // 2. order accurate finite differences 1. and 2. order starting from solid surfaces in longitudial westward direction
-        if ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k-1 ) ) && ( is_air ( h, i, j, k-2 ) ) ){
+        if((is_land(h, i, j, k)) && (is_air(h, i, j, k-1)) 
+            && (is_air(h, i, j, k-2))){
             for(int n=0; n<last_array_index_1; n++)
                 dxdphi_vals[n] = dxdphi_c(arrays_1[n]);
             for(int n=0; n<last_array_index_2; n++)
                 d2xdphi2_vals[n] = d2xdphi2_c(arrays_2[n]);
             phi_flag = true;
         }
-
-        // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral eastward direction
-        if ( ( ( is_land ( h, i, j, k ) ) 
-                && ( ( is_air ( h, i, j, k+1 ) ) && ( is_land ( h, i, j, k+2 ) ) ) ) 
-                || ( ( k == km - 2 )
-                && ( ( is_air ( h, i, j, k ) ) && ( is_land ( h, i, j, k+1 ) ) ) ) ){
+        if(((is_land(h, i, j, k)) && ((is_air(h, i, j, k+1)) 
+            && (is_land(h, i, j, k+2)))) || ((k == km - 2)
+            && ((is_air(h, i, j, k)) && (is_land(h, i, j, k+1))))){
             for(int n=0; n<last_array_index_1; n++)
                 dxdphi_vals[n] = dxdphi_d(arrays_1[n]);
             for(int n=0; n<last_array_index_2; n++)
                 d2xdphi2_vals[n] = 0.;
             phi_flag = true;
         }
-
-        // 1. order accurate finite differences 1. and 2. order starting from solid surfaces in lateral westward direction
-        if ( ( ( is_land ( h, i, j, k ) ) 
-                && ( ( is_air ( h, i, j, k-1 ) ) && ( is_land ( h, i, j, k-2 ) ) ) ) 
-                || ( ( k == 1 )
-                && ( ( is_land ( h, i, j, k ) ) && ( is_air ( h, i, j, k-1 ) ) ) ) ){
+        if(((is_land(h, i, j, k)) 
+                && ((is_air(h, i, j, k-1)) && (is_land(h, i, j, k-2)))) 
+                || ((k == 1) && ((is_land(h, i, j, k)) 
+                && (is_air(h, i, j, k-1))))){
             for(int n=0; n<last_array_index_1; n++)
                 dxdphi_vals[n] = dxdphi_e(arrays_1[n]);
             for(int n=0; n<last_array_index_2; n++)
@@ -260,45 +214,34 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k)
             phi_flag = true;
         }
     }
-
-    // finite differences 1. and 2. order in the free flow field with no contact to solid surfaces
     for(int n=0; n<last_array_index_1; n++){
-        // 1. order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
         if(!r_flag) dxdr_vals[n] = dxdr_a(arrays_1[n]);
         if(!the_flag) dxdthe_vals[n] = dxdthe_a(arrays_1[n]);
         if(!phi_flag) dxdphi_vals[n] = dxdphi_a(arrays_1[n]);
     }
     for(int n=0; n<last_array_index_2; n++){
-        // 2. order derivative for temperature, pressure, water vapour and co2 concentrations and velocity components
         if(!r_flag) d2xdr2_vals[n] = d2xdr2_a(arrays_2[n]);
         if(!the_flag) d2xdthe2_vals[n] = d2xdthe2_a(arrays_2[n]);
         if(!phi_flag) d2xdphi2_vals[n] = d2xdphi2_a(arrays_2[n]);
     }
-
     double dudr = dxdr_vals[i_u_1], dvdr = dxdr_vals[i_v_1], dwdr = dxdr_vals[i_w_1], dtdr = dxdr_vals[i_t_1],
            dpdr = dxdr_vals[i_p_1], dcdr = dxdr_vals[i_c_1], dclouddr = dxdr_vals[i_cloud_1], dicedr = dxdr_vals[i_ice_1],
            dcodr = dxdr_vals[i_co_1];
-    
     double dudthe = dxdthe_vals[i_u_1], dvdthe = dxdthe_vals[i_v_1], dwdthe = dxdthe_vals[i_w_1], dtdthe = dxdthe_vals[i_t_1],
            dpdthe = dxdthe_vals[i_p_1], dcdthe = dxdthe_vals[i_c_1], dclouddthe = dxdthe_vals[i_cloud_1], dicedthe = dxdthe_vals[i_ice_1],
            dcodthe = dxdthe_vals[i_co_1];
-    
     double dudphi = dxdphi_vals[i_u_1], dvdphi = dxdphi_vals[i_v_1], dwdphi = dxdphi_vals[i_w_1], dtdphi = dxdphi_vals[i_t_1],
            dpdphi = dxdphi_vals[i_p_1], dcdphi = dxdphi_vals[i_c_1], dclouddphi = dxdphi_vals[i_cloud_1], dicedphi = dxdphi_vals[i_ice_1],
            dcodphi = dxdphi_vals[i_co_1];
-
     double d2udr2 = d2xdr2_vals[i_u_2], d2vdr2 = d2xdr2_vals[i_v_2], d2wdr2 = d2xdr2_vals[i_w_2], d2tdr2 = d2xdr2_vals[i_t_2],
            d2cdr2 = d2xdr2_vals[i_c_2], d2clouddr2 = d2xdr2_vals[i_cloud_2], d2icedr2 = d2xdr2_vals[i_ice_2],
            d2codr2 = d2xdr2_vals[i_co_2];
-
     double d2udthe2 = d2xdthe2_vals[i_u_2], d2vdthe2 = d2xdthe2_vals[i_v_2], d2wdthe2 = d2xdthe2_vals[i_w_2], d2tdthe2 = d2xdthe2_vals[i_t_2],
            d2cdthe2 = d2xdthe2_vals[i_c_2], d2clouddthe2 = d2xdthe2_vals[i_cloud_2], d2icedthe2 = d2xdthe2_vals[i_ice_2],
            d2codthe2 = d2xdthe2_vals[i_co_2];
-
     double d2udphi2 = d2xdphi2_vals[i_u_2], d2vdphi2 = d2xdphi2_vals[i_v_2], d2wdphi2 = d2xdphi2_vals[i_w_2], d2tdphi2 = d2xdphi2_vals[i_t_2],
            d2cdphi2 = d2xdphi2_vals[i_c_2], d2clouddphi2 = d2xdphi2_vals[i_cloud_2], d2icedphi2 = d2xdphi2_vals[i_ice_2],
            d2codphi2 = d2xdphi2_vals[i_co_2];
-
     double exp_pressure = g / ( 1.e-2 * gam * R_Air );
     double t_u = t.x[ i ][ j ][ k ] * t_0;  // in K
     double p_SL =  .01 * ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 );     // given in hPa
@@ -312,7 +255,7 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k)
     double RS_buoyancy_Momentum = coeff_buoy * Buoyancy * ( r_humid - r_dry ) / r_dry * g; // any humid air is less dense than dry air
 //    double RS_buoyancy_Momentum = 0.;  // test case
     BuoyancyForce.x[ i ][ j ][ k ] = - RS_buoyancy_Momentum / coeff_buoy;// dimension as pressure in kN/m2
-    if(is_land ( h, i, j, k)){
+    if(is_land(h, i, j, k)){
         BuoyancyForce.x[ i ][ j ][ k ] = 0.;
     }
     rhs_t.x[ i ][ j ][ k ] = - ( u.x[ i ][ j ][ k ] * dtdr + v.x[ i ][ j ][ k ] * dtdthe / rm
@@ -384,8 +327,8 @@ void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
     double dist = 0, h_0_j = 0, h_d_j = 0;
-    if( ( ( is_air( h, 0, j, k) ) && ( is_land(h, 0, j+1, k) ) ) || 
-          ( ( is_air(h, 0, j, k) ) && ( is_land(h, 0, j-1, k) ) ) ){
+    if(((is_air(h, 0, j, k)) && (is_land(h, 0, j+1, k))) || 
+          ((is_air(h, 0, j, k)) && (is_land(h, 0, j-1, k)))){
         dist = dist_coeff * dthe;
         h_0_j = dist / dthe;
         h_d_j = cc * ( 1. - h_0_j ); 
@@ -394,8 +337,8 @@ void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
         h_d_j = cc * ( 1. - h_0_j ); 
     }
     double h_0_k = 0, h_d_k = 0;
-    if( ( ( is_air(h, 0, j, k) ) && ( is_land(h, 0, j, k+1) ) ) || 
-          ( ( is_air(h, 0, j, k) ) && ( is_land(h, 0, j, k-1) ) ) ){
+    if(((is_air(h, 0, j, k)) && (is_land(h, 0, j, k+1))) || 
+          ((is_air(h, 0, j, k)) && (is_land(h, 0, j, k-1)))){
         dist = dist_coeff * dphi;
         h_0_k = dist / dphi;
         h_d_k = cc * ( 1. - h_0_k ); 
@@ -403,87 +346,108 @@ void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
         h_0_k = 0.; 
         h_d_k = cc * ( 1. - h_0_k ); 
     }
-    double dvdthe = h_d_j * ( v.x[ 0 ][ j+1 ][ k ] - v.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dwdthe = h_d_j * ( w.x[ 0 ][ j+1 ][ k ] - w.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j+1 ][ k ] - p_dyn.x[ 0 ][ j-1 ][ k ] ) / ( 2. * dthe );
-    double dvdphi = h_d_k * ( v.x[ 0 ][ j ][ k+1 ] - v.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dwdphi = h_d_k * ( w.x[ 0 ][ j ][ k+1 ] - w.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double dpdphi = h_d_k * ( p_dyn.x[ 0 ][ j ][ k+1 ] - p_dyn.x[ 0 ][ j ][ k-1 ] ) / ( 2. * dphi );
-    double d2vdthe2 = h_d_j *  ( v.x[ 0 ][ j+1 ][ k ] - 2. * v.x[ 0 ][ j ][ k ] + v.x[ 0 ][ j-1 ][ k ] ) / dthe2;
-    double d2wdthe2 = h_d_j * ( w.x[ 0 ][ j+1 ][ k ] - 2. * w.x[ 0 ][ j ][ k ] + w.x[ 0 ][ j-1 ][ k ] ) / dthe2;
-    double d2vdphi2 = h_d_k * ( v.x[ 0 ][ j ][ k+1 ] - 2. * v.x[ 0 ][ j ][ k ] + v.x[ 0 ][ j ][ k-1 ] ) / dphi2;
-    double d2wdphi2 = h_d_k * ( w.x[ 0 ][ j ][ k+1 ] - 2. * w.x[ 0 ][ j ][ k ] + w.x[ 0 ][ j ][ k-1 ] ) / dphi2;
+    double dvdthe = h_d_j * ( v.x[ 0 ][ j+1 ][ k ] - v.x[ 0 ][ j-1 ][ k ] ) 
+        / ( 2. * dthe );
+    double dwdthe = h_d_j * ( w.x[ 0 ][ j+1 ][ k ] - w.x[ 0 ][ j-1 ][ k ] ) 
+        / ( 2. * dthe );
+    double dpdthe = h_d_j * ( p_dyn.x[ 0 ][ j+1 ][ k ] - p_dyn.x[ 0 ][ j-1 ][ k ] ) 
+        / ( 2. * dthe );
+    double dvdphi = h_d_k * ( v.x[ 0 ][ j ][ k+1 ] - v.x[ 0 ][ j ][ k-1 ] ) 
+        / ( 2. * dphi );
+    double dwdphi = h_d_k * ( w.x[ 0 ][ j ][ k+1 ] - w.x[ 0 ][ j ][ k-1 ] ) 
+        / ( 2. * dphi );
+    double dpdphi = h_d_k * ( p_dyn.x[ 0 ][ j ][ k+1 ] - p_dyn.x[ 0 ][ j ][ k-1 ] ) 
+        / ( 2. * dphi );
+    double d2vdthe2 = h_d_j *  ( v.x[ 0 ][ j+1 ][ k ] - 2. * v.x[ 0 ][ j ][ k ] 
+        + v.x[ 0 ][ j-1 ][ k ] ) / dthe2;
+    double d2wdthe2 = h_d_j * ( w.x[ 0 ][ j+1 ][ k ] - 2. * w.x[ 0 ][ j ][ k ] 
+        + w.x[ 0 ][ j-1 ][ k ] ) / dthe2;
+    double d2vdphi2 = h_d_k * ( v.x[ 0 ][ j ][ k+1 ] - 2. * v.x[ 0 ][ j ][ k ] 
+        + v.x[ 0 ][ j ][ k-1 ] ) / dphi2;
+    double d2wdphi2 = h_d_k * ( w.x[ 0 ][ j ][ k+1 ] - 2. * w.x[ 0 ][ j ][ k ] 
+        + w.x[ 0 ][ j ][ k-1 ] ) / dphi2;
     if( ( j >= 2 ) && ( j < jm - 3 ) ){
-        if( ( is_land(h, 0, j, k) ) && ( ( is_air(h, 0, j+1, k  ) && ( is_air(h, 0, j+2, k) ) ) ){
-            dvdthe = h_d_j * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j + 1 ][ k ] - v.x[ 0 ][ j + 2 ][ k ] ) 
-                        / ( 2. * dthe );
-            dwdthe = h_d_j * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j + 1 ][ k ] - w.x[ 0 ][ j + 2 ][ k ] ) 
-                        / ( 2. * dthe );
-            dpdthe = h_d_j * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] + 4. * p_dyn.x[ 0 ][ j + 1 ][ k ] - 
-                        p_dyn.x[ 0 ][ j + 2 ][ k ] ) / ( 2. * dthe );
-            d2vdthe2 = h_d_j * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j + 1 ][ k ] + v.x[ 0 ][ j + 2 ][ k ] ) / dthe2;
-            d2wdthe2 = h_d_j * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j + 1 ][ k ] + w.x[ 0 ][ j + 2 ][ k ] ) / dthe2;
+        if((is_land(h, 0, j, k)) && ((is_air(h, 0, j+1, k)) 
+            && (is_air(h, 0, j+2, k)))){
+            dvdthe = h_d_j * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j + 1 ][ k ] 
+                - v.x[ 0 ][ j + 2 ][ k ] ) / ( 2. * dthe );
+            dwdthe = h_d_j * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j + 1 ][ k ] 
+                - w.x[ 0 ][ j + 2 ][ k ] ) / ( 2. * dthe );
+            dpdthe = h_d_j * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] 
+                + 4. * p_dyn.x[ 0 ][ j + 1 ][ k ] - p_dyn.x[ 0 ][ j + 2 ][ k ] ) 
+                / ( 2. * dthe );
+            d2vdthe2 = h_d_j * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j + 1 ][ k ] 
+                + v.x[ 0 ][ j + 2 ][ k ] ) / dthe2;
+            d2wdthe2 = h_d_j * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j + 1 ][ k ] 
+                + w.x[ 0 ][ j + 2 ][ k ] ) / dthe2;
         }
-        if( ( is_land(h, 0, j, k) ) && ( is_air(h, 0, j-1, k) ) && ( is_air(h, 0, j-2, k) ) ){
-            dvdthe = h_d_j * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j - 1 ][ k ] - v.x[ 0 ][ j - 2 ][ k ] ) 
-                        / ( 2. * dthe );
-            dwdthe = h_d_j * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j - 1 ][ k ] - w.x[ 0 ][ j - 2 ][ k ] ) 
-                        / ( 2. * dthe );
-            dpdthe = h_d_j * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] + 4. * p_dyn.x[ 0 ][ j - 1 ][ k ] - 
-                        p_dyn.x[ 0 ][ j - 2 ][ k ] ) / ( 2. * dthe );
-            d2vdthe2 = h_d_j * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j - 1 ][ k ] + v.x[ 0 ][ j - 2 ][ k ] ) / dthe2;
-            d2wdthe2 = h_d_j * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j - 1 ][ k ] + w.x[ 0 ][ j - 2 ][ k ] ) / dthe2;
+        if((is_land(h, 0, j, k)) && (is_air(h, 0, j-1, k)) && (is_air(h, 0, j-2, k))){
+            dvdthe = h_d_j * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j - 1 ][ k ] 
+                - v.x[ 0 ][ j - 2 ][ k ] ) / ( 2. * dthe );
+            dwdthe = h_d_j * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j - 1 ][ k ] 
+                 - w.x[ 0 ][ j - 2 ][ k ] ) / ( 2. * dthe );
+            dpdthe = h_d_j * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] 
+                + 4. * p_dyn.x[ 0 ][ j - 1 ][ k ] - p_dyn.x[ 0 ][ j - 2 ][ k ] ) 
+                    / ( 2. * dthe );
+            d2vdthe2 = h_d_j * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j - 1 ][ k ] 
+                + v.x[ 0 ][ j - 2 ][ k ] ) / dthe2;
+            d2wdthe2 = h_d_j * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j - 1 ][ k ] 
+                + w.x[ 0 ][ j - 2 ][ k ] ) / dthe2;
         }
-        if( ( ( is_land(h, 0, j, k) ) 
-            && ( ( is_air(h, 0, j+1, k) ) && ( is_land(h, 0, j+2, k) ) ) ) 
-            || ( ( j == jm - 2 )
-            && ( ( is_air(h, 0, j, k) ) && ( is_land(h, 0, j+1, k) ) ) ) ){
+        if(((is_land(h, 0, j, k)) 
+            && ((is_air(h, 0, j+1, k)) && (is_land(h, 0, j+2, k)))) 
+            || ((j == jm - 2)
+            && ((is_air(h, 0, j, k)) && (is_land(h, 0, j+1, k))))){
             dvdthe = h_d_j * ( v.x[ 0 ][ j + 1 ][ k ] - v.x[ 0 ][ j ][ k ] ) / dthe;
             dwdthe = h_d_j * ( w.x[ 0 ][ j + 1 ][ k ] - w.x[ 0 ][ j ][ k ] ) / dthe;
             d2vdthe2 = d2wdthe2 = 0.;
         }
-        if( ( ( is_land( h, 0, j, k) ) 
-            && ( ( is_air(h, 0, j-1, k) ) && ( is_land(h, 0, j-2, k ) ) ) ) 
-            || ( ( j == 1 )
-            && ( ( is_land(h, 0, j, k) ) && ( is_air(h, 0, j-1, k) ) ) ) ){
+        if(((is_land( h, 0, j, k)) 
+            && ((is_air(h, 0, j-1, k)) && (is_land(h, 0, j-2, k)))) 
+            || ((j == 1) && ((is_land(h, 0, j, k)) && (is_air(h, 0, j-1, k))))){
             dvdthe = h_d_j * ( v.x[ 0 ][ j - 1 ][ k ] - v.x[ 0 ][ j ][ k ] ) / dthe;
             dwdthe = h_d_j * ( w.x[ 0 ][ j - 1 ][ k ] - w.x[ 0 ][ j ][ k ] ) / dthe;
             d2vdthe2 = d2wdthe2 = 0.;
         }
     }
-    if( ( k >= 2 ) && ( k < km - 3 ) ){
-            if( ( is_land(h, 0, j, k) ) && ( is_air(h, 0, j, k+1) ) && ( is_air(h, 0, j, k+2) ) ){
-            dvdphi = h_d_k * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j ][ k + 1 ] - v.x[ 0 ][ j ][ k + 2 ] ) 
-                        / ( 2. * dphi );
-            dwdphi = h_d_k * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j ][ k + 1 ] - w.x[ 0 ][ j ][ k + 2 ] ) 
-                        / ( 2. * dphi );
-            dpdphi = h_d_k * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] + 4. * p_dyn.x[ 0 ][ j ][ k + 1 ] 
-                        - p_dyn.x[ 0 ][ j ][ k + 2 ] ) / ( 2. * dphi );
-            d2vdthe2 = h_d_k * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j ][ k + 1 ] + v.x[ 0 ][ j ][ k + 2 ] ) / dphi2;
-            d2wdthe2 = h_d_k * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j ][ k + 1 ] + w.x[ 0 ][ j ][ k + 2 ] ) / dphi2;
+    if((k >= 2) && (k < km - 3)){
+            if((is_land(h, 0, j, k)) && (is_air(h, 0, j, k+1)) 
+            && (is_air(h, 0, j, k+2))){
+            dvdphi = h_d_k * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j ][ k + 1 ] 
+                - v.x[ 0 ][ j ][ k + 2 ] ) / ( 2. * dphi );
+            dwdphi = h_d_k * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j ][ k + 1 ] 
+                - w.x[ 0 ][ j ][ k + 2 ] ) / ( 2. * dphi );
+            dpdphi = h_d_k * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] 
+                + 4. * p_dyn.x[ 0 ][ j ][ k + 1 ] - p_dyn.x[ 0 ][ j ][ k + 2 ] ) 
+                / ( 2. * dphi );
+            d2vdthe2 = h_d_k * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j ][ k + 1 ] 
+                + v.x[ 0 ][ j ][ k + 2 ] ) / dphi2;
+            d2wdthe2 = h_d_k * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j ][ k + 1 ] 
+                + w.x[ 0 ][ j ][ k + 2 ] ) / dphi2;
         }
-        if( ( is_land(h, 0, j, k) ) && ( is_air(h, 0, j, k-1) ) && ( is_air(h, 0, j, k-2) ) ){
-            dvdphi = h_d_k * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j ][ k - 1 ] - v.x[ 0 ][ j ][ k - 2 ] ) 
-                        / ( 2. * dphi );
-            dwdphi = h_d_k * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j ][ k - 1 ] - w.x[ 0 ][ j ][ k - 2 ] ) 
-                        / ( 2. * dphi );
-            dpdphi = h_d_k * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] + 4. * p_dyn.x[ 0 ][ j ][ k - 1 ] 
-                        - p_dyn.x[ 0 ][ j ][ k - 2 ] ) / ( 2. * dphi );
-            d2vdthe2 = h_d_k * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j ][ k - 1 ] + v.x[ 0 ][ j ][ k - 2 ] ) / dphi2;
-            d2wdthe2 = h_d_k * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j ][ k - 1 ] + w.x[ 0 ][ j ][ k - 2 ] ) / dphi2;
+        if((is_land(h, 0, j, k)) && (is_air(h, 0, j, k-1)) && (is_air(h, 0, j, k-2))){
+            dvdphi = h_d_k * ( - 3. * v.x[ 0 ][ j ][ k ] + 4. * v.x[ 0 ][ j ][ k - 1 ] 
+                - v.x[ 0 ][ j ][ k - 2 ] ) / ( 2. * dphi );
+            dwdphi = h_d_k * ( - 3. * w.x[ 0 ][ j ][ k ] + 4. * w.x[ 0 ][ j ][ k - 1 ] 
+                - w.x[ 0 ][ j ][ k - 2 ] ) / ( 2. * dphi );
+            dpdphi = h_d_k * ( - 3. * p_dyn.x[ 0 ][ j ][ k ] 
+                + 4. * p_dyn.x[ 0 ][ j ][ k - 1 ] - p_dyn.x[ 0 ][ j ][ k - 2 ] ) 
+                / ( 2. * dphi );
+            d2vdthe2 = h_d_k * ( 2. * v.x[ 0 ][ j ][ k ] - 2. * v.x[ 0 ][ j ][ k - 1 ] 
+                + v.x[ 0 ][ j ][ k - 2 ] ) / dphi2;
+            d2wdthe2 = h_d_k * ( 2. * w.x[ 0 ][ j ][ k ] - 2. * w.x[ 0 ][ j ][ k - 1 ] 
+                + w.x[ 0 ][ j ][ k - 2 ] ) / dphi2;
         }
-        if( ( ( is_land(h, 0, j, k) ) 
-            && ( ( is_air(h, 0, j, k+1) ) && ( is_land(h, 0, j, k+2) ) ) ) 
-            || ( ( k == km - 2 )
-            && ( ( is_air(h, 0, j, k) ) && ( is_land(h, 0, j, k+1) ) ) ) ){
+        if(((is_land(h, 0, j, k))
+            && ((is_air(h, 0, j, k+1)) && (is_land(h, 0, j, k+2)))) || ((k == km - 2)
+            && ((is_air(h, 0, j, k)) && (is_land(h, 0, j, k+1))))){
             dvdphi = h_d_k * ( v.x[ 0 ][ j ][ k + 1 ] - v.x[ 0 ][ j ][ k ] ) / dphi;
             dwdphi = h_d_k * ( w.x[ 0 ][ j ][ k + 1 ] - w.x[ 0 ][ j ][ k ] ) / dphi;
             d2vdphi2 = d2wdphi2 = 0.;    
         }
-        if( ( ( is_land(h, 0, j, k) ) 
-            && ( ( is_air(h, 0, j, k-1) ) && ( is_land(h, 0, j, k-2) ) ) ) 
-            || ( ( k == 1 )
-            && ( ( is_land(h, 0, j, k) ) && ( is_air(h, 0, j, k-1) ) ) ) ){
+        if(((is_land(h, 0, j, k)) 
+            && ((is_air(h, 0, j, k-1)) && (is_land(h, 0, j, k-2)))) || ((k == 1)
+            && ((is_land(h, 0, j, k)) && (is_air(h, 0, j, k-1))))){
             dvdphi = h_d_k * ( v.x[ 0 ][ j ][ k - 1 ] - v.x[ 0 ][ j ][ k ] ) / dphi;
             dwdphi = h_d_k * ( w.x[ 0 ][ j ][ k - 1 ] - w.x[ 0 ][ j ][ k ] ) / dphi;
             d2vdphi2 = d2wdphi2 = 0.;

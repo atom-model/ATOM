@@ -25,11 +25,9 @@ void cAtmosphereModel::run_MSL_data(){
             if(RadiationModel >= 1) 
                 Q_radiation.y[ j ][ k ] = radiation_3D.x[ 0 ][ j ][ k ];
             precipitable_water.y[ j ][ k ] = 0.;
-            Evaporation_Penman.y[ j ][ k ] = 0.;
             Evaporation_Dalton.y[ j ][ k ] = 0.;
         }
     }
-    float f_Penman = 20.; // serves as adjustment factor
     float c43 = 4./3.;
     float c13 = 1./3.;
     for(int k = 0; k < km; k++){
@@ -40,13 +38,7 @@ void cAtmosphereModel::run_MSL_data(){
             float t_denom = t_Celsius + 234.175;
             float E = hp * exp ( 17.0809 * t_Celsius / t_denom );
                 // saturation vapour pressure in the water phase for t > 0°C in hPa
-            float Delta = 4000. * E / ( t_denom * t_denom );
-                // gradient of the water vapour pressure curve in hPa/K, coef = 234.175 * 17.0809
             float sat_deficit = ( E - e );  // saturation deficit in hPa
-            float gamma = p_stat.x[ i ][ j ][ k ] * cp_l / ( ep * lv );  // Psychrometer constant in hPa/K
-            float E_a = .35 * ( 1. + .15 * sqrt ( ( v.x[ i ][ j ][ k ] 
-                * v.x[ i ][ j ][ k ] + w.x[ i ][ j ][ k ] 
-                * w.x[ i ][ j ][ k ] ) / 2. ) * u_0 * 3.6 ) * sat_deficit;
             if(is_land( h, i, j, k)){ //ocean surface
                 if(t_Celsius >= - 2.)  Q_Evaporation.y[ j ][ k ] = 
                     ( 2500.8 - 2.372 * ( t.x[ i ][ j ][ k ] * t_0 - t_0 ) );
@@ -63,19 +55,20 @@ void cAtmosphereModel::run_MSL_data(){
             if(t_Celsius >= 0.){
                 Evaporation_Dalton.y[ j ][ k ] = C_Dalton(u_0, v.x[ i ][ j ][ k ],
                     w.x[ i ][ j ][ k ]) * sat_deficit * 24.;
-                if(is_land( h, i, j, k))  Evaporation_Dalton.y[ j ][ k ] = 
-                    C_Dalton(u_0, v.x[ i+1 ][ j ][ k ], w.x[ i+1 ][ j ][ k ]) 
-                    * sat_deficit * 24.;
+                if(is_land( h, i, j, k)){
+                    t_Celsius = t.x[ i+1 ][ j ][ k ] * t_0 - t_0;
+                    e = c.x[ i+1 ][ j ][ k ] * p_stat.x[ i+1 ][ j ][ k ] / ep;  // water vapour pressure in hPa
+                    t_denom = t_Celsius + 234.175;
+                    E = hp * exp ( 17.0809 * t_Celsius / t_denom );
+                    sat_deficit = ( E - e );  // saturation deficit in hPa
+                    Evaporation_Dalton.y[ j ][ k ] = 
+                        C_Dalton(u_0, v.x[ i+1 ][ j ][ k ], w.x[ i+1 ][ j ][ k ]) 
+                        * sat_deficit * 24.;
+                }
                 // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
                 if(Evaporation_Dalton.y[ j ][ k ] <= 0.)  
                     Evaporation_Dalton.y[ j ][ k ] = 0.;
             }else  Evaporation_Dalton.y[ j ][ k ] = 0.;
-            Evaporation_Penman.y[ j ][ k ] = f_Penman * .0346 * 
-                ( ( Q_radiation.y[ j ][ k ] - radiation_3D.x[ 1 ][ j ][ k ] ) * Delta 
-                + gamma * E_a ) / ( Delta + gamma );
-                // .0346 coefficient W/m2 corresponds to mm/d (Kraus)
-            if(Evaporation_Penman.y[ j ][ k ] <= 0.)  
-                Evaporation_Penman.y[ j ][ k ] = 0.;
         }
     }
     for(int k = 1; k < km-1; k++){
