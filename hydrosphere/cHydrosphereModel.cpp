@@ -192,9 +192,19 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
         // ******   iteration of initial conditions on the surface for the correction of flows close to coasts   ************
         // ******   start of pressure and velocity iterations for the 2D iterational process   *********************************
         //:::::::::::::   begin of pressure loop_2D : if ( pressure_iter_2D > pressure_iter_max_2D)   ::::::::::::::::
-        for(int pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++)        {
+        for(int pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++){
             // :::::  begin of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::
-            for(int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++){
+            for( int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++){
+                cout << endl << endl;
+                cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
+                cout << " 2D OGCM iterational process" << endl;
+                cout << " max total iteration number nm = " << nm << endl << endl;
+
+                cout << " present state of the 2D computation " << endl << "  current time slice, number of iterations, \
+                    maximum and current number of velocity iterations, maximum and current number of pressure iterations " 
+                    << endl << endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max_2D = " << 
+                    velocity_iter_max_2D << "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " 
+                    << pressure_iter_max_2D << "    pressure_iter_2D = " << pressure_iter_2D << endl;
                 boundary.RB_theta ( t, u, v, w, p_dyn, c );
                 boundary.RB_phi ( t, u, v, w, p_dyn, c );
                 oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );

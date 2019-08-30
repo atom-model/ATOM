@@ -171,14 +171,14 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     read_IC(velocity_v_file, v.x[0], jm, km);
     read_IC(velocity_w_file, w.x[0], jm, km);    
     read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
-//    read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
+
+    read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
     iter_cnt_3d = -1;
     if(debug) save_data();
     iter_cnt_3d++;
     init_velocities();
     adjust_temperature_IC(t.x[0], jm, km);
     init_temperature();
-//goto Printout;
     init_water_vapour();
     store_intermediate_data_3D();
     BC_Pressure();

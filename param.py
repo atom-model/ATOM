@@ -55,14 +55,14 @@ def main():
             ( 'tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 24 steps = 9600 m', 'int', 24 ),
             ( 'tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 37 ),
 
-            ( 'rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 240. ),
-            ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 40. ),
+            ( 'rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 230. ),
+#            ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 40. ),
+            ( 'rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 60. ),
 
             ( 'sigma', 'Stefan-Boltzmann constant W/( m²*K4 )', 'double', 5.670280e-8 ),
 
             ( 'albedo_pole', 'albedo around the poles', 'double', 0.8 ),
             ( 'albedo_equator', 'albedo around the equator', 'double', 0.4 ),
-
             ( 'epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / ( by Häckel )', 'double', 0.46 ),
             ( 'epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.47 ),
             ( 'epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001 ),

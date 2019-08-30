@@ -426,7 +426,6 @@ void cAtmosphereModel::paraview_vtk_longal(string &Name_Bathymetry_File,
                 * t_0 - t_0 << endl;
         }
     }
-
     for(int i = 0; i < im; i++){
         for(int k = 0; k < km; k++){
             aux_w.x[ i ][ j_longal ][ k ] = c.x[ i ][ j_longal ][ k ] 
@@ -452,7 +451,7 @@ void cAtmosphereModel::paraview_vtk_longal(string &Name_Bathymetry_File,
     dump_longal("height", aux_v, .001, j_longal, Atmosphere_vtk_longal_File);
     Atmosphere_vtk_longal_File <<  "VECTORS u-w-Cell float" << endl;
     for(int i = 0; i < im; i++){
-        for ( int k = 0; k < km; k++ ){
+        for(int k = 0; k < km; k++){
             Atmosphere_vtk_longal_File << u.x[ i ][ j_longal ][ k ] 
                 << " " << y << " " << w.x[ i ][ j_longal ][ k ] << endl;
         }

@@ -806,7 +806,6 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
             P_snow.x[ im-1 ][ j ][ k ] = 0.;
             S_r.x[ im-1 ][ j ][ k ] = 0.;
             S_s.x[ im-1 ][ j ][ k ] = 0.;
-
             for(int i = im-2; i >= 0; i--){
                 float t_u = t.x[ i ][ j ][ k ] * t_0;
                 if( ( is_land ( h, i, j, k ) ) && ( is_land ( h, i+1, j, k ) ) ){
