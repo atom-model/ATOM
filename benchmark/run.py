@@ -21,8 +21,8 @@ def main(maps_only=False):
     atm_model = Atmosphere()
     hyd_model = Hydrosphere()
 
-    atm_model.load_config( './config_atm.xml' )
-    hyd_model.load_config( './config_hyd.xml' )
+    atm_model.load_config('./config_atm.xml')
+    hyd_model.load_config('./config_hyd.xml')
 
     start_time = atm_model.time_start
     end_time = atm_model.time_end
@@ -73,7 +73,7 @@ def main(maps_only=False):
             os.mkdir(atm_map_output_dir+'/precipitation_evaporation_ratio/')
 
         for time in times:
-            draw_precipitation_map(time, './output/', output_dir=atm_map_output_dir+'/precipitation/', topo_suffix=topo_suffix)
+            draw_precipitation_map(time, './output/', output_dir=atm_map_output_dir +'/precipitation/', topo_suffix=topo_suffix)
             draw_precipitation_evaporation_ratio_map(time, './output/', 
                 output_dir=atm_map_output_dir+'/precipitation_evaporation_ratio/', topo_suffix=topo_suffix)
 
