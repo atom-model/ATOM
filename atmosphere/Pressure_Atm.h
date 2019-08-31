@@ -22,24 +22,20 @@ class cAtmosphereModel;
 
 using namespace std;
 
-class Pressure_Atm
-{
+class Pressure_Atm{
     private:
         cAtmosphereModel* m_model;
-
         int im, jm, km;
-
         double dr, dthe, dphi, c43, c13, zeta;
-
     public:
-        Pressure_Atm ( cAtmosphereModel* model, int, int, int, double, double, double );
+        Pressure_Atm(cAtmosphereModel* model, int, int, int, double, double, double);
 
-        ~Pressure_Atm ();
+        ~Pressure_Atm();
 
-        void computePressure_3D ( double u_0, double r_air, Array_1D &rad, Array_1D &the,
-                 Array &p_dyn, Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w );
+        void computePressure_3D(double u_0, double r_air, Array_1D &rad, Array_1D &the,
+                 Array &p_dyn, Array &p_dynn, Array &h, Array &aux_u, Array &aux_v, Array &aux_w);
 
-        void computePressure_2D ( double u_0, double r_air, Array_1D &rad, Array_1D &the,
-                 Array &p_dyn, Array &p_dynn, Array &h, Array &aux_v, Array &aux_w );
+        void computePressure_2D(double u_0, double r_air, Array_1D &rad, Array_1D &the,
+                 Array &p_dyn, Array &p_dynn, Array &h, Array &aux_v, Array &aux_w);
 };
 #endif

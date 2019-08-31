@@ -23,13 +23,13 @@
 using namespace std;
 using namespace AtomUtils;
 
-BC_Thermohalin::BC_Thermohalin ( int im, int jm, int km, int i_beg, int i_max,
+BC_Thermohalin::BC_Thermohalin(int im, int jm, int km, int i_beg, int i_max,
                             int Ma, int Ma_max, int Ma_max_half, double dr, double g,
                             double r_0_water, double ua, double va, double wa, double ta,
                             double ca, double pa, double u_0, double p_0, double t_0,
                             double c_0, double cp_w, double L_hyd, double t_average,
                             double t_cretaceous_max, double t_equator, double t_pole,
-                            const string &input_path ){
+                            const string &input_path){
     this -> im = im;
     this -> jm = jm;
     this -> km = km;
@@ -105,7 +105,7 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
             i_Ekman_layer = 3. * 7.6 / sqrt( sinthe ) * vel_magnit;
                         // assumed depth at i_Ekman = 3 x pi / gam, velocity opposit plus pi to surface velocity
             coeff = i_Ekman_layer / L_hyd;
-            if( coeff >= 1. ) coeff = 1.;
+            if(coeff >= 1.) coeff = 1.;
             i_Ekman = ( im - 1 ) * ( 1. - coeff );
 
 //          prevention of singular values
@@ -115,7 +115,7 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
 
 //          turning the wind velocities to water velocities along the surface, local angle +/- Ekman_angle
             alfa = atan( fabs( v.x[ im-1 ][ j ][ k ] / w.x[ im-1 ][ j ][ k ] ));
-            if( j <= (jm-1)/2 ){
+            if(j <= (jm-1)/2){
                 if(( w.x[ im-1 ][ j ][ k ] >= 0. ) && ( v.x[ im-1 ][ j ][ k ] >= 0. )){
                     angle = alfa - Ekman_angle;
                 }
@@ -292,8 +292,8 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c, Array
 
 
 
-void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water,
-                     Array &r_salt_water, Array &t, Array &c, Array &h ){
+void BC_Thermohalin::BC_Pressure_Density(Array &p_stat, Array &r_water,
+                     Array &r_salt_water, Array &t, Array &c, Array &h){
 // hydrostatic pressure, equations of state for water and salt water density
 // as functions of salinity, temperature and hydrostatic pressure
     double t_Celsius_0 = 0.;
@@ -323,7 +323,6 @@ void BC_Thermohalin::BC_Pressure_Density ( Array &p_stat, Array &r_water,
                 alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[ im-1 ][ j ][ k ] * c_0 ) * t_Celsius_1;
         }
     }
-
 // hydrostatic pressure, water and salt water density in the field
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -367,8 +366,8 @@ void BC_Thermohalin::BC_Surface_Temperature_NASA
     }
     j = 0;
     k = 0;
-    while( ( k < km ) && (!Name_SurfaceTemperature_File_Read.eof()) ){
-        while( j < jm ){
+    while((k < km) && (!Name_SurfaceTemperature_File_Read.eof())){
+        while(j < jm){
             Name_SurfaceTemperature_File_Read >> dummy_1;
             Name_SurfaceTemperature_File_Read >> dummy_2;
             Name_SurfaceTemperature_File_Read >> dummy_3;
@@ -381,7 +380,7 @@ void BC_Thermohalin::BC_Surface_Temperature_NASA
     Name_SurfaceTemperature_File_Read.close();
     for(int j = 0; j < jm; j++){
         for(int k = 1; k < km-1; k++){
-            if( k == 180 ) t.x[ im-1 ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k + 1 ] 
+            if(k == 180) t.x[ im-1 ][ j ][ k ] = ( t.x[ im-1 ][ j ][ k + 1 ] 
                 + t.x[ im-1 ][ j ][ k - 1 ] ) * .5;
         }
     }
@@ -405,12 +404,12 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA(const string &Name_SurfaceSalinity
     }
     j = 0;
     k = 0;
-    while( ( k < km ) && (!Name_SurfaceSalinity_File_Read.eof()) ){
-        while( j < jm ){
+    while((k < km) && (!Name_SurfaceSalinity_File_Read.eof()) ){
+        while(j < jm){
             Name_SurfaceSalinity_File_Read >> dummy_1;
             Name_SurfaceSalinity_File_Read >> dummy_2;
             Name_SurfaceSalinity_File_Read >> dummy_3;
-            if( dummy_3 < 0. ) dummy_3 = ca;
+            if(dummy_3 < 0.) dummy_3 = ca;
             else  c.x[ im-1 ][ j ][ k ] = dummy_3 / c_0;
             j++;
         }
@@ -421,7 +420,7 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA(const string &Name_SurfaceSalinity
 }
 
 void BC_Thermohalin::IC_Equatorial_Currents 
-                     ( Array &h, Array &u, Array &v, Array &w ){
+                     (Array &h, Array &u, Array &v, Array &w){
 // currents along the equator
 // equatorial undercurrent - Cromwell flow, EUC
 // equatorial intermediate current, EIC
@@ -456,15 +455,15 @@ void BC_Thermohalin::IC_Equatorial_Currents
 // extention of land and ocean areas
     for(int k = 1; k < km-1; k++){
         if( k < km ){
-            if( (is_water(h, im-1, j_half, k)) 
+            if((is_water(h, im-1, j_half, k)) 
                 && (is_land(h, im-1, j_half, k+1)) ){
                 k_end = k;
             }
-            if( ( is_land(h, im-1, j_half, k) ) 
+            if((is_land(h, im-1, j_half, k)) 
                 && (is_water(h, im-1, j_half, k+1)) ){
                 k_beg = k;
             }
-            if ( ( (is_water(h, im-1, j_half, k)) 
+            if(((is_water(h, im-1, j_half, k)) 
                 && (is_water(h, im-1, j_half, k+1)) ) 
                 && ( k == km-2 ) ){
                 k_end = k;
@@ -562,14 +561,14 @@ void BC_Thermohalin::IC_Equatorial_Currents
 
 
 void BC_Thermohalin::IC_CircumPolar_Current 
-                     ( Array &h, Array &u, Array &v, Array &w, Array &c ){
+                     (Array &h, Array &u, Array &v, Array &w, Array &c){
 // south polar sea
 // antarctic circumpolar current ( -5000m deep ) ( from j=147 until j=152 compares to 57°S until 62°S,
 // from k=0 until k=km compares to 0° until 360° )
     for(int i = i_beg; i < im; i++){
         for(int j = 147; j < 153; j++){
             for(int k = 0; k < km; k++){
-                if( is_water(h, i, j, k) ){
+                if(is_water(h, i, j, k)){
 //                  c.x[ i ][ j ][ k ] = ca;
                     w.x[ i ][ j ][ k ] = 2. * u_0;  // 0.5 m/s
                 }
@@ -581,9 +580,9 @@ void BC_Thermohalin::IC_CircumPolar_Current
 
 
 
-void BC_Thermohalin::IC_u_WestEastCoast 
-                     ( Array_1D &rad, Array &h, Array &u, Array &v, 
-                     Array &w, Array &un, Array &vn, Array &wn ){
+void BC_Thermohalin::IC_u_WestEastCoast
+                     (Array_1D &rad, Array &h, Array &u, Array &v, 
+                     Array &w, Array &un, Array &vn, Array &wn){
 // initial conditions for v and w velocity components at the sea surface close to east or west coasts
 // reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
 // w component unchanged
@@ -604,11 +603,11 @@ void BC_Thermohalin::IC_u_WestEastCoast
     k_sequel = 1;                                                       // on solid ground
     for(int j = 0; j < 91; j++){                                        // outer loop: latitude
         for(int k = 0; k < km; k++){                                    // inner loop: longitude
-            if( is_land(h, i_half, j, k)) k_sequel = 0;                 // if solid ground: k_sequel = 0
-            if( ( is_water(h, i_half, j, k) ) && ( k_sequel == 0 )) 
+            if(is_land(h, i_half, j, k)) k_sequel = 0;                 // if solid ground: k_sequel = 0
+            if((is_water(h, i_half, j, k)) && (k_sequel == 0)) 
                 k_water = 0;    // if water and and k_sequel = 0 then is water closest to coast
             else k_water = 1;                                           // somewhere on water
-            if( ( is_water(h, i_half, j, k) ) && ( k_water == 0 )){     // if water is closest to coast, change of velocity components begins
+            if((is_water(h, i_half, j, k)) && (k_water == 0)){     // if water is closest to coast, change of velocity components begins
                 for(int l = 0; l < k_grad; l++){// extension of change, sign change in v-velocity and distribution of u-velocity with depth
                     if(k+l > km-1) break;
                     for(int i = i_beg; i < i_half; i++){                // loop in radial direction, extension for u -velocity component, downwelling here
@@ -630,11 +629,11 @@ void BC_Thermohalin::IC_u_WestEastCoast
     k_sequel = 1;
     for(int j = 91; j < jm; j++){
         for(int k = 0; k < km; k++){
-            if( is_land(h, i_half, j, k) ) k_sequel = 0;
-            if( ( is_water(h, i_half, j, k) ) && ( k_sequel == 0 ) ) 
+            if(is_land(h, i_half, j, k)) k_sequel = 0;
+            if((is_water(h, i_half, j, k)) && (k_sequel == 0)) 
                 k_water = 0;
             else k_water = 1;
-            if( ( is_water(h, i_half, j, k) ) && ( k_water == 0 ) ){
+            if((is_water(h, i_half, j, k)) && (k_water == 0)){
                 for(int l = 0; l < k_grad; l++){
                     if(k+l > km-1) break; 
                     for(int i = i_beg; i < i_half; i++){
@@ -665,7 +664,7 @@ void BC_Thermohalin::IC_u_WestEastCoast
                 flip = 0;                                               // somewhere on water: flip = 0
             }
             else k_water = 1;                                           // first time on land
-            if(( flip == 0 ) && ( k_water == 1 )){                      // on water closest to land
+            if((flip == 0) && (k_water == 1)){                      // on water closest to land
                 for(int l = k; l > ( k - k_grad + 1 ); l--){            // backward extention of velocity change: nothing changes
                     if(l < 0) break;
                     for(int i = i_beg; i < i_half; i++){                // loop in radial direction, extension for u -velocity component, downwelling here
@@ -692,7 +691,7 @@ void BC_Thermohalin::IC_u_WestEastCoast
                 flip = 0;
             }
             else k_water = 1;
-            if( ( flip == 0 ) && ( k_water == 1 ) ){
+            if((flip == 0) && (k_water == 1)){
                 for(int l = k; l > ( k - k_grad + 1 ); l--){
                     if(l < 0) break;    
                     for(int i = i_beg; i < i_half; i++){
@@ -742,13 +741,13 @@ void BC_Thermohalin::Value_Limitation_Hyd(Array &h, Array &u, Array &v,
 
 
 
-void BC_Thermohalin::Pressure_Limitation_Hyd ( Array &p_dyn, Array &p_dynn ){
+void BC_Thermohalin::Pressure_Limitation_Hyd(Array &p_dyn, Array &p_dynn){
 // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             for(int i = 0; i < im; i++){
-                if ( p_dyn.x[ i ][ j ][ k ] >= .1 )  p_dyn.x[ i ][ j ][ k ] = .1;
-                if ( p_dyn.x[ i ][ j ][ k ] <= - .1 )  p_dyn.x[ i ][ j ][ k ] = - .1;
+                if(p_dyn.x[ i ][ j ][ k ] >= .1)  p_dyn.x[ i ][ j ][ k ] = .1;
+                if(p_dyn.x[ i ][ j ][ k ] <= - .1)  p_dyn.x[ i ][ j ][ k ] = - .1;
                 p_dynn.x[ i ][ j ][ k ] = p_dyn.x[ i ][ j ][ k ];
             }
         }

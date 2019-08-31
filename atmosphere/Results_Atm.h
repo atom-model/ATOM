@@ -18,8 +18,7 @@
 
 using namespace std;
 
-class Results_MSL_Atm
-{
+class Results_MSL_Atm{
     private:
         int im, jm, km;
         int j_loc, k_loc, i_loc_level, j_loc_deg, k_loc_deg;
@@ -66,12 +65,12 @@ class Results_MSL_Atm
         string level, deg_north, deg_south, deg_west, deg_east, deg_lat, deg_lon, heading, heading_Dresden, heading_Sydney, heading_Pacific;
 
     public:
-        Results_MSL_Atm ( int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double ); 
+        Results_MSL_Atm( int, int, int, int, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double); 
 
 
-        ~Results_MSL_Atm (  );
+        ~Results_MSL_Atm();
 
-        void run_MSL_data ( int, int, int, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void run_MSL_data(int, int, int, double &, Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &, Array &, Array &, Array &, Array &, Array &);
 
         std::vector<std::vector<double> > m_node_weights;
 
@@ -80,6 +79,6 @@ class Results_MSL_Atm
 
         void CalculateNodeWeights(int jm, int km);
 
-        double C_Dalton ( double u_0, double v, double w );
+        double C_Dalton(double u_0, double v, double w);
 };
 #endif

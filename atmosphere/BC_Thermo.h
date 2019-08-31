@@ -24,13 +24,10 @@ class cAtmosphereModel;
 
 using namespace std;
 
-class BC_Thermo
-{
+class BC_Thermo{
     private:
         cAtmosphereModel* m_model;
-
         int Ma;
-
         int i, j, k, im, jm, km, ll, k_half, j_half, i_half, i_max, j_max, k_max, tropopause_equator,
             tropopause_pole, im_1, i_land, i_trop, i_mount;
         Array& h;
@@ -46,10 +43,8 @@ class BC_Thermo
         int j_r, k_r, j_sun;
         int RadiationModel, sun_position_lat, sun_position_lon, declination, NASATemperature;
         int iter_prec; 
-        
         int *im_tropopause;
         std::vector<std::vector<int> > i_topography;
-
         double zeta, trop_pole, trop_equator; 
         double d_k_half, d_k_max; 
         double ca, ua_00, ua_30, ua_60, ua_90;
@@ -75,7 +70,6 @@ class BC_Thermo
         double aa, bb, cc, dd, f;
         double epsilon_eff_2D, epsilon_eff, epsilon_pole, epsilon_equator,
             epsilon_tropopause, epsilon_eff_max;
-
         double e_h, a_h, p_h, q_h, t_tau_h, t_Celsius, dp_hdr, dp_hdthe, dp_hdphi;
         double sinthe, sinthe2, lv, ls, coeff_lv, coeff_ls, coeff_L_atm_u_0, r_0;
         double dt, dt_dim, dt_rain_dim, dt_snow_dim, dr_dim, dr, dthe, dphi, dt2, dr2, dthe2, dphi2, rm2;
@@ -91,7 +85,6 @@ class BC_Thermo
         double co2_tropopause, co2_eff, co2_coeff, co_pol, co2_vegetation,
             co2_ocean, co2_land, co2_cretaceous, co2_factor;
         double *jm_temp_asym;
-
         double S_c_c, S_au, S_nuc, S_ac, S_rim, S_shed, S_ev, S_dep, S_i_dep,
             S_melt, S_if_frz, S_cf_frz, S_r_frz, S_c_frz, S_c_au, S_i_au, S_d_au, S_agg,
             S_i_cri, S_r_cri, S_s_dep, S_i_melt, S_s_melt;
@@ -104,77 +97,50 @@ class BC_Thermo
         double N_i_0, N_i, t_nuc, t_d, t_hn, m_i_0, m_i_max, m_s_0, c_i_dep,
             c_c_au, c_i_au, c_agg, c_i_cri, c_r_cri, c_s_dep, c_s_melt;
         double coeff_Lv, coeff_Ls, coeff_Q;
-
- 
- 
         string time_slice_comment, time_slice_number, time_slice_unit;
         string temperature_comment, temperature_gain, temperature_modern,
             temperature_average, temperature_unit, temperature_cretaceous, temperature_average_cret;
         string co_comment, co_gain, co_modern, co_av, co_unit, co_cretaceous_str,
             co_average_cret, co_average_str;
-
-
     public:
-        BC_Thermo (cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land,
+        BC_Thermo(cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land,
             double co2_0, Array& h);
-
         ~BC_Thermo();
-
-        void IC_CellStructure ( Array_1D &rad, Array &, Array &, Array &, Array & );
-
-        void BC_Temperature( Array_1D &rad, Array_2D &temperature_NASA, Array &h, Array &t,
-            Array &tn, Array &p_dyn, Array &p_stat );
-
-        void TropopauseLocation ();
-
-        void BC_Radiation_2D_layer ( Array_2D &, Array_2D &, Array_2D &, Array_2D &,
+        void IC_CellStructure(Array_1D &rad, Array &, Array &, Array &, Array &);
+        void BC_Temperature(Array_1D &rad, Array_2D &temperature_NASA, Array &h, Array &t,
+            Array &tn, Array &p_dyn, Array &p_stat);
+        void TropopauseLocation();
+        void BC_Radiation_2D_layer(Array_2D &, Array_2D &, Array_2D &, Array_2D &,
             Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &,
             Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &,
-            Array &, Array &, Array &, Array & );
-
-        void BC_Radiation_multi_layer ( Array_1D &rad, Array_2D &albedo, Array_2D &epsilon,
+            Array &, Array &, Array &, Array &);
+        void BC_Radiation_multi_layer(Array_1D &rad, Array_2D &albedo, Array_2D &epsilon,
             Array_2D &radiation_surface, Array &p_stat, 
             Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D,
-                Array &cloud, Array &ice, Array &co2 );
-
-        void BC_WaterVapour ( Array_1D &rad, Array &h, Array &p_stat, Array &t, Array &c,
-                            Array &v, Array &w );
-
-        void BC_CloudWaterIce ( Array &, Array &, Array &, Array & );
-
-        void Ice_Water_Saturation_Adjustment ( Array_1D &rad, Array &h, Array &c, Array &cn,
+                Array &cloud, Array &ice, Array &co2);
+        void BC_WaterVapour(Array_1D &rad, Array &h, Array &p_stat, Array &t, Array &c,
+                            Array &v, Array &w);
+        void BC_CloudWaterIce(Array &, Array &, Array &, Array &);
+        void Ice_Water_Saturation_Adjustment(Array_1D &rad, Array &h, Array &c, Array &cn,
             Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &t,
-            Array &p_stat, Array &S_c_c );
-
-        void Two_Category_Ice_Scheme ( Array_1D &rad, Array &h, Array &c, Array &t, Array &p_stat, 
+            Array &p_stat, Array &S_c_c);
+        void Two_Category_Ice_Scheme(Array_1D &rad, Array &h, Array &c, Array &t, Array &p_stat, 
             Array &cloud, Array &ice, Array &P_rain, Array &P_snow, Array &S_v,
-            Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c );
-
-        void BC_CO2( double L_atm, Array_1D &rad, Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2 );
-
-        void BC_Surface_Temperature_NASA ( const string &, Array_2D &, Array & );
-
-        void BC_Surface_Precipitation_NASA ( const string &, Array_2D & );
-
-        void BC_Pressure ( double L_atm, Array_1D &, Array &, Array &, Array &, Array & );
-
-        void Latent_Heat ( Array_1D &, Array_1D &, Array_1D &, Array &, Array &,
+            Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c);
+        void BC_CO2(double L_atm, Array_1D &rad, Array_2D &Vegetation, Array &h, Array &t, Array &p_dyn, Array &co2);
+        void BC_Surface_Temperature_NASA(const string &, Array_2D &, Array &);
+        void BC_Surface_Precipitation_NASA(const string &, Array_2D &);
+        void BC_Pressure(double L_atm, Array_1D &, Array &, Array &, Array &, Array &);
+        void Latent_Heat(Array_1D &, Array_1D &, Array_1D &, Array &, Array &,
             Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-            Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
-
-        void IC_Temperature_WestEastCoast ( Array &, Array & );
-
-        void Value_Limitation_Atm ( Array &, Array &, Array &, Array &, Array &,
-            Array &, Array &, Array &, Array &, Array & );
-
-        void Pressure_Limitation_Atm ( Array &, Array & );
-
-        int GetTropopauseHightAdd ( double );
-
-        double GetPoleTemperature ( int, int, int, double, double );
-
+            Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D &);
+        void IC_Temperature_WestEastCoast(Array &, Array & );
+        void Value_Limitation_Atm(Array &, Array &, Array &, Array &, Array &,
+            Array &, Array &, Array &, Array &, Array &);
+        void Pressure_Limitation_Atm(Array &, Array &);
+        int GetTropopauseHightAdd(double);
+        double GetPoleTemperature(int, int, int, double, double);
         double GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map);
-
-        double C_Dalton ( double u_0, double v, double w );
+        double C_Dalton(double u_0, double v, double w);
 };
 #endif

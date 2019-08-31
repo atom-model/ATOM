@@ -25,7 +25,7 @@ class BC_Thermo;
 using namespace std;
 using namespace tinyxml2;
 
-class cAtmosphereModel {
+class cAtmosphereModel{
 public:
 
     cAtmosphereModel();

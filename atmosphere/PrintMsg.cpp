@@ -5,7 +5,7 @@
 void cAtmosphereModel::print_welcome_msg(){
     if(verbose){
         cout << endl << endl << endl;
-        cout << "***** Atmosphere General Circulation Model ( AGCM ) applied to laminar flow" << endl;
+        cout << "***** Atmosphere General Circulation Model (AGCM) applied to laminar flow" << endl;
         cout << "***** program for the computation of geo-atmospherical circulating flows in a spherical shell" << endl;
         cout << "***** finite difference scheme for the solution of the 3D Navier-Stokes equations" << endl;
         cout << "***** with 4 additional transport equations to describe the water vapour, cloud water, cloud ice and co2 concentration" << endl;
@@ -15,17 +15,17 @@ void cAtmosphereModel::print_welcome_msg(){
         cout << "***** temperature distribution given as a parabolic distribution from pole to pole, zonaly constant" << endl;
         cout << "***** water vapour distribution given by Clausius-Claperon equation for the partial pressure" << endl;
         cout << "***** water vapour is part of the Boussinesq approximation and the absorptivity in the radiation model" << endl;
-        cout << "***** two category ice scheme for cold clouds applying parameterization schemes provided by the COSMO code ( German Weather Forecast )" << endl;
+        cout << "***** two category ice scheme for cold clouds applying parameterization schemes provided by the COSMO code (German Weather Forecast)" << endl;
         cout << "***** rain and snow precipitation solved by column equilibrium applying the diagnostic equations" << endl;
         cout << "***** co2 concentration appears in the absorptivity of the radiation models" << endl;
-        cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )" << endl << endl;
+        cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz (roger.grundmann@web.de)" << endl << endl;
         cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
         has_welcome_msg_printed = true;
     }
 }
 
 void cAtmosphereModel::print_final_remarks(){
-    cout << endl << "***** end of the Atmosphere General Circulation Modell ( AGCM ) *****" << endl << endl;
+    cout << endl << "***** end of the Atmosphere General Circulation Modell (AGCM) *****" << endl << endl;
     cout << "***** end of object oriented C++ program for the computation of 3D-atmospheric circulation *****";
     cout << "\n\n\n\n";
 }
@@ -72,7 +72,7 @@ void cAtmosphereModel::print_min_max_values(){
         << endl <<
         " results based on two dimensional considerations of the problem" << endl;
     cout << endl << " co2 distribution row-wise: " << endl << endl;
-    MinMax_Atm  min_max_2d( jm, km);
+    MinMax_Atm  min_max_2d(jm, km);
     min_max_2d.searchMinMax_2D(" max co2_total ", " min co2_total ", " ppm ", 
         co2_total, h, 280.);
     cout << endl << " precipitation: " << endl << endl;
@@ -118,15 +118,15 @@ void cAtmosphereModel::print_min_max_values(){
     double co2_vegetation_average = 0.;
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
-            precipitation_NASA_average += precipitation_NASA.y[ j ][ k ];
-            precipitablewater_average += precipitable_water.y[ j ][ k ];
-            precipitation_average += Precipitation.y[ j ][ k ];
-            temperature_surf_average += t.x[ 0 ][ j ][ k ] * t_0 - t_0;
-            Evaporation_Dalton_average += Evaporation_Dalton.y[ j ][ k ];
-            co2_vegetation_average += co2_total.y[ j ][ k ];
+            precipitation_NASA_average += precipitation_NASA.y[j][k];
+            precipitablewater_average += precipitable_water.y[j][k];
+            precipitation_average += Precipitation.y[j][k];
+            temperature_surf_average += t.x[0][j][k] * t_0 - t_0;
+            Evaporation_Dalton_average += Evaporation_Dalton.y[j][k];
+            co2_vegetation_average += co2_total.y[j][k];
         }
     }
-    temperature_surf_average = ( GetMean_3D(jm, km, t) - 1. ) * t_0;
+    temperature_surf_average = (GetMean_3D(jm, km, t) - 1.) * t_0;
     precipitablewater_average = GetMean_2D (jm, km, precipitable_water);
     precipitation_average = 365. * GetMean_2D(jm, km, Precipitation);
     precipitation_NASA_average = 365. * GetMean_2D(jm, km, precipitation_NASA);
@@ -223,10 +223,10 @@ void cAtmosphereModel::print_min_max_values(){
         k_loc_deg = 360 - k_loc;
         deg_lon = deg_east;
     }
-    double Value_1 = Q_radiation.y[ j_loc ][ k_loc ];
-    double Value_2 = Q_latent.y[ j_loc ][ k_loc ];
-    double Value_3 = Q_sensible.y[ j_loc ][ k_loc ];
-    double Value_4 = Q_bottom.y[ j_loc ][ k_loc ];
+    double Value_1 = Q_radiation.y[j_loc][k_loc];
+    double Value_2 = Q_latent.y[j_loc][k_loc];
+    double Value_3 = Q_sensible.y[j_loc][k_loc];
+    double Value_4 = Q_bottom.y[j_loc][k_loc];
     cout << setw(6) << i_loc_level << setw(2) << level << setw(5) << j_loc_deg
         << setw(3) << deg_lat << setw(4) << k_loc_deg << setw(3) << deg_lon
         << "  " << setiosflags(ios::left) << setw(25) << setfill('.') << name_Value_1
@@ -243,7 +243,7 @@ void cAtmosphereModel::print_min_max_values(){
     double Value_17 = 0.;
     double Value_18 = 0.;
     double Value_19 = 0.;
-    double Value_23 = precipitable_water.y[ j_loc ][ k_loc ];
+    double Value_23 = precipitable_water.y[j_loc][k_loc];
     cout << setw(6) << i_loc_level << setw(2) << level << setw(5) << j_loc_deg
         << setw(3) << deg_lat << setw(4) << k_loc_deg << setw(3) << deg_lon
         << "  " << setiosflags(ios::left) << setw(25) << setfill('.') << name_Value_23
@@ -253,14 +253,14 @@ void cAtmosphereModel::print_min_max_values(){
         << setw(7) << fixed << setfill(' ') << Value_17 << setw(6) << name_unit_wm2
         << "   " << setiosflags(ios::left) << setw(25) << setfill('.') << name_Value_20
         << " = " << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ')
-        << Value_18 << setw(6) << name_unit_wm2 << "   " << setiosflags ( ios::left )
-        << setw (25) << setfill ( '.' ) << name_Value_21 << " = " << resetiosflags(ios::left)
+        << Value_18 << setw(6) << name_unit_wm2 << "   " << setiosflags (ios::left)
+        << setw (25) << setfill ('.') << name_Value_21 << " = " << resetiosflags(ios::left)
         << setw(7) << fixed << setfill(' ') << Value_19 << setw(6)
         << name_unit_wm2 << endl;
     double Value_14 = 0.;
     double Value_15 = 0.;
     double Value_16 = 0.;
-    double Value_24 = Precipitation.y[ j_loc ][ k_loc ];
+    double Value_24 = Precipitation.y[j_loc][k_loc];
     cout << setw(6) << i_loc_level << setw(2) << level << setw(5) << j_loc_deg
         << setw(3) << deg_lat << setw(4) << k_loc_deg << setw(3) << deg_lon
         << "  " << setiosflags(ios::left) << setw(25) << setfill('.') << name_Value_24
@@ -274,7 +274,7 @@ void cAtmosphereModel::print_min_max_values(){
         << setw(25) << setfill('.') << name_Value_18 << " = " << resetiosflags(ios::left)
         << setw(7) << fixed << setfill(' ') << Value_16 << setw(6)
         << name_unit_wm2 << endl;
-    double Value_6 = Evaporation_Dalton.y[ j_loc ][ k_loc ];
+    double Value_6 = Evaporation_Dalton.y[j_loc][k_loc];
     cout << setw(6) << i_loc_level << setw(2) << level << setw(5) << j_loc_deg
         << setw(3) << deg_lat << setw(4) << k_loc_deg << setw(3) << deg_lon
         << "  " << setiosflags(ios::left)
@@ -320,7 +320,7 @@ void cAtmosphereModel::print_min_max_values(){
         << name_Value_22 << " = " << resetiosflags(ios::left) << setw (7)
         << fixed << setfill(' ') << Value_9 << setw(6) << name_unit_ppm
         << endl << endl << endl;
-    double Value_25 = ( GetMean_2D(jm, km, temperature_NASA) - 1. ) * t_0;
+    double Value_25 = (GetMean_2D(jm, km, temperature_NASA) - 1.) * t_0;
     double Value_26 = temperature_surf_average;
     double Value_27 = t_average + t_paleo * t_0;
     cout << setw(6) << setiosflags(ios::left) << setw(40) << setfill('.')
@@ -361,8 +361,8 @@ float cAtmosphereModel::GetMean_2D(int jm, int km, Array_2D &val_2D){
     double ret=0., weight=0.;
     for(int j=0; j<jm; j++){
         for(int k=0; k<km; k++){
-            //std::cout << (val_2D.y[ j ][ k ]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
-            ret+=val_2D.y[ j ][ k ]*m_node_weights[j][k];
+            //std::cout << (val_2D.y[j][k]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
+            ret+=val_2D.y[j][k]*m_node_weights[j][k];
             weight+=m_node_weights[j][k];
         }
     }
@@ -377,9 +377,9 @@ void cAtmosphereModel::CalculateNodeWeights(int jm, int km){
     m_node_weights.clear();
     for(int i=0; i<jm; i++){
         if(i<=90){
-            weight = cos((90-i) * M_PI / 180.0 );
+            weight = cos((90-i) * M_PI / 180.0);
         }else{
-            weight = cos((i-90) * M_PI / 180.0 );
+            weight = cos((i-90) * M_PI / 180.0);
         }
         m_node_weights.push_back(std::vector<double>());
         m_node_weights[i].resize(km, weight);

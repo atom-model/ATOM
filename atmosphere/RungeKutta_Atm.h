@@ -18,8 +18,7 @@
 using namespace std;
 class cAtmosphereModel;
 
-class RungeKutta_Atmosphere
-{
+class RungeKutta_Atmosphere{
     private:
         int im, jm, km;
 
@@ -30,21 +29,21 @@ class RungeKutta_Atmosphere
         cAtmosphereModel* m_model;
 
     public:
-        RungeKutta_Atmosphere (cAtmosphereModel* model, int, int, int, double, double, double, double );
-        ~RungeKutta_Atmosphere ();
+        RungeKutta_Atmosphere(cAtmosphereModel* model, int, int, int, double, double, double, double);
+        ~RungeKutta_Atmosphere();
 
 
-        void solveRungeKutta_3D_Atmosphere( int &, double, double,
+        void solveRungeKutta_3D_Atmosphere(int &, double, double,
                  double, double, double, double, double, double, double, double, double,
                  double, double, double, double, double, double,
                  Array_1D &, Array_1D &, Array_1D &, Array &, Array &, Array &, Array &, Array &,
                  Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
                  Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
                  Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &,
-                 Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
+                 Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &);
 
-        void solveRungeKutta_2D_Atmosphere( int &,
+        void solveRungeKutta_2D_Atmosphere(int &,
                 double, double, double, double, Array_1D &, Array_1D &, Array_1D &,
-                Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+                Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &);
 };
 #endif

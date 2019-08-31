@@ -22,27 +22,20 @@ using namespace std;
 namespace{
     std::function< double(double) > default_lambda=[](double i)->double{return i;};
 }
-class MinMax_Atm
-{
+class MinMax_Atm{
     private:
         int im, jm, km, imax, jmax, kmax, imin, jmin, kmin;
-
         double maxValue, minValue;
-
     public:
-        MinMax_Atm ( int, int );
-        MinMax_Atm ( int, int, int );
-        ~MinMax_Atm ();
-
-        void searchMinMax_2D ( string , string , string , Array_2D &, Array &, double coeff=1.0);
-
-        void searchMinMax_3D ( string , string , string , Array &, Array &, 
+        MinMax_Atm(int, int);
+        MinMax_Atm(int, int, int);
+        ~MinMax_Atm();
+        void searchMinMax_2D(string , string , string , Array_2D &, Array &, double coeff=1.0);
+        void searchMinMax_3D(string , string , string , Array &, Array &, 
                                double coeff=1.0, 
                                std::function< double(double) > lambda = default_lambda,
-                               bool print_heading=false );
-
-        double out_maxValue (  ) const;
-
-        double out_minValue (  ) const;
+                               bool print_heading=false);
+        double out_maxValue() const;
+        double out_minValue() const;
 };
 #endif

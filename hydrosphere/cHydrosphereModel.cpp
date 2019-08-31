@@ -1,12 +1,12 @@
 /*
- * Ocean General Circulation Modell ( OGCM ) applied to laminar flow
+ * Ocean General Circulation Modell (OGCM) applied to laminar flow
  * program for the computation of geo-atmospherical circulating flows in a spherical shell
  * finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 1 additional transport equations to describe the salinity
  * 4th order Runge-Kutta scheme to solve 2nd order differential equations inside an inner iterational loop
  * Poisson equation for the pressure solution in an outer iterational loop
  * temperature distribution given as a parabolic distribution from pole to pole, zonaly constant
- * code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )
+ * code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz (roger.grundmann@web.de)
 */
 #include "cHydrosphereModel.h"
 
@@ -44,11 +44,11 @@ using namespace std;
 using namespace tinyxml2;
 using namespace AtomUtils;
 
-// Earth's radius is r_earth = 6731 km compares to 6.731 [ / ]
-// for 6 km expansion of the area of circulation compares to 0.02 [ / ] with 40 steps of size 0.0005 
+// Earth's radius is r_earth = 6731 km compares to 6.731 [/]
+// for 6 km expansion of the area of circulation compares to 0.02 [/] with 40 steps of size 0.0005 
 // Definition of meridional and longitudinal step sizes 
 // for example: dthe = the_Grad / pi180 = 1.125 / 57.3 = 0.01963
-// maximum velocity on the sea surface  w_max = 0.29 [ / ] compares to 0.21 m/s = 0.78 km/h as annual mean 
+// maximum velocity on the sea surface  w_max = 0.29 [/] compares to 0.21 m/s = 0.78 km/h as annual mean 
 // mean velocity for sea level is 0.5 to 1 km/h compares to 0.14 to 0.28 m/s
 // maximum temperature of earth's surface at equator t_max = 1.1355 compares to 37° C compares to 310 K
 // maximum temperature of earth's surface at equator t_max = 1.0974 compares to 27° C compares to 300 K
@@ -56,7 +56,7 @@ using namespace AtomUtils;
 // minimum temperature in the deep ocean t_deep_ocean = 1.0146 compares to 4° C compares to 277.15 K
 // temperature t_0 = 1.000 compares to 0° C compares to 273,15 K
 // temperature t_0 = 0.003661 compares to 1° C compares to 1 K
-// 1 PSU ( Practical Salt Unit ) = 1 g/kg, means g of salt per kg sweet water
+// 1 PSU (Practical Salt Unit) = 1 g/kg, means g of salt per kg sweet water
 // mass of water compares to 1.0, rate of salt compares to 0.0346
 // c_0 compares to the total mass for mean salinity of 34.6 psu or dimensionsless 1.
 // for c = 0.9249 compares to a salinity of 32.0 psu
@@ -82,7 +82,7 @@ cHydrosphereModel::cHydrosphereModel():
     SetDefaultConfig();
 }
 
-cHydrosphereModel::~cHydrosphereModel(){ }
+cHydrosphereModel::~cHydrosphereModel(){}
 
 #include "cHydrosphereDefaults.cpp.inc"
 
@@ -98,20 +98,18 @@ void cHydrosphereModel::LoadConfig(const char *filename){
         if (!atom){
             throw std::invalid_argument(std::string("Failed to find the 'atom' element in config file: ") + filename);
         }else{
-            elem_common = atom->FirstChildElement( "common" );
+            elem_common = atom->FirstChildElement("common");
             if(!elem_common){
                 throw std::invalid_argument(std::string(
                     "Failed to find the 'common' element in 'atom' element in config file: ") + filename);
             }
-            elem_hydrosphere = atom->FirstChildElement( "hydrosphere" );
+            elem_hydrosphere = atom->FirstChildElement("hydrosphere");
             if (!elem_hydrosphere){
                 throw std::invalid_argument(std::string(
                     "Failed to find the 'hydrosphere' element in 'atom' element in config file: ") + filename);
             }
         }
-
         #include "HydrosphereLoadConfig.cpp.inc"
-
     }catch(const std::exception &exc){
         std::cerr << exc.what() << std::endl;
         abort();
@@ -141,7 +139,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
         Name_SurfaceTemperature_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Temperature.xyz";
         Name_SurfaceSalinity_File = output_path + "/" + std::to_string(Ma) + "Ma_Reconstructed_Salinity.xyz";
         struct stat info;
-        if(stat( Name_SurfaceSalinity_File.c_str(), &info) != 0){
+        if(stat(Name_SurfaceSalinity_File.c_str(), &info) != 0){
             std::string cmd_str = "python " + reconstruction_script_path 
                 + " " + std::to_string(Ma - time_step) + " " + std::to_string(Ma) 
                 + " " + output_path + " " + BathymetrySuffix +" hyd";
@@ -155,14 +153,14 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     PostProcess_Hydrosphere  read_Transfer(im, jm, km, output_path);
     read_Transfer.Atmosphere_TransferFile_read(bathymetry_name, v, w, t, 
         p_dyn, Evaporation_Dalton, Precipitation);
-    cout << "***** time slice for the Oceanic Global Circulation Modell ( OGCM ) is:    Ma = " << Ma << " million years" 
+    cout << "***** time slice for the Oceanic Global Circulation Modell (OGCM) is:    Ma = " << Ma << " million years" 
         << endl << endl;
     cout << "***** bathymetry/topography given y the x-y-z data set:    " << bathymetry_name.c_str() << endl << endl;
     BC_Bathymetry_Hydrosphere  depth(im, jm, km);
     depth.BC_SeaGround(bathymetry_path + "/" + bathymetry_name, L_hyd, h, Bathymetry);
     BC_Hydrosphere  boundary(im, jm, km);
     Pressure_Hyd  startPressure(im, jm, km, dr, dthe, dphi);
-    Results_Hyd  calculate_MSL( im, jm, km);
+    Results_Hyd  calculate_MSL(im, jm, km);
     BC_Thermohalin  oceanflow(im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, 
         dr, g, r_0_water, ua, va, wa, ta, ca, pa, u_0, p_0, t_0, c_0, cp_w, 
         L_hyd, t_average, t_paleo_max, t_equator, t_pole, output_path);
@@ -179,22 +177,16 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     //if(Ma <= 41)  oceanflow.IC_CircumPolar_Current(h, u, v, w, c); // Drake passage closed 41 Ma ago
     oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn);
     oceanflow.BC_Pressure_Density(p_stat, r_water, r_salt_water, t, c, h);
-//goto Printout;
     store_intermediate_data_2D();
     store_intermediate_data_3D();
-    calculate_MSL.land_oceanFraction ( h );
+    calculate_MSL.land_oceanFraction (h);
     /*******************************************   start of pressure and velocity iterations ******************************/
     double emin = epsres * 100.;
     iter_cnt = 1;
-    
-    /** ::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::::**/
+    /** ::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if (switch_2D == 0)   ::::::**/
     if(switch_2D != 1){
-        // ******   iteration of initial conditions on the surface for the correction of flows close to coasts   ************
-        // ******   start of pressure and velocity iterations for the 2D iterational process   *********************************
-        //:::::::::::::   begin of pressure loop_2D : if ( pressure_iter_2D > pressure_iter_max_2D)   ::::::::::::::::
         for(int pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++){
-            // :::::  begin of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::
-            for( int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++){
+            for(int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++){
                 cout << endl << endl;
                 cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
                 cout << " 2D OGCM iterational process" << endl;
@@ -205,31 +197,28 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
                     << endl << endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max_2D = " << 
                     velocity_iter_max_2D << "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " 
                     << pressure_iter_max_2D << "    pressure_iter_2D = " << pressure_iter_2D << endl;
-                boundary.RB_theta ( t, u, v, w, p_dyn, c );
-                boundary.RB_phi ( t, u, v, w, p_dyn, c );
-                oceanflow.Value_Limitation_Hyd ( h, u, v, w, p_dyn, t, c );
+                boundary.RB_theta(t, u, v, w, p_dyn, c);
+                boundary.RB_phi(t, u, v, w, p_dyn, c);
+                oceanflow.Value_Limitation_Hyd(h, u, v, w, p_dyn, t, c);
                 run_data(); 
                 solveRungeKutta_2D_Hydrosphere();
                 store_intermediate_data_2D();
                 iter_cnt++;
-            }
-            //  :::::::::::::   end of velocity loop_2D: if ( velocity_iter_2D > velocity_iter_max_2D )   ::::::::::::::
-            startPressure.computePressure_2D ( u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_v, aux_w );
+            } // end of velocity loop_2D: if(velocity_iter_2D > velocity_iter_max_2D)
+            startPressure.computePressure_2D(u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_v, aux_w);
             if(iter_cnt > nm){
                 cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
                 break;
             }
-        } //end of pressure loop_2D: if ( pressure_iter_2D > pressure_iter_max_2D ) 
+        } // end of pressure loop_2D: if (pressure_iter_2D > pressure_iter_max_2D) 
         iter_cnt = 1;
         switch_2D = 1;
         emin = epsres * 100.;
-    }// end of 2D loop for initial surface conditions: if ( switch_2D == 0 )   ::::::::::
+    }// end of 2D loop for initial surface conditions: if (switch_2D == 0)   ::::::::::
     cout << endl << endl;
     iter_cnt_3d = 0;
     if(debug) save_data();
-    // ::::   begin of 3D pressure loop : if ( pressure_iter > pressure_iter_max )   ::::::::::::::::::::::::
     for(int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++){
-        //   begin of 3D velocity loop : if ( velocity_iter > velocity_iter_max )   :::::::::::
         for(int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++){
             cout << endl << endl;
             cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
@@ -240,7 +229,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
                 << endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max = " << velocity_iter_max << 
                 "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << pressure_iter << endl;
-            // class RB_Hydrosphaere for the geometry of a shell of a sphere
             boundary.RB_radius(ca, ta, pa, dr, rad, t, u, v, w, p_dyn, c);
             boundary.RB_theta(t, u, v, w, p_dyn, c);
             boundary.RB_phi(t, u, v, w, p_dyn, c);
@@ -255,8 +243,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
             iter_cnt++;
             iter_cnt_3d++;
             if(debug) save_data();
-        }
-        //  ::::::  end of velocity loop_3D: if ( velocity_iter > velocity_iter_max )   :::::::::::::::::::::::
+        } // end of velocity loop_3D: if(velocity_iter > velocity_iter_max)
         startPressure.computePressure_3D(u_0, r_0_water, rad, the, p_dyn, p_dynn, h, aux_u, aux_v, aux_w);
 
         if(debug && pressure_iter % checkpoint == 0){
@@ -266,13 +253,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
             cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
             break;
         }
-    }// end of pressure loop_3D: if ( pressure_iter > pressure_iter_max )   :::::::::::
+    }// end of pressure loop_3D: if(pressure_iter > pressure_iter_max)   :::::::::::
     cout << endl << endl;
-//Printout:
     write_file(bathymetry_name, output_path, true);
     iter_cnt_3d++;
     save_data();
-    cout << endl << "***** end of the Hydrosphere General Circulation Modell ( OGCM ) *****" << endl << endl;
+    cout << endl << "***** end of the Hydrosphere General Circulation Modell (OGCM) *****" << endl << endl;
     if(emin <= epsres)  cout << "***** steady solution reached! *****" << endl;
 }
 
@@ -342,7 +328,7 @@ void cHydrosphereModel::Run(){
     // WriteConfig(output_config_path.str().c_str());
     if(verbose){
         cout << endl << endl << endl;
-        cout << "***** Hydrosphere General Circulation Model ( OGCM ) applied to laminar flow" << endl;
+        cout << "***** Hydrosphere General Circulation Model (OGCM) applied to laminar flow" << endl;
         cout << "***** program for the computation of geo-atmospherical circulating flows in a spherical shell" << endl;
         cout << "***** finite difference scheme for the solution of the 3D Navier-Stokes equations" << endl;
         cout << "***** with 1 additional transport equations to describe the salinity" << endl;
@@ -351,14 +337,14 @@ void cHydrosphereModel::Run(){
         cout << "***** multi-layer and two-layer radiation model for the computation of the surface temperature" << endl;
         cout << "***** temperature distribution given as a parabolic distribution from pole to pole, zonaly constant" << endl;
         cout << "***** salinity is part of the Boussinesq approximation" << endl;
-        cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz ( roger.grundmann@web.de )" << endl << endl;
+        cout << "***** code developed by Roger Grundmann, Zum Marktsteig 1, D-01728 Bannewitz (roger.grundmann@web.de)" << endl << endl;
         cout << "***** original program name:  " << __FILE__ << endl;
         cout << "***** compiled:  " << __DATE__  << "  at time:  " << __TIME__ << endl << endl;
     }
     for(int i = time_start; i <= time_end; i+=time_step){
         RunTimeSlice(i);
     }
-    cout << endl << "***** end of the Hydrosphere General Circulation Modell ( OGCM ) *****" << endl << endl;
+    cout << endl << "***** end of the Hydrosphere General Circulation Modell (OGCM) *****" << endl << endl;
     cout << endl;
     cout << "***** end of object oriented C++ program for the computation of 3D-hydrospheric circulation *****";
     cout << "\n\n\n\n";
@@ -389,11 +375,11 @@ void cHydrosphereModel::write_file(std::string &bathymetry_name, string& filepat
 void  cHydrosphereModel::save_data(){
     struct stat info;
     string path = output_path + "/bin_data/";
-    if(stat( path.c_str(), &info ) != 0){
+    if(stat(path.c_str(), &info) != 0){
         mkdir(path.c_str(), 0777);
     }
     std::ostringstream ss;
-    if(iter_cnt_3d == pressure_iter_max * velocity_iter_max + 1)
+    if(iter_cnt_3d == pressure_iter_max * velocity_iter_max+1)
         ss << "_time_" << m_current_time << "_iter_n";
     else
         ss << "_time_" << m_current_time << "_iter_" << iter_cnt_3d;
@@ -402,10 +388,10 @@ void  cHydrosphereModel::save_data(){
     for(int i=0; i<im; i++){
         for(int j=0; j<jm; j++){
             for(int k=0; k<km; k++){
-                c_t.x[ i ][ j ][ k ] = c.x[ i ][ j ][ k ] * 35.;
-                v_t.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] * u_0;
-                w_t.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] * u_0;
-                t_t.x[ i ][ j ][ k ] = t.x[ i ][ j ][ k ] * 273.15 - 273.15;
+                c_t.x[i][j][k] = c.x[i][j][k] * 35.;
+                v_t.x[i][j][k] = v.x[i][j][k] * u_0;
+                w_t.x[i][j][k] = w.x[i][j][k] * u_0;
+                t_t.x[i][j][k] = t.x[i][j][k] * 273.15 - 273.15;
             }
         }
     }
@@ -423,12 +409,12 @@ void cHydrosphereModel::store_intermediate_data_3D(float coeff){
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
-                un.x[ i ][ j ][ k ] = coeff * u.x[ i ][ j ][ k ];
-                vn.x[ i ][ j ][ k ] = coeff * v.x[ i ][ j ][ k ];
-                wn.x[ i ][ j ][ k ] = coeff * w.x[ i ][ j ][ k ];
-                p_dynn.x[ i ][ j ][ k ] = coeff * p_dyn.x[ i ][ j ][ k ];
-                tn.x[ i ][ j ][ k ] = coeff * t.x[ i ][ j ][ k ];
-                cn.x[ i ][ j ][ k ] = coeff * c.x[ i ][ j ][ k ];
+                un.x[i][j][k] = coeff * u.x[i][j][k];
+                vn.x[i][j][k] = coeff * v.x[i][j][k];
+                wn.x[i][j][k] = coeff * w.x[i][j][k];
+                p_dynn.x[i][j][k] = coeff * p_dyn.x[i][j][k];
+                tn.x[i][j][k] = coeff * t.x[i][j][k];
+                cn.x[i][j][k] = coeff * c.x[i][j][k];
             }
         }
     }
@@ -437,9 +423,9 @@ void cHydrosphereModel::store_intermediate_data_3D(float coeff){
 void cHydrosphereModel::store_intermediate_data_2D(float coeff){   
     for(int j = 0; j < jm; j++){   
         for(int k = 0; k < km; k++){   
-            vn.x[ im - 1 ][ j ][ k ] = coeff * v.x[ im - 1 ][ j ][ k ];
-            wn.x[ im - 1 ][ j ][ k ] = coeff * w.x[ im - 1 ][ j ][ k ]; 
-            p_dynn.x[ im - 1 ][ j ][ k ] = coeff * p_dyn.x[ im - 1 ][ j ][ k ];
+            vn.x[im-1][j][k] = coeff * v.x[im-1][j][k];
+            wn.x[im-1][j][k] = coeff * w.x[im-1][j][k]; 
+            p_dynn.x[im-1][j][k] = coeff * p_dyn.x[im-1][j][k];
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Atmosphere General Circulation Modell ( AGCM ) applied to laminar flow
+ * Atmosphere General Circulation Modell (AGCM) applied to laminar flow
  * Program for the computation of geo-atmospherical circulating flows in a spherical shell
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
@@ -29,7 +29,7 @@ namespace{
 
     HemisphereCoords convert_coords(double lon, double lat){
         HemisphereCoords ret;
-        if ( lat > 90 ){
+        if (lat > 90){
             ret.lat = lat - 90;
             ret.north_or_south = "°S";
         }else{
@@ -37,7 +37,7 @@ namespace{
             ret.north_or_south = "°N";
         }
 
-        if ( lon > 180 ){
+        if (lon > 180){
             ret.lon = 360 - lon;
             ret.east_or_west = "°W";
         }else{
@@ -48,7 +48,7 @@ namespace{
     }
 }
 
-MinMax_Atm::MinMax_Atm ( int jm, int km )
+MinMax_Atm::MinMax_Atm (int jm, int km)
 {
     this-> im = 0;
     this-> jm = jm;
@@ -58,7 +58,7 @@ MinMax_Atm::MinMax_Atm ( int jm, int km )
     imax = jmax = kmax = imin = jmin = kmin = 0;
 }
 
-MinMax_Atm::MinMax_Atm ( int im, int jm, int km  )
+MinMax_Atm::MinMax_Atm (int im, int jm, int km )
 {
     this-> im = im;
     this-> jm = jm;
@@ -70,29 +70,29 @@ MinMax_Atm::MinMax_Atm ( int im, int jm, int km  )
 
 MinMax_Atm::~MinMax_Atm () {}
 
-void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, string name_unitValue, 
+void MinMax_Atm::searchMinMax_3D(string name_maxValue, string name_minValue, string name_unitValue, 
                                   Array &value_D, Array &h, double coeff, 
                                   std::function< double(double) > lambda,
                                   bool print_heading)
 {
     // search for minimum and maximum values of the 3-dimensional data sets
-    minValue = maxValue = value_D.x[ 0 ][ 0 ][ 0 ];
+    minValue = maxValue = value_D.x[0][0][0];
     imax = jmax = kmax = imin = jmin = kmin = 0;
 
-    for ( int j = 0; j < jm; j++ )
+    for (int j = 0; j < jm; j++)
     {
-        for ( int k = 0; k < km; k++ )
+        for (int k = 0; k < km; k++)
         {
-            for ( int i = 0; i < im; i++ )
+            for (int i = 0; i < im; i++)
             {
-                if ( value_D.x[ i ][ j ][ k ] > maxValue ) 
+                if (value_D.x[i][j][k] > maxValue) 
                 {
-                    maxValue = value_D.x[ i ][ j ][ k ];
+                    maxValue = value_D.x[i][j][k];
                     imax = i;
                     jmax = j;
                     kmax = k;
-                }else if ( value_D.x[ i ][ j ][ k ] < minValue ){
-                    minValue = value_D.x[ i ][ j ][ k ];
+                }else if (value_D.x[i][j][k] < minValue){
+                    minValue = value_D.x[i][j][k];
                     imin = i;
                     jmin = j;
                     kmin = k;
@@ -118,7 +118,7 @@ void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, st
     int kmin_deg = coords.lon;
     string deg_lon_min = coords.east_or_west;
 
-    cout.precision ( 6 );
+    cout.precision (6);
 
     if(print_heading){
         cout << endl << heading_1 << endl << heading_2 << endl << endl;
@@ -127,33 +127,33 @@ void MinMax_Atm::searchMinMax_3D( string name_maxValue, string name_minValue, st
     maxValue = lambda(maxValue * coeff);
     minValue = lambda(minValue * coeff);
 
-    cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << 
-        resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << 
-        name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << 
-        setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << 
-        setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< 
-        resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << 
-        name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << 
-        setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
+    cout << setiosflags (ios::left) << setw (26) << setfill ('.') << name_maxValue << " = " << 
+        resetiosflags (ios::left) << setw (12) << fixed << setfill (' ') << maxValue << setw (6) << 
+        name_unitValue << setw (5) << jmax_deg << setw (3) << deg_lat_max << setw (4) << kmax_deg << 
+        setw (3) << deg_lon_max << setw (6) << imax_level << setw (2) << level << "          " << 
+        setiosflags (ios::left) << setw (26) << setfill ('.') << name_minValue << " = "<< 
+        resetiosflags (ios::left) << setw (12) << fixed << setfill (' ') << minValue << setw (6) << 
+        name_unitValue << setw (5)  << jmin_deg << setw (3) << deg_lat_min << setw (4) << kmin_deg << 
+        setw (3) << deg_lon_min  << setw (6) << imin_level << setw (2) << level << endl;
 }
 
-void MinMax_Atm::searchMinMax_2D ( string name_maxValue, string name_minValue, string name_unitValue, 
-                                   Array_2D &value, Array &h, double coeff )
+void MinMax_Atm::searchMinMax_2D (string name_maxValue, string name_minValue, string name_unitValue, 
+                                   Array_2D &value, Array &h, double coeff)
 {
     // search for minimum and maximum values of the 2-dimensional data sets on the sea surface
-    minValue = maxValue = value.y[ 0 ][ 0 ];
+    minValue = maxValue = value.y[0][0];
     imax = jmax = kmax = imin = jmin = kmin = 0;  
 
-    for ( int j = 1; j < jm-1; j++ )
+    for (int j = 1; j < jm-1; j++)
     {
-        for ( int k = 1; k < km-1; k++ )
+        for (int k = 1; k < km-1; k++)
         {
-            if ( value.y[ j ][ k ] > maxValue ){
-                maxValue = value.y[ j ][ k ];
+            if (value.y[j][k] > maxValue){
+                maxValue = value.y[j][k];
                 jmax = j;
                 kmax = k;
-            }else if(value.y[ j ][ k ] < minValue ){
-                minValue = value.y[ j ][ k ];
+            }else if(value.y[j][k] < minValue){
+                minValue = value.y[j][k];
                 jmin = j;
                 kmin = k;
             }
@@ -177,27 +177,27 @@ void MinMax_Atm::searchMinMax_2D ( string name_maxValue, string name_minValue, s
     int kmin_deg = coords.lon;
     string deg_lon_min = coords.east_or_west;
 
-    cout.precision ( 6 );
+    cout.precision (6);
 
     maxValue = maxValue * coeff;
     minValue = minValue * coeff;
 
-    cout << setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_maxValue << " = " << 
-        resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << maxValue << setw ( 6 ) << 
-        name_unitValue << setw ( 5 ) << jmax_deg << setw ( 3 ) << deg_lat_max << setw ( 4 ) << kmax_deg << 
-        setw ( 3 ) << deg_lon_max << setw ( 6 ) << imax_level << setw ( 2 ) << level << "          " << 
-        setiosflags ( ios::left ) << setw ( 26 ) << setfill ( '.' ) << name_minValue << " = "<< 
-        resetiosflags ( ios::left ) << setw ( 12 ) << fixed << setfill ( ' ' ) << minValue << setw ( 6 ) << 
-        name_unitValue << setw ( 5 )  << jmin_deg << setw ( 3 ) << deg_lat_min << setw ( 4 ) << kmin_deg << 
-        setw ( 3 ) << deg_lon_min  << setw ( 6 ) << imin_level << setw ( 2 ) << level << endl;
+    cout << setiosflags (ios::left) << setw (26) << setfill ('.') << name_maxValue << " = " << 
+        resetiosflags (ios::left) << setw (12) << fixed << setfill (' ') << maxValue << setw (6) << 
+        name_unitValue << setw (5) << jmax_deg << setw (3) << deg_lat_max << setw (4) << kmax_deg << 
+        setw (3) << deg_lon_max << setw (6) << imax_level << setw (2) << level << "          " << 
+        setiosflags (ios::left) << setw (26) << setfill ('.') << name_minValue << " = "<< 
+        resetiosflags (ios::left) << setw (12) << fixed << setfill (' ') << minValue << setw (6) << 
+        name_unitValue << setw (5)  << jmin_deg << setw (3) << deg_lat_min << setw (4) << kmin_deg << 
+        setw (3) << deg_lon_min  << setw (6) << imin_level << setw (2) << level << endl;
 }
 
-double MinMax_Atm::out_maxValue (  ) const
+double MinMax_Atm::out_maxValue () const
 {
     return maxValue;
 }
 
-double MinMax_Atm::out_minValue (  ) const
+double MinMax_Atm::out_minValue () const
 {
     return minValue;
 }
