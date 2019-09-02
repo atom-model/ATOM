@@ -61,12 +61,12 @@ def draw_precipitation_evaporation_ratio_map(time=0, data_dir='./', output_dir='
     y = all_data[:,1]
     yy = convert_atom_to_gmt(y)
     #x,y=np.meshgrid(x,y)
-    data=fh.variables['z'][:]
-    data=data*365
-    evapor_data=evapor_data*365
+    data = fh.variables['z'][:]
+    data = data*365
+    evapor_data = evapor_data*365
     evapor_data = np.flipud(evapor_data)
-    evapor_data[evapor_data==0]=np.nan
-    data=data/evapor_data
+    #evapor_data[evapor_data==0]=np.nan
+    data = data - evapor_data
 
     mean_val = calculate_spherical_mean(data[~np.isnan(data)].flatten(), yy[~np.isnan(data)].flatten())
     print(mean_val)
@@ -79,7 +79,7 @@ def draw_precipitation_evaporation_ratio_map(time=0, data_dir='./', output_dir='
 
     xi, yi = m(x, y)
     img_data = m.transform_scalar(data, np.arange(-180,180),np.arange(-90,90),361,181)
-    cs = m.imshow(img_data,alpha=0.5, vmin=0, vmax=2, cmap='jet_r')
+    cs = m.imshow(img_data,alpha=0.5, vmin=-2500, vmax=2500, cmap='jet_r')
 
     m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
                             colors ='k', linewidths= 0.3 )
