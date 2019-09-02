@@ -19,8 +19,7 @@
 using namespace std;
 
 
-class RHS_Atmosphere
-{
+class RHS_Atmosphere{
     private:
         int im, jm, km;
 
@@ -28,12 +27,12 @@ class RHS_Atmosphere
         double re, sc_WaterVapour, sc_CO2, g, pr, gam, WaterVapour, Buoyancy, CO2, sigma;
 
     public:
-        RHS_Atmosphere ( int, int, double, double, double );
-        RHS_Atmosphere ( int, int, int, double, double, double, double, double, double,
-                                       double, double, double, double, double, double, double, double, double );
-        ~RHS_Atmosphere ();
+        RHS_Atmosphere(int, int, double, double, double);
+        RHS_Atmosphere(int, int, int, double, double, double, double, double, double,
+                                       double, double, double, double, double, double, double, double, double);
+        ~RHS_Atmosphere();
 
-        void RK_RHS_3D_Atmosphere (int i, int j, int k, double lv, double ls, double ep,
+        void RK_RHS_3D_Atmosphere(int i, int j, int k, double lv, double ls, double ep,
                                             double hp, double u_0, double t_0, double c_0, double co2_0,
                                             double p_0, double r_air, double r_water_vapour, double r_co2,
                                             double L_atm, double cp_l, double R_Air, double R_WaterVapour,
@@ -46,11 +45,11 @@ class RHS_Atmosphere
                                             Array &Q_Sensible, Array &P_rain, Array &P_snow, Array &S_v,
                                             Array &S_c, Array &S_i, Array &S_r, Array &S_s, Array &S_c_c,
                                             Array_2D &Topography, Array_2D &Evaporation_Dalton,
-                                            Array_2D &Precipitation );
+                                            Array_2D &Precipitation);
 
 
-        void RK_RHS_2D_Atmosphere ( int j, int k, double r_air, double u_0, double p_0, double L_atm,
+        void RK_RHS_2D_Atmosphere(int j, int k, double r_air, double u_0, double p_0, double L_atm,
                                             Array_1D &rad, Array_1D &the, Array_1D &phi, Array &h, Array &v, Array &w,
-                                            Array &p_dyn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w );
+                                            Array &p_dyn, Array &rhs_v, Array &rhs_w, Array &aux_v, Array &aux_w);
 };
 #endif

@@ -19,20 +19,16 @@
 
 using namespace std;
 
-class BC_Atmosphere
-{
+class BC_Atmosphere{
     private:
         int im, jm, km;
-
         double c13, c43;
         double t_tropopause;
-
     public:
-        BC_Atmosphere ( int, int, int, double );
+        BC_Atmosphere(int, int, int, double);
         ~BC_Atmosphere();
-
-        void BC_radius ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-        void BC_theta ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
-        void BC_phi ( Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array & );
+        void BC_radius(Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &);
+        void BC_theta(Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &);
+        void BC_phi(Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &, Array &);
 };
 #endif

@@ -9,7 +9,7 @@ using namespace AtomUtils;
 void cAtmosphereModel::init_velocities(){
     // boundary condition for the velocity components in the circulation cells
 
-    // latest version by Grotjahn ( Global Atmospheric Circulations, 1993 )
+    // latest version by Grotjahn (Global Atmospheric Circulations, 1993)
     // default for the velocity components u, v, and w as initial conditions
 
     // velocities given in m/s, 1 m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this class element
@@ -18,8 +18,8 @@ void cAtmosphereModel::init_velocities(){
     // initial velocity components in the northern and southern
     // Pole, Ferrel and Hadley cells
 
-    // equator ( at j=90 compares to 0° latitude )
-    // u-component up to tropopause and back on half distance (  i = 20 )
+    // equator (at j=90 compares to 0° latitude)
+    // u-component up to tropopause and back on half distance (i = 20)
     double va_equator_SL =  0.000;
     double va_equator_Tropopause = 0.000;
     double wa_equator_SL = - 1.;
@@ -125,10 +125,10 @@ void cAtmosphereModel::init_velocities(){
     form_diagonals(v, 165, 180);
 
     //change the direction for southen hemisphere
-    /*for ( int i = 0; i < im; i++ ){
-        for ( int j = 91; j < jm; j++ ){
-            for ( int k = 0; k < km; k++ ){
-                v.x[ i ][ j ][ k ] = - v.x[ i ][ j ][ k ];
+    /*for (int i = 0; i < im; i++){
+        for (int j = 91; j < jm; j++){
+            for (int k = 0; k < km; k++){
+                v.x[i][j][k] = - v.x[i][j][k];
             }
         }
     }*/
@@ -145,15 +145,15 @@ void cAtmosphereModel::init_velocities(){
     smooth_transition(u,v,w,135);
     */
     // non dimensionalization by u_0
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = 0; j < jm; j++ ){
-                if ( is_land ( h, i, j, k ) )     
-                    u.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] = 0.;
+    for (int i = 0; i < im; i++){
+        for (int k = 0; k < km; k++){
+            for (int j = 0; j < jm; j++){
+                if (is_land (h, i, j, k))     
+                    u.x[i][j][k] = v.x[i][j][k] = w.x[i][j][k] = 0.;
                 else{
-                    u.x[ i ][ j ][ k ] = u.x[ i ][ j ][ k ] / u_0;
-                    v.x[ i ][ j ][ k ] = v.x[ i ][ j ][ k ] / u_0;
-                    w.x[ i ][ j ][ k ] = w.x[ i ][ j ][ k ] / u_0;
+                    u.x[i][j][k] = u.x[i][j][k] / u_0;
+                    v.x[i][j][k] = v.x[i][j][k] / u_0;
+                    w.x[i][j][k] = w.x[i][j][k] / u_0;
                 }
             }
         }
@@ -164,15 +164,15 @@ void cAtmosphereModel::init_velocities(){
 */
 void cAtmosphereModel::smooth_transition(Array &u, Array &v, Array &w, int lat){
     int start = lat-3, end = lat+3;
-    for ( int i = 0; i < im; i++ ){
-        for ( int k = 0; k < km; k++ ){
-            for ( int j = start; j <= end; j++ ){
-                u.x[ i ][ j ][ k ] = ( u.x[ i ][ end ][ k ] - u.x[ i ][ start ][ k ] ) *
-                    ( ( double ) ( j - start )  / ( end - start ) ) + u.x[ i ][ start ][ k ];
-                v.x[ i ][ j ][ k ] = ( v.x[ i ][ end ][ k ] - v.x[ i ][ start ][ k ] ) *
-                    ( ( double ) ( j - start )  / ( end - start ) ) + v.x[ i ][ start ][ k ];
-                w.x[ i ][ j ][ k ] = ( w.x[ i ][ end ][ k ] - w.x[ i ][ start ][ k ] ) *
-                    ( ( double ) ( j - start )  / ( end - start ) ) + w.x[ i ][ start ][ k ];
+    for (int i = 0; i < im; i++){
+        for (int k = 0; k < km; k++){
+            for (int j = start; j <= end; j++){
+                u.x[i][j][k] = (u.x[i][end][k] - u.x[i][start][k]) *
+                    ((double) (j - start)  / (end - start)) + u.x[i][start][k];
+                v.x[i][j][k] = (v.x[i][end][k] - v.x[i][start][k]) *
+                    ((double) (j - start)  / (end - start)) + v.x[i][start][k];
+                w.x[i][j][k] = (w.x[i][end][k] - w.x[i][start][k]) *
+                    ((double) (j - start)  / (end - start)) + w.x[i][start][k];
             }
         }
     }
@@ -182,11 +182,11 @@ void cAtmosphereModel::smooth_transition(Array &u, Array &v, Array &w, int lat){
 *
 */
 void cAtmosphereModel::form_diagonals(Array &a, int start, int end){
-    for ( int k = 0; k < km; k++ ){
-        for ( int j = start; j < end; j++ ){
-            for ( int i = 1; i < im; i++ ){
-                a.x[ i ][ j ][ k ] = ( a.x[ i ][ end ][ k ] - a.x[ i ][ start ][ k ] ) *
-                    ( j - start ) / (double)(end - start) + a.x[ i ][ start ][ k ];
+    for (int k = 0; k < km; k++){
+        for (int j = start; j < end; j++){
+            for (int i = 1; i < im; i++){
+                a.x[i][j][k] = (a.x[i][end][k] - a.x[i][start][k]) *
+                    (j - start) / (double)(end - start) + a.x[i][start][k];
             }
         }
     }
@@ -202,31 +202,31 @@ void  cAtmosphereModel::init_u(Array &u, int j){
           ua_90 = 0.5;
     int tropopause_layer = get_tropopause_layer(j);
     float tropopause_height = get_layer_height(tropopause_layer);
-    for( int k = 0; k < km; k++ ){
-        for( int i = 0; i < tropopause_layer; i++ ){
+    for(int k = 0; k < km; k++){
+        for(int i = 0; i < tropopause_layer; i++){
             float layer_height = get_layer_height(i), half_tropopause_height = tropopause_height/2.;
             float ratio;
             if(layer_height < half_tropopause_height){    
                 ratio = layer_height / half_tropopause_height; 
                 switch(j){
-                    case 90:  u.x[ i ][ 90 ][ k ] = ua_00 * ratio; break;
-                    case 60:  u.x[ i ][ 60 ][ k ] = - ua_30 * ratio; break;
-                    case 120: u.x[ i ][ 120 ][ k ] = - ua_30 * ratio; break;
-                    case 30:  u.x[ i ][ 30 ][ k ] = ua_60 * ratio; break;
-                    case 150: u.x[ i ][ 150 ][ k ] = ua_60 * ratio; break;                
-                    case 0:   u.x[ i ][ 0 ][ k ] = - ua_90 *  ratio ; break;
-                    case 180: u.x[ i ][ 180 ][ k ] = - ua_90 * ratio; break;
+                    case 90:  u.x[i][90][k] = ua_00 * ratio; break;
+                    case 60:  u.x[i][60][k] = - ua_30 * ratio; break;
+                    case 120: u.x[i][120][k] = - ua_30 * ratio; break;
+                    case 30:  u.x[i][30][k] = ua_60 * ratio; break;
+                    case 150: u.x[i][150][k] = ua_60 * ratio; break;                
+                    case 0:   u.x[i][0][k] = - ua_90 *  ratio ; break;
+                    case 180: u.x[i][180][k] = - ua_90 * ratio; break;
                 }
             }else{
                 ratio = (tropopause_height-layer_height) / half_tropopause_height;
                 switch(j){
-                    case 90:  u.x[ i ][ 90 ][ k ] = ua_00 * ratio; break;
-                    case 60:  u.x[ i ][ 60 ][ k ] = -ua_30 * ratio; break;
-                    case 120: u.x[ i ][ 120 ][ k ] = -ua_30 * ratio; break;
-                    case 150: u.x[ i ][ 150 ][ k ] = ua_60 * ratio; break;
-                    case 30:  u.x[ i ][ 30 ][ k ] = ua_60 * ratio; break;
-                    case 0:   u.x[ i ][ 0 ][ k ] = - ua_90 * ratio; break;
-                    case 180: u.x[ i ][ 180 ][ k ] = - ua_90 * ratio; break;
+                    case 90:  u.x[i][90][k] = ua_00 * ratio; break;
+                    case 60:  u.x[i][60][k] = -ua_30 * ratio; break;
+                    case 120: u.x[i][120][k] = -ua_30 * ratio; break;
+                    case 150: u.x[i][150][k] = ua_60 * ratio; break;
+                    case 30:  u.x[i][30][k] = ua_60 * ratio; break;
+                    case 0:   u.x[i][0][k] = - ua_90 * ratio; break;
+                    case 180: u.x[i][180][k] = - ua_90 * ratio; break;
                 }
             }
         }
@@ -237,16 +237,16 @@ void  cAtmosphereModel::init_u(Array &u, int j){
 *
 */
 void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl){
-    for(int j = lat_1; j < lat_2+1; j++ ){
+    for(int j = lat_1; j < lat_2+1; j++){
         int tropopause_layer = get_tropopause_layer(j);
         double tropopause_height = get_layer_height(tropopause_layer);
-        for( int k = 0; k < km; k++ ){
+        for(int k = 0; k < km; k++){
             if(is_ocean_surface(h, 0, j, k))
             {
                 coeff_sl = v_or_w.x[0][j][k];
             }
-            for( int i = 0; i < tropopause_layer; i++ ){
-                v_or_w.x[ i ][ j ][ k ] = ( coeff_trop - coeff_sl ) *
+            for(int i = 0; i < tropopause_layer; i++){
+                v_or_w.x[i][j][k] = (coeff_trop - coeff_sl) *
                     get_layer_height(i)/tropopause_height + coeff_sl;
             }
         }
@@ -258,13 +258,13 @@ void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double 
 *
 */
 void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff){
-    for(int j = lat_1; j < lat_2+1; j++ ){
+    for(int j = lat_1; j < lat_2+1; j++){
         int tropopause_layer = get_tropopause_layer(j);
         if(tropopause_layer >= im-1) return;
         double tropopause_height = get_layer_height(tropopause_layer);
-        for( int k = 0; k < km; k++ ){
-            for( int i = tropopause_layer; i < im; i++ ){
-                v_or_w.x[ i ][ j ][ k ] = coeff * (get_layer_height(im-1) - get_layer_height(i)) / 
+        for(int k = 0; k < km; k++){
+            for(int i = tropopause_layer; i < im; i++){
+                v_or_w.x[i][j][k] = coeff * (get_layer_height(im-1) - get_layer_height(i)) / 
                     (get_layer_height(im-1) - tropopause_height);
             }
         }
