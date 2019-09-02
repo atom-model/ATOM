@@ -87,8 +87,8 @@ def draw_precipitation_evaporation_ratio_map(time=0, data_dir='./', output_dir='
     m.drawparallels(np.arange(-90., 90., 10.), labels=[1,0,0,0], fontsize=10)
     m.drawmeridians(np.arange(-180., 180., 45.), labels=[0,0,0,1], fontsize=10)
 
-    cbar = m.colorbar(cs, location='bottom', pad="10%", label='Ratio of Precipitation to Evaporation')
-    plt.title("{1} at {0}Ma (global mean: {2:.2f})".format(time, 'Ratio of Precipitation to Evaporation', mean_val))
+    cbar = m.colorbar(cs, location='bottom', pad="10%", label='Difference between Precipitation and Evaporation')
+    plt.title("{1} at {0}Ma (global mean: {2:.2f})".format(time, 'Difference between Precipitation and Evaporation', mean_val))
     #plt.annotate('Jul-24-2012', xy=(0.5, 0), xycoords='figure fraction', xytext=(0.5, 0.15), textcoords='figure fraction')
     plt.savefig(output_dir+'/{0}_Ma_{1}.png'.format(time, 'precipitation_evaporation_ratio'), bbox_inches='tight')
    
