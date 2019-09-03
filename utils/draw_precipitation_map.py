@@ -38,11 +38,14 @@ def draw_precipitation_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_
     data=data.flatten()
     data=data.reshape((len(data)/3,3))
     #print(data)
-    np.savetxt('/tmp/atom/p.xyz',data, fmt='%0.2f')
+    tmp_dir = '/tmp/atom/'
+    if not os.path.isdir(tmp_dir):
+        os.mkdir(tmp_dir)
+    np.savetxt(tmp_dir+'p.xyz',data, fmt='%0.2f')
 
-    os.system(gmt_cmd + ' grdfilter /tmp/atom/p.xyz -G/tmp/atom/p.nc -Fm7 -Dp -Vl -fg')
+    os.system(gmt_cmd + ' grdfilter {0}p.xyz -G{0}p.nc -Fm7 -Dp -Vl -fg'.format(tmp_dir))
 
-    fh = Dataset('/tmp/atom/p.nc', mode='r')
+    fh = Dataset(tmp_dir+'p.nc', mode='r')
     #x = fh.variables['lon'][:]
     #y = fh.variables['lat'][:]
     x = all_data[:,0]
@@ -73,6 +76,8 @@ def draw_precipitation_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_
     plt.savefig(output_dir+'/{0}_Ma_{1}.png'.format(time, 'precipitation'), bbox_inches='tight')
     #print(output_dir+'/precipitation'+'/{0}_Ma_{1}.png has been saved!'.format(time, 'precipitation'))
     plt.close()
+    fh.close()
 
 if __name__ == "__main__":
-    draw_precipitation_map(0,'../benchmark/output/')
+    for time in range(0,141,10):    
+        draw_precipitation_map(time,'../benchmark/output/')
