@@ -690,7 +690,7 @@ void cHydrosphereModel::Hydrosphere_PlotData(const string &Name_Bathymetry_File,
 
 	PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " 
         << "w-velocity(m/s)" << ", " << "velocity-mag(m/s)" << ", " << "temperature(Celsius)" << ", " << "salinity(psu)" 
-        << ", " << "bottom_water(m/s)" << ", " <<  "upwelling(m/s)" << ", " <<  "downwelling(m/s)" << endl;
+        << ", " << "ekman pumping(m/s)" << ", " <<  "upwelling(m/s)" << ", " <<  "downwelling(m/s)" << endl;
 
 	for ( int k = 0; k < km; k++ ){
 		for ( int j = 0; j < jm; j++ ){

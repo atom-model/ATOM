@@ -13,9 +13,9 @@ def down_sample(a):
     return tmp[3::4]
 
 def draw_velocity(time, output_dir, data_dir):
-    v = np.fromfile('./output/bin_data/atm_v_time_{}_iter_n_layer_0.bin'.format(time),'<f8')
-    w = np.fromfile('./output/bin_data/atm_w_time_{}_iter_n_layer_0.bin'.format(time),'<f8')
-    h = np.fromfile('./output/bin_data/atm_h_time_{}_iter_n_layer_0.bin'.format(time),'<f8') 
+    v = np.fromfile(data_dir + '/bin_data/atm_v_time_{}_iter_n_layer_0.bin'.format(time),'<f8')
+    w = np.fromfile(data_dir + '/bin_data/atm_w_time_{}_iter_n_layer_0.bin'.format(time),'<f8')
+    h = np.fromfile(data_dir + '/bin_data/atm_h_time_{}_iter_n_layer_0.bin'.format(time),'<f8') 
 
     vm = np.sqrt(v**2+w**2)
     vm[vm==0] = 1

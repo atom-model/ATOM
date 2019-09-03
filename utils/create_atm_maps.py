@@ -9,14 +9,15 @@ import numpy as np
 
 from draw_atm_velocities  import draw_velocity
 from draw_topo import draw_topography
+from common_functions import calculate_spherical_mean
 
 map_cfg = {
     'temperature': (6, -20, 30, u'Temperature (Celsius °C)'),
     'v_velocity': (3, -7, 7, 'v_velocity (m/s)'),
     'w_velocity': (4, -8, 9, 'w_velocity (m/s)'),
-    'water_vapour': (7, 0, 20, 'Water Vapour (g/kg)'),
+    'water_vapour': (7, 0, 15, 'Water Vapour (g/kg)'),
     'precipitation': (8, 0, 2500, 'Precipitation (mm/yr)'),
-    'precipitable_water': (9, 0, 30, 'Precipitable Water (mm)'),
+    'precipitable_water': (9, 0, 60, 'Precipitable Water (mm)'),
     'evaporation' : (10, 0, 2500, 'Evaporation (mm/yr)')
 }
 
@@ -41,6 +42,8 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         z = data[:,index]
         if directory in ['precipitation', 'evaporation']:
             z=z*365
+
+        mean_val = calculate_spherical_mean(z[~np.isnan(z)], y[~np.isnan(z)])
 
         topo = data[:,2]
 
@@ -73,7 +76,10 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         #m.drawcoastlines()   
 
         cbar = m.colorbar(cs, location='bottom', pad="10%", label=map_cfg[directory][3])
-        plt.title("{1} at {0}Ma".format(time, directory.capitalize()))
+        if directory in ['temperature', 'water_vapour', 'precipitation', 'precipitable_water', 'evaporation']:
+            plt.title("{1} at {0}Ma (global spherical mean: {2:.2f})".format(time, directory.capitalize(), mean_val))
+        else:
+            plt.title("{1} at {0}Ma".format(time, directory.capitalize()))
         plt.savefig(output_dir+'/'+directory+'/{0}_Ma_{1}.png'.format(time, directory), bbox_inches='tight')
         print(output_dir+'/'+directory+'/{0}_Ma_{1}.png has been saved!'.format(time, directory))
         #plt.show()
@@ -121,8 +127,8 @@ def create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_
 if  __name__ == "__main__":
 
     data_dir = '../benchmark/output'
-    topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
-    topo_suffix = 'Golonka'
+    topo_dir = '../data/topo_grids'
+    topo_suffix = 'smooth'
     start_time = 0
     end_time = 10
     time_step = 5
@@ -130,6 +136,7 @@ if  __name__ == "__main__":
 
     # v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), 
     # precipitation(mm), precipitable water(mm)
+    #sub_dirs = ['precipitable_water']
     sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 
         'precipitation', 'precipitable_water', 'topography', 'velocity', 'evaporation']
 
@@ -141,8 +148,8 @@ if  __name__ == "__main__":
         topo_suffix = sys.argv[5]
         #topo_dir = sys.argv[6]
     except:
-        pass
+        print("Use 'python create_atm_maps.py 0 100 5 ../benchmark/output smooth' to override the default settings")
+        sys.exit(1)
 
     create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
 
-    print("Use './create_atm_maps.py 0 100 5 ../benchmark/output Ma_smooth' to override the default settings")

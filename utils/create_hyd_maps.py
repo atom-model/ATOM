@@ -8,13 +8,14 @@ from mpl_toolkits.basemap import Basemap
 import numpy as np
 
 from draw_vectors import draw_velocity
+from common_functions import calculate_spherical_mean
 
 map_cfg = {
     'temperature': (6, -20, 30, u'Temperature (Celsius °C)'),
     'v_velocity': (3, -0.05, 0.05, 'v_velocity (m/s)'),
     'w_velocity': (4, -0.03, 0.1, 'w_velocity (m/s)'),
     'salinity': (7, 34, 39, 'Salinity (psu)'),
-    'bottom_water': (8, 0, 7, 'Bottom Water (m/s)'),
+    'ekman_pumping': (8, 0, 7, 'Ekman Pumping (m/s)'),
     'upwelling': (9, 0, 0.06, 'Upwelling (m/s)'),
     'downwelling': (10, 0, 0.1, 'Downwelling (m/s)')
 }
@@ -34,6 +35,8 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         x = data[:,0]
         y = data[:,1]
         z = data[:,index]
+
+        mean_val = calculate_spherical_mean(z[~np.isnan(z)], y[~np.isnan(z)])
 
         topo = data[:,2]
 
@@ -66,7 +69,11 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         #m.drawcoastlines()   
 
         cbar = m.colorbar(cs, location='bottom', pad="10%", label=map_cfg[directory][3])
-        plt.title("{1} at {0}Ma".format(time, directory.capitalize()))
+        if directory in ['temperature', 'salinity']:
+            plt.title("{1} at {0}Ma (global spherical mean: {2:.2f})".format(time, directory.capitalize(), mean_val))
+        else:
+            plt.title("{1} at {0}Ma".format(time, directory.capitalize()))
+        
         plt.savefig(output_dir+'/'+directory+'/{0}_Ma_{1}.png'.format(time, directory), bbox_inches='tight')
         print(output_dir + '/' + directory + '/{0}_Ma_{1}.png has been saved!'.format(time, directory))
         #plt.show()
@@ -114,14 +121,14 @@ def create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_
 if  __name__ == "__main__":
 
     data_dir = '../benchmark/output'
-    topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
-    topo_suffix = 'Golonka'
+    topo_dir = '../data/topo_grids/'
+    topo_suffix = 'smooth'
     start_time = 0
     end_time = 10
     time_step = 5
     output_dir = './hyd_maps'
 
-    sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 
+    sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'ekman_pumping', 
         'upwelling', 'downwelling', 'velocity']
 
     try:
@@ -133,11 +140,10 @@ if  __name__ == "__main__":
         topo_dir = sys.argv[6]
     except:
         print("Usage: python " + sys.argv[0] + 
-            ' 0 10 5 ../benchmark/output Golonka ../data/Paleotopography_bathymetry/Golonka_rev210/')
+            ' 0 10 5 ../benchmark/output smooth ../data/topo_grids/')
+        sys.exit(1)
 
     create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
-
-    print("Use './create_hyd_maps.py 0 100 5 ../cli/output Ma_Golonka' to override the default settings")
 
 
 

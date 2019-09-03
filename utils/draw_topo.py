@@ -18,8 +18,8 @@ def draw_topography(time, output_dir, topo_dir, topo_suffix):
     m = Basemap(llcrnrlon=-180,llcrnrlat=-90,urcrnrlon=180,urcrnrlat=90,projection='kav7', lon_0=0)  
 
     xi, yi = m(x, y)
-    v_min = -5000
-    v_max = 5000
+    v_min = 0
+    v_max = 2000
 
     #cs = m.scatter(xi, yi, marker='.', c=z, alpha=0.5, lw=0, vmin=v_min, vmax=v_max)
 
@@ -45,8 +45,8 @@ def draw_topography(time, output_dir, topo_dir, topo_suffix):
 
 if  __name__ == "__main__":
 
-    topo_dir = '../data/Paleotopography_bathymetry/Golonka_rev210/'
-    topo_suffix = 'Golonka'
+    topo_dir = '../data/topo_grids/'
+    topo_suffix = 'smooth'
     start_time = 0
     end_time = 10
     time_step = 5
@@ -59,7 +59,8 @@ if  __name__ == "__main__":
         topo_suffix = sys.argv[4]
         topo_dir = sys.argv[5]
     except:
-        print("Usage: python " + sys.argv[0] +  ' 0 20 5 Golonka ../data/Paleotopography_bathymetry/Golonka_rev210/')
+        print("Usage: python " + sys.argv[0] +  ' 0 20 5 smooth ../data/topo_grids/')
+        sys.exit(1)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

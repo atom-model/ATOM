@@ -94,6 +94,8 @@ def draw_precipitation_evaporation_diff_map(time=0, data_dir='./', output_dir='/
    
     print(output_dir+'/{0}_Ma_{1}.png has been saved!'.format(time, 'precipitation_evaporation_diff'))
     plt.close()
+    fh.close()
 
 if __name__ == "__main__":
-    draw_precipitation_evaporation_ratio_map(0,'../benchmark/output/')
+    for time in range(0,141,10):
+        draw_precipitation_evaporation_ratio_map(time,'../benchmark/output/')
