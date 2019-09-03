@@ -38,7 +38,8 @@ def add_lon_lat_to_gmt_data(data):
     data = data.reshape((181,361))
     return np.stack((X, Y, data),axis=-1)
 
-def draw_precipitation_evaporation_diff_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_suffix='smooth'):
+def draw_precipitation_evaporation_diff_map(time=0, data_dir='./', 
+        output_dir='./precipitation_evaporation_diff', topo_suffix='smooth'):
     gmt_cmd = 'gmt' 
     all_data = np.genfromtxt(data_dir + '/[{0}Ma_{1}.xyz]_PlotData_Atm.xyz'.format(time, topo_suffix), skip_header=1)
     data = all_data[:,8]
@@ -50,11 +51,17 @@ def draw_precipitation_evaporation_diff_map(time=0, data_dir='./', output_dir='/
     data=data.flatten()
     data=data.reshape((len(data)/3,3))
     #print(data)
-    np.savetxt('/tmp/atom/p.xyz',data, fmt='%0.2f')
+    tmp_dir = '/tmp/atom/'
+    if not os.path.isdir(tmp_dir):
+        os.mkdir(tmp_dir)
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
 
-    os.system(gmt_cmd + ' grdfilter /tmp/atom/p.xyz -G/tmp/atom/p.nc -Fm7 -Dp -Vl -fg')
+    np.savetxt(tmp_dir + 'p.xyz',data, fmt='%0.2f')
 
-    fh = Dataset('/tmp/atom/p.nc', mode='r')
+    os.system(gmt_cmd + ' grdfilter {0}p.xyz -G{0}p.nc -Fm7 -Dp -Vl -fg'.format(tmp_dir))
+
+    fh = Dataset(tmp_dir + 'p.nc', mode='r')
     #x = fh.variables['lon'][:]
     #y = fh.variables['lat'][:]
     x = all_data[:,0]
@@ -79,7 +86,7 @@ def draw_precipitation_evaporation_diff_map(time=0, data_dir='./', output_dir='/
 
     xi, yi = m(x, y)
     img_data = m.transform_scalar(data, np.arange(-180,180),np.arange(-90,90),361,181)
-    cs = m.imshow(img_data,alpha=0.5, vmin=-2500, vmax=2500, cmap='jet_r')
+    cs = m.imshow(img_data,alpha=0.5, vmin=-1500, vmax=2000, cmap='jet_r')
 
     m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
                             colors ='k', linewidths= 0.3 )
@@ -98,4 +105,4 @@ def draw_precipitation_evaporation_diff_map(time=0, data_dir='./', output_dir='/
 
 if __name__ == "__main__":
     for time in range(0,141,10):
-        draw_precipitation_evaporation_ratio_map(time,'../benchmark/output/')
+        draw_precipitation_evaporation_diff_map(time,'../benchmark/output/')
