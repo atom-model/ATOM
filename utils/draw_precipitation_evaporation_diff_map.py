@@ -38,7 +38,7 @@ def add_lon_lat_to_gmt_data(data):
     data = data.reshape((181,361))
     return np.stack((X, Y, data),axis=-1)
 
-def draw_precipitation_evaporation_ratio_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_suffix='smooth'):
+def draw_precipitation_evaporation_diff_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_suffix='smooth'):
     gmt_cmd = 'gmt' 
     all_data = np.genfromtxt(data_dir + '/[{0}Ma_{1}.xyz]_PlotData_Atm.xyz'.format(time, topo_suffix), skip_header=1)
     data = all_data[:,8]
@@ -90,9 +90,9 @@ def draw_precipitation_evaporation_ratio_map(time=0, data_dir='./', output_dir='
     cbar = m.colorbar(cs, location='bottom', pad="10%", label='Difference between Precipitation and Evaporation')
     plt.title("{1} at {0}Ma (global mean: {2:.2f})".format(time, 'Difference between Precipitation and Evaporation', mean_val))
     #plt.annotate('Jul-24-2012', xy=(0.5, 0), xycoords='figure fraction', xytext=(0.5, 0.15), textcoords='figure fraction')
-    plt.savefig(output_dir+'/{0}_Ma_{1}.png'.format(time, 'precipitation_evaporation_ratio'), bbox_inches='tight')
+    plt.savefig(output_dir+'/{0}_Ma_{1}.png'.format(time, 'precipitation_evaporation_diff'), bbox_inches='tight')
    
-    print(output_dir+'/{0}_Ma_{1}.png has been saved!'.format(time, 'precipitation_evaporation_ratio'))
+    print(output_dir+'/{0}_Ma_{1}.png has been saved!'.format(time, 'precipitation_evaporation_diff'))
     plt.close()
 
 if __name__ == "__main__":
