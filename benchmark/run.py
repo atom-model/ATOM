@@ -60,7 +60,7 @@ def main(maps_only=False):
         create_atm_maps.create_all_maps(atm_sub_dirs, start_time, end_time, time_step, atm_map_output_dir, 
             atom_output_dir, topo_dir, topo_suffix)
 
-        hyd_sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 
+        hyd_sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'ekman_pumping', 
             'upwelling', 'downwelling', 'velocity']
     
         create_hyd_maps.create_all_maps(hyd_sub_dirs, start_time, end_time, time_step, hyd_map_output_dir,
