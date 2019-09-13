@@ -69,7 +69,7 @@ def draw_precipitation_evaporation_diff_map(time=0, data_dir='./',
     m.drawparallels(np.arange(-90., 90., 10.), labels=[1,0,0,0], fontsize=10)
     m.drawmeridians(np.arange(-180., 180., 45.), labels=[0,0,0,1], fontsize=10)
 
-    bounds = np.array([-30,-17,-13,-10,-8,-6,-4 ,-2,-1, -0.2, 0.0, 0.2, 1, 2 ,4 ,6, 8, 10.0])*365
+    bounds = np.array([-30,-17,-13,-10,-8,-6,-4 ,-2,-1, -0.2, 0.2, 1, 2 ,4 ,6, 8, 10.0])*365
     norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
     cb3 = m.colorbar(cs, cmap=cmap,
                                 norm=norm,

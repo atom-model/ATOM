@@ -171,8 +171,10 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     //  topography and bathymetry as boundary conditions for the structures of the continents and the ocean ground
     bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
     init_topography(bathymetry_path + "/" + bathymetry_name);
-    read_IC(velocity_v_file, v.x[0], jm, km);
-    read_IC(velocity_w_file, w.x[0], jm, km);    
+    if(use_NASA_velocity){
+        read_IC(velocity_v_file, v.x[0], jm, km);
+        read_IC(velocity_w_file, w.x[0], jm, km);    
+    }
     read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
     read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
     iter_cnt_3d = -1;

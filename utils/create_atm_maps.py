@@ -18,7 +18,7 @@ map_cfg = {
     'water_vapour': (7, 0, 15, 'Water Vapour (g/kg)'),
     'precipitation': (8, 0, 2500, 'Precipitation (mm/yr)'),
     'precipitable_water': (9, 0, 60, 'Precipitable Water (mm)'),
-    'evaporation' : (10, 0, 2500, 'Evaporation (mm/yr)')
+    'evaporation' : (10, 0, 1250, 'Evaporation (mm/yr)')
 }
 
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):

@@ -46,7 +46,7 @@ def draw_velocity(time, output_dir, data_dir):
     wn = wn / np.sqrt(np.square(wn) + np.square(vn))
     vn = vn / np.sqrt(np.square(wn) + np.square(vn))
     cs = m.quiver(down_sample(xi), down_sample(yi), wn, vn, down_sample(vm), width=0.001,
-         headlength=7, headwidth=5, pivot='tail', clim=[0, 6], cmap='jet')
+         headlength=7, headwidth=5, pivot='tail', clim=[0, 1.2], cmap='jet')
 
 
     m.contour( xi, yi, h, colors ='k', linewidths= 0.3 )

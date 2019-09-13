@@ -20,10 +20,6 @@ void cAtmosphereModel::init_velocities(){
 
     // equator (at j=90 compares to 0° latitude)
     // u-component up to tropopause and back on half distance (i = 20)
-    double va_equator_SL =  0.000;
-    double va_equator_Tropopause = 0.000;
-    double wa_equator_SL = - 1.;
-    double wa_equator_Tropopause = - 7.5;
 
     init_u(u,0);
     init_u(u,30);
@@ -33,63 +29,61 @@ void cAtmosphereModel::init_velocities(){
     init_u(u,150);
     init_u(u,180);
 
+    //initialise w, tropopause, surface
     //equator
-    init_v_or_w(v,90,90,va_equator_Tropopause,va_equator_SL);
-    init_v_or_w(w,90,90,wa_equator_Tropopause,wa_equator_SL);
+    init_v_or_w(v, 90, 0, 0); // lat:0
     
     //polar cell
-    double va_Polar_SL = 0.;
-    double va_Polar_Tropopause = 0.;
-    double va_Polar_SL_75 = .5;
-    double va_Polar_Tropopause_75 = - 1.;
-    double wa_Polar_SL = - 0.01;
-    double wa_Polar_Tropopause = 0.;
-
     //northern polar cell
-    init_v_or_w(v,0,30,va_Polar_Tropopause,va_Polar_SL); //lat: 90-60
-    init_v_or_w(w,0,30,wa_Polar_Tropopause,wa_Polar_SL); //lat: 90-60
-    init_v_or_w(v,15,15,va_Polar_Tropopause_75,va_Polar_SL_75); //lat: 75
+    init_v_or_w(v, 0, 0, 0);  //lat: 90
+    init_v_or_w(v, 15, -1, 0.5); //lat: 75
 
     //southern polar cell
-    init_v_or_w(v,150,180,va_Polar_Tropopause,va_Polar_SL); //lat: -90-(-60)
-    init_v_or_w(w,150,180,wa_Polar_Tropopause,wa_Polar_SL); //lat: -90-(-60)
-    init_v_or_w(v,165,165,va_Polar_Tropopause_75,va_Polar_SL_75); //lat: -75
+    init_v_or_w(v, 180, 0, 0); //lat: -90
+    init_v_or_w(v, 165, -1, 0.5); //lat: -75
 
     //Ferrel cell
-    double va_Ferrel_SL = 0.5;
-    double va_Ferrel_Tropopause = 1.;
-    double va_Ferrel_SL_45 = - 0.1;
-    double va_Ferrel_Tropopause_45 = 1.;
-    double wa_Ferrel_SL = -0.2;    // subpolar jet
-    double wa_Ferrel_Tropopause = 10.;           
-
     //northern Ferrel cell
-    init_v_or_w(v,30,30,va_Ferrel_Tropopause,va_Ferrel_SL); //lat: 60
-    init_v_or_w(w,30,30,wa_Ferrel_Tropopause,wa_Ferrel_SL); //lat: 60
-    init_v_or_w(v,45,45,va_Ferrel_Tropopause_45,va_Ferrel_SL_45); //lat: 45   
+    init_v_or_w(v, 30, 1, 0.5); //lat: 60
+    init_v_or_w(v, 45, 1, -0.1); //lat: 45   
 
     //southern Ferrel cell
-    init_v_or_w(v,150,150,va_Ferrel_Tropopause,va_Ferrel_SL); //lat: -60
-    init_v_or_w(w,150,150,wa_Ferrel_Tropopause,wa_Ferrel_SL); //lat: -60
-    init_v_or_w(v,135,135,va_Ferrel_Tropopause_45,va_Ferrel_SL_45); //lat: -45   
- 
-    // Hadley cell
-    double va_Hadley_SL = .25;
-    double va_Hadley_Tropopause = - 1.;
-    double va_Hadley_SL_15 = 1.;
-    double va_Hadley_Tropopause_15 = - 1.;
-    double wa_Hadley_SL = 1.;            // at surface
-    double wa_Hadley_Tropopause = 30.;  // subtropic jet in m/s compares to 108 km/h
+    init_v_or_w(v, 150, 1, 0.5); //lat: -60
+    init_v_or_w(v, 135, 1, -0.1); //lat: -45   
 
+    // Hadley cell
     //northern Hadley cell
-    init_v_or_w(v,60,60,va_Hadley_Tropopause,va_Hadley_SL); //lat: 30
-    init_v_or_w(w,60,60,wa_Hadley_Tropopause,wa_Hadley_SL); //lat: 30
-    init_v_or_w(v,75,75,va_Hadley_Tropopause_15,va_Hadley_SL_15); //lat: 15   
+    init_v_or_w(v, 60, -1, 0.25); //lat: 30
+    init_v_or_w(v, 75, -1, 1); //lat: 15   
 
     //southern Hadley cell
-    init_v_or_w(v,120,120,va_Hadley_Tropopause,va_Hadley_SL); //lat: -30
-    init_v_or_w(w,120,120,wa_Hadley_Tropopause,wa_Hadley_SL); //lat: -30
-    init_v_or_w(v,105,105,va_Hadley_Tropopause_15,va_Hadley_SL_15); //lat: -15 
+    init_v_or_w(v, 120, -1, 0.25); //lat: -30
+    init_v_or_w(v, 105, -1, 1); //lat: -15 
+
+    //initialise w
+    //equator
+    init_v_or_w(w, 90, -7.5, -1); //lat: 0
+    
+    //polar cell
+    //northern polar cell
+    init_v_or_w(w, 0, 0, -0.01); //lat: 90
+
+    //southern polar cell
+    init_v_or_w(w, 180, 0, -0.01); //lat: -90
+
+    //Ferrel cell
+    //northern Ferrel cell
+    init_v_or_w(w, 30, 10, -0.2); //lat: 60
+
+    //southern Ferrel cell
+    init_v_or_w(w, 150, 10, -0.2); //lat: -60
+ 
+    // Hadley cell
+    //northern Hadley cell
+    init_v_or_w(w, 60, 30, 1); //lat: 30
+
+    //southern Hadley cell
+    init_v_or_w(w, 120, 30, 1); //lat: -30
 
     // forming diagonals 
     //northen hemisphere
@@ -125,13 +119,15 @@ void cAtmosphereModel::init_velocities(){
     form_diagonals(v, 165, 180);
 
     //change the direction for southen hemisphere
-    /*for (int i = 0; i < im; i++){
-        for (int j = 91; j < jm; j++){
-            for (int k = 0; k < km; k++){
-                v.x[i][j][k] = - v.x[i][j][k];
+    if(!use_NASA_velocity){
+        for (int i = 0; i < im; i++){
+            for (int j = 91; j < jm; j++){
+                for (int k = 0; k < km; k++){
+                    v.x[i][j][k] = - v.x[i][j][k];
+                }
             }
         }
-    }*/
+    }
 
     //smoothing transitions from cell to cell
     /*smooth_transition(u,v,w,60); 
@@ -236,37 +232,37 @@ void  cAtmosphereModel::init_u(Array &u, int j){
 /*
 *
 */
-void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl){
-    for(int j = lat_1; j < lat_2+1; j++){
-        int tropopause_layer = get_tropopause_layer(j);
-        double tropopause_height = get_layer_height(tropopause_layer);
-        for(int k = 0; k < km; k++){
-            if(is_ocean_surface(h, 0, j, k))
-            {
-                coeff_sl = v_or_w.x[0][j][k];
-            }
-            for(int i = 0; i < tropopause_layer; i++){
-                v_or_w.x[i][j][k] = (coeff_trop - coeff_sl) *
-                    get_layer_height(i)/tropopause_height + coeff_sl;
-            }
+void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int j, double coeff_trop, double coeff_sl){
+    int tropopause_layer = get_tropopause_layer(j);
+    double tropopause_height = get_layer_height(tropopause_layer);
+    for(int k = 0; k < km; k++){
+        if(use_NASA_velocity && is_ocean_surface(h, 0, j, k))
+        {
+            coeff_sl = v_or_w.x[0][j][k];
+        }
+        if(!use_NASA_velocity && !is_ocean_surface(h, 0, j, k))
+        {
+            //coeff_sl = 0;
+        }
+        for(int i = 0; i < tropopause_layer; i++){
+            v_or_w.x[i][j][k] = (coeff_trop - coeff_sl) *
+                get_layer_height(i)/tropopause_height + coeff_sl;
         }
     }
-    init_v_or_w_above_tropopause(v_or_w, lat_1, lat_2, coeff_trop);
+    init_v_or_w_above_tropopause(v_or_w, j, coeff_trop);
 }
 
 /*
 *
 */
-void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff){
-    for(int j = lat_1; j < lat_2+1; j++){
-        int tropopause_layer = get_tropopause_layer(j);
-        if(tropopause_layer >= im-1) return;
-        double tropopause_height = get_layer_height(tropopause_layer);
-        for(int k = 0; k < km; k++){
-            for(int i = tropopause_layer; i < im; i++){
-                v_or_w.x[i][j][k] = coeff * (get_layer_height(im-1) - get_layer_height(i)) / 
-                    (get_layer_height(im-1) - tropopause_height);
-            }
+void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int j, double coeff){
+    int tropopause_layer = get_tropopause_layer(j);
+    if(tropopause_layer >= im-1) return;
+    double tropopause_height = get_layer_height(tropopause_layer);
+    for(int k = 0; k < km; k++){
+        for(int i = tropopause_layer; i < im; i++){
+            v_or_w.x[i][j][k] = coeff * (get_layer_height(im-1) - get_layer_height(i)) / 
+                (get_layer_height(im-1) - tropopause_height);
         }
     }
 }

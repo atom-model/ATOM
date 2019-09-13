@@ -202,9 +202,9 @@ private:
 
     void init_u(Array &u, int j);
 
-    void init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl);
+    void init_v_or_w(Array &v_or_w, int lat, double coeff_trop, double coeff_sl);
 
-    void init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff);
+    void init_v_or_w_above_tropopause(Array &v_or_w, int lat, double coeff);
 
     void form_diagonals(Array &a, int start, int end);
 
