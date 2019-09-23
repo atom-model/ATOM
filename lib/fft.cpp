@@ -114,62 +114,134 @@ int next_power_of_two(unsigned number)
     }
     return 0;
 }
+
+void init_gaussian_kernel(double* kernel, double sigma, size_t len)
+{
+    double t = sqrt(2*M_PI)*sigma, ss=2*sigma*sigma;
+    std::cout << t << " " << ss <<std::endl;
+    double sum=0;
+    for(int i=0; i<len; i++)
+    {
+        //std::cout << i << std::endl;
+        double x_2 = (i-len/2)*(i-len/2);
+        kernel[i] = exp(-x_2/ss)/t;
+        sum += kernel[i]; 
+        //std::cout << kernel[i] << std::endl;
+    }
+    for(int i=0; i<len; i++)
+    { 
+        kernel[i] /= sum; 
+    }
+}
  
 int main()
 {
     using namespace std;
+    int m=361, n=181;
 
-    std::ifstream input_file ("./atm_t_time_0_iter_n_layer_0.bin", ios::in | ios::binary);
-    input_file.seekg(0, std::ios::end);
-    size_t size = input_file.tellg();  
-    input_file.seekg(0, std::ios::beg); 
-    char* buffer = new char[size];
-    input_file.read(buffer, size);
-    input_file.close();
-
-    size_t size_n = next_power_of_two(size/8);
-    std::cout << size/8 << " " << log2(size_n) << " " << size_n << std::endl;
-
-    double* padded_double_data = new double[size_n](); 
-    std::copy((double*)buffer, (double*)buffer+size/8, padded_double_data);
-    delete[] buffer;
-    //const Complex test[] = { 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0 };
-    CArray data(size_n);
-    for(int i =0; i<size_n; i++){
-        data[i] = Complex(padded_double_data[i]);
+    int nn = next_power_of_two(n);
+    double* kernel = new double[nn];
+    init_gaussian_kernel(kernel, 1, nn);
+    CArray k_data(nn);
+    for(int i =0; i<nn; i++){
+        std::cout << kernel[i] << ", ";
+        k_data[i] = Complex(kernel[i]);
     }
-    delete[] padded_double_data;
-    std::cout << std::fixed;
-    std::cout << std::setprecision(2);
+    std::cout << std::endl;
+    delete[] kernel;
+
+    fft_ex(k_data);
+
+    /*std::cout << "kernel data" << std::endl;
+    for (int i = 0; i < n; ++i)
+    {
+        std::cout << k_data[i] << " ";
+    }
+    std::cout << std::endl << std::endl;
+    */
+    double* src = new double[m*n](); 
+    double* dst = new double[m*nn]();
+    std::fill_n(src+15*m, m*15, 1);
+    std::fill_n(src+45*m, m*15, 0.2);
+    std::fill_n(src+75*m, m*15, 0.4);
+    std::fill_n(src+105*m, m*15, 0.6);
+    std::fill_n(src+135*m, m*15, 0.8);
+    std::fill_n(src+160*m, m*10, 1);
+
+    std::ofstream ios("input.bin", std::ios::binary | std::ios::out);
+    for(int j=0; j<m*n; j++){
+        ios.write(reinterpret_cast<char*>(&src[j]), sizeof(double)) ;
+    }
+    ios.close();
+
+    for(int j=0; j<m; j++)
+    { 
+        CArray data(nn);
+        for(int i =0; i<nn; i++)
+        {
+            if(i < n)
+                data[i] = Complex(src[m*i+j]);
+            else
+                data[i] = Complex(0);
+        }
+
+        std::cout << std::fixed;
+        std::cout << std::setprecision(2);
     
-    std::cout << "input data" << std::endl;
-    for (int i = 0; i < 8; ++i)
-    {
-        std::cout << data[i] << std::endl;
-    }
+        /*std::cout << "input data" << std::endl;
+        for (int i = 0; i < 8; ++i)
+        {
+            std::cout << data[i] << std::endl;
+        }*/
 
-    // forward fft
-    fft_ex(data);
+        // forward fft
+        fft_ex(data);
 
-    std::cout << std::endl << "fft" << std::endl;
-    for (int i = 0; i < 8; ++i)
-    {
-        std::cout << data[i] << std::endl;
-    }
+        /*std::cout << std::endl << "fft" << std::endl;
+        for (int i = 0; i < 8; ++i)
+        {
+            std::cout << data[i] << std::endl;
+        }*/
+
+        for(int i =0; i<nn; i++)
+        {
+            //double x=data[i].real(), y=data[i].imag(), u=k_data[i].real(), v=k_data[i].imag();
+            //Complex tmp=(x*u-y*v, x*v+y*u);
+            Complex tmp(data[i].real()*k_data[i].real(), data[i].imag()*k_data[i].real());
+            data[i] = tmp;
+        }
  
-    // inverse fft
-    ifft(data);
+        // inverse fft
+        ifft(data);
  
-    std::cout << std::endl << "ifft" << std::endl;
-    for (int i = 0; i < 8; ++i)
-    {
-        std::cout << data[i] << std::endl;
+        /*std::cout << std::endl << "ifft" << std::endl;
+        for (int i = 0; i < 8; ++i)
+        {
+            std::cout << data[i] << std::endl;
+        }*/
+
+        for(int i =0; i<nn; i++)
+        {
+            //the result data need shift
+            if(i>=nn/2){
+                dst[m*(i-nn/2)+j] = data[i].real();
+            }else{
+                dst[m*(i+nn/2)+j] = data[i].real();
+            }
+            //dst[m*i+j] = data[i].real();
+            if(j==0)
+                std::cout << data[i].real() << ",";
+        }
     }
 
-    std::ofstream os("test.bin", std::ios::binary | std::ios::out);
-    for(int j=0; j<size/8; j++){
-        os.write(reinterpret_cast<char*>(&data[j].real()), sizeof(double)) ;
+    std::ofstream os("output.bin", std::ios::binary | std::ios::out);
+    for(int j=0; j<m*n; j++){
+        os.write(reinterpret_cast<char*>(&dst[j]), sizeof(double)) ;
     }
     os.close();
+
+    delete[] src;
+    delete[] dst;
+
     return 0;
 }
