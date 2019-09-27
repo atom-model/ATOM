@@ -110,7 +110,7 @@ double AtomUtils::C_Dalton(double u_0, double v, double w){
     double C_max = .053;  // for v_max = 10 m/s, but C is function of v, should be included
     // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
     double v_max = 10.;  // Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
-    double fac = .45;  // factor to adjust the ratio of NASA precipitation 
+    double fac = 1.;  // factor to adjust the ratio of NASA precipitation 
                        // to Dalton evaporation for the modern world, 
                        // for the modern world the global precipitation is 10% higher than evaporation
     double vel_magnitude = sqrt(v * v + w * w) * u_0;
@@ -130,6 +130,20 @@ void AtomUtils::read_IC(const string& fn, double** a, int jm, int km){
             ifs >> lat >> lon >> d;
             a[ j ][ k ] = d;
         }
+    }
+}
+
+
+void AtomUtils::smooth_cloud_steps(int k, int im, int jm, Array &value_in, 
+    Array &value_out){
+    double coeff = .1;
+    for(int i = 1; i < im-1 ; i++){
+        for(int j = 1; j < jm-1; j++){
+            value_out.x[i][j][k] = ( coeff * value_in.x[i][j][k] 
+            + ( 1. - coeff ) * ( value_in.x[i+1][j][k] 
+            + value_in.x[i-1][j][k] + value_in.x[i][j+1][k] 
+            + value_in.x[i][j-1][k] ) / 4. );
+        } 
     }
 }
 

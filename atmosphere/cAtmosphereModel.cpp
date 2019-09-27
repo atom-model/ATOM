@@ -174,6 +174,9 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     if(use_NASA_velocity){
         read_IC(velocity_v_file, v.x[0], jm, km);
         read_IC(velocity_w_file, w.x[0], jm, km);    
+//    if(NASATemperature == 0){
+//        read_IC(velocity_v_file, v.x[0], jm, km);
+//        read_IC(velocity_w_file, w.x[0], jm, km);
     }
     read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
     read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
@@ -184,10 +187,20 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     adjust_temperature_IC(t.x[0], jm, km);
     init_temperature();
     init_water_vapour();
+//    goto Printout;
     store_intermediate_data_3D();
     BC_Pressure();
     init_co2();
     Ice_Water_Saturation_Adjustment();
+//    Two_Category_Ice_Scheme(); 
+/*
+    for(int k = 0; k < km ; k++){
+//        smooth_cloud_steps(k, im, jm, c, c);
+        smooth_cloud_steps(k, im, jm, cloud, cloud);
+        smooth_cloud_steps(k, im, jm, ice, ice);
+    }
+*/
+//    goto Printout;
     BC_Radiation_multi_layer(); 
     store_intermediate_data_2D();
     store_intermediate_data_3D();
@@ -200,9 +213,6 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     write_file(bathymetry_name, output_path, true);
     iter_cnt_3d++;
     save_data();    
-    cout << endl 
-        << "***** end of the Atmosphere General Circulation Modell (AGCM) *****" 
-        << endl << endl;
     if(debug){
         fedisableexcept(FE_INVALID | FE_OVERFLOW |FE_DIVBYZERO); //not platform independent(bad, very bad, I know)
     }
@@ -356,6 +366,9 @@ void cAtmosphereModel::run_2D_loop(){
 
 
 void cAtmosphereModel::run_3D_loop(){ 
+
+    cout << "    begin run_3D_loop    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
+
     iter_cnt = 1;
     iter_cnt_3d = 0;
     if(debug){
@@ -364,6 +377,9 @@ void cAtmosphereModel::run_3D_loop(){
     }
     for(int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++){
         for(int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++){
+
+    cout << "    in run_3D_loop    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
+
             if(debug){ Array tmp = (t-1)*t_0; tmp.inspect();}
             cout << endl << endl;
             cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
@@ -384,6 +400,13 @@ void cAtmosphereModel::run_3D_loop(){
 //            Moist_Convection(); // work in progress
                 Two_Category_Ice_Scheme(); 
                 Value_Limitation_Atm();
+/*
+                for(int k = 0; k < km ; k++){
+//                    smooth_cloud_steps(k, im, jm, c, c);
+                    smooth_cloud_steps(k, im, jm, cloud, cloud);
+                    smooth_cloud_steps(k, im, jm, ice, ice);
+                }
+*/
             }
             solveRungeKutta_3D_Atmosphere();
             Value_Limitation_Atm();
@@ -553,6 +576,11 @@ void cAtmosphereModel::init_water_vapour(){
                             - get_layer_height(i_mount));
                         c.x[i][j][k] = parabola_interp(c_tropopause, 
                             c.x[i_mount][j][k], x); 
+/*
+                        c.x[i][j][k] = ( c_tropopause - c.x[i_mount][j][k] ) // linear dicrease 
+                            * get_layer_height(i) / get_layer_height(i_trop) 
+                            + c.x[i_mount][j][k]; 
+*/
                     }else{
                         c.x[i][j][k] = c.x[i_mount][j][k];
                     }
@@ -562,6 +590,64 @@ void cAtmosphereModel::init_water_vapour(){
             } // end i
         }// end k
     }// end j
+    // cloud water and cloud ice distribution formed by the curve Versiera (Witch) of Agnesi, algebraic curve of 3. order
+    for(int j = 0; j < jm; j++){
+        int i_trop = get_tropopause_layer(j);
+        for(int k = 0; k < km; k++){
+            int i_mount = get_surface_layer(j, k);
+            double i_max = im-1;
+            double cloud_x_max = .01;
+            double ice_x_max = .01;
+            int cloud_Agnesi = 20;
+            int ice_Agnesi = 33;
+            double cloud_max = c.x[i_mount][j][k] / 4.;
+            double ice_max = c.x[i_mount][j][k] / 10.;
+            for(int i = 0; i < im; i++){
+                if(i < i_trop){
+                    if(i>i_mount){
+                        double x_cloud = ( (double)i - cloud_Agnesi ) 
+                            / ( i_max - cloud_Agnesi ) * cloud_x_max;
+                        double x_ice = ( (double)i - ice_Agnesi ) 
+                            / ( ice_Agnesi - ice_max ) * ice_x_max;
+                        cloud.x[i][j][k] = pow(cloud_max, 3.) 
+                            / ( pow(cloud_max, 2.) + pow(x_cloud, 2.)); 
+                        ice.x[i][j][k] = pow(ice_max, 3.) 
+                            / ( pow(ice_max, 2.) + pow(x_ice, 2.)); 
+                    }else{
+                        cloud.x[i][j][k] = cloud.x[i_mount][j][k];
+                        ice.x[i][j][k] = ice.x[i_mount][j][k];
+                    }
+                }else{
+                    cloud.x[i][j][k] = c_tropopause;
+                    ice.x[i][j][k] = c_tropopause;
+                }
+/*
+    cout.precision(8);
+    cout.setf(ios::fixed);
+    if((j == 90) && (k == 180)) cout << "  cloud/ice  " << "    i = " << i << "    i_mount = " << i_mount << "    i_trop = " << i_trop << "   cloud_max = "  << cloud_max << "   ice_max = "  << ice_max << "   cloud = " << cloud.x[i][j][k] << "   ice = " << ice.x[i][j][k] << "   cloud_pow = " << pow(cloud_max, 3.) << "   ice_pow = " << pow(cloud_max, 3.) << endl;
+*/
+            } // end i
+        }// end k
+    }// end j
+    float c43 = 4./3.;
+    float c13 = 1./3.;
+    for(int k = 1; k < km-1; k++){
+        for(int j = 1; j < jm-1; j++){
+            cloud.x[im-1][j][k] = c43 * cloud.x[im-2][j][k] -
+                c13 * cloud.x[im-3][j][k];
+            ice.x[im-1][j][k] = c43 * ice.x[im-2][j][k] -
+                c13 * ice.x[im-3][j][k];
+            if(is_land (h, 0, j, k)){  
+                cloud.x[0][j][k] = 0.;
+                ice.x[0][j][k] = 0.;
+            }else{
+                cloud.x[0][j][k] = c43 * cloud.x[1][j][k] -
+                    c13 * cloud.x[2][j][k];
+                ice.x[0][j][k] = c43 * ice.x[1][j][k] -
+                    c13 * ice.x[2][j][k];
+            }
+        }
+    }
 }
 
 /*

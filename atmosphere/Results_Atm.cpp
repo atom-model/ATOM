@@ -30,45 +30,72 @@ void cAtmosphereModel::run_MSL_data(){
     }
     float c43 = 4./3.;
     float c13 = 1./3.;
+    float e, E_Rain, E_Ice, sat_deficit;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             int i = get_surface_layer(j,k);
-            float t_Celsius = t.x[i][j][k] * t_0 - t_0;
-            float e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in hPa
-            float t_denom = t_Celsius + 234.175;
-            float E = hp * exp (17.0809 * t_Celsius / t_denom);
-                // saturation vapour pressure in the water phase for t > 0°C in hPa
-            float sat_deficit = (E - e);  // saturation deficit in hPa
-            if(is_land(h, i, j, k)){ //ocean surface
+            float t_u = t.x[i][j][k] * t_0;
+            float t_Celsius = t_u - t_0;
+            if(t_Celsius >= 0.){
+                if(is_land(h, i, j, k)){
+                    t_u = t.x[i][j][k] * t_0;
+                    t_Celsius = t_u - t_0;
+                    e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in hPa
+                    E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
+                    sat_deficit = ( E_Rain - e );  // saturation deficit in hPa
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
+                        * sat_deficit * 24.; // since at the suface velocity is 0, one grid point added
+                } // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
+                if(is_water(h, 0, j, k)){
+                    t_Celsius = ( t.x[0][j][k] + 0.007322 ) * t_0 - t_0; // assumption that ocean surface temperature is 2°C higher
+                    e = c.x[0][j][k] * p_stat.x[0][j][k] / ep;  // water vapour pressure in hPa
+                    t_u = ( t.x[0][j][k] + 0.007322 ) * t_0;
+                    E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
+                    sat_deficit = ( E_Rain - e );  // saturation deficit in hPa
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(u_0, v.x[0][j][k], w.x[0][j][k]) 
+                        * sat_deficit * 24.;
+                }
+            }
+            if(t_Celsius <= 0.){
+                if(is_land(h, i, j, k)){
+                    t_u = t.x[i][j][k] * t_0;
+                    t_Celsius = t_u - t_0;
+                    e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in hPa
+                    E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
+                    sat_deficit = ( E_Ice - e );  // saturation deficit in hPa
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
+                        * sat_deficit * 24.; // since at the suface velocity is 0, one grid point added
+                }
+                if(is_water(h, 0, j, k)){
+                    e = c.x[0][j][k] * p_stat.x[0][j][k] / ep;  // water vapour pressure in hPa
+                    t_u = ( t.x[0][j][k] + 0.007322 ) * t_0;
+                    t_Celsius = t_u - t_0; // assumption that ocean surface temperature is 2°C higher
+                    E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
+                    sat_deficit = ( E_Ice - e );  // saturation deficit in hPa
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(u_0, v.x[0][j][k], w.x[0][j][k]) 
+                        * sat_deficit * 24.;
+                }
+            }
+            if(Evaporation_Dalton.y[j][k] <= 0.)  
+                Evaporation_Dalton.y[j][k] = 0.;
+            if(is_land(h, i, j, k)){
                 if(t_Celsius >= - 2.)  Q_Evaporation.y[j][k] = 
-                    (2500.8 - 2.372 * (t.x[i][j][k] * t_0 - t_0));
+                    (2500.8 - 2.372 * ( t.x[i][j][k] * t_0 - t_0 ) );
                 // heat of Evaporation of water in [kJ/kg] (Kuttler) => variable lv
-                else  Q_Evaporation.y[j][k] = (2500.8 - 2.372 * 
-                          (t.x[i][j][k] * t_0 - t_0)) + 300.;
+                else  Q_Evaporation.y[j][k] = ( 2500.8 - 2.372 * 
+                          ( t.x[i][j][k] * t_0 - t_0 ) ) + 300.;
                 // heat of Evaporation of ice + 300 [kJ/kg]
             }else  Q_Evaporation.y[j][k] = 2300.;  // minimum value used for printout
+
             Q_latent.y[j][k] = Q_Latent.x[i][j][k];  // latente heat in [W/m2] from energy transport equation
             Q_sensible.y[j][k] = Q_Sensible.x[i][j][k];  // sensible heat in [W/m2] from energy transport equation
             Q_bottom.y[j][k] = - Q_radiation.y[j][k] 
                 - Q_latent.y[j][k] - Q_sensible.y[j][k];    
                 // difference understood as heat into the ground
-            if(t_Celsius >= 0.){
-                Evaporation_Dalton.y[j][k] = C_Dalton(u_0, v.x[i][j][k],
-                    w.x[i][j][k]) * sat_deficit * 24.;
-                if(is_land(h, i, j, k)){
-                    t_Celsius = t.x[i+1][j][k] * t_0 - t_0;
-                    e = c.x[i+1][j][k] * p_stat.x[i+1][j][k] / ep;  // water vapour pressure in hPa
-                    t_denom = t_Celsius + 234.175;
-                    E = hp * exp (17.0809 * t_Celsius / t_denom);
-                    sat_deficit = (E - e);  // saturation deficit in hPa
-                    Evaporation_Dalton.y[j][k] = 
-                        C_Dalton(u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
-                        * sat_deficit * 24.;
-                }
-                // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
-                if(Evaporation_Dalton.y[j][k] <= 0.)  
-                    Evaporation_Dalton.y[j][k] = 0.;
-            }else  Evaporation_Dalton.y[j][k] = 0.;
         }
     }
     for(int k = 1; k < km-1; k++){
@@ -132,8 +159,11 @@ void cAtmosphereModel::run_MSL_data(){
     // surface values of precipitation and precipitable water
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] 
-                + P_snow.x[0][j][k]);
+            if((j == 0) && (k == 0)) P_snow.x[0][0][0] = 0.;
+//            if((t.x[0][j][k] * t_0 - t_0) > 0.) P_snow.x[0][j][k] = 0.;
+            Precipitation.y[j][k] = coeff_prec * ( P_rain.x[0][j][k] 
+                + P_snow.x[0][j][k] );
+//            Precipitation.y[j][k] = coeff_prec * P_rain.x[0][j][k]; 
             // 60 s * 60 min * 24 h = 86400 s == 1 d
             // Precipitation, P_rain and P_snow in kg/ (m² * s) = mm/s
             // Precipitation in 86400. * kg/ (m² * d) = 86400 mm/d

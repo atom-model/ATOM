@@ -59,9 +59,9 @@ void cAtmosphereModel::print_min_max_values(){
     min_max_3d.searchMinMax_3D(" max 3D cloud ice ", " min 3D cloud ice ", 
         "g/kg", ice, h, 1000.);
     min_max_3d.searchMinMax_3D(" max 3D rain ", " min 3D rain ", "mm/d", 
-        P_rain, h, 8.46e4);
+        P_rain, h, 8.64e4);
     min_max_3d.searchMinMax_3D(" max 3D snow ", " min 3D snow ", "mm/d", 
-        P_snow, h, 8.46e4);
+        P_snow, h, 8.64e4);
     min_max_3d.searchMinMax_3D(" max 3D co2 ", " min 3D co2 ", "ppm", 
         co2, h, 280.);
     min_max_3d.searchMinMax_3D(" max 3D epsilon ",  " min 3D epsilon ", "%", 

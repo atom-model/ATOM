@@ -20,7 +20,6 @@ using namespace std;
 using namespace AtomUtils;
 
 namespace ParaViewAtm{
-
     void dump_array(const string &name, Array &a, double multiplier, ofstream &f){
         f <<  "    <DataArray type=\"Float32\" Name=\"" << name << "\" format=\"ascii\">\n";
         for(int k = 0; k < a.km; k++){
@@ -87,7 +86,7 @@ void cAtmosphereModel::paraview_panorama_vts(string &Name_Bathymetry_File, int n
     Atmosphere_panorama_vts_File.precision(4);
     Atmosphere_panorama_vts_File.setf(ios::fixed);
     Atmosphere_panorama_vts_File.open(Atmosphere_panorama_vts_File_Name);
-    if (!Atmosphere_panorama_vts_File.is_open()){
+    if(!Atmosphere_panorama_vts_File.is_open()){
         cerr << "ERROR: could not open panorama_vts file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }
@@ -262,7 +261,8 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
     dump_radial("Q_Sensible", Q_Sensible, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Heat_Evaporation", Q_Evaporation, 1., Atmosphere_vtk_radial_File);
-    dump_radial("Evap-Precip", aux_w, 1., i_radial, Atmosphere_vtk_radial_File);
+//    dump_radial("Evap-Precip", aux_w, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("Evap-Precip", aux_w, -1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Vegetation", Vegetation, 1., Atmosphere_vtk_radial_File);
     dump_radial("CO2-Concentration", co2, co2_0, i_radial, Atmosphere_vtk_radial_File);
     Atmosphere_vtk_radial_File <<  "VECTORS v-w-Cell float " << endl;
@@ -329,24 +329,73 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
             float T = t_u;
             float p_SL = .01 * (r_air * R_Air * t.x[0][j][k_zonal] * t_0);
             float p_h;
-            if(i != 0)   p_h = exp (- g * (double) i * (L_atm 
-                / (double) (im-1)) / (R_Air * t_u)) * p_SL;
+            if(i != 0)   p_h = exp (- g * (double)i * (L_atm 
+                / (double)(im-1)) / (R_Air * t_u)) * p_SL;
             else         p_h = p_SL;
             float E_Rain = hp * exp_func(T, 17.2694, 35.86);
             float E_Ice = hp * exp_func(T, 21.8746, 7.66);
             float q_Rain = ep * E_Rain / (p_h - E_Rain);
             float q_Ice = ep * E_Ice / (p_h - E_Ice);
-            aux_u.x[i][j][k_zonal] = c.x[i][j][k_zonal] / q_Rain;
+            aux_u.x[i][j][k_zonal] = c.x[i][j][k_zonal] - q_Rain;
             if(T <= t_0){
-                aux_v.x[i][j][k_zonal] = c.x[i][j][k_zonal] / q_Ice;
+                aux_v.x[i][j][k_zonal] = c.x[i][j][k_zonal] - q_Ice;
             }
             else  aux_v.x[i][j][k_zonal] = 0.;
             float height = get_layer_height(i);
             BuoyancyForce.x[i][j][k_zonal] = height;
         }
     }
+
+
+
+
+
+    for(int j = 0; j < jm; j++){
+        double t_eff_tropo = t_tropopause_pole - t_tropopause;
+        double temp_tropopause = t_eff_tropo * parabola(j/((jm-1)/2.0)) +
+            t_tropopause_pole;   //temperature at tropopause     
+        for(int k = 0; k < km; k++){
+            int i_mount = i_topography[j][k];
+            int i_trop = get_tropopause_layer(j);
+            M_u.x[0][j][k] = t.x[0][j][k];
+            double t_mount_top = (temp_tropopause - M_u.x[0][j][k]) *
+                (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
+                M_u.x[0][j][k]; //temperature at mountain top
+            for(int i = i_mount; i < im; i++){
+                if(i < i_trop+1){
+                    if(i>i_mount){
+                        // linear temperature decay up to tropopause, privat  approximation
+//                        M_u.x[i][j][k] = (temp_tropopause - M_u.x[0][j][k]) * 
+//                            (get_layer_height(i) / get_layer_height(i_trop)) + 
+//                            M_u.x[0][j][k]; 
+                        // US Standard Atmosphere
+                        M_u.x[i][j][k] = M_u.x[0][j][k] - 6.5 * 
+                            (get_layer_height(i) / 1000.) / t_0;
+                    }else{
+                        M_u.x[i][j][k] = t_mount_top; //inside mountain
+                    }
+                }else{ // above tropopause
+                    M_u.x[i][j][k] = temp_tropopause;
+                }
+            }
+            M_u.x[0][j][k] = t_mount_top;
+        }
+    }
+    for(int k = 0; k < km; k++){
+        for(int j = 0; j < jm; j++){
+            for(int i = 0; i < im; i++){
+                M_u.x[i][j][k] = M_u.x[i][j][k] * t_0 - t_0;
+            }
+        }
+    }
+
+
+
+
+
     dump_zonal("Topography", h, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("WaterVapour", c, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("Temp_Standard", M_u, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("CloudWater", cloud, 1000., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("CloudIce", ice, 1000., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Saturation_Water", aux_u, 1., k_zonal, Atmosphere_vtk_zonal_File);

@@ -106,21 +106,15 @@ class BC_Thermo{
         BC_Thermo(cAtmosphereModel* model, int im, int jm, int km, double c_0, double c_land, double t_land,
             double co2_0, Array& h);
         ~BC_Thermo();
-        void IC_CellStructure(Array_1D &rad, Array &, Array &, Array &, Array &);
         void BC_Temperature(Array_1D &rad, Array_2D &temperature_NASA, Array &h, Array &t,
             Array &tn, Array &p_dyn, Array &p_stat);
         void TropopauseLocation();
-        void BC_Radiation_2D_layer(Array_2D &, Array_2D &, Array_2D &, Array_2D &,
-            Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &,
-            Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array_2D &, Array &,
-            Array &, Array &, Array &, Array &);
         void BC_Radiation_multi_layer(Array_1D &rad, Array_2D &albedo, Array_2D &epsilon,
             Array_2D &radiation_surface, Array &p_stat, 
             Array &t, Array &c, Array &h, Array &epsilon_3D, Array &radiation_3D,
                 Array &cloud, Array &ice, Array &co2);
         void BC_WaterVapour(Array_1D &rad, Array &h, Array &p_stat, Array &t, Array &c,
                             Array &v, Array &w);
-        void BC_CloudWaterIce(Array &, Array &, Array &, Array &);
         void Ice_Water_Saturation_Adjustment(Array_1D &rad, Array &h, Array &c, Array &cn,
             Array &cloud, Array &cloudn, Array &ice, Array &icen, Array &t,
             Array &p_stat, Array &S_c_c);
@@ -141,6 +135,5 @@ class BC_Thermo{
         int GetTropopauseHightAdd(double);
         double GetPoleTemperature(int, int, int, double, double);
         double GetPoleTemperature(int Ma, const std::map<int, double> &pole_temp_map);
-        double C_Dalton(double u_0, double v, double w);
 };
 #endif

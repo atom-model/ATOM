@@ -10,7 +10,7 @@ def main():
             ('BathymetrySuffix', '', 'string', 'Ma_smooth.xyz'),
             ('verbose', '', 'bool', False),
             ('output_path', 'directory where model outputs should be placed (must end in /)', 'string', 'output/'),
-            ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', True),
+            ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', False),
             ('debug','flag to control if the program is running in debug mode', 'bool', False),
             #parameters for data reconstruction
             ('velocity_w_file',"",'string','../data/w_surface.txt'),
@@ -21,10 +21,11 @@ def main():
             ('temperature_curve_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
             ('pole_temperature_file', '', 'string', '../data/pole_temperature.txt'),
             ('reconstruction_script_path', '', 'string', '../reconstruction/reconstruct_atom_data.py'),
-            ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True),
+#            ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True),
+            ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False),
         
             ('time_start', 'start time', 'int', 0),
-            ('time_end', 'end time', 'int', 140),
+            ('time_end', 'end time', 'int', 15),
             ('time_step', 'step size between timeslices', 'int', 5),
        ],
         'atmosphere': [
@@ -41,6 +42,7 @@ def main():
             ('epsres', 'accuracy of relative and absolute errors', 'double', 0.00001),
 
             ('sun', 'while no variable sun position wanted', 'int', 0),
+#            ('NASATemperature', 'surface temperature given by NASA', 'int', 1),
             ('NASATemperature', 'surface temperature given by NASA', 'int', 0),
             ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
             ('RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1),
@@ -56,15 +58,19 @@ def main():
             ('tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 24 steps = 9600 m', 'int', 24),
             ('tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 37),
 
-            ('rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 230.),
-            ('rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 40.),
+#            ('rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 220.),
+#            ('rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 40.),
+            ('rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 420.),
+            ('rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 140.),
 
             ('sigma', 'Stefan-Boltzmann constant W/(m²*K4)', 'double', 5.670280e-8),
 
             ('albedo_pole', 'albedo around the poles', 'double', 0.8),
             ('albedo_equator', 'albedo around the equator', 'double', 0.4),
-            ('epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / (by Häckel)', 'double', 0.46),
-            ('epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.47),
+            ('epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / (by Häckel)', 'double', 0.455),
+            ('epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.45),
+#            ('epsilon_equator', 'emissivity and absorptivity caused by other gases than water vapour / (by Häckel)', 'double', 0.465),
+#            ('epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.46),
             ('epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001),
 
             ('re', 'Reynolds number: ratio viscous to inertia forces, Re = u * L / nue', 'double', 1000.),
@@ -108,13 +114,15 @@ def main():
             ('t_pole', 'temperature at the poles t_pole = 0.9436 compares to -15.4°C compares to 258.15 K', 'double', 0.9436),
             ('t_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798),
             ('t_tropopause_pole', 'temperature in the tropopause at the pole, t = 0.784 compares to -59°C compares to 214.15 K', 'double', 0.784),
-            ('t_land', 'temperature increase on land by 2°C (1°C compares to t_land = 0.003661)', 'double', 0.),
+#            ('t_land', 'temperature increase on land by 2°C (1°C compares to t_land = 0.003661)', 'double', 0.),
+            ('t_land', 'temperature increase on land by 2°C (1°C compares to t_land = 0.003661)', 'double', 0.007322),
 
-            ('c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001),
-#            ('c_ocean', 'water vapour reduction on sea surface (50% of the saturation value)', 'double', 0.54),
-#            ('c_land', 'water vapour reduction on land (55% of the saturation value)', 'double', 0.50),
-            ('c_ocean', 'water vapour reduction on sea surface (50% of the saturation value)', 'double', 0.64),
-            ('c_land', 'water vapour reduction on land (55% of the saturation value)', 'double', 0.60),
+#            ('c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.001 compares to 0.001 kg/kg', 'double', 0.001),
+            ('c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.0005 compares to 0.0005 kg/kg', 'double', 0.0005),
+            ('c_ocean', 'water vapour reduction on sea surface (50% of the saturation value)', 'double', 0.76),
+            ('c_land', 'water vapour reduction on land (55% of the saturation value)', 'double', 0.74),
+#            ('c_ocean', 'water vapour reduction on sea surface (50% of the saturation value)', 'double', 0.82),
+#            ('c_land', 'water vapour reduction on land (55% of the saturation value)', 'double', 0.80),
 
             ('co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0),
             ('co2_equator', 'maximum rate of CO2 at sea level at equator, 1. compares to 330 ppm', 'double', 330.0),
