@@ -831,6 +831,9 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
         assert(!c.has_nan());
         assert(!t.has_nan());
     }
+    fft_gaussian_filter(cloud, 5);
+    fft_gaussian_filter(ice, 5);
+    fft_gaussian_filter(c, 5);
 }
 
 

@@ -5,7 +5,7 @@
 CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml2
 
 # Common files for the shared lib (libatom.a)
-LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o lib/Config.o lib/Utils.o
+LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o lib/Config.o lib/Utils.o lib/FFT.o
 
 ATM_OBJ = atmosphere/cAtmosphereModel.o atmosphere/Pressure_Atm.o atmosphere/PrintMsg.o \
 atmosphere/FileIOAtm.o atmosphere/BC_Atm.o atmosphere/BC_Thermo.o atmosphere/RHS_Atm.o \
