@@ -99,6 +99,8 @@ namespace AtomUtils{
 
     void read_IC(const string& fn, double** a, int jm, int km);
 
+    void fft_gaussian_filter(Array& data, int sigma);
+
     template<class T>
     void set_values(T* a, T value, int len){
         for(int i = 0 ; i < len; i++){

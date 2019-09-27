@@ -13,7 +13,7 @@ from common_functions import calculate_spherical_mean
 
 map_cfg = {
     'temperature': (6, -20, 30, u'Temperature (Celsius °C)'),
-    'v_velocity': (3, -7, 7, 'v_velocity (m/s)'),
+    'v_velocity': (3, -1, 1, 'v_velocity (m/s)'),
     'w_velocity': (4, -8, 9, 'w_velocity (m/s)'),
     'water_vapour': (7, 0, 15, 'Water Vapour (g/kg)'),
     'precipitation': (8, 0, 2500, 'Precipitation (mm/yr)'),
