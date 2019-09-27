@@ -676,7 +676,6 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
     float q_Rain = 0.;
     float q_Ice = 0.;
     float q_Rain_n = 0.;
-    float q_Ice_n = 0.;
     float q_v_b = 0.;
     float q_c_b = 0.;
     float q_i_b = 0.;
@@ -801,10 +800,6 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                         if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp = q_Rain;
                         if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp = q_Ice;
                         if((q_c_b > 0.) && (q_i_b > 0.))
-                            q_v_hyp_n = ( q_c_b * q_Rain + q_i_b * q_Ice ) 
-                                      / ( q_c_b + q_i_b );
-                        if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp_n = q_Rain;
-                        if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp_n = q_Ice;
                         q_T = q_v_b + q_c_b + q_i_b; // total water content
                         // rate of condensating or evaporating water vapour to form cloud water, 0.5 given by COSMO
                         S_c_c.x[i][j][k] = - 0.5 * ( cloud.x[i][j][k] 
@@ -847,9 +842,9 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
         assert(!c.has_nan());
         assert(!t.has_nan());
     }
-    fft_gaussian_filter(cloud, 5);
-    fft_gaussian_filter(ice, 5);
-    fft_gaussian_filter(c, 5);
+//    fft_gaussian_filter(cloud, 5);
+//    fft_gaussian_filter(ice, 5);
+//    fft_gaussian_filter(c, 5);
 }
 
 

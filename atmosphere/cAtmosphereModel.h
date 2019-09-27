@@ -188,18 +188,10 @@ private:
     }
     void init_topography(const string &topo_filename);
     void init_u(Array &u, int j);
-<<<<<<< Updated upstream
-
     void init_v_or_w(Array &v_or_w, int lat, double coeff_trop, double coeff_sl);
     void init_v_or_w_above_tropopause(Array &v_or_w, int lat, double coeff);
-
 //    void init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl);
 //    void init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff);
-
-=======
-    void init_v_or_w(Array &v_or_w, int lat_1, int lat_2, double coeff_trop, double coeff_sl);
-    void init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff);
->>>>>>> Stashed changes
     void form_diagonals(Array &a, int start, int end);
     void smooth_transition(Array &u, Array &v, Array &w, int lat);
     void BC_Radiation_multi_layer();
