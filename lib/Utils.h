@@ -99,12 +99,10 @@ namespace AtomUtils{
 
     void read_IC(const string& fn, double** a, int jm, int km);
 
-<<<<<<< HEAD
     void smooth_cloud_steps(int k, int im, int jm, Array &value_in, 
         Array &value_out);
-=======
+
     void fft_gaussian_filter(Array& data, int sigma);
->>>>>>> 5b4a66fb5d4168adf6df961ccfcec0a0b3afaa77
 
     template<class T>
     void set_values(T* a, T value, int len){

@@ -193,14 +193,6 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     init_co2();
     Ice_Water_Saturation_Adjustment();
 //    Two_Category_Ice_Scheme(); 
-/*
-    for(int k = 0; k < km ; k++){
-//        smooth_cloud_steps(k, im, jm, c, c);
-        smooth_cloud_steps(k, im, jm, cloud, cloud);
-        smooth_cloud_steps(k, im, jm, ice, ice);
-    }
-*/
-//    goto Printout;
     BC_Radiation_multi_layer(); 
     store_intermediate_data_2D();
     store_intermediate_data_3D();
@@ -209,7 +201,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     run_3D_loop();
     cout << endl << endl;
 //    restrain_temperature();
-//    Printout:
+    Printout:
     write_file(bathymetry_name, output_path, true);
     iter_cnt_3d++;
     save_data();    

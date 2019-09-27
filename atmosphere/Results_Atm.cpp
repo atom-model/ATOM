@@ -160,10 +160,8 @@ void cAtmosphereModel::run_MSL_data(){
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             if((j == 0) && (k == 0)) P_snow.x[0][0][0] = 0.;
-//            if((t.x[0][j][k] * t_0 - t_0) > 0.) P_snow.x[0][j][k] = 0.;
-            Precipitation.y[j][k] = coeff_prec * ( P_rain.x[0][j][k] 
-                + P_snow.x[0][j][k] );
-//            Precipitation.y[j][k] = coeff_prec * P_rain.x[0][j][k]; 
+            Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] 
+                + P_snow.x[0][j][k]);
             // 60 s * 60 min * 24 h = 86400 s == 1 d
             // Precipitation, P_rain and P_snow in kg/ (m² * s) = mm/s
             // Precipitation in 86400. * kg/ (m² * d) = 86400 mm/d

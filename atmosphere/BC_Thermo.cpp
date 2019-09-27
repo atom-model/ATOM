@@ -34,6 +34,16 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
         logger()<<"20180912: Enter RML ... "<<std::endl;
         tmp.inspect("20180912: ");
     }
+/*
+    if((!is_first_time_slice()) && (NASATemperature != 0)){
+//        epsilon_equator = .46;
+//        epsilon_pole = .47;
+        epsilon_equator = .456;
+        epsilon_pole = .466;
+//        epsilon_equator = .455;
+//        epsilon_pole = .465;
+}
+*/
     std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
     load_map_from_file(pole_temperature_file, pole_temp_map); 
     double rad_eff = rad_pole - rad_equator;
@@ -666,6 +676,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
     float q_Rain = 0.;
     float q_Ice = 0.;
     float q_Rain_n = 0.;
+    float q_Ice_n = 0.;
     float q_v_b = 0.;
     float q_c_b = 0.;
     float q_i_b = 0.;
@@ -790,9 +801,11 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                         if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp = q_Rain;
                         if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp = q_Ice;
                         if((q_c_b > 0.) && (q_i_b > 0.))
-/*
-    if((j == 90) && (k == 180)) cout << " mix" << " i = " << i << " it = " << iter_prec << " tu = "  << t_u - t_0 << " T = "  << T - t_0 << " qT = " << q_T << " dqv = "  << d_q_v << " dqc = "  << d_q_c << " dqi = "  << d_q_i << " qhyp = "  << q_v_hyp << " qvb = " << q_v_b << " qcb = " << q_c_b << " qib = " << q_i_b << " dt = " << d_t << " CND = " << CND << " DEP = " << DEP << " d = " << fabs(q_v_b / q_v_hyp - 1.) << endl;
-*/
+                            q_v_hyp_n = ( q_c_b * q_Rain + q_i_b * q_Ice ) 
+                                      / ( q_c_b + q_i_b );
+                        if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp_n = q_Rain;
+                        if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp_n = q_Ice;
+                        q_T = q_v_b + q_c_b + q_i_b; // total water content
                         // rate of condensating or evaporating water vapour to form cloud water, 0.5 given by COSMO
                         S_c_c.x[i][j][k] = - 0.5 * ( cloud.x[i][j][k] 
                                              - q_c_b ) / dt_dim;
@@ -800,6 +813,9 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                         if(iter_prec >= 3 && fabs(q_v_b - q_v_hyp) 
                             <= 1.e-3 * q_v_hyp)  break;
                         q_v_b = .5 * ( q_v_hyp + q_v_b );  // has smoothing effect
+/*
+    if((j == 90) && (k == 180)) cout << " mix" << " i = " << i << " it = " << iter_prec << " tu = "  << t_u - t_0 << " T = "  << T - t_0 << " qT = " << q_T << " dqv = "  << d_q_v << " dqc = "  << d_q_c << " dqi = "  << d_q_i << " qhyp = "  << q_v_hyp << " qvb = " << q_v_b << " qcb = " << q_c_b << " qib = " << q_i_b << " dt = " << d_t << " CND = " << CND << " DEP = " << DEP << " d = " << fabs(q_v_b / q_v_hyp - 1.) << endl;
+*/
                     } // iter_prec end
                     //** §§§§§§§§§§§§§   end iterations for mixed cloud phase     §§§§§§§**
                     cn.x[i][j][k] = c.x[i][j][k] = q_v_b;  // new values achieved after converged iterations
