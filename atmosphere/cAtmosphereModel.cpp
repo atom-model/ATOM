@@ -174,9 +174,6 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     if(use_NASA_velocity){
         read_IC(velocity_v_file, v.x[0], jm, km);
         read_IC(velocity_w_file, w.x[0], jm, km);    
-//    if(NASATemperature == 0){
-//        read_IC(velocity_v_file, v.x[0], jm, km);
-//        read_IC(velocity_w_file, w.x[0], jm, km);
     }
     read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
     read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
@@ -184,7 +181,8 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     if(debug) save_data();
     iter_cnt_3d++;
     init_velocities();
-    adjust_temperature_IC(t.x[0], jm, km);
+    near_wall_values();
+//    adjust_temperature_IC(t.x[0], jm, km);
     init_temperature();
     init_water_vapour();
 //    goto Printout;
@@ -192,7 +190,6 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     BC_Pressure();
     init_co2();
     Ice_Water_Saturation_Adjustment();
-//    Two_Category_Ice_Scheme(); 
     BC_Radiation_multi_layer(); 
 //    goto Printout;
     store_intermediate_data_2D();
@@ -679,6 +676,106 @@ void cAtmosphereModel::init_water_vapour(){
             }
         }
     }
+}
+
+
+/*
+*
+*/
+void cAtmosphereModel::near_wall_values(){
+    // all variables need initial values to represent a flow field 
+    // as close as possible to the final results due to the frictional 
+    // effects of walls, the first near-wall grid point receives reduced 
+    // values of the velocity variables u, v and w to form a boundary layer
+    for(int k = 0; k < km; k++){
+        for(int j = 0; j < jm; j++){
+            for(int i = 0; i < im; i++){
+                if((j >= 2) && (j < jm - 3)){
+                    if((is_land(h, i, j, k)) && ((is_air(h, i, j+1, k)) 
+                        && (is_air(h, i, j+2, k)))){
+                            u.x[i][j+2][k] = u.x[i][j+2][k] / 2.;
+                            u.x[i][j+1][k] = u.x[i][j+2][k] / 4.;
+                            v.x[i][j+2][k] = v.x[i][j+2][k] / 2.;
+                            v.x[i][j+1][k] = v.x[i][j+2][k] / 4.;
+                            w.x[i][j+2][k] = w.x[i][j+2][k] / 2.;
+                            w.x[i][j+1][k] = w.x[i][j+2][k] / 4.;
+                    }
+                    if((is_land(h, i, j, k)) && (is_air(h, i, j-1, k)) 
+                        && (is_air(h, i, j-2, k))){
+                            u.x[i][j-1][k] = u.x[i][j-2][k] / 4.;
+                            u.x[i][j-2][k] = u.x[i][j-2][k] / 2.;
+                            v.x[i][j-2][k] = v.x[i][j-2][k] / 2.;
+                            v.x[i][j-1][k] = v.x[i][j-2][k] / 4.;
+                            w.x[i][j-2][k] = w.x[i][j-2][k] / 2.;
+                            w.x[i][j-1][k] = w.x[i][j-2][k] / 4.;
+                    }
+                    if(((is_land(h, i, j, k)) 
+                            && ((is_air(h, i, j+1, k)) && (is_land(h, i, j+2, k)))) 
+                            || ((j == jm - 2) && ((is_air(h, i, j, k)) 
+                            && (is_land(h, i, j+1, k))))){
+                                u.x[i][j+2][k] = u.x[i][j+2][k] / 2.;
+                                u.x[i][j+1][k] = u.x[i][j+2][k] / 4.;
+                                v.x[i][j+2][k] = v.x[i][j+2][k] / 2.;
+                                v.x[i][j+1][k] = v.x[i][j+2][k] / 4.;
+                                w.x[i][j+2][k] = w.x[i][j+2][k] / 2.;
+                                w.x[i][j+1][k] = w.x[i][j+2][k] / 4.;
+                    }
+                    if(((is_land(h, i, j, k)) 
+                            && ((is_air(h, i, j-1, k)) && (is_land(h, i, j-2, k)))) 
+                            || ((j == 1) && ((is_land(h, i, j, k)) 
+                            && (is_air(h, i, j-1, k))))){
+                                u.x[i][j-2][k] = u.x[i][j-2][ k ] / 2.;
+                                u.x[i][j-1][k] = u.x[i][j-2][ k ] / 4.;
+                                v.x[i][j-2][k] = v.x[i][j-2][ k ] / 2.;
+                                v.x[i][j-1][k] = v.x[i][j-2][ k ] / 4.;
+                                w.x[i][j-2][k] = w.x[i][j-2][ k ] / 2.;
+                                w.x[i][j-1][k] = w.x[i][j-2][ k ] / 4.;
+                    }
+                }
+                if((k >= 2) && (k < km - 3)){
+                    if((is_land(h, i, j, k)) && (is_air(h, i, j, k+1)) 
+                        && (is_air(h, i, j, k+2))){
+                            u.x[i][j][k+2] = u.x[i][j][k+2] / 2.;
+                            u.x[i][j][k+1] = u.x[i][j][k+2] / 4.;
+                            v.x[i][j][k+2] = v.x[i][j][k+2] / 2.;
+                            v.x[i][j][k+1] = v.x[i][j][k+2] / 4.;
+                            w.x[i][j][k+2] = w.x[i][j][k+2] / 2.;
+                            w.x[i][j][k+1] = w.x[i][j][k+2] / 4.;
+                    }
+                    if((is_land(h, i, j, k)) && (is_air(h, i, j, k-1)) 
+                        && (is_air(h, i, j, k-2))){
+                            u.x[i][j][k-2] = u.x[i][j][k-2] / 2.;
+                            u.x[i][j][k-1] = u.x[i][j][k-2] / 4.;
+                            v.x[i][j][k-2] = v.x[i][j][k-2] / 2.;
+                            v.x[i][j][k-1] = v.x[i][j][k-2] / 4.;
+                            w.x[i][j][k-2] = w.x[i][j][k-2] / 2.;
+                            w.x[i][j][k-1] = w.x[i][j][k-2] / 4.;
+                    }
+                    if(((is_land(h, i, j, k)) && ((is_air(h, i, j, k+1)) 
+                        && (is_land(h, i, j, k+2)))) || ((k == km - 2)
+                        && ((is_air(h, i, j, k)) && (is_land(h, i, j, k+1))))){
+                            u.x[i][j][k+2] = u.x[i][j][k+2] / 2.;
+                            u.x[i][j][k+1] = u.x[i][j][k+2] / 4.;
+                            v.x[i][j][k+2] = v.x[i][j][k+2] / 2.;
+                            v.x[i][j][k+1] = v.x[i][j][k+2] / 4.;
+                            w.x[i][j][k+2] = w.x[i][j][k+2] / 2.;
+                            w.x[i][j][k+1] = w.x[i][j][k+2] / 4.;
+                    }
+                    if(((is_land(h, i, j, k)) 
+                            && ((is_air(h, i, j, k-1)) && (is_land(h, i, j, k-2)))) 
+                            || ((k == 1) && ((is_land(h, i, j, k)) 
+                            && (is_air(h, i, j, k-1))))){
+                                u.x[i][j][k-2] = u.x[i][j][k-2] / 2.;
+                                u.x[i][j][k-1] = u.x[i][j][k-2] / 4.;
+                                v.x[i][j][k-2] = v.x[i][j][k-2] / 2.;
+                                v.x[i][j][k-1] = v.x[i][j][k-2] / 4.;
+                                w.x[i][j][k-2] = w.x[i][j][k-2] / 2.;
+                                w.x[i][j][k-1] = w.x[i][j][k-2] / 4.;
+                    }
+                }
+            } // end i
+        }// end k
+    }// end j
 }
 
 /*
