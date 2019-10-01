@@ -273,6 +273,8 @@ private:
     Array_2D Evaporation_Dalton; // evaporation by Dalton in [mm/d]
     Array_2D Evaporation_Penman; // evaporation by Penman in [mm/d]
     Array_2D co2_total; // areas of higher co2 concentration
+    Array_2D dew_point_temperature; // dew point temperature
+    Array_2D condensation_level; // local condensation level
 
     Array h; // bathymetry, depth from sea level
     Array t; // temperature

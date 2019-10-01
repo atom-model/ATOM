@@ -194,6 +194,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     Ice_Water_Saturation_Adjustment();
 //    Two_Category_Ice_Scheme(); 
     BC_Radiation_multi_layer(); 
+//    goto Printout;
     store_intermediate_data_2D();
     store_intermediate_data_3D();
     run_2D_loop();
@@ -201,7 +202,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     run_3D_loop();
     cout << endl << endl;
 //    restrain_temperature();
-    Printout:
+//    Printout:
     write_file(bathymetry_name, output_path, true);
     iter_cnt_3d++;
     save_data();    
@@ -247,6 +248,8 @@ void cAtmosphereModel::reset_arrays(){
     vapour_evaporation.initArray_2D(jm, km, 0.); // additional water vapour by evaporation
     Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Dalton in [mm/d]
     co2_total.initArray_2D(jm, km, 0.); // areas of higher co2 concentration
+    dew_point_temperature.initArray_2D(jm, km, 0.); // dew point temperature
+    condensation_level.initArray_2D(jm, km, 0.); // areas of higher co2 concentration // local condensation level
     h.initArray(im, jm, km, 0.); // bathymetry, depth from sea level
     t.initArray(im, jm, km, ta); // temperature
     u.initArray(im, jm, km, ua); // u-component velocity component in r-direction
@@ -307,7 +310,25 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name,
     std::string &output_path, bool is_final_result){
     int Ma = int(round(*get_current_time()));
     int i_radial = 0;
-    //  int i_radial = 10;
+    double t_eff_tropo = t_tropopause_pole - t_tropopause;
+    if(i_radial == 0){
+        for(int j = 0; j < jm; j++){
+            double temp_tropopause = t_eff_tropo * parabola(j/((jm-1)/2.0)) 
+                + t_tropopause_pole;   //temperature at tropopause     
+            for(int k = 0; k < km; k++){
+                int i_mount = i_topography[j][k];
+                int i_trop = get_tropopause_layer(j);
+                double t_mount_top = (temp_tropopause - t.x[0][j][k]) *
+                    (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
+                    t.x[0][j][k]; //temperature at mountain top
+                double c_mount_top = (c_tropopause - c.x[0][j][k]) *
+                    (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
+                    c.x[0][j][k]; //temperature at mountain top
+                t.x[i_radial][j][k] = t_mount_top;
+                c.x[i_radial][j][k] = c_mount_top;
+            }
+        }
+    }
     paraview_vtk_radial (bathymetry_name, Ma, i_radial, iter_cnt-1); 
     int j_longal = 62;          // Mount Everest/Himalaya
     paraview_vtk_longal (bathymetry_name, j_longal, iter_cnt-1); 
@@ -539,7 +560,8 @@ void cAtmosphereModel::init_water_vapour(){
     // water vapour contents computed by Clausius-Clapeyron-formula
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            int i_mount = get_surface_layer(j, k);
+//            int i_mount = get_surface_layer(j, k);
+            int i_mount = 0.;
             c.x[i_mount][j][k] = hp * ep * exp (17.0809 
                 * (t.x[i_mount][j][k] * t_0 - t_0) / (234.175 
                 + (t.x[i_mount][j][k] * t_0 - t_0))) / ((r_air * R_Air 
@@ -556,46 +578,66 @@ void cAtmosphereModel::init_water_vapour(){
     }
     // water vapour distribution decreasing approaching tropopause
     for(int j = 0; j < jm; j++){
-        int i_trop = get_tropopause_layer(j);
+//        int i_trop = get_tropopause_layer(j);
+        int i_trop = im-1;
         for(int k = 0; k < km; k++){
-            int i_mount = get_surface_layer(j, k);
+//            int i_mount = get_surface_layer(j, k);
+            int i_mount = 0.;
+//            double c_mount_top = (c_tropopause - c.x[0][j][k]) *
+//                (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
+//                c.x[0][j][k]; //temperature at mountain top
             for(int i = 0; i < im; i++){
-                if(i < i_trop){
+                if(i <= i_trop){
                     if(i>i_mount){
+/*
                         double x = (get_layer_height(i) 
                             - get_layer_height(i_mount)) 
                             / (get_layer_height(i_trop) 
                             - get_layer_height(i_mount));
                         c.x[i][j][k] = parabola_interp(c_tropopause, 
                             c.x[i_mount][j][k], x); 
+*/
+
+                        double x = get_layer_height(i) 
+                            / get_layer_height(i_trop); 
+                        c.x[i][j][k] = parabola_interp(c_tropopause, 
+                            c.x[i_mount][j][k], x); 
+
 /*
                         c.x[i][j][k] = ( c_tropopause - c.x[i_mount][j][k] ) // linear dicrease 
                             * get_layer_height(i) / get_layer_height(i_trop) 
                             + c.x[i_mount][j][k]; 
 */
+                    }
+                }
+/*
                     }else{
-                        c.x[i][j][k] = c.x[i_mount][j][k];
+//                        c.x[i][j][k] = c.x[i_mount][j][k];
+//                        c.x[0][j][k] = c_mount_top;
                     }
                 }else{
                     c.x[i][j][k] = c_tropopause;
                 }
+*/
             } // end i
         }// end k
     }// end j
     // cloud water and cloud ice distribution formed by the curve Versiera (Witch) of Agnesi, algebraic curve of 3. order
     for(int j = 0; j < jm; j++){
-        int i_trop = get_tropopause_layer(j);
+//        int i_trop = get_tropopause_layer(j);
+        int i_trop = im-1;
         for(int k = 0; k < km; k++){
-            int i_mount = get_surface_layer(j, k);
+//            int i_mount = get_surface_layer(j, k);
+            int i_mount = 0.;
             double i_max = im-1;
-            double cloud_x_max = .01;
-            double ice_x_max = .01;
-            int cloud_Agnesi = 20;
-            int ice_Agnesi = 33;
-            double cloud_max = c.x[i_mount][j][k] / 4.;
-            double ice_max = c.x[i_mount][j][k] / 10.;
+            double cloud_x_max = .01; // scaling of the maximum x value in the linear function x(i) 
+            double ice_x_max = .01; // scaling of the maximum x value in the linear function x(i)
+            int cloud_Agnesi = 20; // radial location of cloud water maximum
+            int ice_Agnesi = 33; // radial location of cloud ice maximum
+            double cloud_max = c.x[i_mount][j][k] / 3.; // maximum cloud water based on the surface water vapour
+            double ice_max = c.x[i_mount][j][k] / 14.; // maximum ice water based on the surface water vapour
             for(int i = 0; i < im; i++){
-                if(i < i_trop){
+                if(i <= i_trop){
                     if(i>i_mount){
                         double x_cloud = ( (double)i - cloud_Agnesi ) 
                             / ( i_max - cloud_Agnesi ) * cloud_x_max;
@@ -605,19 +647,16 @@ void cAtmosphereModel::init_water_vapour(){
                             / ( pow(cloud_max, 2.) + pow(x_cloud, 2.)); 
                         ice.x[i][j][k] = pow(ice_max, 3.) 
                             / ( pow(ice_max, 2.) + pow(x_ice, 2.)); 
-                    }else{
+                    }
+/*
+//                    if(is_land(h, 0, j, k)){
+
+                    else{
                         cloud.x[i][j][k] = cloud.x[i_mount][j][k];
                         ice.x[i][j][k] = ice.x[i_mount][j][k];
                     }
-                }else{
-                    cloud.x[i][j][k] = c_tropopause;
-                    ice.x[i][j][k] = c_tropopause;
-                }
-/*
-    cout.precision(8);
-    cout.setf(ios::fixed);
-    if((j == 90) && (k == 180)) cout << "  cloud/ice  " << "    i = " << i << "    i_mount = " << i_mount << "    i_trop = " << i_trop << "   cloud_max = "  << cloud_max << "   ice_max = "  << ice_max << "   cloud = " << cloud.x[i][j][k] << "   ice = " << ice.x[i][j][k] << "   cloud_pow = " << pow(cloud_max, 3.) << "   ice_pow = " << pow(cloud_max, 3.) << endl;
 */
+                }
             } // end i
         }// end k
     }// end j

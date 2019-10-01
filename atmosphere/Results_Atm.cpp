@@ -90,7 +90,6 @@ void cAtmosphereModel::run_MSL_data(){
                           ( t.x[i][j][k] * t_0 - t_0 ) ) + 300.;
                 // heat of Evaporation of ice + 300 [kJ/kg]
             }else  Q_Evaporation.y[j][k] = 2300.;  // minimum value used for printout
-
             Q_latent.y[j][k] = Q_Latent.x[i][j][k];  // latente heat in [W/m2] from energy transport equation
             Q_sensible.y[j][k] = Q_Sensible.x[i][j][k];  // sensible heat in [W/m2] from energy transport equation
             Q_bottom.y[j][k] = - Q_radiation.y[j][k] 

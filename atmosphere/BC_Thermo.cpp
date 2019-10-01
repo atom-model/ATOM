@@ -34,16 +34,6 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
         logger()<<"20180912: Enter RML ... "<<std::endl;
         tmp.inspect("20180912: ");
     }
-/*
-    if((!is_first_time_slice()) && (NASATemperature != 0)){
-//        epsilon_equator = .46;
-//        epsilon_pole = .47;
-        epsilon_equator = .456;
-        epsilon_pole = .466;
-//        epsilon_equator = .455;
-//        epsilon_pole = .465;
-}
-*/
     std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
     load_map_from_file(pole_temperature_file, pole_temp_map); 
     double rad_eff = rad_pole - rad_equator;
@@ -163,7 +153,6 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 std::vector<double> AA(im, 0);
                 std::vector<std::vector<double> > CC(im, std::vector<double>(im, 0));
                 double CCC = 0, DDD = 0;
-
                 // radiation leaving the atmosphere above the tropopause, 
                 // emitted of atmophere 49%, Clouds 9% and 12% atmospheric window
                 radiation_3D.x[i_trop][j][k] = .70 * radiation_surface.y[j][k]; 
@@ -181,7 +170,7 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 double rad_surf_diff = radiation_back + Latent_Heat
                     + Sensible_Heat + atmospheric_window; // radiation leaving the surface
 //                double fac_rad = (double)i_mount * .07 + 1.;  // linear increase with hight, best choice for Ma>0
-                double fac_rad = 1.;  // linear increase with hight, best choice for Ma>0
+                double fac_rad = 1.;
                 rad_surf_diff = fac_rad * rad_surf_diff;
                 AA[i_mount] = rad_surf_diff / radiation_3D.x[i_trop][j][k];// non-dimensional surface radiation
                 CC[i_mount][i_mount] = 0.; // no absorption of radiation on the surface by water vapour
@@ -239,9 +228,6 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                     // Thomas algorithm, recurrence formula
                     radiation_3D.x[i][j][k] = - alfa[i] 
                         * radiation_3D.x[i + 1][j][k] + beta[i];
-//                    t.x[i][j][k] = .5 * (t.x[i][j][k] 
-//                        + pow(radiation_3D.x[i][j][k] / sigma, 
-//                        (1. / 4.)) / t_0);    // averaging of temperature values to smooth the iterations
                     t.x[i][j][k] = pow(radiation_3D.x[i][j][k] / sigma, 
                         (1. / 4.)) / t_0;    // averaging of temperature values to smooth the iterations
                 } // end i
@@ -379,11 +365,6 @@ void cAtmosphereModel::init_temperature(){
                 - get_pole_temperature(*get_previous_time(), pole_temp_map);
             t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map)
                 - get_pole_temperature(*get_previous_time(), pole_temp_map);
-/*
-            t_pole_diff_ocean = 0.;
-            t_pole_diff_land = 0.;
-            t_paleo_add = 0.;
-*/
         }
         // in °C, constant local pole temperature as function of Ma for hothouse climates 
         float pole_temperature = 1 + get_pole_temperature(*get_current_time(), 
@@ -444,10 +425,11 @@ void cAtmosphereModel::init_temperature(){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
             int i_trop = get_tropopause_layer(j);
-            double t_mount_top = (temp_tropopause - t.x[0][j][k]) *
-                (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
-                t.x[0][j][k]; //temperature at mountain top
-            for(int i = i_mount; i < im; i++){
+//            double t_mount_top = (temp_tropopause - t.x[0][j][k]) *
+//                (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
+//                t.x[0][j][k]; //temperature at mountain top
+//            for(int i = i_mount; i < im; i++){
+            for(int i = 0; i < im; i++){
                 if(i < i_trop+1){
                     if(i>i_mount){
                         // linear temperature decay up to tropopause, privat  approximation
@@ -455,16 +437,19 @@ void cAtmosphereModel::init_temperature(){
                             (get_layer_height(i) / get_layer_height(i_trop)) + 
                             t.x[0][j][k]; 
                         // US Standard Atmosphere
-//                        M_u.x[i][j][k] = M_u.x[0][j][k] - 6.5 * 
-//                            (get_layer_height(i) / 1000.) / t_0;
-                    }else{
-                        t.x[i][j][k] = t_mount_top; //inside mountain
+                    }
+                    else{
+//                        t.x[i][j][k] = t_mount_top; //inside mountain
+//                        t.x[i][j][k] = t.x[0][j][k]; //inside mountain
+                        t.x[i][j][k] = (temp_tropopause - t.x[0][j][k]) * 
+                            (get_layer_height(i) / get_layer_height(i_trop)) + 
+                            t.x[0][j][k]; 
                     }
                 }else{ // above tropopause
                     t.x[i][j][k] = temp_tropopause;
                 }
             }
-            t.x[0][j][k] = t_mount_top;
+//            t.x[0][j][k] = t_mount_top;
         }
     }
     logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 
@@ -544,12 +529,14 @@ void cAtmosphereModel::BC_Pressure(){
 }
 
 void cAtmosphereModel::Latent_Heat(){
+//    float coeff_dim = ( L_atm / (double)(im-1) );
+    float coeff_dim = 1.;
     float Q_Latent_Ice = 0.; 
-    float coeff_Lv = lv / (L_atm / (double)(im-1));// coefficient for Q_latent generated by cloud water
-    float coeff_Ls = ls / (L_atm / (double)(im-1));// coefficient for Q_latent generated by cloud ice
-    float coeff_Q = cp_l * r_air * t_0 / (L_atm / (double)(im-1)); // coefficient for Q_Sensible
-    float coeff_lat = .079;
-    float coeff_sen = .15;
+    float coeff_Lv = lv / coeff_dim;// coefficient for Q_latent generated by cloud water
+    float coeff_Ls = ls / coeff_dim;// coefficient for Q_latent generated by cloud ice
+    float coeff_Q = cp_l * r_air * t_0 / coeff_dim; // coefficient for Q_Sensible
+    float coeff_lat = 1.e6 * 19.;
+    float coeff_sen = 2.96;
     float a, e, step, step_p, step_m;
     for(int j = 0; j < jm; j++){
     // water vapour can condensate/evaporate und sublimate/vaporize
@@ -557,34 +544,34 @@ void cAtmosphereModel::Latent_Heat(){
     // latent heat of water vapour
         for(int k = 0; k < km; k++){
             int i_mount = get_surface_layer(j, k);
-            for(int i = i_mount; i < im-2; i++){
+            for(int i = i_mount+1; i < im-2; i++){
                 step_p = ( get_layer_height(i+1) - get_layer_height(i) )
-                    / ( L_atm / (double)(im-1) );
+                    / coeff_dim;
                 step_m = ( get_layer_height(i) - get_layer_height(i-1) )
-                    / ( L_atm / (double)(im-1) );
+                    / coeff_dim;
                 step = step_p + step_m;
                 e = .01 * c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in Pa
                 if(i > i_mount){
-                    a = e / (r_water_vapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
+                    a = e / (R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
                     Q_Latent.x[i][j][k] = - coeff_Lv * a 
-                        * (c.x[i+1][j][k] - c.x[i-1][j][k]) / (2. * step);
+                        * (c.x[i+1][j][k] - c.x[i-1][j][k]) / step;
                     Q_Latent_Ice = - coeff_Ls * a * (ice.x[i+1][j][k] 
-                        - ice.x[i-1][j][k]) / (2. * step);
+                        - ice.x[i-1][j][k]) / step;
                     Q_Sensible.x[i][j][k] = - coeff_sen * coeff_Q 
-                        * (t.x[i+1][j][k] - t.x[i-1][j][k]) / (2. * step);  // sensible heat in [W/m2] from energy transport equation
+                        * (t.x[i+1][j][k] - t.x[i-1][j][k]) / step;  // sensible heat in [W/m2] from energy transport equation
                 }
                 if(i == i_mount){
                     a = e / (R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
                     Q_Latent.x[i][j][k] = - coeff_Lv * a 
                         * (- 3. * c.x[i][j][k] + 4. * c.x[i+1][j][k] 
-                        - c.x[i+2][j][k]) / (2. * step);
+                        - c.x[i+2][j][k]) / step;
                     Q_Latent_Ice = - coeff_Ls * a * (- 3. * ice.x[i][j][k] +
                         4. * ice.x[i+1][j][k] 
-                        - ice.x[i+2][j][k]) / (2. * step);
+                        - ice.x[i+2][j][k]) / step;
                     // sensible heat in [W/m2] from energy transport equation
                     Q_Sensible.x[i][j][k] = - coeff_sen * coeff_Q 
                         * (- 3. * t.x[i][j][k] +
-                        4. * t.x[i+1][j][k] - t.x[i+2][j][k]) / (2. * step);
+                        4. * t.x[i+1][j][k] - t.x[i+2][j][k]) / step;
                 }
                 Q_Latent.x[i][j][k] = 
                     coeff_lat * (Q_Latent.x[i][j][k] + Q_Latent_Ice);
@@ -712,16 +699,13 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                         cloud.x[i][j][k] = 0.; // no cloud water available
                         ice.x[i][j][k] = 0.; // no cloud ice available above 0 °C
                         T_it = t_u;
-/*
-    if((j == 90) && (k == 180)) cout << "  unsat  " << "    i = " << i << "   t_u = "  << t_u - t_0 << "   T_it = "  << T_it - t_0 << "   q_T = " << q_T << "   q_Rain = " << q_Rain << "   c = " << c.x[i][j][k] << "   cloud = " << cloud.x[i][j][k] << endl;
-*/
                     }else{ //     oversaturated
                         for(int iter_prec = 1; iter_prec <= 20; iter_prec++){// iter_prec may be varied
-                            T_it = t_u + lv / cp_l * cloud.x[i][j][k];
                             if(i != 0)
                                 p_h = pow((T_it - gam * height * 1.e-2) / t_u, 
                             exp_pressure) * p_SL;
                             else  p_h = p_SL;
+                            T_it = t_u + lv / cp_l * ( c.x[i][j][k] - q_Rain );
                             E_Rain = hp * exp_func(T_it, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                             q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
                             q_Rain = .5 * ( q_Rain_n + q_Rain );  // smoothing the iteration process
@@ -731,9 +715,6 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                             q_T = c.x[i][j][k] + cloud.x[i][j][k];
                             if(c.x[i][j][k] < 0.)  c.x[i][j][k] = 0.;
                             if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
-/*
-    if((j == 90) && (k == 180)) cout << "  warm  " << "    i = " << i << "    iter_prec = " << iter_prec << "   t_u = "  << t_u - t_0 << "   T_it = "  << T_it - t_0 << "   q_T = " << q_T << "   q_Rain = " << q_Rain << "   q_Rain_n = "  << q_Rain_n << "   c = " << c.x[i][j][k] << "   cloud = " << cloud.x[i][j][k] << "   t_diff = " << lv / cp_l * cloud.x[i][j][k] << endl;
-*/
                             if(fabs(q_Rain - q_Rain_n) < 1.e-3 * q_Rain_n)  break;  
                             q_Rain_n = q_Rain;
                         }//end of for 
@@ -762,7 +743,6 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                     if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp = q_Rain;
                     if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp = q_Ice;
                     // §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§
-//                    for(int iter_prec = 1; iter_prec <= 2; iter_prec++){ // iter_prec = 2 given by COSMO
                     for(int iter_prec = 1; iter_prec <= 10; iter_prec++){ // iter_prec = 2 given by COSMO
                     // condensation == water vapor saturation for cloud water formation, deposition == ice crystal for cloud ice formation
                         CND = ( T - t_00 ) / ( t_0 - t_00 ); // t_00 = 236.15°C, t_0 = 273.15°C
@@ -801,18 +781,15 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                         if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp = q_Ice;
                         if((q_c_b > 0.) && (q_i_b > 0.))
                         q_T = q_v_b + q_c_b + q_i_b; // total water content
-                        // rate of condensating or evaporating water vapour to form cloud water, 0.5 given by COSMO
-                        S_c_c.x[i][j][k] = - 0.5 * ( cloud.x[i][j][k] 
-                                             - q_c_b ) / dt_dim;
-                        if(is_land(h, i, j, k))  S_c_c.x[i][j][k] = 0.;
                         if(iter_prec >= 3 && fabs(q_v_b - q_v_hyp) 
                             <= 1.e-3 * q_v_hyp)  break;
                         q_v_b = .5 * ( q_v_hyp + q_v_b );  // has smoothing effect
-/*
-    if((j == 90) && (k == 180)) cout << " mix" << " i = " << i << " it = " << iter_prec << " tu = "  << t_u - t_0 << " T = "  << T - t_0 << " qT = " << q_T << " dqv = "  << d_q_v << " dqc = "  << d_q_c << " dqi = "  << d_q_i << " qhyp = "  << q_v_hyp << " qvb = " << q_v_b << " qcb = " << q_c_b << " qib = " << q_i_b << " dt = " << d_t << " CND = " << CND << " DEP = " << DEP << " d = " << fabs(q_v_b / q_v_hyp - 1.) << endl;
-*/
                     } // iter_prec end
                     //** §§§§§§§§§§§§§   end iterations for mixed cloud phase     §§§§§§§**
+                    // rate of condensating or evaporating water vapour to form cloud water in kg/(kg*s), 0.5 given by COSMO
+                    S_c_c.x[i][j][k] = - 0.5 * ( cloud.x[i][j][k] 
+                                         - q_c_b ) / dt_dim;
+                    if(is_land(h, i, j, k))  S_c_c.x[i][j][k] = 0.;
                     cn.x[i][j][k] = c.x[i][j][k] = q_v_b;  // new values achieved after converged iterations
                     cloudn.x[i][j][k] = cloud.x[i][j][k] = q_c_b;
                     icen.x[i][j][k] = ice.x[i][j][k] = q_i_b;
@@ -829,10 +806,10 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                 if(c.x[i][j][k] < 0.)      c.x[i][j][k] = 0.;
                 if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
                 if(ice.x[i][j][k] < 0.)    ice.x[i][j][k] = 0.;
-                if(is_land (h, i, j, k)){
-                    cloudn.x[i][j][k] = cloud.x[i][j][k] = 0.;
-                    icen.x[i][j][k] = ice.x[i][j][k] = 0.;
-                }
+//                if(is_land (h, i, j, k)){
+//                    cloudn.x[i][j][k] = cloud.x[i][j][k] = 0.;
+//                    icen.x[i][j][k] = ice.x[i][j][k] = 0.;
+//                }
             }
         }
     }

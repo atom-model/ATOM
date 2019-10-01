@@ -222,6 +222,28 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
             }
         }
     }
+    float exp_pressure = g / (1.e-2 * gam * R_Air);
+    float p_h, p_SL, t_u, height, E_Rain, q_Rain;
+    for(int k = 0; k < km; k++){
+        for(int j = 0; j < jm; j++){
+            for(int i = 0; i < im; i++){
+                t_u = t.x[i][j][k] * t_0; // in K
+                p_SL = .01 * ( r_air * R_Air * t.x[0][j][k] * t_0 ); // given in hPa
+                height = get_layer_height(i);
+                if(i != 0)
+                      p_h = pow((t_u - gam * height * 1.e-2) / t_u, 
+                            exp_pressure) * p_SL;
+                else  p_h = p_SL;
+                E_Rain = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
+                if(c.x[i][j][k] >= q_Rain){
+                    dew_point_temperature.y[j][k] = t_u - t_0;
+                    condensation_level.y[j][k] = height;
+                    break;
+                }
+            }
+        }
+    }
     Atmosphere_vtk_radial_File <<  "POINT_DATA " << jm * km << endl;
     dump_radial("u-Component", u, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("v-Component", v, 1., i_radial, Atmosphere_vtk_radial_File);
@@ -235,6 +257,8 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
         }
     }
     dump_radial_2d("Temp_NASA", temp_NASA, 1., Atmosphere_vtk_radial_File);
+    dump_radial_2d("DewPointTemp", dew_point_temperature, 1., Atmosphere_vtk_radial_File);
+    dump_radial_2d("CondensLevel", condensation_level, 1.e-3, Atmosphere_vtk_radial_File);
     dump_radial("Temp_NASA_diff", aux_v, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("Topography", h, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Topography_m", Topography, 1., Atmosphere_vtk_radial_File);
@@ -345,11 +369,6 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
             BuoyancyForce.x[i][j][k_zonal] = height;
         }
     }
-
-
-
-
-
     for(int j = 0; j < jm; j++){
         double t_eff_tropo = t_tropopause_pole - t_tropopause;
         double temp_tropopause = t_eff_tropo * parabola(j/((jm-1)/2.0)) +
@@ -388,11 +407,6 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
             }
         }
     }
-
-
-
-
-
     dump_zonal("Topography", h, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("WaterVapour", c, 1000., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Temp_Standard", M_u, 1., k_zonal, Atmosphere_vtk_zonal_File);
