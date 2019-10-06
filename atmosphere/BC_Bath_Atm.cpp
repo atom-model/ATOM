@@ -100,55 +100,6 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface(string &topo_filename,
 
 
 
-void BC_Bathymetry_Atmosphere::BC_SolidGround (int RadiationModel, int Ma, double g, double hp, double ep, double r_air, 
-                                                double R_Air, double t_0, double c_0, double t_land, double t_cretaceous, double t_equator,     
-                                                double t_pole, double t_tropopause, double c_land, double c_tropopause, 
-                                                double co2_0, double co2_equator, double co2_pole, double co2_tropopause, 
-                                                double pa, double gam, double sigma, Array &h, Array &u, 
-                                                Array &v, Array &w, Array &t, Array &p_dyn, Array &c, Array &cloud, Array &ice, 
-                                                Array &co2, Array &radiation_3D, Array_2D &Vegetation){
-    for (int j = 0; j < jm; j++){
-        for (int k = 0; k < km; k++){
-            for (int i = im-2; i >= 0; i--){
-                if (is_land (h, i, j, k)){
-                    u.x[i][j][k] = 0.;
-                    v.x[i][j][k] = 0.;
-                    w.x[i][j][k] = 0.;
-//                    t.x[i][j][k] = 1.;  // = 273.15 K
-//                    c.x[i][j][k] = c_tropopause;  // = 1 g/kg water vapour
-//                    c.x[i][j][k] = 0.; 
-                    cloud.x[i][j][k] = 0.;
-                    ice.x[i][j][k] = 0.;
-                    co2.x[i][j][k] = 1.;  // = 280 ppm
-                    p_dyn.x[i][j][k] = 0.;
-                }// is_land
-            } // i
-        } // k
-    } // j
-}
-
-
-
-
-
-
-
-
-
-void BC_Bathymetry_Atmosphere::vegetationDistribution (double max_Precipitation,
-                                                        Array_2D &Precipitation, Array_2D &Vegetation, 
-                                                        Array &t, Array &h){
-    // description or vegetation areas following the local dimensionsles values of precipitation, maximum value is 1
-    for (int j = 0; j < jm; j++){
-        for (int k = 0; k < km; k++){
-            if (max_Precipitation > 0 && is_land(h, 0, j, k) && !(t.x[0][j][k] < 1.)){ 
-                Vegetation.y[j][k] = Precipitation.y[j][k] / max_Precipitation; // actual vegetation areas
-            }else{
-                Vegetation.y[j][k] = 0.;
-            }
-        }
-    }
-}
 
 void BC_Bathymetry_Atmosphere::land_oceanFraction (Array &h){
     // calculation of the ratio ocean to land, also addition and subtraction of CO2 of land, ocean and vegetation

@@ -68,29 +68,14 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 if(c.x[i][j][k] < 0.)      c.x[i][j][k] = 0.;
                 if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
                 if(ice.x[i][j][k] < 0.)    ice.x[i][j][k] = 0.;
-                // COSMO water vapour pressure based on local water vapour, cloud water, cloud ice in hPa
-                double e = (c.x[i][j][k] + cloud.x[i][j][k] 
-                           + ice.x[i][j][k]) * p_stat.x[i][j][k] / ep;
-//                double e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;
+                // COSMO water vapour pressure based on local water vapour in hPa
+                double e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;
                 // radial parabolic distribution, start on zero level
-/*
-                double epsilon_eff = epsilon_eff_max 
-                    - (epsilon_tropopause - epsilon_eff_max) 
-                    * parabola(m_model->get_layer_height(i) 
-                    / m_model->get_layer_height(i_trop));
-*/ 
                 double epsilon_eff = epsilon_eff_max 
                     * (1. - m_model->get_layer_height(i) 
                     / m_model->get_layer_height(i_trop));
-/*
-                double co2_coeff = 1.;
-                if (fabs(m_model->CO2 - 1) < std::numeric_limits<double>::epsilon()){
-                    // influence of co2 in the atmosphere, co2_coeff = 1. means no influence
-                    co2_coeff = co2_factor * (co2_equator / co2_tropopause);
-                }
-*/
                 // dependency given by Häckel, Meteorologie, p. 205 (law by F. Baur and H. Philips, 1934)
-                // co2_coeff * epsilon_eff describe the effect in the emissivity computation of other gases like CO2
+                // epsilon_eff describe the effect in the emissivity computation of other gases like CO2
                 // in the original formula this value is 0.594, for reasons of adjustment to the modern atmosphere,
                 // this constant became a variable in zonal direction
                 // this variable reacts very sensitive and changes the temperature field extremely
@@ -111,14 +96,12 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                     eps_co2 = .5 * eps_co2; // model by Atwater and Ball, 
                                             // factor .5 fits the Atwater and Ball results to Yamamoto and Sasamori,
                                             // which fit best to HITRAN band data
-//                    eps_co2 = 0.; // Test
+//                    eps_co2 = 1.5 * eps_co2; // Test, 1.5 is maximum, otherwise nans develop
 
-                    epsilon_3D.x[i][j][k] = emissivity_add * epsilon_eff 
-                                                  + .0416 * sqrt(e) + eps_co2;
+                    epsilon_3D.x[i][j][k] = eps_co2 + epsilon_eff 
+                        + .0416 * sqrt(e);
                     // atmospheric emissivity by Vogel/Bliss, emissivity seems too high
 //                    epsilon_3D.x[i][j][k] = 0.98 * pow((e/(t.x[i][j][k] * t_0)), 0.0687);
-
-//                    epsilon_3D.x[i][j][k] = co2_coeff * epsilon_eff + .0416 * sqrt(e);
 
                     radiation_3D.x[i][j][k] = (1.-epsilon_3D.x[i][j][k]) 
                         * sigma * pow(t.x[i][j][k] * t_0, 4.);
@@ -157,38 +140,31 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 // emitted of atmophere 49%, Clouds 9% and 12% atmospheric window
                 radiation_3D.x[i_trop][j][k] = .70 * radiation_surface.y[j][k]; 
                 // longwave back radiation absorbed by the surface 116% of the shortwave incoming sun radiation
-//                double radiation_back = epsilon_3D.x[i_mount][j][k] 
-//                    * sigma * pow(t.x[i_mount][j][k] * t_0, 4.);
                 double radiation_back = radiation_surface.y[j][k];
                 // longwave back radiation loss of 12% through the atmospheric window
-//                double atmospheric_window = .12 * radiation_surface.y[j][k]; 
-                double atmospheric_window = 0.; 
+                double atmospheric_window = .12 * radiation_surface.y[j][k]; 
                 // latent heat leaving the surface for cloud formation 24% of the shortwave incoming sun radiation
                 double Latent_Heat = .24 * radiation_surface.y[j][k];
                 // sensible heat leaving the surface by convection 5% of the shortwave incoming sun radiation
                 double Sensible_Heat = .05 * radiation_surface.y[j][k];
                 double rad_surf_diff = radiation_back + Latent_Heat
                     + Sensible_Heat + atmospheric_window; // radiation leaving the surface
-//                double fac_rad = (double)i_mount * .07 + 1.;  // linear increase with hight, best choice for Ma>0
-                double fac_rad = 1.;
-                rad_surf_diff = fac_rad * rad_surf_diff;
                 AA[i_mount] = rad_surf_diff / radiation_3D.x[i_trop][j][k];// non-dimensional surface radiation
                 CC[i_mount][i_mount] = 0.; // no absorption of radiation on the surface by water vapour
-                radiation_3D.x[i_mount][j][k] = (1. 
-                    - epsilon_3D.x[i_mount][j][k]) * sigma * 
-                        pow(t.x[i_mount][j][k] * t_0, 4.) 
-                        / radiation_3D.x[i_trop][j][k]; // radiation leaving the surface
+                radiation_3D.x[i_mount][j][k] = 
+                    (1. - epsilon_3D.x[i_mount][j][k]) * sigma
+                    * pow(t.x[i_mount][j][k] * t_0, 4.) 
+                    / radiation_3D.x[i_trop][j][k]; // radiation leaving the surface
                 for(int i = i_mount+1; i <= i_trop; i++){
-                    AA[i] = AA[i - 1] * (1. - epsilon_3D.x[i][j][k]); // transmitted radiation from each layer
-                    double tmp = sigma * pow(t.x[i][j][k] * t_0, 4.) 
+                    AA[i] = AA[i-1] * (1. - epsilon_3D.x[i][j][k]); // transmitted radiation from each layer
+                    double rad_tmp = sigma * pow(t.x[i][j][k] * t_0, 4.) 
                         / radiation_3D.x[i_trop][j][k];
-                    CC[i][i]= epsilon_3D.x[i][j][k] * tmp; // absorbed radiation in each layer
+                    CC[i][i]= epsilon_3D.x[i][j][k] * rad_tmp; // absorbed radiation in each layer
                     radiation_3D.x[i][j][k] = 
-                        (1. - epsilon_3D.x[i][j][k]) * tmp; // radiation leaving each layer
-                    for(int l = i_mount + 1; l <= i_trop; l++){
+                        (1. - epsilon_3D.x[i][j][k]) * rad_tmp; // radiation leaving each layer
+                    for(int l = i_mount+1; l <= i_trop; l++){
                         // additional transmitted radiation from layer to layer in radial direction
-                        CC[i][l] = CC[i][l - 1] 
-                            * (1. - epsilon_3D.x[l][j][k]);
+                        CC[i][l] = CC[i][l-1] * (1. - epsilon_3D.x[l][j][k]);
                     }
                 }
                 // Thomas algorithm to solve the tridiogonal equation system for the solution of the radiation with a recurrence formula
@@ -197,45 +173,45 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 for(int i = i_mount; i < i_trop; i++){ // values at the surface
                     if(i == i_mount){
                         bb = - radiation_3D.x[i][j][k];
-                        cc = radiation_3D.x[i + 1][j][k];
+                        cc = radiation_3D.x[i+1][j][k];
                         dd = - AA[i];
                         alfa[i] = cc / bb;
                         beta[i] = dd / bb;
                     }else{
-                        for(int l = i_mount + 1; l <= i - 1; l++){
+                        for(int l = i_mount+1; l <= i-1; l++){
                             CCC = CCC + CC[l][i];
                         }
-                        for(int l = i_mount + 1; l <= i - 2; l++){
-                            DDD = DDD + CC[l][i - 1];
+                        for(int l = i_mount+1; l <= i-2; l++){
+                            DDD = DDD + CC[l][i-1];
                         }
-                        aa = radiation_3D.x[i - 1][j][k];
+                        aa = radiation_3D.x[i-1][j][k];
                         bb = - 2. * radiation_3D.x[i][j][k];
-                        cc = radiation_3D.x[i + 1][j][k];
-                        dd = - AA[i - 1] + AA[i] + CCC - DDD;
-                        alfa[i] = cc / (bb - aa * alfa[i - 1]);
-                        beta[i] = (dd - aa * beta[i - 1]) 
-                            / (bb - aa * alfa[i - 1]);
+                        cc = radiation_3D.x[i+1][j][k];
+                        dd = - AA[i-1] + AA[i] + CCC - DDD;
+                        alfa[i] = cc / (bb - aa * alfa[i-1]);
+                        beta[i] = (dd - aa * beta[i-1]) 
+                            / (bb - aa * alfa[i-1]);
                     }
                 }
                 // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
                 t.x[i_trop][j][k] = t_tropopause;
                 radiation_3D.x[i_trop][j][k] = 
-                    (1. - epsilon_3D.x[i_trop][j][k]) * sigma * 
-                    pow(t.x[i_trop][j][k] * t_0, 4.);
+                    (1. - epsilon_3D.x[i_trop][j][k]) * sigma
+                    * pow(t.x[i_trop][j][k] * t_0, 4.);
                 // recurrence formula for the radiation and temperature
                 for(int i = i_trop - 1; i >= i_mount; i--){
                     // above assumed tropopause constant temperature t_tropopause
                     // Thomas algorithm, recurrence formula
                     radiation_3D.x[i][j][k] = - alfa[i] 
-                        * radiation_3D.x[i + 1][j][k] + beta[i];
+                        * radiation_3D.x[i+1][j][k] + beta[i];
                     t.x[i][j][k] = pow(radiation_3D.x[i][j][k] / sigma, 
                         (1. / 4.)) / t_0;    // averaging of temperature values to smooth the iterations
                 } // end i
                 for(int i = i_trop; i < im; i++){ // above tropopause
                     t.x[i][j][k] = t_tropopause;
                     radiation_3D.x[i][j][k] = 
-                        (1. - epsilon_3D.x[i_trop][j][k]) * sigma * 
-                        pow(t.x[i][j][k] * t_0, 4.);
+                        (1. - epsilon_3D.x[i_trop][j][k]) * sigma
+                        * pow(t.x[i][j][k] * t_0, 4.);
                 } // end i
             } // end k
         } // end j

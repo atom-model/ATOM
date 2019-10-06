@@ -42,16 +42,6 @@ class BC_Bathymetry_Atmosphere{
         ~BC_Bathymetry_Atmosphere();
         void BC_MountainSurface(string &topo_filename, double L_atm, Array_1D &rad, Array_2D &Topography, Array &h);
         void BC_IceShield(int, double, Array &, Array &, Array &, Array &, Array_2D &, Array_2D &);
-        void BC_SolidGround(int RadiationModel, int Ma, double g, double hp, double ep,
-                                            double r_air, double R_Air, double t_0, double c_0, double t_land,
-                                            double t_cretaceous, double t_equator, double t_pole,
-                                            double t_tropopause, double c_land, double c_tropopause,
-                                            double co2_0, double co2_equator, double co2_pole,
-                                            double co2_tropopause, double pa, double gam, double sigma,
-                                            Array &h, Array &u, Array &v, Array &w, Array &t, Array &p_dyn,
-                                            Array &c, Array &cloud, Array &ice, Array &co2, Array &radiation_3D,
-                                            Array_2D &Vegetation);
-        void vegetationDistribution(double, Array_2D &, Array_2D &, Array &, Array &);
         void land_oceanFraction(Array &);
 };
 #endif

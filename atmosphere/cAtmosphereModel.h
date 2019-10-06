@@ -160,7 +160,7 @@ private:
     void restrain_temperature();
     void Pressure_Limitation_Atm();
     void Value_Limitation_Atm();
-    void vegetationDistribution();
+    void vegetation_distribution();
     void BC_SolidGround(); 
     /*
      * initialize co2 Array co2

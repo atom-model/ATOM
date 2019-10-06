@@ -207,15 +207,8 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
         for(int k = 0; k < km; k++){
             for(int j = 0; j < jm; j++){
                 temp_NASA.y[j][k] = temperature_NASA.y[j][k] * t_0 - t_0;
+                temp_NASA.y[j][k] = temp_NASA.y[j][k] / t_0;
                 for(int i = im-2; i >= 0; i--){
-                    if(Ma == 0){
-                        if((is_air(h, i+1, j, k)) && (is_land(h, i, j, k)))
-                            aux_v.x[i_radial][j][k] = (t.x[0][j][k] 
-                            - temperature_NASA.y[j][k]) * t_0;
-                        if(is_air(h, 0, j, k))
-                            aux_v.x[i_radial][j][k] = (t.x[0][j][k] 
-                            - temperature_NASA.y[j][k]) * t_0;
-                    }else  aux_v.x[i_radial][j][k] = 0.;
                     aux_w.x[i_radial][j][k] = Evaporation_Dalton.y[j][k] 
                         - Precipitation.y[j][k];
                 }
@@ -259,7 +252,6 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
     dump_radial_2d("Temp_NASA", temp_NASA, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("DewPointTemp", dew_point_temperature, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("CondensLevel", condensation_level, 1.e-3, Atmosphere_vtk_radial_File);
-    dump_radial("Temp_NASA_diff", aux_v, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("Topography", h, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Topography_m", Topography, 1., Atmosphere_vtk_radial_File);
     dump_radial("WaterVapour", c, 1000., i_radial, Atmosphere_vtk_radial_File);
@@ -285,7 +277,6 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
     dump_radial("Q_Sensible", Q_Sensible, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Heat_Evaporation", Q_Evaporation, 1., Atmosphere_vtk_radial_File);
-//    dump_radial("Evap-Precip", aux_w, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("Evap-Precip", aux_w, -1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Vegetation", Vegetation, 1., Atmosphere_vtk_radial_File);
     dump_radial("CO2-Concentration", co2, co2_0, i_radial, Atmosphere_vtk_radial_File);

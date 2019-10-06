@@ -320,7 +320,8 @@ void cAtmosphereModel::print_min_max_values(){
         << name_Value_22 << " = " << resetiosflags(ios::left) << setw (7)
         << fixed << setfill(' ') << Value_9 << setw(6) << name_unit_ppm
         << endl << endl << endl;
-    double Value_25 = (GetMean_2D(jm, km, temperature_NASA) - 1.) * t_0;
+//    double Value_25 = (GetMean_2D(jm, km, temperature_NASA) - 1.) * t_0;
+    double Value_25 = (GetMean_2D(jm, km, temperature_NASA) - 1.);
     double Value_26 = temperature_surf_average;
     double Value_27 = t_average + t_paleo * t_0;
     cout << setw(6) << setiosflags(ios::left) << setw(40) << setfill('.')
