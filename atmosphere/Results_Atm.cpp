@@ -23,7 +23,7 @@ void cAtmosphereModel::run_MSL_data(){
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             if(RadiationModel >= 1) 
-                Q_radiation.y[j][k] = radiation_3D.x[0][j][k];
+                Q_radiation.y[j][k] = - radiation_surface.y[j][k];
             precipitable_water.y[j][k] = 0.;
             Evaporation_Dalton.y[j][k] = 0.;
         }
