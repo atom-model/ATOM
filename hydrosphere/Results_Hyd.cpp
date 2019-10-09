@@ -40,13 +40,13 @@ void cHydrosphereModel::run_data(){
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            Upwelling.y[ j ][ k ] = 0.;  // Upwelling
-            Downwelling.y[ j ][ k ] = 0.;  // Downwelling
-            EkmanPumping.y[ j ][ k ] = 0.;  // Ekman pumping
-            SaltFinger.y[ j ][ k ] = 0.;  // SaltFinger
-            SaltDiffusion.y[ j ][ k ] = 0.;  // SaltFinger
-            BuoyancyForce_2D.y[ j ][ k ] = 0.; // Saltdiffusion
-            Salt_total.y[ j ][ k ] = 0.;  // total Salt
+            Upwelling.y[j][k] = 0.;  // Upwelling
+            Downwelling.y[j][k] = 0.;  // Downwelling
+            EkmanPumping.y[j][k] = 0.;  // Ekman pumping
+            SaltFinger.y[j][k] = 0.;  // SaltFinger
+            SaltDiffusion.y[j][k] = 0.;  // SaltFinger
+            BuoyancyForce_2D.y[j][k] = 0.; // Saltdiffusion
+            Salt_total.y[j][k] = 0.;  // total Salt
         }
     }
 
@@ -77,20 +77,20 @@ void cHydrosphereModel::run_data(){
             } 
             for ( int i = i_beg; i < im; i++ ){
                 if ( is_water( h, i, j, k) ){
-                    aux_grad_v.z[ i ] = v.x[ i ][ j ][ k ];
-                    aux_grad_w.z[ i ] = w.x[ i ][ j ][ k ];
+                    aux_grad_v.z[i] = v.x[i][j][k];
+                    aux_grad_w.z[i] = w.x[i][j][k];
                 }else{
-                    aux_grad_v.z[ i ] = 0.;
-                    aux_grad_w.z[ i ] = 0.;
+                    aux_grad_v.z[i] = 0.;
+                    aux_grad_w.z[i] = 0.;
                 }
             }
             if ( i_diff % 2 == 0 ){
-                aux_v.x[ im-1 ][ j ][ k ] = simpson ( i_beg, i_max, dr, aux_grad_v );
-                aux_w.x[ im-1 ][ j ][ k ] = simpson ( i_beg, i_max, dr, aux_grad_w );
-//                aux_v.x[ im-1 ][ j ][ k ] = trapezoidal ( i_beg, i_max, dr, aux_grad_v );
-//                aux_w.x[ im-1 ][ j ][ k ] = trapezoidal ( i_beg, i_max, dr, aux_grad_w );
-//                aux_v.x[ im-1 ][ j ][ k ] = rectangular ( i_beg, i_max, dr, aux_grad_v );
-//                aux_w.x[ im-1 ][ j ][ k ] = rectangular ( i_beg, i_max, dr, aux_grad_w );
+                aux_v.x[im-1][j][k] = simpson ( i_beg, i_max, dr, aux_grad_v );
+                aux_w.x[im-1][j][k] = simpson ( i_beg, i_max, dr, aux_grad_w );
+//                aux_v.x[im-1][j][k] = trapezoidal ( i_beg, i_max, dr, aux_grad_v );
+//                aux_w.x[im-1][j][k] = trapezoidal ( i_beg, i_max, dr, aux_grad_w );
+//                aux_v.x[im-1][j][k] = rectangular ( i_beg, i_max, dr, aux_grad_v );
+//                aux_w.x[im-1][j][k] = rectangular ( i_beg, i_max, dr, aux_grad_w );
             }
             else cout << "       i_diff = i_max - i_Ekman    must be an even number to use the Simpson integration method" << endl;
         }
@@ -98,57 +98,57 @@ void cHydrosphereModel::run_data(){
 
     for ( int k = 1; k < km-1; k++ ){
         for ( int j = 1; j < j_half-1; j++ ){
-            rmsinthe = rad.z[ im-1 ] * sin( the.z[ j ] );
-            EkmanPumping.y[ j ][ k ] = - ( ( aux_v.x[ im-1 ][ j + 1 ][ k ] - aux_v.x[ im-1 ][ j - 1 ][ k ] ) /
-                ( 2. * rad.z[ im-1 ] * dthe ) + ( aux_w.x[ im-1 ][ j ][ k + 1 ] - aux_w.x[ im-1 ][ j ][ k - 1 ] )
+            rmsinthe = rad.z[im-1] * sin( the.z[j] );
+            EkmanPumping.y[j][k] = - ( ( aux_v.x[im-1][j + 1][k] - aux_v.x[im-1][j - 1][k] ) /
+                ( 2. * rad.z[im-1] * dthe ) + ( aux_w.x[im-1][j][k + 1] - aux_w.x[im-1][j][k - 1] )
                 / ( 2. * rmsinthe * dphi ) ) * coeff_EkmanPumping;
         }
         for ( int j = j_half+2; j < jm-1; j++ ){
-            rmsinthe = rad.z[ im-1 ] * sin( the.z[ j ] );
-            EkmanPumping.y[ j ][ k ] = - ( ( aux_v.x[ im-1 ][ j + 1 ][ k ] - aux_v.x[ im-1 ][ j - 1 ][ k ] ) /
-                ( 2. * rad.z[ im-1 ] * dthe )
-                + ( aux_w.x[ im-1 ][ j ][ k + 1 ] - aux_w.x[ im-1 ][ j ][ k - 1 ] ) /
+            rmsinthe = rad.z[im-1] * sin( the.z[j] );
+            EkmanPumping.y[j][k] = - ( ( aux_v.x[im-1][j + 1][k] - aux_v.x[im-1][j - 1][k] ) /
+                ( 2. * rad.z[im-1] * dthe )
+                + ( aux_w.x[im-1][j][k + 1] - aux_w.x[im-1][j][k - 1] ) /
                 ( 2. * rmsinthe * dphi ) ) * coeff_EkmanPumping;
         }
         for ( int j = 1; j < jm-1; j++ ){
-            if ( EkmanPumping.y[ j ][ k ] >= 0. )  Upwelling.y[ j ][ k ] = EkmanPumping.y[ j ][ k ];
-            else  Upwelling.y[ j ][ k ] = 0.;
-            if ( EkmanPumping.y[ j ][ k ] < 0. )  Downwelling.y[ j ][ k ] = EkmanPumping.y[ j ][ k ];
-            else  Downwelling.y[ j ][ k ] = 0.;
+            if ( EkmanPumping.y[j][k] >= 0. )  Upwelling.y[j][k] = EkmanPumping.y[j][k];
+            else  Upwelling.y[j][k] = 0.;
+            if ( EkmanPumping.y[j][k] < 0. )  Downwelling.y[j][k] = EkmanPumping.y[j][k];
+            else  Downwelling.y[j][k] = 0.;
         }
     }
 
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            Downwelling.y[ j ][ k ] = fabs ( Downwelling.y[ j ][ k ] );
+            Downwelling.y[j][k] = fabs ( Downwelling.y[j][k] );
         }
     }
 
     for ( int k = 0; k < km; k++ ){
         for ( int i = 0; i < im; i++ ){
-            Upwelling.y[ 0 ][ k ] = c43 * Upwelling.y[ 1 ][ k ] -
-                c13 * Upwelling.y[ 2 ][ k ];
-            Upwelling.y[ jm-1 ][ k ] = c43 * Upwelling.y[ jm-2 ][ k ] -
-                c13 * Upwelling.y[ jm-3 ][ k ];
-            Downwelling.y[ 0 ][ k ] = c43 * Downwelling.y[ 1 ][ k ] -
-                c13 * Downwelling.y[ 2 ][ k ];
-            Downwelling.y[ jm-1 ][ k ] = c43 * Downwelling.y[ jm-2 ][ k ] -
-                c13 * Downwelling.y[ jm-3 ][ k ];
+            Upwelling.y[0][k] = c43 * Upwelling.y[1][k] -
+                c13 * Upwelling.y[2][k];
+            Upwelling.y[jm-1][k] = c43 * Upwelling.y[jm-2][k] -
+                c13 * Upwelling.y[jm-3][k];
+            Downwelling.y[0][k] = c43 * Downwelling.y[1][k] -
+                c13 * Downwelling.y[2][k];
+            Downwelling.y[jm-1][k] = c43 * Downwelling.y[jm-2][k] -
+                c13 * Downwelling.y[jm-3][k];
         }
     }
 
     for ( int i = 0; i < im; i++ ){
         for ( int j = 0; j < jm; j++ ){
-            Upwelling.y[ j ][ 0 ] = c43 * Upwelling.y[ j ][ 1 ] - c13 * Upwelling.y[ j ][ 2 ];
-            Upwelling.y[ j ][ km-1 ] = c43 * Upwelling.y[ j ][ km-2 ] -
-                c13 * Upwelling.y[ j ][ km-3 ];
-            Upwelling.y[ j ][ 0 ] = Upwelling.y[ j ][ km-1 ] = ( Upwelling.y[ j ][ 0 ] +
-                Upwelling.y[ j ][ km-1 ] ) / 2.;
-            Downwelling.y[ j ][ 0 ] = c43 * Downwelling.y[ j ][ 1 ] - c13 * Downwelling.y[ j ][ 2 ];
-            Downwelling.y[ j ][ km-1 ] = c43 * Downwelling.y[ j ][ km-2 ] -
-                c13 * Downwelling.y[ j ][ km-3 ];
-            Downwelling.y[ j ][ 0 ] = Downwelling.y[ j ][ km-1 ] = ( Downwelling.y[ j ][ 0 ] +
-                Downwelling.y[ j ][ km-1 ] ) / 2.;
+            Upwelling.y[j][0] = c43 * Upwelling.y[j][1] - c13 * Upwelling.y[j][2];
+            Upwelling.y[j][km-1] = c43 * Upwelling.y[j][km-2] -
+                c13 * Upwelling.y[j][km-3];
+            Upwelling.y[j][0] = Upwelling.y[j][km-1] = ( Upwelling.y[j][0] +
+                Upwelling.y[j][km-1] ) / 2.;
+            Downwelling.y[j][0] = c43 * Downwelling.y[j][1] - c13 * Downwelling.y[j][2];
+            Downwelling.y[j][km-1] = c43 * Downwelling.y[j][km-2] -
+                c13 * Downwelling.y[j][km-3];
+            Downwelling.y[j][0] = Downwelling.y[j][km-1] = ( Downwelling.y[j][0] +
+                Downwelling.y[j][km-1] ) / 2.;
         }
     }
 
@@ -156,10 +156,10 @@ void cHydrosphereModel::run_data(){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = i_half; i < im; i++ ){
                 if ( is_water( h, i, j, k) ){
-                    SaltFinger.y[ j ][ k ] += Salt_Finger.x[ i ][ j ][ k ];
-                    SaltDiffusion.y[ j ][ k ] += Salt_Diffusion.x[ i ][ j ][ k ];
-                    BuoyancyForce_2D.y[ j ][ k ] += BuoyancyForce_3D.x[ i ][ j ][ k ];
-                    Salt_total.y[ j ][ k ] += c.x[ i ][ j ][ k ] * c_0;
+                    SaltFinger.y[j][k] += Salt_Finger.x[i][j][k];
+                    SaltDiffusion.y[j][k] += Salt_Diffusion.x[i][j][k];
+                    BuoyancyForce_2D.y[j][k] += BuoyancyForce_3D.x[i][j][k];
+                    Salt_total.y[j][k] += c.x[i][j][k] * c_0;
                 }
             }
         }
@@ -168,72 +168,72 @@ void cHydrosphereModel::run_data(){
 // boundaries of buoyancy force
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
-            BuoyancyForce_3D.x[ 0 ][ j ][ k ] = c43 * BuoyancyForce_3D.x[ 1 ][ j ][ k ] -
-                c13 * BuoyancyForce_3D.x[ 2 ][ j ][ k ];
-            BuoyancyForce_3D.x[ im-1 ][ j ][ k ] = c43 * BuoyancyForce_3D.x[ im-2 ][ j ][ k ] -
-                c13 * BuoyancyForce_3D.x[ im-3 ][ j ][ k ];
-            Salt_Finger.x[ 0 ][ j ][ k ] = c43 * Salt_Finger.x[ 1 ][ j ][ k ] -
-                c13 * Salt_Finger.x[ 2 ][ j ][ k ];
-            Salt_Finger.x[ im-1 ][ j ][ k ] = c43 * Salt_Finger.x[ im-2 ][ j ][ k ] -
-                c13 * Salt_Finger.x[ im-3 ][ j ][ k ];
-            Salt_Diffusion.x[ 0 ][ j ][ k ] = c43 * Salt_Diffusion.x[ 1 ][ j ][ k ] -
-                c13 * Salt_Diffusion.x[ 2 ][ j ][ k ];
-            Salt_Diffusion.x[ im-1 ][ j ][ k ] = c43 * Salt_Diffusion.x[ im-2 ][ j ][ k ] -
-                c13 * Salt_Diffusion.x[ im-3 ][ j ][ k ];
-            Salt_Balance.x[ 0 ][ j ][ k ] = c43 * Salt_Balance.x[ 1 ][ j ][ k ] -
-                c13 * Salt_Balance.x[ 2 ][ j ][ k ];
-            Salt_Balance.x[ im-1 ][ j ][ k ] = c43 * Salt_Balance.x[ im-2 ][ j ][ k ] -
-                c13 * Salt_Balance.x[ im-3 ][ j ][ k ];
+            BuoyancyForce_3D.x[0][j][k] = c43 * BuoyancyForce_3D.x[1][j][k] -
+                c13 * BuoyancyForce_3D.x[2][j][k];
+            BuoyancyForce_3D.x[im-1][j][k] = c43 * BuoyancyForce_3D.x[im-2][j][k] -
+                c13 * BuoyancyForce_3D.x[im-3][j][k];
+            Salt_Finger.x[0][j][k] = c43 * Salt_Finger.x[1][j][k] -
+                c13 * Salt_Finger.x[2][j][k];
+            Salt_Finger.x[im-1][j][k] = c43 * Salt_Finger.x[im-2][j][k] -
+                c13 * Salt_Finger.x[im-3][j][k];
+            Salt_Diffusion.x[0][j][k] = c43 * Salt_Diffusion.x[1][j][k] -
+                c13 * Salt_Diffusion.x[2][j][k];
+            Salt_Diffusion.x[im-1][j][k] = c43 * Salt_Diffusion.x[im-2][j][k] -
+                c13 * Salt_Diffusion.x[im-3][j][k];
+            Salt_Balance.x[0][j][k] = c43 * Salt_Balance.x[1][j][k] -
+                c13 * Salt_Balance.x[2][j][k];
+            Salt_Balance.x[im-1][j][k] = c43 * Salt_Balance.x[im-2][j][k] -
+                c13 * Salt_Balance.x[im-3][j][k];
         }
     }
 
     for ( int k = 0; k < km; k++ ){
         for ( int i = 0; i < im; i++ ){
-            BuoyancyForce_3D.x[ i ][ 0 ][ k ] = c43 * BuoyancyForce_3D.x[ i ][ 1 ][ k ] -
-                c13 * BuoyancyForce_3D.x[ i ][ 2 ][ k ];
-            BuoyancyForce_3D.x[ i ][ jm-1 ][ k ] = c43 * BuoyancyForce_3D.x[ i ][ jm-2 ][ k ] -
-                c13 * BuoyancyForce_3D.x[ i ][ jm-3 ][ k ];
-            Salt_Finger.x[ i ][ 0 ][ k ] = c43 * Salt_Finger.x[ i ][ 1 ][ k ] -
-                c13 * Salt_Finger.x[ i ][ 2 ][ k ];
-            Salt_Finger.x[ i ][ jm-1 ][ k ] = c43 * Salt_Finger.x[ i ][ jm-2 ][ k ] -
-                c13 * Salt_Finger.x[ i ][ jm-3 ][ k ];
-            Salt_Diffusion.x[ i ][ 0 ][ k ] = c43 * Salt_Diffusion.x[ i ][ 1 ][ k ] -
-                 c13 * Salt_Diffusion.x[ i ][ 2 ][ k ];
-            Salt_Diffusion.x[ i ][ jm-1 ][ k ] = c43 * Salt_Diffusion.x[ i ][ jm-2 ][ k ] -
-                c13 * Salt_Diffusion.x[ i ][ jm-3 ][ k ];
-            Salt_Balance.x[ i ][ 0 ][ k ] = c43 * Salt_Balance.x[ i ][ 1 ][ k ] -
-                c13 * Salt_Balance.x[ i ][ 2 ][ k ];
-            Salt_Balance.x[ i ][ jm-1 ][ k ] = c43 * Salt_Balance.x[ i ][ jm-2 ][ k ] -
-                c13 * Salt_Balance.x[ i ][ jm-3 ][ k ];
+            BuoyancyForce_3D.x[i][0][k] = c43 * BuoyancyForce_3D.x[i][1][k] -
+                c13 * BuoyancyForce_3D.x[i][2][k];
+            BuoyancyForce_3D.x[i][jm-1][k] = c43 * BuoyancyForce_3D.x[i][jm-2][k] -
+                c13 * BuoyancyForce_3D.x[i][jm-3][k];
+            Salt_Finger.x[i][0][k] = c43 * Salt_Finger.x[i][1][k] -
+                c13 * Salt_Finger.x[i][2][k];
+            Salt_Finger.x[i][jm-1][k] = c43 * Salt_Finger.x[i][jm-2][k] -
+                c13 * Salt_Finger.x[i][jm-3][k];
+            Salt_Diffusion.x[i][0][k] = c43 * Salt_Diffusion.x[i][1][k] -
+                 c13 * Salt_Diffusion.x[i][2][k];
+            Salt_Diffusion.x[i][jm-1][k] = c43 * Salt_Diffusion.x[i][jm-2][k] -
+                c13 * Salt_Diffusion.x[i][jm-3][k];
+            Salt_Balance.x[i][0][k] = c43 * Salt_Balance.x[i][1][k] -
+                c13 * Salt_Balance.x[i][2][k];
+            Salt_Balance.x[i][jm-1][k] = c43 * Salt_Balance.x[i][jm-2][k] -
+                c13 * Salt_Balance.x[i][jm-3][k];
         }
     }
 
     for ( int i = 0; i < im; i++ ){
         for ( int j = 0; j < jm; j++ ){
-            BuoyancyForce_3D.x[ i ][ j ][ 0 ] = c43 * BuoyancyForce_3D.x[ i ][ j ][ 1 ] -
-                c13 * BuoyancyForce_3D.x[ i ][ j ][ 2 ];
-            BuoyancyForce_3D.x[ i ][ j ][ km-1 ] = c43 * BuoyancyForce_3D.x[ i ][ j ][ km-2 ] -
-                c13 * BuoyancyForce_3D.x[ i ][ j ][ km-3 ];
-            BuoyancyForce_3D.x[ i ][ j ][ 0 ] = BuoyancyForce_3D.x[ i ][ j ][ km-1 ] =
-                ( BuoyancyForce_3D.x[ i ][ j ][ 0 ] + BuoyancyForce_3D.x[ i ][ j ][ km-1 ] ) / 2.;
-            Salt_Finger.x[ i ][ j ][ 0 ] = c43 * Salt_Finger.x[ i ][ j ][ 1 ] -
-                c13 * Salt_Finger.x[ i ][ j ][ 2 ];
-            Salt_Finger.x[ i ][ j ][ km-1 ] = c43 * Salt_Finger.x[ i ][ j ][ km-2 ] -
-                c13 * Salt_Finger.x[ i ][ j ][ km-3 ];
-            Salt_Finger.x[ i ][ j ][ 0 ] = Salt_Finger.x[ i ][ j ][ km-1 ] = ( Salt_Finger.x[ i ][ j ][ 0 ] +
-                 Salt_Finger.x[ i ][ j ][ km-1 ] ) / 2.;
-            Salt_Diffusion.x[ i ][ j ][ 0 ] = c43 * Salt_Diffusion.x[ i ][ j ][ 1 ] -
-                c13 * Salt_Diffusion.x[ i ][ j ][ 2 ];
-            Salt_Diffusion.x[ i ][ j ][ km-1 ] = c43 * Salt_Diffusion.x[ i ][ j ][ km-2 ] -
-                c13 * Salt_Diffusion.x[ i ][ j ][ km-3 ];
-            Salt_Diffusion.x[ i ][ j ][ 0 ] = Salt_Diffusion.x[ i ][ j ][ km-1 ] =
-                ( Salt_Diffusion.x[ i ][ j ][ 0 ] + Salt_Diffusion.x[ i ][ j ][ km-1 ] ) / 2.;
-            Salt_Balance.x[ i ][ j ][ 0 ] = c43 * Salt_Balance.x[ i ][ j ][ 1 ] -
-                c13 * Salt_Balance.x[ i ][ j ][ 2 ];
-            Salt_Balance.x[ i ][ j ][ km-1 ] = c43 * Salt_Balance.x[ i ][ j ][ km-2 ] -
-                c13 * Salt_Balance.x[ i ][ j ][ km-3 ];
-            Salt_Balance.x[ i ][ j ][ 0 ] = Salt_Balance.x[ i ][ j ][ km-1 ] =
-                ( Salt_Balance.x[ i ][ j ][ 0 ] + Salt_Balance.x[ i ][ j ][ km-1 ] ) / 2.;
+            BuoyancyForce_3D.x[i][j][0] = c43 * BuoyancyForce_3D.x[i][j][1] -
+                c13 * BuoyancyForce_3D.x[i][j][2];
+            BuoyancyForce_3D.x[i][j][km-1] = c43 * BuoyancyForce_3D.x[i][j][km-2] -
+                c13 * BuoyancyForce_3D.x[i][j][km-3];
+            BuoyancyForce_3D.x[i][j][0] = BuoyancyForce_3D.x[i][j][km-1] =
+                ( BuoyancyForce_3D.x[i][j][0] + BuoyancyForce_3D.x[i][j][km-1] ) / 2.;
+            Salt_Finger.x[i][j][0] = c43 * Salt_Finger.x[i][j][1] -
+                c13 * Salt_Finger.x[i][j][2];
+            Salt_Finger.x[i][j][km-1] = c43 * Salt_Finger.x[i][j][km-2] -
+                c13 * Salt_Finger.x[i][j][km-3];
+            Salt_Finger.x[i][j][0] = Salt_Finger.x[i][j][km-1] = ( Salt_Finger.x[i][j][0] +
+                 Salt_Finger.x[i][j][km-1] ) / 2.;
+            Salt_Diffusion.x[i][j][0] = c43 * Salt_Diffusion.x[i][j][1] -
+                c13 * Salt_Diffusion.x[i][j][2];
+            Salt_Diffusion.x[i][j][km-1] = c43 * Salt_Diffusion.x[i][j][km-2] -
+                c13 * Salt_Diffusion.x[i][j][km-3];
+            Salt_Diffusion.x[i][j][0] = Salt_Diffusion.x[i][j][km-1] =
+                ( Salt_Diffusion.x[i][j][0] + Salt_Diffusion.x[i][j][km-1] ) / 2.;
+            Salt_Balance.x[i][j][0] = c43 * Salt_Balance.x[i][j][1] -
+                c13 * Salt_Balance.x[i][j][2];
+            Salt_Balance.x[i][j][km-1] = c43 * Salt_Balance.x[i][j][km-2] -
+                c13 * Salt_Balance.x[i][j][km-3];
+            Salt_Balance.x[i][j][0] = Salt_Balance.x[i][j][km-1] =
+                ( Salt_Balance.x[i][j][0] + Salt_Balance.x[i][j][km-1] ) / 2.;
         }
     }
 }

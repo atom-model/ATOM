@@ -330,17 +330,17 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name,
             }
         }
     }
-    paraview_vtk_radial (bathymetry_name, Ma, i_radial, iter_cnt-1); 
+    paraview_vtk_radial(bathymetry_name, Ma, i_radial, iter_cnt-1); 
     int j_longal = 62;          // Mount Everest/Himalaya
-    paraview_vtk_longal (bathymetry_name, j_longal, iter_cnt-1); 
+    paraview_vtk_longal(bathymetry_name, j_longal, iter_cnt-1); 
     int k_zonal = 87;           // Mount Everest/Himalaya
-    paraview_vtk_zonal (bathymetry_name, k_zonal, iter_cnt-1); 
+    paraview_vtk_zonal(bathymetry_name, k_zonal, iter_cnt-1); 
     if(paraview_panorama_vts_flag){ //This function creates a large file. Use a flag to control if it is wanted.
         paraview_panorama_vts (bathymetry_name, iter_cnt-1); 
     }
     Value_Limitation_Atm();
-    Atmosphere_v_w_Transfer (bathymetry_name);
-    Atmosphere_PlotData (bathymetry_name, (is_final_result ? -1 : iter_cnt-1));
+    Atmosphere_v_w_Transfer(bathymetry_name);
+    Atmosphere_PlotData(bathymetry_name, (is_final_result ? -1 : iter_cnt-1));
 }
 
 void cAtmosphereModel::run_2D_loop(){

@@ -1508,9 +1508,6 @@ void cAtmosphereModel::BC_Evaporation(){
     double vapour_surface = 0.;
     double evap_precip = 0.;
     double coeff_vapour = 1.1574e-8;  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
-//    double coeff_vapour = 1.1574e-8 * 2000.;  
-//                                      2000. is fantasy, but it produces a small increase 
-//                                      of surface water vapour due to evaporation, TODO
     double zeta = 3.715;
     double rm = rad.z[0];
     double exp_rm = 1. / exp(zeta * rm);

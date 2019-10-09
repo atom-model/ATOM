@@ -92,17 +92,17 @@ double Accuracy_Hyd::residuumQuery_3D ( Array_1D &rad, Array_1D &the,
 
     for ( int i = 1; i < im-1; i++ ){
         for ( int j = 1; j < jm-1; j++ ){
-            sinthe = sin( the.z[ j ] );
-            costhe = cos( the.z[ j ] );
-            rmsinthe = rad.z[ i ] * sinthe;
+            sinthe = sin( the.z[j] );
+            costhe = cos( the.z[j] );
+            rmsinthe = rad.z[i] * sinthe;
 
             for ( int k = 1; k < km-1; k++ ){
-                dudr = ( u.x[ i+1 ][ j ][ k ] - u.x[ i-1 ][ j ][ k ] ) / ( 2. * dr );
-                dvdthe = ( v.x[ i ][ j+1 ][ k ] - v.x[ i ][ j-1 ][ k ] ) / ( 2. * dthe );
-                dwdphi = ( w.x[ i ][ j ][ k+1 ] - w.x[ i ][ j ][ k-1 ] ) / ( 2. * dphi );
+                dudr = ( u.x[i+1][j][k] - u.x[i-1][j][k] ) / ( 2. * dr );
+                dvdthe = ( v.x[i][j+1][k] - v.x[i][j-1][k] ) / ( 2. * dthe );
+                dwdphi = ( w.x[i][j][k+1] - w.x[i][j][k-1] ) / ( 2. * dphi );
 
-                residuum = dudr + 2. * u.x[ i ][ j ][ k ] / rad.z[ i ] + dvdthe / rad.z[ i ]
-                            + costhe / rmsinthe * v.x[ i ][ j ][ k ] + dwdphi / rmsinthe;
+                residuum = dudr + 2. * u.x[i][j][k] / rad.z[i] + dvdthe / rad.z[i]
+                            + costhe / rmsinthe * v.x[i][j][k] + dwdphi / rmsinthe;
                 if ( fabs ( residuum ) >= min ){
                     min = residuum;
                     i_res = i;
@@ -132,7 +132,7 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
     for ( int i = 0; i < im; i++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int k = 0; k < km; k++ ){
-                max_u = fabs ( u.x[ i ][ j ][ k ] - un.x[ i ][ j ][ k ] );
+                max_u = fabs ( u.x[i][j][k] - un.x[i][j][k] );
                 if ( max_u >= min_u ){
                     min_u = max_u;
                     i_u = i;
@@ -140,7 +140,7 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                     k_u = k;
                 }
 
-                max_v = fabs ( v.x[ i ][ j ][ k ] - vn.x[ i ][ j ][ k ] );
+                max_v = fabs ( v.x[i][j][k] - vn.x[i][j][k] );
                 if ( max_v >= min_v ){
                     min_v = max_v;
                     i_v = i;
@@ -148,7 +148,7 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                     k_v = k;
                 }
 
-                max_w = fabs ( w.x[ i ][ j ][ k ] - wn.x[ i ][ j ][ k ] );
+                max_w = fabs ( w.x[i][j][k] - wn.x[i][j][k] );
                 if ( max_w >= min_w ){
                     min_w = max_w;
                     i_w = i;
@@ -156,7 +156,7 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                     k_w = k;
                 }
 
-                max_t = fabs ( t.x[ i ][ j ][ k ] - tn.x[ i ][ j ][ k ] );
+                max_t = fabs ( t.x[i][j][k] - tn.x[i][j][k] );
                 if ( max_t >= min_t ){
                     min_t = max_t;
                     i_t = i;
@@ -164,7 +164,7 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                     k_t = k;
                 }
 
-                max_c = fabs ( c.x[ i ][ j ][ k ] - cn.x[ i ][ j ][ k ] );
+                max_c = fabs ( c.x[i][j][k] - cn.x[i][j][k] );
                 if ( max_c >= min_c ){
                     min_c = max_c;
                     i_c = i;
@@ -172,7 +172,7 @@ double Accuracy_Hyd::steadyQuery_3D ( Array &u, Array &un, Array &v, Array &vn,
                     k_c = k;
                 }
 
-                max_p = fabs ( p_dyn.x[ i ][ j ][ k ] - p_dynn.x[ i ][ j ][ k ] );
+                max_p = fabs ( p_dyn.x[i][j][k] - p_dynn.x[i][j][k] );
                 if ( max_p >= min_p ){
                     min_p = max_p;
                     i_p = i;
@@ -315,14 +315,14 @@ double Accuracy_Hyd::residuumQuery_2D ( Array_1D &rad, Array_1D &the,
     min = residuum = 0.;
 
     for ( int j = 1; j < jm-1; j++ ){
-        sinthe = sin( the.z[ j ] );
-        costhe = cos( the.z[ j ] );
-        rmsinthe = rad.z[ im-1 ] * sinthe;
+        sinthe = sin( the.z[j] );
+        costhe = cos( the.z[j] );
+        rmsinthe = rad.z[im-1] * sinthe;
 
     for ( int k = 1; k < km-1; k++ ){
-            dvdthe = ( v.x[ im-1 ][ j+1 ][ k ] - v.x[ im-1 ][ j-1 ][ k ] ) / ( 2. * dthe );
-            dwdphi = ( w.x[ im-1 ][ j ][ k+1 ] - w.x[ im-1 ][ j ][ k-1 ] ) / ( 2. * dphi );
-            residuum = dvdthe / rad.z[ im-1 ] + costhe / rmsinthe * v.x[ im-1 ][ j ][ k ] +
+            dvdthe = ( v.x[im-1][j+1][k] - v.x[im-1][j-1][k] ) / ( 2. * dthe );
+            dwdphi = ( w.x[im-1][j][k+1] - w.x[im-1][j][k-1] ) / ( 2. * dphi );
+            residuum = dvdthe / rad.z[im-1] + costhe / rmsinthe * v.x[im-1][j][k] +
                 dwdphi / rmsinthe;
             if ( fabs ( residuum ) >= min ){
                 min = residuum;
@@ -352,21 +352,21 @@ double Accuracy_Hyd::steadyQuery_2D ( Array &h, Array &v, Array &vn, Array &w,
         for ( int k = 0; k < km; k++ ){
             if ( is_water( h, im-1, j, k) )
             {
-                max_v = fabs ( v.x[ im-1 ][ j ][ k ] - vn.x[ im-1 ][ j ][ k ] );
+                max_v = fabs ( v.x[im-1][j][k] - vn.x[im-1][j][k] );
                 if ( max_v >= min_v ){
                     min_v = max_v;
                     j_v = j;
                     k_v = k;
                 }
 
-                max_w = fabs ( w.x[ im-1 ][ j ][ k ] - wn.x[ im-1 ][ j ][ k ] );
+                max_w = fabs ( w.x[im-1][j][k] - wn.x[im-1][j][k] );
                 if ( max_w >= min_w ){
                     min_w = max_w;
                     j_w = j;
                     k_w = k;
                 }
 
-                max_p = fabs ( p_dyn.x[ im-1 ][ j ][ k ] - p_dynn.x[ im-1 ][ j ][ k ] );
+                max_p = fabs ( p_dyn.x[im-1][j][k] - p_dynn.x[im-1][j][k] );
                 if ( max_p >= min_p ){
                     min_p = max_p;
                     j_p = j;

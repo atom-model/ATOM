@@ -47,10 +47,10 @@ void cAtmosphereModel::Atmosphere_PlotData (string &Name_Bathymetry_File, int it
         cerr << "ERROR: could not open PlotData file " << __FILE__ << " at line " << __LINE__ << "\n";
         abort();
     }
-    PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " 
+    PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography(m)" << ", " << "v-velocity(m/s)" << ", " 
         << "w-velocity(m/s)" << ", " << "velocity-mag(m/s)" << ", " << "temperature(Celsius)" << ", " 
-        << "water_vapour(g/kg)" << ", " << "precipitation(mm)" << ", " <<  "precipitable water(mm)" << ", " 
-        << "Evaporation_Dalton (mm/day) " <<endl;
+        << "water_vapour(g/kg)" << ", " << "precipitation(mm/d)" << ", " <<  "precipitable water(mm)" << ", " 
+        << "Evaporation_Dalton (mm/d) " <<endl;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             double vel_mag = sqrt(pow(v.x[0][j][k] * u_0, 2) + pow(w.x[0][j][k] * u_0, 2));

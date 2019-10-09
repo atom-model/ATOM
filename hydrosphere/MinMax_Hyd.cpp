@@ -76,9 +76,9 @@ void MinMax_Hyd::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( value_3D.x[ i ][ j ][ k ] > maxValue ) 
+				if ( value_3D.x[i][j][k] > maxValue ) 
 				{
-					maxValue = value_3D.x[ i ][ j ][ k ];
+					maxValue = value_3D.x[i][j][k];
 					imax = i;
 					jmax = j;
 					kmax = k;
@@ -95,9 +95,9 @@ void MinMax_Hyd::searchMinMax_3D ( string &name_maxValue, string &name_minValue,
 		{
 			for ( int i = 0; i < im; i++ )
 			{
-				if ( value_3D.x[ i ][ j ][ k ] < minValue ) 
+				if ( value_3D.x[i][j][k] < minValue ) 
 				{
-					minValue = value_3D.x[ i ][ j ][ k ];
+					minValue = value_3D.x[i][j][k];
 					imin = i;
 					jmin = j;
 					kmin = k;
@@ -232,9 +232,9 @@ void MinMax_Hyd::searchMinMax_2D ( string &name_maxValue, string &name_minValue,
 	{
 		for ( int k = 1; k < km-1; k++ )
 		{
-			if ( value.y[ j ][ k ] > maxValue ) 
+			if ( value.y[j][k] > maxValue ) 
 			{
-				maxValue = value.y[ j ][ k ];
+				maxValue = value.y[j][k];
 				jmax = j;
 				kmax = k;
 			}
@@ -247,9 +247,9 @@ void MinMax_Hyd::searchMinMax_2D ( string &name_maxValue, string &name_minValue,
 	{
 		for ( int k = 1; k < km-1; k++ )
 		{
-			if ( ( value.y[ j ][ k ] < minValue ) && ( value.y[ j ][ k ] != 0. ) )
+			if ( ( value.y[j][k] < minValue ) && ( value.y[j][k] != 0. ) )
 			{
-				minValue = value.y[ j ][ k ];
+				minValue = value.y[j][k];
 				jmin = j;
 				kmin = k;
 			}

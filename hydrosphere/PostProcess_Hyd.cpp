@@ -87,7 +87,7 @@ void PostProcess_Hydrosphere::dump_zonal(const string &desc, Array &a,
 
     for ( int i = 0; i < im; i++ ){
         for ( int j = 0; j < jm; j++ ){
-            f << (a.x[ i ][ j ][ k ] * multiplier) << endl;
+            f << (a.x[i][j][k] * multiplier) << endl;
         }
     }
 }
@@ -151,21 +151,21 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
 
 
     for ( int k = 0; k < km; k++ ){
-        sinphi = sin( phi.z[ k ] );
-        cosphi = cos( phi.z[ k ] );
+        sinphi = sin( phi.z[k] );
+        cosphi = cos( phi.z[k] );
         for ( int j = 0; j < jm; j++ ){
-            sinthe = sin( the.z[ j ] );
-            costhe = cos( the.z[ j ] );
+            sinthe = sin( the.z[j] );
+            costhe = cos( the.z[j] );
             for ( int i = 0; i < im; i++ ){
 // transformation from spherical to cartesian coordinates for presentation in ParaView
-                fup.x[ i ][ j ][ k ] = sinthe * cosphi * u.x[ i ][ j ][ k ] + costhe * cosphi *
-                    v.x[ i ][ j ][ k ] - sinphi * w.x[ i ][ j ][ k ];
-                fvp.x[ i ][ j ][ k ] = sinthe * sinphi * u.x[ i ][ j ][ k ] + sinphi * costhe *
-                    v.x[ i ][ j ][ k ] + cosphi * w.x[ i ][ j ][ k ];
-                fwp.x[ i ][ j ][ k ] = costhe * u.x[ i ][ j ][ k ] - sinthe * v.x[ i ][ j ][ k ];
+                fup.x[i][j][k] = sinthe * cosphi * u.x[i][j][k] + costhe * cosphi *
+                    v.x[i][j][k] - sinphi * w.x[i][j][k];
+                fvp.x[i][j][k] = sinthe * sinphi * u.x[i][j][k] + sinphi * costhe *
+                    v.x[i][j][k] + cosphi * w.x[i][j][k];
+                fwp.x[i][j][k] = costhe * u.x[i][j][k] - sinthe * v.x[i][j][k];
 
-                Hydrosphere_vts_File << fup.x[ i ][ j ][ k ] << " " << fvp.x[ i ][ j ][ k ]
-                    << " " << fwp.x[ i ][ j ][ k ]  << endl;
+                Hydrosphere_vts_File << fup.x[i][j][k] << " " << fvp.x[i][j][k]
+                    << " " << fwp.x[i][j][k]  << endl;
             }
             Hydrosphere_vts_File <<  "\n"  << endl;
         }
@@ -181,7 +181,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
-                Hydrosphere_vts_File << h.x[ i ][ j ][ k ]  << endl;
+                Hydrosphere_vts_File << h.x[i][j][k]  << endl;
             }
             Hydrosphere_vts_File <<  "\n"  << endl;
         }
@@ -196,7 +196,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
-                Hydrosphere_vts_File << t.x[ i ][ j ][ k ]  << endl;
+                Hydrosphere_vts_File << t.x[i][j][k]  << endl;
             }
             Hydrosphere_vts_File <<  "\n"  << endl;
         }
@@ -211,7 +211,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
-                Hydrosphere_vts_File << p.x[ i ][ j ][ k ]  << endl;
+                Hydrosphere_vts_File << p.x[i][j][k]  << endl;
             }
             Hydrosphere_vts_File <<  "\n"  << endl;
         }
@@ -226,7 +226,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
-                Hydrosphere_vts_File << c.x[ i ][ j ][ k ]  << endl;
+                Hydrosphere_vts_File << c.x[i][j][k]  << endl;
             }
             Hydrosphere_vts_File <<  "\n"  << endl;
         }
@@ -242,9 +242,9 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
-                x = rad.z[ i ] * sin( the.z[ j ] ) * cos ( phi.z[ k ] );
-                y = rad.z[ i ] * sin( the.z[ j ] ) * sin ( phi.z[ k ] );
-                z = rad.z[ i ] * cos( the.z[ j ] );
+                x = rad.z[i] * sin( the.z[j] ) * cos ( phi.z[k] );
+                y = rad.z[i] * sin( the.z[j] ) * sin ( phi.z[k] );
+                z = rad.z[i] * cos( the.z[j] );
 
                 Hydrosphere_vts_File << x << " " << y << " " << z  << endl;
             }
@@ -268,7 +268,7 @@ void PostProcess_Hydrosphere::paraview_vts ( const string &Name_Bathymetry_File,
 
 
 void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathymetry_File,
-                                                    int n, double &u_0, double &r_0_water, Array &h,
+                                                    int n, double &u_0, double &c_0, double &r_0_water, Array &h,
                                                     Array &t, Array &p_dyn, Array &p_stat, Array &r_water,
                                                     Array &r_salt_water, Array &u, Array &v, Array &w,
                                                     Array &c, Array &aux_u, Array &aux_v, Array &aux_w,
@@ -302,7 +302,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
         for ( int j = 0; j < jm; j++ ){
             for ( int i = 0; i < im; i++ ){
 // transformtion from spherical to cartesian coordinates for representation in ParaView
-                Hydrosphere_panorama_vts_File << u.x[ i ][ j ][ k ] << " " << v.x[ i ][ j ][ k ] << " " << w.x[ i ][ j ][ k ]  << endl;
+                Hydrosphere_panorama_vts_File << u.x[i][j][k] << " " << v.x[i][j][k] << " " << w.x[i][j][k]  << endl;
             }
             Hydrosphere_panorama_vts_File <<  "\n"  << endl;
         }
@@ -318,7 +318,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
     dump_array("Temperature", t, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, Hydrosphere_panorama_vts_File);
     dump_array("PressureStatic", p_stat, 1.0, Hydrosphere_panorama_vts_File);
-    dump_array("Salinity", c, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("Salinity", c, c_0, Hydrosphere_panorama_vts_File);
     dump_array("DensityWater", r_water, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("DensitySaltWater", r_salt_water, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("Salt_Finger", Salt_Finger, 1.0, Hydrosphere_panorama_vts_File);
@@ -372,7 +372,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
 
 
 void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetry_File,
-                                                    int j_longal, int n, double &u_0, double &r_0_water,
+                                                    int j_longal, int n, double &u_0, double &c_0, double &r_0_water,
                                                     Array &h, Array &p_dyn, Array &p_stat, Array &r_water,
                                                     Array &r_salt_water, Array &t, Array &u, Array &v, Array &w,
                                                     Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger,
@@ -429,7 +429,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
     dump_longal("Temperature", t, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("PressureStatic", p_stat, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("Salinity", c, 1., j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("Salinity", c, c_0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("DensityWater", r_water, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("DensitySaltWater", r_salt_water, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("SaltFinger", Salt_Finger, 1., j_longal, Hydrosphere_vtk_longal_File);
@@ -443,7 +443,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
     for ( int i = 0; i < im; i++ ){
         for ( int k = 0; k < km; k++ ){
-            Hydrosphere_vtk_longal_File << u.x[ i ][ j_longal ][ k ] << " " << y << " " << w.x[ i ][ j_longal ][ k ] << endl;
+            Hydrosphere_vtk_longal_File << u.x[i][j_longal][k] << " " << y << " " << w.x[i][j_longal][k] << endl;
         }
     }
     Hydrosphere_vtk_longal_File.close();
@@ -455,7 +455,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
 
 
 void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetry_File,
-                                                    int i_radial, int n, double &u_0, double &t_0, double &r_0_water,
+                                                    int i_radial, int n, double &u_0, double &t_0, double &c_0, double &r_0_water,
                                                     Array &h, Array &p_dyn, Array &p_stat, Array &r_water,
                                                     Array &r_salt_water, Array &t, Array &u, Array &v, Array &w,
                                                     Array &c, Array &aux_u, Array &aux_v, Array &Salt_Finger,
@@ -514,9 +514,9 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     Hydrosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
-            Hydrosphere_vtk_radial_File << t.x[ i_radial ][ j ][ k ] * t_0 - t_0 << endl;
-            aux_v.x[ i_radial ][ j ][ k ] = Evaporation_Dalton.y[ j ][ k ] - Precipitation.y[ j ][ k ];
-            if ( is_land( h, 0, j, k ) )                        aux_v.x[ i_radial ][ j ][ k ] = 0.;
+            Hydrosphere_vtk_radial_File << t.x[i_radial][j][k] * t_0 - t_0 << endl;
+            aux_v.x[i_radial][j][k] = Evaporation_Dalton.y[j][k] - Precipitation.y[j][k];
+            if ( is_land( h, 0, j, k ) )                        aux_v.x[i_radial][j][k] = 0.;
         }
     }
 
@@ -528,7 +528,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     dump_radial("w-Component", w, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("PressureStatic", p_stat, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("Salinity", c, 1., i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("Salinity", c, c_0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("DensityWater", r_water, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("DensitySaltWater", r_salt_water, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("SaltFinger", Salt_Finger, 1., i_radial, Hydrosphere_vtk_radial_File);
@@ -540,13 +540,13 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     dump_radial_2d("BottomWater", BottomWater, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Hydrosphere_vtk_radial_File);
     dump_radial_2d("Precipitation", Precipitation, 1., Hydrosphere_vtk_radial_File);
-    dump_radial("Evap-Precip", aux_v, 1., i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("Evap-Precip", aux_v, -1., i_radial, Hydrosphere_vtk_radial_File);
 
     Hydrosphere_vtk_radial_File <<  "VECTORS v-w-Cell float" << endl;
 
     for ( int j = 0; j < jm; j++ ){
         for ( int k = 0; k < km; k++ ){
-            Hydrosphere_vtk_radial_File << v.x[ i_radial ][ j ][ k ] << " " << w.x[ i_radial ][ j ][ k ] << " " << z << endl;
+            Hydrosphere_vtk_radial_File << v.x[i_radial][j][k] << " " << w.x[i_radial][j][k] << " " << z << endl;
         }
     }
     Hydrosphere_vtk_radial_File.close();
@@ -558,7 +558,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
 
 
 void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry_File,
-                                                    int k_zonal, int n, double &u_0, double &r_0_water,
+                                                    int k_zonal, int n, double &u_0, double &c_0, double &r_0_water,
                                                     Array &h, Array &p_dyn, Array &p_stat, Array &r_water,
                                                     Array &r_salt_water, Array &t, Array &u, Array &v,
                                                     Array &w, Array &c, Array &Salt_Finger, Array &Salt_Diffusion,
@@ -617,7 +617,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
     dump_zonal("Temperature", t, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("PressureStatic", p_stat, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("Salinity", c, 1., k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("Salinity", c, c_0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("DensityWater", r_water, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("DensitySaltWater", r_salt_water, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("SaltFinger", Salt_Finger, 1., k_zonal, Hydrosphere_vtk_zonal_File);
@@ -630,7 +630,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 
     for ( int i = 0; i < im; i++ ){
         for ( int j = 0; j < jm; j++ ){
-            Hydrosphere_vtk_zonal_File << u.x[ i ][ j ][ k_zonal ] << " " << v.x[ i ][ j ][ k_zonal ] << " " << z << endl;
+            Hydrosphere_vtk_zonal_File << u.x[i][j][k_zonal] << " " << v.x[i][j][k_zonal] << " " << z << endl;
         }
     }
     Hydrosphere_vtk_zonal_File.close();
@@ -641,7 +641,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
 
 
 void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_Bathymetry_File,
-                                                    Array &v, Array &w, Array &t, Array &p, Array_2D &Evaporation_Dalton,
+                                                    Array &v, Array &w, Array &t, Array &p_dyn, Array_2D &Evaporation_Dalton,
                                                     Array_2D &Precipitation ){
     ifstream v_w_Transfer_File;
     string Name_v_w_Transfer_File = output_path + "/[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
@@ -657,14 +657,14 @@ void PostProcess_Hydrosphere::Atmosphere_TransferFile_read ( const string &Name_
 
     for ( int j = 0; j < jm; j++ ){
         for ( int   k = 0; k < km; k++ ){
-            v_w_Transfer_File >> v.x[ im-1 ][ j ][ k ];
-            v_w_Transfer_File >> w.x[ im-1 ][ j ][ k ];
-            v_w_Transfer_File >> t.x[ im-1 ][ j ][ k ];
-            v_w_Transfer_File >> p.x[ im-1 ][ j ][ k ];
-            v_w_Transfer_File >> Evaporation_Dalton.y[ j ][ k ];
-            v_w_Transfer_File >> Precipitation.y[ j ][ k ];
+            v_w_Transfer_File >> v.x[im-1][j][k];
+            v_w_Transfer_File >> w.x[im-1][j][k];
+            v_w_Transfer_File >> t.x[im-1][j][k];
+            v_w_Transfer_File >> p_dyn.x[im-1][j][k];
+            v_w_Transfer_File >> Evaporation_Dalton.y[j][k];
+            v_w_Transfer_File >> Precipitation.y[j][k];
 
-            p.x[ im-1 ][ j ][ k ] = 0.;
+//            p_dyn.x[im-1][j][k] = 0.;
         }
     }
     v_w_Transfer_File.close();
@@ -679,26 +679,26 @@ void cHydrosphereModel::Hydrosphere_PlotData(const string &Name_Bathymetry_File,
     string path = output_path + "/[" + Name_Bathymetry_File + "]_PlotData_Hyd"+
         (iter_cnt > 0 ? "_"+to_string(iter_cnt) : "")+".xyz";
 
-	ofstream PlotData_File(path);
-	PlotData_File.precision ( 4 );
-	PlotData_File.setf ( ios::fixed );
+    ofstream PlotData_File(path);
+    PlotData_File.precision ( 4 );
+    PlotData_File.setf ( ios::fixed );
 
     if (!PlotData_File.is_open()){
         cerr << "ERROR: could not open PlotData file " << __FILE__ << " at line " << __LINE__ << "\n";
-		abort();
-	}
+        abort();
+    }
 
-	PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " 
+    PlotData_File << "lons(deg)" << ", " << "lats(deg)" << ", " << "topography" << ", " << "v-velocity(m/s)" << ", " 
         << "w-velocity(m/s)" << ", " << "velocity-mag(m/s)" << ", " << "temperature(Celsius)" << ", " << "salinity(psu)" 
         << ", " << "ekman pumping(m/s)" << ", " <<  "upwelling(m/s)" << ", " <<  "downwelling(m/s)" << endl;
 
-	for ( int k = 0; k < km; k++ ){
-		for ( int j = 0; j < jm; j++ ){
-			double vel_mag = sqrt ( pow ( v.x[ im-1 ][ j ][ k ] * u_0 , 2 ) + pow ( w.x[ im-1 ][ j ][ k ] * u_0, 2 ) );
-			PlotData_File << k << " " << 90-j << " " << h.x[ im-1 ][ j ][ k ] << " " << v.x[ im-1 ][ j ][ k ] * u_0 
-            << " " << w.x[ im-1 ][ j ][ k ] * u_0 << " " << vel_mag << " " << t.x[ im-1 ][ j ][ k ] * 273.15 - 273.15 
-            << " " << c.x[ im-1 ][ j ][ k ] * c_0 << " " << EkmanPumping.y[ j ][ k ] << " " << Upwelling.y[ j ][ k ] 
-            << "   " << Downwelling.y[ j ][ k ] << " " <<  endl;
-		}
-	}
+    for ( int k = 0; k < km; k++ ){
+        for ( int j = 0; j < jm; j++ ){
+            double vel_mag = sqrt ( pow ( v.x[im-1][j][k] * u_0 , 2 ) + pow ( w.x[im-1][j][k] * u_0, 2 ) );
+            PlotData_File << k << " " << 90-j << " " << h.x[im-1][j][k] << " " << v.x[im-1][j][k] * u_0 
+            << " " << w.x[im-1][j][k] * u_0 << " " << vel_mag << " " << t.x[im-1][j][k] * 273.15 - 273.15 
+            << " " << c.x[im-1][j][k] * c_0 << " " << EkmanPumping.y[j][k] << " " << Upwelling.y[j][k] 
+            << "   " << Downwelling.y[j][k] << " " <<  endl;
+        }
+    }
 }

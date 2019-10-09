@@ -60,16 +60,13 @@ class BC_Thermohalin{
 
         void IC_u_WestEastCoast ( Array_1D &rad, Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn );
 
-        void BC_Temperature_Salinity ( Array &, Array &, Array &, Array & );
+        void BC_Temperature_Salinity ( Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D & );
 
         void BC_Surface_Temperature_NASA ( const string &, Array & );
 
         void BC_Surface_Salinity_NASA ( const string &, Array & );
 
         void BC_Pressure_Density ( Array &, Array &, Array &, Array &, Array &, Array & );
-
-        void BC_Evaporation ( Array_2D &Evaporation_Dalton, 
-                              Array_2D &Precipitation, Array &h, Array &c, Array &r_water );
 
         void IC_CircumPolar_Current ( Array &, Array &, Array &, Array &, Array & );
 

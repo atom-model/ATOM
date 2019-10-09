@@ -53,9 +53,9 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
             }
             
             int i_boden = (im-1) + int(floor( depth / L_hyd * ( im - 1 ) ) );
-            Bathymetry.y[ j ][ k ] = -depth;
+            Bathymetry.y[j][k] = -depth;
             for ( int i = 0; i <= i_boden; i++ ){
-                h.x[ i ][ j ][ k ] = 1.;
+                h.x[i][j][k] = 1.;
             }
 
             if(ifile.fail())
@@ -65,7 +65,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
                 std::getline(ifile, tmp);
                 logger() << "bad data in topography at: " << lon << " " << lat << " " << tmp << std::endl;
             }
-            //logger() << lon << " " << lat << " " << h.x[ 0 ][ j ][ k ] << std::endl;            
+            //logger() << lon << " " << lat << " " << h.x[0][j][k] << std::endl;            
         }
     }
 
@@ -77,10 +77,10 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
     // rewrite bathymetric data from -180° - 0° - +180° to 0°- 360°
     for ( int j = 0; j < jm; j++ )
     {
-        move_data(Bathymetry.y[ j ], km);
+        move_data(Bathymetry.y[j], km);
         for ( int i = 0; i < im; i++ )
         {
-            move_data(h.x[ i ][ j ], km);
+            move_data(h.x[i][j], km);
         }
     }
 
@@ -92,21 +92,21 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
             for ( int i = 2; i < im-2; i++ ){
                 if ( ( is_land( h, i, j, k) ) && ( ( is_water( h, i, j+1, k) ) && ( is_water( h, i, j-1, k) ) )
                  && ( ( is_water( h, i, j, k+1) ) && ( is_water( h, i, j, k-1) ) ) ){
-                     h_center = h.x[ i ][ j ][ k ];
-                     h.x[ i ][ j ][ k ] = 0.;
+                     h_center = h.x[i][j][k];
+                     h.x[i][j][k] = 0.;
                  }
 
                 if ( ( h_center == 1. ) && ( ( is_water( h, i, j-2, k) ) && ( is_water( h, i, j, k+2) ) ) ){
-                    h.x[ i ][ j - 1 ][ k + 1 ] = 0.;
+                    h.x[i][j - 1][k + 1] = 0.;
                 }
                 if ( ( h_center == 1. ) && ( ( is_water( h, i, j-2, k) ) && ( is_water( h, i, j, k-2) ) ) ){ 
-                    h.x[ i ][ j - 1 ][ k - 1 ] = 0.;
+                    h.x[i][j - 1][k - 1] = 0.;
                 }
                 if ( ( h_center == 1. ) && ( ( is_water( h, i, j+2, k) ) && ( is_water( h, i, j, k-2) ) ) ){
-                    h.x[ i ][ j + 1 ][ k - 1 ] = 0.;
+                    h.x[i][j + 1][k - 1] = 0.;
                 }
                 if ( ( h_center == 1. ) && ( ( is_water( h, i, j+2, k) ) && ( is_water( h, i, j, k+2) ) ) ){ 
-                    h.x[ i ][ j + 1 ][ k + 1 ] = 0.;
+                    h.x[i][j + 1][k + 1] = 0.;
                 }
             }
         }
@@ -126,12 +126,12 @@ void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta,
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
                 if(is_land(h,  i,  j,  k )){
-                    p_dyn.x[ i ][ j ][ k ] = p_dynn.x[ i ][ j ][ k ];
-                    t.x[ i ][ j ][ k ] = tn.x[ i ][ j ][ k ];
-                    c.x[ i ][ j ][ k ] = cn.x[ i ][ j ][ k ];
-                    u.x[ i ][ j ][ k ] = un.x[ i ][ j ][ k ] = 0.;
-                    v.x[ i ][ j ][ k ] = vn.x[ i ][ j ][ k ] = 0.;
-                    w.x[ i ][ j ][ k ] = wn.x[ i ][ j ][ k ] = 0.;
+                    p_dyn.x[i][j][k] = p_dynn.x[i][j][k];
+                    t.x[i][j][k] = tn.x[i][j][k];
+                    c.x[i][j][k] = cn.x[i][j][k];
+                    u.x[i][j][k] = un.x[i][j][k] = 0.;
+                    v.x[i][j][k] = vn.x[i][j][k] = 0.;
+                    w.x[i][j][k] = wn.x[i][j][k] = 0.;
                 }
             }
         }

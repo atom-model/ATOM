@@ -23,11 +23,12 @@ def main():
             ('reconstruction_script_path', '', 'string', '../reconstruction/reconstruct_atom_data.py'),
 #            ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True),
             ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False),
+            ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
         
             ('time_start', 'start time', 'int', 0),
             ('time_end', 'end time', 'int', 15),
             ('time_step', 'step size between timeslices', 'int', 5),
-       ],
+      ],
         'atmosphere': [
             ('velocity_iter_max_2D', 'the number of velocity iterations', 'int',2),
             ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10),
@@ -44,7 +45,6 @@ def main():
             ('sun', 'while no variable sun position wanted', 'int', 0),
 #            ('NASATemperature', 'surface temperature given by NASA', 'int', 1),
             ('NASATemperature', 'surface temperature given by NASA', 'int', 0),
-            ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
             ('RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1),
 
             ('declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0),
@@ -123,7 +123,7 @@ def main():
             ('co2_vegetation', 'value compares to ppm of co2 consumed by the vegetation', 'double', 140.0),
             ('co2_ocean', 'value compares to 0.6/600Gt per year on the sea surface', 'double', 0.0),
             ('co2_land', 'value compares to 0.2/600Gt per year on land', 'double', 0.0),
-       ],
+      ],
         'hydrosphere': [
             ('input_path', 'directory where Atmosphere output can be read (must end in /)', 'string', 'output'),
             ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2),
@@ -167,7 +167,7 @@ def main():
             ('t_average', 'mean temperature of the modern earth', 'double', 15.4),
             ('t_equator', 'temperature t_0 = 1.1025 compares to 28.0° C compares to 301.15 K', 'double', 1.1025),
             ('t_pole', 'compares to -1.9°C, freezing temperature of sea water at poles', 'double', 0.9930),
-       ]
+      ]
     }
     XML_READ_FUNCS = {
         "string": "FillStringWithElement",
@@ -328,13 +328,13 @@ cdef extern from "c%sModel.h":
     for filename, classname, sections in [
         ('atmosphere/cAtmosphereDefaults.cpp.inc', 'cAtmosphereModel', atmosphere_sections),
         ('hydrosphere/cHydrosphereDefaults.cpp.inc', 'cHydrosphereModel', hydrosphere_sections)
-   ]:
+  ]:
         write_cpp_defaults (filename, classname, sections)
 
     for filename, classname, sections in [
         ('atmosphere/AtmosphereLoadConfig.cpp.inc', 'cAtmosphereModel', atmosphere_sections),
         ('hydrosphere/HydrosphereLoadConfig.cpp.inc', 'cHydrosphereModel', hydrosphere_sections)
-   ]:
+  ]:
         write_cpp_load_config (filename, classname, sections)
 
     #for filename, classname, sections in [
@@ -346,7 +346,7 @@ cdef extern from "c%sModel.h":
     for filename, sections in [
         ('atmosphere/AtmosphereParams.h.inc', atmosphere_sections),
         ('hydrosphere/HydrosphereParams.h.inc', hydrosphere_sections)
-   ]:
+  ]:
         write_cpp_headers (filename, sections)
 
     #for filename, sections in [
@@ -364,25 +364,25 @@ cdef extern from "c%sModel.h":
     for filename, model, sections in [
         ('python/atmosphere_pxd.pxi', 'Atmosphere', atmosphere_sections),
         ('python/hydrosphere_pxd.pxi', 'Hydrosphere', hydrosphere_sections)
-   ]:
+  ]:
         write_pxd (filename, model, sections)
 
     for  filename, sections in [
         ('python/config_atm.xml', atmosphere_sections),
         ('python/config_hyd.xml', hydrosphere_sections)
-   ]:
+  ]:
         write_config_xml (filename, sections)
 
     for  filename, sections in [
         ('cli/config_atm.xml', atmosphere_sections),
         ('cli/config_hyd.xml', hydrosphere_sections)
-   ]:
+  ]:
         write_config_xml (filename, sections)
 
     for  filename, sections in [
         ('benchmark/config_atm.xml', atmosphere_sections),
         ('benchmark/config_hyd.xml', hydrosphere_sections)
-   ]:
+  ]:
         write_config_xml (filename, sections)
 
 

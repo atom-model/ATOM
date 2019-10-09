@@ -63,7 +63,7 @@ using namespace AtomUtils;
 // for c = 0.9682 compares to a salinity of 33.5 psu
 // for c = 1.0000 compares to a salinity of 34.6 psu
 // for c = 1.0983 compares to a salinity of 38.0 psu
-const float cHydrosphereModel::dr = 0.025;  // 0.025 x 40 = 1.0 compares to 16 km : 40 = 150 m for 1 radial step
+const float cHydrosphereModel::dr = 0.025;  // 0.025 x 40 = 1.0 compares to 200m : 40 = 5m for 1 radial step
 const float cHydrosphereModel::dt = 0.000001; // time step satisfies the CFL condition
 const float cHydrosphereModel::pi180 = 180./ M_PI;  // pi180 = 57.3
 const float cHydrosphereModel::the_degree = 1.;   // compares to 1° step size laterally
@@ -128,6 +128,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     the.Coordinates(jm, the0, dthe);
     phi.Coordinates(km, phi0, dphi);
     int switch_2D = 0;
+    double emin = epsres * 100.;
     // radial expansion of the computational field for the computation of initial values
     int i_max = im - 1;   // corresponds to sea level
     int i_beg = 0;  // compares to an ocean depth of 1000 m with step size 25m, location of the thermocline
@@ -164,29 +165,36 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     BC_Thermohalin  oceanflow(im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, 
         dr, g, r_0_water, ua, va, wa, ta, ca, pa, u_0, p_0, t_0, c_0, cp_w, 
         L_hyd, t_average, t_paleo_max, t_equator, t_pole, output_path);
-    read_IC(Name_SurfaceTemperature_File, v.x[im-1], jm, km);
-    read_IC(Name_SurfaceSalinity_File, v.x[im-1], jm, km);
-    read_IC(velocity_v_file, v.x[im-1], jm, km);
-    read_IC(velocity_w_file, w.x[im-1], jm, km);
+//    goto Printout;
+    if(use_NASA_velocity){
+        read_IC(velocity_v_file, v.x[im-1], jm, km);
+        read_IC(velocity_w_file, w.x[im-1], jm, km);    
+        read_IC(Name_SurfaceTemperature_File, t.x[im-1], jm, km);
+        read_IC(Name_SurfaceSalinity_File, c.x[im-1], jm, km);
+    }
     iter_cnt_3d = -1;
     if(debug) save_data();
     iter_cnt_3d++;
+//    goto Printout;
     IC_v_w_EkmanSpiral();
+//    goto Printout;
     oceanflow.IC_u_WestEastCoast(rad, h, u, v, w, un, vn, wn);
     //oceanflow.IC_Equatorial_Currents(h, u, v, w);
     //if(Ma <= 41)  oceanflow.IC_CircumPolar_Current(h, u, v, w, c); // Drake passage closed 41 Ma ago
-    oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn);
-    oceanflow.BC_Pressure_Density(p_stat, r_water, r_salt_water, t, c, h);
+//    oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn );
+    oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn, Evaporation_Dalton, Precipitation, salinity_evaporation );
+//    oceanflow.BC_Pressure_Density(p_stat, r_water, r_salt_water, t, c, h);
+//    goto Printout;
     store_intermediate_data_2D();
     store_intermediate_data_3D();
     calculate_MSL.land_oceanFraction (h);
     /*******************************************   start of pressure and velocity iterations ******************************/
-    double emin = epsres * 100.;
     iter_cnt = 1;
     /** ::::::::::::::::::::::::::::::::::::::   begin of 2D loop for initial surface conditions: if (switch_2D == 0)   ::::::**/
     if(switch_2D != 1){
         for(int pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++){
             for(int velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++){
+/*
                 cout << endl << endl;
                 cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
                 cout << " 2D OGCM iterational process" << endl;
@@ -197,6 +205,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
                     << endl << endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max_2D = " << 
                     velocity_iter_max_2D << "     velocity_iter_2D = " << velocity_iter_2D << "    pressure_iter_max_2D = " 
                     << pressure_iter_max_2D << "    pressure_iter_2D = " << pressure_iter_2D << endl;
+*/
                 boundary.RB_theta(t, u, v, w, p_dyn, c);
                 boundary.RB_phi(t, u, v, w, p_dyn, c);
                 oceanflow.Value_Limitation_Hyd(h, u, v, w, p_dyn, t, c);
@@ -234,7 +243,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
             boundary.RB_phi(t, u, v, w, p_dyn, c);
             depth.BC_SolidGround(ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn);
             oceanflow.BC_Pressure_Density(p_stat, r_water, r_salt_water, t, c, h);
-            BC_Evaporation();
             oceanflow.Value_Limitation_Hyd(h, u, v, w, p_dyn, t, c);
             solveRungeKutta_3D_Hydrosphere(); 
             print_min_max();
@@ -254,6 +262,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
             break;
         }
     }// end of pressure loop_3D: if(pressure_iter > pressure_iter_max)   :::::::::::
+    Printout:
     cout << endl << endl;
     write_file(bathymetry_name, output_path, true);
     iter_cnt_3d++;
@@ -353,18 +362,18 @@ void cHydrosphereModel::Run(){
 void cHydrosphereModel::write_file(std::string &bathymetry_name, string& filepath, bool is_final_result){
     PostProcess_Hydrosphere  write_File(im, jm, km, filepath);
     int j_longal = 75;
-    write_File.paraview_vtk_longal(bathymetry_name, j_longal, iter_cnt-1, u_0, r_0_water, h, p_dyn, p_stat, r_water, 
+    write_File.paraview_vtk_longal(bathymetry_name, j_longal, iter_cnt-1, u_0, c_0, r_0_water, h, p_dyn, p_stat, r_water, 
         r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance);
     int k_zonal = 185;
-    write_File.paraview_vtk_zonal(bathymetry_name, k_zonal, iter_cnt-1, u_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, 
+    write_File.paraview_vtk_zonal(bathymetry_name, k_zonal, iter_cnt-1, u_0, c_0, r_0_water, h, p_dyn, p_stat, r_water, r_salt_water, 
             t, u, v, w, c, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance);
     int i_radial = 40;
-    write_File.paraview_vtk_radial(bathymetry_name, i_radial, iter_cnt-1, u_0, t_0, r_0_water, h, p_dyn, p_stat, r_water, 
+    write_File.paraview_vtk_radial(bathymetry_name, i_radial, iter_cnt-1, u_0, t_0, c_0, r_0_water, h, p_dyn, p_stat, r_water, 
         r_salt_water, t, u, v, w, c, aux_u, aux_v, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance, 
         Upwelling, Downwelling, SaltFinger, SaltDiffusion, BuoyancyForce_2D, EkmanPumping, Evaporation_Dalton, 
         Precipitation, Bathymetry);
     if(paraview_panorama_vts_flag){
-        write_File.paraview_panorama_vts(bathymetry_name, iter_cnt-1, u_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
+        write_File.paraview_panorama_vts(bathymetry_name, iter_cnt-1, u_0, c_0, r_0_water, h, t, p_dyn, p_stat, r_water, r_salt_water, 
             u, v, w, c, aux_u, aux_v, aux_w, Salt_Finger, Salt_Diffusion, BuoyancyForce_3D, Salt_Balance);
     }
     PostProcess_Hydrosphere  ppa(im, jm, km, output_path);
