@@ -94,14 +94,6 @@ def main():
             ('c_0', 'maximum value of water vapour in kg / kg', 'double', 0.035),
             ('co2_0', 'maximum value of CO2 in ppm at preindustrial times', 'double', 280.0),
 
-            ('ua', 'initial velocity component in r-direction', 'double', 0.0),
-            ('va', 'initial velocity component in theta-direction', 'double', 0.0),
-            ('wa', 'initial velocity component in phi-direction', 'double', 0.0),
-            ('pa', 'initial value for the pressure field', 'double', 0.0),
-            ('ca', 'value 1. stands for the value of 35 g/kg water vapour', 'double', 1.0),
-            ('ta', 'initial value for the temperature field, 1.0 compares to 0° C compares to 273.15 K', 'double', 1.0),
-            ('coa', 'initial value of co2 = 1.0 compares to 280 ppm in pre-industrial times', 'double', 1.0),
-
             ('t_paleo_max', 'maximum add of mean temperature in °C during paleo times', 'double', 10.0),
             ('t_paleo', 'value at modern times', 'double', 0.0),
 
@@ -149,14 +141,6 @@ def main():
             ('r_0_water', 'reference density of fresh water in kg/m3', 'double', 1000.0),
 
             ('epsres', 'accuracy for relative and absolute errors0,988571429', 'double', 0.0005),
-
-            ('ua', 'initial velocity component in r-direction', 'double', 0.0),
-            ('va', 'initial velocity component in theta-direction', 'double', 0.0),
-            ('wa', 'initial velocity component in phi-direction', 'double', 0.0),
-            ('pa', 'initial value for the pressure field', 'double', 0.0),
-            ('ta', 'compares to -1°C', 'double', 0.9963),
-            ('ca', 'c = 1.0 compares to a salinity of 34.6 psu, mean value, ca corresponds to ta = 1.0  (= 0°C)', 'double', 1.0),
-            ('ca_max', 'c = 1.0983 compares to a salinity of 38.00 psu  used for deep flow initialization', 'double', 1.0983),
 
             ('t_paleo_max', 'maximum add of mean temperature during paleo', 'double', 10.0),
 

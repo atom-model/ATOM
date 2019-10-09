@@ -37,7 +37,7 @@ class BC_Thermohalin{
         double v_grad, t_Celsius, u_max;
         double t_cretaceous, t_cretaceous_max, t_cretaceous_coeff;
         double rg;
-        double dr, g, r_0_water, ua, va, wa, ca, pa, ta, u_0, cp_w, L_hyd, t_average;
+        double dr, g, r_0_water, u_0, cp_w, L_hyd, t_average;
 
         string time_slice_comment, time_slice_number, time_slice_unit;
         string temperature_comment, temperature_gain, temperature_modern,
@@ -52,7 +52,7 @@ class BC_Thermohalin{
 
         BC_Thermohalin (int, int, int, int , int , int, int, int, double, double, double,
             double, double, double, double, double, double,  double, double, double,
-            double, double, double, double, double, double, double, const string &);
+            double, const string &);
 
         ~BC_Thermohalin();
 

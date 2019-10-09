@@ -117,8 +117,7 @@ void BC_Bathymetry_Hydrosphere::BC_SeaGround(const string &bathymetry_file,
 
 
 
-void BC_Bathymetry_Hydrosphere::BC_SolidGround ( double ca, double ta,
-                                                    double pa, Array &h, Array &t, Array &u, Array &v,
+void BC_Bathymetry_Hydrosphere::BC_SolidGround ( Array &h, Array &t, Array &u, Array &v,
                                                     Array &w, Array &p_dyn, Array &c, Array &tn,
                                                     Array &un, Array &vn, Array &wn, Array &p_dynn, Array &cn){
     // boundary conditions for the total solid ground

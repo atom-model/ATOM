@@ -43,7 +43,6 @@ const double cAtmosphereModel::dphi = phi_degree / pi180;
     
 const double cAtmosphereModel::dr = 0.025;    // 0.025 x 40 = 1.0 compares to 16 km : 40 = 400 m for 1 radial step
 const double cAtmosphereModel::dt = 0.00001;  // time step coincides with the CFL condition
-//const double cAtmosphereModel::dt = 0.0001;
     
 const double cAtmosphereModel::the0 = 0.;             // North Pole
 const double cAtmosphereModel::phi0 = 0.;             // zero meridian in Greenwich
@@ -251,25 +250,25 @@ void cAtmosphereModel::reset_arrays(){
     dew_point_temperature.initArray_2D(jm, km, 0.); // dew point temperature
     condensation_level.initArray_2D(jm, km, 0.); // areas of higher co2 concentration // local condensation level
     h.initArray(im, jm, km, 0.); // bathymetry, depth from sea level
-    t.initArray(im, jm, km, ta); // temperature
-    u.initArray(im, jm, km, ua); // u-component velocity component in r-direction
-    v.initArray(im, jm, km, va); // v-component velocity component in theta-direction
-    w.initArray(im, jm, km, wa); // w-component velocity component in phi-direction
-    c.initArray(im, jm, km, ca); // water vapour
+    t.initArray(im, jm, km, 1.); // temperature
+    u.initArray(im, jm, km, 0.); // u-component velocity component in r-direction
+    v.initArray(im, jm, km, 0.); // v-component velocity component in theta-direction
+    w.initArray(im, jm, km, 0.); // w-component velocity component in phi-direction
+    c.initArray(im, jm, km, 1.); // water vapour
     cloud.initArray(im, jm, km, 0.); // cloud water
     ice.initArray(im, jm, km, 0.); // cloud ice
-    co2.initArray(im, jm, km, coa); // CO2
-    tn.initArray(im, jm, km, ta); // temperature new
-    un.initArray(im, jm, km, ua); // u-velocity component in r-direction new
-    vn.initArray(im, jm, km, va); // v-velocity component in theta-direction new
-    wn.initArray(im, jm, km, wa); // w-velocity component in phi-direction new
-    cn.initArray(im, jm, km, ca); // water vapour new
+    co2.initArray(im, jm, km, 1.); // CO2
+    tn.initArray(im, jm, km, 1.); // temperature new
+    un.initArray(im, jm, km, 0.); // u-velocity component in r-direction new
+    vn.initArray(im, jm, km, 0.); // v-velocity component in theta-direction new
+    wn.initArray(im, jm, km, 0.); // w-velocity component in phi-direction new
+    cn.initArray(im, jm, km, 1.); // water vapour new
     cloudn.initArray(im, jm, km, 0.); // cloud water new
     icen.initArray(im, jm, km, 0.); // cloud ice new
-    co2n.initArray(im, jm, km, coa); // CO2 new
-    p_dyn.initArray(im, jm, km, pa); // dynamic pressure
-    p_dynn.initArray(im, jm, km, pa); // dynamic pressure
-    p_stat.initArray(im, jm, km, pa); // static pressure
+    co2n.initArray(im, jm, km, 1.); // CO2 new
+    p_dyn.initArray(im, jm, km, 1.); // dynamic pressure
+    p_dynn.initArray(im, jm, km, 1.); // dynamic pressure
+    p_stat.initArray(im, jm, km, 1.); // static pressure
     rhs_t.initArray(im, jm, km, 0.); // auxilliar field RHS temperature
     rhs_u.initArray(im, jm, km, 0.); // auxilliar field RHS u-velocity component
     rhs_v.initArray(im, jm, km, 0.); // auxilliar field RHS v-velocity component

@@ -163,7 +163,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     Pressure_Hyd  startPressure(im, jm, km, dr, dthe, dphi);
     Results_Hyd  calculate_MSL(im, jm, km);
     BC_Thermohalin  oceanflow(im, jm, km, i_beg, i_max, Ma, Ma_max, Ma_max_half, 
-        dr, g, r_0_water, ua, va, wa, ta, ca, pa, u_0, p_0, t_0, c_0, cp_w, 
+        dr, g, r_0_water, u_0, p_0, t_0, c_0, cp_w, 
         L_hyd, t_average, t_paleo_max, t_equator, t_pole, output_path);
 //    goto Printout;
     if(use_NASA_velocity){
@@ -238,10 +238,10 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
                 << endl << " Ma = " << Ma << "     n = " << iter_cnt << "    velocity_iter_max = " << velocity_iter_max << 
                 "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << pressure_iter << endl;
-            boundary.RB_radius(ca, ta, pa, dr, rad, t, u, v, w, p_dyn, c);
+            boundary.RB_radius(dr, rad, t, u, v, w, p_dyn, c);
             boundary.RB_theta(t, u, v, w, p_dyn, c);
             boundary.RB_phi(t, u, v, w, p_dyn, c);
-            depth.BC_SolidGround(ca, ta, pa, h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn);
+            depth.BC_SolidGround(h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn);
             oceanflow.BC_Pressure_Density(p_stat, r_water, r_salt_water, t, c, h);
             oceanflow.Value_Limitation_Hyd(h, u, v, w, p_dyn, t, c);
             solveRungeKutta_3D_Hydrosphere(); 
@@ -262,7 +262,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
             break;
         }
     }// end of pressure loop_3D: if(pressure_iter > pressure_iter_max)   :::::::::::
-    Printout:
+//    Printout:
     cout << endl << endl;
     write_file(bathymetry_name, output_path, true);
     iter_cnt_3d++;
@@ -292,21 +292,21 @@ void cHydrosphereModel::reset_arrays(){
     Precipitation.initArray_2D(jm, km, 0.); // areas of higher precipitation
 
     h.initArray(im, jm, km, 0.); // bathymetry, depth from sea level
-    t.initArray(im, jm, km, ta); // temperature
-    u.initArray(im, jm, km, ua); // u-component velocity component in r-direction
-    v.initArray(im, jm, km, va); // v-component velocity component in theta-direction
-    w.initArray(im, jm, km, wa); // w-component velocity component in phi-direction
-    c.initArray(im, jm, km, ca); // water vapour
+    t.initArray(im, jm, km, 1.); // temperature
+    u.initArray(im, jm, km, 0.); // u-component velocity component in r-direction
+    v.initArray(im, jm, km, 0.); // v-component velocity component in theta-direction
+    w.initArray(im, jm, km, 0.); // w-component velocity component in phi-direction
+    c.initArray(im, jm, km, 1.); // water vapour
 
-    tn.initArray(im, jm, km, ta); // temperature new
-    un.initArray(im, jm, km, ua); // u-velocity component in r-direction new
-    vn.initArray(im, jm, km, va); // v-velocity component in theta-direction new
-    wn.initArray(im, jm, km, wa); // w-velocity component in phi-direction new
-    cn.initArray(im, jm, km, ca); // water vapour new
+    tn.initArray(im, jm, km, 1.); // temperature new
+    un.initArray(im, jm, km, 0.); // u-velocity component in r-direction new
+    vn.initArray(im, jm, km, 0.); // v-velocity component in theta-direction new
+    wn.initArray(im, jm, km, 0.); // w-velocity component in phi-direction new
+    cn.initArray(im, jm, km, 1.); // water vapour new
 
-    p_dyn.initArray(im, jm, km, pa); // dynamic pressure
-    p_dynn.initArray(im, jm, km, pa); // dynamic pressure new
-    p_stat.initArray(im, jm, km, pa); // static pressure
+    p_dyn.initArray(im, jm, km, 1.); // dynamic pressure
+    p_dynn.initArray(im, jm, km, 1.); // dynamic pressure new
+    p_stat.initArray(im, jm, km, 1.); // static pressure
 
     rhs_t.initArray(im, jm, km, 0.); // auxilliar field RHS temperature
     rhs_u.initArray(im, jm, km, 0.); // auxilliar field RHS u-velocity component

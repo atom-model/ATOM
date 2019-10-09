@@ -1507,7 +1507,8 @@ void cAtmosphereModel::BC_Evaporation(){
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
     double vapour_surface = 0.;
     double evap_precip = 0.;
-    double coeff_vapour = 1.1574e-8;  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
+//    double coeff_vapour = 1.1574e-8 * L_atm / ( c_0 * u_0 );  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to mm/s
+    double coeff_vapour = .1 * 1.1574e-8 * L_atm / ( c_0 * u_0 );  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to mm/s
     double zeta = 3.715;
     double rm = rad.z[0];
     double exp_rm = 1. / exp(zeta * rm);

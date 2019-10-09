@@ -35,7 +35,7 @@ BC_Hydrosphere::~BC_Hydrosphere() {}
 
 
 
-void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, double dr, Array_1D &rad, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c )
+void BC_Hydrosphere::RB_radius ( double dr, Array_1D &rad, Array &t, Array &u, Array &v, Array &w, Array &p_dyn, Array &c )
 {
 // boundary conditions for the r-direction, loop index i
     
@@ -56,8 +56,8 @@ void BC_Hydrosphere::RB_radius ( double ca, double ta, double pa, double dr, Arr
 //            t.x[0][j][k] = t.x[3][j][k] - 3. * t.x[2][j][k] + 3. * t.x[1][j][k];        // extrapolation
 //            p_dyn.x[0][j][k] = p_dyn.x[3][j][k] - 3. * p_dyn.x[2][j][k] + 3. * p_dyn.x[1][j][k];        // extrapolation
 
-            t.x[0][j][k] = ta;        // Dirichlet
-            c.x[0][j][k] = ca;        // Dirichlet
+            t.x[0][j][k] = 1.;        // Dirichlet
+            c.x[0][j][k] = 1.;        // Dirichlet
             u.x[0][j][k] = 0.;        // Dirichlet
             v.x[0][j][k] = 0.;        // Dirichlet
             w.x[0][j][k] = 0.;        // Dirichlet

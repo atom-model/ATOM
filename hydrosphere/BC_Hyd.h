@@ -29,7 +29,7 @@ public:
     ~BC_Hydrosphere();
 
 
-    void RB_radius ( double, double, double, double, Array_1D &, Array &, Array &,
+    void RB_radius ( double, Array_1D &, Array &, Array &,
         Array &, Array &, Array &, Array & );
 
     void RB_theta ( Array &, Array &, Array &, Array &,

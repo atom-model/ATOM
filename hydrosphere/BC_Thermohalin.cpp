@@ -25,8 +25,7 @@ using namespace AtomUtils;
 
 BC_Thermohalin::BC_Thermohalin(int im, int jm, int km, int i_beg, int i_max,
                             int Ma, int Ma_max, int Ma_max_half, double dr, double g,
-                            double r_0_water, double ua, double va, double wa, double ta,
-                            double ca, double pa, double u_0, double p_0, double t_0,
+                            double r_0_water, double u_0, double p_0, double t_0,
                             double c_0, double cp_w, double L_hyd, double t_average,
                             double t_cretaceous_max, double t_equator, double t_pole,
                             const string &input_path){
@@ -41,12 +40,6 @@ BC_Thermohalin::BC_Thermohalin(int im, int jm, int km, int i_beg, int i_max,
     this -> dr = dr;
     this -> g = g;
     this -> r_0_water = r_0_water;
-    this -> ua = ua;
-    this -> va = va;
-    this -> wa = wa;
-    this -> ta = ta;
-    this -> ca = ca;
-    this -> pa = pa;
     this -> u_0 = u_0;
     this -> p_0 = p_0;
     this -> t_0 = t_0;
@@ -255,9 +248,9 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
                 if(t_Celsius <= t_pole * t_0 - t_0)
                     t_Celsius = t_pole * t_0 - t_0;
                 c.x[im-1][j][k] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
-                if ( c.x[im-1][j][k] <= ca ) c.x[im-1][j][k] = ca;
+                if ( c.x[im-1][j][k] <= 1. ) c.x[im-1][j][k] = 1.;
             }else{
-                c.x[im-1][j][k] = ca;
+                c.x[im-1][j][k] = 1.;
             }
         }
     }
@@ -269,19 +262,19 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
 // distribution of t and c with increasing depth
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            tm_tbeg = ( t.x[im-1][j][k] - ta ) 
+            tm_tbeg = ( t.x[im-1][j][k] - 1. ) 
                 / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
             if(t.x[im-1][j][k] <= t_pole)
                 t.x[im-1][j][k] = t_pole;
-            cm_cbeg = ( c.x[im-1][j][k] - ca ) 
+            cm_cbeg = ( c.x[im-1][j][k] - 1. ) 
                 / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
             for(int i = i_beg; i < im-1; i++){
                     d_i = (double)i;
-                    t.x[i][j][k] = ta + tm_tbeg 
+                    t.x[i][j][k] = 1. + tm_tbeg 
                         * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
                     if(t.x[i][j][k] <= t_pole)
                         t.x[i][j][k] = t_pole;
-                    c.x[i][j][k] = ca + cm_cbeg 
+                    c.x[i][j][k] = 1. + cm_cbeg 
                         * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
             }
         }
@@ -320,11 +313,11 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
                     double d_i_max = (double)i_max;
                     double d_i_beg = (double)i_beg;
                     double d_i = 0.;
-                    cm_cbeg = ( c.x[im-1][j][k] - ca ) 
+                    cm_cbeg = ( c.x[im-1][j][k] - 1. ) 
                         / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
                     for(int i = i_beg; i < im-1; i++){
                         d_i = (double)i;
-                        c.x[i][j][k] = ca + cm_cbeg 
+                        c.x[i][j][k] = 1. + cm_cbeg 
                             * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
                     }
 /*
@@ -342,8 +335,8 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
                 if(is_water(h, i, j, k)){
-                    t.x[i][j][k] = ta;
-                    c.x[i][j][k] = ca;
+                    t.x[i][j][k] = 1.;
+                    c.x[i][j][k] = 1.;
                 }
             }
         }
@@ -470,7 +463,7 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA(const string &Name_SurfaceSalinity
             Name_SurfaceSalinity_File_Read >> dummy_1;
             Name_SurfaceSalinity_File_Read >> dummy_2;
             Name_SurfaceSalinity_File_Read >> dummy_3;
-            if(dummy_3 < 0.) dummy_3 = ca;
+            if(dummy_3 < 0.) dummy_3 = 1.;
             else  c.x[im-1][j][k] = dummy_3 / c_0;
             j++;
         }
@@ -630,7 +623,7 @@ void BC_Thermohalin::IC_CircumPolar_Current
         for(int j = 147; j < 153; j++){
             for(int k = 0; k < km; k++){
                 if(is_water(h, i, j, k)){
-//                  c.x[i][j][k] = ca;
+//                  c.x[i][j][k] = 1.;
                     w.x[i][j][k] = 2. * u_0;  // 0.5 m/s
                 }
             }
