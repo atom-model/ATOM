@@ -318,7 +318,7 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
     dump_array("Temperature", t, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, Hydrosphere_panorama_vts_File);
     dump_array("PressureStatic", p_stat, 1.0, Hydrosphere_panorama_vts_File);
-    dump_array("Salinity", c, c_0, Hydrosphere_panorama_vts_File);
+    dump_array("Salinity", c, 1., Hydrosphere_panorama_vts_File);
     dump_array("DensityWater", r_water, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("DensitySaltWater", r_salt_water, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("Salt_Finger", Salt_Finger, 1.0, Hydrosphere_panorama_vts_File);
@@ -429,7 +429,7 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
     dump_longal("Temperature", t, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("PressureStatic", p_stat, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("Salinity", c, c_0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("Salinity", c, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("DensityWater", r_water, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("DensitySaltWater", r_salt_water, 1., j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("SaltFinger", Salt_Finger, 1., j_longal, Hydrosphere_vtk_longal_File);
@@ -528,7 +528,7 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
     dump_radial("w-Component", w, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("PressureStatic", p_stat, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("Salinity", c, c_0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("Salinity", c, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("DensityWater", r_water, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("DensitySaltWater", r_salt_water, 1., i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("SaltFinger", Salt_Finger, 1., i_radial, Hydrosphere_vtk_radial_File);
@@ -617,7 +617,7 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
     dump_zonal("Temperature", t, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("PressureDynamic", p_dyn, u_0 * u_0 * r_0_water * 1e-3, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("PressureStatic", p_stat, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("Salinity", c, c_0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("Salinity", c, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("DensityWater", r_water, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("DensitySaltWater", r_salt_water, 1., k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("SaltFinger", Salt_Finger, 1., k_zonal, Hydrosphere_vtk_zonal_File);
@@ -697,7 +697,7 @@ void cHydrosphereModel::Hydrosphere_PlotData(const string &Name_Bathymetry_File,
             double vel_mag = sqrt ( pow ( v.x[im-1][j][k] * u_0 , 2 ) + pow ( w.x[im-1][j][k] * u_0, 2 ) );
             PlotData_File << k << " " << 90-j << " " << h.x[im-1][j][k] << " " << v.x[im-1][j][k] * u_0 
             << " " << w.x[im-1][j][k] * u_0 << " " << vel_mag << " " << t.x[im-1][j][k] * 273.15 - 273.15 
-            << " " << c.x[im-1][j][k] * c_0 << " " << EkmanPumping.y[j][k] << " " << Upwelling.y[j][k] 
+            << " " << c.x[im-1][j][k] << " " << EkmanPumping.y[j][k] << " " << Upwelling.y[j][k] 
             << "   " << Downwelling.y[j][k] << " " <<  endl;
         }
     }

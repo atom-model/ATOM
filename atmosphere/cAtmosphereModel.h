@@ -133,7 +133,6 @@ private:
 
     void run_2D_loop();
     void run_3D_loop();
-    void run_MSL_data();
 public:
     void RK_RHS_2D_Atmosphere(int j, int k);
     void RK_RHS_3D_Atmosphere(int i, int j, int k);
@@ -212,7 +211,7 @@ private:
     void computePressure_2D();
     void print_welcome_msg();
     void print_final_remarks();
-    void BC_Evaporation();
+    void WaterVapourEvaporation();
     void Moist_Convection();
     void near_wall_values();
     void store_intermediate_data_2D(float coeff=1);
@@ -276,7 +275,7 @@ private:
     Array_2D co2_total; // areas of higher co2 concentration
     Array_2D dew_point_temperature; // dew point temperature
     Array_2D condensation_level; // local condensation level
-
+    Array_2D c_fix; // local surface water vapour fixed for iterations
     Array h; // bathymetry, depth from sea level
     Array t; // temperature
     Array u; // u-component velocity component in r-direction

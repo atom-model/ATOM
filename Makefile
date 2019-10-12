@@ -9,7 +9,7 @@ LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o lib/Config.o lib/Utils.o lib
 
 ATM_OBJ = atmosphere/cAtmosphereModel.o atmosphere/Pressure_Atm.o atmosphere/PrintMsg.o \
 atmosphere/FileIOAtm.o atmosphere/BC_Atm.o atmosphere/BC_Thermo.o atmosphere/RHS_Atm.o \
-atmosphere/RungeKutta_Atm.o atmosphere/Results_Atm.o atmosphere/MinMax_Atm.o atmosphere/Accuracy_Atm.o \
+atmosphere/RungeKutta_Atm.o atmosphere/MinMax_Atm.o atmosphere/Accuracy_Atm.o \
 atmosphere/ParaviewAtm.o atmosphere/InitVelocity.o
 
 HYD_OBJ = hydrosphere/cHydrosphereModel.o hydrosphere/Accuracy_Hyd.o hydrosphere/BC_Hyd.o hydrosphere/PrintMsg.o \

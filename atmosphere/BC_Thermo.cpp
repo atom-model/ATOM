@@ -333,62 +333,58 @@ void cAtmosphereModel::init_temperature(){
     double d_j_half = (double)(jm-1)/2.;
     float t_pole_diff_ocean = 0.;
     float t_pole_diff_land = 0.;
-    if(RadiationModel == 1){
-        //the t_pole_diff_ocean should be the difference between this time slice and the previous one
-        if(!is_first_time_slice()){
-
-            t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map)
-                - get_pole_temperature(*get_previous_time(), pole_temp_map);
-            t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map)
-                - get_pole_temperature(*get_previous_time(), pole_temp_map);
-        }
-        // in °C, constant local pole temperature as function of Ma for hothouse climates 
-        float pole_temperature = 1 + get_pole_temperature(*get_current_time(), 
-            pole_temp_map) / t_0;
-        float t_eff = pole_temperature - t_equator;  // coefficient for the zonal parabolic temperature distribution
-        for(int k = 0; k < km; k++){
-            for(int j = 0; j < jm; j++){
-                double d_j = (double)j;
-                if(NASATemperature == 0){  // parabolic ocean surface temperature assumed
-                    t.x[0][j][k] = t_eff * parabola(d_j/d_j_half) 
-                        + pole_temperature + t_paleo_add;
-//                    srand(time(NULL));
-//                    t.x[0][j][k] += (rand() % 10 - 5) / 50. / t_0;
-                    if(is_land(h, 0, j, k)){
-                        t.x[0][j][k] += m_model->t_land;
+    //the t_pole_diff_ocean should be the difference between this time slice and the previous one
+    if(!is_first_time_slice()){
+        t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map)
+            - get_pole_temperature(*get_previous_time(), pole_temp_map);
+        t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map)
+            - get_pole_temperature(*get_previous_time(), pole_temp_map);
+    }
+    // in °C, constant local pole temperature as function of Ma for hothouse climates 
+    float pole_temperature = 1 + get_pole_temperature(*get_current_time(), 
+        pole_temp_map) / t_0;
+    float t_eff = pole_temperature - t_equator;  // coefficient for the zonal parabolic temperature distribution
+    for(int k = 0; k < km; k++){
+        for(int j = 0; j < jm; j++){
+            double d_j = (double)j;
+            if(NASATemperature == 0){  // parabolic ocean surface temperature assumed
+                t.x[0][j][k] = t_eff * parabola(d_j/d_j_half) 
+                    + pole_temperature + t_paleo_add;
+//                srand(time(NULL));
+//                t.x[0][j][k] += (rand() % 10 - 5) / 50. / t_0;
+                if(is_land(h, 0, j, k)){
+                    t.x[0][j][k] += m_model->t_land;
+                }
+            }else{  // if(NASATemperature == 1) ocean surface temperature based on NASA temperature distribution
+                // transported for later time slices Ma by use_earthbyte_reconstruction
+                if(is_land (h, 0, j, k)){  // on land a parabolic distribution assumed, no NASA based data transportable
+                    if(*get_current_time() > 0){
+//                        t.x[0][j][k] = (t_eff * parabola(d_j/d_j_half) 
+//                            + pole_temperature) + t_paleo_add + m_model->t_land;
+                        t.x[0][j][k] += t_paleo_add + m_model->t_land
+                            + t_pole_diff_land * fabs(parabola(d_j
+                            /d_j_half) + 1.) / t_0;
+                        // land surface temperature increased by mean t_paleo_add
+                        // and by a zonally equator wards decreasing temperature difference is added
+                        // Stein/Rüdiger/Parish pole temperature decreasing equator wards
                     }
-                }else{  // if(NASATemperature == 1) ocean surface temperature based on NASA temperature distribution
-                    // transported for later time slices Ma by use_earthbyte_reconstruction
-                    if(is_land (h, 0, j, k)){  // on land a parabolic distribution assumed, no NASA based data transportable
-                        if(*get_current_time() > 0){
-//                            t.x[0][j][k] = (t_eff * parabola(d_j/d_j_half) 
-//                                + pole_temperature) + t_paleo_add + m_model->t_land;
-                            t.x[0][j][k] += t_paleo_add + m_model->t_land
-                                + t_pole_diff_land * fabs(parabola(d_j
-                                /d_j_half) + 1.) / t_0;
-                            // land surface temperature increased by mean t_paleo_add
-                            // and by a zonally equator wards decreasing temperature difference is added
-                            // Stein/Rüdiger/Parish pole temperature decreasing equator wards
-                        }
-                        if(*get_current_time() == 0)
-                            t.x[0][j][k] = temperature_NASA.y[j][k];  // initial temperature by NASA for Ma=0
-                    }else{ // if the location is ocean
-                        if(*get_current_time() > 0){        
-                            // ocean surface temperature increased by mean t_paleo_add
-                            // and by a zonally equator wards decreasing temperature difference is added
-                            // Stein/Rüdiger/Parish pole temperature decreasing equator wards
-                            t.x[0][j][k] += t_paleo_add 
-                                + t_pole_diff_ocean * fabs(parabola(d_j 
-                                / d_j_half) + 1.) / t_0;
-                        }
-                        if(*get_current_time() == 0)
-                            t.x[0][j][k] = temperature_NASA.y[j][k];  // initial temperature by NASA for Ma=0
+                    if(*get_current_time() == 0)
+                        t.x[0][j][k] = temperature_NASA.y[j][k];  // initial temperature by NASA for Ma=0
+                }else{ // if the location is ocean
+                    if(*get_current_time() > 0){        
+                        // ocean surface temperature increased by mean t_paleo_add
+                        // and by a zonally equator wards decreasing temperature difference is added
+                        // Stein/Rüdiger/Parish pole temperature decreasing equator wards
+                        t.x[0][j][k] += t_paleo_add 
+                            + t_pole_diff_ocean * fabs(parabola(d_j 
+                            / d_j_half) + 1.) / t_0;
                     }
-                }// else(NASATemperature == 1)
-            }// for j
-        }// for k
-    }// if(RadiationModel == 1)
-
+                    if(*get_current_time() == 0)
+                        t.x[0][j][k] = temperature_NASA.y[j][k];  // initial temperature by NASA for Ma=0
+                }
+            }// else(NASATemperature == 1)
+        }// for j
+    }// for k
     // zonal temperature along tropopause
     double t_eff_tropo = t_tropopause_pole - t_tropopause;
     //use "linear temperature decay" to generate temperature data for layers between mountain top and tropopause
@@ -668,7 +664,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                         ice.x[i][j][k] = 0.; // no cloud ice available above 0 °C
                         T_it = t_u;
                     }else{ //     oversaturated
-                        for(int iter_prec = 1; iter_prec <= 20; iter_prec++){// iter_prec may be varied
+                        for(int iter_prec = 1; iter_prec <= 20; iter_prec++){ // iter_prec may be varied
                             if(i != 0)
                                 p_h = pow((T_it - gam * height * 1.e-2) / t_u, 
                             exp_pressure) * p_SL;
@@ -1501,30 +1497,148 @@ void cAtmosphereModel::IC_v_w_WestEastCoast(){
 }
 
 
-void cAtmosphereModel::BC_Evaporation(){ 
-// mass flux of water vapour follows the same rules as given for the salinity flux in oceans
-// preparations for salinity increase due to evaporation and precipitation differences
+
+void cAtmosphereModel::WaterVapourEvaporation(){ 
+// preparations for water vapour increase due to the differences between evaporation and precipitation 
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
-    double vapour_surface = 0.;
-    double evap_precip = 0.;
-//    double coeff_vapour = 1.1574e-8 * L_atm / ( c_0 * u_0 );  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to mm/s
-    double coeff_vapour = .1 * 1.1574e-8 * L_atm / ( c_0 * u_0 );  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to mm/s
+// amount of additional water vapour by the difference of evaporation and precipitation is negligible but functional
+    for(int k = 0; k < km; k++){
+        for(int j = 0; j < jm; j++){
+            for(int i = 0; i < im; i++){
+                if(c.x[i][j][k] < 0.)  c.x[i][j][k] = 0.;
+                if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
+                if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
+            }
+        }
+    }
+    // surface values of Evaporation, Condensation, Water, Water_super, IceAir, precipitable_water only for radial printout
+    precipitable_water.y[0][0] = 0.;
+    precipitable_water.y[0][0] = 0.;
+    co2_total.y[0][0] = 0.;
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            co2_total.y[j][k] = co2.x[0][j][k];
+            for(int i = 0; i < im; i++){
+                float e = 100. * c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in Pa
+                float a = e / (R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
+                float step = get_layer_height(i+1) - get_layer_height(i);
+                precipitable_water.y[j][k] +=  a * step;
+                 // mass of water in kg/m²
+                // precipitable_water mass in 1 kg/m² compares to 1 mm hight, with water density kg/ (m² * mm)
+            }
+        }
+    }
+    double coeff_prec = 86400.;  // dimensions see below
+    // surface values of precipitation and precipitable water
+    for(int k = 0; k < km; k++){
+        for(int j = 0; j < jm; j++){
+            if((j == 0) && (k == 0)) P_snow.x[0][0][0] = 0.;
+            Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] 
+                + P_snow.x[0][j][k]); // in mm/d
+            // 60 s * 60 min * 24 h = 86400 s == 1 d
+            // Precipitation, P_rain and P_snow in kg/ (m² * s) == mm/s
+            // Precipitation in 86400. * kg/ (m² * d) = 86400 * mm/d
+            // kg/ (m² * s) == mm/s (Kraus, p. 94)
+        }
+    }
+    float e, E_Rain, E_Ice, sat_deficit;
+    for(int k = 0; k < km; k++){
+        for(int j = 0; j < jm; j++){
+            int i = get_surface_layer(j,k);
+            float t_u = t.x[i][j][k] * t_0;
+            float t_Celsius = t_u - t_0;
+            if(t_Celsius >= 0.){
+                if(is_land(h, i, j, k)){
+                    t_u = t.x[i][j][k] * t_0;
+                    t_Celsius = t_u - t_0;
+                    e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in hPa
+                    E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
+                    sat_deficit = ( E_Rain - e );  // saturation deficit in hPa
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
+                        * sat_deficit * 24.; // since at the suface velocity is 0, one grid point added
+                } // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
+                if(is_water(h, 0, j, k)){
+                    t_Celsius = ( t.x[0][j][k] + 0.007322 ) * t_0 - t_0; // assumption that ocean surface temperature is 2°C higher
+                    e = c.x[0][j][k] * p_stat.x[0][j][k] / ep;  // water vapour pressure in hPa
+                    t_u = ( t.x[0][j][k] + 0.007322 ) * t_0;
+                    E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
+                    sat_deficit = ( E_Rain - e );  // saturation deficit in hPa
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(u_0, v.x[0][j][k], w.x[0][j][k]) 
+                        * sat_deficit * 24.;
+                }
+            }
+            if(t_Celsius <= 0.){
+                if(is_land(h, i, j, k)){
+                    t_u = t.x[i][j][k] * t_0;
+                    t_Celsius = t_u - t_0;
+                    e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in hPa
+                    E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
+                    sat_deficit = ( E_Ice - e );  // saturation deficit in hPa
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
+                        * sat_deficit * 24.; // since at the suface velocity is 0, one grid point added
+                }
+                if(is_water(h, 0, j, k)){
+                    e = c.x[0][j][k] * p_stat.x[0][j][k] / ep;  // water vapour pressure in hPa
+                    t_u = ( t.x[0][j][k] + 0.007322 ) * t_0;
+                    t_Celsius = t_u - t_0; // assumption that ocean surface temperature is 2°C higher
+                    E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
+                    sat_deficit = ( E_Ice - e );  // saturation deficit in hPa
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(u_0, v.x[0][j][k], w.x[0][j][k]) 
+                        * sat_deficit * 24.;
+                }
+            }
+            if(Evaporation_Dalton.y[j][k] <= 0.)  
+                Evaporation_Dalton.y[j][k] = 0.;
+        }
+    }
+    double coeff_vapour = 1.1574e-8 * L_atm / ( c_0 * u_0 );  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to mm/s
     double zeta = 3.715;
     double rm = rad.z[0];
     double exp_rm = 1. / exp(zeta * rm);
-// additional water vapour as a source term due to evaporation at ocean surface (i = 0)
+    double evap_precip = 0.;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            evap_precip = Evaporation_Dalton.y[j][k] - Precipitation.y[j][k];
-    // this formula contains a 2. order accurate gradient of 1. order, needs 3 points
-            vapour_surface = (- 3. * c.x[0][j][k] + 4. * c.x[1][j][k] - c.x[2][j][k]) / 
-                             (2. * dr * exp_rm) * (1. - 2. * c.x[0][j][k]) * evap_precip;     // 2. ord.
-    // this formula contains a 1. order accurate gradient of 1. order, needs 2 points
-//          vapour_surface = (c.x[0][j][k] - c.x[1][j][k]) / (dr * exp_rm) * (1. - 2. * c.x[0][j][k]) * evap_precip;
-            vapour_evaporation.y[j][k] = - coeff_vapour * vapour_surface;
-            c.x[0][j][k] = c.x[0][j][k] + vapour_evaporation.y[j][k];
-        }
-     }
+            if(iter_cnt_3d == 1)  c_fix.y[j][k] = c.x[0][j][k];
+            double vapour_surface_n = 0.;
+            double vapour_surface = 0.;
+            for(int iter_prec = 1; iter_prec <= 20; iter_prec++){ // iter_prec may be varied
+                evap_precip = Evaporation_Dalton.y[j][k] - Precipitation.y[j][k];
+//                vapour_surface = - ( - 3. * c.x[0][j][k] + 4. * c.x[1][j][k] 
+//                    - c.x[2][j][k] ) / ( 2. * dr * exp_rm ) // 1. order derivative, 2. order accurate
+//                    * ( 1. + 2. * c.x[0][j][k] ) * evap_precip; 
+                vapour_surface = - ( c.x[1][j][k] - c.x[0][j][k] ) // 1. order derivative, 1. order accurate
+                    / ( dr * exp_rm ) * ( 1. + 2. * c.x[0][j][k] ) 
+                    * evap_precip;
+                if(iter_prec == 1)  vapour_surface_n = .9 * vapour_surface;
+                vapour_evaporation.y[j][k] = coeff_vapour * vapour_surface;
+                if(is_land(h, 0, j, k))
+                    vapour_evaporation.y[j][k] = 0.;
+                c.x[0][j][k] = c_fix.y[j][k] + vapour_evaporation.y[j][k];
+
+    cout.precision(5);
+    cout.setf(ios::fixed);
+    if((j == 90) && (k == 180)) cout << "  it = " << iter_prec << "  vap_evap = " << vapour_evaporation.y[j][k] * 1000. << "  coeff_vap = " << coeff_vapour  << "  vap_surf = " << vapour_surface << "  vap_surf_n = " << vapour_surface_n << "  c_fix = " << c_fix.y[j][k] * 1000. << "  c = " << c.x[0][j][k] * 1000. << "  Evap-Prec = " << evap_precip << "  Evap = " << Evaporation_Dalton.y[j][k] << "  Prec = " << Precipitation.y[j][k] << "  c_grad_1 = " << ( c.x[1][j][k] - c.x[0][j][k] ) / ( dr * exp_rm ) << "  c_grad_2 = " << ( - 3. * c.x[0][j][k] + 4. * c.x[1][j][k] - c.x[2][j][k] ) / ( 2. * dr * exp_rm ) << endl;
+
+                for(int i = 0; i < im; i++){
+                    if(i <= im-1){
+                        if(i > 0){
+                            double x = get_layer_height(i) 
+                                / get_layer_height(im-1); 
+                            c.x[i][j][k] = parabola_interp(c_tropopause, 
+                                c.x[0][j][k], x); 
+                        }
+                    }
+                } // end i
+                if(iter_prec >= 5 && fabs(vapour_surface / vapour_surface_n - 1.) 
+                    <= 1.e-3)  break;  
+                vapour_surface_n = vapour_surface;
+            } // iter_prec 
+        } // end j
+    } // end k
 }
 
 

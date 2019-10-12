@@ -178,7 +178,7 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
 
 void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c, 
     Array &p_dyn, Array_2D &Evaporation_Dalton, Array_2D &Precipitation, 
-    Array_2D &salinity_evaporation){
+    Array_2D &salinity_evaporation, Array_2D &c_fix){
     // initial conditions for salt content and temperature and salinity decrease below the sea surface
     j_half = ( jm -1 ) / 2;
     j_max = jm - 1;
@@ -247,10 +247,10 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
                 t_Celsius = t.x[im-1][j][k] * t_0 - t_0;
                 if(t_Celsius <= t_pole * t_0 - t_0)
                     t_Celsius = t_pole * t_0 - t_0;
-                c.x[im-1][j][k] = ( ( t_Celsius + 346. ) / 10. ) / c_0;
-                if ( c.x[im-1][j][k] <= 1. ) c.x[im-1][j][k] = 1.;
+                c.x[im-1][j][k] = ( ( t_Celsius + 346. ) / 10. );
+                if ( c.x[im-1][j][k] <= 1. ) c.x[im-1][j][k] = c_0;
             }else{
-                c.x[im-1][j][k] = 1.;
+                c.x[im-1][j][k] = c_0;
             }
         }
     }
@@ -266,7 +266,7 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
                 / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
             if(t.x[im-1][j][k] <= t_pole)
                 t.x[im-1][j][k] = t_pole;
-            cm_cbeg = ( c.x[im-1][j][k] - 1. ) 
+            cm_cbeg = ( c.x[im-1][j][k] - c_0 ) 
                 / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
             for(int i = i_beg; i < im-1; i++){
                     d_i = (double)i;
@@ -274,7 +274,7 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
                         * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
                     if(t.x[i][j][k] <= t_pole)
                         t.x[i][j][k] = t_pole;
-                    c.x[i][j][k] = 1. + cm_cbeg 
+                    c.x[i][j][k] = c_0 + cm_cbeg 
                         * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
             }
         }
@@ -286,48 +286,47 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
     double evap_precip = 0.;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            std::vector<std::vector<double> > c_fix(jm, std::vector<double>(km, 0));
-            c_fix[j][k] = c.x[im-1][j][k];
+            c_fix.y[j][k] = c.x[im-1][j][k];
             double salinity_surface_n = 0.;
             double salinity_surface = 0.;
-                for(int iter_prec = 1; iter_prec <= 20; iter_prec++){// iter_prec may be varied
-                    evap_precip = Evaporation_Dalton.y[j][k] 
-                        - Precipitation.y[j][k];
+            for(int iter_prec = 1; iter_prec <= 20; iter_prec++){// iter_prec may be varied
+                evap_precip = Evaporation_Dalton.y[j][k] 
+                    - Precipitation.y[j][k];
 //                salinity_surface = - ( - 3. * c.x[im - 1][j][k]
-//                               + 4. * c.x[im - 2][j][k] 
-//                               - c.x[im - 3][j][k] ) / ( 2. * dr ) // 1. order derivative, 2. order accurate
-//                               * ( 1. - 2. * c.x[im - 1][j][k] ) 
-//                               * evap_precip; 
-                    salinity_surface = ( c.x[im-1][j][k] 
-                        - c.x[im-2][j][k] ) / dr // 1. order derivative, 1. order accurate
-                        * ( 1. - 2. * c.x[im-1][j][k] ) * evap_precip;
-                    if(iter_prec == 1) 
-                        salinity_surface_n = .9 * salinity_surface;
-                    salinity_evaporation.y[j][k] = coeff_salinity 
-                        * salinity_surface;
-                    if(is_land(h, im-1, j, k))
-                        salinity_evaporation.y[j][k] = 0.;
-                    c.x[im-1][j][k] = c_fix[j][k] 
-                        + salinity_evaporation.y[j][k];
-                    double cm_cbeg = 0.;
-                    double d_i_max = (double)i_max;
-                    double d_i_beg = (double)i_beg;
-                    double d_i = 0.;
-                    cm_cbeg = ( c.x[im-1][j][k] - 1. ) 
-                        / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
-                    for(int i = i_beg; i < im-1; i++){
-                        d_i = (double)i;
-                        c.x[i][j][k] = 1. + cm_cbeg 
-                            * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
-                    }
-/*
-    cout.precision ( 8 );
+//                    + 4. * c.x[im - 2][j][k] 
+//                    - c.x[im - 3][j][k] ) / ( 2. * dr ) // 1. order derivative, 2. order accurate
+//                    * ( 1. + 2. * c.x[im - 1][j][k] ) 
+//                    * evap_precip; 
+                salinity_surface = - ( c.x[im-1][j][k] - c.x[im-2][j][k] ) // 1. order derivative, 1. order accurate
+                    / 1000. / dr * ( 1. + 2. * c.x[im-1][j][k] / 1000. ) 
+                    * evap_precip;
+                if(iter_prec == 1) 
+                    salinity_surface_n = .9 * salinity_surface;
+                salinity_evaporation.y[j][k] = coeff_salinity 
+                    * salinity_surface;
+                if(is_land(h, im-1, j, k))
+                    salinity_evaporation.y[j][k] = 0.;
+                c.x[im-1][j][k] = c_fix.y[j][k] 
+                    + salinity_evaporation.y[j][k];
+                double cm_cbeg = 0.;
+                double d_i_max = (double)i_max;
+                double d_i_beg = (double)i_beg;
+                double d_i = 0.;
+                cm_cbeg = ( c.x[im-1][j][k] - c_0 ) 
+                    / ( d_i_max * d_i_max - d_i_beg * d_i_beg );
+                for(int i = i_beg; i < im-1; i++){
+                    d_i = (double)i;
+                    c.x[i][j][k] = c_0 + cm_cbeg 
+                        * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
+                }
+
+    cout.precision ( 5 );
     cout.setf ( ios::fixed );
-    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   iter_prec = " << iter_prec << "   salinity_evaporation = " << salinity_evaporation.y[j][k] * c_0 << "   coeff_salinity = " << coeff_salinity << "   salinity_surface = " << salinity_surface * c_0 << "   salinity_surface_n = " << salinity_surface_n * c_0 << "   c_fix = " << c_fix[j][k] * c_0 << "   c = " << c.x[im-1][j][k] * c_0 << "   Evap-Prec = " << evap_precip << "   Evap = " << Evaporation_Dalton.y[j][k] << "   Prec = " << Precipitation.y[j][k] << "   c_grad_1 = " << ( c.x[im-1][j][k] - c.x[im-2][j][k] ) / dr << "   c_grad_2 = " << - ( - 3. * c.x[im-1][j][k] + 4. * c.x[im-2][j][k] - c.x[im-3][j][k] ) / ( 2. * dr ) << endl;
-*/
-                    if(fabs(salinity_surface - salinity_surface_n) 
-                        < 1.e-5 * salinity_surface_n)  break;  
-                    salinity_surface_n = salinity_surface;
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "  it = " << iter_prec << "  sal_evap = " << salinity_evaporation.y[j][k] << "  coeff_sal = " << coeff_salinity << "  sal_surf = " << salinity_surface << "  sal_surf_n = " << salinity_surface_n << "  c_fix = " << c_fix.y[j][k] << "  c = " << c.x[im-1][j][k] << "  Evap-Prec = " << evap_precip << "  Evap = " << Evaporation_Dalton.y[j][k] << "  Prec = " << Precipitation.y[j][k] << "  c_grad_1 = " << ( c.x[im-1][j][k] - c.x[im-2][j][k] ) / dr << "  c_grad_2 = " << - ( - 3. * c.x[im-1][j][k] + 4. * c.x[im-2][j][k] - c.x[im-3][j][k] ) / ( 2. * dr ) << endl;
+
+                if(fabs(salinity_surface / salinity_surface_n - 1.) 
+                    < 1.e-5)  break;  
+                salinity_surface_n = salinity_surface;
             } // iter_prec 
         } // end j
     } // end k
@@ -336,7 +335,7 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
             for(int k = 0; k < km; k++){
                 if(is_water(h, i, j, k)){
                     t.x[i][j][k] = 1.;
-                    c.x[i][j][k] = 1.;
+                    c.x[i][j][k] = c_0;
                 }
             }
         }
@@ -373,8 +372,8 @@ void BC_Thermohalin::BC_Pressure_Density(Array &p_stat, Array &r_water,
             beta_p = .808;
             alfa_t_p = .0708 * ( 1. + .068 * t_Celsius_1 );
             gamma_t_p = .003 * ( 1. - .012 * t_Celsius_1 );
-            r_salt_water.x[im-1][j][k] = C_p + beta_p * c.x[im-1][j][k] * c_0 -
-                alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[im-1][j][k] * c_0 ) * t_Celsius_1;
+            r_salt_water.x[im-1][j][k] = C_p + beta_p * c.x[im-1][j][k] -
+                alfa_t_p * t_Celsius_1 - gamma_t_p * ( 1. - c.x[im-1][j][k] ) * t_Celsius_1;
         }
     }
 // hydrostatic pressure, water and salt water density in the field
@@ -396,8 +395,8 @@ void BC_Thermohalin::BC_Pressure_Density(Array &p_stat, Array &r_water,
                 beta_p = .808 - .0085* p_km;
                 alfa_t_p = .0708 * ( 1. + .351 * p_km + .068 *( 1. - .0683 * p_km ) * t_Celsius_1 );
                 gamma_t_p = .003 * ( 1. - .059 * p_km - .012 * ( 1. - .064 * p_km ) * t_Celsius_1 );
-                r_salt_water.x[i][j][k] = C_p + beta_p * c.x[i][j][k] * c_0 -
-                    alfa_t_p * t_Celsius_1 - gamma_t_p * ( c_0 - c.x[i][j][k] * c_0 ) * t_Celsius_1;
+                r_salt_water.x[i][j][k] = C_p + beta_p * c.x[i][j][k] -
+                    alfa_t_p * t_Celsius_1 - gamma_t_p * ( 1. - c.x[i][j][k] ) * t_Celsius_1;
             }
         }
     }
@@ -786,8 +785,8 @@ void BC_Thermohalin::Value_Limitation_Hyd(Array &h, Array &u, Array &v,
                 if( w.x[i][j][k] <= - .552 )  w.x[i][j][k] = - .552;
                 if( t.x[i][j][k] >= 1.147 )  t.x[i][j][k] = 1.147; //40.15 °C
                 if( t.x[i][j][k] <= 0.9963 )  t.x[i][j][k] = 0.9963;// -1.0 °C
-                if( c.x[i][j][k] >= 1.156 )  c.x[i][j][k] = 1.156;  // 40.0 psu
-                if( c.x[i][j][k] <= .95 )  c.x[i][j][k] = .95;      // 32.0 psu
+                if( c.x[i][j][k] >= 40. )  c.x[i][j][k] = 40.;  // 40.0 psu
+                if( c.x[i][j][k] <= 32. )  c.x[i][j][k] = 32.;      // 32.0 psu
             }
         }
     }

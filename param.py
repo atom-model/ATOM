@@ -45,7 +45,6 @@ def main():
             ('sun', 'while no variable sun position wanted', 'int', 0),
 #            ('NASATemperature', 'surface temperature given by NASA', 'int', 1),
             ('NASATemperature', 'surface temperature given by NASA', 'int', 0),
-            ('RadiationModel', 'surface temperature computation by a multi-layer radiation model', 'int', 1),
 
             ('declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0),
             ('sun_position_lat', 'position of sun j = 120 means 30°S, j = 60 means 30°N', 'int', 60),

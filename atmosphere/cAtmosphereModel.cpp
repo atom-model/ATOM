@@ -175,14 +175,14 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
         read_IC(velocity_v_file, v.x[0], jm, km);
         read_IC(velocity_w_file, w.x[0], jm, km);    
     }
-    read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
+//    read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
     read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
     read_IC(Name_SurfaceNASATemperature_File, temperature_NASA.y, jm, km);
     iter_cnt_3d = -1;
     if(debug) save_data();
     iter_cnt_3d++;
     init_velocities();
-    near_wall_values();
+//    near_wall_values();
 //    adjust_temperature_IC(t.x[0], jm, km);
     init_temperature();
     init_water_vapour();
@@ -202,7 +202,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     cout << endl << endl;
 //    restrain_temperature();
 //    Printout:
-    write_file(bathymetry_name, output_path, true);
+//    write_file(bathymetry_name, output_path, true);
     iter_cnt_3d++;
     save_data();    
     if(debug){
@@ -249,6 +249,7 @@ void cAtmosphereModel::reset_arrays(){
     co2_total.initArray_2D(jm, km, 0.); // areas of higher co2 concentration
     dew_point_temperature.initArray_2D(jm, km, 0.); // dew point temperature
     condensation_level.initArray_2D(jm, km, 0.); // areas of higher co2 concentration // local condensation level
+    c_fix.initArray_2D(jm, km, 0.); // local surface water vapour fixed for iterations
     h.initArray(im, jm, km, 0.); // bathymetry, depth from sea level
     t.initArray(im, jm, km, 1.); // temperature
     u.initArray(im, jm, km, 0.); // u-component velocity component in r-direction
@@ -407,20 +408,14 @@ void cAtmosphereModel::run_3D_loop(){
             BC_theta();
             BC_phi();
             BC_SolidGround();
-            BC_Evaporation(); 
             if(velocity_iter % 2 == 0){
                 Ice_Water_Saturation_Adjustment();
 //            Moist_Convection(); // work in progress
                 Two_Category_Ice_Scheme(); 
                 Value_Limitation_Atm();
+//                if(pressure_iter == 2)  WaterVapourEvaporation();
+                WaterVapourEvaporation();
                 init_co2();
-/*
-                for(int k = 0; k < km ; k++){
-//                    smooth_cloud_steps(k, im, jm, c, c);
-                    smooth_cloud_steps(k, im, jm, cloud, cloud);
-                    smooth_cloud_steps(k, im, jm, ice, ice);
-                }
-*/
             }
             solveRungeKutta_3D_Atmosphere();
             Value_Limitation_Atm();
@@ -430,13 +425,13 @@ void cAtmosphereModel::run_3D_loop(){
             Latent_Heat(); 
             print_min_max_values();
             vegetation_distribution();
-            run_MSL_data(); 
             iter_cnt++;
             iter_cnt_3d++;
             if(debug) save_data();
         }//end of velocity loop
         computePressure_3D();
-        if(debug && pressure_iter % checkpoint == 0){
+//        if(debug && pressure_iter % checkpoint == 0){
+        if(pressure_iter % checkpoint == 0){
             write_file(bathymetry_name, output_path);
         }
         if(iter_cnt > nm){
@@ -554,9 +549,6 @@ void cAtmosphereModel::restrain_temperature(){
 */
 void cAtmosphereModel::init_water_vapour(){
     // initial and boundary conditions of water vapour on water and land surfaces
-    // parabolic water vapour distribution from pole to pole accepted
-    // maximum water vapour content on water surface at equator c_equator = 1.04 compares to 0.04 volume parts
-    // minimum water vapour at tropopause c_tropopause = 0.0 compares to 0.0 volume parts
     // value 0.04 stands for the maximum value of 40 g/kg, g water vapour per kg dry air
     // water vapour contents computed by Clausius-Clapeyron-formula
     for(int k = 0; k < km; k++){
@@ -584,42 +576,15 @@ void cAtmosphereModel::init_water_vapour(){
         for(int k = 0; k < km; k++){
 //            int i_mount = get_surface_layer(j, k);
             int i_mount = 0.;
-//            double c_mount_top = (c_tropopause - c.x[0][j][k]) *
-//                (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
-//                c.x[0][j][k]; //temperature at mountain top
             for(int i = 0; i < im; i++){
                 if(i <= i_trop){
                     if(i>i_mount){
-/*
-                        double x = (get_layer_height(i) 
-                            - get_layer_height(i_mount)) 
-                            / (get_layer_height(i_trop) 
-                            - get_layer_height(i_mount));
-                        c.x[i][j][k] = parabola_interp(c_tropopause, 
-                            c.x[i_mount][j][k], x); 
-*/
-
                         double x = get_layer_height(i) 
                             / get_layer_height(i_trop); 
                         c.x[i][j][k] = parabola_interp(c_tropopause, 
                             c.x[i_mount][j][k], x); 
-
-/*
-                        c.x[i][j][k] = ( c_tropopause - c.x[i_mount][j][k] ) // linear dicrease 
-                            * get_layer_height(i) / get_layer_height(i_trop) 
-                            + c.x[i_mount][j][k]; 
-*/
                     }
                 }
-/*
-                    }else{
-//                        c.x[i][j][k] = c.x[i_mount][j][k];
-//                        c.x[0][j][k] = c_mount_top;
-                    }
-                }else{
-                    c.x[i][j][k] = c_tropopause;
-                }
-*/
             } // end i
         }// end k
     }// end j
@@ -649,14 +614,6 @@ void cAtmosphereModel::init_water_vapour(){
                         ice.x[i][j][k] = pow(ice_max, 3.) 
                             / ( pow(ice_max, 2.) + pow(x_ice, 2.)); 
                     }
-/*
-//                    if(is_land(h, 0, j, k)){
-
-                    else{
-                        cloud.x[i][j][k] = cloud.x[i_mount][j][k];
-                        ice.x[i][j][k] = ice.x[i_mount][j][k];
-                    }
-*/
                 }
             } // end i
         }// end k

@@ -159,7 +159,7 @@ void cHydrosphereModel::run_data(){
                     SaltFinger.y[j][k] += Salt_Finger.x[i][j][k];
                     SaltDiffusion.y[j][k] += Salt_Diffusion.x[i][j][k];
                     BuoyancyForce_2D.y[j][k] += BuoyancyForce_3D.x[i][j][k];
-                    Salt_total.y[j][k] += c.x[i][j][k] * c_0;
+                    Salt_total.y[j][k] += c.x[i][j][k];
                 }
             }
         }

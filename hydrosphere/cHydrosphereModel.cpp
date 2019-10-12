@@ -182,7 +182,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     //oceanflow.IC_Equatorial_Currents(h, u, v, w);
     //if(Ma <= 41)  oceanflow.IC_CircumPolar_Current(h, u, v, w, c); // Drake passage closed 41 Ma ago
 //    oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn );
-    oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn, Evaporation_Dalton, Precipitation, salinity_evaporation );
+    oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn, Evaporation_Dalton, Precipitation, salinity_evaporation, c_fix );
 //    oceanflow.BC_Pressure_Density(p_stat, r_water, r_salt_water, t, c, h);
 //    goto Printout;
     store_intermediate_data_2D();
@@ -290,19 +290,20 @@ void cHydrosphereModel::reset_arrays(){
     salinity_evaporation.initArray_2D(jm, km, 0.); // additional salinity by evaporation
     Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Dalton in [mm/d]
     Precipitation.initArray_2D(jm, km, 0.); // areas of higher precipitation
+    c_fix.initArray_2D(jm, km, 0.); // local surface salinity fixed for iterations
 
     h.initArray(im, jm, km, 0.); // bathymetry, depth from sea level
     t.initArray(im, jm, km, 1.); // temperature
     u.initArray(im, jm, km, 0.); // u-component velocity component in r-direction
     v.initArray(im, jm, km, 0.); // v-component velocity component in theta-direction
     w.initArray(im, jm, km, 0.); // w-component velocity component in phi-direction
-    c.initArray(im, jm, km, 1.); // water vapour
+    c.initArray(im, jm, km, 1.); // salinity
 
     tn.initArray(im, jm, km, 1.); // temperature new
     un.initArray(im, jm, km, 0.); // u-velocity component in r-direction new
     vn.initArray(im, jm, km, 0.); // v-velocity component in theta-direction new
     wn.initArray(im, jm, km, 0.); // w-velocity component in phi-direction new
-    cn.initArray(im, jm, km, 1.); // water vapour new
+    cn.initArray(im, jm, km, 1.); // salinity new
 
     p_dyn.initArray(im, jm, km, 1.); // dynamic pressure
     p_dynn.initArray(im, jm, km, 1.); // dynamic pressure new

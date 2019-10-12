@@ -98,7 +98,7 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k)
 
     // buoyancy effects by salt water density changes
     double drodc = .7;    // gradient given in kg/m³/m
-    double salt_water_ref = r_water.x[i][j][k] + drodc * c.x[i][j][k] * c_0;
+    double salt_water_ref = r_water.x[i][j][k] + drodc * c.x[i][j][k];
                           // common linear approach for salt water based on fresh water
 
     double coeff_buoy = L_hyd / ( u_0 * u_0 );

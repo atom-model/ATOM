@@ -62,6 +62,7 @@ private:
     Array_2D salinity_evaporation; // additional salinity by evaporation
     Array_2D Evaporation_Dalton; // evaporation by Penman in [mm/d]
     Array_2D Precipitation; // areas of higher precipitation
+    Array_2D c_fix; // local surface salinity fixed for iterations
 
     Array h; // bathymetry, depth from sea level
     Array t; // temperature
