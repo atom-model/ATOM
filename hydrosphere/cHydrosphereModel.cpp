@@ -178,7 +178,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
 //    goto Printout;
     IC_v_w_EkmanSpiral();
 //    goto Printout;
-    oceanflow.IC_u_WestEastCoast(rad, h, u, v, w, un, vn, wn);
+//    oceanflow.IC_u_WestEastCoast(rad, h, u, v, w, un, vn, wn);
     //oceanflow.IC_Equatorial_Currents(h, u, v, w);
     //if(Ma <= 41)  oceanflow.IC_CircumPolar_Current(h, u, v, w, c); // Drake passage closed 41 Ma ago
 //    oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn );

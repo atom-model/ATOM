@@ -55,7 +55,9 @@ void cHydrosphereModel::run_data(){
     double coeff = i_Ekman_layer / L_hyd;
     double rmsinthe = 0.;
     double coeff_EkmanPumping = 0.03 * u_0 * ( L_hyd /(double)(im-1) * dr ) 
-                                    / ( 111000 * dthe ) * ( 84600 * 365 ); // = 513.201
+                                    / ( 111000. * dthe ) * ( 84600. * 365. ); // = 513.201
+//    double coeff_EkmanPumping = .18 * u_0 * ( L_hyd /(double)(im-1) * dr ) 
+//                                    / ( 111000. * dthe ) * ( 84600. * 365. ); // = 513.201
     // dimensional units: 111000 m for 1°, 84600 * 365 for m/y from m/s
 
     int i_Ekman = ( im - 1 ) * ( 1. - coeff );

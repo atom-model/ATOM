@@ -109,9 +109,9 @@ void cAtmosphereModel::paraview_panorama_vts(string &Name_Bathymetry_File, int n
     Atmosphere_panorama_vts_File <<  "\n"  << endl;
     Atmosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
     dump_array("Topography", h, 1.0, Atmosphere_panorama_vts_File);
-    dump_array("u-component", u, 1.0, Atmosphere_panorama_vts_File);
-    dump_array("v-component", v, 1.0, Atmosphere_panorama_vts_File);
-    dump_array("w-component", w, 1.0, Atmosphere_panorama_vts_File);
+    dump_array("u-component", u, u_0, Atmosphere_panorama_vts_File);
+    dump_array("v-component", v, u_0, Atmosphere_panorama_vts_File);
+    dump_array("w-component", w, u_0, Atmosphere_panorama_vts_File);
     Atmosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" Name=\"Temperature\" format=\"ascii\">\n"  << endl;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -238,9 +238,9 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
         }
     }
     Atmosphere_vtk_radial_File <<  "POINT_DATA " << jm * km << endl;
-    dump_radial("u-Component", u, 1., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial("v-Component", v, 1., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial("w-Component", w, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("u-Component", u, u_0, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("v-Component", v, u_0, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("w-Component", w, u_0, i_radial, Atmosphere_vtk_radial_File);
     Atmosphere_vtk_radial_File <<  "SCALARS Temperature float " << 1 << endl;
     Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
     for(int j = 0; j < jm; j++){
@@ -325,9 +325,9 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
         x = x + dx;
     }
     Atmosphere_vtk_zonal_File <<  "POINT_DATA " << im * jm << endl;
-    dump_zonal("u-Component", u, 1., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("v-Component", v, 1., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("w-Component", w, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("u-Component", u, u_0, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("v-Component", v, u_0, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("w-Component", w, u_0, k_zonal, Atmosphere_vtk_zonal_File);
     Atmosphere_vtk_zonal_File <<  "SCALARS Temperature float " << 1 << endl;
     Atmosphere_vtk_zonal_File <<  "LOOKUP_TABLE default"  <<endl;
     for(int i = 0; i < im; i++){
@@ -469,9 +469,9 @@ void cAtmosphereModel::paraview_vtk_longal(string &Name_Bathymetry_File,
         x = x + dx;
     }
     Atmosphere_vtk_longal_File <<  "POINT_DATA " << im * km << endl;
-    dump_longal("u-Component", u, 1., j_longal, Atmosphere_vtk_longal_File);
-    dump_longal("v-Component", v, 1., j_longal, Atmosphere_vtk_longal_File);
-    dump_longal("w-Component", w, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("u-Component", u, u_0, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("v-Component", v, u_0, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("w-Component", w, u_0, j_longal, Atmosphere_vtk_longal_File);
     Atmosphere_vtk_longal_File <<  "SCALARS Temperature float " << 1 << endl;
     Atmosphere_vtk_longal_File <<  "LOOKUP_TABLE default"  <<endl;
     for(int i = 0; i < im; i++){

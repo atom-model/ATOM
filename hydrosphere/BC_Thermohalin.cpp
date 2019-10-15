@@ -60,6 +60,7 @@ BC_Thermohalin::~BC_Thermohalin(){}
 
 void cHydrosphereModel::IC_v_w_EkmanSpiral(){
     float water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
+//    float water_wind = .18;  // ocean surface velocity is about 3% of the wind velocity at the surface
     //Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
     //a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
 //    float Ekman_angle = 45.0 / pi180;
@@ -69,8 +70,8 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             if(is_water(h, im-1, j, k)){
-                v.x[im - 1][j][k] = water_wind * v.x[im - 1][j][k] / u_0;
-                w.x[im - 1][j][k] = water_wind * w.x[im - 1][j][k] / u_0;
+                v.x[im-1][j][k] = water_wind * v.x[im-1][j][k] / u_0;
+                w.x[im-1][j][k] = water_wind * w.x[im-1][j][k] / u_0;
             }
         }
     }
@@ -78,6 +79,7 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
     // northern and southern hemisphere
     int i_Ekman = 0;
     double sinthe = 0.;
+    double rm = 0.;
     double vel_magnit = 0.;
     double vel_mag = 0.;
     double i_Ekman_layer = 0.;
@@ -89,17 +91,17 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
     double alfa = 0;
     float angle = 0;
     for(int j = 1; j < jm-1; j++){
+        sinthe = sin(fabs( the.z[j] - M_PI / 2. ));
         for(int k = 1; k < km-1; k++){
-            sinthe = sin( fabs( the.z[j] - M_PI / 2. ) );
             vel_magnit = sqrt( v.x[im-1][j][k] * v.x[im-1][j][k] 
                          + w.x[im-1][j][k] * w.x[im-1][j][k] ) 
-                         / water_wind * u_0; // dimensional surface wind velocity U_10
+                         / water_wind * u_0; // dimensional surface wind velocity U_10 in m/s
 //          original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 139, eq. 9.16
-            i_Ekman_layer = 3. * 7.6 / sqrt( sinthe ) * vel_magnit;
+            i_Ekman_layer = 3. * 7.6 / sqrt(sinthe) * vel_magnit;
             // assumed depth at i_Ekman = 3 x pi / gam, velocity opposit plus pi to surface velocity
             coeff = i_Ekman_layer / L_hyd;
             if(coeff >= 1.) coeff = 1.;
-            i_Ekman = ( im - 1 ) * ( 1. - coeff );
+            i_Ekman = ( im-1 ) * ( 1. - coeff );
 
 //          prevention of singular values
             if( w.x[im-1][j][k] == 0. ) w.x[im-1][j][k] = 1.e-6;
@@ -109,7 +111,7 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
 //          turning the wind velocities to water velocities along the surface, local angle +/- Ekman_angle
 //            alfa = atan( fabs( v.x[im-1][j][k] / w.x[im-1][j][k] ));
             if(j <= (jm-1)/2){
-                alfa = atan( fabs( v.x[im-1][j][k] / w.x[im-1][j][k] ));
+                alfa = atan(fabs( v.x[im-1][j][k] / w.x[im-1][j][k] ));
                 if(( w.x[im-1][j][k] >= 0. ) && ( v.x[im-1][j][k] >= 0. )){
                     angle = alfa - Ekman_angle;
                 }
@@ -149,7 +151,7 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
 //          original laws in Robert H. Stewart, Introduction to Physical Oceanography, p. 137, eq. 9.9a/b
                 gam_z = - 3. * M_PI * (double)( i - im-1 ) 
                     / (double)( i_Ekman - im-1 );
-                exp_gam_z = exp ( gam_z );
+                exp_gam_z = exp( gam_z );
                 sin_gam_z = - sin( angle + gam_z );
                 cos_gam_z = cos( angle + gam_z );
                 if(j <= (jm-1)/2){
@@ -170,6 +172,18 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
                     v.x[i][j][k] = 0.;
                     w.x[i][j][k] = 0.;
                 }
+            }
+        }
+    }
+// vertical velocity u calculated by the continuity equation
+    for ( int k = 1; k < km-1; k++ ){
+        for ( int j = 1; j < jm-1; j++ ){
+            sinthe = sin(the.z[j]);
+            for ( int i = 0; i < im-1; i++ ){
+                rm = rad.z[i];
+                u.x[i+1][j][k] = u.x[i][j][k] - dr * ( ( v.x[i][j+1][k] 
+                    - v.x[i][j-1][k] ) / ( 2. * rm * dthe ) + ( w.x[i][j][k+1] 
+                    - w.x[i][j][k-1] ) / ( 2. * rm * sinthe * dphi ) );
             }
         }
     }
@@ -319,11 +333,11 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
                     c.x[i][j][k] = c_0 + cm_cbeg 
                         * ( d_i * d_i - d_i_beg * d_i_beg );// parabolic approach
                 }
-
+/*
     cout.precision ( 5 );
     cout.setf ( ios::fixed );
     if ( ( j == 90 ) && ( k == 180 ) ) cout << "  it = " << iter_prec << "  sal_evap = " << salinity_evaporation.y[j][k] << "  coeff_sal = " << coeff_salinity << "  sal_surf = " << salinity_surface << "  sal_surf_n = " << salinity_surface_n << "  c_fix = " << c_fix.y[j][k] << "  c = " << c.x[im-1][j][k] << "  Evap-Prec = " << evap_precip << "  Evap = " << Evaporation_Dalton.y[j][k] << "  Prec = " << Precipitation.y[j][k] << "  c_grad_1 = " << ( c.x[im-1][j][k] - c.x[im-2][j][k] ) / dr << "  c_grad_2 = " << - ( - 3. * c.x[im-1][j][k] + 4. * c.x[im-2][j][k] - c.x[im-3][j][k] ) / ( 2. * dr ) << endl;
-
+*/
                 if(fabs(salinity_surface / salinity_surface_n - 1.) 
                     < 1.e-5)  break;  
                 salinity_surface_n = salinity_surface;
@@ -636,12 +650,13 @@ void BC_Thermohalin::IC_CircumPolar_Current
 void BC_Thermohalin::IC_u_WestEastCoast
                      (Array_1D &rad, Array &h, Array &u, Array &v, 
                      Array &w, Array &un, Array &vn, Array &wn){
-// initial conditions for v and w velocity components at the sea surface close to east or west coasts
-// reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
-// w component unchanged
-    int i_beg = 20;  // == 500m depth
-    int i_middle = i_beg + 16;  // 0 + 36 = 36 for total depth 100m ( i_beg= 0 ), asymmetric with depth for stepsizes of 25m
-    int i_half = 38;
+// initial conditions for u velocity component at the sea surface close to east or west coasts
+//    int i_beg = 20;  // == 100m depth
+//    int i_middle = 36;  
+//    int i_half = 38;
+    int i_beg = 10;  // == 100m depth
+    int i_middle = i_beg + 16;  // 
+    int i_half = i_beg + 18;
     d_i_middle = (double)i_middle;
     d_i_half = (double)i_half;
     d_i_max =  (double)i_max;
@@ -663,13 +678,13 @@ void BC_Thermohalin::IC_u_WestEastCoast
             if((is_water(h, i_half, j, k)) && (k_water == 0)){     // if water is closest to coast, change of velocity components begins
                 for(int l = 0; l < k_grad; l++){// extension of change, sign change in v-velocity and distribution of u-velocity with depth
                     if(k+l > km-1) break;
-                    for(int i = i_beg; i < i_half; i++){                // loop in radial direction, extension for u -velocity component, downwelling here
+                    for(int i = i_beg; i < i_half; i++){                // loop in radial direction, extension for u-velocity component, downwelling here
                         m = i + ( i_half - i_middle );
                         d_i = ( double ) i;
-                        u.x[i][j][k + l] = - d_i / d_i_half * water_wind 
-                            / ( ( double )( l + 1 ) );    // increase with depth, decrease with distance from coast
-                        u.x[m][j][k + l] = - d_i / d_i_middle * water_wind 
-                            / ( ( double )( l + 1 ) );// decrease with depth, decrease with distance from coast
+                        u.x[i][j][k+l] = - d_i / d_i_half * water_wind 
+                            / ( ( double )( l+1 ) );    // increase with depth, decrease with distance from coast
+                        u.x[m][j][k+l] = - d_i / d_i_middle * water_wind 
+                            / ( ( double )( l+1 ) );// decrease with depth, decrease with distance from coast
                     }
                 }
                 k_sequel = 1;                                           // looking for another east coast
@@ -692,10 +707,10 @@ void BC_Thermohalin::IC_u_WestEastCoast
                     for(int i = i_beg; i < i_half; i++){
                         m = i + ( i_half - i_middle );
                         d_i = (double)i;
-                        u.x[i][j][k + l] = - d_i / d_i_half * water_wind 
-                            / ( (double)( l + 1 ) );    // increase with depth, decrease with distance from coast
-                        u.x[m][j][k + l] = - d_i / d_i_middle * water_wind 
-                            / ( (double)( l + 1 ) );// decrease with depth, decrease with distance from coast
+                        u.x[i][j][k+l] = - d_i / d_i_half * water_wind 
+                            / ( (double)( l+1 ) );    // increase with depth, decrease with distance from coast
+                        u.x[m][j][k+l] = - d_i / d_i_middle * water_wind 
+                            / ( (double)( l+1 ) );// decrease with depth, decrease with distance from coast
                     }
                 }
                 k_sequel = 1;
