@@ -176,7 +176,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
         read_IC(velocity_w_file, w.x[0], jm, km);    
     }
 //    read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);
-    read_IC(Name_SurfacePrecipitation_File, Precipitation.y, jm, km);
+    read_IC(Name_SurfacePrecipitation_File, precipitation_NASA.y, jm, km);
     read_IC(Name_SurfaceNASATemperature_File, temperature_NASA.y, jm, km);
     iter_cnt_3d = -1;
     if(debug) save_data();
