@@ -76,6 +76,7 @@ cAtmosphereModel::cAtmosphereModel():
     the.Coordinates(jm, the0, dthe);
     phi.Coordinates(km, phi0, dphi);
     init_layer_heights();
+    init_tropopause_layers();
 }
 
 cAtmosphereModel::~cAtmosphereModel(){
@@ -1046,6 +1047,7 @@ void cAtmosphereModel::check_data(Array& a, Array&an, const std::string& name){
     }
 }
 
+
 void cAtmosphereModel::check_data(){
     check_data(t,tn,"t");
     check_data(u,un,"u");
@@ -1056,3 +1058,20 @@ void cAtmosphereModel::check_data(){
     check_data(ice,icen,"ice");
     check_data(co2,co2n,"c02");
 }
+
+
+void cAtmosphereModel::init_tropopause_layers(){
+    tropopause_layers = std::vector<int>(jm, tropopause_pole);
+
+    for(int j=0; j<jm; j++){
+        tropopause_layers[j] = tropopause_pole + (tropopause_pole - tropopause_equator) * parabola(j/((jm-1)/2.));
+    }
+
+    if(debug){
+        for(int j=0; j<jm; j++){
+            std::cout << tropopause_layers[j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+

@@ -80,11 +80,13 @@ public:
      * Given a latitude, return the layer index of tropopause
     */
     int get_tropopause_layer(int j){
+        assert(j>=0);
+        assert(j<jm);
         //refer to  BC_Thermo::TropopauseLocation and BC_Thermo::GetTropopauseHightAdd
         //tropopause height is proportional to the mean tropospheric temperature.
         //higher near the equator - warm troposphere
         //lower at the poles - cold troposphere
-        return tropopause_equator;//return a constant number for now, need to be fixed
+        return tropopause_layers[j];
     }
     /*
      *
@@ -155,6 +157,9 @@ private:
     }
 
     std::vector<std::vector<int> > i_topography;
+
+    std::vector<int> tropopause_layers; // keep the tropopause layer index
+    void init_tropopause_layers();
 
     void restrain_temperature();
     void Pressure_Limitation_Atm();
