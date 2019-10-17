@@ -1061,15 +1061,16 @@ void cAtmosphereModel::check_data(){
 
 
 void cAtmosphereModel::init_tropopause_layers(){
-    tropopause_layers = std::vector<int>(jm, tropopause_pole);
+    tropopause_layers = std::vector<double>(jm, tropopause_pole);
 // Versiera di Agnesi approach, two inflection points
     int j_max = jm-1;
     int j_half = j_max/2;
-    int coeff_trop = 8;
+    double coeff_trop = 8.; // case dependent adjustment to the polar intended values
     // scaling of the maximum x value in the linear function x(j) to get tropopause_pole
     for(int j=j_half; j<=jm-1; j++){
-        int x = coeff_trop * (double)j / (double)j_half;
+        double x = coeff_trop * (double)j / (double)j_half;
         tropopause_layers[j] = Agnesi(x, tropopause_equator); 
+//        tropopause_layers[j] = tropopause_equator; 
     }
     for(int j=0; j<j_half; j++){
         tropopause_layers[j] = tropopause_layers[j_max-j];

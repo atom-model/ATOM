@@ -263,7 +263,7 @@ void cAtmosphereModel::init_temperature(){
     const char* temperature_average_pal = " t paleo";
     const char* temperature_unit =  "°C ";
     cout << endl << setiosflags(ios::left) << setw(55) << setfill('.') 
-        << temperature_comment << resetiosflags(ios::left) << setw(12) 
+        << temperature_comment << resetiosflags(ios::left) << setw(13) 
         << temperature_gain << " = " << setw(7) << setfill(' ') 
         << t_paleo << setw(5) << temperature_unit << endl << setw(55) 
         << setfill('.') << setiosflags(ios::left) << temperature_modern 
@@ -394,11 +394,12 @@ void cAtmosphereModel::init_temperature(){
 // Versiera di Agnesi approach, two inflection points
     int j_max = jm-1;
     int j_half = j_max/2;
-    int coeff_trop = .006;
+    double coeff_trop = .006; // case dependent adjustment to the polar intended values
     // scaling of the maximum x value in the linear function x(j) to get tropopause_pole
     for(int j=j_half; j<=jm-1; j++){
-        int x = coeff_trop * (double)j / (double)j_half;
+        double x = coeff_trop * (double)j / (double)j_half;
         temp_tropopause[j] = Agnesi(x, t_tropopause); 
+//        temp_tropopause[j] = t_tropopause; 
     }
     for(int j=0; j<j_half; j++){
         temp_tropopause[j] = temp_tropopause[j_max-j];
