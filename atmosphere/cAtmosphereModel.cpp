@@ -314,17 +314,17 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name,
     double t_eff_tropo = t_tropopause_pole - t_tropopause;
     if(i_radial == 0){
         for(int j = 0; j < jm; j++){
-            double temp_tropopause = t_eff_tropo * parabola(j/((jm-1)/2.0)) 
-                + t_tropopause_pole;   //temperature at tropopause     
+            double temp_tropopause = t_eff_tropo * parabola((double)j
+                /((double)(jm-1)/2.0)) + t_tropopause_pole;   //temperature at tropopause     
             for(int k = 0; k < km; k++){
                 int i_mount = i_topography[j][k];
                 int i_trop = get_tropopause_layer(j);
                 double t_mount_top = (temp_tropopause - t.x[0][j][k]) *
-                    (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
-                    t.x[0][j][k]; //temperature at mountain top
+                    (get_layer_height(i_mount) 
+                    / get_layer_height(i_trop)) + t.x[0][j][k]; //temperature at mountain top
                 double c_mount_top = (c_tropopause - c.x[0][j][k]) *
-                    (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
-                    c.x[0][j][k]; //temperature at mountain top
+                    (get_layer_height(i_mount) 
+                    / get_layer_height(i_trop)) + c.x[0][j][k]; //temperature at mountain top
                 t.x[i_radial][j][k] = t_mount_top;
                 c.x[i_radial][j][k] = c_mount_top;
                 co2.x[i_radial][j][k] = co2.x[i_mount][j][k];
@@ -596,7 +596,7 @@ void cAtmosphereModel::init_water_vapour(){
         for(int k = 0; k < km; k++){
 //            int i_mount = get_surface_layer(j, k);
             int i_mount = 0.;
-            double i_max = im-1;
+            double i_max = (double)(im-1);
             double cloud_x_max = .01; // scaling of the maximum x value in the linear function x(i) 
             double ice_x_max = .01; // scaling of the maximum x value in the linear function x(i)
             int cloud_Agnesi = 20; // radial location of cloud water maximum
@@ -1062,11 +1062,18 @@ void cAtmosphereModel::check_data(){
 
 void cAtmosphereModel::init_tropopause_layers(){
     tropopause_layers = std::vector<int>(jm, tropopause_pole);
-
-    for(int j=0; j<jm; j++){
-        tropopause_layers[j] = tropopause_pole + (tropopause_pole - tropopause_equator) * parabola(j/((jm-1)/2.));
+// Versiera di Agnesi approach, two inflection points
+    int j_max = jm-1;
+    int j_half = j_max/2;
+    int coeff_trop = 8;
+    // scaling of the maximum x value in the linear function x(j) to get tropopause_pole
+    for(int j=j_half; j<=jm-1; j++){
+        int x = coeff_trop * (double)j / (double)j_half;
+        tropopause_layers[j] = Agnesi(x, tropopause_equator); 
     }
-
+    for(int j=0; j<j_half; j++){
+        tropopause_layers[j] = tropopause_layers[j_max-j];
+    }
     if(debug){
         for(int j=0; j<jm; j++){
             std::cout << tropopause_layers[j] << " ";

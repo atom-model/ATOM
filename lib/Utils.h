@@ -51,6 +51,11 @@ namespace AtomUtils{
         return x*x - 2*x;
     }
 
+    inline double Agnesi(double x, double equator){
+        return pow(equator, 3.) // Versiera di Agnesi
+            / ( pow(equator, 2.) + pow(x, 2.));
+    }
+
     inline bool is_east_coast(const Array& h, int j, int k){
         if(k == h.get_km()-1 ) return false;//on grid boundary
         return is_land(h, 0, j, k) && !is_land(h, 0, j, k+1);

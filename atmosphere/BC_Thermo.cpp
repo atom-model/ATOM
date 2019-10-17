@@ -44,8 +44,8 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
         for(int k = 0; k < km; k++){
             for(int i = 0; i < im-1; i++){
                 if(is_ocean_surface(h, i, j, k) || is_land_surface(h, i, j, k)){
-                    albedo.y[j][k] = albedo_co2_eff * parabola(j/j_max_half) 
-                    + albedo_pole;
+                    albedo.y[j][k] = albedo_co2_eff * parabola((double)j
+                        /(double)j_max_half) + albedo_pole;
                 }
             }
         }
@@ -57,13 +57,14 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
     for(int j = 0; j < jm; j++){
         int i_trop = m_model->get_tropopause_layer(j);
         // on zero level, lateral parabolic distribution
-        epsilon_eff_max = epsilon_eff_2D * parabola(j/j_max_half) + epsilon_pole;
+        epsilon_eff_max = epsilon_eff_2D * parabola((double)j
+            /(double)j_max_half) + epsilon_pole;
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
             // shortwave radiation from the sun absobed at the surface 47%
             // in W/m², assumption of parabolic surface radiation at zero level
-            radiation_surface.y[j][k] = rad_eff * parabola(j/j_max_half) 
-                + rad_pole;
+            radiation_surface.y[j][k] = rad_eff * parabola((double)j
+                /(double)j_max_half) + rad_pole;
             for(int i = 0; i <= i_trop; i++){
                 if(c.x[i][j][k] < 0.)      c.x[i][j][k] = 0.;
                 if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
@@ -72,8 +73,7 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 double e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;
                 // radial parabolic distribution, start on zero level
                 double epsilon_eff = epsilon_eff_max 
-                    * (1. - m_model->get_layer_height(i) 
-                    / m_model->get_layer_height(i_trop));
+                    * (1. - get_layer_height(i) / get_layer_height(i_trop));
                 // dependency given by Häckel, Meteorologie, p. 205 (law by F. Baur and H. Philips, 1934)
                 // epsilon_eff describe the effect in the emissivity computation of other gases like CO2
                 // in the original formula this value is 0.594, for reasons of adjustment to the modern atmosphere,
@@ -81,8 +81,7 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 // this variable reacts very sensitive and changes the temperature field extremely
                 // the second term describes the influence of water vapour only 
                 if(i >= i_mount){ //start from the mountain top
-                    double step = m_model->get_layer_height(i+1) 
-                                - m_model->get_layer_height(i); // local atmospheric shell thickness
+                    double step = get_layer_height(i+1) - get_layer_height(i); // local atmospheric shell thickness
                     double P_c = (1.e-6 * p_stat.x[i][j][k] 
                                  * co2.x[i][j][k] * co2_0 / p_0);
                     double u_c = P_c * step * 100. * (L_atm / (double)(im-1)); // model by Atwater and Ball
@@ -348,7 +347,7 @@ void cAtmosphereModel::init_temperature(){
         for(int j = 0; j < jm; j++){
             double d_j = (double)j;
             if(NASATemperature == 0){  // parabolic ocean surface temperature assumed
-                t.x[0][j][k] = t_eff * parabola(d_j/d_j_half) 
+                t.x[0][j][k] = t_eff * parabola((double)d_j/(double)d_j_half) 
                     + pole_temperature + t_paleo_add;
 //                srand(time(NULL));
 //                t.x[0][j][k] += (rand() % 10 - 5) / 50. / t_0;
@@ -362,8 +361,8 @@ void cAtmosphereModel::init_temperature(){
 //                        t.x[0][j][k] = (t_eff * parabola(d_j/d_j_half) 
 //                            + pole_temperature) + t_paleo_add + m_model->t_land;
                         t.x[0][j][k] += t_paleo_add + m_model->t_land
-                            + t_pole_diff_land * fabs(parabola(d_j
-                            /d_j_half) + 1.) / t_0;
+                            + t_pole_diff_land * fabs(parabola((double)d_j
+                            /(double)d_j_half) + 1.) / t_0;
                         // land surface temperature increased by mean t_paleo_add
                         // and by a zonally equator wards decreasing temperature difference is added
                         // Stein/Rüdiger/Parish pole temperature decreasing equator wards
@@ -376,8 +375,8 @@ void cAtmosphereModel::init_temperature(){
                         // and by a zonally equator wards decreasing temperature difference is added
                         // Stein/Rüdiger/Parish pole temperature decreasing equator wards
                         t.x[0][j][k] += t_paleo_add 
-                            + t_pole_diff_ocean * fabs(parabola(d_j 
-                            / d_j_half) + 1.) / t_0;
+                            + t_pole_diff_ocean * fabs(parabola((double)d_j 
+                            / (double)d_j_half) + 1.) / t_0;
                     }
                     if(*get_current_time() == 0)
                         t.x[0][j][k] = temperature_NASA.y[j][k];  // initial temperature by NASA for Ma=0
@@ -386,39 +385,47 @@ void cAtmosphereModel::init_temperature(){
         }// for j
     }// for k
     // zonal temperature along tropopause
-    double t_eff_tropo = t_tropopause_pole - t_tropopause;
+//    double t_eff_tropo = t_tropopause_pole - t_tropopause;
     //use "linear temperature decay" to generate temperature data for layers between mountain top and tropopause
     //use "mountain top temperature" for the layers below mountain top
     //use "tropopause tempeature" for the layers above tropopause
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
+    temp_tropopause = std::vector<double>(jm, t_tropopause_pole);
+// Versiera di Agnesi approach, two inflection points
+    int j_max = jm-1;
+    int j_half = j_max/2;
+    int coeff_trop = .006;
+    // scaling of the maximum x value in the linear function x(j) to get tropopause_pole
+    for(int j=j_half; j<=jm-1; j++){
+        int x = coeff_trop * (double)j / (double)j_half;
+        temp_tropopause[j] = Agnesi(x, t_tropopause); 
+    }
+    for(int j=0; j<j_half; j++){
+        temp_tropopause[j] = temp_tropopause[j_max-j];
+    }
     for(int j = 0; j < jm; j++){
-        double temp_tropopause = t_eff_tropo * parabola(j/((jm-1)/2.0)) +
-            t_tropopause_pole;   //temperature at tropopause     
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
             int i_trop = get_tropopause_layer(j);
-//            double t_mount_top = (temp_tropopause - t.x[0][j][k]) *
-//                (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
-//                t.x[0][j][k]; //temperature at mountain top
 //            for(int i = i_mount; i < im; i++){
             for(int i = 0; i < im; i++){
                 if(i < i_trop+1){
                     if(i>i_mount){
                         // linear temperature decay up to tropopause, privat  approximation
-                        t.x[i][j][k] = (temp_tropopause - t.x[0][j][k]) * 
-                            (get_layer_height(i) / get_layer_height(i_trop)) + 
-                            t.x[0][j][k]; 
+                        t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) * 
+                            (get_layer_height(i) / get_layer_height(i_trop)) 
+                            + t.x[0][j][k]; 
                         // US Standard Atmosphere
                     }
                     else{
 //                        t.x[i][j][k] = t_mount_top; //inside mountain
 //                        t.x[i][j][k] = t.x[0][j][k]; //inside mountain
-                        t.x[i][j][k] = (temp_tropopause - t.x[0][j][k]) * 
-                            (get_layer_height(i) / get_layer_height(i_trop)) + 
-                            t.x[0][j][k]; 
+                        t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) * 
+                            (get_layer_height(i) / get_layer_height(i_trop)) 
+                            + t.x[0][j][k]; 
                     }
                 }else{ // above tropopause
-                    t.x[i][j][k] = temp_tropopause;
+                    t.x[i][j][k] = temp_tropopause[j];
                 }
             }
 //            t.x[0][j][k] = t_mount_top;
@@ -488,7 +495,7 @@ void cAtmosphereModel::BC_Pressure(){
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             for(int i = 1; i < im; i++){
-                float height = get_layer_height(i);
+                double height = get_layer_height(i);
                 p_stat.x[i][j][k] = pow(((t.x[0][j][k] 
                     * t_0 - gam * height * 1.e-2) /
                     (t.x[0][j][k] * t_0)), exp_pressure) 
@@ -870,7 +877,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                 if(P_rain.x[i+1][j][k] < 0.)  P_rain.x[i+1][j][k] = 0.;
                 if(P_snow.x[i+1][j][k] < 0.)  P_snow.x[i+1][j][k] = 0.;
                 float p_SL = .01 * (r_air * R_Air * t.x[0][j][k] * t_0); // given in hPa
-                float height = get_layer_height(i);
+                double height = get_layer_height(i);
                 float p_h;
                 if(i != 0)  
                     p_h = pow(((t_u - gam * height * 1.e-2) / t_u), 
@@ -879,7 +886,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                 float r_dry = 100. * p_h / (R_Air * t_u);  // density of dry air in kg/m³
                 float r_humid = r_dry * (1. + c.x[i][j][k]) 
                     / (1. + R_WaterVapour / R_Air * c.x[i][j][k]);                
-                float step = get_layer_height(i+1) - get_layer_height(i);
+                double step = get_layer_height(i+1) - get_layer_height(i);
                 P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
                     + coeff_ev_pr * r_humid * S_r.x[i+1][j][k] * step;  // in kg / (m2 * s) == mm/s
                 P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
@@ -914,9 +921,11 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         float E_Ice = hp * exp_func(t_u, 21.8746, 7.66);  // saturation water vapour pressure for the ice phase in hPa
                         float q_Rain = ep * E_Rain / (p_h - E_Rain);  // water vapour amount at saturation with water formation in kg/kg
                         float q_Ice  = ep * E_Ice / (p_h - E_Ice);  // water vapour amount at saturation with ice formation in kg/kg
-                        dt_rain_dim = ( get_layer_height(i+1) - height ) / 1.6; 
+                        dt_rain_dim = ( get_layer_height(i+1) 
+                            - height ) / 1.6; 
                         // adjusted rain fall time step by fixed velocities == 1.6 m/s by variable local step size
-                        dt_snow_dim = ( get_layer_height(i+1) - height ) / 0.96; 
+                        dt_snow_dim = ( get_layer_height(i+1) 
+                            - height ) / 0.96; 
                         // adjusted snow fall time step by fixed velocities == 0.96 m/s by variable local step size
                         // ice and snow average siz 
                         if(!(t_u > t_0)){  
@@ -1058,7 +1067,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         // rain and snow integration
                         if(P_rain.x[i+1][j][k] < 0.)  P_rain.x[i+1][j][k] = 0.;
                         if(P_snow.x[i+1][j][k] < 0.)  P_snow.x[i+1][j][k] = 0.;
-                        float step = get_layer_height(i+1) - get_layer_height(i);
+                        double step = get_layer_height(i+1) - get_layer_height(i);
                         P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
                              + coeff_ev_pr * r_humid * S_r.x[i+1][j][k] * step;  // in kg / (m2 * s) == mm/s 
                         P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
@@ -1526,7 +1535,8 @@ void cAtmosphereModel::WaterVapourEvaporation(){
             for(int i = 0; i < im; i++){
                 float e = 100. * c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in Pa
                 float a = e / (R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
-                float step = get_layer_height(i+1) - get_layer_height(i);
+                double step = get_layer_height(i+1) 
+                    - get_layer_height(i);
                 precipitable_water.y[j][k] +=  a * step;
                  // mass of water in kg/m²
                 // precipitable_water mass in 1 kg/m² compares to 1 mm hight, with water density kg/ (m² * mm)

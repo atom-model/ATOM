@@ -157,8 +157,8 @@ private:
     }
 
     std::vector<std::vector<int> > i_topography;
-
     std::vector<int> tropopause_layers; // keep the tropopause layer index
+    std::vector<double> temp_tropopause; // lateral temperature distribution along the tropopause
     void init_tropopause_layers();
 
     void restrain_temperature();

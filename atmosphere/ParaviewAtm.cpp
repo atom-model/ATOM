@@ -356,21 +356,21 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
                 aux_v.x[i][j][k_zonal] = c.x[i][j][k_zonal] - q_Ice;
             }
             else  aux_v.x[i][j][k_zonal] = 0.;
-            float height = get_layer_height(i);
+            double height = get_layer_height(i);
             BuoyancyForce.x[i][j][k_zonal] = height;
         }
     }
     for(int j = 0; j < jm; j++){
         double t_eff_tropo = t_tropopause_pole - t_tropopause;
-        double temp_tropopause = t_eff_tropo * parabola(j/((jm-1)/2.0)) +
-            t_tropopause_pole;   //temperature at tropopause     
+        double temp_tropopause = t_eff_tropo * parabola((double)j
+            /((double)(jm-1)/2.0)) + t_tropopause_pole;   //temperature at tropopause     
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
             int i_trop = get_tropopause_layer(j);
             M_u.x[0][j][k] = t.x[0][j][k];
             double t_mount_top = (temp_tropopause - M_u.x[0][j][k]) *
-                (get_layer_height(i_mount) / get_layer_height(i_trop)) + 
-                M_u.x[0][j][k]; //temperature at mountain top
+                (double)(get_layer_height(i_mount) 
+                / (double)get_layer_height(i_trop)) + M_u.x[0][j][k]; //temperature at mountain top
             for(int i = i_mount; i < im; i++){
                 if(i < i_trop+1){
                     if(i>i_mount){
@@ -380,7 +380,7 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
 //                            M_u.x[0][j][k]; 
                         // US Standard Atmosphere
                         M_u.x[i][j][k] = M_u.x[0][j][k] - 6.5 * 
-                            (get_layer_height(i) / 1000.) / t_0;
+                            (double)(get_layer_height(i) / 1000.) / t_0;
                     }else{
                         M_u.x[i][j][k] = t_mount_top; //inside mountain
                     }
@@ -484,7 +484,7 @@ void cAtmosphereModel::paraview_vtk_longal(string &Name_Bathymetry_File,
         for(int k = 0; k < km; k++){
             aux_w.x[i][j_longal][k] = c.x[i][j_longal][k] 
                 + cloud.x[i][j_longal][k] + ice.x[i][j_longal][k];
-            float height = get_layer_height(i);
+            double height = get_layer_height(i);
             aux_v.x[i][j_longal][k] = height;
         }
     }

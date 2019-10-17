@@ -54,8 +54,10 @@ def main():
             ('Ma_max_half', 'half of time scale', 'int', 150),
 
             ('L_atm', 'extension of the atmosphere shell in m, 16000 m / 40 steps = 400 m', 'double', 16000.),
-            ('tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 24 steps = 9600 m', 'int', 24),
-            ('tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 37),
+#            ('tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 24 steps = 9600 m', 'int', 24),
+#            ('tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 37),
+            ('tropopause_pole', 'extension of the troposphere at the poles in m, 400 m * 24 steps = 9600 m', 'int', 34),
+            ('tropopause_equator', 'extension of the troposphere at the equator in m, 400 m * 30 steps = 12000 m', 'int', 39),
 
             ('rad_equator', 'long wave radiation on the surface of the earth in W/m2, fitted to NASA temperature', 'double', 430.),
             ('rad_pole', 'long wave radiation at the poles in W/m2, an approximation for the singularity at the poles', 'double', 140.),
