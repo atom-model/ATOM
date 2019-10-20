@@ -140,6 +140,7 @@ public:
     void RK_RHS_3D_Atmosphere(int i, int j, int k);
     void solveRungeKutta_2D_Atmosphere();
     void solveRungeKutta_3D_Atmosphere();
+    void fft(Array &);
 private:
     void load_temperature_curve();
 

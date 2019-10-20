@@ -29,26 +29,30 @@ void cAtmosphereModel::init_velocities(){
     init_u(u,150);
     init_u(u,180);
 
-    //initialise w, tropopause, surface
+    //initialise v, tropopause, surface
     //equator
     init_v_or_w(v, 90, 0, 0); // lat:0
     
     //polar cell
     //northern polar cell
     init_v_or_w(v, 0, 0, 0);  //lat: 90
-    init_v_or_w(v, 15, -1, 0.5); //lat: 75
+//    init_v_or_w(v, 15, -1, 0.5); //lat: 75
+    init_v_or_w(v, 15, -.1, 0.05); //lat: 75
 
     //southern polar cell
     init_v_or_w(v, 180, 0, 0); //lat: -90
-    init_v_or_w(v, 165, -1, 0.5); //lat: -75
+//    init_v_or_w(v, 165, -1, 0.5); //lat: -75
+    init_v_or_w(v, 165, -.1, 0.05); //lat: -75
 
     //Ferrel cell
     //northern Ferrel cell
-    init_v_or_w(v, 30, 1, 0.5); //lat: 60
+//    init_v_or_w(v, 30, 1, 0.5); //lat: 60
+    init_v_or_w(v, 30, .2, 0.1); //lat: 60
     init_v_or_w(v, 45, 1, -0.1); //lat: 45   
 
     //southern Ferrel cell
-    init_v_or_w(v, 150, 1, 0.5); //lat: -60
+//    init_v_or_w(v, 150, 1, 0.5); //lat: -60
+    init_v_or_w(v, 150, .2, 0.1); //lat: -60
     init_v_or_w(v, 135, 1, -0.1); //lat: -45   
 
     // Hadley cell
@@ -60,7 +64,7 @@ void cAtmosphereModel::init_velocities(){
     init_v_or_w(v, 120, -1, 0.25); //lat: -30
     init_v_or_w(v, 105, -1, 1); //lat: -15 
 
-    //initialise w
+    //initialise w, tropopause, surface
     //equator
     init_v_or_w(w, 90, -7.5, -1); //lat: 0
     
@@ -193,9 +197,13 @@ void cAtmosphereModel::form_diagonals(Array &a, int start, int end){
 */
 void  cAtmosphereModel::init_u(Array &u, int j){
     float ua_00 = 1,
-          ua_30 = 1,
-          ua_60 = 0.5,
-          ua_90 = 0.5;
+//          ua_30 = 1,
+          ua_30 = .8,
+//          ua_60 = 0.5,
+          ua_60 = 0.2,
+//          ua_90 = 0.5;
+          //ua_90 = 0.2;
+          ua_90 = 0.05;
     int tropopause_layer = get_tropopause_layer(j);
     float tropopause_height = get_layer_height(tropopause_layer);
     for(int k = 0; k < km; k++){

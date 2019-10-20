@@ -161,7 +161,15 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
                     v.x[i][j][k] = - vel_mag * exp_gam_z * sin_gam_z; 
                     w.x[i][j][k] = - vel_mag * exp_gam_z * cos_gam_z;
                 }
-//    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i << "   j = " << j << "   k = " << k << "   gam_z = " << gam_z << "   exp_gam_z = " << exp_gam_z << "   sin_gam_z = " << sin_gam_z << "   cos_gam_z = " << cos_gam_z << "   i_Ekman = " << i_Ekman << "   v = " << v.x[i][j][k] << "   w = " << w.x[i][j][k] << "   vel_mag = " << vel_mag << "   vel_magnit = " << vel_magnit << endl;
+/*
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i 
+        << "   j = " << j << "   k = " << k << "   gam_z = " 
+        << gam_z << "   exp_gam_z = " << exp_gam_z 
+        << "   sin_gam_z = " << sin_gam_z << "   cos_gam_z = " << cos_gam_z 
+        << "   i_Ekman = " << i_Ekman << "   v = " << v.x[i][j][k] 
+        << "   w = " << w.x[i][j][k] << "   vel_mag = " << vel_mag 
+        << "   vel_magnit = " << vel_magnit << endl;
+*/
             }
         }
     }

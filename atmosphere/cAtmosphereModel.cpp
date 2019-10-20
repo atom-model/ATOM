@@ -194,6 +194,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 //    goto Printout;
     Ice_Water_Saturation_Adjustment();
     BC_Radiation_multi_layer(); 
+//    fft_gaussian_filter(t, 2);
 //    goto Printout;
     store_intermediate_data_2D();
     store_intermediate_data_3D();
@@ -410,6 +411,7 @@ void cAtmosphereModel::run_3D_loop(){
             BC_phi();
             BC_SolidGround();
             if(velocity_iter % 2 == 0){
+//                fft_gaussian_filter(t, 5);
                 Ice_Water_Saturation_Adjustment();
 //            Moist_Convection(); // work in progress
                 Two_Category_Ice_Scheme(); 
@@ -1063,18 +1065,26 @@ void cAtmosphereModel::check_data(){
 void cAtmosphereModel::init_tropopause_layers(){
     tropopause_layers = std::vector<double>(jm, tropopause_pole);
 // Versiera di Agnesi approach, two inflection points
+    int i_max = im-1;
     int j_max = jm-1;
     int j_half = j_max/2;
-    double coeff_trop = 8.; // case dependent adjustment to the polar intended values
-    // scaling of the maximum x value in the linear function x(j) to get tropopause_pole
-    for(int j=j_half; j<=jm-1; j++){
-        double x = coeff_trop * (double)j / (double)j_half;
+    for(int j=j_half; j>=0; j--){
+        double x = sqrt(pow(tropopause_equator,3) / tropopause_pole 
+            - pow(tropopause_equator,2)) * (double)(j_half-j) 
+            / (double)j_half;
         tropopause_layers[j] = Agnesi(x, tropopause_equator); 
-//        tropopause_layers[j] = tropopause_equator; 
+        tropopause_layers[j] = round(tropopause_layers[j] 
+            / L_atm * (double)i_max); 
+/*
+    cout << "   j = " << j << "   x = " << x 
+        << "   Agnesi = " << Agnesi(x, tropopause_equator) 
+        << "   tropopause_equator = " << tropopause_equator 
+        << "   tropopause_layers = " << round(tropopause_layers[j]) << endl;
+*/
     }
-    for(int j=0; j<j_half; j++){
+    for(int j=j_max; j>j_half; j--){
         tropopause_layers[j] = tropopause_layers[j_max-j];
-    }
+     }
     if(debug){
         for(int j=0; j<jm; j++){
             std::cout << tropopause_layers[j] << " ";
