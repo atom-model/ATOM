@@ -104,8 +104,10 @@ namespace AtomUtils{
 
     void read_IC(const string& fn, double** a, int jm, int km);
 
-    void smooth_cloud_steps(int k, int im, int jm, Array &value_in, 
+    double smooth_steps(int k, int im, int jm, Array &value_in, 
         Array &value_out);
+
+    double smooth_tropopause(int jm, double* value_in, double* value_out);
 
     void fft_gaussian_filter(Array& data, int sigma);
 

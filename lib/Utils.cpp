@@ -134,17 +134,78 @@ void AtomUtils::read_IC(const string& fn, double** a, int jm, int km){
 }
 
 
-void AtomUtils::smooth_cloud_steps(int k, int im, int jm, Array &value_in, 
+double AtomUtils::smooth_steps(int k, int im, int jm, Array &value_in, 
     Array &value_out){
-    double coeff = .1;
+//    double coeff = .1;
+    double coeff = .5;
+//    double coeff = .0;
+    std::vector<std::vector<double> > inter(im, std::vector<double>(jm, 0));
+    for(int i = 0; i < im ; i++){
+        for(int j = 0; j < jm; j++){
+            inter[i][j] = value_in.x[i][j][k];
+/*
+            if(i==35 && j==90)  
+                cout << "   smooth_steps 1   " 
+                    << "   i = " << i << "   j = " << j << "   k = " << k 
+                    << "   inter = " << inter[i][j] 
+                    << "   value_in = " << value_in.x[i][j][k] 
+                    << "   value_out = " << value_out.x[i][j][k] << endl;
+*/
+        }
+    }
     for(int i = 1; i < im-1 ; i++){
         for(int j = 1; j < jm-1; j++){
+/*
             value_out.x[i][j][k] = ( coeff * value_in.x[i][j][k] 
-            + ( 1. - coeff ) * ( value_in.x[i+1][j][k] 
-            + value_in.x[i-1][j][k] + value_in.x[i][j+1][k] 
-            + value_in.x[i][j-1][k] ) / 4. );
+                + ( 1. - coeff ) * ( value_in.x[i+1][j][k] 
+                + value_in.x[i-1][j][k] + value_in.x[i][j+1][k] 
+                + value_in.x[i][j-1][k] ) / 4. );
+*/
+            value_out.x[i][j][k] = ( coeff * inter[i][j] 
+                + ( 1. - coeff ) * ( inter[i+1][j] 
+                + inter[i-1][j] + inter[i][j+1] 
+                + inter[i][j-1] ) / 4. );
+/*
+        if(i==35 && j==90)  
+            cout << "   smooth_steps 2   " 
+                << "   i = " << i << "   j = " << j << "   k = " << k 
+                << "   inter = " << inter[i][j] 
+                << "   value_in = " << value_in.x[i][j][k] 
+                << "   value_out = " << value_out.x[i][j][k] << endl;
+*/
         } 
     }
+    return value_out.x[0][0][0];
+}
+
+
+double AtomUtils::smooth_tropopause(int jm, double* value_in, double* value_out){
+//    double coeff = .1;
+    double coeff = .5;
+//    double coeff = .0;
+    std::vector<double>inter(jm, 0);
+    for(int j = 0; j < jm; j++){
+        inter[j] = value_in[j];
+        cout << "   smooth_tropopause 1   " 
+            << "   j = " << j << "   inter = " << inter[j] 
+            << "   value_in = " << value_in[j] 
+            << "   value_out = " << value_out[j] << endl;
+    }
+//    for(int j = 1; j < jm-1; j++){
+    for(int j = 2; j < jm-2; j++){
+//        value_out[j] = ( coeff * value_in[j] + ( 1. - coeff ) 
+//            * ( value_in[j+1] + value_in[j-1] ) / 2. );
+        value_out[j] = ( coeff * inter[j] + ( 1. - coeff ) 
+//            * ( inter[j+1] + inter[j-1] ) / 2. );
+            * ( inter[j+1] + inter[j-1] + inter[j+2] + inter[j-2] ) / 4. );
+
+    cout << "   smooth_tropopause 2   " 
+        << "   j = " << j << "   inter = " << inter[j] 
+        << "   value_in = " << value_in[j] 
+        << "   value_out = " << value_out[j] << endl;
+
+    } 
+    return value_out[0];
 }
 
 
