@@ -857,8 +857,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
     double exp_pressure = g / (1.e-2 * gam * R_Air);
     float dt_snow_dim = 417.,  // dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
           dt_rain_dim = 250.;  // dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
-//    float coeff_ev_pr = .00154;  // coefficient to adjust the modern worlds precipitation
-    float coeff_ev_pr = .0013;  // coefficient to adjust the modern worlds precipitation
+    float coeff_ev_pr = .0012;  // coefficient to adjust the modern worlds precipitation
     double m_i = m_i_max;  
     float p_h, N_i, S_nuc, S_c_frz, S_i_dep=0, S_c_au, S_i_au, S_d_au, 
         S_ac, S_rim, S_shed;
