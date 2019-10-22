@@ -414,12 +414,12 @@ void cAtmosphereModel::run_3D_loop(){
             if(velocity_iter % 2 == 0){
 //                fft_gaussian_filter(t, 5);
                 for(int k = 0; k < km; k++){
-                    smooth_steps( k, im, jm, t, t);
-                    smooth_steps( k, im, jm, c, c);
-                    smooth_steps( k, im, jm, cloud, cloud);
-                    smooth_steps( k, im, jm, ice, ice);
-                    smooth_steps( k, im, jm, P_rain, P_rain);
-                    smooth_steps( k, im, jm, P_snow, P_snow);
+                    AtomUtils::smooth_steps( k, im, jm, t, t);
+                    AtomUtils::smooth_steps( k, im, jm, c, c);
+                    AtomUtils::smooth_steps( k, im, jm, cloud, cloud);
+                    AtomUtils::smooth_steps( k, im, jm, ice, ice);
+                    AtomUtils::smooth_steps( k, im, jm, P_rain, P_rain);
+                    AtomUtils::smooth_steps( k, im, jm, P_snow, P_snow);
                 }
                 Ice_Water_Saturation_Adjustment();
 //            Moist_Convection(); // work in progress
@@ -1094,7 +1094,7 @@ void cAtmosphereModel::init_tropopause_layers(){
     for(int j=j_max; j>j_half; j--){
         tropopause_layers[j] = tropopause_layers[j_max-j];
      }
-    AtomUtils::smooth_tropopause(jm, &tropopause_layers[0], &tropopause_layers[0]);
+    AtomUtils::smooth_tropopause(jm, tropopause_layers, tropopause_layers);
     if(debug){
         for(int j=0; j<jm; j++){
             std::cout << tropopause_layers[j] << " ";

@@ -179,7 +179,8 @@ double AtomUtils::smooth_steps(int k, int im, int jm, Array &value_in,
 }
 
 
-double AtomUtils::smooth_tropopause(int jm, double* value_in, double* value_out){
+double AtomUtils::smooth_tropopause(int jm, std::vector<double> &value_in, 
+    std::vector<double> &value_out){
 //    double coeff = .1;
     double coeff = .5;
 //    double coeff = .0;

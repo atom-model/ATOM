@@ -107,7 +107,8 @@ namespace AtomUtils{
     double smooth_steps(int k, int im, int jm, Array &value_in, 
         Array &value_out);
 
-    double smooth_tropopause(int jm, double* value_in, double* value_out);
+    double smooth_tropopause(int jm, std::vector<double> &value_in, 
+        std::vector<double> &value_out);
 
     void fft_gaussian_filter(Array& data, int sigma);
 
