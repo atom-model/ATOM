@@ -36,6 +36,9 @@ def main():
             ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
             ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
+            ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', .054),
+            ('coeff_ev_pr', "coefficient to adjust to the modern worlds precipitation", 'double', .0012),
+
             ('WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0),
             ('Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
             ('CO2', 'CO2 influence on atmospheric thermodynamics', 'double', 1.0),

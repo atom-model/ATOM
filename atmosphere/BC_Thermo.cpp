@@ -857,7 +857,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
     double exp_pressure = g / (1.e-2 * gam * R_Air);
     float dt_snow_dim = 417.,  // dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
           dt_rain_dim = 250.;  // dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
-    float coeff_ev_pr = .0012;  // coefficient to adjust the modern worlds precipitation
+//    float coeff_ev_pr = .0012;  // coefficient to adjust to the modern worlds precipitation
     double m_i = m_i_max;  
     float p_h, N_i, S_nuc, S_c_frz, S_i_dep=0, S_c_au, S_i_au, S_d_au, 
         S_ac, S_rim, S_shed;
@@ -1680,7 +1680,7 @@ void cAtmosphereModel::WaterVapourEvaporation(){
                     E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
                     sat_deficit = ( E_Rain - e );  // saturation deficit in hPa
                     Evaporation_Dalton.y[j][k] = 
-                        C_Dalton(u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
+                        C_Dalton(coeff_Dalton, u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
                         * sat_deficit * 24.; // since at the suface velocity is 0, one grid point added
                 } // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
                 if(is_water(h, 0, j, k)){
@@ -1690,7 +1690,7 @@ void cAtmosphereModel::WaterVapourEvaporation(){
                     E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
                     sat_deficit = ( E_Rain - e );  // saturation deficit in hPa
                     Evaporation_Dalton.y[j][k] = 
-                        C_Dalton(u_0, v.x[0][j][k], w.x[0][j][k]) 
+                        C_Dalton(coeff_Dalton, u_0, v.x[0][j][k], w.x[0][j][k]) 
                         * sat_deficit * 24.;
                 }
             }
@@ -1702,7 +1702,7 @@ void cAtmosphereModel::WaterVapourEvaporation(){
                     E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
                     sat_deficit = ( E_Ice - e );  // saturation deficit in hPa
                     Evaporation_Dalton.y[j][k] = 
-                        C_Dalton(u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
+                        C_Dalton(coeff_Dalton, u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
                         * sat_deficit * 24.; // since at the suface velocity is 0, one grid point added
                 }
                 if(is_water(h, 0, j, k)){
@@ -1712,7 +1712,7 @@ void cAtmosphereModel::WaterVapourEvaporation(){
                     E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
                     sat_deficit = ( E_Ice - e );  // saturation deficit in hPa
                     Evaporation_Dalton.y[j][k] = 
-                        C_Dalton(u_0, v.x[0][j][k], w.x[0][j][k]) 
+                        C_Dalton(coeff_Dalton, u_0, v.x[0][j][k], w.x[0][j][k]) 
                         * sat_deficit * 24.;
                 }
             }

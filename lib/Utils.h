@@ -100,7 +100,7 @@ namespace AtomUtils{
         return exp(co_1 * (T_K - 273.15) / (T_K - co_2));                        // temperature in °K
     }
 
-    double C_Dalton ( double u_0, double v, double w );
+    double C_Dalton (double coeff_Dalton, double u_0, double v, double w);
 
     void read_IC(const string& fn, double** a, int jm, int km);
 

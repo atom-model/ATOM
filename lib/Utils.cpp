@@ -104,17 +104,15 @@ AtomUtils::max_diff(int im, int jm, int km, const Array &a1, const Array &a2){
 }
 
 
-double AtomUtils::C_Dalton(double u_0, double v, double w){
+double AtomUtils::C_Dalton(double coeff_Dalton, double u_0, double v, double w){
     // variation of the heat transfer coefficient in Dalton's evaporation law, parabola
     // air velocity measured 2m above sea level
-    double C_max = .054;  // for v_max = 10 m/s, but C is function of v, should be included
+    // for v_max = 10 m/s, but coeff_Dalton is function of v, should be included
     // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
     double v_max = 10.;  // Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
-    double fac = 1.;  // factor to adjust the ratio of NASA precipitation 
-                       // to Dalton evaporation for the modern world, 
                        // for the modern world the global precipitation is 10% higher than evaporation
     double vel_magnitude = sqrt(v * v + w * w) * u_0;
-    return fac * sqrt(C_max * C_max / v_max * vel_magnitude);  // result in mm/h
+    return sqrt(coeff_Dalton * coeff_Dalton / v_max * vel_magnitude);  // result in mm/h
 }
 
 
