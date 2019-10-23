@@ -205,7 +205,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     cout << endl << endl;
 //    restrain_temperature();
 //    Printout:
-//    write_file(bathymetry_name, output_path, true);
+    write_file(bathymetry_name, output_path, true);
     iter_cnt_3d++;
     save_data();    
     if(debug){
