@@ -360,35 +360,47 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
             BuoyancyForce.x[i][j][k_zonal] = height;
         }
     }
+    temp_tropopause = std::vector<double>(jm, t_tropopause_pole);
+    int j_max = jm-1;
+    int j_half = j_max/2;
+    for(int j=j_half; j>=0; j--){
+        double x = sqrt(pow(t_tropopause,3) / t_tropopause_pole 
+            - pow(t_tropopause,2)) * (double)(j_half-j) 
+            / (double)j_half;
+        temp_tropopause[j] = Agnesi(x, t_tropopause); 
+    }
+    for(int j=j_max; j>j_half; j--){
+        temp_tropopause[j] = temp_tropopause[j_max-j];
+    }
+    AtomUtils::smooth_tropopause(jm, temp_tropopause);
     for(int j = 0; j < jm; j++){
-        double t_eff_tropo = t_tropopause_pole - t_tropopause;
-        double temp_tropopause = t_eff_tropo * parabola((double)j
-            /((double)(jm-1)/2.0)) + t_tropopause_pole;   //temperature at tropopause     
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
             int i_trop = get_tropopause_layer(j);
             M_u.x[0][j][k] = t.x[0][j][k];
-            double t_mount_top = (temp_tropopause - M_u.x[0][j][k]) *
-                (double)(get_layer_height(i_mount) 
-                / (double)get_layer_height(i_trop)) + M_u.x[0][j][k]; //temperature at mountain top
-            for(int i = i_mount; i < im; i++){
-                if(i < i_trop+1){
+//            for(int i = i_mount; i < im; i++){
+            for(int i = 0; i < im; i++){
+                if(i < i_trop){
                     if(i>i_mount){
-                        // linear temperature decay up to tropopause, privat  approximation
-//                        M_u.x[i][j][k] = (temp_tropopause - M_u.x[0][j][k]) * 
-//                            (get_layer_height(i) / get_layer_height(i_trop)) + 
-//                            M_u.x[0][j][k]; 
+                        // linear temperature decay up to tropopause
+                        // compares to the US Standard Atmosphere 
+                        // with variable tropopause location
+                        M_u.x[i][j][k] = (temp_tropopause[j] - M_u.x[0][j][k]) * 
+                            (get_layer_height(i) / get_layer_height(i_trop)) + 
+                            M_u.x[0][j][k]; 
                         // US Standard Atmosphere
-                        M_u.x[i][j][k] = M_u.x[0][j][k] - 6.5 * 
-                            (double)(get_layer_height(i) / 1000.) / t_0;
+//                        M_u.x[i][j][k] = M_u.x[0][j][k] - 6.5 * 
+//                            (double)(get_layer_height(i) / 1000.) / t_0;
                     }else{
-                        M_u.x[i][j][k] = t_mount_top; //inside mountain
+                        M_u.x[i][j][k] = (temp_tropopause[j] - M_u.x[0][j][k]) * 
+                            (get_layer_height(i) / get_layer_height(i_trop)) + 
+                            M_u.x[0][j][k]; 
+
                     }
                 }else{ // above tropopause
-                    M_u.x[i][j][k] = temp_tropopause;
+                    M_u.x[i][j][k] = temp_tropopause[j]; //inside mountain
                 }
             }
-            M_u.x[0][j][k] = t_mount_top;
         }
     }
     for(int k = 0; k < km; k++){

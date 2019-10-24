@@ -186,7 +186,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 //    near_wall_values();
 //    adjust_temperature_IC(t.x[0], jm, km);
     init_temperature();
-    for(int k = 0; k < km; k++)  smooth_steps( k, im, jm, t, t);
+    for(int k = 0; k < km; k++)  smooth_steps( k, im, jm, t);
     init_water_vapour();
 //    goto Printout;
     store_intermediate_data_3D();
@@ -205,7 +205,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     cout << endl << endl;
 //    restrain_temperature();
 //    Printout:
-    write_file(bathymetry_name, output_path, true);
+//    write_file(bathymetry_name, output_path, true);
     iter_cnt_3d++;
     save_data();    
     if(debug){
@@ -413,14 +413,26 @@ void cAtmosphereModel::run_3D_loop(){
             BC_SolidGround();
             if(velocity_iter % 2 == 0){
 //                fft_gaussian_filter(t, 5);
+/*
                 for(int k = 0; k < km; k++){
-                    AtomUtils::smooth_steps( k, im, jm, t, t);
-                    AtomUtils::smooth_steps( k, im, jm, c, c);
-                    AtomUtils::smooth_steps( k, im, jm, cloud, cloud);
-                    AtomUtils::smooth_steps( k, im, jm, ice, ice);
-                    AtomUtils::smooth_steps( k, im, jm, P_rain, P_rain);
-                    AtomUtils::smooth_steps( k, im, jm, P_snow, P_snow);
+
+                    AtomUtils::smooth_steps( k, im, jm, t);
+                    AtomUtils::smooth_steps( k, im, jm, c);
+                    AtomUtils::smooth_steps( k, im, jm, cloud);
+                    AtomUtils::smooth_steps( k, im, jm, ice);
+                    AtomUtils::smooth_steps( k, im, jm, P_rain);
+                    AtomUtils::smooth_steps( k, im, jm, P_snow);
+
+
+                    fft_gaussian_filter(t, 5);
+                    fft_gaussian_filter(c, 5);
+                    fft_gaussian_filter(cloud, 5);
+                    fft_gaussian_filter(ice, 5);
+                    fft_gaussian_filter(P_rain, 5);
+                    fft_gaussian_filter(P_snow, 5);
+
                 }
+*/
                 Ice_Water_Saturation_Adjustment();
 //            Moist_Convection(); // work in progress
                 Two_Category_Ice_Scheme(); 
@@ -1094,7 +1106,7 @@ void cAtmosphereModel::init_tropopause_layers(){
     for(int j=j_max; j>j_half; j--){
         tropopause_layers[j] = tropopause_layers[j_max-j];
      }
-    AtomUtils::smooth_tropopause(jm, tropopause_layers, tropopause_layers);
+//    AtomUtils::smooth_tropopause(jm, tropopause_layers, tropopause_layers);
     if(debug){
         for(int j=0; j<jm; j++){
             std::cout << tropopause_layers[j] << " ";

@@ -104,11 +104,9 @@ namespace AtomUtils{
 
     void read_IC(const string& fn, double** a, int jm, int km);
 
-    double smooth_steps(int k, int im, int jm, Array &value_in, 
-        Array &value_out);
+    void smooth_steps(int k, int im, int jm, Array &value);
 
-    double smooth_tropopause(int jm, std::vector<double> &value_in, 
-        std::vector<double> &value_out);
+    void smooth_tropopause(int jm, std::vector<double> &value);
 
     void fft_gaussian_filter(Array& data, int sigma);
 

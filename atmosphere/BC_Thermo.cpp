@@ -34,24 +34,19 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
         logger()<<"20180912: Enter RML ... "<<std::endl;
         tmp.inspect("20180912: ");
     }
-
-
     temp_tropopause = std::vector<double>(jm, t_tropopause_pole);
-// Versiera di Agnesi approach, two inflection points
     int j_max = jm-1;
     int j_half = j_max/2;
-    double coeff_trop = .006; // case dependent adjustment to the polar intended values
-    // scaling of the maximum x value in the linear function x(j) to get tropopause_pole
-    for(int j=j_half; j<=jm-1; j++){
-        double x = coeff_trop * (double)j / (double)j_half;
+    for(int j=j_half; j>=0; j--){
+        double x = sqrt(pow(t_tropopause,3) / t_tropopause_pole 
+            - pow(t_tropopause,2)) * (double)(j_half-j) 
+            / (double)j_half;
         temp_tropopause[j] = Agnesi(x, t_tropopause); 
-//        temp_tropopause[j] = t_tropopause; 
     }
-    for(int j=0; j<j_half; j++){
+    for(int j=j_max; j>j_half; j--){
         temp_tropopause[j] = temp_tropopause[j_max-j];
     }
-
-
+    AtomUtils::smooth_tropopause(jm, temp_tropopause);
     std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
     load_map_from_file(pole_temperature_file, pole_temp_map); 
     double rad_eff = rad_pole - rad_equator;
@@ -134,7 +129,6 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
             //above tropopause
             for(int i = i_trop; i < im; i++){
                 epsilon_3D.x[i][j][k] = epsilon_3D.x[i_trop][j][k];
-//                t.x[i][j][k] = t_tropopause;
                 t.x[i][j][k] = temp_tropopause[j];
                 radiation_3D.x[i][j][k] = (1. - epsilon_3D.x[i][j][k]) 
                     * sigma * pow(t.x[i][j][k] * t_0, 4.);
@@ -212,7 +206,6 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                     }
                 }
                 // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
-//                t.x[i_trop][j][k] = t_tropopause;
                 t.x[i_trop][j][k] = temp_tropopause[j];
                 radiation_3D.x[i_trop][j][k] = 
                     (1. - epsilon_3D.x[i_trop][j][k]) * sigma
@@ -227,7 +220,6 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                         (1. / 4.)) / t_0;    // averaging of temperature values to smooth the iterations
                 } // end i
                 for(int i = i_trop; i < im; i++){ // above tropopause
-//                    t.x[i][j][k] = t_tropopause;
                     t.x[i][j][k] = temp_tropopause[j];
                     radiation_3D.x[i][j][k] = 
                         (1. - epsilon_3D.x[i_trop][j][k]) * sigma
@@ -412,7 +404,6 @@ void cAtmosphereModel::init_temperature(){
     //use "tropopause tempeature" for the layers above tropopause
     // temperature approaching the tropopause, above constant temperature following Standard Atmosphere
     temp_tropopause = std::vector<double>(jm, t_tropopause_pole);
-// Versiera di Agnesi approach, two inflection points
     int j_max = jm-1;
     int j_half = j_max/2;
     for(int j=j_half; j>=0; j--){
@@ -420,7 +411,6 @@ void cAtmosphereModel::init_temperature(){
             - pow(t_tropopause,2)) * (double)(j_half-j) 
             / (double)j_half;
         temp_tropopause[j] = Agnesi(x, t_tropopause); 
-        temp_tropopause[j] = temp_tropopause[j]; 
 /*
     cout << "   j = " << j << "   x = " << x 
         << "   Agnesi = " << Agnesi(x, t_tropopause) 
@@ -430,24 +420,22 @@ void cAtmosphereModel::init_temperature(){
     }
     for(int j=j_max; j>j_half; j--){
         temp_tropopause[j] = temp_tropopause[j_max-j];
-     }
+    }
+    AtomUtils::smooth_tropopause(jm, temp_tropopause);
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
             int i_trop = get_tropopause_layer(j);
 //            for(int i = i_mount; i < im; i++){
             for(int i = 0; i < im; i++){
-                if(i < i_trop+1){
+                if(i < i_trop){
                     if(i>i_mount){
                         // linear temperature decay up to tropopause, privat  approximation
                         t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) * 
                             (get_layer_height(i) / get_layer_height(i_trop)) 
                             + t.x[0][j][k]; 
                         // US Standard Atmosphere
-                    }
-                    else{
-//                        t.x[i][j][k] = t_mount_top; //inside mountain
-//                        t.x[i][j][k] = t.x[0][j][k]; //inside mountain
+                    }else{
                         t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) * 
                             (get_layer_height(i) / get_layer_height(i_trop)) 
                             + t.x[0][j][k]; 
@@ -456,9 +444,9 @@ void cAtmosphereModel::init_temperature(){
                     t.x[i][j][k] = temp_tropopause[j];
                 }
             }
-//            t.x[0][j][k] = t_mount_top;
         }
     }
+//    fft_gaussian_filter(t, 5);
     logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 
         << std::endl << std::endl;
     if(debug){
