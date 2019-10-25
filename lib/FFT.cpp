@@ -168,8 +168,12 @@ void AtomUtils::fft_gaussian_filter(Array& in_data, int sigma){
             {
                 if(j < jm)
                     data[j] = Complex(in_data.x[i][j][k]);
-                else
-                    data[j] = Complex(0);
+                else{//mirror the padding
+                    if(j<jm+(nn-jm)/2)
+                        data[j] = Complex(in_data.x[i][jm-(j-jm)][k]);
+                    else
+                        data[j] = Complex(in_data.x[i][nn-j][k]);
+                }
             }
  
             // forward fft
