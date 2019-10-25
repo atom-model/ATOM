@@ -160,6 +160,8 @@ void AtomUtils::fft_gaussian_filter(Array& in_data, int sigma){
     //fft gaussian kernel data
     fft_ex(k_data);
 
+    assert(nn<2*jm);
+
     for(int i=0; i<im; i++){
         for(int k=0; k<km; k++)
         {
@@ -170,9 +172,9 @@ void AtomUtils::fft_gaussian_filter(Array& in_data, int sigma){
                     data[j] = Complex(in_data.x[i][j][k]);
                 else{//mirror the padding
                     if(j<jm+(nn-jm)/2)
-                        data[j] = Complex(in_data.x[i][jm-(j-jm)][k]);
+                        data[j] = Complex(in_data.x[i][(jm-1)-(j-jm)][k]);
                     else
-                        data[j] = Complex(in_data.x[i][nn-j][k]);
+                        data[j] = Complex(in_data.x[i][(nn-1)-j][k]);
                 }
             }
  
