@@ -21,7 +21,6 @@ def main():
             ('temperature_curve_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
             ('pole_temperature_file', '', 'string', '../data/pole_temperature.txt'),
             ('reconstruction_script_path', '', 'string', '../reconstruction/reconstruct_atom_data.py'),
-#            ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True),
             ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False),
             ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
         
@@ -36,8 +35,8 @@ def main():
             ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
             ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
-            ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', .054),
-            ('coeff_ev_pr', "coefficient to adjust to the modern worlds precipitation", 'double', .0012),
+            ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', .065),
+            ('coeff_Precipitation', "coefficient to adjust to the modern worlds precipitation", 'double', .0013),
 
             ('WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0),
             ('Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
@@ -46,7 +45,6 @@ def main():
             ('epsres', 'accuracy of relative and absolute errors', 'double', 0.00001),
 
             ('sun', 'while no variable sun position wanted', 'int', 0),
-#            ('NASATemperature', 'surface temperature given by NASA', 'int', 1),
             ('NASATemperature', 'surface temperature given by NASA', 'int', 0),
 
             ('declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0),
@@ -105,7 +103,6 @@ def main():
             ('t_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798),
             ('t_tropopause_pole', 'temperature in the tropopause at the pole, t = 0.784 compares to -59°C compares to 214.15 K', 'double', 0.784),
             ('t_land', 'temperature increase on land by 2°C (1°C compares to t_land = 0.003661)', 'double', 0.),
-#            ('t_land', 'temperature increase on land by 2°C (1°C compares to t_land = 0.003661)', 'double', 0.007322),
 
             ('c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.0005 compares to 0.0005 kg/kg', 'double', 0.0005),
             ('c_ocean', 'water vapour reduction on sea surface (50% of the saturation value)', 'double', 0.76),

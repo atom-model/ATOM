@@ -845,7 +845,6 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
     double exp_pressure = g / (1.e-2 * gam * R_Air);
     float dt_snow_dim = 417.,  // dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
           dt_rain_dim = 250.;  // dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
-//    float coeff_ev_pr = .0012;  // coefficient to adjust to the modern worlds precipitation
     double m_i = m_i_max;  
     float p_h, N_i, S_nuc, S_c_frz, S_i_dep=0, S_c_au, S_i_au, S_d_au, 
         S_ac, S_rim, S_shed;
@@ -904,9 +903,11 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                     / (1. + R_WaterVapour / R_Air * c.x[i][j][k]);                
                 double step = get_layer_height(i+1) - get_layer_height(i);
                 P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
-                    + coeff_ev_pr * r_humid * S_r.x[i+1][j][k] * step;  // in kg / (m2 * s) == mm/s
+                    + coeff_Precipitation * r_humid * S_r.x[i+1][j][k] 
+                    * step;  // in kg / (m2 * s) == mm/s
                 P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
-                    + coeff_ev_pr * r_humid * S_s.x[i+1][j][k] * step; 
+                    + coeff_Precipitation * r_humid * S_s.x[i+1][j][k] 
+                    * step; 
                 if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
                 if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
             }
@@ -1085,9 +1086,11 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         if(P_snow.x[i+1][j][k] < 0.)  P_snow.x[i+1][j][k] = 0.;
                         double step = get_layer_height(i+1) - get_layer_height(i);
                         P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
-                             + coeff_ev_pr * r_humid * S_r.x[i+1][j][k] * step;  // in kg / (m2 * s) == mm/s 
+                             + coeff_Precipitation * r_humid 
+                             * S_r.x[i+1][j][k] * step;  // in kg / (m2 * s) == mm/s 
                         P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
-                             + coeff_ev_pr * r_humid * S_s.x[i+1][j][k] * step; 
+                             + coeff_Precipitation * r_humid 
+                             * S_s.x[i+1][j][k] * step; 
                         if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
                         if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
                     }  // end i RainSnow

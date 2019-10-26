@@ -183,19 +183,22 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     if(debug) save_data();
     iter_cnt_3d++;
     init_velocities();
+    fft_gaussian_filter(u, 5);
+    fft_gaussian_filter(v, 5);
+    fft_gaussian_filter(w, 5);
 //    near_wall_values();
-//    adjust_temperature_IC(t.x[0], jm, km);
+    adjust_temperature_IC(t.x[0], jm, km);
     init_temperature();
-    for(int k = 0; k < km; k++)  smooth_steps( k, im, jm, t);
     init_water_vapour();
-//    goto Printout;
     store_intermediate_data_3D();
     BC_Pressure();
     init_co2();
-//    goto Printout;
     Ice_Water_Saturation_Adjustment();
-    BC_Radiation_multi_layer(); 
-//    fft_gaussian_filter(t, 2);
+//    BC_Radiation_multi_layer(); 
+    fft_gaussian_filter(t, 5);
+    fft_gaussian_filter(c, 5);
+    fft_gaussian_filter(cloud, 5);
+    fft_gaussian_filter(ice, 5);
 //    goto Printout;
     store_intermediate_data_2D();
     store_intermediate_data_3D();
@@ -383,9 +386,7 @@ void cAtmosphereModel::run_2D_loop(){
 
 
 void cAtmosphereModel::run_3D_loop(){ 
-
     cout << "    begin run_3D_loop    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-
     iter_cnt = 1;
     iter_cnt_3d = 0;
     if(debug){
@@ -394,9 +395,7 @@ void cAtmosphereModel::run_3D_loop(){
     }
     for(int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++){
         for(int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++){
-
-    cout << "    in run_3D_loop    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-
+            cout << "    in run_3D_loop    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
             if(debug){ Array tmp = (t-1)*t_0; tmp.inspect();}
             cout << endl << endl;
             cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
@@ -412,49 +411,32 @@ void cAtmosphereModel::run_3D_loop(){
             BC_phi();
             BC_SolidGround();
             if(velocity_iter % 2 == 0){
-//                fft_gaussian_filter(t, 5);
-/*
-                for(int k = 0; k < km; k++){
-
-                    AtomUtils::smooth_steps( k, im, jm, t);
-                    AtomUtils::smooth_steps( k, im, jm, c);
-                    AtomUtils::smooth_steps( k, im, jm, cloud);
-                    AtomUtils::smooth_steps( k, im, jm, ice);
-                    AtomUtils::smooth_steps( k, im, jm, P_rain);
-                    AtomUtils::smooth_steps( k, im, jm, P_snow);
-
-
-                    fft_gaussian_filter(t, 5);
-                    fft_gaussian_filter(c, 5);
-                    fft_gaussian_filter(cloud, 5);
-                    fft_gaussian_filter(ice, 5);
-                    fft_gaussian_filter(P_rain, 5);
-                    fft_gaussian_filter(P_snow, 5);
-
-                }
-*/
+//                Moist_Convection(); // work in progress
                 Ice_Water_Saturation_Adjustment();
-//            Moist_Convection(); // work in progress
-                Two_Category_Ice_Scheme(); 
+                fft_gaussian_filter(t, 5);
+                fft_gaussian_filter(c, 5);
+                fft_gaussian_filter(cloud, 5);
+                fft_gaussian_filter(ice, 5);
                 Value_Limitation_Atm();
-//                if(pressure_iter == 2)  WaterVapourEvaporation();
+                Two_Category_Ice_Scheme(); 
+                fft_gaussian_filter(P_rain, 2);
+                fft_gaussian_filter(P_snow, 2);
                 WaterVapourEvaporation();
                 init_co2();
             }
             solveRungeKutta_3D_Atmosphere();
             Value_Limitation_Atm();
             store_intermediate_data_3D();
-            if(debug)check_data(); 
-            BC_Radiation_multi_layer(); 
+//            BC_Radiation_multi_layer(); 
             Latent_Heat(); 
             print_min_max_values();
             vegetation_distribution();
+            if(debug)check_data(); 
             iter_cnt++;
             iter_cnt_3d++;
             if(debug) save_data();
         }//end of velocity loop
         computePressure_3D();
-//        if(debug && pressure_iter % checkpoint == 0){
         if(pressure_iter % checkpoint == 0){
             write_file(bathymetry_name, output_path);
         }
@@ -1106,7 +1088,6 @@ void cAtmosphereModel::init_tropopause_layers(){
     for(int j=j_max; j>j_half; j--){
         tropopause_layers[j] = tropopause_layers[j_max-j];
      }
-//    AtomUtils::smooth_tropopause(jm, tropopause_layers, tropopause_layers);
     if(debug){
         for(int j=0; j<jm; j++){
             std::cout << tropopause_layers[j] << " ";
