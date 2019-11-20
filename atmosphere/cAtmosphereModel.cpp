@@ -438,7 +438,7 @@ void cAtmosphereModel::run_3D_loop(){
         }//end of velocity loop
         computePressure_3D();
         if(pressure_iter % checkpoint == 0){
-            write_file(bathymetry_name, output_path);
+            write_file(bathymetry_name, output_path, true);
         }
         if(iter_cnt > nm){
             cout << "       nm = " << nm 
