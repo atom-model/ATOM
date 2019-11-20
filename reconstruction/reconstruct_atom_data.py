@@ -111,7 +111,7 @@ def gmt_filter(a):
 
 def get_coastline_polygons_from_topography(filename):
     data = np.genfromtxt(filename)   
-    m = Basemap(llcrnrlon=-180,llcrnrlat=-90,urcrnrlon=180,urcrnrlat=90,projection='cyl')
+    m = Basemap(llcrnrlon=-180,llcrnrlat=-90,urcrnrlon=180,urcrnrlat=90,projection='cyl', resolution = 'c')
     x = data[:,0]
     y = data[:,1]
     topo = data[:,2]
