@@ -208,7 +208,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     cout << endl << endl;
 //    restrain_temperature();
 //    Printout:
-//    write_file(bathymetry_name, output_path, true);
+    write_file(bathymetry_name, output_path, true);//this line is needed here and important.
     iter_cnt_3d++;
     save_data();    
     if(debug){
@@ -438,7 +438,7 @@ void cAtmosphereModel::run_3D_loop(){
         }//end of velocity loop
         computePressure_3D();
         if(pressure_iter % checkpoint == 0){
-            write_file(bathymetry_name, output_path, true);
+            write_file(bathymetry_name, output_path);
         }
         if(iter_cnt > nm){
             cout << "       nm = " << nm 
