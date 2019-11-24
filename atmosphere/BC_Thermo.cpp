@@ -827,16 +827,21 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
           c_i_au = 1.e-3,  // in 1/s
           c_ac = .24,  // m2/kg
           c_rim = 18.6,  // m2/kg
+//          c_rim = 8.6,  // m2/kg             adopted from One-Category-Ice-Scheme
           c_agg = 10.3,  // m2/kg
           c_i_cri = .24,  // m2
           c_r_cri = 3.2e-5,  // m2
           a_ev = 1.e-3,  // m2/kg
           b_ev = 5.9,  // m2*s/kg
+//          b_ev = 5.98,  // m2*s/kg             adopted from One-Category-Ice-Scheme
           c_s_dep = 1.8e-2,  // m2/kg
           b_s_dep = 12.3,  // m2*s/kg
+//          b_s_dep = 10.5,  // m2*s/kg             adopted from One-Category-Ice-Scheme
           c_s_melt = 8.43e-5,  // (m2*s)/(K*kg)
           b_s_melt = 12.05,  // m2*s/kg
+//          b_s_melt = 10.5,  // m2*s/kg             adopted from One-Category-Ice-Scheme
           a_s_melt = 2.31e3, // K/(kg/kg)
+//          a_s_melt = 1.38e-5, // K/(kg/kg)             adopted from One-Category-Ice-Scheme
           c_r_frz = 3.75e-2,  // (m2*s)/(K*kg)
           t_nuc = 267.15,  // in K    -6 °C
           t_d = 248.15,  // in K    -25 °C
@@ -902,12 +907,13 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                 float r_humid = r_dry * (1. + c.x[i][j][k]) 
                     / (1. + R_WaterVapour / R_Air * c.x[i][j][k]);                
                 double step = get_layer_height(i+1) - get_layer_height(i);
+                float t_Celsius = t_u - t_0;
                 P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
                     + coeff_Precipitation * r_humid * S_r.x[i+1][j][k] 
                     * step;  // in kg / (m2 * s) == mm/s
-                P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
-                    + coeff_Precipitation * r_humid * S_s.x[i+1][j][k] 
-                    * step; 
+                if(t_Celsius < 0.)  P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
+                    + coeff_Precipitation * r_humid 
+                    * S_s.x[i+1][j][k] * step; 
                 if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
                 if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
             }
@@ -979,7 +985,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         else  S_i_au = 0.;
                         if(t_u <= t_0)
                             S_d_au = S_i_dep / (1.5 * (pow((m_s_0 / m_i), 
-                                (2. / 3.)) - 1.));  // depositional growth of cloud ice, < VI >
+                                (2. / 3.)) - 1.));  // autoconversion due to depositional growth of cloud ice, < VI >
                         else  S_d_au = 0.;
                         // collection mechanism
                         if(t_u > t_0)  
@@ -1056,23 +1062,23 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
 //                        S_r_cri=0; // causes 
 //                        S_i_cri=0;// causes 
 
-//                        S_agg=0;// causes less snow around pole regions
-//                        S_rim=0; // causes smaller snow stripes in low latitudes
+//                        S_agg=0;// causes no snow around pole regions
+//                        S_rim=0; // causes less snow around pole regions
 
 //                        S_i_au=0; // causes less snow around pole regions
 //                        S_s_dep=0; // causes less snow in near pole regions
-//                        S_d_au=0; //  causes more snow in pole regions
+                        S_d_au=0; //  causes considerably more snow, TODO
                         // sinks and sources
-                        S_v.x[i][j][k] = - S_c_c.x[i][j][k] + S_ev - S_i_dep -
-                            S_s_dep - S_nuc;
+                        S_v.x[i][j][k] = - S_c_c.x[i][j][k] + S_ev - S_i_dep 
+                            - S_s_dep - S_nuc;
                         S_c.x[i][j][k] = S_c_c.x[i][j][k] - S_c_au - S_ac 
                             - S_c_frz + S_i_melt - S_rim - S_shed;
-                        S_i.x[i][j][k] = S_nuc + S_c_frz + S_i_dep - S_i_melt -
-                            S_i_au - S_d_au - S_agg - S_i_cri;
+                        S_i.x[i][j][k] = S_nuc + S_c_frz + S_i_dep - S_i_melt 
+                            - S_i_au - S_d_au - S_agg - S_i_cri;
                         S_r.x[i][j][k] = S_c_au + S_ac - S_ev + S_shed 
                             - S_r_cri - S_r_frz + S_s_melt;
-                        S_s.x[i][j][k] = S_d_au + S_s_dep + S_i_au + S_rim +
-                            S_agg + S_i_cri + S_r_cri + S_r_frz - S_s_melt;
+                        S_s.x[i][j][k] = S_i_au + S_d_au + S_agg + S_rim 
+                            + S_s_dep + S_i_cri + S_r_cri + S_r_frz - S_s_melt;
                         if((is_land(h, i, j, k)) && (is_land(h, i+1, j, k))){
                             S_c_c.x[i][j][k] = 0.;
                             S_v.x[i][j][k] = 0.;
@@ -1088,9 +1094,10 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
                              + coeff_Precipitation * r_humid 
                              * S_r.x[i+1][j][k] * step;  // in kg / (m2 * s) == mm/s 
-                        P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
+                        if(t_Celsius < 0.)  P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
                              + coeff_Precipitation * r_humid 
                              * S_s.x[i+1][j][k] * step; 
+                        else  P_snow.x[i][j][k] = 0.;
                         if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
                         if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
                     }  // end i RainSnow

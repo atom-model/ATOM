@@ -12,13 +12,13 @@ from draw_topo import draw_topography
 from common_functions import calculate_spherical_mean
 
 map_cfg = {
-    'temperature': (6, -20, 30, u'Temperature (Celsius °C)'),
+    'temperature': (6, -20, 40, u'Temperature (Celsius °C)'),
     'v_velocity': (3, -1, 1, 'v_velocity (m/s)'),
     'w_velocity': (4, -8, 9, 'w_velocity (m/s)'),
-    'water_vapour': (7, 0, 15, 'Water Vapour (g/kg)'),
-    'precipitation': (8, 0, 2500, 'Precipitation (mm/yr)'),
-    'precipitable_water': (9, 0, 60, 'Precipitable Water (mm)'),
-    'evaporation' : (10, 0, 1250, 'Evaporation (mm/yr)')
+    'water_vapour': (7, 0, 25, 'Water Vapour (g/kg)'),
+    'precipitation': (8, 0, 4000, 'Precipitation (mm/yr)'),
+    'precipitable_water': (9, 0, 200, 'Precipitable Water (mm)'),
+    'evaporation': (10, 0, 2500, 'Evaporation (mm/yr)'),
 }
 
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):

@@ -344,7 +344,7 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name,
     if(paraview_panorama_vts_flag){ //This function creates a large file. Use a flag to control if it is wanted.
         paraview_panorama_vts (bathymetry_name, iter_cnt-1); 
     }
-    Value_Limitation_Atm();
+//    Value_Limitation_Atm();
     Atmosphere_v_w_Transfer(bathymetry_name);
     Atmosphere_PlotData(bathymetry_name, (is_final_result ? -1 : iter_cnt-1));
 }
@@ -369,7 +369,7 @@ void cAtmosphereModel::run_2D_loop(){
 */
                 BC_theta();
                 BC_phi();
-                Value_Limitation_Atm();
+//                Value_Limitation_Atm();
                 BC_SolidGround();
                 solveRungeKutta_2D_Atmosphere();
                 store_intermediate_data_2D();
@@ -417,7 +417,7 @@ void cAtmosphereModel::run_3D_loop(){
                 fft_gaussian_filter(c, 5);
                 fft_gaussian_filter(cloud, 5);
                 fft_gaussian_filter(ice, 5);
-                Value_Limitation_Atm();
+//                Value_Limitation_Atm();
                 Two_Category_Ice_Scheme(); 
                 fft_gaussian_filter(P_rain, 2);
                 fft_gaussian_filter(P_snow, 2);
@@ -425,7 +425,7 @@ void cAtmosphereModel::run_3D_loop(){
                 init_co2();
             }
             solveRungeKutta_3D_Atmosphere();
-            Value_Limitation_Atm();
+//            Value_Limitation_Atm();
             store_intermediate_data_3D();
 //            BC_Radiation_multi_layer(); 
             Latent_Heat(); 

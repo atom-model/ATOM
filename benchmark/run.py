@@ -56,6 +56,8 @@ def main(maps_only=False):
         # precipitation(mm), precipitable water(mm)
         atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 
                 'precipitable_water', 'topography', 'velocity', 'evaporation']
+#        atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 
+#                'precipitation', 'precipitable_water', 'topography', 'velocity', 'evaporation']
 
         create_atm_maps.create_all_maps(atm_sub_dirs, start_time, end_time, time_step, atm_map_output_dir, 
             atom_output_dir, topo_dir, topo_suffix)
