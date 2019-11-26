@@ -845,6 +845,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
     double exp_pressure = g / (1.e-2 * gam * R_Air);
     float dt_snow_dim = 417.,  // dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
           dt_rain_dim = 250.;  // dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
+    double coeff_snow = .01;
     double m_i = m_i_max;  
     float p_h, N_i, S_nuc, S_c_frz, S_i_dep=0, S_c_au, S_i_au, S_d_au, 
         S_ac, S_rim, S_shed;
@@ -907,7 +908,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                     + coeff_Precipitation * r_humid * S_r.x[i+1][j][k] 
                     * step;  // in kg / (m2 * s) == mm/s
                 if(t_Celsius < 0.)  P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
-                    + coeff_Precipitation * r_humid 
+                    + coeff_Precipitation * r_humid * coeff_snow
                     * S_s.x[i+1][j][k] * step; 
                 if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
                 if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
@@ -1062,7 +1063,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
 
 //                        S_i_au=0; // causes less snow around pole regions
 //                        S_s_dep=0; // causes less snow in near pole regions
-                        S_d_au=0; //  causes considerably more snow, TODO
+//                        S_d_au=0; //  causes considerably more snow, TODO
                         // sinks and sources
                         S_v.x[i][j][k] = - S_c_c.x[i][j][k] + S_ev - S_i_dep 
                             - S_s_dep - S_nuc;
@@ -1090,7 +1091,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                              + coeff_Precipitation * r_humid 
                              * S_r.x[i+1][j][k] * step;  // in kg / (m2 * s) == mm/s 
                         if(t_Celsius < 0.)  P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
-                             + coeff_Precipitation * r_humid 
+                             + coeff_Precipitation * r_humid * coeff_snow 
                              * S_s.x[i+1][j][k] * step; 
                         else  P_snow.x[i][j][k] = 0.;
                         if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
@@ -1544,6 +1545,7 @@ void cAtmosphereModel::Value_Limitation_Atm(){
             if(Precipitation.y[j][k] >= 25.)  Precipitation.y[j][k] = 25.;
             if(Precipitation.y[j][k] <= 0)  Precipitation.y[j][k] = 0.;
             for(int i = 0; i < im; i++){
+/*
                 if(u.x[i][j][k] >= .106)  u.x[i][j][k] = .106;
                 if(u.x[i][j][k] <= - .106)  u.x[i][j][k] = - .106;
                 if(v.x[i][j][k] >= 1.125)  v.x[i][j][k] = 1.125;
@@ -1564,6 +1566,7 @@ void cAtmosphereModel::Value_Limitation_Atm(){
                 if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
                 if(co2.x[i][j][k] >= 5.36)  co2.x[i][j][k] = 5.36;
                 if(co2.x[i][j][k] <= 1.)  co2.x[i][j][k] = 1.;
+*/
                 if(is_land(h, i, j, k)){
                     u.x[i][j][k] = 0.;
                     v.x[i][j][k] = 0.;

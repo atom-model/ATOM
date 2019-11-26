@@ -36,8 +36,7 @@ def main():
             ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
             ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', .065),
-#            ('coeff_Precipitation', "coefficient to adjust to the modern worlds precipitation", 'double', .0013),
-            ('coeff_Precipitation', "coefficient to adjust to the modern worlds precipitation", 'double', .0046),
+            ('coeff_Precipitation', "coefficient to adjust to the modern worlds precipitation", 'double', .007),
 
             ('WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0),
             ('Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
