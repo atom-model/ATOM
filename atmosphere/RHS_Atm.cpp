@@ -251,36 +251,53 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
     double coeff_energy = L_atm / (cp_l * t_0 * u_0); // coefficient for the source terms = .00729
     double coeff_buoy =  L_atm / (u_0 * u_0); // coefficient for bouancy term = 208.333
     double coeff_trans = L_atm / u_0;   // coefficient for the concentration terms = 2000.
-    double r_humid = r_dry * (1. + c.x[i][j][k]) / (1. + R_WaterVapour / R_Air * c.x[i][j][k]);
+    double r_humid = r_dry 
+        / (1. + ( R_WaterVapour / R_Air - 1. ) * c.x[i][j][k] 
+        - cloud.x[i][j][k] - ice.x[i][j][k]);                
     double RS_buoyancy_Momentum = coeff_buoy * Buoyancy * (r_humid - r_dry) / r_dry * g; // any humid air is less dense than dry air
 //    double RS_buoyancy_Momentum = 0.;  // test case
-    BuoyancyForce.x[i][j][k] = - RS_buoyancy_Momentum / coeff_buoy;// dimension as pressure in kN/m2
+    BuoyancyForce.x[i][j][k] = - RS_buoyancy_Momentum / coeff_buoy;// units like pressure in kN/m2
     if(is_land(h, i, j, k)){
         BuoyancyForce.x[i][j][k] = 0.;
     }
+// Coriolis forces are negligibly small, enhancing them artificially shows their influence on velocity vectors
+    double omega = 7.292e-5;
+//    double omega = 7.292e-5 * 1.e6;
+    double coriolis = 1.;
+    double sinthe_coriolis = sinthe;
+    if(j>90) sinthe_coriolis = - sinthe_coriolis;
+    double coriolis_rad = + h_d_i * coriolis * 2. * omega 
+        * costhe * w.x[i][j][k];
+    double coriolis_the = - h_d_j * coriolis * 2. * omega 
+        * sinthe_coriolis * w.x[i][j][k];
+    double coriolis_phi = + h_d_k * coriolis * 2. * omega 
+        * ( sinthe_coriolis * v.x[i][j][k] - costhe * u.x[i][j][k] );
     rhs_t.x[i][j][k] = - (u.x[i][j][k] * dtdr + v.x[i][j][k] * dtdthe / rm
             + w.x[i][j][k] * dtdphi / rmsinthe) + (d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2
             + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2) / (re * pr)
-            + coeff_energy * (S_c.x[i][j][k] + S_r.x[i][j][k])
-            + coeff_energy * (S_i.x[i][j][k] + S_s.x[i][j][k]);
+            + coeff_energy * (S_c.x[i][j][k] + S_r.x[i][j][k]) * lv
+            + coeff_energy * (S_i.x[i][j][k] + S_s.x[i][j][k]) * ls;
 //            - h_0_i * t.x[i][j][k] * k_Force / dr2;
     rhs_u.x[i][j][k] = - (u.x[i][j][k] * dudr + v.x[i][j][k] * dudthe / rm 
             + w.x[i][j][k] * dudphi / rmsinthe)
             - dpdr / r_air + (d2udr2 + h_d_i * 2. * u.x[i][j][k] / rm2 + d2udthe2 / rm2
             + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2) / re
             - RS_buoyancy_Momentum
+            + coriolis_rad
             - h_0_i * u.x[i][j][k] * k_Force / dr2;
     rhs_v.x[i][j][k] = - (u.x[i][j][k] * dvdr + v.x[i][j][k] * dvdthe / rm
             + w.x[i][j][k] * dvdphi / rmsinthe) +
             - dpdthe / rm / r_air + (d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
             - (1. + costhe * costhe / (rm * sinthe2)) * h_d_j * v.x[i][j][k] + d2vdphi2 / rm2sinthe2
             + 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2) / re
+            + coriolis_the
             - h_0_j * v.x[i][j][k] * k_Force / dthe2;
     rhs_w.x[i][j][k] = - (u.x[i][j][k] * dwdr + v.x[i][j][k] * dwdthe / rm
             + w.x[i][j][k] * dwdphi / rmsinthe) +
             - dpdphi / rmsinthe / r_air + (d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2
             + dwdthe / rm2sinthe  * costhe - (1. + costhe * costhe / (rm * sinthe2)) * h_d_k * w.x[i][j][k]
             + d2wdphi2 / rm2sinthe2 + 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2) / re
+            + coriolis_phi
             - h_0_k * w.x[i][j][k] * k_Force / dphi2;
     rhs_c.x[i][j][k] = - (u.x[i][j][k] * dcdr + v.x[i][j][k] * dcdthe / rm
             + w.x[i][j][k] * dcdphi / rmsinthe) + (d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2

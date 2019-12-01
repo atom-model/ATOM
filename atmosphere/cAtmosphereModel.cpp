@@ -183,7 +183,8 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     if(debug) save_data();
     iter_cnt_3d++;
     init_velocities();
-//    IC_v_w_WestEastCoast();
+    IC_v_w_WestEastCoast();
+//    goto Printout;
     fft_gaussian_filter(u, 5);
     fft_gaussian_filter(v, 5);
     fft_gaussian_filter(w, 5);
@@ -412,7 +413,6 @@ void cAtmosphereModel::run_3D_loop(){
             BC_phi();
             BC_SolidGround();
             if(velocity_iter % 2 == 0){
-//                Moist_Convection(); // work in progress
                 Ice_Water_Saturation_Adjustment();
                 fft_gaussian_filter(t, 5);
                 fft_gaussian_filter(c, 5);
@@ -428,7 +428,6 @@ void cAtmosphereModel::run_3D_loop(){
             solveRungeKutta_3D_Atmosphere();
             Value_Limitation_Atm();
             store_intermediate_data_3D();
-//            BC_Radiation_multi_layer(); 
             Latent_Heat(); 
             print_min_max_values();
             vegetation_distribution();

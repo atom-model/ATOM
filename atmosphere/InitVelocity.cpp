@@ -122,7 +122,7 @@ void cAtmosphereModel::init_velocities(){
     form_diagonals(v, 150, 165);
     form_diagonals(v, 165, 180);
 
-    //change the direction for southen hemisphere
+    //change the direction for southern hemisphere
     if(!use_NASA_velocity){
         for (int i = 0; i < im; i++){
             for (int j = 91; j < jm; j++){
@@ -184,7 +184,7 @@ void cAtmosphereModel::smooth_transition(Array &u, Array &v, Array &w, int lat){
 void cAtmosphereModel::form_diagonals(Array &a, int start, int end){
     for (int k = 0; k < km; k++){
         for (int j = start; j < end; j++){
-            for (int i = 1; i < im; i++){
+            for (int i = 0; i < im; i++){
                 a.x[i][j][k] = (a.x[i][end][k] - a.x[i][start][k]) *
                     (j - start) / (double)(end - start) + a.x[i][start][k];
             }

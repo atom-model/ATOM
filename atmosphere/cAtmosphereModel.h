@@ -218,7 +218,6 @@ private:
     void print_welcome_msg();
     void print_final_remarks();
     void WaterVapourEvaporation();
-    void Moist_Convection();
     void near_wall_values();
     void store_intermediate_data_2D(float coeff=1);
     void store_intermediate_data_3D(float coeff=1);

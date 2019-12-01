@@ -159,8 +159,9 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                     t_Celsius = t.x[ i ][ j ][ k ] * t_0 - t_0;
 
                     r_dry = 100. * p_stat.x[ i ][ j ][ k ] / ( R_Air * t.x[ i ][ j ][ k ] * t_0 );
-                    r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );
-                    // density of humid air, COSMO version withot cloud and ice water, masses negligible
+                    r_humid = r_dry 
+                        / (1. + ( R_WaterVapour / R_Air - 1. ) * c.x[i][j][k] 
+                        - cloud.x[i][j][k] - ice.x[i][j][k]);                
 
                     e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep;  // water vapour pressure in hPa
 
@@ -205,8 +206,9 @@ void Results_MSL_Atm::run_MSL_data ( int n, int velocity_iter_max, int Radiation
                     if ( i == 0 )     p_stat.x[ 0 ][ j ][ k ] = ( r_air * R_Air * t.x[ 0 ][ j ][ k ] * t_0 ) * .01;  // given in hPa
                     t_Celsius = t.x[ 0 ][ j ][ k ] * t_0 - t_0;
                     r_dry = 100. * p_stat.x[ 0 ][ j ][ k ] / ( R_Air * t.x[ 0 ][ j ][ k ] * t_0 );
-                    r_humid = r_dry / ( 1. + ( R_WaterVapour / R_Air - 1. ) * c.x[ i ][ j ][ k ] );
-                    // density of humid air, COSMO version withot cloud and ice water, masses negligible
+                    r_humid = r_dry 
+                        / (1. + ( R_WaterVapour / R_Air - 1. ) * c.x[i][j][k] 
+                        - cloud.x[i][j][k] - ice.x[i][j][k]);                
                     e = c.x[ i ][ j ][ k ] * p_stat.x[ i ][ j ][ k ] / ep;  // water vapour pressure in Pa
                     t_denom = t_Celsius + 234.175;
                     E = hp * exp ( 17.0809 * t_Celsius / t_denom );  // saturation vapour pressure in the water phase for t > 0°C in hPa
