@@ -207,7 +207,7 @@ private:
     void Two_Category_Ice_Scheme();
     void BC_Pressure();
     void Latent_Heat();
-    void IC_v_w_WestEastCoast();   
+    void IC_WestEastCoast();   
     void read_NASA_temperature(const string &fn);
     void read_NASA_precipitation(const string&);
     void BC_radius();

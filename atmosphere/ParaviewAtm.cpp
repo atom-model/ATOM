@@ -249,7 +249,7 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
                 - t_0 << endl;
         }
     }
-    dump_radial_2d("Temp_NASA", temp_NASA, 1., Atmosphere_vtk_radial_File);
+    dump_radial_2d("Temperature_NASA", temp_NASA, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("DewPointTemp", dew_point_temperature, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("CondensLevel", condensation_level, 1.e-3, Atmosphere_vtk_radial_File);
     dump_radial("Topography", h, 1., i_radial, Atmosphere_vtk_radial_File);

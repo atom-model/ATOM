@@ -367,8 +367,7 @@ void BC_Thermohalin::BC_Temperature_Salinity(Array &h, Array &t, Array &c,
 
 
 
-void BC_Thermohalin::BC_Pressure_Density(Array &p_stat, Array &r_water,
-                     Array &r_salt_water, Array &t, Array &c, Array &h){
+void cHydrosphereModel::BC_Pressure_Density(){
 // hydrostatic pressure, equations of state for water and salt water density
 // as functions of salinity, temperature and hydrostatic pressure
     double t_Celsius_0 = 0.;
@@ -402,17 +401,17 @@ void BC_Thermohalin::BC_Pressure_Density(Array &p_stat, Array &r_water,
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             for(int i = im-2; i >= 0; i--){
-                d_i = (double)( im - 1 - i );
+                double d_i = (double)(im-1-i);
                 t_Celsius_1 = t.x[i][j][k] * t_0 - t_0;
-                t_Celsius_0 = t.x[i + 1][j][k] * t_0 - t_0;
+                t_Celsius_0 = t.x[i+1][j][k] * t_0 - t_0;
 //              p_stat.x[i][j][k] = r_0_water * g * d_i * ( L_hyd / ( double ) ( im-1 ) )
 //                   100000. + p_0 / 1000.;                // hydrostatic pressure in bar
-                p_stat.x[i][j][k] = r_water.x[i + 1][j][k] * g * d_i * ( L_hyd /
-                    (double)( im-1 ) ) / 100000. + p_0 / 1000.;             // hydrostatic pressure in bar
+                p_stat.x[i][j][k] = r_water.x[i+1][j][k] * g * d_i * ( L_hyd /
+                    (double)(im-1) ) / 100000. + p_0 / 1000.;             // hydrostatic pressure in bar
                 r_water.x[i][j][k] = r_water.x[i + 1][j][k] / ( 1. + beta_water *
                     ( t_Celsius_1 - t_Celsius_0 ) ) / ( 1. - ( p_stat.x[i][j][k] -
                     p_stat.x[i+1][j][k] ) / E_water * 1e5 );               // given in kg/m³
-                p_km  = (double)( im - 1 - i ) * ( L_hyd / (double)( im-1 ) ) / 1000.;
+                p_km  = (double)(im-1-i) * ( L_hyd / (double)(im-1) ) / 1000.;
                 C_p = 999.83 + 5.053 * p_km - .048 * p_km * p_km;
                 beta_p = .808 - .0085* p_km;
                 alfa_t_p = .0708 * ( 1. + .351 * p_km + .068 *( 1. - .0683 * p_km ) * t_Celsius_1 );
@@ -494,8 +493,7 @@ void BC_Thermohalin::BC_Surface_Salinity_NASA(const string &Name_SurfaceSalinity
     Name_SurfaceSalinity_File_Read.close();
 }
 
-void BC_Thermohalin::IC_Equatorial_Currents 
-                     (Array &h, Array &u, Array &v, Array &w){
+void cHydrosphereModel::IC_Equatorial_Currents(){
 // currents along the equator
 // equatorial undercurrent - Cromwell flow, EUC
 // equatorial intermediate current, EIC
@@ -514,19 +512,20 @@ void BC_Thermohalin::IC_Equatorial_Currents
     i_EUC_o = 36; // 100m depth
 */
 // one grid step compares to a depth of 5 m for L_hyd = 200m   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    i_EIC_u = i_beg; // 200m depth  // westward equatorial intermediate current, max 0.1 m/s
-    i_EIC_o = 0; // 0m depth
-    i_SCC_u = 0; // 800m depth  // eastward subsurface counter current, max 0.05 m/s
-    i_SCC_o = 0; // 300m depth
-    i_ECC_u = 0; // 200m depth  // eastward equatorial counter current, max 0.2 m/s
-    i_ECC_o = im; // 0m depth
-    i_EUC_u = 0; // 200m depth  // eastward equatorial under current ( Cromwell current ), max 0.8 m/s
-    i_EUC_o = 20; // 100m depth
+    int i_beg = 0; // 200m depth  
+    int i_EIC_u = i_beg; // 200m depth  // westward equatorial intermediate current, max 0.1 m/s
+    int i_EIC_o = 0; // 0m depth
+    int i_SCC_u = 0; // 800m depth  // eastward subsurface counter current, max 0.05 m/s
+    int i_SCC_o = 0; // 300m depth
+    int i_ECC_u = 0; // 200m depth  // eastward equatorial counter current, max 0.2 m/s
+    int i_ECC_o = im; // 0m depth
+    int i_EUC_u = 0; // 200m depth  // eastward equatorial under current ( Cromwell current ), max 0.8 m/s
+    int i_EUC_o = 20; // 100m depth
 // equatorial currents and counter-currents
 //  §§§§§§§§§§§§§§§§§§§§§§§§§   valid for all paleo-ocean constellations along the equator   §§§§§§§§§§§§§§§§§§§§§§§§§§
-    j_half = ( jm -1 ) / 2;
-    k_beg = 0;
-    k_end = 0;
+    int j_half = ( jm -1 ) / 2;
+    int k_beg = 0;
+    int k_end = 0;
 // extention of land and ocean areas
     for(int k = 1; k < km-1; k++){
         if( k < km ){
@@ -635,11 +634,11 @@ void BC_Thermohalin::IC_Equatorial_Currents
 
 
 
-void BC_Thermohalin::IC_CircumPolar_Current 
-                     (Array &h, Array &u, Array &v, Array &w, Array &c){
+void cHydrosphereModel::IC_CircumPolar_Current(){ 
 // south polar sea
 // antarctic circumpolar current ( -5000m deep ) ( from j=147 until j=152 compares to 57°S until 62°S,
 // from k=0 until k=km compares to 0° until 360° )
+    int i_beg = 0;
     for(int i = i_beg; i < im; i++){
         for(int j = 147; j < 153; j++){
             for(int k = 0; k < km; k++){
@@ -655,29 +654,30 @@ void BC_Thermohalin::IC_CircumPolar_Current
 
 
 
-void BC_Thermohalin::IC_u_WestEastCoast
-                     (Array_1D &rad, Array &h, Array &u, Array &v, 
-                     Array &w, Array &un, Array &vn, Array &wn){
+void cHydrosphereModel::IC_u_WestEastCoast(){
+//void BC_Thermohalin::IC_u_WestEastCoast
+//                     (Array_1D &rad, Array &h, Array &u, Array &v, 
+//                     Array &w, Array &un, Array &vn, Array &wn){
 // initial conditions for u velocity component at the sea surface close to east or west coasts
 //    int i_beg = 20;  // == 100m depth
 //    int i_middle = 36;  
 //    int i_half = 38;
-    int i_beg = 10;  // == 100m depth
-    int i_middle = i_beg + 16;  // 
-    int i_half = i_beg + 18;
-    d_i_middle = (double)i_middle;
-    d_i_half = (double)i_half;
-    d_i_max =  (double)i_max;
+    float water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
+    int i_beg = 20;  // == 100m depth
+    int i_half = i_beg + 10; // location of u-max
+    int j_half = (jm-1)/2;
+    int i_max = im-1;
+    double d_i_half = (double)i_half;
 // search for east coasts and associated velocity components to close the circulations
 // transition between coast flows and open sea flows included
 // northern hemisphere: east coast
 //    k_grad = 6;                                                       // extension of velocity change
-    k_grad = 10;                                                        // extension of velocity change
-    k_a = k_grad;                                                       // left distance
-    k_b = 0;                                                            // right distance
-    k_water = 0;                                                        // on water closest to coast
-    k_sequel = 1;                                                       // on solid ground
-    for(int j = 0; j < 91; j++){                                        // outer loop: latitude
+    int k_grad = 20;                                                        // extension of velocity change
+    int k_water = 0;                                                        // on water closest to coast
+    int k_sequel = 1;                                                       // on solid ground
+    int m = 0;
+    double d_i = 0.;
+    for(int j = 0; j <= j_half; j++){                                        // outer loop: latitude
         for(int k = 0; k < km; k++){                                    // inner loop: longitude
             if(is_land(h, i_half, j, k)) k_sequel = 0;                 // if solid ground: k_sequel = 0
             if((is_water(h, i_half, j, k)) && (k_sequel == 0)) 
@@ -686,13 +686,13 @@ void BC_Thermohalin::IC_u_WestEastCoast
             if((is_water(h, i_half, j, k)) && (k_water == 0)){     // if water is closest to coast, change of velocity components begins
                 for(int l = 0; l < k_grad; l++){// extension of change, sign change in v-velocity and distribution of u-velocity with depth
                     if(k+l > km-1) break;
-                    for(int i = i_beg; i < i_half; i++){                // loop in radial direction, extension for u-velocity component, downwelling here
-                        m = i + ( i_half - i_middle );
-                        d_i = ( double ) i;
+                    for(int i = i_beg; i <= i_half; i++){                // loop in radial direction, extension for u-velocity component, downwelling here
+                        m = i_max - ( i - i_beg );
+                        d_i = ( double )i;
                         u.x[i][j][k+l] = - d_i / d_i_half * water_wind 
-                            / ( ( double )( l+1 ) );    // increase with depth, decrease with distance from coast
-                        u.x[m][j][k+l] = - d_i / d_i_middle * water_wind 
-                            / ( ( double )( l+1 ) );// decrease with depth, decrease with distance from coast
+                            / (double )(l+1);    // increase with depth, decrease with distance from coast
+                        u.x[m][j][k+l] = - d_i / d_i_half * water_wind 
+                            / (double)(l+1);// decrease with depth, decrease with distance from coast
                     }
                 }
                 k_sequel = 1;                                           // looking for another east coast
@@ -703,7 +703,7 @@ void BC_Thermohalin::IC_u_WestEastCoast
 // southern hemisphere: east coast
     k_water = 0;
     k_sequel = 1;
-    for(int j = 91; j < jm; j++){
+    for(int j = j_half+1; j < jm; j++){
         for(int k = 0; k < km; k++){
             if(is_land(h, i_half, j, k)) k_sequel = 0;
             if((is_water(h, i_half, j, k)) && (k_sequel == 0)) 
@@ -712,13 +712,13 @@ void BC_Thermohalin::IC_u_WestEastCoast
             if((is_water(h, i_half, j, k)) && (k_water == 0)){
                 for(int l = 0; l < k_grad; l++){
                     if(k+l > km-1) break; 
-                    for(int i = i_beg; i < i_half; i++){
-                        m = i + ( i_half - i_middle );
+                    for(int i = i_beg; i <= i_half; i++){
+                        m = i_max - ( i - i_beg );
                         d_i = (double)i;
                         u.x[i][j][k+l] = - d_i / d_i_half * water_wind 
-                            / ( (double)( l+1 ) );    // increase with depth, decrease with distance from coast
-                        u.x[m][j][k+l] = - d_i / d_i_middle * water_wind 
-                            / ( (double)( l+1 ) );// decrease with depth, decrease with distance from coast
+                            / (double)(l+1);    // increase with depth, decrease with distance from coast
+                        u.x[m][j][k+l] = - d_i / d_i_half * water_wind 
+                            / (double)(l+1);// decrease with depth, decrease with distance from coast
                     }
                 }
                 k_sequel = 1;
@@ -730,10 +730,9 @@ void BC_Thermohalin::IC_u_WestEastCoast
 // transition between coast flows and open sea flows included
 // northern hemisphere: west coast
 //    k_grad = 6;                                                       // extension of velocity change
-    k_a = 0;                                                            // left distance
     k_water = 0;                                                        // somewhere on water
-    flip = 0;                                                           // somewhere on water
-    for(int j = 0; j < 91; j++){                                        // outer loop: latitude
+    int flip = 0;                                                           // somewhere on water
+    for(int j = 0; j <= j_half; j++){                                        // outer loop: latitude
         for(int k = 0; k < km; k++){                                    // inner loop: longitude
             if(is_water(h, i_half, j, k)){                              // if somewhere on water
                 k_water = 0;                                            // somewhere on water: k_water = 0
@@ -743,12 +742,12 @@ void BC_Thermohalin::IC_u_WestEastCoast
             if((flip == 0) && (k_water == 1)){                      // on water closest to land
                 for(int l = k; l > ( k - k_grad + 1 ); l--){            // backward extention of velocity change: nothing changes
                     if(l < 0) break;
-                    for(int i = i_beg; i < i_half; i++){                // loop in radial direction, extension for u -velocity component, downwelling here
-                        m = i + ( i_half - i_middle );
+                    for(int i = i_beg; i <= i_half; i++){                // loop in radial direction, extension for u -velocity component, downwelling here
+                        m = i_max - ( i - i_beg );
                         d_i = (double)i;
                         u.x[i][j][l] = + d_i / d_i_half * water_wind 
                             / ( (double)( k - l + 1 ) );    // increase with depth, decrease with distance from coast
-                        u.x[m][j][l] = + d_i / d_i_middle * water_wind 
+                        u.x[m][j][l] = + d_i / d_i_half * water_wind 
                             / ( (double)( k - l + 1 ) );    // decrease with depth, decrease with distance from coast
                     }
                 }
@@ -760,7 +759,7 @@ void BC_Thermohalin::IC_u_WestEastCoast
 // southern hemisphere: west coast
     k_water = 0;
     flip = 0;
-    for(int j = 91; j < jm; j++){
+    for(int j = j_half+1; j < jm; j++){
         for(int k = 0; k < km; k++){
             if(is_water(h, i_half, j, k)){
                 k_water = 0;
@@ -770,12 +769,12 @@ void BC_Thermohalin::IC_u_WestEastCoast
             if((flip == 0) && (k_water == 1)){
                 for(int l = k; l > ( k - k_grad + 1 ); l--){
                     if(l < 0) break;    
-                    for(int i = i_beg; i < i_half; i++){
-                        m = i + ( i_half - i_middle );
+                    for(int i = i_beg; i <= i_half; i++){
+                        m = i_max - ( i - i_beg );
                         d_i = (double)i;
                         u.x[i][j][l] = + d_i / d_i_half * water_wind 
                             / ( (double)( k - l + 1 ) );
-                        u.x[m][j][l] = + d_i / d_i_middle * water_wind 
+                        u.x[m][j][l] = + d_i / d_i_half * water_wind 
                             / ( (double)( k - l + 1 ) );
                     }
                 }

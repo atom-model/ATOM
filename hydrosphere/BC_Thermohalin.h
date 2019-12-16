@@ -58,19 +58,13 @@ class BC_Thermohalin{
 
         void IC_v_w_EkmanSpiral ( Array_1D &, Array_1D &, Array &, Array &, Array & );
 
-        void IC_u_WestEastCoast ( Array_1D &rad, Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn );
+//        void IC_u_WestEastCoast ( Array_1D &rad, Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn );
 
         void BC_Temperature_Salinity ( Array &, Array &, Array &, Array &, Array_2D &, Array_2D &, Array_2D &, Array_2D & );
 
         void BC_Surface_Temperature_NASA ( const string &, Array & );
 
         void BC_Surface_Salinity_NASA ( const string &, Array & );
-
-        void BC_Pressure_Density ( Array &, Array &, Array &, Array &, Array &, Array & );
-
-        void IC_CircumPolar_Current ( Array &, Array &, Array &, Array &, Array & );
-
-        void IC_Equatorial_Currents ( Array &h, Array &u, Array &v, Array &w );
 
         void Value_Limitation_Hyd ( Array &, Array &, Array &, Array &, Array &, Array &, Array & );
 

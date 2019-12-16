@@ -183,20 +183,21 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     if(debug) save_data();
     iter_cnt_3d++;
     init_velocities();
-    IC_v_w_WestEastCoast();
 //    goto Printout;
-    fft_gaussian_filter(u, 5);
-    fft_gaussian_filter(v, 5);
-    fft_gaussian_filter(w, 5);
 //    near_wall_values();
     adjust_temperature_IC(t.x[0], jm, km);
     init_temperature();
+    IC_WestEastCoast();
     init_water_vapour();
+//    goto Printout;
     store_intermediate_data_3D();
     BC_Pressure();
     init_co2();
     Ice_Water_Saturation_Adjustment();
 //    BC_Radiation_multi_layer(); 
+    fft_gaussian_filter(u, 5);
+    fft_gaussian_filter(v, 5);
+    fft_gaussian_filter(w, 5);
     fft_gaussian_filter(t, 5);
     fft_gaussian_filter(c, 5);
     fft_gaussian_filter(cloud, 5);
@@ -1014,7 +1015,8 @@ void cAtmosphereModel::store_intermediate_data_3D(float coeff){
 void cAtmosphereModel::adjust_temperature_IC(double** t, int jm, int km){
     for(int k=0; k < km; k++){
         for(int j=0; j < jm; j++){
-            t[j][k] = temperature_NASA.y[j][k] = (t[j][k] + t_0) / t_0;
+//            t[j][k] = temperature_NASA.y[j][k] = (t[j][k] + t_0) / t_0;
+            t[j][k] = (t[j][k] + t_0) / t_0;
         }
     }
     // correction of surface temperature around 180°E

@@ -1143,7 +1143,7 @@ void cAtmosphereModel::Value_Limitation_Atm(){
                     v.x[i][j][k] = 0.;
                     w.x[i][j][k] = 0.;
 //                    t.x[i][j][k] = 1.;  // = 273.15 K
-//                    c.x[i][j][k] = 0.;
+                    c.x[i][j][k] = 0.;
                     cloud.x[i][j][k] = 0.;
                     ice.x[i][j][k] = 0.;
 //                    co2.x[i][j][k] = 1.;  // = 280 ppm
@@ -1155,18 +1155,19 @@ void cAtmosphereModel::Value_Limitation_Atm(){
 }
 
 
-void cAtmosphereModel::IC_v_w_WestEastCoast(){
-// initial conditions for v and w velocity components at the sea surface close to east or west coasts
-// reversal of v velocity component between north and south equatorial current ommitted at respectively 10°
-// w component not changed in sign
-// search for east coasts and associated velocity components to close the circulations
+void cAtmosphereModel::IC_WestEastCoast(){
+// initial conditions for v and w velocity components and temperature at 
+// the sea surface close to east or west coasts
 // transition between coast flows and open sea flows included
+// upwelling along west coasts causes a temperature reduction
 // east coast
-    int i_max = 20;
+    int i_max = 20; // maximun height of the coast near velocity and temperature changes
     double d_i_max = get_layer_height(i_max);
     double d_i = 0.;
     double v_neg = 0.;
-    int k_mid = 30;
+    double w_neg = 0.;
+    double t_neg = 0.;
+    int k_mid = 30; // maximun extension from the coasts
     int k_beg = 1;
     for(int j = 0; j < jm; j++){
         for(int k = 1; k < km-1; k++){
@@ -1175,21 +1176,22 @@ void cAtmosphereModel::IC_v_w_WestEastCoast(){
                     if(is_land(h, 0, j, k+1))  break;
                     if(is_air(h, 0, j, k-2))  break;
                     if(is_air(h, 0, j, k-3))  break;
-                    v_neg = - v.x[0][j][k+k_mid];
+                    v_neg = - v.x[0][j][k]; // negative values for v to form global vortices
                     for(int l = 0; l <= k_mid; l++){
                         v.x[0][j][k+l] = ( v.x[0][j][k+k_mid] - v_neg ) 
                             / (double)k_mid * (double)l + v_neg;
-                        for(int i = 1; i <= i_max; i++){
+                        for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
                             d_i = get_layer_height(i);
                             v.x[i][j][k+l] = ( v.x[i_max][j][k+l] - v.x[0][j][k+l] ) 
                                 / d_i_max * d_i + v.x[0][j][k+l];
                         }
                         if(is_land(h, 0, j, k+l))  v.x[0][j][k+l] = 0.;
                     }
+                    w_neg = 0.; // on land w = 0
                     for(int l = 0; l <= k_mid; l++){
-                        w.x[0][j][k+l] = w.x[0][j][k+k_mid] 
-                            / (double)k_mid * (double)l;
-                        for(int i = 1; i <= i_max; i++){
+                        w.x[0][j][k+l] = ( w.x[0][j][k+k_mid] - w_neg ) 
+                            / (double)k_mid * (double)l + w_neg; // decreasing w approaching east coasts
+                        for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
                             d_i = get_layer_height(i);
                             w.x[i][j][k+l] = ( w.x[i_max][j][k+l] - w.x[0][j][k+l] ) 
                                 / d_i_max * d_i + w.x[0][j][k+l];
@@ -1204,16 +1206,18 @@ void cAtmosphereModel::IC_v_w_WestEastCoast(){
         k_beg = 1;
     } // end j
 // west coast
-    k_mid = 10;
-    k_beg = k_mid;
+//    k_mid = 10;
+    k_mid = 30;
+    k_beg = k_mid-20;
     for(int j = 0; j < jm; j++){
-        for(int k = k_mid; k < km-1; k++){
+        for(int k = 1; k < km-1; k++){
             if((is_air(h, 0, j, k-1))&&(is_land(h, 0, j, k))){
-                while(k >= k_beg){
+                while(k >= 1){
                     if(is_air(h, 0, j, k+1))  break;
+//                    v_neg = - v.x[0][j][k+k_mid]; // no changes of v along west coasts
 /*
-//                    v_neg = - v.x[0][j][k+k_mid];
-                    v_neg = v.x[0][j][k+k_mid];
+//                    v_neg = v.x[0][j][k+k_mid];
+                    v_neg = v.x[0][j][k];
                     for(int l = k_mid; l >= 0; l--){
                         v.x[0][j][k-l] = ( v.x[0][j][k-k_mid] - v_neg ) 
                             / (double)k_mid * (double)l + v_neg;
@@ -1225,22 +1229,54 @@ void cAtmosphereModel::IC_v_w_WestEastCoast(){
                         if(is_land(h, 0, j, k-l))  v.x[0][j][k-l] = 0.;
                     }
 */
+                    w_neg = w.x[0][j][k];
                     for(int l = k_mid; l >= 0; l--){
-                        w.x[0][j][k-l] = w.x[0][j][k-k_mid] 
-                            / (double)k_mid * (double)l;
-                        for(int i = 1; i <= i_max; i++){
+                        w.x[0][j][k-l] = ( w.x[0][j][k-k_mid] - w_neg ) 
+                            / (double)k_mid * (double)l + w_neg; // decreasing w approaching west coasts
+                        for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
                             d_i = get_layer_height(i);
                             w.x[i][j][k-l] = ( w.x[i_max][j][k-l] - w.x[0][j][k-l] ) 
                                 / d_i_max * d_i + w.x[0][j][k-l];
                         }
                         if(is_land(h, 0, j, k-l))  w.x[0][j][k-l] = 0.;
                     }
-                    k_beg = k - k_mid;
+                    t_neg = .97 * t.x[0][j][k];
+                    for(int l = k_mid; l >= 0; l--){
+                        t.x[0][j][k-l] = ( t.x[0][j][k-k_mid] - t_neg ) 
+                            / (double)k_mid * (double)l + t_neg; // decreasing temperature leaving west coasts
+                            // upwelling along west coasts lowers temperature
+                        for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
+                            d_i = get_layer_height(i);
+                            t.x[i][j][k-l] = ( t.x[i_max][j][k-l] - t.x[0][j][k-l] ) 
+                                / d_i_max * d_i + t.x[0][j][k-l];
+                        }
+                    }
                     break;
                 } // end while
             } // end if
         } // end k
-        k_beg = k_mid;
+    } // end j
+    int k_mid_eq = 120; // maximun extension from west coasts for equatorial temperature changes
+    for(int j = 80; j <= 100; j++){
+        for(int k = 1; k < km-1; k++){
+            if((is_air(h, 0, j, k-1))&&(is_land(h, 0, j, k))){
+                while(k >= 1){
+                    if(is_air(h, 0, j, k+1))  break;
+                    t_neg = .97 * t.x[0][j][k];
+                    for(int l = k_mid_eq; l >= 0; l--){ // development with height, decreasing influence
+                        t.x[0][j][k-l] = ( t.x[0][j][k-k_mid_eq] - t_neg ) 
+                            / (double)k_mid_eq * (double)l + t_neg; // decreasing temperature leaving west coasts
+                            // upwelling regions along equatorial currents beginning on west coasts lower the local temperature
+                        for(int i = 1; i <= i_max; i++){
+                            d_i = get_layer_height(i);
+                            t.x[i][j][k-l] = ( t.x[i_max][j][k-l] - t.x[0][j][k-l] ) 
+                                / d_i_max * d_i + t.x[0][j][k-l]; // development with height, decreasing influence
+                        }
+                    }
+                    break;
+                } // end while
+            } // end if
+        } // end k
     } // end j
 }
 

@@ -25,7 +25,7 @@ def main():
             ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
         
             ('time_start', 'start time', 'int', 0),
-            ('time_end', 'end time', 'int', 50),
+            ('time_end', 'end time', 'int', 0),
             ('time_step', 'step size between timeslices', 'int', 10),
       ],
         'atmosphere': [
@@ -35,8 +35,8 @@ def main():
             ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
             ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
-            ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', .065),
-            ('coeff_Precipitation', "coefficient to adjust to the modern worlds precipitation", 'double', .007),
+            ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', .045),
+            ('coeff_Precipitation', "coefficient to adjust to the modern worlds precipitation", 'double', .015),
 
             ('WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0),
             ('Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
@@ -106,7 +106,8 @@ def main():
 
             ('c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.0005 compares to 0.0005 kg/kg', 'double', 0.0005),
             ('c_ocean', 'water vapour reduction on sea surface (50% of the saturation value)', 'double', 0.76),
-            ('c_land', 'water vapour reduction on land (55% of the saturation value)', 'double', 0.76),
+#            ('c_land', 'water vapour reduction on land (55% of the saturation value)', 'double', 0.76),
+            ('c_land', 'water vapour reduction on land (55% of the saturation value)', 'double', 0.72),
 
             ('co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0),
             ('co2_paleo', 'value at modern times', 'double', 330.0),

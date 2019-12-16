@@ -29,6 +29,10 @@ private:
     void save_data();
     void run_data();
     void IC_v_w_EkmanSpiral();
+    void IC_u_WestEastCoast();
+    void IC_Equatorial_Currents();
+    void IC_CircumPolar_Current();
+    void BC_Pressure_Density();
     void solveRungeKutta_2D_Hydrosphere();
     void solveRungeKutta_3D_Hydrosphere();
     void RK_RHS_3D_Hydrosphere(int i, int j, int k);

@@ -178,12 +178,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
 //    goto Printout;
     IC_v_w_EkmanSpiral();
 //    goto Printout;
-//    oceanflow.IC_u_WestEastCoast(rad, h, u, v, w, un, vn, wn);
-    //oceanflow.IC_Equatorial_Currents(h, u, v, w);
-    //if(Ma <= 41)  oceanflow.IC_CircumPolar_Current(h, u, v, w, c); // Drake passage closed 41 Ma ago
+//    IC_u_WestEastCoast();
+//    IC_Equatorial_Currents();
+    //if(Ma <= 41)  IC_CircumPolar_Current(); // Drake passage closed 41 Ma ago
 //    oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn );
     oceanflow.BC_Temperature_Salinity(h, t, c, p_dyn, Evaporation_Dalton, Precipitation, salinity_evaporation, c_fix );
-//    oceanflow.BC_Pressure_Density(p_stat, r_water, r_salt_water, t, c, h);
+//    BC_Pressure_Density();
 //    goto Printout;
     store_intermediate_data_2D();
     store_intermediate_data_3D();
@@ -242,7 +242,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
             boundary.RB_theta(t, u, v, w, p_dyn, c);
             boundary.RB_phi(t, u, v, w, p_dyn, c);
             depth.BC_SolidGround(h, t, u, v, w, p_dyn, c, tn, un, vn, wn, p_dynn, cn);
-            oceanflow.BC_Pressure_Density(p_stat, r_water, r_salt_water, t, c, h);
+            BC_Pressure_Density();
             oceanflow.Value_Limitation_Hyd(h, u, v, w, p_dyn, t, c);
             solveRungeKutta_3D_Hydrosphere(); 
             print_min_max();
