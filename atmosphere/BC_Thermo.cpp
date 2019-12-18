@@ -1178,6 +1178,7 @@ void cAtmosphereModel::IC_WestEastCoast(){
                     if(is_air(h, 0, j, k-3))  break;
                     v_neg = - v.x[0][j][k]; // negative values for v to form global vortices
                     for(int l = 0; l <= k_mid; l++){
+                        if(k+l > km-1)  break;
                         v.x[0][j][k+l] = ( v.x[0][j][k+k_mid] - v_neg ) 
                             / (double)k_mid * (double)l + v_neg;
                         for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
@@ -1189,6 +1190,7 @@ void cAtmosphereModel::IC_WestEastCoast(){
                     }
                     w_neg = 0.; // on land w = 0
                     for(int l = 0; l <= k_mid; l++){
+                        if(k+l > km-1)  break;
                         w.x[0][j][k+l] = ( w.x[0][j][k+k_mid] - w_neg ) 
                             / (double)k_mid * (double)l + w_neg; // decreasing w approaching east coasts
                         for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
@@ -1231,6 +1233,7 @@ void cAtmosphereModel::IC_WestEastCoast(){
 */
                     w_neg = w.x[0][j][k];
                     for(int l = k_mid; l >= 0; l--){
+                        if(k-l < 0)  break;
                         w.x[0][j][k-l] = ( w.x[0][j][k-k_mid] - w_neg ) 
                             / (double)k_mid * (double)l + w_neg; // decreasing w approaching west coasts
                         for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
@@ -1242,6 +1245,7 @@ void cAtmosphereModel::IC_WestEastCoast(){
                     }
                     t_neg = .97 * t.x[0][j][k];
                     for(int l = k_mid; l >= 0; l--){
+                        if(k-l < 0)  break;
                         t.x[0][j][k-l] = ( t.x[0][j][k-k_mid] - t_neg ) 
                             / (double)k_mid * (double)l + t_neg; // decreasing temperature leaving west coasts
                             // upwelling along west coasts lowers temperature
@@ -1264,6 +1268,7 @@ void cAtmosphereModel::IC_WestEastCoast(){
                     if(is_air(h, 0, j, k+1))  break;
                     t_neg = .97 * t.x[0][j][k];
                     for(int l = k_mid_eq; l >= 0; l--){ // development with height, decreasing influence
+                        if(k-l < 0)  break;
                         t.x[0][j][k-l] = ( t.x[0][j][k-k_mid_eq] - t_neg ) 
                             / (double)k_mid_eq * (double)l + t_neg; // decreasing temperature leaving west coasts
                             // upwelling regions along equatorial currents beginning on west coasts lower the local temperature
