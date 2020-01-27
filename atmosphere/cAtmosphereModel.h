@@ -184,9 +184,9 @@ private:
     */
     void init_layer_heights(){
         const float zeta = 3.715;
-        float h = L_atm / ( im-1 );
+        float h = L_atm/(im-1);
         for(int i=0; i<im; i++){
-            m_layer_heights.push_back( (exp( zeta * ( rad.z[ i ] - 1. ) ) - 1 ) * h );
+            m_layer_heights.push_back((exp(zeta * (rad.z[ i ] - 1.)) - 1) * h);
             //std::cout << m_layer_heights.back() << std::endl;
         } 
         return;
@@ -245,7 +245,7 @@ private:
 
     string bathymetry_name;
 
-    double coeff_mmWS;    // coeff_mmWS = 1.2041 / 0.0094 [ kg/m³ / kg/m³ ] = 128,0827 [ / ]
+    double coeff_mmWS;    // coeff_mmWS = 1.2041/0.0094 [ kg/m³/kg/m³ ] = 128,0827 [/]
     double max_Precipitation;
 
     bool is_node_weights_initialised;

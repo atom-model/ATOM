@@ -36,10 +36,10 @@ const double cAtmosphereModel::pi180 = 180./ M_PI;      // pi180 = 57.3
 const double cAtmosphereModel::the_degree = 1.;         // compares to 1° step size laterally
 const double cAtmosphereModel::phi_degree = 1.;         // compares to 1° step size longitudinally
 
-// dthe = the_degree / pi180 = 1.0 / 57.3 = 0.01745, 180 * .01745 = 3.141
-const double cAtmosphereModel::dthe = the_degree / pi180; 
-// dphi = phi_degree / pi180 = 1.0 / 57.3 = 0.01745, 360 * .01745 = 6.282
-const double cAtmosphereModel::dphi = phi_degree / pi180;
+// dthe = the_degree/pi180 = 1.0/57.3 = 0.01745, 180 * .01745 = 3.141
+const double cAtmosphereModel::dthe = the_degree/pi180; 
+// dphi = phi_degree/pi180 = 1.0/57.3 = 0.01745, 360 * .01745 = 6.282
+const double cAtmosphereModel::dphi = phi_degree/pi180;
     
 const double cAtmosphereModel::dr = 0.025;    // 0.025 x 40 = 1.0 compares to 16 km : 40 = 400 m for 1 radial step
 const double cAtmosphereModel::dt = 0.00001;  // time step coincides with the CFL condition
@@ -65,7 +65,7 @@ cAtmosphereModel::cAtmosphereModel():
     signal(SIGINT, exit);
     // set default configuration
     SetDefaultConfig();
-    coeff_mmWS = r_air / r_water_vapour; // coeff_mmWS = 1.2041 / 0.0094 [kg/m³ / kg/m³] = 128,0827 [/]
+    coeff_mmWS = r_air/r_water_vapour; // coeff_mmWS = 1.2041/0.0094 [kg/m³/kg/m³] = 128,0827 [/]
     m_model = this;
     //  Coordinate system in form of a spherical shell
     //  rad for r-direction normal to the surface of the earth, the for lateral and phi for longitudinal direction
@@ -187,14 +187,15 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 //    near_wall_values();
     adjust_temperature_IC(t.x[0], jm, km);
     init_temperature();
+    BC_Pressure();
     IC_WestEastCoast();
     init_water_vapour();
 //    goto Printout;
     store_intermediate_data_3D();
-    BC_Pressure();
     init_co2();
     Ice_Water_Saturation_Adjustment();
 //    BC_Radiation_multi_layer(); 
+
     fft_gaussian_filter(u, 5);
     fft_gaussian_filter(v, 5);
     fft_gaussian_filter(w, 5);
@@ -202,6 +203,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     fft_gaussian_filter(c, 5);
     fft_gaussian_filter(cloud, 5);
     fft_gaussian_filter(ice, 5);
+
 //    goto Printout;
     store_intermediate_data_2D();
     store_intermediate_data_3D();
@@ -211,7 +213,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     cout << endl << endl;
 //    restrain_temperature();
 //    Printout:
-    write_file(bathymetry_name, output_path, true);//this line is needed here and important.
+//    write_file(bathymetry_name, output_path, true);//this line is needed here and important.
     iter_cnt_3d++;
     save_data();    
     if(debug){
@@ -329,10 +331,10 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name,
                 int i_trop = get_tropopause_layer(j);
                 double t_mount_top = (temp_tropopause - t.x[0][j][k]) *
                     (get_layer_height(i_mount) 
-                    / get_layer_height(i_trop)) + t.x[0][j][k]; //temperature at mountain top
+                   /get_layer_height(i_trop)) + t.x[0][j][k]; //temperature at mountain top
                 double c_mount_top = (c_tropopause - c.x[0][j][k]) *
                     (get_layer_height(i_mount) 
-                    / get_layer_height(i_trop)) + c.x[0][j][k]; //temperature at mountain top
+                   /get_layer_height(i_trop)) + c.x[0][j][k]; //temperature at mountain top
                 t.x[i_radial][j][k] = t_mount_top;
                 c.x[i_radial][j][k] = c_mount_top;
                 co2.x[i_radial][j][k] = co2.x[i_mount][j][k];
@@ -389,7 +391,6 @@ void cAtmosphereModel::run_2D_loop(){
 
 
 void cAtmosphereModel::run_3D_loop(){ 
-    cout << "    begin run_3D_loop    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
     iter_cnt = 1;
     iter_cnt_3d = 0;
     if(debug){
@@ -398,7 +399,6 @@ void cAtmosphereModel::run_3D_loop(){
     }
     for(int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++){
         for(int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++){
-            cout << "    in run_3D_loop    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
             if(debug){ Array tmp = (t-1)*t_0; tmp.inspect();}
             cout << endl << endl;
             cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
@@ -413,16 +413,21 @@ void cAtmosphereModel::run_3D_loop(){
             BC_theta();
             BC_phi();
             BC_SolidGround();
+//            BC_Pressure();
             if(velocity_iter % 2 == 0){
                 Ice_Water_Saturation_Adjustment();
+
                 fft_gaussian_filter(t, 5);
                 fft_gaussian_filter(c, 5);
                 fft_gaussian_filter(cloud, 5);
                 fft_gaussian_filter(ice, 5);
+
                 Value_Limitation_Atm();
                 Two_Category_Ice_Scheme(); 
+
                 fft_gaussian_filter(P_rain, 2);
                 fft_gaussian_filter(P_snow, 2);
+
                 WaterVapourEvaporation();
                 init_co2();
             }
@@ -439,7 +444,7 @@ void cAtmosphereModel::run_3D_loop(){
         }//end of velocity loop
         computePressure_3D();
         if(pressure_iter % checkpoint == 0){
-            write_file(bathymetry_name, output_path);
+            write_file(bathymetry_name, output_path, true);
         }
         if(iter_cnt > nm){
             cout << "       nm = " << nm 
@@ -484,7 +489,7 @@ float cAtmosphereModel::get_mean_temperature_from_curve(float time) const{
     }
     //std::cout << upper->first << " " << bottom->first << std::endl;
     return upper->second + (time - upper->first) 
-        / (bottom->first - upper->first) 
+       /(bottom->first - upper->first) 
         * (bottom->second - upper->second);
 }
 
@@ -517,9 +522,9 @@ void cAtmosphereModel::calculate_node_weights(){
     m_node_weights.clear();
     for(int i=0; i<jm; i++){
         if(i<=90){
-            weight = cos((90-i) * M_PI / 180.0);
+            weight = cos((90-i) * M_PI/180.0);
         }else{
-            weight = cos((i-90) * M_PI / 180.0);
+            weight = cos((i-90) * M_PI/180.0);
         }
         m_node_weights.push_back(std::vector<double>());
         m_node_weights[i].resize(km, weight);
@@ -534,7 +539,7 @@ void cAtmosphereModel::restrain_temperature(){
     for(int j=0;j<jm;j++){
         for(int k=0; k<km; k++){
             if(t.x[0][j][k] - 1 > 0){
-                t.x[0][j][k] -= exp((t.x[0][j][k] - 1) * t_0 / 4 - 10) * 6 / t_0;
+                t.x[0][j][k] -= exp((t.x[0][j][k] - 1) * t_0/4 - 10) * 6/t_0;
             }
         }
     }
@@ -563,8 +568,8 @@ void cAtmosphereModel::init_water_vapour(){
 //            int i_mount = get_surface_layer(j, k);
             int i_mount = 0.;
             c.x[i_mount][j][k] = hp * ep * exp (17.0809 
-                * (t.x[i_mount][j][k] * t_0 - t_0) / (234.175 
-                + (t.x[i_mount][j][k] * t_0 - t_0))) / ((r_air * R_Air 
+                * (t.x[i_mount][j][k] * t_0 - t_0)/(234.175 
+                + (t.x[i_mount][j][k] * t_0 - t_0)))/((r_air * R_Air 
                 * t.x[i_mount][j][k] * t_0) * .01);
                 // saturation of relative water vapour in kg/kg
             if(is_air(h, 0, j, k)){
@@ -587,7 +592,7 @@ void cAtmosphereModel::init_water_vapour(){
                 if(i <= i_trop){
                     if(i>i_mount){
                         double x = get_layer_height(i) 
-                            / get_layer_height(i_trop); 
+                           /get_layer_height(i_trop); 
                         c.x[i][j][k] = parabola_interp(c_tropopause, 
                             c.x[i_mount][j][k], x); 
                     }
@@ -607,19 +612,19 @@ void cAtmosphereModel::init_water_vapour(){
             double ice_x_max = .01; // scaling of the maximum x value in the linear function x(i)
             int cloud_Agnesi = 20; // radial location of cloud water maximum
             int ice_Agnesi = 33; // radial location of cloud ice maximum
-            double cloud_max = c.x[i_mount][j][k] / 3.; // maximum cloud water based on the surface water vapour
-            double ice_max = c.x[i_mount][j][k] / 14.; // maximum ice water based on the surface water vapour
+            double cloud_max = c.x[i_mount][j][k]/3.; // maximum cloud water based on the surface water vapour
+            double ice_max = c.x[i_mount][j][k]/14.; // maximum ice water based on the surface water vapour
             for(int i = 0; i < im; i++){
                 if(i <= i_trop){
                     if(i>i_mount){
-                        double x_cloud = ( (double)i - cloud_Agnesi ) 
-                            / ( i_max - cloud_Agnesi ) * cloud_x_max;
-                        double x_ice = ( (double)i - ice_Agnesi ) 
-                            / ( ice_Agnesi - ice_max ) * ice_x_max;
+                        double x_cloud = ((double)i - cloud_Agnesi) 
+                           /(i_max - cloud_Agnesi) * cloud_x_max;
+                        double x_ice = ((double)i - ice_Agnesi) 
+                           /(ice_Agnesi - ice_max) * ice_x_max;
                         cloud.x[i][j][k] = pow(cloud_max, 3.) 
-                            / ( pow(cloud_max, 2.) + pow(x_cloud, 2.)); 
+                           /(pow(cloud_max, 2.) + pow(x_cloud, 2.)); 
                         ice.x[i][j][k] = pow(ice_max, 3.) 
-                            / ( pow(ice_max, 2.) + pow(x_ice, 2.)); 
+                           /(pow(ice_max, 2.) + pow(x_ice, 2.)); 
                     }
                 }
             } // end i
@@ -661,84 +666,84 @@ void cAtmosphereModel::near_wall_values(){
                 if((j >= 2) && (j < jm - 3)){
                     if((is_land(h, i, j, k)) && ((is_air(h, i, j+1, k)) 
                         && (is_air(h, i, j+2, k)))){
-                            u.x[i][j+2][k] = u.x[i][j+2][k] / 2.;
-                            u.x[i][j+1][k] = u.x[i][j+2][k] / 4.;
-                            v.x[i][j+2][k] = v.x[i][j+2][k] / 2.;
-                            v.x[i][j+1][k] = v.x[i][j+2][k] / 4.;
-                            w.x[i][j+2][k] = w.x[i][j+2][k] / 2.;
-                            w.x[i][j+1][k] = w.x[i][j+2][k] / 4.;
+                            u.x[i][j+2][k] = u.x[i][j+2][k]/2.;
+                            u.x[i][j+1][k] = u.x[i][j+2][k]/4.;
+                            v.x[i][j+2][k] = v.x[i][j+2][k]/2.;
+                            v.x[i][j+1][k] = v.x[i][j+2][k]/4.;
+                            w.x[i][j+2][k] = w.x[i][j+2][k]/2.;
+                            w.x[i][j+1][k] = w.x[i][j+2][k]/4.;
                     }
                     if((is_land(h, i, j, k)) && (is_air(h, i, j-1, k)) 
                         && (is_air(h, i, j-2, k))){
-                            u.x[i][j-1][k] = u.x[i][j-2][k] / 4.;
-                            u.x[i][j-2][k] = u.x[i][j-2][k] / 2.;
-                            v.x[i][j-2][k] = v.x[i][j-2][k] / 2.;
-                            v.x[i][j-1][k] = v.x[i][j-2][k] / 4.;
-                            w.x[i][j-2][k] = w.x[i][j-2][k] / 2.;
-                            w.x[i][j-1][k] = w.x[i][j-2][k] / 4.;
+                            u.x[i][j-1][k] = u.x[i][j-2][k]/4.;
+                            u.x[i][j-2][k] = u.x[i][j-2][k]/2.;
+                            v.x[i][j-2][k] = v.x[i][j-2][k]/2.;
+                            v.x[i][j-1][k] = v.x[i][j-2][k]/4.;
+                            w.x[i][j-2][k] = w.x[i][j-2][k]/2.;
+                            w.x[i][j-1][k] = w.x[i][j-2][k]/4.;
                     }
                     if(((is_land(h, i, j, k)) 
                             && ((is_air(h, i, j+1, k)) && (is_land(h, i, j+2, k)))) 
                             || ((j == jm - 2) && ((is_air(h, i, j, k)) 
                             && (is_land(h, i, j+1, k))))){
-                                u.x[i][j+2][k] = u.x[i][j+2][k] / 2.;
-                                u.x[i][j+1][k] = u.x[i][j+2][k] / 4.;
-                                v.x[i][j+2][k] = v.x[i][j+2][k] / 2.;
-                                v.x[i][j+1][k] = v.x[i][j+2][k] / 4.;
-                                w.x[i][j+2][k] = w.x[i][j+2][k] / 2.;
-                                w.x[i][j+1][k] = w.x[i][j+2][k] / 4.;
+                                u.x[i][j+2][k] = u.x[i][j+2][k]/2.;
+                                u.x[i][j+1][k] = u.x[i][j+2][k]/4.;
+                                v.x[i][j+2][k] = v.x[i][j+2][k]/2.;
+                                v.x[i][j+1][k] = v.x[i][j+2][k]/4.;
+                                w.x[i][j+2][k] = w.x[i][j+2][k]/2.;
+                                w.x[i][j+1][k] = w.x[i][j+2][k]/4.;
                     }
                     if(((is_land(h, i, j, k)) 
                             && ((is_air(h, i, j-1, k)) && (is_land(h, i, j-2, k)))) 
                             || ((j == 1) && ((is_land(h, i, j, k)) 
                             && (is_air(h, i, j-1, k))))){
-                                u.x[i][j-2][k] = u.x[i][j-2][ k ] / 2.;
-                                u.x[i][j-1][k] = u.x[i][j-2][ k ] / 4.;
-                                v.x[i][j-2][k] = v.x[i][j-2][ k ] / 2.;
-                                v.x[i][j-1][k] = v.x[i][j-2][ k ] / 4.;
-                                w.x[i][j-2][k] = w.x[i][j-2][ k ] / 2.;
-                                w.x[i][j-1][k] = w.x[i][j-2][ k ] / 4.;
+                                u.x[i][j-2][k] = u.x[i][j-2][ k ]/2.;
+                                u.x[i][j-1][k] = u.x[i][j-2][ k ]/4.;
+                                v.x[i][j-2][k] = v.x[i][j-2][ k ]/2.;
+                                v.x[i][j-1][k] = v.x[i][j-2][ k ]/4.;
+                                w.x[i][j-2][k] = w.x[i][j-2][ k ]/2.;
+                                w.x[i][j-1][k] = w.x[i][j-2][ k ]/4.;
                     }
                 }
                 if((k >= 2) && (k < km - 3)){
                     if((is_land(h, i, j, k)) && (is_air(h, i, j, k+1)) 
                         && (is_air(h, i, j, k+2))){
-                            u.x[i][j][k+2] = u.x[i][j][k+2] / 2.;
-                            u.x[i][j][k+1] = u.x[i][j][k+2] / 4.;
-                            v.x[i][j][k+2] = v.x[i][j][k+2] / 2.;
-                            v.x[i][j][k+1] = v.x[i][j][k+2] / 4.;
-                            w.x[i][j][k+2] = w.x[i][j][k+2] / 2.;
-                            w.x[i][j][k+1] = w.x[i][j][k+2] / 4.;
+                            u.x[i][j][k+2] = u.x[i][j][k+2]/2.;
+                            u.x[i][j][k+1] = u.x[i][j][k+2]/4.;
+                            v.x[i][j][k+2] = v.x[i][j][k+2]/2.;
+                            v.x[i][j][k+1] = v.x[i][j][k+2]/4.;
+                            w.x[i][j][k+2] = w.x[i][j][k+2]/2.;
+                            w.x[i][j][k+1] = w.x[i][j][k+2]/4.;
                     }
                     if((is_land(h, i, j, k)) && (is_air(h, i, j, k-1)) 
                         && (is_air(h, i, j, k-2))){
-                            u.x[i][j][k-2] = u.x[i][j][k-2] / 2.;
-                            u.x[i][j][k-1] = u.x[i][j][k-2] / 4.;
-                            v.x[i][j][k-2] = v.x[i][j][k-2] / 2.;
-                            v.x[i][j][k-1] = v.x[i][j][k-2] / 4.;
-                            w.x[i][j][k-2] = w.x[i][j][k-2] / 2.;
-                            w.x[i][j][k-1] = w.x[i][j][k-2] / 4.;
+                            u.x[i][j][k-2] = u.x[i][j][k-2]/2.;
+                            u.x[i][j][k-1] = u.x[i][j][k-2]/4.;
+                            v.x[i][j][k-2] = v.x[i][j][k-2]/2.;
+                            v.x[i][j][k-1] = v.x[i][j][k-2]/4.;
+                            w.x[i][j][k-2] = w.x[i][j][k-2]/2.;
+                            w.x[i][j][k-1] = w.x[i][j][k-2]/4.;
                     }
                     if(((is_land(h, i, j, k)) && ((is_air(h, i, j, k+1)) 
                         && (is_land(h, i, j, k+2)))) || ((k == km - 2)
                         && ((is_air(h, i, j, k)) && (is_land(h, i, j, k+1))))){
-                            u.x[i][j][k+2] = u.x[i][j][k+2] / 2.;
-                            u.x[i][j][k+1] = u.x[i][j][k+2] / 4.;
-                            v.x[i][j][k+2] = v.x[i][j][k+2] / 2.;
-                            v.x[i][j][k+1] = v.x[i][j][k+2] / 4.;
-                            w.x[i][j][k+2] = w.x[i][j][k+2] / 2.;
-                            w.x[i][j][k+1] = w.x[i][j][k+2] / 4.;
+                            u.x[i][j][k+2] = u.x[i][j][k+2]/2.;
+                            u.x[i][j][k+1] = u.x[i][j][k+2]/4.;
+                            v.x[i][j][k+2] = v.x[i][j][k+2]/2.;
+                            v.x[i][j][k+1] = v.x[i][j][k+2]/4.;
+                            w.x[i][j][k+2] = w.x[i][j][k+2]/2.;
+                            w.x[i][j][k+1] = w.x[i][j][k+2]/4.;
                     }
                     if(((is_land(h, i, j, k)) 
                             && ((is_air(h, i, j, k-1)) && (is_land(h, i, j, k-2)))) 
                             || ((k == 1) && ((is_land(h, i, j, k)) 
                             && (is_air(h, i, j, k-1))))){
-                                u.x[i][j][k-2] = u.x[i][j][k-2] / 2.;
-                                u.x[i][j][k-1] = u.x[i][j][k-2] / 4.;
-                                v.x[i][j][k-2] = v.x[i][j][k-2] / 2.;
-                                v.x[i][j][k-1] = v.x[i][j][k-2] / 4.;
-                                w.x[i][j][k-2] = w.x[i][j][k-2] / 2.;
-                                w.x[i][j][k-1] = w.x[i][j][k-2] / 4.;
+                                u.x[i][j][k-2] = u.x[i][j][k-2]/2.;
+                                u.x[i][j][k-1] = u.x[i][j][k-2]/4.;
+                                v.x[i][j][k-2] = v.x[i][j][k-2]/2.;
+                                v.x[i][j][k-1] = v.x[i][j][k-2]/4.;
+                                w.x[i][j][k-2] = w.x[i][j][k-2]/2.;
+                                w.x[i][j][k-1] = w.x[i][j][k-2]/4.;
                     }
                 }
             } // end i
@@ -829,10 +834,10 @@ void cAtmosphereModel::init_co2(){
         << " = "  << setw (7)  << setfill (' ') << co2_average + co2_paleo
         << setw (5) << co_unit << endl;
     cout << endl;
-    co2_paleo = co2_paleo / co2_0;
-    co2_land = co2_land / co2_0;
-    co2_ocean = co2_ocean / co2_0;
-    co2_tropopause = co2_tropopause / co2_0;
+    co2_paleo = co2_paleo/co2_0;
+    co2_land = co2_land/co2_0;
+    co2_ocean = co2_ocean/co2_0;
+    co2_tropopause = co2_tropopause/co2_0;
     double emittancy_total = 0.423; // in W/m²
     double coeff_em = 5.6697e-8; // in W/(m² K)
     double delta_T = 0.02; // in K
@@ -847,7 +852,7 @@ void cAtmosphereModel::init_co2(){
                      // original formula by Nasif Nahle Sabag delta T(co2)
                      // co2_paleo taken over from Ruddiman, p 86, effect of co2 on global temperature
                 co2.x[i_mount][j][k] = exp (4. * delta_T * coeff_em 
-                     * pow((t.x[i_mount][j][k] * t_0), 3) / emittancy_total)
+                     * pow((t.x[i_mount][j][k] * t_0), 3)/emittancy_total)
                      + co2_paleo + co2_ocean;
             }
             if(is_land(h, i_mount, j, k)){
@@ -856,9 +861,9 @@ void cAtmosphereModel::init_co2(){
                      // original formula by Nasif Nahle Sabag delta T(co2)
                      // co2_paleo taken over from Ruddiman, p 86, effect of co2 on global temperature
                 co2.x[i_mount][j][k] = exp (4. * delta_T * coeff_em 
-                     * pow((t.x[i_mount][j][k] * t_0), 3) / emittancy_total)
+                     * pow((t.x[i_mount][j][k] * t_0), 3)/emittancy_total)
                      + co2_paleo + co2_land - co2_vegetation
-                     * Vegetation.y[j][k] / co2_0;
+                     * Vegetation.y[j][k]/co2_0;
             }
         }
     }
@@ -873,7 +878,7 @@ void cAtmosphereModel::init_co2(){
                     if(i <= i_trop){
                         // radial distribution approximated by a parabola
                         double x = get_layer_height(i) 
-                            / get_layer_height(i_trop); 
+                           /get_layer_height(i_trop); 
                         co2.x[i][j][k] = parabola_interp(co2_tropopause, 
                             co2.x[i_mount][j][k], x); 
                     }else  co2.x[i][j][k] = co2_tropopause;
@@ -973,10 +978,10 @@ void cAtmosphereModel::vegetation_distribution(){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
             if(max_Precipitation > 0 && is_land(h, 0, j, k) 
-                && !( get_layer_height(i_mount) > 2400.) // above the timberline no vegeation
-                && !( ( t.x[ 0 ][ j ][ k ] * t_0 - t_0 ) < - 10. ) ){ //  vegetation >= -10°C
+                && !(get_layer_height(i_mount) > 2400.) // above the timberline no vegeation
+                && !((t.x[ 0 ][ j ][ k ] * t_0 - t_0) < - 10.)){ //  vegetation >= -10°C
                 Vegetation.y[j][k] = Precipitation.y[j][k] 
-                    / max_Precipitation; // actual vegetation areas
+                   /max_Precipitation; // actual vegetation areas
             }else{
                 Vegetation.y[j][k] = 0.;
             }
@@ -1015,16 +1020,16 @@ void cAtmosphereModel::store_intermediate_data_3D(float coeff){
 void cAtmosphereModel::adjust_temperature_IC(double** t, int jm, int km){
     for(int k=0; k < km; k++){
         for(int j=0; j < jm; j++){
-//            t[j][k] = temperature_NASA.y[j][k] = (t[j][k] + t_0) / t_0;
-            t[j][k] = (t[j][k] + t_0) / t_0;
+//            t[j][k] = temperature_NASA.y[j][k] = (t[j][k] + t_0)/t_0;
+            t[j][k] = (t[j][k] + t_0)/t_0;
         }
     }
     // correction of surface temperature around 180°E
     int k_half = (km-1)/2;
     for(int j = 0; j < jm; j++){
-        t[j][k_half] = (t[j][k_half+1] + t[j][k_half-1]) / 2.;
+        t[j][k_half] = (t[j][k_half+1] + t[j][k_half-1])/2.;
         temperature_NASA.y[j][k_half] = (temperature_NASA.y[j][k_half+1] +
-            temperature_NASA.y[j][k_half-1]) / 2.;
+            temperature_NASA.y[j][k_half-1])/2.;
     }
 }
 
@@ -1050,7 +1055,7 @@ void cAtmosphereModel::check_data(Array& a, Array&an, const std::string& name){
         logger() << name << " diff min: " << t_diff_min << std::endl;
         logger() << name << " diff max: " << t_diff_max << std::endl;
         logger() << name << " diff mean: " << t_diff_mean << "   " 
-            << (double)t_diff_mean / (jm*km) << std::endl;
+            << (double)t_diff_mean/(jm*km) << std::endl;
     }
 }
 
@@ -1074,12 +1079,12 @@ void cAtmosphereModel::init_tropopause_layers(){
     int j_max = jm-1;
     int j_half = j_max/2;
     for(int j=j_half; j>=0; j--){
-        double x = sqrt(pow(tropopause_equator,3) / tropopause_pole 
+        double x = sqrt(pow(tropopause_equator,3)/tropopause_pole 
             - pow(tropopause_equator,2)) * (double)(j_half-j) 
-            / (double)j_half;
+           /(double)j_half;
         tropopause_layers[j] = Agnesi(x, tropopause_equator); 
         tropopause_layers[j] = round(tropopause_layers[j] 
-            / L_atm * (double)i_max); 
+           /L_atm * (double)i_max); 
 /*
     cout << "   j = " << j << "   x = " << x 
         << "   Agnesi = " << Agnesi(x, tropopause_equator) 

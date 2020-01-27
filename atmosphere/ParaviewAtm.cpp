@@ -166,6 +166,10 @@ void cAtmosphereModel::paraview_panorama_vts(string &Name_Bathymetry_File, int n
     Atmosphere_panorama_vts_File <<  " </StructuredGrid>\n"  << endl;
     Atmosphere_panorama_vts_File <<  "</VTKFile>\n"  << endl;
     Atmosphere_panorama_vts_File.close();
+    cout << "   File:  " << "[" 
+        + Name_Bathymetry_File + "]_Atm_panorama_" + std::to_string(n) + ".vts" 
+        << "  has been written to Directory:  " 
+        << output_path << endl;
 }
 
 void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File, 
@@ -207,7 +211,7 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
         for(int k = 0; k < km; k++){
             for(int j = 0; j < jm; j++){
                 temp_NASA.y[j][k] = temperature_NASA.y[j][k] * t_0 - t_0;
-                temp_NASA.y[j][k] = temp_NASA.y[j][k] / t_0;
+                temp_NASA.y[j][k] = temp_NASA.y[j][k]/t_0;
                 for(int i = im-2; i >= 0; i--){
                     aux_w.x[i_radial][j][k] = Evaporation_Dalton.y[j][k] 
                         - Precipitation.y[j][k];
@@ -215,22 +219,16 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
             }
         }
     }
-    float exp_pressure = g / (1.e-2 * gam * R_Air);
-    float p_h, p_SL, t_u, height, E_Rain, q_Rain;
+    float t_u, height, E_Rain, q_Rain;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             for(int i = 0; i < im; i++){
                 t_u = t.x[i][j][k] * t_0; // in K
-                p_SL = .01 * ( r_air * R_Air * t.x[0][j][k] * t_0 ); // given in hPa
-                height = get_layer_height(i);
-                if(i != 0)
-                      p_h = pow((t_u - gam * height * 1.e-2) / t_u, 
-                            exp_pressure) * p_SL;
-                else  p_h = p_SL;
                 E_Rain = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
+                q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
                 if(c.x[i][j][k] >= q_Rain){
                     dew_point_temperature.y[j][k] = t_u - t_0;
+                    height = get_layer_height(i);
                     condensation_level.y[j][k] = height;
                     break;
                 }
@@ -288,6 +286,10 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
         }
     }
     Atmosphere_vtk_radial_File.close();
+    cout << "   File:  " << "[" 
+        + Name_Bathymetry_File + "]_Atm_radial_" + std::to_string(i_radial) 
+        + "_" + std::to_string(n) + ".vtk" 
+        << "  has been written to Directory:  " << output_path << endl;
 }
 
 void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File, 
@@ -342,15 +344,10 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
                 + cloud.x[i][j][k_zonal] + ice.x[i][j][k_zonal];
             float t_u = t.x[i][j][k_zonal] * t_0;
             float T = t_u;
-            float p_SL = .01 * (r_air * R_Air * t.x[0][j][k_zonal] * t_0);
-            float p_h;
-            if(i != 0)   p_h = exp (- g * (double)i * (L_atm 
-                / (double)(im-1)) / (R_Air * t_u)) * p_SL;
-            else         p_h = p_SL;
             float E_Rain = hp * exp_func(T, 17.2694, 35.86);
             float E_Ice = hp * exp_func(T, 21.8746, 7.66);
-            float q_Rain = ep * E_Rain / (p_h - E_Rain);
-            float q_Ice = ep * E_Ice / (p_h - E_Ice);
+            float q_Rain = ep * E_Rain/(p_stat.x[i][j][k_zonal] - E_Rain);
+            float q_Ice = ep * E_Ice/(p_stat.x[i][j][k_zonal] - E_Ice);
             aux_u.x[i][j][k_zonal] = c.x[i][j][k_zonal] - q_Rain;
             if(T <= t_0){
                 aux_v.x[i][j][k_zonal] = c.x[i][j][k_zonal] - q_Ice;
@@ -364,9 +361,9 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
     int j_max = jm-1;
     int j_half = j_max/2;
     for(int j=j_half; j>=0; j--){
-        double x = sqrt(pow(t_tropopause,3) / t_tropopause_pole 
+        double x = sqrt(pow(t_tropopause,3)/t_tropopause_pole 
             - pow(t_tropopause,2)) * (double)(j_half-j) 
-            / (double)j_half;
+           /(double)j_half;
         temp_tropopause[j] = Agnesi(x, t_tropopause); 
     }
     for(int j=j_max; j>j_half; j--){
@@ -386,14 +383,14 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
                         // compares to the US Standard Atmosphere 
                         // with variable tropopause location
                         M_u.x[i][j][k] = (temp_tropopause[j] - M_u.x[0][j][k]) * 
-                            (get_layer_height(i) / get_layer_height(i_trop)) + 
+                            (get_layer_height(i)/get_layer_height(i_trop)) + 
                             M_u.x[0][j][k]; 
                         // US Standard Atmosphere
 //                        M_u.x[i][j][k] = M_u.x[0][j][k] - 6.5 * 
-//                            (double)(get_layer_height(i) / 1000.) / t_0;
+//                            (double)(get_layer_height(i)/1000.)/t_0;
                     }else{
                         M_u.x[i][j][k] = (temp_tropopause[j] - M_u.x[0][j][k]) * 
-                            (get_layer_height(i) / get_layer_height(i_trop)) + 
+                            (get_layer_height(i)/get_layer_height(i_trop)) + 
                             M_u.x[0][j][k]; 
 
                     }
@@ -443,6 +440,9 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
         }
     }
     Atmosphere_vtk_zonal_File.close();
+    cout << "   File:  " << "[" + Name_Bathymetry_File 
+        + "]_Atm_zonal_" + std::to_string(k_zonal) + "_" + std::to_string(n) + ".vtk" 
+        << "  has been written to Directory:  " << output_path << endl;
 }
 
 void cAtmosphereModel::paraview_vtk_longal(string &Name_Bathymetry_File, 
@@ -523,4 +523,7 @@ void cAtmosphereModel::paraview_vtk_longal(string &Name_Bathymetry_File,
         }
     }
     Atmosphere_vtk_longal_File.close();
+    cout << "   File:  " << "[" + Name_Bathymetry_File 
+        + "]_Atm_longal_" + std::to_string(j_longal) + "_" + std::to_string(n) + ".vtk" 
+        << "  has been written to Directory:  " << output_path << endl;
 }

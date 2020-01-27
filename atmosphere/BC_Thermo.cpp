@@ -38,9 +38,9 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
     int j_max = jm-1;
     int j_half = j_max/2;
     for(int j=j_half; j>=0; j--){
-        double x = sqrt(pow(t_tropopause,3) / t_tropopause_pole 
+        double x = sqrt(pow(t_tropopause,3)/t_tropopause_pole 
             - pow(t_tropopause,2)) * (double)(j_half-j) 
-            / (double)j_half;
+           /(double)j_half;
         temp_tropopause[j] = Agnesi(x, t_tropopause); 
     }
     for(int j=j_max; j>j_half; j--){
@@ -83,10 +83,10 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
                 if(ice.x[i][j][k] < 0.)    ice.x[i][j][k] = 0.;
                 // COSMO water vapour pressure based on local water vapour in hPa
-                double e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;
+                double e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;
                 // radial parabolic distribution, start on zero level
                 double epsilon_eff = epsilon_eff_max 
-                    * (1. - get_layer_height(i) / get_layer_height(i_trop));
+                    * (1. - get_layer_height(i)/get_layer_height(i_trop));
                 // dependency given by Häckel, Meteorologie, p. 205 (law by F. Baur and H. Philips, 1934)
                 // epsilon_eff describe the effect in the emissivity computation of other gases like CO2
                 // in the original formula this value is 0.594, for reasons of adjustment to the modern atmosphere,
@@ -96,12 +96,12 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 if(i >= i_mount){ //start from the mountain top
                     double step = get_layer_height(i+1) - get_layer_height(i); // local atmospheric shell thickness
                     double P_c = (1.e-6 * p_stat.x[i][j][k] 
-                                 * co2.x[i][j][k] * co2_0 / p_0);
-                    double u_c = P_c * step * 100. * (L_atm / (double)(im-1)); // model by Atwater and Ball
-//                    u_c = 300. / 0.9869 * P_c * step * 100. / (t.x[i][j][k] * t_0); 
+                                 * co2.x[i][j][k] * co2_0/p_0);
+                    double u_c = P_c * step * 100. * (L_atm/(double)(im-1)); // model by Atwater and Ball
+//                    u_c = 300./0.9869 * P_c * step * 100./(t.x[i][j][k] * t_0); 
                             // modell by Yamamoto and Sasamori
                  // influence on the emissivity by carbon dioxcide by the law by Bliss
-//                    x_c = 10. * P_c / (R_co2 * t.x[i][j][k] * t_0) * step * p_0;
+//                    x_c = 10. * P_c/(R_co2 * t.x[i][j][k] * t_0) * step * p_0;
                   // coefficient in the Bliss law, 10. => conversion from kg/m² to g/cm²
 //                    eps_co2 = .185 * (1. - exp (- 50. * x_c)); // modell by Bliss
                     double eps_co2 = .185 * (1. - exp(- 0.3919 * pow(u_c, 0.4))); // model by Atwater and Ball
@@ -161,16 +161,16 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                 double Sensible_Heat = .05 * radiation_surface.y[j][k];
                 double rad_surf_diff = radiation_back + Latent_Heat
                     + Sensible_Heat + atmospheric_window; // radiation leaving the surface
-                AA[i_mount] = rad_surf_diff / radiation_3D.x[i_trop][j][k];// non-dimensional surface radiation
+                AA[i_mount] = rad_surf_diff/radiation_3D.x[i_trop][j][k];// non-dimensional surface radiation
                 CC[i_mount][i_mount] = 0.; // no absorption of radiation on the surface by water vapour
                 radiation_3D.x[i_mount][j][k] = 
                     (1. - epsilon_3D.x[i_mount][j][k]) * sigma
                     * pow(t.x[i_mount][j][k] * t_0, 4.) 
-                    / radiation_3D.x[i_trop][j][k]; // radiation leaving the surface
+                   /radiation_3D.x[i_trop][j][k]; // radiation leaving the surface
                 for(int i = i_mount+1; i <= i_trop; i++){
                     AA[i] = AA[i-1] * (1. - epsilon_3D.x[i][j][k]); // transmitted radiation from each layer
                     double rad_tmp = sigma * pow(t.x[i][j][k] * t_0, 4.) 
-                        / radiation_3D.x[i_trop][j][k];
+                       /radiation_3D.x[i_trop][j][k];
                     CC[i][i]= epsilon_3D.x[i][j][k] * rad_tmp; // absorbed radiation in each layer
                     radiation_3D.x[i][j][k] = 
                         (1. - epsilon_3D.x[i][j][k]) * rad_tmp; // radiation leaving each layer
@@ -187,8 +187,8 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                         bb = - radiation_3D.x[i][j][k];
                         cc = radiation_3D.x[i+1][j][k];
                         dd = - AA[i];
-                        alfa[i] = cc / bb;
-                        beta[i] = dd / bb;
+                        alfa[i] = cc/bb;
+                        beta[i] = dd/bb;
                     }else{
                         for(int l = i_mount+1; l <= i-1; l++){
                             CCC = CCC + CC[l][i];
@@ -200,9 +200,9 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                         bb = - 2. * radiation_3D.x[i][j][k];
                         cc = radiation_3D.x[i+1][j][k];
                         dd = - AA[i-1] + AA[i] + CCC - DDD;
-                        alfa[i] = cc / (bb - aa * alfa[i-1]);
+                        alfa[i] = cc/(bb - aa * alfa[i-1]);
                         beta[i] = (dd - aa * beta[i-1]) 
-                            / (bb - aa * alfa[i-1]);
+                           /(bb - aa * alfa[i-1]);
                     }
                 }
                 // radiation leaving the atmosphere above the tropopause, later needed for non-dimensionalisation
@@ -216,8 +216,8 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                     // Thomas algorithm, recurrence formula
                     radiation_3D.x[i][j][k] = - alfa[i] 
                         * radiation_3D.x[i+1][j][k] + beta[i];
-                    t.x[i][j][k] = pow(radiation_3D.x[i][j][k] / sigma, 
-                        (1. / 4.)) / t_0;    // averaging of temperature values to smooth the iterations
+                    t.x[i][j][k] = pow(radiation_3D.x[i][j][k]/sigma, 
+                        (1./4.))/t_0;    // averaging of temperature values to smooth the iterations
                 } // end i
                 for(int i = i_trop; i < im; i++){ // above tropopause
                     t.x[i][j][k] = temp_tropopause[j];
@@ -297,11 +297,11 @@ void cAtmosphereModel::init_temperature(){
         double j_pol = jm-1;
         double j_par_f = (double)j_par;
         double j_pol_f = (double)j_pol;
-        double aa = (t_equator - t_pole) / (((j_par_f * j_par_f) 
+        double aa = (t_equator - t_pole)/(((j_par_f * j_par_f) 
             - (j_pol_f * j_pol_f)) - 2. * j_par_f * (j_par_f - j_pol_f));
         double bb = - 2. * aa * j_par_f;
         double cc = t_equator + aa * j_par_f * j_par_f;
-        double j_d = sqrt ((cc - t_pole) / aa);
+        double j_d = sqrt ((cc - t_pole)/aa);
         double dd = 2. * aa * j_d + bb;
         double e = t_pole;
         // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature (linear equation + parabola)
@@ -321,14 +321,14 @@ void cAtmosphereModel::init_temperature(){
         // communicates the impression of local sun radiation on the southern hemisphere
         double k_par = sun_position_lon;  // position of the sun at constant longitude
         double k_pol = km - 1;
-        double t_360 = (t_0 + 5.) / t_0;
+        double t_360 = (t_0 + 5.)/t_0;
         for(int j = 0; j < jm; j++){
             double jm_temp_asym = t.x[0][j][20];//transfer of zonal constant temperature into aa 1D-temperature field
             for(int k = 0; k < km; k++){
                 double k_par_f = (double)k_par;
                 double k_pol_f = (double)k_pol;
                 double d_k = (double) k;
-                aa = (jm_temp_asym - t_360) / (((k_par_f * k_par_f) 
+                aa = (jm_temp_asym - t_360)/(((k_par_f * k_par_f) 
                     - (k_pol_f * k_pol_f)) - 2. * k_par_f * 
                     (k_par_f - k_pol_f));
                 bb = - 2. * aa * k_par_f;
@@ -354,7 +354,7 @@ void cAtmosphereModel::init_temperature(){
     }
     // in °C, constant local pole temperature as function of Ma for hothouse climates 
     float pole_temperature = 1 + get_pole_temperature(*get_current_time(), 
-        pole_temp_map) / t_0;
+        pole_temp_map)/t_0;
     float t_eff = pole_temperature - t_equator;  // coefficient for the zonal parabolic temperature distribution
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -363,7 +363,7 @@ void cAtmosphereModel::init_temperature(){
                 t.x[0][j][k] = t_eff * parabola((double)d_j/(double)d_j_half) 
                     + pole_temperature + t_paleo_add;
 //                srand(time(NULL));
-//                t.x[0][j][k] += (rand() % 10 - 5) / 50. / t_0;
+//                t.x[0][j][k] += (rand() % 10 - 5)/50./t_0;
                 if(is_land(h, 0, j, k)){
                     t.x[0][j][k] += m_model->t_land;
                 }
@@ -375,7 +375,7 @@ void cAtmosphereModel::init_temperature(){
 //                            + pole_temperature) + t_paleo_add + m_model->t_land;
                         t.x[0][j][k] += t_paleo_add + m_model->t_land
                             + t_pole_diff_land * fabs(parabola((double)d_j
-                            /(double)d_j_half) + 1.) / t_0;
+                            /(double)d_j_half) + 1.)/t_0;
                         // land surface temperature increased by mean t_paleo_add
                         // and by a zonally equator wards decreasing temperature difference is added
                         // Stein/Rüdiger/Parish pole temperature decreasing equator wards
@@ -389,7 +389,7 @@ void cAtmosphereModel::init_temperature(){
                         // Stein/Rüdiger/Parish pole temperature decreasing equator wards
                         t.x[0][j][k] += t_paleo_add 
                             + t_pole_diff_ocean * fabs(parabola((double)d_j 
-                            / (double)d_j_half) + 1.) / t_0;
+                           /(double)d_j_half) + 1.)/t_0;
                     }
                     if(*get_current_time() == 0)
                         t.x[0][j][k] = temperature_NASA.y[j][k];  // initial temperature by NASA for Ma=0
@@ -407,9 +407,9 @@ void cAtmosphereModel::init_temperature(){
     int j_max = jm-1;
     int j_half = j_max/2;
     for(int j=j_half; j>=0; j--){
-        double x = sqrt(pow(t_tropopause,3) / t_tropopause_pole 
+        double x = sqrt(pow(t_tropopause,3)/t_tropopause_pole 
             - pow(t_tropopause,2)) * (double)(j_half-j) 
-            / (double)j_half;
+           /(double)j_half;
         temp_tropopause[j] = Agnesi(x, t_tropopause); 
 /*
     cout << "   j = " << j << "   x = " << x 
@@ -432,12 +432,12 @@ void cAtmosphereModel::init_temperature(){
                     if(i>i_mount){
                         // linear temperature decay up to tropopause, privat  approximation
                         t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) * 
-                            (get_layer_height(i) / get_layer_height(i_trop)) 
+                            (get_layer_height(i)/get_layer_height(i_trop)) 
                             + t.x[0][j][k]; 
                         // US Standard Atmosphere
                     }else{
                         t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) * 
-                            (get_layer_height(i) / get_layer_height(i_trop)) 
+                            (get_layer_height(i)/get_layer_height(i_trop)) 
                             + t.x[0][j][k]; 
                     }
                 }else{ // above tropopause
@@ -469,16 +469,16 @@ void cAtmosphereModel::read_NASA_temperature(const string &fn){
         for(int j=0; j < jm; j++){
             ifs >> lat >> lon >> temperature;
             t.x[0][j][k] = temperature_NASA.y[j][k] = 
-                (temperature + t_0) / t_0;
+                (temperature + t_0)/t_0;
         }
     }
     // correction of surface temperature around 180°E
     int k_half = (km -1)/2;
     for(int j = 0; j < jm; j++){
         t.x[0][j][k_half] = (t.x[0][j][k_half + 1] 
-            + t.x[0][j][k_half - 1]) / 2.;
+            + t.x[0][j][k_half - 1])/2.;
         temperature_NASA.y[j][k_half] = (temperature_NASA.y[j][k_half + 1] +
-            temperature_NASA.y[j][k_half - 1]) / 2.;
+            temperature_NASA.y[j][k_half - 1])/2.;
     }
 }
 
@@ -500,22 +500,20 @@ void cAtmosphereModel::read_NASA_precipitation(const string &fn){
 }
 
 void cAtmosphereModel::BC_Pressure(){
-    float exp_pressure = g / (1.e-2 * gam * R_Air);
+    float exp_pressure = g/(1.e-2 * gam * R_Air);
     // boundary condition of surface pressure given by surface temperature through gas equation
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            p_stat.x[0][j][k] = .01 * (r_air * R_Air 
-                * t.x[0][j][k] * t_0);      // given in hPa
+            p_stat.x[0][j][k] = .01 * (r_air * R_Air * t.x[0][j][k] * t_0);  // given in hPa
         }
     }
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             for(int i = 1; i < im; i++){
                 double height = get_layer_height(i);
-                p_stat.x[i][j][k] = pow(((t.x[0][j][k] 
-                    * t_0 - gam * height * 1.e-2) /
-                    (t.x[0][j][k] * t_0)), exp_pressure) 
-                    * p_stat.x[0][j][k];
+                double t_u = t.x[0][j][k] * t_0;
+                p_stat.x[i][j][k] = p_stat.x[0][j][k] 
+                    * pow(((t_u - gam * height * 1.e-2) /t_u), exp_pressure);
                 // linear temperature distribution T = T0 - gam * height
                 // current air pressure, politropic formula in hPa, Kraus p. 28
             }
@@ -536,31 +534,31 @@ void cAtmosphereModel::Latent_Heat(){
         for(int k = 0; k < km; k++){
             int i_mount = get_surface_layer(j, k);
             for(int i = i_mount+1; i < im-2; i++){
-                step_p = ( get_layer_height(i+1) - get_layer_height(i) );
-                step_m = ( get_layer_height(i) - get_layer_height(i-1) );
+                step_p = (get_layer_height(i+1) - get_layer_height(i));
+                step_m = (get_layer_height(i) - get_layer_height(i-1));
                 step = step_p + step_m;
-                e = .01 * c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in Pa
+                e = .01 * c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in Pa
                 if(i > i_mount){
-                    a = e / (R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
+                    a = e/(R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
                     Q_Latent.x[i][j][k] = - lv * a 
-                        * (c.x[i+1][j][k] - c.x[i-1][j][k]) / step;
+                        * (c.x[i+1][j][k] - c.x[i-1][j][k])/step;
                     Q_Latent_Ice = - ls * a * (ice.x[i+1][j][k] 
-                        - ice.x[i-1][j][k]) / step;
+                        - ice.x[i-1][j][k])/step;
                     Q_Sensible.x[i][j][k] = - coeff_sen * coeff_Q 
-                        * (t.x[i+1][j][k] - t.x[i-1][j][k]) / step;  // sensible heat in [W/m2] from energy transport equation
+                        * (t.x[i+1][j][k] - t.x[i-1][j][k])/step;  // sensible heat in [W/m2] from energy transport equation
                 }
                 if(i == i_mount){
-                    a = e / (R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
+                    a = e/(R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
                     Q_Latent.x[i][j][k] = - lv * a 
                         * (- 3. * c.x[i][j][k] + 4. * c.x[i+1][j][k] 
-                        - c.x[i+2][j][k]) / step;
+                        - c.x[i+2][j][k])/step;
                     Q_Latent_Ice = - ls * a * (- 3. * ice.x[i][j][k] +
                         4. * ice.x[i+1][j][k] 
-                        - ice.x[i+2][j][k]) / step;
+                        - ice.x[i+2][j][k])/step;
                     // sensible heat in [W/m2] from energy transport equation
                     Q_Sensible.x[i][j][k] = - coeff_sen * coeff_Q 
                         * (- 3. * t.x[i][j][k] +
-                        4. * t.x[i+1][j][k] - t.x[i+2][j][k]) / step;
+                        4. * t.x[i+1][j][k] - t.x[i+2][j][k])/step;
                 }
                 Q_Latent.x[i][j][k] = 
                     coeff_lat * (Q_Latent.x[i][j][k] + Q_Latent_Ice);
@@ -605,12 +603,12 @@ void cAtmosphereModel::Latent_Heat(){
                 - c13 * Q_Latent.x[i][j][2];
             float b2 = c43 * Q_Latent.x[i][j][km-2] 
                 - c13 * Q_Latent.x[i][j][km-3];
-            Q_Latent.x[i][j][0] = Q_Latent.x[i][j][km-1] = (b1+ b2) / 2.;
+            Q_Latent.x[i][j][0] = Q_Latent.x[i][j][km-1] = (b1+ b2)/2.;
             b1 = c43 * Q_Sensible.x[i][j][1] 
                 - c13 * Q_Sensible.x[i][j][2];
             b2 = c43 * Q_Sensible.x[i][j][km-2] 
                 - c13 * Q_Sensible.x[i][j][km-3];
-            Q_Sensible.x[i][j][0] = Q_Sensible.x[i][j][km-1] = (b1+ b2) / 2.;
+            Q_Sensible.x[i][j][0] = Q_Sensible.x[i][j][km-1] = (b1+ b2)/2.;
         }
     }
 }
@@ -634,9 +632,9 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
     // constant coefficients for the adjustment of cloud water and cloud ice amount vice versa
     float t_00 = 236.15;
     float t_Celsius_0 = 0.; // in Celsius = 0 °C
-    float exp_pressure = g / (1.e-2 * gam * R_Air);
+    float exp_pressure = g/(1.e-2 * gam * R_Air);
     float q_v_hyp = 0., q_T = 0.;
-    float dt_dim = L_atm / u_0 * dt;// dimensional time step of the system in s == 0.02 s
+    float dt_dim = L_atm/u_0 * dt;// dimensional time step of the system in s == 0.02 s
     float t_u = 0.;
     float T_it = 0.;
     float T = 0.;
@@ -667,16 +665,19 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
             for(int i = 0; i < im; i++){
                 t_u = t.x[i][j][k] * t_0; // in K
                 t_Celsius = t_u - t_0; // in C
-                p_SL = .01 * ( r_air * R_Air * t.x[0][j][k] * t_0 ); // given in hPa
+                p_SL = .01 * (r_air * R_Air * t.x[0][j][k] * t_0); // given in hPa
                 height = get_layer_height(i);
                 if(i != 0)
-                      p_h = pow((t_u - gam * height * 1.e-2) / t_u, 
+                      p_h = pow((t_u - gam * height * 1.e-2)/t_u, 
                             exp_pressure) * p_SL;
                 else  p_h = p_SL;
+                p_stat.x[i][j][k] = p_h;
                 E_Rain = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                 E_Ice = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the ice phase in hPa
-                q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
-                q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
+                q_Rain = ep * E_Rain/(p_h - E_Rain); // water vapour amount at saturation with water formation in kg/kg
+                q_Ice = ep * E_Ice/(p_h - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
+                q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
+                q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
                 /** %%%%%%%%%%%%%%%%%%%%%%%%%%%     warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
                 // warm cloud phase in case water vapour is over-saturated
                 if(t_Celsius >= t_Celsius_0){ //temperature above 0 Celsius
@@ -688,28 +689,24 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                         T_it = t_u;
                     }else{ //     oversaturated
                         for(int iter_prec = 1; iter_prec <= 20; iter_prec++){ // iter_prec may be varied
-                            if(i != 0)
-                                p_h = pow((T_it - gam * height * 1.e-2) / t_u, 
-                            exp_pressure) * p_SL;
-                            else  p_h = p_SL;
-                            T_it = t_u + lv / cp_l * ( c.x[i][j][k] - q_Rain );
+                            T_it = t_u + lv/cp_l * (c.x[i][j][k] - q_Rain);
                             E_Rain = hp * exp_func(T_it, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                            q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
-                            q_Rain = .5 * ( q_Rain_n + q_Rain );  // smoothing the iteration process
+                            q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
+                            q_Rain = .5 * (q_Rain_n + q_Rain);  // smoothing the iteration process
                             c.x[i][j][k] = q_Rain; // water vapour restricted to saturated water vapour amount
                             cloud.x[i][j][k] = q_T - c.x[i][j][k]; // cloud water amount
                             ice.x[i][j][k] = 0.; // no cloud ice available
                             q_T = c.x[i][j][k] + cloud.x[i][j][k];
                             if(c.x[i][j][k] < 0.)  c.x[i][j][k] = 0.;
                             if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
-                            if(fabs(q_Rain / q_Rain_n - 1.) < 1.e-3)  break;  
+                            if(fabs(q_Rain/q_Rain_n - 1.) < 1.e-3)  break;  
                             q_Rain_n = q_Rain;
                         }//end of for 
                     }//oversaturated
                     cn.x[i][j][k] = c.x[i][j][k];
                     cloudn.x[i][j][k] = cloud.x[i][j][k];
                     icen.x[i][j][k] = ice.x[i][j][k];
-                    tn.x[i][j][k] = t.x[i][j][k] = T_it / t_0;
+                    tn.x[i][j][k] = t.x[i][j][k] = T_it/t_0;
                 } // end (t_Celsius > 0.)
                 // %%%%%%%%%%%%%%%%%%%%%%%%%%%     end  warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 // %%%%%%%%%%%%%%%%%%%%%%%%%%%     begin mixed cloud phase         %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -722,18 +719,18 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                     T = t_u; // in K
                     E_Rain = hp * exp_func(T, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                     E_Ice = hp * exp_func(T, 21.8746, 7.66); // saturation water vapour pressure for the ice phase in hPa
-                    q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
-                    q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
+                    q_Rain = ep * E_Rain/(p_h - E_Rain); // water vapour amount at saturation with water formation in kg/kg
+                    q_Ice = ep * E_Ice/(p_h - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
                     if(q_c_b > 0. && q_i_b > 0.)
-                        q_v_hyp = ( q_c_b * q_Rain + q_i_b * q_Ice ) 
-                                  / ( q_c_b + q_i_b );
+                        q_v_hyp = (q_c_b * q_Rain + q_i_b * q_Ice) 
+                                 /(q_c_b + q_i_b);
                     if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp = q_Rain;
                     if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp = q_Ice;
                     // §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§
                     for(int iter_prec = 1; iter_prec <= 10; iter_prec++){ // iter_prec = 2 given by COSMO
                     // condensation == water vapor saturation for cloud water formation, deposition == ice crystal for cloud ice formation
-                        CND = ( T - t_00 ) / ( t_0 - t_00 ); // t_00 = 236.15°C, t_0 = 273.15°C
-                        DEP = ( t_0 - T ) / ( t_0 - t_00 );
+                        CND = (T - t_00)/(t_0 - t_00); // t_00 = 236.15°C, t_0 = 273.15°C
+                        DEP = (t_0 - T)/(t_0 - t_00);
                         if(T <= t_00){
                             CND = 0.;
                             DEP = 1.;
@@ -746,7 +743,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                         d_q_v = .5 * d_q_v; // but why?
                         d_q_c = - d_q_v * CND;
                         d_q_i = - d_q_v * DEP;
-                        d_t = ( lv * d_q_c + ls * d_q_i ) / cp_l; // in K, temperature changes
+                        d_t = (lv * d_q_c + ls * d_q_i)/cp_l; // in K, temperature changes
                         T = t_u + d_t; // in K
                         q_v_b = c.x[i][j][k] - d_q_v;  // new values
                         q_c_b = cloud.x[i][j][k] + d_q_c;
@@ -754,33 +751,30 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                         if(q_v_b < 0.)  q_v_b = 0.;  // negative values excluded, when iteration starts
                         if(q_c_b < 0.)  q_c_b = 0.;
                         if(q_i_b < 0.)  q_i_b = 0.;
-                        if(i != 0) p_h = pow(((T - gam * height * 1.e-2) / T), 
-                                       exp_pressure) * p_SL; // given in hPa
-                        else  p_h = p_SL;
                         E_Rain = hp * exp_func(T, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                         E_Ice = hp * exp_func(T, 21.8746, 7.66); // saturation water vapour pressure for the ice phase in hPa
-                        q_Rain = ep * E_Rain / ( p_h - E_Rain ); // water vapour amount at saturation with water formation in kg/kg
-                        q_Ice = ep * E_Ice / ( p_h - E_Ice ); // water vapour amount at saturation with ice formation in kg/kg
+                        q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
+                        q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
                         if((q_c_b > 0.) && (q_i_b > 0.))
-                            q_v_hyp = ( q_c_b * q_Rain + q_i_b * q_Ice ) 
-                                      / ( q_c_b + q_i_b );
+                            q_v_hyp = (q_c_b * q_Rain + q_i_b * q_Ice) 
+                                     /(q_c_b + q_i_b);
                         if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp = q_Rain;
                         if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp = q_Ice;
                         if((q_c_b > 0.) && (q_i_b > 0.))
                         q_T = q_v_b + q_c_b + q_i_b; // total water content
-                        if(iter_prec >= 3 && fabs(q_v_b / q_v_hyp - 1.) 
+                        if(iter_prec >= 3 && fabs(q_v_b/q_v_hyp - 1.) 
                             <= 1.e-3)  break;
-                        q_v_b = .5 * ( q_v_hyp + q_v_b );  // has smoothing effect
+                        q_v_b = .5 * (q_v_hyp + q_v_b);  // has smoothing effect
                     } // iter_prec end
                     //** §§§§§§§§§§§§§   end iterations for mixed cloud phase     §§§§§§§**
                     // rate of condensating or evaporating water vapour to form cloud water in kg/(kg*s), 0.5 given by COSMO
-                    S_c_c.x[i][j][k] = 0.5 * ( cloud.x[i][j][k] 
-                        - q_c_b ) / dt_dim;
+                    S_c_c.x[i][j][k] = 0.5 * (cloud.x[i][j][k] 
+                        - q_c_b)/dt_dim;
                     if(is_land(h, i, j, k))  S_c_c.x[i][j][k] = 0.;
                     cn.x[i][j][k] = c.x[i][j][k] = q_v_b;  // new values achieved after converged iterations
                     cloudn.x[i][j][k] = cloud.x[i][j][k] = q_c_b;
                     icen.x[i][j][k] = ice.x[i][j][k] = q_i_b;
-                    tn.x[i][j][k] = t.x[i][j][k] = T / t_0;
+                    tn.x[i][j][k] = t.x[i][j][k] = T/t_0;
                     if(t_Celsius > t_Celsius_0)  icen.x[i][j][k] = 
                                             ice.x[i][j][k] = 0.;
                 } // temperature below 0 Celsius
@@ -809,6 +803,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
 //    fft_gaussian_filter(cloud, 5);
 //    fft_gaussian_filter(ice, 5);
 //    fft_gaussian_filter(c, 5);
+    return;
 }
 
 
@@ -842,12 +837,11 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
           t_d = 248.15,  // in K    -25 °C
           t_hn = 236.15,  // in K    -40 °C
           t_r_frz = 271.15;  // in K    -2 °C
-    double exp_pressure = g / (1.e-2 * gam * R_Air);
-    float dt_snow_dim = 417.,  // dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m / 417 s = .96 m/s fallout velocity
-          dt_rain_dim = 250.;  // dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m / 250 s = 1.6 m/s fallout velocity
+    float dt_snow_dim = 417.,  // dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m/417 s = .96 m/s fallout velocity
+          dt_rain_dim = 250.;  // dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m/250 s = 1.6 m/s fallout velocity
     double coeff_snow = .01;
     double m_i = m_i_max;  
-    float p_h, N_i, S_nuc, S_c_frz, S_i_dep=0, S_c_au, S_i_au, S_d_au, 
+    float N_i, S_nuc, S_c_frz, S_i_dep=0, S_c_au, S_i_au, S_d_au, 
         S_ac, S_rim, S_shed;
     float S_agg, S_i_cri, S_r_cri, S_ev, S_s_dep, S_i_melt, S_s_melt, S_r_frz;
     // rain and snow distribution based on parameterization schemes adopted from the COSMO code used by the German Weather Forecast
@@ -887,27 +881,21 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         if(ice.x[i][j][k] > 0.)
                             S_i_au = c_i_au * ice.x[i][j][k];  // cloud ice to snow, cloud ice crystal aggregation
                     }
-                    S_r.x[i][j][k] = S_c_au;  // in kg / (kg * s)
+                    S_r.x[i][j][k] = S_c_au;  // in kg/(kg * s)
                     S_s.x[i][j][k] = S_i_au;
                 }
                 if(P_rain.x[i+1][j][k] < 0.)  P_rain.x[i+1][j][k] = 0.;
                 if(P_snow.x[i+1][j][k] < 0.)  P_snow.x[i+1][j][k] = 0.;
-                float p_SL = .01 * (r_air * R_Air * t.x[0][j][k] * t_0); // given in hPa
-                double height = get_layer_height(i);
-                float p_h;
-                if(i != 0)  
-                    p_h = pow(((t_u - gam * height * 1.e-2) / t_u), 
-                        exp_pressure) * p_SL;
-                else  p_h = p_SL;
-                float r_dry = 100. * p_h / (R_Air * t_u);  // density of dry air in kg/m³
+
+                float r_dry = 100. * p_stat.x[i][j][k]/(R_Air * t_u);  // density of dry air in kg/m³
                 float r_humid = r_dry 
-                    / (1. + ( R_WaterVapour / R_Air - 1. ) * c.x[i][j][k] 
+                   /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
                     - cloud.x[i][j][k] - ice.x[i][j][k]);                
                 double step = get_layer_height(i+1) - get_layer_height(i);
                 float t_Celsius = t_u - t_0;
                 P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
                     + coeff_Precipitation * r_humid * S_r.x[i+1][j][k] 
-                    * step;  // in kg / (m2 * s) == mm/s
+                    * step;  // in kg/(m2 * s) == mm/s
                 if(t_Celsius < 0.)  P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
                     + coeff_Precipitation * r_humid * coeff_snow
                     * S_s.x[i+1][j][k] * step; 
@@ -928,30 +916,26 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                     for(int i = im-2; i >= 0; i--){
                         float t_u = t.x[i][j][k] * t_0;
                         float t_Celsius = t_u - t_0;
-                        float p_SL =  .01 * (r_air * R_Air * t.x[0][j][k] * t_0); // given in hPa
                         float height = get_layer_height(i);
-                        if(i != 0)  
-                            p_h = pow(((t_u - gam * height * 1.e-2) / t_u), 
-                                exp_pressure) * p_SL;
-                        else  p_h = p_SL;
-                        float r_dry = 100. * p_h / (R_Air * t_u);  // density of dry air in kg/m³
+                        float r_dry = 100. * p_stat.x[i][j][k]/(R_Air * t_u);  // density of dry air in kg/m³
                         float r_humid = r_dry 
-                            / (1. + ( R_WaterVapour / R_Air - 1. ) * c.x[i][j][k] 
+                           /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
                             - cloud.x[i][j][k] - ice.x[i][j][k]);                
                         float E_Rain = hp * exp_func(t_u, 17.2694, 35.86);  // saturation water vapour pressure for the water phase at t > 0°C in hPa
                         float E_Ice = hp * exp_func(t_u, 21.8746, 7.66);  // saturation water vapour pressure for the ice phase in hPa
-                        float q_Rain = ep * E_Rain / (p_h - E_Rain);  // water vapour amount at saturation with water formation in kg/kg
-                        float q_Ice  = ep * E_Ice / (p_h - E_Ice);  // water vapour amount at saturation with ice formation in kg/kg
-                        dt_rain_dim = ( get_layer_height(i+1) 
-                            - height ) / 1.6; 
+                        float q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain);  // water vapour amount at saturation with water formation in kg/kg
+                        float q_Ice  = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice);  // water vapour amount at saturation with ice formation in kg/kg
+                        height = get_layer_height(i);
+                        dt_rain_dim = (get_layer_height(i+1) 
+                            - height)/1.6; 
                         // adjusted rain fall time step by fixed velocities == 1.6 m/s by variable local step size
-                        dt_snow_dim = ( get_layer_height(i+1) 
-                            - height ) / 0.96; 
+                        dt_snow_dim = (get_layer_height(i+1) 
+                            - height)/0.96; 
                         // adjusted snow fall time step by fixed velocities == 0.96 m/s by variable local step size
                         // ice and snow average siz 
                         if(!(t_u > t_0)){  
                             N_i = N_i_0 * exp(.2 * (t_0 - t_u));
-                            m_i = r_humid * ice.x[i][j][k] / N_i;
+                            m_i = r_humid * ice.x[i][j][k]/N_i;
                             if(m_i > m_i_max) { m_i = m_i_max; }
                             if(m_i < m_i_0) { m_i = m_i_0; }
                         }
@@ -960,18 +944,18 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                             if(((t_u < t_d) && (c.x[i][j][k] >= q_Ice))
                                 || (((t_d <= t_u) && (t_u <= t_nuc)) 
                                 && (c.x[i][j][k] >= q_Rain)))
-                                S_nuc = m_i_0 / (r_humid * dt_snow_dim) * N_i;  // nucleation of cloud ice, < I >
+                                S_nuc = m_i_0/(r_humid * dt_snow_dim) * N_i;  // nucleation of cloud ice, < I >
                         }
                         else  S_nuc = 0.;
                         if((t_u < t_hn) && (cloud.x[i][j][k] > 0.))
-                            S_c_frz = cloud.x[i][j][k] / dt_rain_dim;  //nucleation of cloud ice due to freezing of cloud water, < II >
+                            S_c_frz = cloud.x[i][j][k]/dt_rain_dim;  //nucleation of cloud ice due to freezing of cloud water, < II >
                         else  S_c_frz = 0.;
                         if(!(t_Celsius > 0.)){  //temperature <= 0
                             if(c.x[i][j][k] > q_Ice){  // supersaturation
-                                S_i_dep = c_i_dep * N_i * pow(m_i, (1. / 3.)) 
+                                S_i_dep = c_i_dep * N_i * pow(m_i, (1./3.)) 
                                     * (c.x[i][j][k] - q_Ice);  // supersaturation, < III >
                             }else if(- ice.x[i][j][k]  > c.x[i][j][k] - q_Ice) 
-                                S_i_dep = - ice.x[i][j][k] / dt_snow_dim; // subsaturation, < III >
+                                S_i_dep = - ice.x[i][j][k]/dt_snow_dim; // subsaturation, < III >
                         }
                         else  S_i_dep = 0.; //temperature > 0
                         // autoconversion processes
@@ -982,13 +966,13 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                             S_i_au = c_i_au * ice.x[i][j][k];  // cloud ice to snow, cloud ice crystal aggregation, < V >
                         else  S_i_au = 0.;
                         if(t_u <= t_0)
-                            S_d_au = S_i_dep / (1.5 * (pow((m_s_0 / m_i), 
-                                (2. / 3.)) - 1.));  // autoconversion due to depositional growth of cloud ice, < VI >
+                            S_d_au = S_i_dep/(1.5 * (pow((m_s_0/m_i), 
+                                (2./3.)) - 1.));  // autoconversion due to depositional growth of cloud ice, < VI >
                         else  S_d_au = 0.;
                         // collection mechanism
                         if(t_u > t_0)  
                             S_ac = c_ac * cloud.x[i][j][k] 
-                                * pow(P_rain.x[i][j][k], (7. / 9.));
+                                * pow(P_rain.x[i][j][k], (7./9.));
                             // accreation rate from depletion of cloud water due to collection by all rain drops, < VII >
                         else  S_ac = 0.;  // accreation rate from depletion of cloud water due to collection by all rain drops
                         if(t_u < t_0)  
@@ -1002,10 +986,10 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         if(t_u <= t_0){
                             S_agg = c_agg * ice.x[i][j][k] * P_snow.x[i][j][k];  // collection of cloud ice by snow particles, < X >
                             S_i_cri = c_i_cri * ice.x[i][j][k] 
-                                * pow(P_rain.x[i][j][k], (7. / 9.));
+                                * pow(P_rain.x[i][j][k], (7./9.));
                                 // decrease in cloud ice mass due to collision/coalescense interaction with raindrops, < XI >
-                            S_r_cri = c_r_cri * ice.x[i][j][k] / m_i 
-                                * pow(P_rain.x[i][j][k], (13. / 9.));
+                            S_r_cri = c_r_cri * ice.x[i][j][k]/m_i 
+                                * pow(P_rain.x[i][j][k], (13./9.));
                                 // decrease of rainwater due to freezing resulting from collection of ice crystals, < XII >
                         }else{
                             S_agg = 0.;
@@ -1015,16 +999,16 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         // diffusional growth of rain and snow
                         if(t_u < t_0){  // temperature below zero
                             S_s_dep = c_s_dep * (1. + b_s_dep 
-                                * pow(P_snow.x[i][j][k], (5. / 26.))) * 
+                                * pow(P_snow.x[i][j][k], (5./26.))) * 
                                 (c.x[i][j][k] - q_Ice) 
-                                * pow(P_snow.x[i][j][k], (8. / 13.));
+                                * pow(P_snow.x[i][j][k], (8./13.));
                              // deposition/sublimation of snow, < XIV >
                             S_ev = 0.;
                         }else{  
                             S_ev = a_ev * (1. + b_ev 
-                                * pow(P_rain.x[i][j][k], (1. / 6.))) *
+                                * pow(P_rain.x[i][j][k], (1./6.))) *
                                 (q_Rain - c.x[i][j][k]) 
-                                * pow(P_rain.x[i][j][k], (4. / 9.));
+                                * pow(P_rain.x[i][j][k], (4./9.));
                             // evaporation of rain due to water vapour diffusion, < XIII >
                             S_s_dep = 0.;
                         }
@@ -1033,24 +1017,28 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         S_s_melt = 0.;
                         if(t_u > t_0){ // temperature above zero
                             if(ice.x[i][j][k] > 0.)
-                                S_i_melt = ice.x[i][j][k] / dt_snow_dim; // cloud ice particles melting to cloud water, < XV >
+                                S_i_melt = ice.x[i][j][k]/dt_snow_dim; // cloud ice particles melting to cloud water, < XV >
+/*
+                            float p_SL = .01 * (r_air * R_Air * t.x[0][j][k] * t_0); // given in hPa
                             float p_t_in = pow(((t_0 - gam * height * 1.e-2) 
-                                / t_0), exp_pressure) * p_SL;  // given in hPa
+                               /t_0), exp_pressure) * p_SL;  // given in hPa
+*/
+                            float p_t_in = p_stat.x[i][j][k];
                             float E_Rain_t_in = hp * exp_func(t_0, 17.2694, 35.86);
                                 // saturation water vapour pressure for the water phase at t = 0°C in hPa
-                            float q_Rain_t_in = ep * E_Rain_t_in / (p_t_in 
+                            float q_Rain_t_in = ep * E_Rain_t_in/(p_t_in 
                                 - E_Rain_t_in);
                                 // water vapour amount at saturation with water formation in kg/kg
                             S_s_melt = c_s_melt * (1. + b_s_melt 
-                                * pow(P_snow.x[i][j][k], (5. / 26.))) *
+                                * pow(P_snow.x[i][j][k], (5./26.))) *
                                 ((t_u - t_0) + a_s_melt * (c.x[i][j][k] 
                                 - q_Rain_t_in)) * pow(P_snow.x[i][j][k], 
-                                (8. / 13.));  // melting rate of snow to form rain, < XVI >
+                                (8./13.));  // melting rate of snow to form rain, < XVI >
                                 // arbitrary factor 50 adjusts the average precipitation in mm/d
                         }
                         if(t_r_frz - t_u > 0.)
                             S_r_frz = c_r_frz * pow((t_r_frz - t_u), 
-                                (3. / 2.)) * pow(P_rain.x[i][j][k], (3. / 2.));
+                                (3./2.)) * pow(P_rain.x[i][j][k], (3./2.));
                                 // immersion freezing and contact nucleation, < XVII >
                         else  S_r_frz = 0.;
 
@@ -1091,7 +1079,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         double step = get_layer_height(i+1) - get_layer_height(i);
                         P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
                              + coeff_Precipitation * r_humid 
-                             * S_r.x[i+1][j][k] * step;  // in kg / (m2 * s) == mm/s 
+                             * S_r.x[i+1][j][k] * step;  // in kg/(m2 * s) == mm/s 
                         if(t_Celsius < 0.)  P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
                              + coeff_Precipitation * r_humid * coeff_snow 
                              * S_s.x[i+1][j][k] * step; 
@@ -1103,6 +1091,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
             }  // end k
         }  // end iter_prec
     }  // end if true
+    return;
 }
 
 
@@ -1160,9 +1149,12 @@ void cAtmosphereModel::IC_WestEastCoast(){
 // the sea surface close to east or west coasts
 // transition between coast flows and open sea flows included
 // upwelling along west coasts causes a temperature reduction
-// east coast
+
+/** ........................... east coast ........................... **/
+
 //    int i_max = 20; // maximun height of the coast near velocity and temperature changes
-    int i_max = 10; // maximun height of the coast near velocity and temperature changes
+//    int i_max = 10; // maximun height of the coast near velocity and temperature changes
+    int i_max = 5; // maximun height of the coast near velocity and temperature changes
     double d_i_max = get_layer_height(i_max);
     double d_i = 0.;
     double v_neg = 0.;
@@ -1170,6 +1162,7 @@ void cAtmosphereModel::IC_WestEastCoast(){
     double t_neg = 0.;
     int k_mid = 30; // maximun extension from the coasts
     int k_beg = 1;
+/*
     for(int j = 0; j < jm; j++){
         for(int k = 1; k < km-1; k++){
             if((is_air(h, 0, j, k))&&(is_land(h, 0, j, k-1))){
@@ -1180,24 +1173,24 @@ void cAtmosphereModel::IC_WestEastCoast(){
                     v_neg = - v.x[0][j][k]; // negative values for v to form global vortices
                     for(int l = 0; l <= k_mid; l++){
                         if(k+l > km-1)  break;
-                        v.x[0][j][k+l] = ( v.x[0][j][k+k_mid] - v_neg ) 
-                            / (double)k_mid * (double)l + v_neg;
+                        v.x[0][j][k+l] = (v.x[0][j][k+k_mid] - v_neg) 
+                           /(double)k_mid * (double)l + v_neg;
                         for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
                             d_i = get_layer_height(i);
-                            v.x[i][j][k+l] = ( v.x[i_max][j][k+l] - v.x[0][j][k+l] ) 
-                                / d_i_max * d_i + v.x[0][j][k+l];
+                            v.x[i][j][k+l] = (v.x[i_max][j][k+l] - v.x[0][j][k+l]) 
+                               /d_i_max * d_i + v.x[0][j][k+l];
                         }
                         if(is_land(h, 0, j, k+l))  v.x[0][j][k+l] = 0.;
                     }
                     w_neg = 0.; // on land w = 0
                     for(int l = 0; l <= k_mid; l++){
                         if(k+l > km-1)  break;
-                        w.x[0][j][k+l] = ( w.x[0][j][k+k_mid] - w_neg ) 
-                            / (double)k_mid * (double)l + w_neg; // decreasing w approaching east coasts
+                        w.x[0][j][k+l] = (w.x[0][j][k+k_mid] - w_neg) 
+                           /(double)k_mid * (double)l + w_neg; // decreasing w approaching east coasts
                         for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
                             d_i = get_layer_height(i);
-                            w.x[i][j][k+l] = ( w.x[i_max][j][k+l] - w.x[0][j][k+l] ) 
-                                / d_i_max * d_i + w.x[0][j][k+l];
+                            w.x[i][j][k+l] = (w.x[i_max][j][k+l] - w.x[0][j][k+l]) 
+                               /d_i_max * d_i + w.x[0][j][k+l];
                         }
                         if(is_land(h, 0, j, k+l))  w.x[0][j][k+l] = 0.;
                     }
@@ -1208,26 +1201,28 @@ void cAtmosphereModel::IC_WestEastCoast(){
         } // end k
         k_beg = 1;
     } // end j
-// west coast
-//    k_mid = 10;
+*/
+/** ........................... west coast extension of temperature decrease due to upwelling ........................... **/
+
+    k_mid = 10;
 //    k_mid = 40;
-    k_mid = 50;
+//    k_mid = 50;
     for(int j = 0; j < jm; j++){
         for(int k = 1; k < km-1; k++){
             if((is_air(h, 0, j, k-1))&&(is_land(h, 0, j, k))){
                 while(k >= 1){
                     if(is_air(h, 0, j, k+1))  break;
-//                    v_neg = - v.x[0][j][k+k_mid]; // no changes of v along west coasts
 /*
+//                    v_neg = - v.x[0][j][k+k_mid]; // no changes of v along west coasts
 //                    v_neg = v.x[0][j][k+k_mid];
                     v_neg = v.x[0][j][k];
                     for(int l = k_mid; l >= 0; l--){
-                        v.x[0][j][k-l] = ( v.x[0][j][k-k_mid] - v_neg ) 
-                            / (double)k_mid * (double)l + v_neg;
+                        v.x[0][j][k-l] = (v.x[0][j][k-k_mid] - v_neg) 
+                           /(double)k_mid * (double)l + v_neg;
                         for(int i = 1; i <= i_max; i++){
                             d_i = get_layer_height(i);
-                            v.x[i][j][k-l] = ( v.x[i_max][j][k-l] - v.x[0][j][k-l] ) 
-                                / d_i_max * d_i + v.x[0][j][k-l];
+                            v.x[i][j][k-l] = (v.x[i_max][j][k-l] - v.x[0][j][k-l]) 
+                               /d_i_max * d_i + v.x[0][j][k-l];
                         }
                         if(is_land(h, 0, j, k-l))  v.x[0][j][k-l] = 0.;
                     }
@@ -1237,12 +1232,12 @@ void cAtmosphereModel::IC_WestEastCoast(){
 //                        if(k-l < 0)  break;
                     for(int l = 0; l <= k_mid; l++){
                         if(k-l < 0)  break;
-                        w.x[0][j][k-l] = ( w.x[0][j][k-k_mid] - w_neg ) 
-                            / (double)k_mid * (double)l + w_neg; // decreasing w approaching west coasts
+                        w.x[0][j][k-l] = (w.x[0][j][k-k_mid] - w_neg) 
+                           /(double)k_mid * (double)l + w_neg; // decreasing w approaching west coasts
                         for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
                             d_i = get_layer_height(i);
-                            w.x[i][j][k-l] = ( w.x[i_max][j][k-l] - w.x[0][j][k-l] ) 
-                                / d_i_max * d_i + w.x[0][j][k-l];
+                            w.x[i][j][k-l] = (w.x[i_max][j][k-l] - w.x[0][j][k-l]) 
+                               /d_i_max * d_i + w.x[0][j][k-l];
                         }
                         if(is_land(h, 0, j, k-l))  w.x[0][j][k-l] = 0.;
                     }
@@ -1251,13 +1246,13 @@ void cAtmosphereModel::IC_WestEastCoast(){
 //                        if(k-l < 0)  break;
                     for(int l = 0; l <= k_mid; l++){
                         if(k-l < 0)  break;
-                        t.x[0][j][k-l] = ( t.x[0][j][k-k_mid] - t_neg ) 
-                            / (double)k_mid * (double)l + t_neg; // decreasing temperature leaving west coasts
+                        t.x[0][j][k-l] = (t.x[0][j][k-k_mid] - t_neg) 
+                           /(double)k_mid * (double)l + t_neg; // decreasing temperature leaving west coasts
                             // upwelling along west coasts lowers temperature
                         for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
                             d_i = get_layer_height(i);
-                            t.x[i][j][k-l] = ( t.x[i_max][j][k-l] - t.x[0][j][k-l] ) 
-                                / d_i_max * d_i + t.x[0][j][k-l];
+                            t.x[i][j][k-l] = (t.x[i_max][j][k-l] - t.x[0][j][k-l]) 
+                               /d_i_max * d_i + t.x[0][j][k-l];
                         }
                     }
                     break;
@@ -1265,7 +1260,11 @@ void cAtmosphereModel::IC_WestEastCoast(){
             } // end if
         } // end k
     } // end j
-    int k_mid_eq = 120; // maximun extension from west coasts for equatorial lowered initial temperatures
+
+/** ........................... west coast equatorial extension of temperature decrease ........................... **/
+
+//    int k_mid_eq = 120; // maximun extension from west coasts for equatorial lowered initial temperatures
+    int k_mid_eq = 80; // maximun extension from west coasts for equatorial lowered initial temperatures
 //    for(int j = 80; j <= 100; j++){  // zonal extension of equatorial lowered initial temperatures
     for(int j = 88; j <= 92; j++){  // zonal extension of equatorial lowered initial temperatures
         for(int k = 1; k < km-1; k++){
@@ -1277,13 +1276,13 @@ void cAtmosphereModel::IC_WestEastCoast(){
 //                        if(k-l < 0)  break;
                     for(int l = 0; l <= k_mid_eq; l++){
                         if(k-l < 0)  break;
-                        t.x[0][j][k-l] = ( t.x[0][j][k-k_mid_eq] - t_neg ) 
-                            / (double)k_mid_eq * (double)l + t_neg; // decreasing temperature leaving west coasts
+                        t.x[0][j][k-l] = (t.x[0][j][k-k_mid_eq] - t_neg) 
+                           /(double)k_mid_eq * (double)l + t_neg; // decreasing temperature leaving west coasts
                             // upwelling regions along equatorial currents beginning on west coasts lower the local temperature
                         for(int i = 1; i <= i_max; i++){
                             d_i = get_layer_height(i);
-                            t.x[i][j][k-l] = ( t.x[i_max][j][k-l] - t.x[0][j][k-l] ) 
-                                / d_i_max * d_i + t.x[0][j][k-l]; // development with height, decreasing influence
+                            t.x[i][j][k-l] = (t.x[i_max][j][k-l] - t.x[0][j][k-l]) 
+                               /d_i_max * d_i + t.x[0][j][k-l]; // development with height, decreasing influence
                         }
                     }
                     break;
@@ -1321,8 +1320,8 @@ void cAtmosphereModel::WaterVapourEvaporation(){
         for(int k = 0; k < km; k++){
             co2_total.y[j][k] = co2.x[0][j][k];
             for(int i = 0; i < im; i++){
-                float e = 100. * c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in Pa
-                float a = e / (R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
+                float e = 100. * c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in Pa
+                float a = e/(R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
                 double step = get_layer_height(i+1) 
                     - get_layer_height(i);
                 precipitable_water.y[j][k] +=  a * step;
@@ -1354,19 +1353,19 @@ void cAtmosphereModel::WaterVapourEvaporation(){
                 if(is_land(h, i, j, k)){
                     t_u = t.x[i][j][k] * t_0;
                     t_Celsius = t_u - t_0;
-                    e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in hPa
+                    e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in hPa
                     E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
-                    sat_deficit = ( E_Rain - e );  // saturation deficit in hPa
+                    sat_deficit = (E_Rain - e);  // saturation deficit in hPa
                     Evaporation_Dalton.y[j][k] = 
                         C_Dalton(coeff_Dalton, u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
                         * sat_deficit * 24.; // since at the suface velocity is 0, one grid point added
                 } // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*d) = mm/d
                 if(is_water(h, 0, j, k)){
-                    t_Celsius = ( t.x[0][j][k] + 0.007322 ) * t_0 - t_0; // assumption that ocean surface temperature is 2°C higher
-                    e = c.x[0][j][k] * p_stat.x[0][j][k] / ep;  // water vapour pressure in hPa
-                    t_u = ( t.x[0][j][k] + 0.007322 ) * t_0;
+                    t_Celsius = (t.x[0][j][k] + 0.007322) * t_0 - t_0; // assumption that ocean surface temperature is 2°C higher
+                    e = c.x[0][j][k] * p_stat.x[0][j][k]/ep;  // water vapour pressure in hPa
+                    t_u = (t.x[0][j][k] + 0.007322) * t_0;
                     E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
-                    sat_deficit = ( E_Rain - e );  // saturation deficit in hPa
+                    sat_deficit = (E_Rain - e);  // saturation deficit in hPa
                     Evaporation_Dalton.y[j][k] = 
                         C_Dalton(coeff_Dalton, u_0, v.x[0][j][k], w.x[0][j][k]) 
                         * sat_deficit * 24.;
@@ -1376,19 +1375,19 @@ void cAtmosphereModel::WaterVapourEvaporation(){
                 if(is_land(h, i, j, k)){
                     t_u = t.x[i][j][k] * t_0;
                     t_Celsius = t_u - t_0;
-                    e = c.x[i][j][k] * p_stat.x[i][j][k] / ep;  // water vapour pressure in hPa
+                    e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in hPa
                     E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
-                    sat_deficit = ( E_Ice - e );  // saturation deficit in hPa
+                    sat_deficit = (E_Ice - e);  // saturation deficit in hPa
                     Evaporation_Dalton.y[j][k] = 
                         C_Dalton(coeff_Dalton, u_0, v.x[i+1][j][k], w.x[i+1][j][k]) 
                         * sat_deficit * 24.; // since at the suface velocity is 0, one grid point added
                 }
                 if(is_water(h, 0, j, k)){
-                    e = c.x[0][j][k] * p_stat.x[0][j][k] / ep;  // water vapour pressure in hPa
-                    t_u = ( t.x[0][j][k] + 0.007322 ) * t_0;
+                    e = c.x[0][j][k] * p_stat.x[0][j][k]/ep;  // water vapour pressure in hPa
+                    t_u = (t.x[0][j][k] + 0.007322) * t_0;
                     t_Celsius = t_u - t_0; // assumption that ocean surface temperature is 2°C higher
                     E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
-                    sat_deficit = ( E_Ice - e );  // saturation deficit in hPa
+                    sat_deficit = (E_Ice - e);  // saturation deficit in hPa
                     Evaporation_Dalton.y[j][k] = 
                         C_Dalton(coeff_Dalton, u_0, v.x[0][j][k], w.x[0][j][k]) 
                         * sat_deficit * 24.;
@@ -1398,10 +1397,10 @@ void cAtmosphereModel::WaterVapourEvaporation(){
                 Evaporation_Dalton.y[j][k] = 0.;
         }
     }
-    double coeff_vapour = 1.1574e-8 * L_atm / ( c_0 * u_0 );  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to mm/s
+    double coeff_vapour = 1.1574e-8 * L_atm/(c_0 * u_0);  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to mm/s
     double zeta = 3.715;
     double rm = rad.z[0];
-    double exp_rm = 1. / exp(zeta * rm);
+    double exp_rm = 1./exp(zeta * rm);
     double evap_precip = 0.;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -1410,11 +1409,11 @@ void cAtmosphereModel::WaterVapourEvaporation(){
             double vapour_surface = 0.;
             for(int iter_prec = 1; iter_prec <= 20; iter_prec++){ // iter_prec may be varied
                 evap_precip = Evaporation_Dalton.y[j][k] - Precipitation.y[j][k];
-//                vapour_surface = - ( - 3. * c.x[0][j][k] + 4. * c.x[1][j][k] 
-//                    - c.x[2][j][k] ) / ( 2. * dr * exp_rm ) // 1. order derivative, 2. order accurate
-//                    * ( 1. + 2. * c.x[0][j][k] ) * evap_precip; 
-                vapour_surface = - ( c.x[1][j][k] - c.x[0][j][k] ) // 1. order derivative, 1. order accurate
-                    / ( dr * exp_rm ) * ( 1. + 2. * c.x[0][j][k] ) 
+//                vapour_surface = - (- 3. * c.x[0][j][k] + 4. * c.x[1][j][k] 
+//                    - c.x[2][j][k])/(2. * dr * exp_rm) // 1. order derivative, 2. order accurate
+//                    * (1. + 2. * c.x[0][j][k]) * evap_precip; 
+                vapour_surface = - (c.x[1][j][k] - c.x[0][j][k]) // 1. order derivative, 1. order accurate
+                   /(dr * exp_rm) * (1. + 2. * c.x[0][j][k]) 
                     * evap_precip;
                 if(iter_prec == 1)  vapour_surface_n = .9 * vapour_surface;
                 vapour_evaporation.y[j][k] = coeff_vapour * vapour_surface;
@@ -1431,21 +1430,21 @@ void cAtmosphereModel::WaterVapourEvaporation(){
         << "  c = " << c.x[0][j][k] * 1000. << "  Evap-Prec = " << evap_precip 
         << "  Evap = " << Evaporation_Dalton.y[j][k] 
         << "  Prec = " << Precipitation.y[j][k] << "  c_grad_1 = " 
-        << ( c.x[1][j][k] - c.x[0][j][k] ) / ( dr * exp_rm ) << "  c_grad_2 = " 
-        << ( - 3. * c.x[0][j][k] + 4. * c.x[1][j][k] - c.x[2][j][k] ) 
-        / ( 2. * dr * exp_rm ) << endl;
+        << (c.x[1][j][k] - c.x[0][j][k])/(dr * exp_rm) << "  c_grad_2 = " 
+        << (- 3. * c.x[0][j][k] + 4. * c.x[1][j][k] - c.x[2][j][k]) 
+       /(2. * dr * exp_rm) << endl;
 */
                 for(int i = 0; i < im; i++){
                     if(i <= im-1){
                         if(i > 0){
                             double x = get_layer_height(i) 
-                                / get_layer_height(im-1); 
+                               /get_layer_height(im-1); 
                             c.x[i][j][k] = parabola_interp(c_tropopause, 
                                 c.x[0][j][k], x); 
                         }
                     }
                 } // end i
-                if(iter_prec >= 5 && fabs(vapour_surface / vapour_surface_n - 1.) 
+                if(iter_prec >= 5 && fabs(vapour_surface/vapour_surface_n - 1.) 
                     <= 1.e-3)  break;  
                 vapour_surface_n = vapour_surface;
             } // iter_prec 
@@ -1472,7 +1471,7 @@ void cAtmosphereModel::Pressure_Limitation_Atm(){
 }
 
 double get_pole_temperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
-    return (t_2 - t_1) / (double) (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
+    return (t_2 - t_1)/(double) (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
 }
 
 double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map){

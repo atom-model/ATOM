@@ -293,7 +293,7 @@ void cAtmosphereModel::print_min_max_values(){
        << setw(7) << fixed << setfill(' ') << Value_8 << setw(6) << name_unit_mma
         << "   " << setiosflags(ios::left) << setw(40) << setfill ('.') << name_Value_9
         << " = " << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ')
-        << Value_8 / 365. << setw(6) << name_unit_mmd << endl;
+        << Value_8/365. << setw(6) << name_unit_mmd << endl;
     double Value_10 = precipitation_NASA_average;
     cout << setw(6) << setiosflags(ios::left) << setw(40) << setfill('.')
         << name_Value_7 << " = " << resetiosflags(ios::left) << setw(7)
@@ -303,7 +303,7 @@ void cAtmosphereModel::print_min_max_values(){
         << Value_10 << setw(6) << name_unit_mma << "   " << setiosflags(ios::left)
         << setw(40) << setfill('.') << name_Value_11 << " = "
         << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ')
-        << Value_10 / 365. << setw(6) << name_unit_mmd << endl;
+        << Value_10/365. << setw(6) << name_unit_mmd << endl;
     double Value_13 = Evaporation_Dalton_average;
     cout << setw(6) << setiosflags(ios::left) << setw(40) << setfill('.')
         << name_Value_7 << " = " << resetiosflags(ios::left) << setw(7)
@@ -313,7 +313,7 @@ void cAtmosphereModel::print_min_max_values(){
         << fixed << setfill(' ') << Value_13 << setw(6) << name_unit_mma
         << "   " << setiosflags(ios::left) << setw(40) << setfill('.')
         << name_Value_15 << " = " << resetiosflags(ios::left) << setw(7)
-        << fixed << setfill(' ') << Value_13 / 365. << setw(6)
+        << fixed << setfill(' ') << Value_13/365. << setw(6)
         << name_unit_mmd << endl;
     double Value_9 = co2_vegetation_average * co2_0;
     cout << setw(6) << setiosflags(ios::left) << setw(40) << setfill('.')
@@ -378,9 +378,9 @@ void cAtmosphereModel::CalculateNodeWeights(int jm, int km){
     m_node_weights.clear();
     for(int i=0; i<jm; i++){
         if(i<=90){
-            weight = cos((90-i) * M_PI / 180.0);
+            weight = cos((90-i) * M_PI/180.0);
         }else{
-            weight = cos((i-90) * M_PI / 180.0);
+            weight = cos((i-90) * M_PI/180.0);
         }
         m_node_weights.push_back(std::vector<double>());
         m_node_weights[i].resize(km, weight);

@@ -364,6 +364,10 @@ void PostProcess_Hydrosphere::paraview_panorama_vts ( const string &Name_Bathyme
     Hydrosphere_panorama_vts_File <<  " </StructuredGrid>\n"  << endl;
     Hydrosphere_panorama_vts_File <<  "</VTKFile>\n"  << endl;
     Hydrosphere_panorama_vts_File.close();
+    cout << "   File:  " << "[" 
+        + Name_Bathymetry_File + "]_Hyd_panorama_" + std::to_string(n) + ".vts" 
+        << "  has been written to Directory:  " 
+        << output_path << endl;
 }
 
 
@@ -447,6 +451,9 @@ void PostProcess_Hydrosphere::paraview_vtk_longal ( const string &Name_Bathymetr
         }
     }
     Hydrosphere_vtk_longal_File.close();
+    cout << "   File:  " << "[" + Name_Bathymetry_File 
+        + "]_Hyd_longal_" + std::to_string(j_longal) + "_" + std::to_string(n) + ".vtk" 
+        << "  has been written to Directory:  " << output_path << endl;
 }
 
 
@@ -550,6 +557,10 @@ void PostProcess_Hydrosphere::paraview_vtk_radial ( const string &Name_Bathymetr
         }
     }
     Hydrosphere_vtk_radial_File.close();
+    cout << "   File:  " << "[" 
+        + Name_Bathymetry_File + "]_Hyd_radial_" + std::to_string(i_radial) 
+        + "_" + std::to_string(n) + ".vtk" 
+        << "  has been written to Directory:  " << output_path << endl;
 }
 
 
@@ -634,6 +645,9 @@ void PostProcess_Hydrosphere::paraview_vtk_zonal ( const string &Name_Bathymetry
         }
     }
     Hydrosphere_vtk_zonal_File.close();
+    cout << "   File:  " << "[" + Name_Bathymetry_File 
+        + "]_Hyd_zonal_" + std::to_string(k_zonal) + "_" + std::to_string(n) + ".vtk" 
+        << "  has been written to Directory:  " << output_path << endl;
 }
 
 
