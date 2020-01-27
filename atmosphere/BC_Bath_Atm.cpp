@@ -96,6 +96,63 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface(string &topo_filename,
             move_data(h.x[i][j], km);
         }
     }
+
+
+//  reduction and smoothing of peaks and needles in the bathymetry
+    double h_center = 0.;
+    for(int k = 2; k < km-2; k++){
+        for(int j = 2; j < jm-2; j++){
+            for(int i = 0; i <= im-2; i++){
+                if((is_land(h, i, j, k)) && ((is_water(h, i, j+1, k)) 
+                    && (is_water(h, i, j-1, k))) && ((is_water(h, i, j, k+1)) 
+                    && (is_water(h, i, j, k-1)))){
+                    h_center = h.x[i][j][k];
+                    h.x[i][j][k] = 0.;
+                 }
+/*
+                if((h_center == 1.) && ((is_water(h, i, j-2, k)) 
+                    && (is_water(h, i, j, k+2)))){
+                    h.x[i][j-1][k+1] = 0.;
+                }
+                if((h_center == 1.) && ((is_water(h, i, j-2, k)) 
+                    && (is_water(h, i, j, k-2)))){ 
+                    h.x[i][j-1][k-1] = 0.;
+                }
+                if((h_center == 1.) && ((is_water(h, i, j+2, k)) 
+                    && (is_water(h, i, j, k-2)))){
+                    h.x[i][j+1][k-1] = 0.;
+                }
+                if((h_center == 1.) && ((is_water(h, i, j+2, k)) 
+                    && (is_water(h, i, j, k+2)))){ 
+                    h.x[i][j+1][k+1] = 0.;
+                }
+*/
+/*
+                if((h_center == 1.) && ((is_land(h, i, j, k)) 
+                    && (is_water(h, i, j, k+2)))){
+                    h.x[i][j][k] = h.x[i][j][k+1] = 0.;
+                }
+                if((h_center == 1.) && ((is_land(h, i, j, k)) 
+                    && (is_water(h, i, j+2, k)))){ 
+                    h.x[i][j][k] = h.x[i][j+1][k] = 0.;
+                }
+*/
+                if((i >= 1) && (h_center == 1.) && (is_water(h, 2, j, k))){
+                    h.x[0][j][k] = 0.;
+                }
+/*
+                if((h_center == 1.) && ((is_water(h, i, j+2, k)) 
+                    && (is_water(h, i, j, k+2)))){ 
+                    h.x[i][j+1][k+1] = 0.;
+                }
+*/
+            }
+        }
+    }
+
+
+
+
 }
 
 

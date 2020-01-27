@@ -517,7 +517,7 @@ void cAtmosphereModel::BC_Pressure(){
                     (t.x[0][j][k] * t_0)), exp_pressure) 
                     * p_stat.x[0][j][k];
                 // linear temperature distribution T = T0 - gam * height
-                // current air pressure, step size in 500 m, from politropic formula in hPa
+                // current air pressure, politropic formula in hPa, Kraus p. 28
             }
         }
     }
@@ -1161,7 +1161,8 @@ void cAtmosphereModel::IC_WestEastCoast(){
 // transition between coast flows and open sea flows included
 // upwelling along west coasts causes a temperature reduction
 // east coast
-    int i_max = 20; // maximun height of the coast near velocity and temperature changes
+//    int i_max = 20; // maximun height of the coast near velocity and temperature changes
+    int i_max = 10; // maximun height of the coast near velocity and temperature changes
     double d_i_max = get_layer_height(i_max);
     double d_i = 0.;
     double v_neg = 0.;
@@ -1209,8 +1210,8 @@ void cAtmosphereModel::IC_WestEastCoast(){
     } // end j
 // west coast
 //    k_mid = 10;
-    k_mid = 30;
-    k_beg = k_mid-20;
+//    k_mid = 40;
+    k_mid = 50;
     for(int j = 0; j < jm; j++){
         for(int k = 1; k < km-1; k++){
             if((is_air(h, 0, j, k-1))&&(is_land(h, 0, j, k))){
@@ -1232,7 +1233,9 @@ void cAtmosphereModel::IC_WestEastCoast(){
                     }
 */
                     w_neg = w.x[0][j][k];
-                    for(int l = k_mid; l >= 0; l--){
+//                    for(int l = k_mid; l >= 0; l--){
+//                        if(k-l < 0)  break;
+                    for(int l = 0; l <= k_mid; l++){
                         if(k-l < 0)  break;
                         w.x[0][j][k-l] = ( w.x[0][j][k-k_mid] - w_neg ) 
                             / (double)k_mid * (double)l + w_neg; // decreasing w approaching west coasts
@@ -1243,8 +1246,10 @@ void cAtmosphereModel::IC_WestEastCoast(){
                         }
                         if(is_land(h, 0, j, k-l))  w.x[0][j][k-l] = 0.;
                     }
-                    t_neg = .97 * t.x[0][j][k];
-                    for(int l = k_mid; l >= 0; l--){
+                    t_neg = .95 * t.x[0][j][k];
+//                    for(int l = k_mid; l >= 0; l--){
+//                        if(k-l < 0)  break;
+                    for(int l = 0; l <= k_mid; l++){
                         if(k-l < 0)  break;
                         t.x[0][j][k-l] = ( t.x[0][j][k-k_mid] - t_neg ) 
                             / (double)k_mid * (double)l + t_neg; // decreasing temperature leaving west coasts
@@ -1260,14 +1265,17 @@ void cAtmosphereModel::IC_WestEastCoast(){
             } // end if
         } // end k
     } // end j
-    int k_mid_eq = 120; // maximun extension from west coasts for equatorial temperature changes
-    for(int j = 80; j <= 100; j++){
+    int k_mid_eq = 120; // maximun extension from west coasts for equatorial lowered initial temperatures
+//    for(int j = 80; j <= 100; j++){  // zonal extension of equatorial lowered initial temperatures
+    for(int j = 88; j <= 92; j++){  // zonal extension of equatorial lowered initial temperatures
         for(int k = 1; k < km-1; k++){
             if((is_air(h, 0, j, k-1))&&(is_land(h, 0, j, k))){
                 while(k >= 1){
                     if(is_air(h, 0, j, k+1))  break;
-                    t_neg = .97 * t.x[0][j][k];
-                    for(int l = k_mid_eq; l >= 0; l--){ // development with height, decreasing influence
+                    t_neg = .95 * t.x[0][j][k];  // reduction of the original parabolic temperature approach due to upwelling with lower temperatures
+//                    for(int l = k_mid_eq; l >= 0; l--){ // development with height, decreasing influence
+//                        if(k-l < 0)  break;
+                    for(int l = 0; l <= k_mid_eq; l++){
                         if(k-l < 0)  break;
                         t.x[0][j][k-l] = ( t.x[0][j][k-k_mid_eq] - t_neg ) 
                             / (double)k_mid_eq * (double)l + t_neg; // decreasing temperature leaving west coasts

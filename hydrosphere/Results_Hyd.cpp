@@ -54,12 +54,12 @@ void cHydrosphereModel::run_data(){
     double i_Ekman_layer = 100.;  // assumed Ekman-layer depth of 100m
     double coeff = i_Ekman_layer / L_hyd;
     double rmsinthe = 0.;
-    double coeff_EkmanPumping = 0.03 * u_0 * ( L_hyd /(double)(im-1) * dr ) 
-                                    / ( 111000. * dthe ) * ( 84600. * 365. ); // = 513.201
-//    double coeff_EkmanPumping = .18 * u_0 * ( L_hyd /(double)(im-1) * dr ) 
+//    double coeff_EkmanPumping = 0.03 * u_0 * ( L_hyd /(double)(im-1) * dr ) 
+//    double coeff_EkmanPumping = - u_0 * ( L_hyd /(double)(im-1) * dr ) 
 //                                    / ( 111000. * dthe ) * ( 84600. * 365. ); // = 513.201
     // dimensional units: 111000 m for 1°, 84600 * 365 for m/y from m/s
-
+    double coeff_EkmanPumping = - u_0 * ( L_hyd /(double)(im-1) * dr ) 
+                                    / ( 111000. * dthe ) * ( 84600. * 10. );
     int i_Ekman = ( im - 1 ) * ( 1. - coeff );
     int j_half = ( jm -1 ) / 2;
     int i_max = im - 1;
@@ -107,19 +107,20 @@ void cHydrosphereModel::run_data(){
         }
         for ( int j = j_half+2; j < jm-1; j++ ){
             rmsinthe = rad.z[im-1] * sin( the.z[j] );
-            EkmanPumping.y[j][k] = - ( ( aux_v.x[im-1][j + 1][k] - aux_v.x[im-1][j - 1][k] ) /
+            EkmanPumping.y[j][k] = ( aux_v.x[im-1][j + 1][k] - aux_v.x[im-1][j - 1][k] ) /
                 ( 2. * rad.z[im-1] * dthe )
                 + ( aux_w.x[im-1][j][k + 1] - aux_w.x[im-1][j][k - 1] ) /
-                ( 2. * rmsinthe * dphi ) ) * coeff_EkmanPumping;
+                ( 2. * rmsinthe * dphi ) * coeff_EkmanPumping;
         }
         for ( int j = 1; j < jm-1; j++ ){
             if ( EkmanPumping.y[j][k] >= 0. )  Upwelling.y[j][k] = EkmanPumping.y[j][k];
             else  Upwelling.y[j][k] = 0.;
+//            if( Upwelling.y[j][k] >= .8 )  Upwelling.y[j][k] = .8;
             if ( EkmanPumping.y[j][k] < 0. )  Downwelling.y[j][k] = EkmanPumping.y[j][k];
             else  Downwelling.y[j][k] = 0.;
+//            if( Downwelling.y[j][k] <= -.8 )  Downwelling.y[j][k] = -.8;
         }
     }
-
     for ( int k = 0; k < km; k++ ){
         for ( int j = 0; j < jm; j++ ){
             Downwelling.y[j][k] = fabs ( Downwelling.y[j][k] );

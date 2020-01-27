@@ -56,7 +56,7 @@ class BC_Thermohalin{
 
         ~BC_Thermohalin();
 
-        void IC_v_w_EkmanSpiral ( Array_1D &, Array_1D &, Array &, Array &, Array & );
+        void IC_EkmanSpiral ( Array_1D &, Array_1D &, Array &, Array &, Array & );
 
 //        void IC_u_WestEastCoast ( Array_1D &rad, Array &h, Array &u, Array &v, Array &w, Array &un, Array &vn, Array &wn );
 

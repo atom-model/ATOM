@@ -28,7 +28,7 @@ private:
     void write_file(std::string &bathymetry_name, string& filepath, bool is_final_result = false);
     void save_data();
     void run_data();
-    void IC_v_w_EkmanSpiral();
+    void IC_EkmanSpiral();
     void IC_u_WestEastCoast();
     void IC_Equatorial_Currents();
     void IC_CircumPolar_Current();

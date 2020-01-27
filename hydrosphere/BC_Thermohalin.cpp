@@ -52,29 +52,32 @@ BC_Thermohalin::BC_Thermohalin(int im, int jm, int km, int i_beg, int i_max,
     this -> t_pole = t_pole;
     this -> input_path = input_path;
 
-    j_half = ( jm - 1 ) / 2;
+    j_half = (jm-1)/2;
 }
 
 BC_Thermohalin::~BC_Thermohalin(){}
 
 
-void cHydrosphereModel::IC_v_w_EkmanSpiral(){
+void cHydrosphereModel::IC_EkmanSpiral(){
     float water_wind = .03;  // ocean surface velocity is about 3% of the wind velocity at the surface
-//    float water_wind = .18;  // ocean surface velocity is about 3% of the wind velocity at the surface
+//    float water_wind = 1.;  // ocean surface velocity is about 3% of the wind velocity at the surface
     //Ekman spiral demands 45° turning of the water flow compared to the air flow at contact surface
     //a further turning downwards until the end of the shear layer such that finally 90° of turning are reached
-//    float Ekman_angle = 45.0 / pi180;
-    float Ekman_angle = 0.0;
+    float Ekman_angle = 45. / pi180;
     // initial conditions for v and w velocity components at the sea surface
     // ocean surface velocity is about 3% of the wind velocity at the surface
+/*
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             if(is_water(h, im-1, j, k)){
-                v.x[im-1][j][k] = water_wind * v.x[im-1][j][k] / u_0;
-                w.x[im-1][j][k] = water_wind * w.x[im-1][j][k] / u_0;
+                v.x[im-1][j][k] = water_wind * v.x[im-1][j][k]; // dimensional
+                w.x[im-1][j][k] = water_wind * w.x[im-1][j][k]; // dimensional
+//                v.x[im-1][j][k] = v.x[im-1][j][k] / u_0; // dimensional
+//                w.x[im-1][j][k] = w.x[im-1][j][k] / u_0; // dimensional
             }
         }
     }
+*/
     // surface wind vector driving the Ekman spiral in the Ekman layer
     // northern and southern hemisphere
     int i_Ekman = 0;
@@ -91,76 +94,51 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
     double alfa = 0;
     float angle = 0;
     for(int j = 1; j < jm-1; j++){
-        sinthe = sin(fabs( the.z[j] - M_PI / 2. ));
+        sinthe = sin(fabs(( 90. - (double)j) * M_PI / 180. ));
+        if(sinthe == 0.)  sinthe = 1.e-5;
         for(int k = 1; k < km-1; k++){
             vel_magnit = sqrt( v.x[im-1][j][k] * v.x[im-1][j][k] 
-                         + w.x[im-1][j][k] * w.x[im-1][j][k] ) 
-                         / water_wind * u_0; // dimensional surface wind velocity U_10 in m/s
-//          original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 139, eq. 9.16
-            i_Ekman_layer = 3. * 7.6 / sqrt(sinthe) * vel_magnit;
-            // assumed depth at i_Ekman = 3 x pi / gam, velocity opposit plus pi to surface velocity
+                         + w.x[im-1][j][k] * w.x[im-1][j][k] )
+                         * u_0 / water_wind; // dimensional surface wind velocity U_10 in m/s
+            //          original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 139, eq. 9.16
+            i_Ekman_layer = 3. * 7.6 / sqrt(sinthe) * vel_magnit; // dimensional surface wind velocity U_10 in m/s
+            // assumed depth at i_Ekman = 3 x pi / gam, velocity opposite direction plus pi to surface velocity
             coeff = i_Ekman_layer / L_hyd;
             if(coeff >= 1.) coeff = 1.;
             i_Ekman = ( im-1 ) * ( 1. - coeff );
-
-//          prevention of singular values
-            if( w.x[im-1][j][k] == 0. ) w.x[im-1][j][k] = 1.e-6;
-            if( v.x[im-1][j][k] == 0. ) v.x[im-1][j][k] = 1.e-6;
-            if( vel_magnit == 0. ) vel_magnit = 1.e-6;
-
+/*
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   coeff " 
+        << "   j = " << j << "   k = " << k << "   sqrt(sinthe) = " 
+        << sqrt(sinthe) << "   i_Ekman_layer = " << i_Ekman_layer 
+        << "   coeff = " << coeff << "   u_0 = " << u_0 
+        << "   i_Ekman = " << i_Ekman 
+        << "   vel_magnit = " << vel_magnit << endl << endl;
+*/
+//          prevention of singular behaviour
+            if( w.x[im-1][j][k] == 0. ) w.x[im-1][j][k] = 1.e-8;
+            alfa = atan(fabs( v.x[im-1][j][k] / w.x[im-1][j][k] ));
 //          turning the wind velocities to water velocities along the surface, local angle +/- Ekman_angle
-//            alfa = atan( fabs( v.x[im-1][j][k] / w.x[im-1][j][k] ));
             if(j <= (jm-1)/2){
-                alfa = atan(fabs( v.x[im-1][j][k] / w.x[im-1][j][k] ));
-                if(( w.x[im-1][j][k] >= 0. ) && ( v.x[im-1][j][k] >= 0. )){
-                    angle = alfa - Ekman_angle;
-                }
-                if(( w.x[im-1][j][k] <= 0. ) && ( v.x[im-1][j][k] >= 0. )){
-                    angle = .5 * M_PI - ( alfa + Ekman_angle ) + .5 * M_PI;
-                }
-                if(( w.x[im-1][j][k] <= 0. ) && ( v.x[im-1][j][k] <= 0. )){
-                    angle = alfa - Ekman_angle + M_PI;
-                }
-                if(( w.x[im-1][j][k] >= 0. ) && ( v.x[im-1][j][k] <= 0. )){
-                    angle = .5 * M_PI - ( alfa + Ekman_angle ) + 1.5 * M_PI;
-                }
-            }else{
-                alfa = - atan( fabs( v.x[im-1][j][k] / w.x[im-1][j][k] ));
-                if(( w.x[im-1][j][k] >= 0. ) && ( v.x[im-1][j][k] >= 0. )){
+                if((w.x[im-1][j][k] >= 0.)&&(v.x[im-1][j][k] >= 0.))
                     angle = alfa + Ekman_angle;
-                }
-                if(( w.x[im-1][j][k] <= 0. ) && ( v.x[im-1][j][k] >= 0. )){
-                    angle = .5 * M_PI - ( alfa - Ekman_angle ) + .5 * M_PI;
-                }
-                if(( w.x[im-1][j][k] <= 0. ) && ( v.x[im-1][j][k] <= 0. )){
-                    angle = alfa + Ekman_angle + M_PI;
-                }
-                if(( w.x[im-1][j][k] >= 0. ) && ( v.x[im-1][j][k] <= 0. )){
-                    angle = .5 * M_PI - ( alfa - Ekman_angle ) + 1.5 * M_PI;
-                }
-            }
-//          original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 138, eq. 9.11a/b
-            v.x[im-1][j][k] = v.x[im-1][j][k] * water_wind / u_0; // non-dimensional surface water velocity V_0
-            w.x[im-1][j][k] = w.x[im-1][j][k] * water_wind / u_0; // non-dimensional surface water velocity V_0
-            vel_mag = sqrt( v.x[im-1][j][k] * v.x[im-1][j][k] 
-                          + w.x[im-1][j][k] * w.x[im-1][j][k] );
-            v.x[im-1][j][k] = vel_mag * cos( angle );
-            w.x[im-1][j][k] = - vel_mag * sin( angle );
-            for(int i = im-1; i >= i_Ekman; i--){
-//            for(int i = im-2; i >= i_Ekman; i--){
-//          original laws in Robert H. Stewart, Introduction to Physical Oceanography, p. 137, eq. 9.9a/b
-                gam_z = - 3. * M_PI * (double)( i - im-1 ) 
-                    / (double)( i_Ekman - im-1 );
-                exp_gam_z = exp( gam_z );
-                sin_gam_z = - sin( angle + gam_z );
-                cos_gam_z = cos( angle + gam_z );
-                if(j <= (jm-1)/2){
+                if((w.x[im-1][j][k] <= 0.)&&(v.x[im-1][j][k] >= 0.))
+                    angle = M_PI - alfa + Ekman_angle;
+                if((w.x[im-1][j][k] >= 0.)&&(v.x[im-1][j][k] <= 0.))
+                    angle = 2. * M_PI + alfa + Ekman_angle;
+                if((w.x[im-1][j][k] <= 0.)&&(v.x[im-1][j][k] <= 0.))
+                    angle = 2. * M_PI - alfa + Ekman_angle;
+//              original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 138, eq. 9.11a/b
+                vel_mag = - sqrt(v.x[im-1][j][k] * v.x[im-1][j][k] 
+                              + w.x[im-1][j][k] * w.x[im-1][j][k]);
+                for(int i = im-1; i >= i_Ekman; i--){
+//              original laws in Robert H. Stewart, Introduction to Physical Oceanography, p. 137, eq. 9.9a/b
+                    gam_z = - 3. * M_PI * (double)(i - im-1) 
+                        /(double)(i_Ekman - im-1);
+                    exp_gam_z = exp(gam_z);
+                    sin_gam_z = - sin(angle + gam_z);
+                    cos_gam_z = cos(angle + gam_z);
                     v.x[i][j][k] = vel_mag * exp_gam_z * sin_gam_z; 
                     w.x[i][j][k] = - vel_mag * exp_gam_z * cos_gam_z;
-                }else{
-                    v.x[i][j][k] = - vel_mag * exp_gam_z * sin_gam_z; 
-                    w.x[i][j][k] = - vel_mag * exp_gam_z * cos_gam_z;
-                }
 /*
     if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i 
         << "   j = " << j << "   k = " << k << "   gam_z = " 
@@ -170,28 +148,61 @@ void cHydrosphereModel::IC_v_w_EkmanSpiral(){
         << "   w = " << w.x[i][j][k] << "   vel_mag = " << vel_mag 
         << "   vel_magnit = " << vel_magnit << endl;
 */
+                }
+            }else{
+                if((w.x[im-1][j][k] >= 0.)&&(v.x[im-1][j][k] <= 0.))
+                    angle = M_PI - ( 2. * M_PI - alfa - Ekman_angle );
+                if((w.x[im-1][j][k] <= 0.)&&(v.x[im-1][j][k] <= 0.))
+                    angle = M_PI - ( M_PI + alfa - Ekman_angle );
+                if((w.x[im-1][j][k] >= 0.)&&( v.x[im-1][j][k] >= 0.))
+                    angle = M_PI - ( alfa - Ekman_angle );
+                if((w.x[im-1][j][k] <= 0.)&&(v.x[im-1][j][k] >= 0.))
+                    angle = M_PI - ( M_PI - alfa - Ekman_angle );
+//              original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 138, eq. 9.11a/b
+                vel_mag = - sqrt(v.x[im-1][j][k] * v.x[im-1][j][k] 
+                              + w.x[im-1][j][k] * w.x[im-1][j][k]);
+                for(int i = im-1; i >= i_Ekman; i--){
+//              original laws in Robert H. Stewart, Introduction to Physical Oceanography, p. 137, eq. 9.9a/b
+                    gam_z = - 3. * M_PI * (double)(i - im-1) 
+                        /(double)(i_Ekman - im-1);
+                    exp_gam_z = exp(gam_z);
+                    sin_gam_z = - sin(angle + gam_z);
+                    cos_gam_z = cos(angle + gam_z);
+                    v.x[i][j][k] = vel_mag * exp_gam_z * sin_gam_z; 
+                    w.x[i][j][k] = vel_mag * exp_gam_z * cos_gam_z;
+/*
+    if ( ( j == 90 ) && ( k == 180 ) ) cout << "   i = " << i 
+        << "   j = " << j << "   k = " << k << "   gam_z = " 
+        << gam_z << "   exp_gam_z = " << exp_gam_z 
+        << "   sin_gam_z = " << sin_gam_z << "   cos_gam_z = " << cos_gam_z 
+        << "   i_Ekman = " << i_Ekman << "   v = " << v.x[i][j][k] 
+        << "   w = " << w.x[i][j][k] << "   vel_mag = " << vel_mag 
+        << "   vel_magnit = " << vel_magnit << endl;
+*/
+                }
+            }
+        }
+    }
+// vertical velocity u calculated by the continuity equation
+    for(int k = 1; k < km-1; k++){
+        for(int j = 1; j < jm-1; j++){
+            sinthe = sin(the.z[j]);
+            for(int i = 0; i < im-1; i++){
+                rm = rad.z[i];
+                u.x[i+1][j][k] = u.x[i][j][k]-dr*((v.x[i][j+1][k] 
+                    -v.x[i][j-1][k])/(2.*rm*dthe)+(w.x[i][j][k+1] 
+                    -w.x[i][j][k-1])/(2.*rm*sinthe*dphi));
             }
         }
     }
     for(int i = 0; i <= im-1; i++){
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
-                if(is_land( h, i, j, k)){
+                if(is_land(h, i, j, k)){
+                    u.x[i][j][k] = 0.;
                     v.x[i][j][k] = 0.;
                     w.x[i][j][k] = 0.;
                 }
-            }
-        }
-    }
-// vertical velocity u calculated by the continuity equation
-    for ( int k = 1; k < km-1; k++ ){
-        for ( int j = 1; j < jm-1; j++ ){
-            sinthe = sin(the.z[j]);
-            for ( int i = 0; i < im-1; i++ ){
-                rm = rad.z[i];
-                u.x[i+1][j][k] = u.x[i][j][k] - dr * ( ( v.x[i][j+1][k] 
-                    - v.x[i][j-1][k] ) / ( 2. * rm * dthe ) + ( w.x[i][j][k+1] 
-                    - w.x[i][j][k-1] ) / ( 2. * rm * sinthe * dphi ) );
             }
         }
     }

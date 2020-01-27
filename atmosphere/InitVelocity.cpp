@@ -67,6 +67,7 @@ void cAtmosphereModel::init_velocities(){
     //initialise w, tropopause, surface
     //equator
     init_v_or_w(w, 90, -7.5, -1); //lat: 0
+//    init_v_or_w(w, 90, -7.5, -.5); //lat: 0
     
     //polar cell
     //northern polar cell
