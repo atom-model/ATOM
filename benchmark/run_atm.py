@@ -1,4 +1,6 @@
-import sys, random
+#!/usr/bin/env python
+
+import sys, random, argparse
 sys.path.append('../reconstruction')
 sys.path.append('../utils')
 

@@ -10,8 +10,6 @@
 #include <iostream>
 #include <cmath>
 #include "cAtmosphereModel.h"
-#include "RungeKutta_Atm.h"
-#include "RHS_Atm.h"
 
 using namespace std;
 

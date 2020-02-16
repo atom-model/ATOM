@@ -1,5 +1,5 @@
 /*
- * Ocean General Circulation Modell ( OGCM ) applied to laminar flow
+ * Ocean General Circulation Modell(OGCM) applied to laminar flow
  * Program for the computation of geo-atmospherical circulating flows in a spherical shell
  * Finite difference scheme for the solution of the 3D Navier-Stokes equations
  * with 2 additional transport equations to describe the water vapour and co2 concentration
@@ -10,7 +10,9 @@
 
 #include <iostream>
 #include <cmath>
-
+#include "Array.h"
+#include "Array_2D.h"
+#include "Array_1D.h"
 #include "cHydrosphereModel.h"
 #include "Utils.h"
 
@@ -19,8 +21,10 @@ using namespace AtomUtils;
 
 
 void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
-//    double cc = - 1.;  // factor leads to better results (adapted method)
+//    double cc = - 1.;  // factor leads to better results(adapted method)
     double cc = - 2.;  // factor leads to better results 
+//  (Reinout vander Meulen, The immersed Boundary Method for the Incompressible Navier-Stokes Equations)
+    double coeff_p = p_0/(r_0_water*u_0*u_0);
     double dr2 = dr * dr;
     double dthe2 = dthe * dthe;
     double dphi2 = dphi * dphi;
@@ -44,64 +48,57 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
         h_0_i = h_0_j = h_0_k = 1.;
         h_d_i = h_d_j = h_d_k = 0.; 
     }
-    double topo_step = L_hyd / (double)(im-1);
-    double height = (double)i * topo_step;
+    double topo_step = L_hyd/(double)(im-1);
+    double height =(double)i * topo_step;
 //    double dist_coeff = 0.;
 //    double dist_coeff = .1;
 //    double dist_coeff = .9;
     double dist_coeff = .5;
     double topo_diff = fabs(height - Bathymetry.y[j][k]);
-    if((topo_diff <= topo_step) && ((is_water(h, i, j, k)) 
-        && (is_land(h, i-1, j, k)))){
-//        double h_0_i = .5 * (acos(topo_diff * 3.14 / L_atm) + 1.);   // cosine distribution function, better results for benchmark case
-        h_0_i = topo_diff / topo_step;  // hat distribution function
+    if((topo_diff <= topo_step) &&((is_water(h, i, j, k)) 
+        &&(is_land(h, i-1, j, k)))){
+//        double h_0_i = .5 *(acos(topo_diff * 3.14/L_hyd) + 1.);   // cosine distribution function, better results for benchmark case
+        h_0_i = topo_diff/topo_step;  // hat distribution function
         h_d_i = 1. - h_0_i; 
     }
-    if((is_water(h, i, j, k)) && (is_land(h, i, j+1, k))){ 
+    if((is_water(h, i, j, k)) &&(is_land(h, i, j+1, k))){ 
         dist = dist_coeff * dthe;
-        h_0_j = dist / dthe;
+        h_0_j = dist/dthe;
         h_d_j = 1. - h_0_j; 
     }
-    if((is_water(h, i, j, k)) && (is_land(h, i, j-1, k))){
+    if((is_water(h, i, j, k)) &&(is_land(h, i, j-1, k))){
         dist = dist_coeff * dthe;
-        h_0_j = dist / dthe;
+        h_0_j = dist/dthe;
         h_d_j = 1. - h_0_j; 
     }
-    if((is_water(h, i, j, k)) && (is_land(h, i, j, k+1))){
+    if((is_water(h, i, j, k)) &&(is_land(h, i, j, k+1))){
         dist = dist_coeff * dphi;
-        h_0_k = dist / dphi;
+        h_0_k = dist/dphi;
         h_d_k = 1. - h_0_k; 
     }
-    if((is_water(h, i, j, k)) && (is_land(h, i, j, k-1))){
+    if((is_water(h, i, j, k)) &&(is_land(h, i, j, k-1))){
         dist = dist_coeff * dphi;
-        h_0_k = dist / dphi;
+        h_0_k = dist/dphi;
         h_d_k = 1. - h_0_k; 
     }
     // buoyancy effects by salt water density changes
     double drodc = .7;    // gradient given in kg/m³/m
     double salt_water_ref = r_water.x[i][j][k] + drodc * c.x[i][j][k];
                           // common linear approach for salt water based on fresh water
-
-    double coeff_buoy = L_hyd / ( u_0 * u_0 );
-                          // coefficient for the buoyancy term == 16.0
+    double coeff_buoy = L_hyd/(u_0 * u_0); // coefficient for the buoyancy term == 16.0
     // Boussineq-approximation for the buoyancy force caused by salinity, higher salinity causes negative buoyancy
-    double RS_buoyancy_Momentum = Buoyancy * coeff_buoy * g * ( r_salt_water.x[i][j][k] - salt_water_ref )
-                                  / salt_water_ref;  // buoyancy based on water density, salt water is heavier than fresh water 
-    //    double RS_buoyancy_Momentum = 0.;  // test case
-    BuoyancyForce_3D.x[i][j][k] = RS_buoyancy_Momentum / coeff_buoy;
-                                        // dimension as pressure in kN/m2
-    Salt_Balance.x[i][j][k] = salt_water_ref - r_salt_water.x[i][j][k];
-                                        // difference of salinity compared to average
-    if ( Salt_Balance.x[i][j][k] < 0. ){
-        Salt_Diffusion.x[i][j][k] = Salt_Balance.x[i][j][k];
-                                        // for negativ salinity balance, higher than reference
+    double RS_buoyancy_Momentum = Buoyancy * coeff_buoy * g 
+        *(r_salt_water.x[i][j][k] - salt_water_ref)/salt_water_ref; // buoyancy based on water density, salt water is heavier than fresh water 
+    BuoyancyForce_3D.x[i][j][k] = RS_buoyancy_Momentum/coeff_buoy; // dimension as pressure in kN/m2
+    Salt_Balance.x[i][j][k] = salt_water_ref - r_salt_water.x[i][j][k]; // difference of salinity compared to average
+    if(Salt_Balance.x[i][j][k] < 0.){
+        Salt_Diffusion.x[i][j][k] = Salt_Balance.x[i][j][k]; // for negativ salinity balance, higher than reference
         Salt_Finger.x[i][j][k] = 0.;
     }else{
-        Salt_Finger.x[i][j][k] = Salt_Balance.x[i][j][k];
-                                        // for positiv salinity balance, lower than reference
+        Salt_Finger.x[i][j][k] = Salt_Balance.x[i][j][k]; // for positiv salinity balance, lower than reference
         Salt_Diffusion.x[i][j][k] = 0.;
     }
-    if ( is_land( h, i, j, k) ){
+    if(is_land(h, i, j, k)){
         Salt_Balance.x[i][j][k] = 0.;
         Salt_Finger.x[i][j][k] = 0.;
         Salt_Diffusion.x[i][j][k] = 0.;
@@ -118,210 +115,295 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
     double coriolis_the = - h_d_j * coriolis * 2. * omega 
         * sinthe_coriolis * w.x[i][j][k];
     double coriolis_phi = + h_d_k * coriolis * 2. * omega 
-        * ( sinthe_coriolis * v.x[i][j][k] - costhe * u.x[i][j][k] );
-    double dudr = h_d_i * ( u.x[i+1][j][k] - u.x[i-1][j][k] ) / ( 2. * dr );
-    double dvdr = h_d_i * ( v.x[i+1][j][k] - v.x[i-1][j][k] ) / ( 2. * dr );
-    double dwdr = h_d_i * ( w.x[i+1][j][k] - w.x[i-1][j][k] ) / ( 2. * dr );
-    double dtdr = h_d_i * ( t.x[i+1][j][k] - t.x[i-1][j][k] ) / ( 2. * dr );
-    double dpdr = h_d_i * ( p_dyn.x[i+1][j][k] - p_dyn.x[i-1][j][k] ) / ( 2. * dr );
-    double dcdr = h_d_i * ( c.x[i+1][j][k] - c.x[i-1][j][k] ) / ( 2. * dr );
-    double dudthe = h_d_j * ( u.x[i][j+1][k] - u.x[i][j-1][k] ) / ( 2. * dthe );
-    double dvdthe = h_d_j * ( v.x[i][j+1][k] - v.x[i][j-1][k] ) / ( 2. * dthe );
-    double dwdthe = h_d_j * ( w.x[i][j+1][k] - w.x[i][j-1][k] ) / ( 2. * dthe );
-    double dtdthe = h_d_j * ( t.x[i][j+1][k] - t.x[i][j-1][k] ) / ( 2. * dthe );
-    double dpdthe = h_d_j * ( p_dyn.x[i][j+1][k] - p_dyn.x[i][j-1][k] ) / ( 2. * dthe );
-    double dcdthe = h_d_j * ( c.x[i][j+1][k] - c.x[i][j-1][k] ) / ( 2. * dthe );
-    double dudphi = h_d_k * ( u.x[i][j][k+1] - u.x[i][j][k-1] ) / ( 2. * dphi );
-    double dvdphi = h_d_k * ( v.x[i][j][k+1] - v.x[i][j][k-1] ) / ( 2. * dphi );
-    double dwdphi = h_d_k * ( w.x[i][j][k+1] - w.x[i][j][k-1] ) / ( 2. * dphi );
-    double dtdphi = h_d_k * ( t.x[i][j][k+1] - t.x[i][j][k-1] ) / ( 2. * dphi );
-    double dpdphi = h_d_k * ( p_dyn.x[i][j][k+1] - p_dyn.x[i][j][k-1] ) / ( 2. * dphi );
-    double dcdphi = h_d_k * ( c.x[i][j][k+1] - c.x[i][j][k-1] ) / ( 2. * dphi );
-    double d2udr2 = h_d_i * ( u.x[i+1][j][k] - 2. * u.x[i][j][k] + u.x[i-1][j][k] ) / dr2;
-    double d2vdr2 = h_d_i * ( v.x[i+1][j][k] - 2. * v.x[i][j][k] + v.x[i-1][j][k] ) / dr2; 
-    double d2wdr2 = h_d_i * ( w.x[i+1][j][k] - 2. * w.x[i][j][k] + w.x[i-1][j][k] ) / dr2; 
-    double d2tdr2 = h_d_i * ( t.x[i+1][j][k] - 2. * t.x[i][j][k] + t.x[i-1][j][k] ) / dr2; 
-    double d2cdr2 = h_d_i * ( c.x[i+1][j][k] - 2. * c.x[i][j][k] + c.x[i-1][j][k] ) / dr2; 
-    double d2udthe2 = h_d_j * ( u.x[i][j+1][k] - 2. * u.x[i][j][k] + u.x[i][j-1][k] ) / dthe2;
-    double d2vdthe2 = h_d_j * ( v.x[i][j+1][k] - 2. * v.x[i][j][k] + v.x[i][j-1][k] ) / dthe2;
-    double d2wdthe2 = h_d_j * ( w.x[i][j+1][k] - 2. * w.x[i][j][k] + w.x[i][j-1][k] ) / dthe2;
-    double d2tdthe2 = h_d_j * ( t.x[i][j+1][k] - 2. * t.x[i][j][k] + t.x[i][j-1][k] ) / dthe2;
-    double d2cdthe2 = h_d_j * ( c.x[i][j+1][k] - 2. * c.x[i][j][k] + c.x[i][j-1][k] ) / dthe2;
-    double d2udphi2 = h_d_k * ( u.x[i][j][k+1] - 2. * u.x[i][j][k] + u.x[i][j][k-1] ) / dphi2;
-    double d2vdphi2 = h_d_k * ( v.x[i][j][k+1] - 2. * v.x[i][j][k] + v.x[i][j][k-1] ) / dphi2;
-    double d2wdphi2 = h_d_k * ( w.x[i][j][k+1] - 2. * w.x[i][j][k] + w.x[i][j][k-1] ) / dphi2;
-    double d2tdphi2 = h_d_k * ( t.x[i][j][k+1] - 2. * t.x[i][j][k] + t.x[i][j][k-1] ) / dphi2;
-    double d2cdphi2 = h_d_k * ( c.x[i][j][k+1] - 2. * c.x[i][j][k] + c.x[i][j][k-1] ) / dphi2;
-    if ( i < im - 2 ){
-        if ( ( is_land ( h, i, j, k ) ) && ( ( is_water ( h, i+1, j, k ) ) && ( is_water ( h, i+2, j, k ) ) ) ){
-            dudr = h_d_i * ( - 3. * u.x[i][j][k] + 4. * u.x[i + 1][j][k] - u.x[i + 2][j][k] ) / ( 2. * dr );
-            dvdr = h_d_i * ( - 3. * v.x[i][j][k] + 4. * v.x[i + 1][j][k] - v.x[i + 2][j][k] ) / ( 2. * dr );
-            dwdr = h_d_i * ( - 3. * w.x[i][j][k] + 4. * w.x[i + 1][j][k] - w.x[i + 2][j][k] ) / ( 2. * dr );
-            dtdr = h_d_i * ( - 3. * t.x[i][j][k] + 4. * t.x[i + 1][j][k] - t.x[i + 2][j][k] ) / ( 2. * dr );
-            dpdr = h_d_i * ( - 3. * p_dyn.x[i][j][k] + 4. * p_dyn.x[i + 1][j][k] - p_dyn.x[i + 2][j][k] ) / ( 2. * dr );
-            dcdr = h_d_i * ( - 3. * u.x[i][j][k] + 4. * u.x[i + 1][j][k] - u.x[i + 2][j][k] ) / ( 2. * dr );
-            d2udr2 = h_d_i * ( u.x[i][j][k] - 2. * u.x[i + 1][j][k] + u.x[i + 2][j][k] ) / dr2; 
-            d2vdr2 = h_d_i * ( v.x[i][j][k] - 2. * v.x[i + 1][j][k] + v.x[i + 2][j][k] ) / dr2; 
-            d2wdr2 = h_d_i * ( w.x[i][j][k] - 2. * w.x[i + 1][j][k] + w.x[i + 2][j][k] ) / dr2; 
-            d2tdr2 = h_d_i * ( t.x[i][j][k] - 2. * t.x[i + 1][j][k] + t.x[i + 2][j][k] ) / dr2; 
-            d2cdr2 = h_d_i * ( u.x[i][j][k] - 2. * u.x[i + 1][j][k] + u.x[i + 2][j][k] ) / dr2; 
+        * (sinthe_coriolis * v.x[i][j][k] - costhe * u.x[i][j][k]);
+    double dudr = h_d_i *(u.x[i+1][j][k] - u.x[i-1][j][k])/(2. * dr);
+    double dvdr = h_d_i *(v.x[i+1][j][k] - v.x[i-1][j][k])/(2. * dr);
+    double dwdr = h_d_i *(w.x[i+1][j][k] - w.x[i-1][j][k])/(2. * dr);
+    double dtdr = h_d_i *(t.x[i+1][j][k] - t.x[i-1][j][k])/(2. * dr);
+    double dpdr = h_d_i *(p_dyn.x[i+1][j][k] - p_dyn.x[i-1][j][k])
+        /(2. * dr);
+    double dcdr = h_d_i *(c.x[i+1][j][k] - c.x[i-1][j][k])/(2. * dr);
+    double dudthe = h_d_j *(u.x[i][j+1][k] - u.x[i][j-1][k])/(2. * dthe);
+    double dvdthe = h_d_j *(v.x[i][j+1][k] - v.x[i][j-1][k])/(2. * dthe);
+    double dwdthe = h_d_j *(w.x[i][j+1][k] - w.x[i][j-1][k])/(2. * dthe);
+    double dtdthe = h_d_j *(t.x[i][j+1][k] - t.x[i][j-1][k])/(2. * dthe);
+    double dpdthe = h_d_j *(p_dyn.x[i][j+1][k] - p_dyn.x[i][j-1][k])
+        /(2. * dthe);
+    double dcdthe = h_d_j *(c.x[i][j+1][k] - c.x[i][j-1][k])/(2. * dthe);
+    double dudphi = h_d_k *(u.x[i][j][k+1] - u.x[i][j][k-1])/(2. * dphi);
+    double dvdphi = h_d_k *(v.x[i][j][k+1] - v.x[i][j][k-1])/(2. * dphi);
+    double dwdphi = h_d_k *(w.x[i][j][k+1] - w.x[i][j][k-1])/(2. * dphi);
+    double dtdphi = h_d_k *(t.x[i][j][k+1] - t.x[i][j][k-1])/(2. * dphi);
+    double dpdphi = h_d_k *(p_dyn.x[i][j][k+1] - p_dyn.x[i][j][k-1])
+        /(2. * dphi);
+    double dcdphi = h_d_k *(c.x[i][j][k+1] - c.x[i][j][k-1])/(2. * dphi);
+    double d2udr2 = h_d_i *(u.x[i+1][j][k] - 2. * u.x[i][j][k] 
+        + u.x[i-1][j][k])/dr2;
+    double d2vdr2 = h_d_i *(v.x[i+1][j][k] - 2. * v.x[i][j][k] 
+        + v.x[i-1][j][k])/dr2; 
+    double d2wdr2 = h_d_i *(w.x[i+1][j][k] - 2. * w.x[i][j][k] 
+        + w.x[i-1][j][k])/dr2; 
+    double d2tdr2 = h_d_i *(t.x[i+1][j][k] - 2. * t.x[i][j][k] 
+        + t.x[i-1][j][k])/dr2; 
+    double d2cdr2 = h_d_i *(c.x[i+1][j][k] - 2. * c.x[i][j][k] 
+        + c.x[i-1][j][k])/dr2; 
+    double d2udthe2 = h_d_j *(u.x[i][j+1][k] - 2. * u.x[i][j][k] 
+        + u.x[i][j-1][k])/dthe2;
+    double d2vdthe2 = h_d_j *(v.x[i][j+1][k] - 2. * v.x[i][j][k] 
+        + v.x[i][j-1][k])/dthe2;
+    double d2wdthe2 = h_d_j *(w.x[i][j+1][k] - 2. * w.x[i][j][k] 
+        + w.x[i][j-1][k])/dthe2;
+    double d2tdthe2 = h_d_j *(t.x[i][j+1][k] - 2. * t.x[i][j][k] 
+        + t.x[i][j-1][k])/dthe2;
+    double d2cdthe2 = h_d_j *(c.x[i][j+1][k] - 2. * c.x[i][j][k] 
+        + c.x[i][j-1][k])/dthe2;
+    double d2udphi2 = h_d_k *(u.x[i][j][k+1] - 2. * u.x[i][j][k] 
+        + u.x[i][j][k-1])/dphi2;
+    double d2vdphi2 = h_d_k *(v.x[i][j][k+1] - 2. * v.x[i][j][k] 
+        + v.x[i][j][k-1])/dphi2;
+    double d2wdphi2 = h_d_k *(w.x[i][j][k+1] - 2. * w.x[i][j][k] 
+        + w.x[i][j][k-1])/dphi2;
+    double d2tdphi2 = h_d_k *(t.x[i][j][k+1] - 2. * t.x[i][j][k] 
+        + t.x[i][j][k-1])/dphi2;
+    double d2cdphi2 = h_d_k *(c.x[i][j][k+1] - 2. * c.x[i][j][k] 
+        + c.x[i][j][k-1])/dphi2;
+    if(i < im - 2){
+        if((is_land(h, i, j, k)) &&((is_water(h, i+1, j, k)) 
+            && (is_water(h, i+2, j, k)))){
+            dudr = h_d_i *(- 3. * u.x[i][j][k] + 4. * u.x[i+1][j][k] 
+                - u.x[i+2][j][k])/(2. * dr);
+            dvdr = h_d_i *(- 3. * v.x[i][j][k] + 4. * v.x[i+1][j][k] 
+                - v.x[i+2][j][k])/(2. * dr);
+            dwdr = h_d_i *(- 3. * w.x[i][j][k] + 4. * w.x[i+1][j][k] 
+                - w.x[i+2][j][k])/(2. * dr);
+            dtdr = h_d_i *(- 3. * t.x[i][j][k] + 4. * t.x[i+1][j][k] 
+                - t.x[i+2][j][k])/(2. * dr);
+            dpdr = h_d_i *(- 3. * p_dyn.x[i][j][k] 
+                + 4. * p_dyn.x[i+1][j][k] - p_dyn.x[i+2][j][k])/(2. * dr);
+            dcdr = h_d_i *(- 3. * c.x[i][j][k] 
+                + 4. * c.x[i + 1][j][k] - c.x[i+2][j][k])/(2. * dr);
+            d2udr2 = h_d_i *(u.x[i][j][k] - 2. * u.x[i+1][j][k] 
+                + u.x[i+2][j][k])/dr2; 
+            d2vdr2 = h_d_i *(v.x[i][j][k] - 2. * v.x[i+1][j][k] 
+                + v.x[i+2][j][k])/dr2; 
+            d2wdr2 = h_d_i *(w.x[i][j][k] - 2. * w.x[i+1][j][k] 
+                + w.x[i+2][j][k])/dr2; 
+            d2tdr2 = h_d_i *(t.x[i][j][k] - 2. * t.x[i+1][j][k] 
+                + t.x[i+2][j][k])/dr2; 
+            d2cdr2 = h_d_i *(c.x[i][j][k] - 2. * c.x[i+1][j][k] 
+                + c.x[i+2][j][k])/dr2; 
         }
     }
-    if ( ( j >= 2 ) && ( j <= jm - 3 ) ){
-        if ( ( is_land ( h, i, j, k ) ) && ( ( is_water ( h, i, j+1, k ) ) && ( is_water ( h, i, j+2, k ) ) ) ){
-            dudthe = h_d_j * ( - 3. * u.x[i][j][k] + 4. * u.x[i][j + 1][k] - u.x[i][j + 2][k] ) / ( 2. * dthe );
-            dvdthe = h_d_j * ( - 3. * v.x[i][j][k] + 4. * v.x[i][j + 1][k] - v.x[i][j + 2][k] ) / ( 2. * dthe );
-            dwdthe = h_d_j * ( - 3. * w.x[i][j][k] + 4. * w.x[i][j + 1][k] - w.x[i][j + 2][k] ) / ( 2. * dthe );
-            dtdthe = h_d_j * ( - 3. * t.x[i][j][k] + 4. * t.x[i][j + 1][k] - t.x[i][j + 2][k] ) / ( 2. * dthe );
-            dpdthe = h_d_j * ( - 3. * p_dyn.x[i][j][k] + 4. * p_dyn.x[i][j + 1][k] - p_dyn.x[i][j + 2][k] ) / ( 2. * dthe );
-            dcdthe = h_d_j * ( - 3. * c.x[i][j][k] + 4. * c.x[i][j + 1][k] - c.x[i][j + 2][k] ) / ( 2. * dthe );
-            d2udthe2 = h_d_j * ( u.x[i][j][k] - 2. * u.x[i][j + 1][k] + u.x[i][j + 2][k] ) / dthe2;
-            d2vdthe2 = h_d_j * ( v.x[i][j][k] - 2. * v.x[i][j + 1][k] + v.x[i][j + 2][k] ) / dthe2;
-            d2wdthe2 = h_d_j * ( w.x[i][j][k] - 2. * w.x[i][j + 1][k] + w.x[i][j + 2][k] ) / dthe2;
-            d2tdthe2 = h_d_j * ( t.x[i][j][k] - 2. * t.x[i][j + 1][k] + t.x[i][j + 2][k] ) / dthe2;
-            d2cdthe2 = h_d_j * ( c.x[i][j][k] - 2. * c.x[i][j + 1][k] + c.x[i][j + 2][k] ) / dthe2;
+    if((j >= 2) &&(j <= jm - 3)){
+        if((is_land(h, i, j, k)) &&((is_water(h, i, j+1, k)) 
+            && (is_water(h, i, j+2, k)))){
+            dudthe = h_d_j *(- 3. * u.x[i][j][k] + 4. * u.x[i][j+1][k] 
+                - u.x[i][j+2][k])/(2. * dthe);
+            dvdthe = h_d_j *(- 3. * v.x[i][j][k] + 4. * v.x[i][j+1][k] 
+                - v.x[i][j+2][k])/(2. * dthe);
+            dwdthe = h_d_j *(- 3. * w.x[i][j][k] + 4. * w.x[i][j+1][k] 
+                - w.x[i][j+2][k])/(2. * dthe);
+            dtdthe = h_d_j *(- 3. * t.x[i][j][k] + 4. * t.x[i][j+1][k] 
+                - t.x[i][j+2][k])/(2. * dthe);
+            dpdthe = h_d_j *(- 3. * p_dyn.x[i][j][k] 
+                + 4. * p_dyn.x[i][j+1][k] - p_dyn.x[i][j+2][k])/(2. * dthe);
+            dcdthe = h_d_j *(- 3. * c.x[i][j][k] + 4. * c.x[i][j+1][k] 
+                - c.x[i][j+2][k])/(2. * dthe);
+            d2udthe2 = h_d_j *(u.x[i][j][k] - 2. * u.x[i][j+1][k] 
+                + u.x[i][j+2][k])/dthe2;
+            d2vdthe2 = h_d_j *(v.x[i][j][k] - 2. * v.x[i][j+1][k] 
+                + v.x[i][j+2][k])/dthe2;
+            d2wdthe2 = h_d_j *(w.x[i][j][k] - 2. * w.x[i][j+1][k] 
+                + w.x[i][j+2][k])/dthe2;
+            d2tdthe2 = h_d_j *(t.x[i][j][k] - 2. * t.x[i][j+1][k] 
+                + t.x[i][j+2][k])/dthe2;
+            d2cdthe2 = h_d_j *(c.x[i][j][k] - 2. * c.x[i][j+1][k] 
+                + c.x[i][j+2][k])/dthe2;
         }
-        if ( ( is_land ( h, i, j, k ) ) && ( is_water ( h, i, j-1, k ) ) && ( is_water ( h, i, j-2, k ) ) ){
-            dudthe = h_d_j * ( - 3. * u.x[i][j][k] + 4. * u.x[i][j - 1][k] - u.x[i][j - 2][k] ) / ( 2. * dthe );
-            dvdthe = h_d_j * ( - 3. * v.x[i][j][k] + 4. * v.x[i][j - 1][k] - v.x[i][j - 2][k] ) / ( 2. * dthe );
-            dwdthe = h_d_j * ( - 3. * w.x[i][j][k] + 4. * w.x[i][j - 1][k] - w.x[i][j - 2][k] ) / ( 2. * dthe );
-            dtdthe = h_d_j * ( - 3. * t.x[i][j][k] + 4. * t.x[i][j - 1][k] - t.x[i][j - 2][k] ) / ( 2. * dthe );
-            dpdthe = h_d_j * ( - 3. * p_dyn.x[i][j][k] + 4. * p_dyn.x[i][j - 1][k] - p_dyn.x[i][j - 2][k] ) / ( 2. * dthe );
-            dcdthe = h_d_j * ( - 3. * c.x[i][j][k] + 4. * c.x[i][j - 1][k] - c.x[i][j - 2][k] ) / ( 2. * dthe );
-            d2udthe2 = h_d_j * ( u.x[i][j][k] - 2. * u.x[i][j - 1][k] + u.x[i][j - 2][k] ) / dthe2;
-            d2vdthe2 = h_d_j * ( v.x[i][j][k] - 2. * v.x[i][j - 1][k] + v.x[i][j - 2][k] ) / dthe2;
-            d2wdthe2 = h_d_j * ( w.x[i][j][k] - 2. * w.x[i][j - 1][k] + w.x[i][j - 2][k] ) / dthe2;
-            d2tdthe2 = h_d_j * ( t.x[i][j][k] - 2. * t.x[i][j - 1][k] + t.x[i][j - 2][k] ) / dthe2;
-            d2cdthe2 = h_d_j * ( c.x[i][j][k] - 2. * c.x[i][j - 1][k] + c.x[i][j - 2][k] ) / dthe2;
+        if((is_land(h, i, j, k)) &&(is_water(h, i, j-1, k)) 
+            && (is_water(h, i, j-2, k))){
+            dudthe = h_d_j *(- 3. * u.x[i][j][k] + 4. * u.x[i][j-1][k] 
+                - u.x[i][j-2][k])/(2. * dthe);
+            dvdthe = h_d_j *(- 3. * v.x[i][j][k] + 4. * v.x[i][j-1][k] 
+                - v.x[i][j-2][k])/(2. * dthe);
+            dwdthe = h_d_j *(- 3. * w.x[i][j][k] + 4. * w.x[i][j-1][k] 
+                - w.x[i][j-2][k])/(2. * dthe);
+            dtdthe = h_d_j *(- 3. * t.x[i][j][k] + 4. * t.x[i][j-1][k] 
+                - t.x[i][j-2][k])/(2. * dthe);
+            dpdthe = h_d_j *(- 3. * p_dyn.x[i][j][k] 
+                + 4. * p_dyn.x[i][j-1][k] - p_dyn.x[i][j-2][k])
+                    /(2. * dthe);
+            dcdthe = h_d_j *(- 3. * c.x[i][j][k] + 4. * c.x[i][j-1][k] 
+                - c.x[i][j-2][k])/(2. * dthe);
+            d2udthe2 = h_d_j *(u.x[i][j][k] - 2. * u.x[i][j-1][k] 
+                + u.x[i][j-2][k])/dthe2;
+            d2vdthe2 = h_d_j *(v.x[i][j][k] - 2. * v.x[i][j-1][k] 
+                + v.x[i][j-2][k])/dthe2;
+            d2wdthe2 = h_d_j *(w.x[i][j][k] - 2. * w.x[i][j-1][k] 
+                + w.x[i][j-2][k])/dthe2;
+            d2tdthe2 = h_d_j *(t.x[i][j][k] - 2. * t.x[i][j-1][k] 
+                + t.x[i][j-2][k])/dthe2;
+            d2cdthe2 = h_d_j *(c.x[i][j][k] - 2. * c.x[i][j-1][k] 
+                + c.x[i][j-2][k])/dthe2;
         }
-        if ( ( ( is_land ( h, i, j, k ) ) 
-            && ( ( is_water ( h, i, j+1, k ) ) && ( is_land ( h, i, j+2, k ) ) ) ) 
-            || ( ( j == jm - 2 )
-            && ( ( is_water ( h, i, j, k ) ) && ( is_land ( h, i, j+1, k ) ) ) ) ){
-            dudthe = h_d_j * ( u.x[i][j + 1][k] - u.x[i][j][k] ) / dthe;
-            dvdthe = h_d_j * ( v.x[i][j + 1][k] - v.x[i][j][k] ) / dthe;
-            dwdthe = h_d_j * ( w.x[i][j + 1][k] - w.x[i][j][k] ) / dthe;
-            dtdthe = h_d_j * ( t.x[i][j + 1][k] - t.x[i][j][k] ) / dthe;
-            dpdthe = h_d_j * ( p_dyn.x[i][j + 1][k] - p_dyn.x[i][j][k] ) / dthe;
-            dcdthe = h_d_j * ( c.x[i][j + 1][k] - c.x[i][j][k] ) / dthe;
+        if(((is_land(h, i, j, k)) 
+            &&((is_water(h, i, j+1, k)) &&(is_land(h, i, j+2, k)))) 
+            ||((j == jm - 2)
+            &&((is_water(h, i, j, k)) &&(is_land(h, i, j+1, k))))){
+            dudthe = h_d_j *(u.x[i][j+1][k] - u.x[i][j][k])/dthe;
+            dvdthe = h_d_j *(v.x[i][j+1][k] - v.x[i][j][k])/dthe;
+            dwdthe = h_d_j *(w.x[i][j+1][k] - w.x[i][j][k])/dthe;
+            dtdthe = h_d_j *(t.x[i][j+1][k] - t.x[i][j][k])/dthe;
+            dpdthe = h_d_j *(p_dyn.x[i][j+1][k] - p_dyn.x[i][j][k])/dthe;
+            dcdthe = h_d_j *(c.x[i][j+1][k] - c.x[i][j][k])/dthe;
             d2udthe2 = d2vdthe2 = d2wdthe2 = d2tdthe2 = d2cdthe2 = 0.;
         }
-        if ( ( ( is_land ( h, i, j, k ) ) 
-            && ( ( is_water ( h, i, j-1, k ) ) && ( is_land ( h, i, j-2, k ) ) ) ) 
-            || ( ( j == 1 )
-            && ( ( is_land ( h, i, j, k ) ) && ( is_water ( h, i, j-1, k ) ) ) ) ){
-            dudthe = h_d_j * ( u.x[i][j - 1][k] - u.x[i][j][k] ) / dthe;
-            dvdthe = h_d_j * ( v.x[i][j - 1][k] - v.x[i][j][k] ) / dthe;
-            dwdthe = h_d_j * ( w.x[i][j - 1][k] - w.x[i][j][k] ) / dthe;
-            dtdthe = h_d_j * ( t.x[i][j - 1][k] - t.x[i][j][k] ) / dthe;
-            dpdthe = h_d_j * ( p_dyn.x[i][j - 1][k] - p_dyn.x[i][j][k] ) / dthe;
-            dcdthe = h_d_j * ( c.x[i][j - 1][k] - c.x[i][j][k] ) / dthe;
+        if(((is_land(h, i, j, k)) 
+            &&((is_water(h, i, j-1, k)) &&(is_land(h, i, j-2, k)))) 
+            ||((j == 1)
+            &&((is_land(h, i, j, k)) &&(is_water(h, i, j-1, k))))){
+            dudthe = h_d_j *(u.x[i][j-1][k] - u.x[i][j][k])/dthe;
+            dvdthe = h_d_j *(v.x[i][j-1][k] - v.x[i][j][k])/dthe;
+            dwdthe = h_d_j *(w.x[i][j-1][k] - w.x[i][j][k])/dthe;
+            dtdthe = h_d_j *(t.x[i][j-1][k] - t.x[i][j][k])/dthe;
+            dpdthe = h_d_j *(p_dyn.x[i][j-1][k] - p_dyn.x[i][j][k])/dthe;
+            dcdthe = h_d_j *(c.x[i][j-1][k] - c.x[i][j][k])/dthe;
             d2udthe2 = d2vdthe2 = d2wdthe2 = d2tdthe2 = d2cdthe2 = 0.;
         }
     }
-    if ( ( k >= 2 ) && ( k <= km - 3 ) ){
-        if ( ( is_land ( h, i, j, k ) ) && ( is_water ( h, i, j, k+1 ) ) && ( is_water ( h, i, j, k+2 ) ) ){
-            dudphi = h_d_k * ( - 3. * u.x[i][j][k] + 4. * u.x[i][j][k + 1] - u.x[i][j][k + 2] ) / ( 2. * dphi );
-            dvdphi = h_d_k * ( - 3. * v.x[i][j][k] + 4. * v.x[i][j][k + 1] - v.x[i][j][k + 2] ) / ( 2. * dphi );
-            dwdphi = h_d_k * ( - 3. * w.x[i][j][k] + 4. * w.x[i][j][k + 1] - w.x[i][j][k + 2] ) / ( 2. * dphi );
-            dtdphi = h_d_k * ( - 3. * t.x[i][j][k] + 4. * t.x[i][j][k + 1] - t.x[i][j][k + 2] ) / ( 2. * dphi );
-            dpdphi = h_d_k * ( - 3. * p_dyn.x[i][j][k] + 4. * p_dyn.x[i][j][k + 1] - p_dyn.x[i][j][k + 2] ) / ( 2. * dphi );
-            dcdphi = h_d_k * ( - 3. * c.x[i][j][k] + 4. * c.x[i][j][k + 1] - c.x[i][j][k + 2] ) / ( 2. * dphi );
-            d2udphi2 = h_d_k * ( u.x[i][j][k] - 2. * u.x[i][j][k + 1] + u.x[i][j][k + 2] ) / dphi2;
-            d2vdphi2 = h_d_k * ( v.x[i][j][k] - 2. * v.x[i][j][k + 1] + v.x[i][j][k + 2] ) / dphi2;
-            d2wdphi2 = h_d_k * ( w.x[i][j][k] - 2. * w.x[i][j][k + 1] + w.x[i][j][k + 2] ) / dphi2;
-            d2tdphi2 = h_d_k * ( t.x[i][j][k] - 2. * t.x[i][j][k + 1] + t.x[i][j][k + 2] ) / dphi2;
-            d2cdphi2 = h_d_k * ( c.x[i][j][k] - 2. * c.x[i][j][k + 1] + c.x[i][j][k + 2] ) / dphi2;
+    if((k >= 2) &&(k <= km - 3)){
+        if((is_land(h, i, j, k)) &&(is_water(h, i, j, k+1)) 
+            && (is_water(h, i, j, k+2))){
+            dudphi = h_d_k *(- 3. * u.x[i][j][k] + 4. * u.x[i][j][k+1] 
+                - u.x[i][j][k+2])/(2. * dphi);
+            dvdphi = h_d_k *(- 3. * v.x[i][j][k] + 4. * v.x[i][j][k+1] 
+                - v.x[i][j][k+2])/(2. * dphi);
+            dwdphi = h_d_k *(- 3. * w.x[i][j][k] + 4. * w.x[i][j][k+1] 
+                - w.x[i][j][k+2])/(2. * dphi);
+            dtdphi = h_d_k *(- 3. * t.x[i][j][k] + 4. * t.x[i][j][k+1] 
+                - t.x[i][j][k+2])/(2. * dphi);
+            dpdphi = h_d_k *(- 3. * p_dyn.x[i][j][k] 
+                + 4. * p_dyn.x[i][j][k+1] - p_dyn.x[i][j][k+2])/(2. * dphi);
+            dcdphi = h_d_k *(- 3. * c.x[i][j][k] + 4. * c.x[i][j][k+1] 
+                - c.x[i][j][k+2])/(2. * dphi);
+            d2udphi2 = h_d_k *(u.x[i][j][k] - 2. * u.x[i][j][k+1] 
+                + u.x[i][j][k+2])/dphi2;
+            d2vdphi2 = h_d_k *(v.x[i][j][k] - 2. * v.x[i][j][k+1] 
+                + v.x[i][j][k+2])/dphi2;
+            d2wdphi2 = h_d_k *(w.x[i][j][k] - 2. * w.x[i][j][k+1] 
+                + w.x[i][j][k+2])/dphi2;
+            d2tdphi2 = h_d_k *(t.x[i][j][k] - 2. * t.x[i][j][k+1] 
+                + t.x[i][j][k+2])/dphi2;
+            d2cdphi2 = h_d_k *(c.x[i][j][k] - 2. * c.x[i][j][k+1] 
+                + c.x[i][j][k+2])/dphi2;
         }
-        if ( ( is_land ( h, i, j, k ) ) && ( is_water ( h, i, j, k-1 ) ) && ( is_water ( h, i, j, k-2 ) ) ){
-            dudphi = h_d_k * ( - 3. * u.x[i][j][k] + 4. * u.x[i][j][k - 1] - u.x[i][j][k - 2] ) / ( 2. * dphi );
-            dvdphi = h_d_k * ( - 3. * v.x[i][j][k] + 4. * v.x[i][j][k - 1] - v.x[i][j][k - 2] ) / ( 2. * dphi );
-            dwdphi = h_d_k * ( - 3. * w.x[i][j][k] + 4. * w.x[i][j][k - 1] - w.x[i][j][k - 2] ) / ( 2. * dphi );
-            dtdphi = h_d_k * ( - 3. * t.x[i][j][k] + 4. * t.x[i][j][k - 1] - t.x[i][j][k - 2] ) / ( 2. * dphi );
-            dpdphi = h_d_k * ( - 3. * p_dyn.x[i][j][k] + 4. * p_dyn.x[i][j][k - 1] - p_dyn.x[i][j][k - 2] ) / ( 2. * dphi );
-            dcdphi = h_d_k * ( - 3. * c.x[i][j][k] + 4. * c.x[i][j][k - 1] - c.x[i][j][k - 2] ) / ( 2. * dphi );
-            d2udphi2 = h_d_k * ( u.x[i][j][k] - 2. * u.x[i][j][k - 1] + u.x[i][j][k - 2] ) / dphi2;
-            d2vdphi2 = h_d_k * ( v.x[i][j][k] - 2. * v.x[i][j][k - 1] + v.x[i][j][k - 2] ) / dphi2;
-            d2wdphi2 = h_d_k * ( w.x[i][j][k] - 2. * w.x[i][j][k - 1] + w.x[i][j][k - 2] ) / dphi2;
-            d2tdphi2 = h_d_k * ( t.x[i][j][k] - 2. * t.x[i][j][k - 1] + t.x[i][j][k - 2] ) / dphi2;
-            d2cdphi2 = h_d_k * ( c.x[i][j][k] - 2. * c.x[i][j][k - 1] + c.x[i][j][k - 2] ) / dphi2;
+        if((is_land(h, i, j, k)) &&(is_water(h, i, j, k-1)) 
+            && (is_water(h, i, j, k-2))){
+            dudphi = h_d_k *(- 3. * u.x[i][j][k] + 4. * u.x[i][j][k-1] 
+                - u.x[i][j][k-2])/(2. * dphi);
+            dvdphi = h_d_k *(- 3. * v.x[i][j][k] + 4. * v.x[i][j][k-1] 
+                - v.x[i][j][k-2])/(2. * dphi);
+            dwdphi = h_d_k *(- 3. * w.x[i][j][k] + 4. * w.x[i][j][k-1] 
+                - w.x[i][j][k-2])/(2. * dphi);
+            dtdphi = h_d_k *(- 3. * t.x[i][j][k] + 4. * t.x[i][j][k-1] 
+                - t.x[i][j][k-2])/(2. * dphi);
+            dpdphi = h_d_k *(- 3. * p_dyn.x[i][j][k] 
+                + 4. * p_dyn.x[i][j][k-1] - p_dyn.x[i][j][k-2])/(2. * dphi);
+            dcdphi = h_d_k *(- 3. * c.x[i][j][k] + 4. * c.x[i][j][k-1] 
+                - c.x[i][j][k-2])/(2. * dphi);
+            d2udphi2 = h_d_k *(u.x[i][j][k] - 2. * u.x[i][j][k-1] 
+                + u.x[i][j][k-2])/dphi2;
+            d2vdphi2 = h_d_k *(v.x[i][j][k] - 2. * v.x[i][j][k-1] 
+                + v.x[i][j][k-2])/dphi2;
+            d2wdphi2 = h_d_k *(w.x[i][j][k] - 2. * w.x[i][j][k-1] 
+                + w.x[i][j][k-2])/dphi2;
+            d2tdphi2 = h_d_k *(t.x[i][j][k] - 2. * t.x[i][j][k-1] 
+                + t.x[i][j][k-2])/dphi2;
+            d2cdphi2 = h_d_k *(c.x[i][j][k] - 2. * c.x[i][j][k-1] 
+                + c.x[i][j][k-2])/dphi2;
         }
-        if ( ( ( is_land ( h, i, j, k ) ) 
-            && ( ( is_water ( h, i, j, k+1 ) ) && ( is_land ( h, i, j, k+2 ) ) ) ) 
-            || ( ( k == km - 2 )
-            && ( ( is_water ( h, i, j, k ) ) && ( is_land ( h, i, j, k+1 ) ) ) ) ){
-            dudphi = h_d_k * ( u.x[i][j][k + 1] - u.x[i][j][k] ) / dphi;
-            dvdphi = h_d_k * ( v.x[i][j][k + 1] - v.x[i][j][k] ) / dphi;
-            dwdphi = h_d_k * ( w.x[i][j][k + 1] - w.x[i][j][k] ) / dphi;
-            dtdphi = h_d_k * ( t.x[i][j][k + 1] - t.x[i][j][k] ) / dphi;
-            dpdphi = h_d_k * ( p_dyn.x[i][j][k + 1] - p_dyn.x[i][j][k] ) / dphi;
-            dcdphi = h_d_k * ( c.x[i][j][k + 1] - c.x[i][j][k] ) / dphi;
+        if(((is_land(h, i, j, k)) 
+            &&((is_water(h, i, j, k+1)) &&(is_land(h, i, j, k+2)))) 
+            ||((k == km - 2)
+            &&((is_water(h, i, j, k)) &&(is_land(h, i, j, k+1))))){
+            dudphi = h_d_k *(u.x[i][j][k+1] - u.x[i][j][k])/dphi;
+            dvdphi = h_d_k *(v.x[i][j][k+1] - v.x[i][j][k])/dphi;
+            dwdphi = h_d_k *(w.x[i][j][k+1] - w.x[i][j][k])/dphi;
+            dtdphi = h_d_k *(t.x[i][j][k+1] - t.x[i][j][k])/dphi;
+            dpdphi = h_d_k *(p_dyn.x[i][j][k+1] - p_dyn.x[i][j][k])/dphi;
+            dcdphi = h_d_k *(c.x[i][j][k+1] - c.x[i][j][k])/dphi;
             d2udphi2 = d2vdphi2 = d2wdphi2 = d2tdphi2 = d2cdphi2 = 0.;
         }
-        if ( ( ( is_land ( h, i, j, k ) ) 
-            && ( ( is_water ( h, i, j, k-1 ) ) && ( is_land ( h, i, j, k-2 ) ) ) ) 
-            || ( ( k == 1 )
-            && ( ( is_land ( h, i, j, k ) ) && ( is_water ( h, i, j, k-1 ) ) ) ) ){
-            dudphi = h_d_k * ( u.x[i][j][k - 1] - u.x[i][j][k] ) / dphi;
-            dvdphi = h_d_k * ( v.x[i][j][k - 1] - v.x[i][j][k] ) / dphi;
-            dwdphi = h_d_k * ( w.x[i][j][k - 1] - w.x[i][j][k] ) / dphi;
-            dtdphi = h_d_k * ( t.x[i][j][k - 1] - t.x[i][j][k] ) / dphi;
-            dpdphi = h_d_k * ( p_dyn.x[i][j][k - 1] - p_dyn.x[i][j][k] ) / dphi;
-            dcdphi = h_d_k * ( c.x[i][j][k - 1] - c.x[i][j][k] ) / dphi;
+        if(((is_land(h, i, j, k)) 
+            &&((is_water(h, i, j, k-1)) &&(is_land(h, i, j, k-2)))) 
+            ||((k == 1)
+            &&((is_land(h, i, j, k)) &&(is_water(h, i, j, k-1))))){
+            dudphi = h_d_k *(u.x[i][j][k-1] - u.x[i][j][k])/dphi;
+            dvdphi = h_d_k *(v.x[i][j][k-1] - v.x[i][j][k])/dphi;
+            dwdphi = h_d_k *(w.x[i][j][k-1] - w.x[i][j][k])/dphi;
+            dtdphi = h_d_k *(t.x[i][j][k-1] - t.x[i][j][k])/dphi;
+            dpdphi = h_d_k *(p_dyn.x[i][j][k-1] - p_dyn.x[i][j][k])/dphi;
+            dcdphi = h_d_k *(c.x[i][j][k-1] - c.x[i][j][k])/dphi;
             d2udphi2 = d2vdphi2 = d2wdphi2 = d2tdphi2 = d2cdphi2 = 0.;
         }
     }
-    rhs_t.x[i][j][k] = - ( u.x[i][j][k] * dtdr + v.x[i][j][k] * dtdthe / rm 
-            + w.x[i][j][k] * dtdphi / rmsinthe ) + ( d2tdr2 + dtdr * 2. / rm + d2tdthe2 / rm2 
-            + dtdthe * costhe / rm2sinthe + d2tdphi2 / rm2sinthe2 ) / ( re * pr );
-//            + cc * h_0_i * t.x[i][j][k] / dr2;
-    rhs_u.x[i][j][k] = - ( u.x[i][j][k] * dudr + v.x[i][j][k] * dudthe / rm 
-            + w.x[i][j][k] * dudphi / rmsinthe ) 
-            + dpdr / salt_water_ref + ( d2udr2 + h_d_i * 2. * u.x[i][j][k] / rm2 + d2udthe2 / rm2 
-            + 4. * dudr / rm + dudthe * costhe / rm2sinthe + d2udphi2 / rm2sinthe2 ) / re 
-            + RS_buoyancy_Momentum 
-            + coriolis_rad
-            + cc * h_0_i * u.x[i][j][k] / dthe2;
-    rhs_v.x[i][j][k] = - ( u.x[i][j][k] * dvdr + v.x[i][j][k] * dvdthe / rm 
-            + w.x[i][j][k] * dvdphi / rmsinthe ) 
-            - dpdthe / rm / salt_water_ref + ( d2vdr2 + dvdr * 2. / rm + d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe 
-            - ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[i][j][k] + d2vdphi2 / rm2sinthe2 
-            + 2. * dudthe / rm2 - dwdphi * 2. * costhe / rm2sinthe2 ) / re 
-            + coriolis_the
-            + cc * h_0_j * v.x[i][j][k] / dthe2;
-    rhs_w.x[i][j][k] = - ( u.x[i][j][k] * dwdr + v.x[i][j][k] * dwdthe / rm 
-            + w.x[i][j][k] * dwdphi / rmsinthe ) 
-            - dpdphi / rmsinthe / salt_water_ref + ( d2wdr2 + dwdr * 2. / rm + d2wdthe2 / rm2 
-            + dwdthe / rm2sinthe  * costhe - ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[i][j][k] 
-            + d2wdphi2 / rm2sinthe2 + 2. * dudphi / rm2sinthe + dvdphi * 2. * costhe / rm2sinthe2 ) / re 
-            + coriolis_phi
-            + cc * h_0_k * w.x[i][j][k] / dphi2;
-    rhs_c.x[i][j][k] = - ( u.x[i][j][k] * dcdr + v.x[i][j][k] * dcdthe / rm 
-            + w.x[i][j][k] * dcdphi / rmsinthe ) + ( d2cdr2 + dcdr * 2. / rm + d2cdthe2 / rm2 
-            + dcdthe * costhe / rm2sinthe + d2cdphi2 / rm2sinthe2 ) / ( sc * re );
-//            + cc * h_0_i * c.x[i][j][k] / dr2;
-    aux_u.x[i][j][k] = rhs_u.x[i][j][k] + h_d_i * dpdr / salt_water_ref;
-    aux_v.x[i][j][k] = rhs_v.x[i][j][k] + h_d_j * dpdthe / rm / salt_water_ref;
-    aux_w.x[i][j][k] = rhs_w.x[i][j][k] + h_d_k * dpdphi / rmsinthe / salt_water_ref;
-    if ( is_land( h, i, j, k) ){
+    rhs_t.x[i][j][k] = - (u.x[i][j][k] * dtdr + v.x[i][j][k] * dtdthe/rm 
+            + w.x[i][j][k] * dtdphi/rmsinthe) 
+            + (d2tdr2 + dtdr * 2./rm + d2tdthe2/rm2 
+            + dtdthe * costhe/rm2sinthe + d2tdphi2/rm2sinthe2)/(re * pr);
+    rhs_u.x[i][j][k] = - (u.x[i][j][k] * dudr + v.x[i][j][k] * dudthe/rm 
+            + w.x[i][j][k] * dudphi/rmsinthe) 
+            - coeff_p * dpdr 
+            + (d2udr2 + h_d_i * 2. * u.x[i][j][k]/rm2 + d2udthe2/rm2 
+            + 4. * dudr/rm + dudthe * costhe/rm2sinthe 
+            + d2udphi2/rm2sinthe2)/re 
+            - h_d_i * RS_buoyancy_Momentum 
+            + h_d_i * coriolis_rad
+            + cc * h_0_i * u.x[i][j][k]/dr2;
+    rhs_v.x[i][j][k] = - (u.x[i][j][k] * dvdr + v.x[i][j][k] * dvdthe/rm 
+            + w.x[i][j][k] * dvdphi/rmsinthe) 
+            - coeff_p * dpdthe/rm 
+            + (d2vdr2 + dvdr * 2./rm + d2vdthe2/rm2 
+            + dvdthe/rm2sinthe * costhe 
+            - (1. + costhe * costhe/(rm * sinthe2)) * h_d_j * v.x[i][j][k] 
+            + d2vdphi2/rm2sinthe2 + 2. * dudthe/rm2 
+            - dwdphi * 2. * costhe/rm2sinthe2)/re 
+            + h_d_j * coriolis_the
+            + cc * h_0_j * v.x[i][j][k]/dthe2;
+    rhs_w.x[i][j][k] = - (u.x[i][j][k] * dwdr + v.x[i][j][k] * dwdthe/rm 
+            + w.x[i][j][k] * dwdphi/rmsinthe) 
+            - coeff_p * dpdphi/rmsinthe + (d2wdr2 + dwdr * 2./rm + d2wdthe2/rm2 
+            + dwdthe/rm2sinthe  * costhe 
+            - (1. + costhe * costhe/sinthe2) * h_d_k * w.x[i][j][k] 
+            + d2wdphi2/rm2sinthe2 + 2. * dudphi/rm2sinthe 
+            + dvdphi * 2. * costhe/rm2sinthe2)/re 
+            + h_d_k * coriolis_phi
+            + cc * h_0_k * w.x[i][j][k]/dphi2;
+    rhs_c.x[i][j][k] = - (u.x[i][j][k] * dcdr + v.x[i][j][k] * dcdthe/rm 
+            + w.x[i][j][k] * dcdphi/rmsinthe) 
+            + (d2cdr2 + dcdr * 2./rm + d2cdthe2/rm2 
+            + dcdthe * costhe/rm2sinthe + d2cdphi2/rm2sinthe2)/(sc * re);
+    aux_u.x[i][j][k] = rhs_u.x[i][j][k] + coeff_p * dpdr;
+    aux_v.x[i][j][k] = rhs_v.x[i][j][k] + coeff_p * dpdthe/rm;
+    aux_w.x[i][j][k] = rhs_w.x[i][j][k] + coeff_p * dpdphi/rmsinthe;
+    if(is_land(h, i, j, k)){
         aux_u.x[i][j][k] = aux_v.x[i][j][k] = aux_w.x[i][j][k] = 0.;
     }
 }
 
 
-
-
-void cHydrosphereModel::RK_RHS_2D_Hydrosphere( int j, int k){
-    //  2D surface iterations
-//    double cc = - 1.;  // factor leads to better results (adapted method)
+void cHydrosphereModel::RK_RHS_2D_Hydrosphere(int j, int k){
+//    double cc = - 1.;  // factor leads to better results(adapted method)
     double cc = - 2.;  // factor leads to better results 
+//  (Reinout vander Meulen, The immersed Boundary Method for the Incompressible Navier-Stokes Equations)
+    double coeff_p = p_0/(r_0_water*u_0*u_0);
     double dthe2 = dthe * dthe;
     double dphi2 = dphi * dphi;
     double rm = rad.z[im-1];
     double rm2 = rm * rm;
-    double sinthe = sin( the.z[j] );
+    double sinthe = sin(the.z[j]);
     double sinthe2 = sinthe * sinthe;
-    double costhe = cos( the.z[j] );
+    double costhe = cos(the.z[j]);
     double rmsinthe = rm * sinthe;
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
@@ -336,147 +418,171 @@ void cHydrosphereModel::RK_RHS_2D_Hydrosphere( int j, int k){
         h_0_j = h_0_k = 1.;
         h_d_j = h_d_k = 0.; 
     }
-//    double dist_coeff = 0.;
-//    double dist_coeff = .1;
-//    double dist_coeff = .9;
     double dist_coeff = .5;
     if((is_water(h, im-1, j, k)) && (is_land(h, im-1, j+1, k))){ 
         dist = dist_coeff * dthe;
-        h_0_j = dist / dthe;
+        h_0_j = dist/dthe;
         h_d_j = 1. - h_0_j; 
     }
     if((is_water(h, im-1, j, k)) && (is_land(h, im-1, j-1, k))){
         dist = dist_coeff * dthe;
-        h_0_j = dist / dthe;
+        h_0_j = dist/dthe;
         h_d_j = 1. - h_0_j; 
     }
     if((is_water(h, im-1, j, k)) && (is_land(h, im-1, j, k+1))){
         dist = dist_coeff * dphi;
-        h_0_k = dist / dphi;
+        h_0_k = dist/dphi;
         h_d_k = 1. - h_0_k; 
     }
     if((is_water(h, im-1, j, k)) && (is_land(h, im-1, j, k-1))){
         dist = dist_coeff * dphi;
-        h_0_k = dist / dphi;
+        h_0_k = dist/dphi;
         h_d_k = 1. - h_0_k; 
     }
-    double dvdthe = h_d_j * ( v.x[im-1][j+1][k] - v.x[im-1][j-1][k] ) / ( 2. * dthe );
-    double dwdthe = h_d_j * ( w.x[im-1][j+1][k] - w.x[im-1][j-1][k] ) / ( 2. * dthe );
-    double dpdthe = h_d_j * ( p_dyn.x[im-1][j+1][k] - p_dyn.x[im-1][j-1][k] ) / ( 2. * dthe );
-    double dvdphi = h_d_k * ( v.x[im-1][j][k+1] - v.x[im-1][j][k-1] ) / ( 2. * dphi );
-    double dwdphi = h_d_k * ( w.x[im-1][j][k+1] - w.x[im-1][j][k-1] ) / ( 2. * dphi );
-    double dpdphi = h_d_k * ( p_dyn.x[im-1][j][k+1] - p_dyn.x[im-1][j][k-1] ) / ( 2. * dphi );
-    double d2vdthe2 = h_d_j * ( v.x[im-1][j+1][k] - 2. * v.x[im-1][j][k] + v.x[im-1][j-1][k] ) / dthe2;
-    double d2wdthe2 = h_d_j * ( w.x[im-1][j+1][k] - 2. * w.x[im-1][j][k] + w.x[im-1][j-1][k] ) / dthe2;
-    double d2vdphi2 = h_d_k * ( v.x[im-1][j][k+1] - 2. * v.x[im-1][j][k] + v.x[im-1][j][k-1] ) / dphi2;
-    double d2wdphi2 = h_d_k * ( w.x[im-1][j][k+1] - 2. * w.x[im-1][j][k] + w.x[im-1][j][k-1] ) / dphi2;
-    if ( ( j >= 2 ) && ( j < jm - 3 ) ){
-        if ( ( is_land( h, im-1, j, k) ) 
-                && ( ( is_land( h, im-1, j+1, k ) ) 
-                && ( is_land( h, im-1, j+2, k ) ) ) ){
-            dvdthe = h_d_j * ( - 3. * v.x[im-1][j][k] + 4. * v.x[im-1][j + 1][k] - v.x[im-1][j + 2][k] ) 
-                        / ( 2. * dthe );
-            dwdthe = h_d_j * ( - 3. * w.x[im-1][j][k] + 4. * w.x[im-1][j + 1][k] - w.x[im-1][j + 2][k] ) 
-                        / ( 2. * dthe );
-            dpdthe = h_d_j * ( - 3. * p_dyn.x[im-1][j][k] + 4. * p_dyn.x[im-1][j + 1][k] - 
-                        p_dyn.x[im-1][j + 2][k] ) / ( 2. * dthe );
-            d2vdthe2 = h_d_j * ( 2. * v.x[im-1][j][k] - 2. * v.x[im-1][j + 1][k] + v.x[im-1][j + 2][k] ) / dthe2;
-            d2wdthe2 = h_d_j * ( 2. * w.x[im-1][j][k] - 2. * w.x[im-1][j + 1][k] + w.x[im-1][j + 2][k] ) / dthe2;
+    double dvdthe = h_d_j * (v.x[im-1][j+1][k] - v.x[im-1][j-1][k])
+        /(2. * dthe);
+    double dwdthe = h_d_j * (w.x[im-1][j+1][k] - w.x[im-1][j-1][k])
+        /(2. * dthe);
+    double dpdthe = h_d_j * (p_dyn.x[im-1][j+1][k] - p_dyn.x[im-1][j-1][k])
+        /(2. * dthe);
+    double dvdphi = h_d_k * (v.x[im-1][j][k+1] - v.x[im-1][j][k-1])/(2. * dphi);
+    double dwdphi = h_d_k * (w.x[im-1][j][k+1] - w.x[im-1][j][k-1])/(2. * dphi);
+    double dpdphi = h_d_k * (p_dyn.x[im-1][j][k+1] - p_dyn.x[im-1][j][k-1])
+        /(2. * dphi);
+    double d2vdthe2 = h_d_j * (v.x[im-1][j+1][k] - 2. * v.x[im-1][j][k] 
+        + v.x[im-1][j-1][k])/dthe2;
+    double d2wdthe2 = h_d_j * (w.x[im-1][j+1][k] - 2. * w.x[im-1][j][k] 
+        + w.x[im-1][j-1][k])/dthe2;
+    double d2vdphi2 = h_d_k * (v.x[im-1][j][k+1] - 2. * v.x[im-1][j][k] 
+        + v.x[im-1][j][k-1])/dphi2;
+    double d2wdphi2 = h_d_k * (w.x[im-1][j][k+1] - 2. * w.x[im-1][j][k] 
+        + w.x[im-1][j][k-1])/dphi2;
+    if((j >= 2) && (j < jm-3)){
+        if((is_land(h, im-1, j, k)) 
+                && ((is_land(h, im-1, j+1, k)) 
+                && (is_land(h, im-1, j+2, k)))){
+            dvdthe = h_d_j * (- 3. * v.x[im-1][j][k] + 4. * v.x[im-1][j+1][k] 
+                - v.x[im-1][j+2][k])/(2. * dthe);
+            dwdthe = h_d_j * (- 3. * w.x[im-1][j][k] + 4. * w.x[im-1][j+1][k] 
+                - w.x[im-1][j+2][k])/(2. * dthe);
+            dpdthe = h_d_j * (- 3. * p_dyn.x[im-1][j][k] 
+                + 4. * p_dyn.x[im-1][j+1][k] - p_dyn.x[im-1][j+2][k])
+                /(2. * dthe);
+            d2vdthe2 = h_d_j * (2. * v.x[im-1][j][k] - 2. * v.x[im-1][j+1][k] 
+                + v.x[im-1][j+2][k])/dthe2;
+            d2wdthe2 = h_d_j * (2. * w.x[im-1][j][k] - 2. * w.x[im-1][j+1][k] 
+                + w.x[im-1][j+2][k])/dthe2;
         }
-        if ( ( is_land( h, im-1, j, k) ) 
-                && ( is_land( h, im-1, j+1, k ) ) ){
-            dvdthe = h_d_j * ( v.x[im-1][j + 1][k] - v.x[im-1][j][k] ) / dthe;
-            dwdthe = h_d_j * ( w.x[im-1][j + 1][k] - w.x[im-1][j][k] ) / dthe;
-            dpdthe = h_d_j * ( p_dyn.x[im-1][j + 1][k] - p_dyn.x[im-1][j][k] ) / dthe;
+        if((is_land(h, im-1, j, k)) 
+                && (is_land(h, im-1, j+1, k))){
+            dvdthe = h_d_j * (v.x[im-1][j+1][k] - v.x[im-1][j][k])/dthe;
+            dwdthe = h_d_j * (w.x[im-1][j+1][k] - w.x[im-1][j][k])/dthe;
+            dpdthe = h_d_j * (p_dyn.x[im-1][j+1][k] - p_dyn.x[im-1][j][k])/dthe;
             d2vdthe2 = d2wdthe2 = 0.;
         }
-        if ( ( is_land( h, im-1, j, k) ) 
-            && ( is_land( h, im-1, j-1, k ) ) 
-            && ( is_land( h, im-1, j-2, k ) ) ){
-            dvdthe = h_d_j * ( - 3. * v.x[im-1][j][k] + 4. * v.x[im-1][j - 1][k] - v.x[im-1][j - 2][k] ) 
-                        / ( 2. * dthe );
-            dwdthe = h_d_j * ( - 3. * w.x[im-1][j][k] + 4. * w.x[im-1][j - 1][k] - w.x[im-1][j - 2][k] ) 
-                        / ( 2. * dthe );
-            dpdthe = h_d_j * ( - 3. * p_dyn.x[im-1][j][k] + 4. * p_dyn.x[im-1][j - 1][k] - 
-                        p_dyn.x[im-1][j - 2][k] ) / ( 2. * dthe );
-            d2vdthe2 = h_d_j * ( 2. * v.x[im-1][j][k] - 2. * v.x[im-1][j - 1][k] + v.x[im-1][j - 2][k] ) / dthe2;
-            d2wdthe2 = h_d_j * ( 2. * w.x[im-1][j][k] - 2. * w.x[im-1][j - 1][k] + w.x[im-1][j - 2][k] ) / dthe2;
+        if((is_land(h, im-1, j, k)) 
+            && (is_land(h, im-1, j-1, k)) 
+            && (is_land(h, im-1, j-2, k))){
+            dvdthe = h_d_j * (- 3. * v.x[im-1][j][k] + 4. * v.x[im-1][j-1][k] 
+                - v.x[im-1][j-2][k])/(2. * dthe);
+            dwdthe = h_d_j * (- 3. * w.x[im-1][j][k] + 4. * w.x[im-1][j-1][k] 
+                - w.x[im-1][j-2][k])/(2. * dthe);
+            dpdthe = h_d_j * (- 3. * p_dyn.x[im-1][j][k] 
+                + 4. * p_dyn.x[im-1][j-1][k] - p_dyn.x[im-1][j-2][k])
+                /(2. * dthe);
+            d2vdthe2 = h_d_j * (2. * v.x[im-1][j][k] - 2. * v.x[im-1][j-1][k] 
+                + v.x[im-1][j-2][k])/dthe2;
+            d2wdthe2 = h_d_j * (2. * w.x[im-1][j][k] - 2. * w.x[im-1][j-1][k] 
+                + w.x[im-1][j-2][k])/dthe2;
         }
-        if ( ( is_land( h, im-1, j, k) ) 
-            && ( is_land( h, im-1, j-1, k ) ) ){
-            dvdthe = h_d_j * ( v.x[im-1][j][k] - v.x[im-1][j - 1][k] ) / dthe;
-            dwdthe = h_d_j * ( w.x[im-1][j][k] - w.x[im-1][j - 1][k] ) / dthe;
-            dpdthe = h_d_j * ( p_dyn.x[im-1][j][k] - p_dyn.x[im-1][j - 1][k] ) / dthe;
+        if((is_land(h, im-1, j, k)) 
+            && (is_land(h, im-1, j-1, k))){
+            dvdthe = h_d_j * (v.x[im-1][j][k] - v.x[im-1][j-1][k])/dthe;
+            dwdthe = h_d_j * (w.x[im-1][j][k] - w.x[im-1][j-1][k])/dthe;
+            dpdthe = h_d_j * (p_dyn.x[im-1][j][k] - p_dyn.x[im-1][j-1][k])/dthe;
             d2vdthe2 = d2wdthe2 = 0.;
         }
         d2vdthe2 = d2wdthe2 = 0.;
     }
-    if ( ( k >= 2 ) && ( k < km - 3 ) ){
-        if ( ( is_land( h, im-1, j, k) ) 
-            && ( is_land( h, im-1, j, k+1) ) 
-            && ( is_land( h, im-1, j, k+2 ) ) ){
-            dvdphi = h_d_k * ( - 3. * v.x[im-1][j][k] + 4. * v.x[im-1][j][k + 1] - v.x[im-1][j][k + 2] ) 
-                        / ( 2. * dphi );
-            dwdphi = h_d_k * ( - 3. * w.x[im-1][j][k] + 4. * w.x[im-1][j][k + 1] - w.x[im-1][j][k + 2] ) 
-                        / ( 2. * dphi );
-            dpdphi = h_d_k * ( - 3. * p_dyn.x[im-1][j][k] + 4. * p_dyn.x[im-1][j][k + 1] 
-                        - p_dyn.x[im-1][j][k + 2] ) / ( 2. * dphi );
-            d2vdthe2 = h_d_k * ( 2. * v.x[im-1][j][k] - 2. * v.x[im-1][j][k + 1] + v.x[im-1][j][k + 2] ) / dphi2;
-            d2wdthe2 = h_d_k * ( 2. * w.x[im-1][j][k] - 2. * w.x[im-1][j][k + 1] + w.x[im-1][j][k + 2] ) / dphi2;
+    if((k >= 2) &&(k < km - 3)){
+        if((is_land(h, im-1, j, k)) 
+            && (is_land(h, im-1, j, k+1)) 
+            && (is_land(h, im-1, j, k+2))){
+            dvdphi = h_d_k *(- 3. * v.x[im-1][j][k] + 4. * v.x[im-1][j][k+1] 
+                - v.x[im-1][j][k+2])/(2. * dphi);
+            dwdphi = h_d_k *(- 3. * w.x[im-1][j][k] + 4. * w.x[im-1][j][k+1] 
+                - w.x[im-1][j][k+2])/(2. * dphi);
+            dpdphi = h_d_k *(- 3. * p_dyn.x[im-1][j][k] 
+                + 4. * p_dyn.x[im-1][j][k+1] - p_dyn.x[im-1][j][k+2])
+                /(2. * dphi);
+            d2vdthe2 = h_d_k *(2. * v.x[im-1][j][k] - 2. * v.x[im-1][j][k+1] 
+                + v.x[im-1][j][k+2])/dphi2;
+            d2wdthe2 = h_d_k *(2. * w.x[im-1][j][k] - 2. * w.x[im-1][j][k+1] 
+                + w.x[im-1][j][k+2])/dphi2;
         }
-        if ( ( is_land( h, im-1, j, k) ) 
-            && ( is_land( h, im-1, j, k+1) ) ){
-            dvdphi = h_d_k * ( v.x[im-1][j][k + 1] - v.x[im-1][j][k] ) / dphi;
-            dwdphi = h_d_k * ( w.x[im-1][j][k + 1] - w.x[im-1][j][k] ) / dphi;
-            dpdphi = h_d_k * ( p_dyn.x[im-1][j][k + 1] - p_dyn.x[im-1][j][k] ) / dphi;
+        if((is_land(h, im-1, j, k)) 
+            && (is_land(h, im-1, j, k+1))){
+            dvdphi = h_d_k * (v.x[im-1][j][k+1] - v.x[im-1][j][k])/dphi;
+            dwdphi = h_d_k * (w.x[im-1][j][k + 1] - w.x[im-1][j][k])/dphi;
+            dpdphi = h_d_k * (p_dyn.x[im-1][j][k + 1] - p_dyn.x[im-1][j][k])/dphi;
             d2vdphi2 = d2wdphi2 = 0.;
         }
-        if ( ( is_land( h, im-1, j, k) ) 
-            && ( is_land( h, im-1, j, k-1) ) 
-            && ( is_land( h, im-1, j, k-2) ) ){
-            dvdphi = h_d_k * ( - 3. * v.x[im-1][j][k] + 4. * v.x[im-1][j][k - 1] - v.x[im-1][j][k - 2] ) 
-                        / ( 2. * dphi );
-            dwdphi = h_d_k * ( - 3. * w.x[im-1][j][k] + 4. * w.x[im-1][j][k - 1] - w.x[im-1][j][k - 2] ) 
-                        / ( 2. * dphi );
-            dpdphi = h_d_k * ( - 3. * p_dyn.x[im-1][j][k] + 4. * p_dyn.x[im-1][j][k - 1] 
-                        - p_dyn.x[im-1][j][k - 2] ) / ( 2. * dphi );
-            d2vdthe2 = h_d_k * ( 2. * v.x[im-1][j][k] - 2. * v.x[im-1][j][k - 1] + v.x[im-1][j][k - 2] ) / dphi2;
-            d2wdthe2 = h_d_k * ( 2. * w.x[im-1][j][k] - 2. * w.x[im-1][j][k - 1] + w.x[im-1][j][k - 2] ) / dphi2;
+        if((is_land(h, im-1, j, k)) 
+            && (is_land(h, im-1, j, k-1)) 
+            && (is_land(h, im-1, j, k-2))){
+            dvdphi = h_d_k * (- 3. * v.x[im-1][j][k] + 4. * v.x[im-1][j][k-1] 
+                - v.x[im-1][j][k-2])/(2. * dphi);
+            dwdphi = h_d_k * (- 3. * w.x[im-1][j][k] + 4. * w.x[im-1][j][k-1] 
+                - w.x[im-1][j][k-2])/(2. * dphi);
+            dpdphi = h_d_k * (- 3. * p_dyn.x[im-1][j][k] 
+                + 4. * p_dyn.x[im-1][j][k-1] - p_dyn.x[im-1][j][k-2])
+                /(2. * dphi);
+            d2vdthe2 = h_d_k * (2. * v.x[im-1][j][k] - 2. * v.x[im-1][j][k-1] 
+                + v.x[im-1][j][k-2])/dphi2;
+            d2wdthe2 = h_d_k * (2. * w.x[im-1][j][k] - 2. * w.x[im-1][j][k-1] 
+                + w.x[im-1][j][k-2])/dphi2;
         }
-        if ( ( is_land( h, im-1, j, k) ) 
-            && ( is_land( h, im-1, j, k-1) ) ){
-            dvdphi = h_d_k * ( v.x[im-1][j][k] - v.x[im-1][j][k - 1] ) / dphi;
-            dwdphi = h_d_k * ( w.x[im-1][j][k] - w.x[im-1][j][k - 1] ) / dphi;
-            dpdphi = h_d_k * ( p_dyn.x[im-1][j][k] - p_dyn.x[im-1][j][k - 1] ) / dphi;
+        if((is_land(h, im-1, j, k)) 
+            && (is_land(h, im-1, j, k-1))){
+            dvdphi = h_d_k * (v.x[im-1][j][k] - v.x[im-1][j][k-1])/dphi;
+            dwdphi = h_d_k * (w.x[im-1][j][k] - w.x[im-1][j][k-1])/dphi;
+            dpdphi = h_d_k * (p_dyn.x[im-1][j][k] - p_dyn.x[im-1][j][k-1])/dphi;
             d2vdphi2 = d2wdphi2 = 0.;
         }
         d2vdphi2 = d2wdphi2 = 0.;
     }else{
-        if ( ( is_land( h, im-1, j, k) ) && ( is_land( h, im-1, j, k+1) ) ){
-            dvdphi = h_d_k * ( v.x[im-1][j][k + 1] - v.x[im-1][j][k] ) / dphi;
-            dwdphi = h_d_k * ( w.x[im-1][j][k + 1] - w.x[im-1][j][k] ) / dphi;
-            dpdphi = h_d_k * ( p_dyn.x[im-1][j][k + 1] - p_dyn.x[im-1][j][k] ) / dphi;
+        if((is_land(h, im-1, j, k)) &&(is_land(h, im-1, j, k+1))){
+            dvdphi = h_d_k * (v.x[im-1][j][k+1] - v.x[im-1][j][k])/dphi;
+            dwdphi = h_d_k * (w.x[im-1][j][k+1] - w.x[im-1][j][k])/dphi;
+            dpdphi = h_d_k * (p_dyn.x[im-1][j][k+1] - p_dyn.x[im-1][j][k])/dphi;
         }
-        if ( ( h.x[im-1][j][k] == 0. ) && ( is_land( h, im-1, j, k-1) ) ){
-            dvdphi = h_d_k * ( v.x[im-1][j][k] - v.x[im-1][j][k - 1] ) / dphi;
-            dwdphi = h_d_k * ( w.x[im-1][j][k] - w.x[im-1][j][k - 1] ) / dphi;
-            dpdphi = h_d_k * ( p_dyn.x[im-1][j][k] - p_dyn.x[im-1][j][k - 1] ) / dphi;
+        if((h.x[im-1][j][k] == 0.) &&(is_land(h, im-1, j, k-1))){
+            dvdphi = h_d_k * (v.x[im-1][j][k] - v.x[im-1][j][k-1])/dphi;
+            dwdphi = h_d_k * (w.x[im-1][j][k] - w.x[im-1][j][k-1])/dphi;
+            dpdphi = h_d_k * (p_dyn.x[im-1][j][k] - p_dyn.x[im-1][j][k-1])/dphi;
         }
         d2vdthe2 = d2wdthe2 = 0.;
         d2vdphi2 = d2wdphi2 = 0.;
     }
-    rhs_v.x[im-1][j][k] = - ( v.x[im-1][j][k] * dvdthe / rm + w.x[im-1][j][k] * dvdphi / rmsinthe ) +
-                - h_d_j * dpdthe / rm / r_0_water - ( d2vdthe2 / rm2 + dvdthe / rm2sinthe * costhe
-                - ( 1. + costhe * costhe / sinthe2 ) * h_d_j * v.x[im-1][j][k] + d2vdphi2 / rm2sinthe2 
-                - dwdphi * 2. * costhe / rm2sinthe2 ) / re
-                + cc * h_0_j * v.x[im-1][j][k] / dthe2;
-    rhs_w.x[im-1][j][k] = - ( v.x[im-1][j][k] * dwdthe / rm +  w.x[im-1][j][k] * dwdphi / rmsinthe ) +
-                - h_d_k * dpdphi / rmsinthe / r_0_water + ( d2wdthe2 / rm2 + dwdthe / rm2sinthe  * costhe
-                - ( 1. + costhe * costhe / sinthe2 ) * h_d_k * w.x[im-1][j][k] + d2wdphi2 / rm2sinthe2 
-                + dvdphi * 2. * costhe / rm2sinthe2 ) / re
-                + cc * h_0_k * w.x[im-1][j][k] / dphi2;
-    aux_v.x[im-1][j][k] = rhs_v.x[im-1][j][k] + h_d_j * dpdthe / rm / r_0_water;
-    aux_w.x[im-1][j][k] = rhs_w.x[im-1][j][k] + h_d_k * dpdphi / rmsinthe / r_0_water;
+    rhs_v.x[im-1][j][k] = -(v.x[im-1][j][k] * dvdthe/rm 
+        + w.x[im-1][j][k] * dvdphi/rmsinthe) 
+        - coeff_p * dpdthe/rm 
+        - (d2vdthe2/rm2 + dvdthe/rm2sinthe * costhe 
+        - (1. + costhe * costhe/sinthe2) * h_d_j * v.x[im-1][j][k] 
+        + d2vdphi2/rm2sinthe2 - dwdphi * 2. * costhe/rm2sinthe2)/re 
+        + cc * h_0_j * v.x[im-1][j][k]/dthe2;
+    rhs_w.x[im-1][j][k] = -(v.x[im-1][j][k] * dwdthe/rm 
+        + w.x[im-1][j][k] * dwdphi/rmsinthe) 
+        - coeff_p * dpdphi/rmsinthe 
+        + (d2wdthe2/rm2 + dwdthe/rm2sinthe  * costhe 
+        - (1. + costhe * costhe/sinthe2) * h_d_k * w.x[im-1][j][k] 
+        + d2wdphi2/rm2sinthe2 + dvdphi * 2. * costhe/rm2sinthe2)/re 
+        + cc * h_0_k * w.x[im-1][j][k]/dphi2;
+    aux_v.x[im-1][j][k] = rhs_v.x[im-1][j][k] + coeff_p * dpdthe/rm;
+    aux_w.x[im-1][j][k] = rhs_w.x[im-1][j][k] + coeff_p * dpdphi/rmsinthe;
+    if(is_land(h, im-1, j, k)){
+        aux_u.x[im-1][j][k] = aux_v.x[im-1][j][k] = aux_w.x[im-1][j][k] = 0.;
+    }
 }
 
 

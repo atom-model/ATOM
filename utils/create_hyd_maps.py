@@ -15,9 +15,9 @@ map_cfg = {
     'v_velocity': (3, -0.05, 0.05, 'v_velocity (m/s)'),
     'w_velocity': (4, -0.03, 0.1, 'w_velocity (m/s)'),
     'salinity': (7, 34, 39, 'Salinity (psu)'),
-    'ekman_pumping': (8, 0, 7, 'Ekman Pumping (m/s)'),
+    'Ekman_pumping': (8, 0, 0.06, 'Ekman Pumping (m/s)'),
     'upwelling': (9, 0, 0.06, 'Upwelling (m/s)'),
-    'downwelling': (10, 0, 0.1, 'Downwelling (m/s)')
+    'downwelling': (10, 0, 0.06, 'Downwelling (m/s)')
 }
 
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
@@ -128,7 +128,7 @@ if  __name__ == "__main__":
     time_step = 5
     output_dir = './hyd_maps'
 
-    sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'ekman_pumping', 
+    sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'Ekman_pumping', 
         'upwelling', 'downwelling', 'velocity']
 
     try:

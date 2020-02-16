@@ -228,8 +228,8 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
             } // end k
         } // end j
     }
-    logger() << "exit BC_Radiation_multi_layer: temperature max: " 
-        << (t.max() - 1)*t_0 << std::endl << std::endl;
+//    logger() << "exit BC_Radiation_multi_layer: temperature max: " 
+//        << (t.max() - 1)*t_0 << std::endl << std::endl;
     if(debug){
         Array tmp = (t-1)*t_0;
         logger()<<"20180912: Exit RML ... "<<std::endl;
@@ -408,8 +408,7 @@ void cAtmosphereModel::init_temperature(){
     int j_half = j_max/2;
     for(int j=j_half; j>=0; j--){
         double x = sqrt(pow(t_tropopause,3)/t_tropopause_pole 
-            - pow(t_tropopause,2)) * (double)(j_half-j) 
-           /(double)j_half;
+            - pow(t_tropopause,2)) * (double)(j_half-j)/(double)j_half;
         temp_tropopause[j] = Agnesi(x, t_tropopause); 
 /*
     cout << "   j = " << j << "   x = " << x 
@@ -431,13 +430,13 @@ void cAtmosphereModel::init_temperature(){
                 if(i < i_trop){
                     if(i>i_mount){
                         // linear temperature decay up to tropopause, privat  approximation
-                        t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) * 
-                            (get_layer_height(i)/get_layer_height(i_trop)) 
+                        t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) 
+                            * (get_layer_height(i)/get_layer_height(i_trop)) 
                             + t.x[0][j][k]; 
                         // US Standard Atmosphere
                     }else{
-                        t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) * 
-                            (get_layer_height(i)/get_layer_height(i_trop)) 
+                        t.x[i][j][k] = (temp_tropopause[j] - t.x[0][j][k]) 
+                            * (get_layer_height(i)/get_layer_height(i_trop)) 
                             + t.x[0][j][k]; 
                     }
                 }else{ // above tropopause
@@ -447,8 +446,8 @@ void cAtmosphereModel::init_temperature(){
         }
     }
 //    fft_gaussian_filter(t, 5);
-    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 
-        << std::endl << std::endl;
+//    logger() << "exit BC_Temperature: temperature max: " << (t.max()-1)*t_0 
+//        << std::endl << std::endl;
     if(debug){
         Array tmp = (t-1)*t_0;
         logger()<<"20180912: Exit BCT ... "<<std::endl;
@@ -498,8 +497,10 @@ void cAtmosphereModel::read_NASA_precipitation(const string &fn){
         }
     }
 }
-
-void cAtmosphereModel::BC_Pressure(){
+/*
+*
+*/
+void cAtmosphereModel::BC_PressureStat(){
     float exp_pressure = g/(1.e-2 * gam * R_Air);
     // boundary condition of surface pressure given by surface temperature through gas equation
     for(int k = 0; k < km; k++){
@@ -513,14 +514,16 @@ void cAtmosphereModel::BC_Pressure(){
                 double height = get_layer_height(i);
                 double t_u = t.x[0][j][k] * t_0;
                 p_stat.x[i][j][k] = p_stat.x[0][j][k] 
-                    * pow(((t_u - gam * height * 1.e-2) /t_u), exp_pressure);
+                    * pow(((t_u - gam * height * 1.e-2)/t_u), exp_pressure);
                 // linear temperature distribution T = T0 - gam * height
                 // current air pressure, politropic formula in hPa, Kraus p. 28
             }
         }
     }
 }
-
+/*
+*
+*/
 void cAtmosphereModel::Latent_Heat(){
     float Q_Latent_Ice = 0.; 
     float coeff_Q = cp_l * r_air * t_0; // coefficient for Q_Sensible
@@ -612,11 +615,9 @@ void cAtmosphereModel::Latent_Heat(){
         }
     }
 }
-
-
-
-
-
+/*
+*
+*/
 //Tao, W.-K., Simpson, J., and McCumber, M.: 
 //An Ice-Water Saturation Adjustment, American Meteorological Society, Notes and 
 //Correspon-dence, Volume 1, 321–235, 1988, 1988.
@@ -674,8 +675,6 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                 p_stat.x[i][j][k] = p_h;
                 E_Rain = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                 E_Ice = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the ice phase in hPa
-                q_Rain = ep * E_Rain/(p_h - E_Rain); // water vapour amount at saturation with water formation in kg/kg
-                q_Ice = ep * E_Ice/(p_h - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
                 q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
                 q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
                 /** %%%%%%%%%%%%%%%%%%%%%%%%%%%     warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
@@ -805,9 +804,9 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
 //    fft_gaussian_filter(c, 5);
     return;
 }
-
-
-
+/*
+*
+*/
 // Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
 // resulting the precipitation distribution formed of rain and snow
 void cAtmosphereModel::Two_Category_Ice_Scheme(){   
@@ -1093,11 +1092,9 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
     }  // end if true
     return;
 }
-
-
-
-
-
+/*
+*
+*/
 void cAtmosphereModel::Value_Limitation_Atm(){
 // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
     for(int k = 0; k < km; k++){
@@ -1105,7 +1102,7 @@ void cAtmosphereModel::Value_Limitation_Atm(){
             if(Precipitation.y[j][k] >= 25.)  Precipitation.y[j][k] = 25.;
             if(Precipitation.y[j][k] <= 0)  Precipitation.y[j][k] = 0.;
             for(int i = 0; i < im; i++){
-/*
+
                 if(u.x[i][j][k] >= .106)  u.x[i][j][k] = .106;
                 if(u.x[i][j][k] <= - .106)  u.x[i][j][k] = - .106;
                 if(v.x[i][j][k] >= 1.125)  v.x[i][j][k] = 1.125;
@@ -1126,32 +1123,19 @@ void cAtmosphereModel::Value_Limitation_Atm(){
                 if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
                 if(co2.x[i][j][k] >= 5.36)  co2.x[i][j][k] = 5.36;
                 if(co2.x[i][j][k] <= 1.)  co2.x[i][j][k] = 1.;
-*/
-                if(is_land(h, i, j, k)){
-                    u.x[i][j][k] = 0.;
-                    v.x[i][j][k] = 0.;
-                    w.x[i][j][k] = 0.;
-//                    t.x[i][j][k] = 1.;  // = 273.15 K
-                    c.x[i][j][k] = 0.;
-                    cloud.x[i][j][k] = 0.;
-                    ice.x[i][j][k] = 0.;
-//                    co2.x[i][j][k] = 1.;  // = 280 ppm
-                    p_dyn.x[i][j][k] = 0.;
-                }
             }
         }
     }
 }
-
-
+/*
+*
+*/
 void cAtmosphereModel::IC_WestEastCoast(){
 // initial conditions for v and w velocity components and temperature at 
 // the sea surface close to east or west coasts
 // transition between coast flows and open sea flows included
 // upwelling along west coasts causes a temperature reduction
-
-/** ........................... east coast ........................... **/
-
+/** ........................... east coast extension of v- and w-velocity decrease due to upwelling ........................... **/
 //    int i_max = 20; // maximun height of the coast near velocity and temperature changes
 //    int i_max = 10; // maximun height of the coast near velocity and temperature changes
     int i_max = 5; // maximun height of the coast near velocity and temperature changes
@@ -1160,9 +1144,8 @@ void cAtmosphereModel::IC_WestEastCoast(){
     double v_neg = 0.;
     double w_neg = 0.;
     double t_neg = 0.;
-    int k_mid = 30; // maximun extension from the coasts
+    int k_mid = 30; //  maximun extension of velocity management from the east coasts
     int k_beg = 1;
-/*
     for(int j = 0; j < jm; j++){
         for(int k = 1; k < km-1; k++){
             if((is_air(h, 0, j, k))&&(is_land(h, 0, j, k-1))){
@@ -1201,37 +1184,24 @@ void cAtmosphereModel::IC_WestEastCoast(){
         } // end k
         k_beg = 1;
     } // end j
-*/
-/** ........................... west coast extension of temperature decrease due to upwelling ........................... **/
-
-    k_mid = 10;
-//    k_mid = 40;
-//    k_mid = 50;
+/** ........................... west coast extension of w-velocity decrease due to upwelling ........................... **/
+    k_mid = 50; //  maximun extension of velocity management from the west coasts
+    int k_mid_temp = 15; //  maximun extension of temperature management from the west coasts
+//    int k_mid_temp = 10; //  maximun extension of temperature management from the west coasts
+    int k_temp = 0; //  maximun extension of temperature management from the west coasts
+    double vel_inter = 0.;
+    double temp_inter = 0.;
+    double temp_red = 0.95;
     for(int j = 0; j < jm; j++){
         for(int k = 1; k < km-1; k++){
             if((is_air(h, 0, j, k-1))&&(is_land(h, 0, j, k))){
                 while(k >= 1){
-                    if(is_air(h, 0, j, k+1))  break;
-/*
-//                    v_neg = - v.x[0][j][k+k_mid]; // no changes of v along west coasts
-//                    v_neg = v.x[0][j][k+k_mid];
-                    v_neg = v.x[0][j][k];
-                    for(int l = k_mid; l >= 0; l--){
-                        v.x[0][j][k-l] = (v.x[0][j][k-k_mid] - v_neg) 
-                           /(double)k_mid * (double)l + v_neg;
-                        for(int i = 1; i <= i_max; i++){
-                            d_i = get_layer_height(i);
-                            v.x[i][j][k-l] = (v.x[i_max][j][k-l] - v.x[0][j][k-l]) 
-                               /d_i_max * d_i + v.x[0][j][k-l];
-                        }
-                        if(is_land(h, 0, j, k-l))  v.x[0][j][k-l] = 0.;
-                    }
-*/
+                    if(is_air(h, 0, j, k))  break;
                     w_neg = w.x[0][j][k];
-//                    for(int l = k_mid; l >= 0; l--){
-//                        if(k-l < 0)  break;
-                    for(int l = 0; l <= k_mid; l++){
-                        if(k-l < 0)  break;
+                    if(k<=k_mid) k_temp = k_mid - k;
+                    else k_temp = k_mid;
+                    for(int l = 0; l <= k_temp; l++){
+                        vel_inter = w.x[0][j][k-l];
                         w.x[0][j][k-l] = (w.x[0][j][k-k_mid] - w_neg) 
                            /(double)k_mid * (double)l + w_neg; // decreasing w approaching west coasts
                         for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
@@ -1239,21 +1209,23 @@ void cAtmosphereModel::IC_WestEastCoast(){
                             w.x[i][j][k-l] = (w.x[i_max][j][k-l] - w.x[0][j][k-l]) 
                                /d_i_max * d_i + w.x[0][j][k-l];
                         }
-                        if(is_land(h, 0, j, k-l))  w.x[0][j][k-l] = 0.;
+                        if(is_land(h, 0, j, k-l))  w.x[0][j][k-l] = vel_inter;
                     }
-                    t_neg = .95 * t.x[0][j][k];
-//                    for(int l = k_mid; l >= 0; l--){
-//                        if(k-l < 0)  break;
-                    for(int l = 0; l <= k_mid; l++){
-                        if(k-l < 0)  break;
-                        t.x[0][j][k-l] = (t.x[0][j][k-k_mid] - t_neg) 
-                           /(double)k_mid * (double)l + t_neg; // decreasing temperature leaving west coasts
+/** ........................... west coast equatorial extension of temperature decrease ........................... **/
+                    t_neg = temp_red * t.x[0][j][k];
+                    if(k<=k_mid_temp) k_temp = k_mid_temp - k;
+                    else k_temp = k_mid_temp;
+                    for(int l = 0; l <= k_temp; l++){
+                        temp_inter = t.x[0][j][k-l];
+                        t.x[0][j][k-l] = (t.x[0][j][k-k_mid_temp] - t_neg) 
+                           /(double)k_mid_temp * (double)l + t_neg; // decreasing temperature leaving west coasts
                             // upwelling along west coasts lowers temperature
                         for(int i = 1; i <= i_max; i++){ // development with height, decreasing influence
                             d_i = get_layer_height(i);
                             t.x[i][j][k-l] = (t.x[i_max][j][k-l] - t.x[0][j][k-l]) 
                                /d_i_max * d_i + t.x[0][j][k-l];
                         }
+                        if(is_land(h, 0, j, k-l))  t.x[0][j][k-l] = temp_inter;
                     }
                     break;
                 } // end while
@@ -1263,42 +1235,33 @@ void cAtmosphereModel::IC_WestEastCoast(){
 
 /** ........................... west coast equatorial extension of temperature decrease ........................... **/
 
-//    int k_mid_eq = 120; // maximun extension from west coasts for equatorial lowered initial temperatures
-    int k_mid_eq = 80; // maximun extension from west coasts for equatorial lowered initial temperatures
-//    for(int j = 80; j <= 100; j++){  // zonal extension of equatorial lowered initial temperatures
-    for(int j = 88; j <= 92; j++){  // zonal extension of equatorial lowered initial temperatures
+    int j_var_north = 86;
+    int j_var_south = 94;
+    int k_mid_eq = 120; // maximun extension from west coasts for equatorial lowered initial temperatures
+    for(int j = j_var_north; j <= j_var_south; j++){  // zonal extension of equatorial lowered initial temperatures
         for(int k = 1; k < km-1; k++){
             if((is_air(h, 0, j, k-1))&&(is_land(h, 0, j, k))){
-                while(k >= 1){
-                    if(is_air(h, 0, j, k+1))  break;
-                    t_neg = .95 * t.x[0][j][k];  // reduction of the original parabolic temperature approach due to upwelling with lower temperatures
-//                    for(int l = k_mid_eq; l >= 0; l--){ // development with height, decreasing influence
-//                        if(k-l < 0)  break;
-                    for(int l = 0; l <= k_mid_eq; l++){
-                        if(k-l < 0)  break;
-                        t.x[0][j][k-l] = (t.x[0][j][k-k_mid_eq] - t_neg) 
-                           /(double)k_mid_eq * (double)l + t_neg; // decreasing temperature leaving west coasts
-                            // upwelling regions along equatorial currents beginning on west coasts lower the local temperature
-                        for(int i = 1; i <= i_max; i++){
-                            d_i = get_layer_height(i);
-                            t.x[i][j][k-l] = (t.x[i_max][j][k-l] - t.x[0][j][k-l]) 
-                               /d_i_max * d_i + t.x[0][j][k-l]; // development with height, decreasing influence
-                        }
+                k_temp = k_mid_eq;
+                t_neg = temp_red * t.x[0][j][k];  // reduction of the original parabolic temperature approach due to upwelling with lower temperatures
+                for(int l = 0; l <= k_temp; l++){
+                    temp_inter = t.x[0][j][k-l];
+                    t.x[0][j][k-l] = (t.x[0][j][k-k_mid_eq] - t_neg) 
+                       /(double)k_mid_eq * (double)l + t_neg; // decreasing temperature leaving west coasts
+                        // upwelling regions along equatorial currents beginning on west coasts lower the local temperature
+                    for(int i = 1; i <= i_max; i++){
+                        d_i = get_layer_height(i);
+                        t.x[i][j][k-l] = (t.x[i_max][j][k-l] - t.x[0][j][k-l]) 
+                           /d_i_max * d_i + t.x[0][j][k-l]; // development with height, decreasing influence
                     }
-                    break;
-                } // end while
+                    if(is_land(h, 0, j, k-l))  t.x[0][j][k-l] = temp_inter;
+                }
             } // end if
         } // end k
     } // end j
 }
-
-
-
-
-
-
-
-
+/*
+*
+*/
 void cAtmosphereModel::WaterVapourEvaporation(){ 
 // preparations for water vapour increase due to the differences between evaporation and precipitation 
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
@@ -1319,11 +1282,10 @@ void cAtmosphereModel::WaterVapourEvaporation(){
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             co2_total.y[j][k] = co2.x[0][j][k];
-            for(int i = 0; i < im; i++){
+            for(int i = 0; i < im-1; i++){
                 float e = 100. * c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in Pa
                 float a = e/(R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
-                double step = get_layer_height(i+1) 
-                    - get_layer_height(i);
+                double step = get_layer_height(i+1) - get_layer_height(i);
                 precipitable_water.y[j][k] +=  a * step;
                  // mass of water in kg/m²
                 // precipitable_water mass in 1 kg/m² compares to 1 mm height, with water density kg/ (m² * mm)
@@ -1451,8 +1413,9 @@ void cAtmosphereModel::WaterVapourEvaporation(){
         } // end j
     } // end k
 }
-
-
+/*
+*
+*/
 void cAtmosphereModel::Pressure_Limitation_Atm(){
     // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
     for(int k = 0; k < km; k++){
@@ -1469,11 +1432,15 @@ void cAtmosphereModel::Pressure_Limitation_Atm(){
         }
     }
 }
-
+/*
+*
+*/
 double get_pole_temperature(int Ma, int Ma_1, int Ma_2, double t_1, double t_2){
     return (t_2 - t_1)/(double) (Ma_2 - Ma_1) * (double) (Ma - Ma_1) + t_1;
 }
-
+/*
+*
+*/
 double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map){
     assert(pole_temp_map.size()>1);
     std::pair<int, double> up = *pole_temp_map.begin(), bottom = *++pole_temp_map.begin();

@@ -7,13 +7,13 @@
 #include <vector>
 #include <fstream>
 #include <limits>
-
+#include <functional>
 #include "Array.h"
 #include "Array_2D.h"
 #include "Array_1D.h"
 #include "tinyxml2.h"
 #include "PythonStream.h"
-
+/*
 class BC_Atmosphere;
 class RungeKutta_Atmosphere;
 class BC_Bathymetry_Atmosphere;
@@ -21,9 +21,13 @@ class RHS_Atmosphere;
 class Pressure_Atm;
 class Results_MSL_Atm;
 class BC_Thermo;
-
+*/
 using namespace std;
 using namespace tinyxml2;
+
+namespace{
+    std::function<double(double)> default_lambda=[](double i)->double{return i;};
+}
 
 class cAtmosphereModel{
 public:
@@ -126,7 +130,7 @@ public:
 private:
     void SetDefaultConfig();
     void reset_arrays();
-    void print_min_max_values();
+    void print_min_max_atm();
     void write_file(std::string &bathymetry_name, string& filepath, 
         bool is_final_result = false);
 
@@ -157,31 +161,21 @@ private:
         return calculate_mean_temperature(t);
     }
 
+    const  int c43 = 4./3., c13 = 1./3.;
+
     std::vector<std::vector<int> > i_topography;
     std::vector<double> tropopause_layers; // keep the tropopause layer index
     std::vector<double> temp_tropopause; // lateral temperature distribution along the tropopause
-    void init_tropopause_layers();
 
+    void init_tropopause_layers();
     void restrain_temperature();
     void Pressure_Limitation_Atm();
     void Value_Limitation_Atm();
     void vegetation_distribution();
     void BC_SolidGround(); 
-    /*
-     * initialize co2 Array co2
-    */
     void init_co2();
-    /*
-     * initialize water vapour Array c
-    */
     void init_water_vapour();
-    /*
-     * initialize velocities Array u, w, v
-    */
     void init_velocities();
-    /* 
-    * This function must be called after "rad" has been initialized.
-    */
     void init_layer_heights(){
         const float zeta = 3.715;
         float h = L_atm/(im-1);
@@ -205,7 +199,7 @@ private:
     void save_array(const string& fn, const Array& a);
     void Ice_Water_Saturation_Adjustment();
     void Two_Category_Ice_Scheme();
-    void BC_Pressure();
+    void BC_PressureStat();
     void Latent_Heat();
     void IC_WestEastCoast();   
     void read_NASA_temperature(const string &fn);
@@ -230,6 +224,16 @@ private:
     void paraview_vtk_longal(string &Name_Bathymetry_File, int j_longal, int n); 
     void Atmosphere_v_w_Transfer(string &Name_Bathymetry_File);
     void Atmosphere_PlotData(string &Name_Bathymetry_File, int iter_cnt);
+    void run_data_atm();
+    void searchMinMax_2D(string, string, 
+        string, Array_2D &, double coeff=1.);
+    void searchMinMax_3D(string, string, 
+        string, Array &, double coeff=1., 
+        std::function< double(double) > lambda = default_lambda,
+        bool print_heading=false);
+
+    double out_maxValue() const;
+    double out_minValue() const;
 
     static cAtmosphereModel* m_model;
 
@@ -247,6 +251,8 @@ private:
 
     double coeff_mmWS;    // coeff_mmWS = 1.2041/0.0094 [ kg/m³/kg/m³ ] = 128,0827 [/]
     double max_Precipitation;
+    double maxValue;
+    double minValue;
 
     bool is_node_weights_initialised;
     bool has_welcome_msg_printed;

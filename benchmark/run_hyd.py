@@ -1,4 +1,6 @@
-import sys, random
+#!/usr/bin/env python
+
+import sys, random, argparse
 sys.path.append('../reconstruction')
 sys.path.append('../utils')
 
@@ -12,10 +14,8 @@ from reconstruct_atom_data import *
 from pyatom import Atmosphere, Hydrosphere
 import create_atm_maps, create_hyd_maps
 
-#atm_model = Atmosphere()
 hyd_model = Hydrosphere()
 
-#atm_model.load_config( './config_atm_dev.xml' )
 hyd_model.load_config( './config_hyd.xml' )
 
 start_time = hyd_model.time_start
@@ -54,7 +54,7 @@ try:
 #    create_atm_maps.create_all_maps(atm_sub_dirs, start_time, end_time, time_step, atm_map_output_dir, 
 #            atom_output_dir, topo_dir, topo_suffix)
 
-    hyd_sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'bottom_water', 
+    hyd_sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'Ekman_pumping', 
             'upwelling', 'downwelling', 'velocity']
     
     create_hyd_maps.create_all_maps(hyd_sub_dirs, start_time, end_time, time_step, hyd_map_output_dir,

@@ -64,6 +64,7 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
 //    double cc = - 1.;  // factor leads to better results 
     double cc = - 2.;  // factor leads to better results 
 //  (Reinout vander Meulen, The immersed Boundary Method for the Incompressible Navier-Stokes Equations)
+    double coeff_p = p_0/(r_air*u_0*u_0);
     double dr2 = dr * dr;
     double dthe2 = dthe * dthe;
     double dphi2 = dphi * dphi;
@@ -281,21 +282,21 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
 //            + cc * h_0_i * t.x[i][j][k]/dr2;
     rhs_u.x[i][j][k] = - (u.x[i][j][k] * dudr + v.x[i][j][k] * dudthe/rm 
             + w.x[i][j][k] * dudphi/rmsinthe)
-            - dpdr/r_air + (d2udr2 + h_d_i * 2. * u.x[i][j][k]/rm2 + d2udthe2/rm2
+            - coeff_p * dpdr + (d2udr2 + h_d_i * 2. * u.x[i][j][k]/rm2 + d2udthe2/rm2
             + 4. * dudr/rm + dudthe * costhe/rm2sinthe + d2udphi2/rm2sinthe2)/re
             - h_d_i * RS_buoyancy_Momentum
             + h_d_i * coriolis_rad
             + cc * h_0_i * u.x[i][j][k]/dr2;
     rhs_v.x[i][j][k] = - (u.x[i][j][k] * dvdr + v.x[i][j][k] * dvdthe/rm
             + w.x[i][j][k] * dvdphi/rmsinthe) +
-            - dpdthe/rm/r_air + (d2vdr2 + dvdr * 2./rm + d2vdthe2/rm2 + dvdthe/rm2sinthe * costhe
+            - coeff_p * dpdthe/rm + (d2vdr2 + dvdr * 2./rm + d2vdthe2/rm2 + dvdthe/rm2sinthe * costhe
             - (1. + costhe * costhe/(rm * sinthe2)) * h_d_j * v.x[i][j][k] + d2vdphi2/rm2sinthe2
             + 2. * dudthe/rm2 - dwdphi * 2. * costhe/rm2sinthe2)/re
             + h_d_j * coriolis_the
             + cc * h_0_j * v.x[i][j][k]/dthe2;
     rhs_w.x[i][j][k] = - (u.x[i][j][k] * dwdr + v.x[i][j][k] * dwdthe/rm
-            + w.x[i][j][k] * dwdphi/rmsinthe) +
-            - dpdphi/rmsinthe/r_air + (d2wdr2 + dwdr * 2./rm + d2wdthe2/rm2
+            + w.x[i][j][k] * dwdphi/rmsinthe)
+            - coeff_p * dpdphi/rmsinthe + (d2wdr2 + dwdr * 2./rm + d2wdthe2/rm2
             + dwdthe/rm2sinthe  * costhe - (1. + costhe * costhe/(rm * sinthe2)) * h_d_k * w.x[i][j][k]
             + d2wdphi2/rm2sinthe2 + 2. * dudphi/rm2sinthe + dvdphi * 2. * costhe/rm2sinthe2)/re
             + h_d_k * coriolis_phi
@@ -319,9 +320,9 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
             + w.x[i][j][k] * dcodphi/rmsinthe) + (d2codr2 + dcodr * 2./rm + d2codthe2/rm2
             + dcodthe * costhe/rm2sinthe + d2codphi2/rm2sinthe2)/(sc_CO2 * re);
 //            + cc * h_0_i * co2.x[i][j][k]/dr2;
-    aux_u.x[i][j][k] = rhs_u.x[i][j][k] + h_d_i * dpdr/r_air;
-    aux_v.x[i][j][k] = rhs_v.x[i][j][k] + h_d_j * dpdthe/rm/r_air;
-    aux_w.x[i][j][k] = rhs_w.x[i][j][k] + h_d_k * dpdphi/rmsinthe/r_air;
+    aux_u.x[i][j][k] = rhs_u.x[i][j][k] + coeff_p * dpdr;
+    aux_v.x[i][j][k] = rhs_v.x[i][j][k] + coeff_p * dpdthe/rm;
+    aux_w.x[i][j][k] = rhs_w.x[i][j][k] + coeff_p * dpdphi/rmsinthe;
     if(is_land(h, i, j, k)){
         aux_u.x[i][j][k] = aux_v.x[i][j][k] = aux_w.x[i][j][k] = 0.;
     }
@@ -334,6 +335,7 @@ void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
 //    double cc = - 1.;  // factor leads to better results (adapted method)
     double cc = - 2.;  // factor leads to better results 
 //  (Reinout vander Meulen, The immersed Boundary Method for the Incompressible Navier-Stokes Equations)
+    double coeff_p = p_0/(r_air*u_0*u_0);
     double dthe2 = dthe * dthe;
     double dphi2 = dphi * dphi;
     double rm = rad.z[0];
@@ -355,9 +357,6 @@ void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
         h_0_j = h_0_k = 1.;
         h_d_j = h_d_k = 0.; 
     }
-//    double dist_coeff = 0.;
-//    double dist_coeff = .1;
-//    double dist_coeff = .9;
     double dist_coeff = .5;
     if((is_air(h, 0, j, k)) && (is_land(h, 0, j+1, k))){ 
         dist = dist_coeff * dthe;
@@ -482,18 +481,25 @@ void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
             d2vdphi2 = d2wdphi2 = 0.;
         }
     }
-    rhs_v.x[0][j][k] = - (v.x[0][j][k] * dvdthe/rm + w.x[0][j][k] * dvdphi/rmsinthe) +
-                - h_d_j * dpdthe/rm/r_air - (d2vdthe2/rm2 + dvdthe/rm2sinthe * costhe
-                - (1. + costhe * costhe/sinthe2) * h_d_j * v.x[0][j][k]
-                + d2vdphi2/rm2sinthe2 - dwdphi * 2. * costhe/rm2sinthe2)/re
-                + cc * h_0_j * v.x[0][j][k]/dthe2;
-    rhs_w.x[0][j][k] = - (v.x[0][j][k] * dwdthe/rm +  w.x[0][j][k] * dwdphi/rmsinthe) +
-                - h_d_k * dpdphi/rmsinthe/r_air + (d2wdthe2/rm2 + dwdthe/rm2sinthe  * costhe
-                - (1. + costhe * costhe/sinthe2) * h_d_k * w.x[0][j][k]
-                + d2wdphi2/rm2sinthe2 + dvdphi * 2. * costhe/rm2sinthe2)/re
-                + cc * h_0_k * w.x[0][j][k]/dphi2;
-    aux_v.x[0][j][k] = rhs_v.x[0][j][k] + h_d_j * dpdthe/rm/r_air;
-    aux_w.x[0][j][k] = rhs_w.x[0][j][k] + h_d_k * dpdphi/rmsinthe/r_air;
+    rhs_v.x[0][j][k] = - (v.x[0][j][k] * dvdthe/rm 
+        + w.x[0][j][k] * dvdphi/rmsinthe) 
+        - coeff_p * dpdthe/rm 
+        - (d2vdthe2/rm2 + dvdthe/rm2sinthe * costhe - (1. + costhe * costhe/sinthe2) 
+        * h_d_j * v.x[0][j][k] + d2vdphi2/rm2sinthe2 - dwdphi 
+        * 2. * costhe/rm2sinthe2)/re 
+        + cc * h_0_j * v.x[0][j][k]/dthe2;
+    rhs_w.x[0][j][k] = - (v.x[0][j][k] * dwdthe/rm 
+        +  w.x[0][j][k] * dwdphi/rmsinthe) 
+        - coeff_p * dpdphi/rmsinthe 
+        + (d2wdthe2/rm2 + dwdthe/rm2sinthe  * costhe - (1. + costhe * costhe/sinthe2) 
+        * h_d_k * w.x[0][j][k] + d2wdphi2/rm2sinthe2 
+        + dvdphi * 2. * costhe/rm2sinthe2)/re
+        + cc * h_0_k * w.x[0][j][k]/dphi2;
+    aux_v.x[0][j][k] = rhs_v.x[0][j][k] + coeff_p * dpdthe/rm;
+    aux_w.x[0][j][k] = rhs_w.x[0][j][k] + coeff_p * dpdphi/rmsinthe;
+    if(is_land(h, 0, j, k)){
+        aux_u.x[0][j][k] = aux_v.x[0][j][k] = aux_w.x[0][j][k] = 0.;
+    }
 }
 
 
