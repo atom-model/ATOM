@@ -887,9 +887,10 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                 if(P_snow.x[i+1][j][k] < 0.)  P_snow.x[i+1][j][k] = 0.;
 
                 float r_dry = 100. * p_stat.x[i][j][k]/(R_Air * t_u);  // density of dry air in kg/m³
-                float r_humid = r_dry 
-                   /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
-                    - cloud.x[i][j][k] - ice.x[i][j][k]);                
+//                float r_humid = r_dry 
+//                   /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
+//                    - cloud.x[i][j][k] - ice.x[i][j][k]);                
+                float r_humid = r_dry * (1.- c.x[i][j][k])/(1. + R_WaterVapour/R_Air * c.x[i][j][k]);
                 double step = get_layer_height(i+1) - get_layer_height(i);
                 float t_Celsius = t_u - t_0;
                 P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
@@ -917,9 +918,10 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         float t_Celsius = t_u - t_0;
                         float height = get_layer_height(i);
                         float r_dry = 100. * p_stat.x[i][j][k]/(R_Air * t_u);  // density of dry air in kg/m³
-                        float r_humid = r_dry 
-                           /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
-                            - cloud.x[i][j][k] - ice.x[i][j][k]);                
+//                        float r_humid = r_dry 
+//                           /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
+//                            - cloud.x[i][j][k] - ice.x[i][j][k]);                
+                        float r_humid = r_dry * (1.- c.x[i][j][k])/(1. + R_WaterVapour/R_Air * c.x[i][j][k]);
                         float E_Rain = hp * exp_func(t_u, 17.2694, 35.86);  // saturation water vapour pressure for the water phase at t > 0°C in hPa
                         float E_Ice = hp * exp_func(t_u, 21.8746, 7.66);  // saturation water vapour pressure for the ice phase in hPa
                         float q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain);  // water vapour amount at saturation with water formation in kg/kg

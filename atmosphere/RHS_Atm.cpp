@@ -255,9 +255,10 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
     double coeff_energy = L_atm/(cp_l * t_0 * u_0); // coefficient for the source terms = .00729
     double coeff_buoy =  L_atm/(u_0 * u_0); // coefficient for bouancy term = 208.333
     double coeff_trans = L_atm/u_0;   // coefficient for the concentration terms = 2000.
-    double r_humid = r_dry 
-       /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
-        - cloud.x[i][j][k] - ice.x[i][j][k]);                
+//    double r_humid = r_dry 
+//       /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
+//        - cloud.x[i][j][k] - ice.x[i][j][k]);                
+    double r_humid = r_dry * (1.- c.x[i][j][k])/(1. + R_WaterVapour/R_Air * c.x[i][j][k]);
     double RS_buoyancy_Momentum = coeff_buoy * Buoyancy * (r_humid - r_dry)/r_dry * g; // any humid air is less dense than dry air
 //    double RS_buoyancy_Momentum = 0.;  // test case
     BuoyancyForce.x[i][j][k] = - RS_buoyancy_Momentum/coeff_buoy;// units like pressure in kN/m2

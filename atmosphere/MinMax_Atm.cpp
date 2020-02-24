@@ -42,7 +42,8 @@ namespace{
 }
 /*
 *
-*/void cAtmosphereModel::searchMinMax_3D(string name_maxValue, string name_minValue, 
+*/
+void cAtmosphereModel::searchMinMax_3D(string name_maxValue, string name_minValue, 
     string name_unitValue, Array &value_D, double coeff, 
     std::function< double(double) > lambda, bool print_heading){
     double maxValue = value_D.x[0][0][0];
