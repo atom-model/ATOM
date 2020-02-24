@@ -7,6 +7,8 @@ sys.path.append('../utils')
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import mpl_toolkits
+mpl_toolkits.__path__.append('/usr/local/lib/python2.7/dist-packages/mpl_toolkits/')
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
@@ -14,7 +16,7 @@ from reconstruct_atom_data import *
 from pyatom import Atmosphere, Hydrosphere
 import create_atm_maps, create_hyd_maps
 from draw_temperature_plot import draw_temperature_plot
-from draw_precipitation_map import draw_precipitation_map
+from draw_precipitation_map import draw_precipitation_map, draw_nasa_precipitation_and_diff_map
 from draw_precipitation_evaporation_diff_map import draw_precipitation_evaporation_diff_map
 
 def main(maps_only=False):
@@ -81,6 +83,8 @@ def main(maps_only=False):
 
         if end_time >= 100:
             draw_temperature_plot(lon=180,data_dir='./output/', output_dir='./output/')
+        
+        draw_nasa_precipitation_and_diff_map(0, './output/', output_dir=atm_map_output_dir, topo_suffix=topo_suffix)
 
     except:
         import traceback
