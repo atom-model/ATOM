@@ -175,6 +175,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
 //    IC_Equatorial_Currents();
 //    if(Ma <= 41)  IC_CircumPolar_Current(); // Drake passage closed 41 Ma ago
     BC_Temperature_Salinity();
+//    goto Printout;
     PresStat_SaltWaterDens();
     store_intermediate_data_2D();
     store_intermediate_data_3D();
