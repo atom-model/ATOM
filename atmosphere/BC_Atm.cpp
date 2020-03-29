@@ -25,6 +25,10 @@ void cAtmosphereModel::BC_radius(){
             p_dyn.x[0][j][k] = c43 * p_dyn.x[1][j][k] - c13 * p_dyn.x[2][j][k];
             v.x[0][j][k] = c43 * v.x[1][j][k] - c13 * v.x[2][j][k];
             w.x[0][j][k] = c43 * w.x[1][j][k] - c13 * w.x[2][j][k];
+            t.x[0][j][k] = c43 * t.x[1][j][k] - c13 * t.x[2][j][k];
+            c.x[0][j][k] = c43 * c.x[1][j][k] - c13 * c.x[2][j][k];
+            cloud.x[0][j][k] = c43 * cloud.x[1][j][k] - c13 * cloud.x[2][j][k];
+            ice.x[0][j][k] = c43 * ice.x[1][j][k] - c13 * ice.x[2][j][k];
             co2.x[0][j][k] = c43 * co2.x[1][j][k] - c13 * co2.x[2][j][k];
 
             t.x[im-1][j][k] = t.x[im-4][j][k] - 3. * t.x[im-3][j][k] + 3. * t.x[im-2][j][k];

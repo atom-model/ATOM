@@ -21,12 +21,18 @@ using namespace AtomUtils;
     (h_d_i * (X->x[i+1][j][k] - X->x[i-1][j][k])/(2. * dr) * exp_rm)
 #define dxdr_b(X) \
     (h_d_i * (- 3. * X->x[i][j][k] + 4. * X->x[i + 1][j][k] - X->x[i + 2][j][k])/(2. * dr) * exp_rm)
+/*
 #define d2xdr2_a(X) \
     (h_d_i * (X->x[i+1][j][k] - 2. * X->x[i][j][k] + X->x[i-1][j][k])/dr2 * exp_2_rm \
     - h_d_i * (X->x[i+1][j][k] - X->x[i-1][j][k])/(2. * dr) * exp_2_rm_2)
 #define d2xdr2_b(X) \
     (h_d_i * (X->x[i][j][k] - 2. * X->x[i + 1][j][k] + X->x[i + 2][j][k])/dr2 * exp_2_rm \
     - h_d_i * (- 3. * X->x[i][j][k] + 4. * X->x[i + 1][j][k] - X->x[i + 2][j][k])/(2. * dr) * exp_2_rm_2)
+*/
+#define d2xdr2_a(X) \
+    (h_d_i * (X->x[i+1][j][k] - 2. * X->x[i][j][k] + X->x[i-1][j][k])/dr2 * exp_2_rm)
+#define d2xdr2_b(X) \
+    (h_d_i * (X->x[i][j][k] - 2. * X->x[i + 1][j][k] + X->x[i + 2][j][k])/dr2 * exp_2_rm)
 #define dxdthe_a(X) \
     (h_d_j * (X->x[i][j+1][k] - X->x[i][j-1][k])/(2. * dthe))
 #define dxdthe_b(X) \
@@ -61,19 +67,16 @@ using namespace AtomUtils;
     (h_d_k * (X->x[i][j][k] - 2. * X->x[i][j][k - 1] + X->x[i][j][k - 2])/dphi2)
 
 void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
-//    double cc = - 1.;  // factor leads to better results 
-    double cc = - 2.;  // factor leads to better results 
+    double cc = - 1.;  // factor leads to better results 
+//    double cc = - 2.;  // factor leads to better results 
 //  (Reinout vander Meulen, The immersed Boundary Method for the Incompressible Navier-Stokes Equations)
-    double coeff_p = p_0/(r_air*u_0*u_0);
     double dr2 = dr * dr;
     double dthe2 = dthe * dthe;
     double dphi2 = dphi * dphi;
     double rm = rad.z[i];
     double rm2 = rm * rm;
-    double zeta = 3.715;
-    double exp_rm = 1./exp(zeta * rm);
-    double exp_2_rm = 1./exp(2. * zeta * rm);
-    double exp_2_rm_2 = 2./exp(2. * zeta * rm);
+    double exp_rm = 1./(rm + 1.);
+    double exp_2_rm = 1./pow((rm + 1.),2);
     double sinthe = sin(the.z[j]);
     double sinthe2 = sinthe * sinthe;
     double costhe = cos(the.z[j]);
@@ -94,10 +97,10 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
     }
     double topo_step = get_layer_height(i) - get_layer_height(i-1);
     double height = get_layer_height(i);
-//    double dist_coeff = 0.;
+    double dist_coeff = 0.;
 //    double dist_coeff = .1;
 //    double dist_coeff = .9;
-    double dist_coeff = .5;
+//    double dist_coeff = .5;
     double topo_diff = fabs(height - Topography.y[j][k]);
     if((topo_diff <= topo_step) && ((is_air(h, i, j, k)) 
         && (is_land(h, i-1, j, k)))){
@@ -252,16 +255,15 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
            d2codphi2 = d2xdphi2_vals[i_co_2];
     double t_u = t.x[i][j][k] * t_0;  // in K
     double r_dry = 100. * p_stat.x[i][j][k]/(R_Air * t_u);
-    double coeff_energy = L_atm/(cp_l * t_0 * u_0); // coefficient for the source terms = .00729
+    double coeff_p = L_atm/(r_air * u_0 * u_0); // coefficient for the pressure terms = 207.624
+    double coeff_energy = L_atm/(r_air * cp_l * t_0 * u_0); // coefficient for the source terms = 6.054e-3
     double coeff_buoy =  L_atm/(u_0 * u_0); // coefficient for bouancy term = 208.333
-    double coeff_trans = L_atm/u_0;   // coefficient for the concentration terms = 2000.
-//    double r_humid = r_dry 
-//       /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
-//        - cloud.x[i][j][k] - ice.x[i][j][k]);                
-    double r_humid = r_dry * (1.- c.x[i][j][k])/(1. + R_WaterVapour/R_Air * c.x[i][j][k]);
+//    double coeff_trans = 1.;   // coefficient for the concentration terms = 2000.
+    double coeff_trans = L_atm/(u_0 * c_0);   // coefficient for the concentration terms = 5.7143e4
+    double r_humid = r_dry/(1. + (R_WaterVapour/R_Air - 1.) 
+        * c.x[i][j][k] - cloud.x[i][j][k] - ice.x[i][j][k]);
     double RS_buoyancy_Momentum = coeff_buoy * Buoyancy * (r_humid - r_dry)/r_dry * g; // any humid air is less dense than dry air
-//    double RS_buoyancy_Momentum = 0.;  // test case
-    BuoyancyForce.x[i][j][k] = - RS_buoyancy_Momentum/coeff_buoy;// units like pressure in kN/m2
+    BuoyancyForce.x[i][j][k] = - RS_buoyancy_Momentum/coeff_buoy * r_air; // force per unit volume in kN/m³
     if(is_land(h, i, j, k)){
         BuoyancyForce.x[i][j][k] = 0.;
     }
@@ -278,6 +280,7 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
     rhs_t.x[i][j][k] = - (u.x[i][j][k] * dtdr + v.x[i][j][k] * dtdthe/rm
             + w.x[i][j][k] * dtdphi/rmsinthe) + (d2tdr2 + dtdr * 2./rm + d2tdthe2/rm2
             + dtdthe * costhe/rm2sinthe + d2tdphi2/rm2sinthe2)/(re * pr)
+            + coeff_energy * (u.x[i][j][k] * dpdr + v.x[i][j][k]/rm * dpdthe + w.x[i][j][k]/rmsinthe * dpdphi)
             + coeff_energy * (S_c.x[i][j][k] + S_r.x[i][j][k]) * lv
             + coeff_energy * (S_i.x[i][j][k] + S_s.x[i][j][k]) * ls;
 //            + cc * h_0_i * t.x[i][j][k]/dr2;
@@ -305,22 +308,22 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
     rhs_c.x[i][j][k] = - (u.x[i][j][k] * dcdr + v.x[i][j][k] * dcdthe/rm
             + w.x[i][j][k] * dcdphi/rmsinthe) + (d2cdr2 + dcdr * 2./rm + d2cdthe2/rm2
             + dcdthe * costhe/rm2sinthe + d2cdphi2/rm2sinthe2)/(sc_WaterVapour * re)
-            + S_v.x[i][j][k] * coeff_trans;
-//            - h_0_i * c.x[i][j][k]/dr2;
+            + S_v.x[i][j][k] * coeff_trans
+            - h_0_i * c.x[i][j][k]/dr2;
     rhs_cloud.x[i][j][k] = - (u.x[i][j][k] * dclouddr + v.x[i][j][k] * dclouddthe/rm
             + w.x[i][j][k] * dclouddphi/rmsinthe) + (d2clouddr2 + dclouddr * 2./rm + d2clouddthe2/rm2
             + dclouddthe * costhe/rm2sinthe + d2clouddphi2/rm2sinthe2)/(sc_WaterVapour * re)
-            + S_c.x[i][j][k] * coeff_trans;
-//            + cc * h_0_i * cloud.x[i][j][k]/dr2;
+            + S_c.x[i][j][k] * coeff_trans
+            + cc * h_0_i * cloud.x[i][j][k]/dr2;
     rhs_ice.x[i][j][k] = - (u.x[i][j][k] * dicedr + v.x[i][j][k] * dicedthe/rm
             + w.x[i][j][k] * dicedphi/rmsinthe) + (d2icedr2 + dicedr * 2./rm + d2icedthe2/rm2
             + dicedthe * costhe/rm2sinthe + d2icedphi2/rm2sinthe2)/(sc_WaterVapour * re)
-            + S_i.x[i][j][k] * coeff_trans;
-//            + cc * h_0_i * ice.x[i][j][k]/dr2;
+            + S_i.x[i][j][k] * coeff_trans
+            + cc * h_0_i * ice.x[i][j][k]/dr2;
     rhs_co2.x[i][j][k] = - (u.x[i][j][k] * dcodr + v.x[i][j][k] * dcodthe/rm
             + w.x[i][j][k] * dcodphi/rmsinthe) + (d2codr2 + dcodr * 2./rm + d2codthe2/rm2
-            + dcodthe * costhe/rm2sinthe + d2codphi2/rm2sinthe2)/(sc_CO2 * re);
-//            + cc * h_0_i * co2.x[i][j][k]/dr2;
+            + dcodthe * costhe/rm2sinthe + d2codphi2/rm2sinthe2)/(sc_CO2 * re)
+            + cc * h_0_i * co2.x[i][j][k]/dr2;
     aux_u.x[i][j][k] = rhs_u.x[i][j][k] + coeff_p * dpdr;
     aux_v.x[i][j][k] = rhs_v.x[i][j][k] + coeff_p * dpdthe/rm;
     aux_w.x[i][j][k] = rhs_w.x[i][j][k] + coeff_p * dpdphi/rmsinthe;
@@ -333,10 +336,11 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
 
 
 void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
-//    double cc = - 1.;  // factor leads to better results (adapted method)
-    double cc = - 2.;  // factor leads to better results 
+    double cc = - 1.;  // factor leads to better results (adapted method)
+//    double cc = - 2.;  // factor leads to better results 
 //  (Reinout vander Meulen, The immersed Boundary Method for the Incompressible Navier-Stokes Equations)
-    double coeff_p = p_0/(r_air*u_0*u_0);
+//    double coeff_p = 100. * p_0/(r_air*u_0*u_0);
+    double coeff_p = L_atm/(r_air * u_0 * u_0); // coefficient for the pressure terms = 207.624
     double dthe2 = dthe * dthe;
     double dphi2 = dphi * dphi;
     double rm = rad.z[0];

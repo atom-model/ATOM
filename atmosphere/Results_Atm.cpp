@@ -243,13 +243,14 @@ void cAtmosphereModel::run_data_atm(){
     double coeff_prec = 86400.;  // dimensions see below
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] + P_snow.x[0][j][k]);
-            // 60 s * 60 min * 24 h = 86400 s == 1 d
-            // Precipitation, P_rain and P_snow in kg/(m² * s)= mm/s
-            // Precipitation in 86400. * kg/(m² * d)= 86400 mm/d
-            // kg/(m² * s)== mm/s(Kraus, p. 94)
-            if(Precipitation.y[j][k] >= 25.) Precipitation.y[j][k] = 25.;
-            if(Precipitation.y[j][k] <= 0.) Precipitation.y[j][k] = 0.;
+//            Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] + P_snow.x[0][j][k]);
+            Precipitation.y[j][k] = coeff_prec * P_rain.x[0][j][k];
+            // 60 s * 60 m * 24 h = 86400 s == 1 d
+            // Precipitation, P_rain and P_snow in kg/(m²*s) = mm/s
+            // Precipitation in 86400. * kg/(m²*d) = 86400 mm/d
+            // kg/(m² * s) == mm/s(Kraus, p. 94)
+//            if(Precipitation.y[j][k] >= 25.) Precipitation.y[j][k] = 25.;
+//            if(Precipitation.y[j][k] <= 0.) Precipitation.y[j][k] = 0.;
         }
     }
     temperature_NASA_average = GetMean_2D(jm, km, temperature_NASA);

@@ -17,7 +17,7 @@ using namespace std;
 using namespace AtomUtils;
 
 void cAtmosphereModel::computePressure_3D(){
-    double coeff_p = p_0/(r_air*u_0*u_0);
+    double coeff_p = 1e2 * p_0/(r_air*u_0*u_0);
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             aux_u.x[0][j][k] = c43 * aux_u.x[1][j][k] - c13 * aux_u.x[2][j][k];
@@ -96,8 +96,7 @@ void cAtmosphereModel::computePressure_3D(){
     for(int i = 1; i < im-1; i++){
         rm = rad.z[i];
         rm2 = rm * rm;
-        double zeta = 3.715;
-        double exp_rm = 1./exp(zeta * rm);
+        double exp_rm = 1./(rm + 1.);
         for(int j = 1; j < jm-1; j++){
             sinthe = sin(the.z[j]);
             rmsinthe = rm * sinthe;
@@ -121,76 +120,76 @@ void cAtmosphereModel::computePressure_3D(){
                     daux_udr = (aux_u.x[i+1][j][k] - aux_u.x[i][j][k])/dr * exp_rm;
                     drhs_udr = (rhs_u.x[i+1][j][k] - rhs_u.x[i][j][k])/dr * exp_rm;
                 }
-                daux_vdthe = (aux_v.x[im-1][j+1][k] - aux_v.x[im-1][j-1][k])
+                daux_vdthe = (aux_v.x[i][j+1][k] - aux_v.x[i][j-1][k])
                     /(2. * dthe * rm);
-                drhs_vdthe = (rhs_v.x[im-1][j+1][k] - rhs_v.x[im-1][j-1][k])
+                drhs_vdthe = (rhs_v.x[i][j+1][k] - rhs_v.x[i][j-1][k])
                     /(2. * dthe * rm);
                 if((is_land(h, i, j, k)) && (is_water(h, i, j+1, k))){
-                    daux_vdthe = (aux_v.x[im-1][j+1][k] 
-                        - aux_v.x[im-1][j][k])/(dthe * rm);
-                    drhs_vdthe = (rhs_v.x[im-1][j+1][k] 
-                        - rhs_v.x[im-1][j][k])/(dthe * rm);
+                    daux_vdthe = (aux_v.x[i][j+1][k] 
+                        - aux_v.x[i][j][k])/(dthe * rm);
+                    drhs_vdthe = (rhs_v.x[i][j+1][k] 
+                        - rhs_v.x[i][j][k])/(dthe * rm);
                     }
                 if((is_land(h, i, j, k)) && (is_water(h, i, j-1, k))){
-                    daux_vdthe = (aux_v.x[im-1][j-1][k] 
-                        - aux_v.x[im-1][j][k])/(dthe * rm);
-                    drhs_vdthe = (rhs_v.x[im-1][j-1][k] 
-                        - rhs_v.x[im-1][j][k])/(dthe * rm);
+                    daux_vdthe = (aux_v.x[i][j-1][k] 
+                        - aux_v.x[i][j][k])/(dthe * rm);
+                    drhs_vdthe = (rhs_v.x[i][j-1][k] 
+                        - rhs_v.x[i][j][k])/(dthe * rm);
                     }
                 if((j >= 2) &&(j <= jm - 3)){
                     if((is_land(h, i, j, k)) && (is_water(h, i, j+1, k)) 
                         &&(is_water(h, i, j+2, k))){
-                        daux_vdthe = (- 3. * aux_v.x[im-1][j][k] 
-                            + 4. * aux_v.x[im-1][j+1][k] 
-                            - aux_v.x[im-1][j + 2][k])/(2. * dthe * rm);
-                        drhs_vdthe = (- 3. * rhs_v.x[im-1][j][k] 
-                            + 4. * rhs_v.x[im-1][j+1][k] 
-                            - rhs_v.x[im-1][j + 2][k])/(2. * dthe * rm);
+                        daux_vdthe = (- 3. * aux_v.x[i][j][k] 
+                            + 4. * aux_v.x[i][j+1][k] 
+                            - aux_v.x[i][j + 2][k])/(2. * dthe * rm);
+                        drhs_vdthe = (- 3. * rhs_v.x[i][j][k] 
+                            + 4. * rhs_v.x[i][j+1][k] 
+                            - rhs_v.x[i][j + 2][k])/(2. * dthe * rm);
                         }
                     if((is_land(h, i, j, k)) && (is_water(h, i, j-1, k)) 
                         &&(is_water(h, i, j-2, k))){
-                        daux_vdthe = (- 3. * aux_v.x[im-1][j][k] 
-                            + 4. * aux_v.x[im-1][j-1][k] 
-                            - aux_v.x[im-1][j-2][k])/(2. * dthe * rm);
-                        drhs_vdthe = (- 3. * rhs_v.x[im-1][j][k] 
-                            + 4. * rhs_v.x[im-1][j-1][k] 
-                            - rhs_v.x[im-1][j-2][k])/(2. * dthe * rm);
+                        daux_vdthe = (- 3. * aux_v.x[i][j][k] 
+                            + 4. * aux_v.x[i][j-1][k] 
+                            - aux_v.x[i][j-2][k])/(2. * dthe * rm);
+                        drhs_vdthe = (- 3. * rhs_v.x[i][j][k] 
+                            + 4. * rhs_v.x[i][j-1][k] 
+                            - rhs_v.x[i][j-2][k])/(2. * dthe * rm);
                         }
                 }
-                daux_wdphi =(aux_w.x[im-1][j][k+1] 
-                    - aux_w.x[im-1][j][k-1])/(2. * dphi * rmsinthe);
-                drhs_wdphi =(rhs_w.x[im-1][j][k+1] 
-                    - rhs_w.x[im-1][j][k-1])/(2. * dphi * rmsinthe);
+                daux_wdphi =(aux_w.x[i][j][k+1] 
+                    - aux_w.x[i][j][k-1])/(2. * dphi * rmsinthe);
+                drhs_wdphi =(rhs_w.x[i][j][k+1] 
+                    - rhs_w.x[i][j][k-1])/(2. * dphi * rmsinthe);
                 if((is_land(h, i, j, k)) && (is_water(h, i, j, k+1))){
-                    daux_wdphi = (aux_w.x[im-1][j][k+1] 
-                        - aux_w.x[im-1][j][k])/(dphi * rmsinthe);
-                    drhs_wdphi = (rhs_w.x[im-1][j][k+1] 
-                        - rhs_w.x[im-1][j][k])/(dphi * rmsinthe);
+                    daux_wdphi = (aux_w.x[i][j][k+1] 
+                        - aux_w.x[i][j][k])/(dphi * rmsinthe);
+                    drhs_wdphi = (rhs_w.x[i][j][k+1] 
+                        - rhs_w.x[i][j][k])/(dphi * rmsinthe);
                     }
                 if((is_land(h, i, j, k)) && (is_water(h, i, j, k-1))){
-                    daux_wdphi = (aux_w.x[im-1][j][k-1] 
-                        - aux_w.x[im-1][j][k])/(dphi * rmsinthe);
-                    drhs_wdphi = (rhs_w.x[im-1][j][k-1] 
-                        - rhs_w.x[im-1][j][k])/(dphi * rmsinthe);
+                    daux_wdphi = (aux_w.x[i][j][k-1] 
+                        - aux_w.x[i][j][k])/(dphi * rmsinthe);
+                    drhs_wdphi = (rhs_w.x[i][j][k-1] 
+                        - rhs_w.x[i][j][k])/(dphi * rmsinthe);
                     }
                 if((k >= 2) &&(k <= km - 3)){
                     if((is_land(h, i, j, k)) && (is_water(h, i, j, k+1)) 
                         &&(is_water(h, i, j, k+2))){
-                        daux_wdphi = (- 3. * aux_w.x[im-1][j][k] 
-                        + 4. * aux_w.x[im-1][j][k+1] 
-                        - aux_w.x[im-1][j][k + 2])/(2. * rmsinthe * dphi);
-                        drhs_wdphi = (- 3. * rhs_w.x[im-1][j][k] 
-                        + 4. * rhs_w.x[im-1][j][k+1] 
-                        - rhs_w.x[im-1][j][k + 2])/(2. * rmsinthe * dphi);
+                        daux_wdphi = (- 3. * aux_w.x[i][j][k] 
+                        + 4. * aux_w.x[i][j][k+1] 
+                        - aux_w.x[i][j][k + 2])/(2. * rmsinthe * dphi);
+                        drhs_wdphi = (- 3. * rhs_w.x[i][j][k] 
+                        + 4. * rhs_w.x[i][j][k+1] 
+                        - rhs_w.x[i][j][k + 2])/(2. * rmsinthe * dphi);
                     }
                     if((is_land(h, i, j, k)) && (is_water(h, i, j, k-1)) 
                         &&(is_water(h, i, j, k-2))){
-                        daux_wdphi = (- 3. * aux_w.x[im-1][j][k] 
-                            + 4. * aux_w.x[im-1][j][k - 1] 
-                            - aux_w.x[im-1][j][k-2])/(2. * rmsinthe * dphi);
-                        drhs_wdphi = (- 3. * rhs_w.x[im-1][j][k] 
-                            + 4. * rhs_w.x[im-1][j][k - 1] 
-                            - rhs_w.x[im-1][j][k-2])/(2. * rmsinthe * dphi);
+                        daux_wdphi = (- 3. * aux_w.x[i][j][k] 
+                            + 4. * aux_w.x[i][j][k - 1] 
+                            - aux_w.x[i][j][k-2])/(2. * rmsinthe * dphi);
+                        drhs_wdphi = (- 3. * rhs_w.x[i][j][k] 
+                            + 4. * rhs_w.x[i][j][k - 1] 
+                            - rhs_w.x[i][j][k-2])/(2. * rmsinthe * dphi);
                         }
                 }
                 p_dyn.x[i][j][k] = ((p_dyn.x[i+1][j][k] 
@@ -208,7 +207,7 @@ void cAtmosphereModel::computePressure_3D(){
 *
 */
 void cAtmosphereModel::computePressure_2D(){
-    double coeff_p = p_0/(r_air*u_0*u_0);
+    double coeff_p = 1e2 * p_0/(r_air*u_0*u_0);
     for(int k = 0; k < km; k++){
         aux_v.x[0][0][k] = c43 * aux_v.x[0][1][k] - c13 * aux_v.x[0][2][k];
         aux_v.x[0][jm-1][k] = c43 * aux_v.x[0][jm-2][k] - c13 * aux_v.x[0][jm-3][k];

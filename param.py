@@ -30,16 +30,16 @@ def main():
       ],
         'atmosphere': [
            ('velocity_iter_max_2D', 'the number of velocity iterations', 'int',2),
-           ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10),
+           ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 5),
            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
-           ('pressure_iter_max', 'the number of pressure iterations', 'int', 4),
-           ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
+           ('pressure_iter_max', 'the number of pressure iterations', 'int', 16),
+           ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 4),
 
            ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', .3),
-           ('coeff_Precipitation', "coefficient to adjust to the modern worlds precipitation", 'double', .015),
 
            ('WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0),
-           ('Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
+#           ('Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
+           ('Buoyancy', 'buoyancy effect on the vertical velocity', 'double', 0.0),
            ('CO2', 'CO2 influence on atmospheric thermodynamics', 'double', 1.0),
 
            ('epsres', 'accuracy of relative and absolute errors', 'double', 0.00001),
@@ -76,9 +76,9 @@ def main():
            ('g', 'gravitational acceleration of the earth in m/s²', 'double', 9.8066),
            ('ep', 'ratio of the gas constants of dry air to water vapour [/]', 'double', 0.623),
            ('hp', 'water vapour pressure at T = 0°C: E = 6.1 hPa', 'double', 6.1078),
-           ('R_Air', 'specific gas constant of air in J/(kg*K)', 'double', 287.1),
+           ('R_Air', 'specific gas constant of air in J/(kg*K)', 'double', 286.9),
            ('r_air', 'density of dry air in kg/m³ at 20°C', 'double', 1.2041),
-           ('R_WaterVapour', 'specific gas constant of water vapour in J/(kg*K)', 'double', 461.6),
+           ('R_WaterVapour', 'specific gas constant of water vapour in J/(kg*K)', 'double', 461.4),
            ('r_water_vapour', 'density of saturated water vapour in kg/m³ at 10°C', 'double', 0.0094),
            ('R_co2', 'specific gas constant of CO2 in J/(kg*4.5K)', 'double', 188.91),
            ('lv', 'specific latent evaporation heat(Condensation heat) in J/kg', 'double', 2.52e6),
@@ -99,7 +99,8 @@ def main():
 
            ('t_average', 'mean temperature of the modern earth', 'double', 15.4),
            ('t_equator', 'temperature t_0 = 1.11 compares to 26.0° C compares to 299.15 K', 'double', 1.095),
-           ('t_pole', 'temperature at the poles t_pole = 0.9436 compares to -15.4°C compares to 258.15 K', 'double', 0.9436),
+#           ('t_pole', 'temperature at the poles t_pole = 0.9436 compares to -15.4°C compares to 258.15 K', 'double', 0.9436),
+           ('t_pole', 'temperature at the poles t_pole = 0.9436 compares to -15.4°C compares to 258.15 K', 'double', 0.9269),
            ('t_tropopause', 'temperature in the tropopause, t = 0.798 compares to -55°C compares to 218.15 K', 'double', 0.798),
            ('t_tropopause_pole', 'temperature in the tropopause at the pole, t = 0.784 compares to -59°C compares to 214.15 K', 'double', 0.784),
            ('t_land', 'temperature increase on land by 2°C(1°C compares to t_land = 0.003661)', 'double', 0.),

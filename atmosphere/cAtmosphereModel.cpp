@@ -38,7 +38,8 @@ const double cAtmosphereModel::dthe = the_degree/pi180;
 const double cAtmosphereModel::dphi = phi_degree/pi180;
     
 const double cAtmosphereModel::dr = 0.025;    // 0.025 x 40 = 1.0 compares to 16 km : 40 = 400 m for 1 radial step
-const double cAtmosphereModel::dt = 0.00001;  // time step coincides with the CFL condition
+//const double cAtmosphereModel::dt = 0.00001;  // time step coincides with the CFL condition
+const double cAtmosphereModel::dt = 0.0001;  // time step coincides with the CFL condition
     
 const double cAtmosphereModel::the0 = 0.;             // North Pole
 const double cAtmosphereModel::phi0 = 0.;             // zero meridian in Greenwich
@@ -188,22 +189,22 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     init_co2();
     store_intermediate_data_3D();
     Ice_Water_Saturation_Adjustment();
+//    Two_Category_Ice_Scheme(); 
     BC_Radiation_multi_layer(); 
 //    Value_Limitation_Atm();
 //    goto Printout;
-
-    fft_gaussian_filter(u, 5);
-    fft_gaussian_filter(v, 5);
-    fft_gaussian_filter(w, 5);
-    fft_gaussian_filter(t, 5);
-    fft_gaussian_filter(c, 5);
-    fft_gaussian_filter(cloud, 5);
-    fft_gaussian_filter(ice, 5);
+    fft_gaussian_filter(u,5);
+    fft_gaussian_filter(v,5);
+    fft_gaussian_filter(w,5);
+    fft_gaussian_filter(t,5);
+    fft_gaussian_filter(c,5);
+    fft_gaussian_filter(cloud,5);
+    fft_gaussian_filter(ice,5);
 
 //    goto Printout;
-    store_intermediate_data_2D();
+//    store_intermediate_data_2D();
     store_intermediate_data_3D();
-    run_2D_loop();
+//    run_2D_loop();
     cout << endl << endl;
     run_3D_loop();
     cout << endl << endl;
@@ -266,7 +267,6 @@ void cAtmosphereModel::run_3D_loop(){
     iter_cnt_3d = 0;
     if(debug){
         save_data();
-        //chessboard_grid(t.x[0], 30, 30, jm, km);
     }
     for(int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++){
         for(int velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++){
@@ -287,16 +287,33 @@ void cAtmosphereModel::run_3D_loop(){
             if(velocity_iter % 2 == 0){
                 Ice_Water_Saturation_Adjustment();
                 BC_Radiation_multi_layer(); 
-                fft_gaussian_filter(t, 5);
-                fft_gaussian_filter(c, 5);
-                fft_gaussian_filter(cloud, 5);
-                fft_gaussian_filter(ice, 5);
+                fft_gaussian_filter(t,5);
+                fft_gaussian_filter(c,5);
+                fft_gaussian_filter(cloud,5);
+                fft_gaussian_filter(ice,5);
                 Two_Category_Ice_Scheme(); 
-                fft_gaussian_filter(P_rain, 2);
-                fft_gaussian_filter(P_snow, 2);
-                WaterVapourEvaporation();
+                fft_gaussian_filter(P_rain,5);
+                fft_gaussian_filter(P_snow,5);
+//                WaterVapourEvaporation();
             }
             solveRungeKutta_3D_Atmosphere();
+
+            for(int k = 0; k < km; k++){
+                for(int j = 0; j < jm; j++){
+                    for(int i = 0; i < im; i++){
+                        if(c.x[i][j][k] < 0.)      c.x[i][j][k] = cn.x[i][j][k] = 0.;
+                        if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = cloudn.x[i][j][k] = 0.;
+                        if(ice.x[i][j][k] < 0.)    ice.x[i][j][k] = icen.x[i][j][k] = 0.;
+                        if(is_land (h, i, j, k)){
+                            cn.x[i][j][k] = c.x[i][j][k] = 0.;
+                            cloudn.x[i][j][k] = cloud.x[i][j][k] = 0.;
+                            icen.x[i][j][k] = ice.x[i][j][k] = 0.;
+                        }
+                    }
+                }
+            }
+
+            BC_radius();
 //            Value_Limitation_Atm();
             store_intermediate_data_3D();
             Latent_Heat(); 
@@ -927,6 +944,59 @@ void  cAtmosphereModel::save_data(){
 *
 */
 void cAtmosphereModel::BC_SolidGround(){
+/*
+    temp_tropopause = std::vector<double>(jm, t_tropopause_pole);
+    int j_max = jm-1;
+    int j_half = j_max/2;
+    for(int j=j_half; j>=0; j--){
+        double x = sqrt(pow(t_tropopause,3)/t_tropopause_pole 
+            - pow(t_tropopause,2)) * (double)(j_half-j) 
+           /(double)j_half;
+        temp_tropopause[j] = Agnesi(x, t_tropopause); 
+    }
+    for(int j=j_max; j>j_half; j--){
+        temp_tropopause[j] = temp_tropopause[j_max-j];
+    }
+    AtomUtils::smooth_tropopause(jm, temp_tropopause);
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            int i_mount = i_topography[j][k];
+            int i_trop = get_tropopause_layer(j);
+            M_u.x[0][j][k] = t.x[0][j][k];
+//            for(int i = i_mount; i < im; i++){
+            for(int i = 0; i < im; i++){
+                if(i < i_trop){
+                    if(i>i_mount){
+                        // linear temperature decay up to tropopause
+                        // compares to the US Standard Atmosphere 
+                        // with variable tropopause location
+                        M_u.x[i][j][k] = (temp_tropopause[j] - M_u.x[0][j][k]) * 
+                            (get_layer_height(i)/get_layer_height(i_trop)) + 
+                            M_u.x[0][j][k]; 
+                        // US Standard Atmosphere
+//                        M_u.x[i][j][k] = M_u.x[0][j][k] - 6.5 * 
+//                            (double)(get_layer_height(i)/1000.)/t_0;
+                    }else{
+                        M_u.x[i][j][k] = (temp_tropopause[j] - M_u.x[0][j][k]) * 
+                            (get_layer_height(i)/get_layer_height(i_trop)) + 
+                            M_u.x[0][j][k]; 
+
+                    }
+                }else{ // above tropopause
+                    M_u.x[i][j][k] = temp_tropopause[j]; //inside mountain
+                }
+            }
+        }
+    }
+
+    for(int k = 0; k < km; k++){
+        for(int j = 0; j < jm; j++){
+            for(int i = 0; i < im; i++){
+                M_u.x[i][j][k] = M_u.x[i][j][k] * t_0 - t_0;
+            }
+        }
+    }
+*/
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             for(int i = im-2; i >= 0; i--){
@@ -934,14 +1004,16 @@ void cAtmosphereModel::BC_SolidGround(){
                     u.x[i][j][k] = 0.;
                     v.x[i][j][k] = 0.;
                     w.x[i][j][k] = 0.;
-                    //t.x[i][j][k] = 1.;  // = 273.15 K
-                    //c.x[i][j][k] = c_tropopause;  // = 1 g/kg water vapour
-                    //c.x[i][j][k] = 0.; 
+//                    t.x[i][j][k] = 1.;  // = 273.15 K
+//                    t.x[i][j][k] =  M_u.x[i][j][k];
+                    c.x[i][j][k] = 0.; 
                     cloud.x[i][j][k] = 0.;
                     ice.x[i][j][k] = 0.;
+//                    P_rain.x[i][j][k] = 0.;
+//                    P_snow.x[i][j][k] = 0.;
                     co2.x[i][j][k] = 1.;  // = 280 ppm
-                    p_dyn.x[i][j][k] = 0.;
-                }// is_land
+//                    p_dyn.x[i][j][k] = 0.;
+                } // is_land
             } // i
         } // k
     } // j

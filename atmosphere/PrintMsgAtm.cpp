@@ -34,12 +34,13 @@ void cAtmosphereModel::print_final_remarks(){
 *
 */
 void cAtmosphereModel::print_min_max_atm(){
+    double coeff_p = 1e-2 * r_air * u_0 * u_0; // in hPa = 0.77056
     searchMinMax_3D(" max 3D temperature ", " min 3D temperature ", 
         " deg", t, 273.15, [](double i)->double{return i - 273.15;}, true);
     searchMinMax_3D(" max 3D u-component ", " min 3D u-component ", "m/s", u, u_0);
     searchMinMax_3D(" max 3D v-component ", " min 3D v-component ", "m/s", v, u_0);
     searchMinMax_3D(" max 3D w-component ", " min 3D w-component ", "m/s", w, u_0);
-    searchMinMax_3D(" max 3D pressure dynamic ", " min 3D pressure dynamic ", "hPa", p_dyn, .01);
+    searchMinMax_3D(" max 3D pressure dynamic ", " min 3D pressure dynamic ", "hPa", p_dyn, coeff_p);
     searchMinMax_3D(" max 3D pressure static ", " min 3D pressure static ", "hPa", p_stat, 1.);
     cout << endl << " energies in the three dimensional space: " << endl << endl;
     searchMinMax_3D(" max 3D radiation ",  " min 3D radiation ",  "W/m2", radiation_3D, 1.);
@@ -49,11 +50,13 @@ void cAtmosphereModel::print_min_max_atm(){
     searchMinMax_3D(" max 3D water vapour ",  " min 3D water vapour ", "g/kg", c, 1000.);
     searchMinMax_3D(" max 3D cloud water ", " min 3D cloud water ", "g/kg", cloud, 1000.);
     searchMinMax_3D(" max 3D cloud ice ", " min 3D cloud ice ", "g/kg", ice, 1000.);
-    searchMinMax_3D(" max 3D rain ", " min 3D rain ", "mm/d", P_rain, 8.64e4);
-    searchMinMax_3D(" max 3D snow ", " min 3D snow ", "mm/d", P_snow, 8.64e4);
+//    searchMinMax_3D(" max 3D rain ", " min 3D rain ", "mm/d", P_rain, 8.64e4);
+//    searchMinMax_3D(" max 3D snow ", " min 3D snow ", "mm/d", P_snow, 8.64e4);
+    searchMinMax_3D(" max 3D rain ", " min 3D rain ", "mm/d", P_rain, 1.);
+    searchMinMax_3D(" max 3D snow ", " min 3D snow ", "mm/d", P_snow, 1.);
     searchMinMax_3D(" max 3D co2 ", " min 3D co2 ", "ppm", co2, co2_0);
     searchMinMax_3D(" max 3D epsilon ",  " min 3D epsilon ", "%", epsilon_3D, 1.);
-    searchMinMax_3D(" max 3D buoyancy force ", " min 3D buoyancy force ", "kN/m2", BuoyancyForce, 1.);
+    searchMinMax_3D(" max 3D buoyancy force ", " min 3D buoyancy force ", "kN/m3", BuoyancyForce, 1.);
     cout << endl << " printout of maximum and minimum values of properties at their locations: latitude, longitude" 
         << endl <<
         " results based on two dimensional considerations of the problem" << endl;

@@ -115,7 +115,7 @@ void cAtmosphereModel::BC_Radiation_multi_layer(){
                     // atmospheric emissivity by Vogel/Bliss, emissivity seems too high
 //                    epsilon_3D.x[i][j][k] = 0.98 * pow((e/(t.x[i][j][k] * t_0)), 0.0687);
 
-                    radiation_3D.x[i][j][k] = (1.-epsilon_3D.x[i][j][k]) 
+                    radiation_3D.x[i][j][k] = (1. - epsilon_3D.x[i][j][k]) 
                         * sigma * pow(t.x[i][j][k] * t_0, 4.);
                 }
                 if(epsilon_3D.x[i][j][k] > 1.)  epsilon_3D.x[i][j][k] = 1.;
@@ -634,10 +634,12 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
     float t_00 = 236.15;
     float t_Celsius_0 = 0.; // in Celsius = 0 °C
     float exp_pressure = g/(1.e-2 * gam * R_Air);
-    float q_v_hyp = 0., q_T = 0.;
-    float dt_dim = L_atm/u_0 * dt;// dimensional time step of the system in s == 0.02 s
+    float q_v_hyp = 0.;
+//    float dt_dim = L_atm/u_0 * dt; // dimensional time step of the system = 0.2 for dt = 1e-4
+    float dt_dim = L_atm/u_0; // dimensional time step = 2000.
+//    float coeff_evap_cond = 0.5; // original COSMO
+    float coeff_evap_cond = 1.;
     float t_u = 0.;
-    float T_it = 0.;
     float T = 0.;
     float d_t = 0.;
     float t_Celsius = 0.;
@@ -648,7 +650,6 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
     float E_Ice = 0.;
     float q_Rain = 0.;
     float q_Ice = 0.;
-    float q_Rain_n = 0.;
     float q_v_b = 0.;
     float q_c_b = 0.;
     float q_i_b = 0.;
@@ -663,7 +664,7 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
     // starting from a guessed parabolic temperature and water vapour distribution in north/south direction
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            for(int i = 0; i < im; i++){
+            for(int i = 1; i < im; i++){
                 t_u = t.x[i][j][k] * t_0; // in K
                 t_Celsius = t_u - t_0; // in C
                 p_SL = .01 * (r_air * R_Air * t.x[0][j][k] * t_0); // given in hPa
@@ -677,119 +678,83 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
                 E_Ice = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the ice phase in hPa
                 q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
                 q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
-                /** %%%%%%%%%%%%%%%%%%%%%%%%%%%     warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% **/
-                // warm cloud phase in case water vapour is over-saturated
-                if(t_Celsius >= t_Celsius_0){ //temperature above 0 Celsius
-                    q_T = c.x[i][j][k] + cloud.x[i][j][k]; // total water content
-                    if(!(q_T > q_Rain)){ //     subsaturated
-                        c.x[i][j][k] = q_T; // total water amount as water vapour
-                        cloud.x[i][j][k] = 0.; // no cloud water available
-                        ice.x[i][j][k] = 0.; // no cloud ice available above 0 °C
-                        T_it = t_u;
-                    }else{ //     oversaturated
-                        for(int iter_prec = 1; iter_prec <= 20; iter_prec++){ // iter_prec may be varied
-                            T_it = t_u + lv/cp_l * (c.x[i][j][k] - q_Rain);
-                            E_Rain = hp * exp_func(T_it, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                            q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
-                            q_Rain = .5 * (q_Rain_n + q_Rain);  // smoothing the iteration process
-                            c.x[i][j][k] = q_Rain; // water vapour restricted to saturated water vapour amount
-                            cloud.x[i][j][k] = q_T - c.x[i][j][k]; // cloud water amount
-                            ice.x[i][j][k] = 0.; // no cloud ice available
-                            q_T = c.x[i][j][k] + cloud.x[i][j][k];
-                            if(c.x[i][j][k] < 0.)  c.x[i][j][k] = 0.;
-                            if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
-                            if(fabs(q_Rain/q_Rain_n - 1.) < 1.e-3)  break;  
-                            q_Rain_n = q_Rain;
-                        }//end of for 
-                    }//oversaturated
-                    cn.x[i][j][k] = c.x[i][j][k];
-                    cloudn.x[i][j][k] = cloud.x[i][j][k];
-                    icen.x[i][j][k] = ice.x[i][j][k];
-                    tn.x[i][j][k] = t.x[i][j][k] = T_it/t_0;
-                } // end (t_Celsius > 0.)
-                // %%%%%%%%%%%%%%%%%%%%%%%%%%%     end  warm cloud phase     %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                // %%%%%%%%%%%%%%%%%%%%%%%%%%%     begin mixed cloud phase         %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                else{ //temperature below 0 Celsius
-                    if(t_Celsius > t_Celsius_0)  ice.x[i][j][k] = 0.;
-                    q_v_b = c.x[i][j][k];
-                    q_c_b = cloud.x[i][j][k];
-                    q_i_b = ice.x[i][j][k];
-                    q_T = q_v_b + q_c_b + q_i_b; // total water content
-                    T = t_u; // in K
+                if(t_Celsius > t_Celsius_0)  ice.x[i][j][k] = 0.;
+                if(c.x[i][j][k] < 0.)  c.x[i][j][k] = 0.;
+                if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
+                if(ice.x[i][j][k] < 0.)  ice.x[i][j][k] = 0.;
+                q_v_b = c.x[i][j][k];
+                q_c_b = cloud.x[i][j][k];
+                q_i_b = ice.x[i][j][k];
+                double cloud_in = cloud.x[i][j][k];
+                T = t_u; // in K
+                E_Rain = hp * exp_func(T, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                E_Ice = hp * exp_func(T, 21.8746, 7.66); // saturation water vapour pressure for the ice phase in hPa
+                q_Rain = ep * E_Rain/(p_h - E_Rain); // water vapour amount at saturation with water formation in kg/kg
+                q_Ice = ep * E_Ice/(p_h - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
+                if(q_c_b > 0. && q_i_b > 0.)
+                    q_v_hyp = (q_c_b * q_Rain + q_i_b * q_Ice) 
+                             /(q_c_b + q_i_b);
+                if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp = q_Rain;
+                if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp = q_Ice;
+                // §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§
+                for(int iter_prec = 1; iter_prec <= 20; iter_prec++){ // iter_prec = 2 given by COSMO
+                // condensation == water vapor saturation for cloud water formation, deposition == ice crystal for cloud ice formation
+                    CND = (T - t_00)/(t_0 - t_00); // t_00 = 236.15°C, t_0 = 273.15°C
+                    DEP = (t_0 - T)/(t_0 - t_00);
+                    if(T <= t_00){
+                        CND = 0.;
+                        DEP = 1.;
+                    }
+                    if(T >= t_0){
+                        CND = 1.;
+                        DEP = 0.;
+                    }
+                    d_q_v = q_v_hyp - q_v_b;  // changes in water vapour causing cloud water and cloud ice
+                    d_q_c = - d_q_v * CND;
+                    d_q_i = - d_q_v * DEP;
+                    d_t = (lv * d_q_c + ls * d_q_i)/cp_l; // in K, temperature changes
+                    T = t_u + d_t; // in K
+                    q_v_b = c.x[i][j][k] - d_q_v;  // new values
+                    q_c_b = cloud.x[i][j][k] + d_q_c;
+                    q_i_b = ice.x[i][j][k] + d_q_i;
+                    if(q_v_b < 0.)  q_v_b = 0.;  // negative values excluded, when iteration starts
+                    if(q_c_b < 0.)  q_c_b = 0.;
+                    if(q_i_b < 0.)  q_i_b = 0.;
                     E_Rain = hp * exp_func(T, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                     E_Ice = hp * exp_func(T, 21.8746, 7.66); // saturation water vapour pressure for the ice phase in hPa
-                    q_Rain = ep * E_Rain/(p_h - E_Rain); // water vapour amount at saturation with water formation in kg/kg
-                    q_Ice = ep * E_Ice/(p_h - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
-                    if(q_c_b > 0. && q_i_b > 0.)
+                    q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
+                    q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
+                    if((q_c_b > 0.) && (q_i_b > 0.))
                         q_v_hyp = (q_c_b * q_Rain + q_i_b * q_Ice) 
                                  /(q_c_b + q_i_b);
                     if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp = q_Rain;
                     if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp = q_Ice;
-                    // §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§     iterations for mixed cloud phase     §§§§§§§§§§§§§§§§§§§§§
-                    for(int iter_prec = 1; iter_prec <= 10; iter_prec++){ // iter_prec = 2 given by COSMO
-                    // condensation == water vapor saturation for cloud water formation, deposition == ice crystal for cloud ice formation
-                        CND = (T - t_00)/(t_0 - t_00); // t_00 = 236.15°C, t_0 = 273.15°C
-                        DEP = (t_0 - T)/(t_0 - t_00);
-                        if(T <= t_00){
-                            CND = 0.;
-                            DEP = 1.;
-                        }
-                        if(T >= t_0){
-                            CND = 1.;
-                            DEP = 0.;
-                        }
-                        d_q_v = q_v_hyp - q_v_b;  // changes in water vapour causing cloud water and cloud ice
-                        d_q_v = .5 * d_q_v; // but why?
-                        d_q_c = - d_q_v * CND;
-                        d_q_i = - d_q_v * DEP;
-                        d_t = (lv * d_q_c + ls * d_q_i)/cp_l; // in K, temperature changes
-                        T = t_u + d_t; // in K
-                        q_v_b = c.x[i][j][k] - d_q_v;  // new values
-                        q_c_b = cloud.x[i][j][k] + d_q_c;
-                        q_i_b = ice.x[i][j][k] + d_q_i;
-                        if(q_v_b < 0.)  q_v_b = 0.;  // negative values excluded, when iteration starts
-                        if(q_c_b < 0.)  q_c_b = 0.;
-                        if(q_i_b < 0.)  q_i_b = 0.;
-                        E_Rain = hp * exp_func(T, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                        E_Ice = hp * exp_func(T, 21.8746, 7.66); // saturation water vapour pressure for the ice phase in hPa
-                        q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
-                        q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // water vapour amount at saturation with ice formation in kg/kg
-                        if((q_c_b > 0.) && (q_i_b > 0.))
-                            q_v_hyp = (q_c_b * q_Rain + q_i_b * q_Ice) 
-                                     /(q_c_b + q_i_b);
-                        if((q_c_b >= 0.) && (q_i_b == 0.))  q_v_hyp = q_Rain;
-                        if((q_c_b == 0.) && (q_i_b >= 0.))  q_v_hyp = q_Ice;
-                        if((q_c_b > 0.) && (q_i_b > 0.))
-                        q_T = q_v_b + q_c_b + q_i_b; // total water content
-                        if(iter_prec >= 3 && fabs(q_v_b/q_v_hyp - 1.) 
-                            <= 1.e-3)  break;
-                        q_v_b = .5 * (q_v_hyp + q_v_b);  // has smoothing effect
-                    } // iter_prec end
-                    //** §§§§§§§§§§§§§   end iterations for mixed cloud phase     §§§§§§§**
-                    // rate of condensating or evaporating water vapour to form cloud water in kg/(kg*s), 0.5 given by COSMO
-                    S_c_c.x[i][j][k] = 0.5 * (cloud.x[i][j][k] 
-                        - q_c_b)/dt_dim;
-                    if(is_land(h, i, j, k))  S_c_c.x[i][j][k] = 0.;
-                    cn.x[i][j][k] = c.x[i][j][k] = q_v_b;  // new values achieved after converged iterations
-                    cloudn.x[i][j][k] = cloud.x[i][j][k] = q_c_b;
-                    icen.x[i][j][k] = ice.x[i][j][k] = q_i_b;
-                    tn.x[i][j][k] = t.x[i][j][k] = T/t_0;
-                    if(t_Celsius > t_Celsius_0)  icen.x[i][j][k] = 
-                                            ice.x[i][j][k] = 0.;
-                } // temperature below 0 Celsius
+                    if((q_c_b > 0.) && (q_i_b > 0.))
+                    if(iter_prec >= 3 && fabs(q_v_b/q_v_hyp - 1.) 
+                        <= 1.e-3)  break;
+                    q_v_b = .5 * (q_v_hyp + q_v_b);  // has smoothing effect
+                } // iter_prec end
+                c.x[i][j][k] = q_v_b;  // new values achieved after converged iterations
+                cloud.x[i][j][k] = q_c_b;
+                ice.x[i][j][k] = q_i_b;
+                t.x[i][j][k] = T/t_0;
+                S_c_c.x[i][j][k] = coeff_evap_cond * (cloud_in - q_c_b)/dt_dim;
+                if(t_Celsius > t_Celsius_0)  ice.x[i][j][k] = 0.;
             } // end i
         } // end j
     } // end k
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             for(int i = 0; i < im; i++){
-                if(c.x[i][j][k] < 0.)      c.x[i][j][k] = 0.;
-                if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
-                if(ice.x[i][j][k] < 0.)    ice.x[i][j][k] = 0.;
-//                if(is_land (h, i, j, k)){
-//                    cloudn.x[i][j][k] = cloud.x[i][j][k] = 0.;
-//                    icen.x[i][j][k] = ice.x[i][j][k] = 0.;
-//                }
+                if(c.x[i][j][k] < 0.)      c.x[i][j][k] = cn.x[i][j][k] = 0.;
+                if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = cloudn.x[i][j][k] = 0.;
+                if(ice.x[i][j][k] < 0.)    ice.x[i][j][k] = icen.x[i][j][k] = 0.;
+                if(is_land (h, i, j, k)){
+                    cn.x[i][j][k] = c.x[i][j][k] = 0.;
+                    cloudn.x[i][j][k] = cloud.x[i][j][k] = 0.;
+                    icen.x[i][j][k] = ice.x[i][j][k] = 0.;
+                    S_c_c.x[i][j][k] = 0.;
+                }
             }
         }
     }
@@ -799,9 +764,6 @@ void cAtmosphereModel::Ice_Water_Saturation_Adjustment(){
         assert(!c.has_nan());
         assert(!t.has_nan());
     }
-//    fft_gaussian_filter(cloud, 5);
-//    fft_gaussian_filter(ice, 5);
-//    fft_gaussian_filter(c, 5);
     return;
 }
 /*
@@ -831,14 +793,13 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
           c_s_melt = 8.43e-5,  // (m2*s)/(K*kg)
           b_s_melt = 12.05,  // m2*s/kg
           a_s_melt = 2.31e3, // K/(kg/kg)
-          c_r_frz = 3.75e-2,  // (m2*s)/(K*kg)
+          c_r_frz = 3.75e-2,  // m2/(K*kg)
           t_nuc = 267.15,  // in K    -6 °C
           t_d = 248.15,  // in K    -25 °C
           t_hn = 236.15,  // in K    -40 °C
           t_r_frz = 271.15;  // in K    -2 °C
     float dt_snow_dim = 417.,  // dt_snow_dim is the time  in 417 s to pass dr = 400 m, 400 m/417 s = .96 m/s fallout velocity
           dt_rain_dim = 250.;  // dt_rain_dim is the time  in 250 s to pass dr = 400 m, 400 m/250 s = 1.6 m/s fallout velocity
-    double coeff_snow = .01;
     double m_i = m_i_max;  
     float N_i, S_nuc, S_c_frz, S_i_dep=0, S_c_au, S_i_au, S_d_au, 
         S_ac, S_rim, S_shed;
@@ -858,53 +819,6 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
             }
         }
     }
-    /******************* initial values for rain and snow calculation *********************/
-    for(int k = 0; k < km; k++){
-        for(int j = 0; j < jm; j++){
-            P_rain.x[im-1][j][k] = 0.;
-            P_snow.x[im-1][j][k] = 0.;
-            S_r.x[im-1][j][k] = 0.;
-            S_s.x[im-1][j][k] = 0.;
-            for(int i = im-2; i >= 0; i--){
-                float t_u = t.x[i][j][k] * t_0;
-                if((is_land(h, i, j, k)) && (is_land(h, i+1, j, k))){
-                    S_r.x[i][j][k] = 0.;
-                    S_s.x[i][j][k] = 0.;
-                }else{
-                    if(t_u >= t_0){
-                        if(cloud.x[i][j][k] > 0.)
-                            S_c_au = c_c_au * cloud.x[i][j][k];// cloud water to rain, cloud droplet collection in kg/(kg*s)
-                        S_i_au = 0.;
-                    }else{ // temperature < 0 
-                        S_c_au = 0.;
-                        if(ice.x[i][j][k] > 0.)
-                            S_i_au = c_i_au * ice.x[i][j][k];  // cloud ice to snow, cloud ice crystal aggregation
-                    }
-                    S_r.x[i][j][k] = S_c_au;  // in kg/(kg * s)
-                    S_s.x[i][j][k] = S_i_au;
-                }
-                if(P_rain.x[i+1][j][k] < 0.)  P_rain.x[i+1][j][k] = 0.;
-                if(P_snow.x[i+1][j][k] < 0.)  P_snow.x[i+1][j][k] = 0.;
-
-                float r_dry = 100. * p_stat.x[i][j][k]/(R_Air * t_u);  // density of dry air in kg/m³
-//                float r_humid = r_dry 
-//                   /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
-//                    - cloud.x[i][j][k] - ice.x[i][j][k]);                
-                float r_humid = r_dry * (1.- c.x[i][j][k])/(1. + R_WaterVapour/R_Air * c.x[i][j][k]);
-                double step = get_layer_height(i+1) - get_layer_height(i);
-                float t_Celsius = t_u - t_0;
-                P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
-                    + coeff_Precipitation * r_humid * S_r.x[i+1][j][k] 
-                    * step;  // in kg/(m2 * s) == mm/s
-                if(t_Celsius < 0.)  P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
-                    + coeff_Precipitation * r_humid * coeff_snow
-                    * S_s.x[i+1][j][k] * step; 
-                if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
-                if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
-            }
-        }
-    }
-    /******************* main part for rain and snow calculation *********************/
     if(true){
         for(int iter_prec = 1; iter_prec < 2; iter_prec++){  // no iterations made
             for(int k = 0; k < km; k++){
@@ -918,10 +832,8 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         float t_Celsius = t_u - t_0;
                         float height = get_layer_height(i);
                         float r_dry = 100. * p_stat.x[i][j][k]/(R_Air * t_u);  // density of dry air in kg/m³
-//                        float r_humid = r_dry 
-//                           /(1. + (R_WaterVapour/R_Air - 1.) * c.x[i][j][k] 
-//                            - cloud.x[i][j][k] - ice.x[i][j][k]);                
-                        float r_humid = r_dry * (1.- c.x[i][j][k])/(1. + R_WaterVapour/R_Air * c.x[i][j][k]);
+                        float r_humid = r_dry/(1. + (R_WaterVapour/R_Air - 1.) 
+                            * c.x[i][j][k] - cloud.x[i][j][k] - ice.x[i][j][k]);
                         float E_Rain = hp * exp_func(t_u, 17.2694, 35.86);  // saturation water vapour pressure for the water phase at t > 0°C in hPa
                         float E_Ice = hp * exp_func(t_u, 21.8746, 7.66);  // saturation water vapour pressure for the ice phase in hPa
                         float q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain);  // water vapour amount at saturation with water formation in kg/kg
@@ -1019,11 +931,6 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         if(t_u > t_0){ // temperature above zero
                             if(ice.x[i][j][k] > 0.)
                                 S_i_melt = ice.x[i][j][k]/dt_snow_dim; // cloud ice particles melting to cloud water, < XV >
-/*
-                            float p_SL = .01 * (r_air * R_Air * t.x[0][j][k] * t_0); // given in hPa
-                            float p_t_in = pow(((t_0 - gam * height * 1.e-2) 
-                               /t_0), exp_pressure) * p_SL;  // given in hPa
-*/
                             float p_t_in = p_stat.x[i][j][k];
                             float E_Rain_t_in = hp * exp_func(t_0, 17.2694, 35.86);
                                 // saturation water vapour pressure for the water phase at t = 0°C in hPa
@@ -1066,7 +973,7 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                             - S_r_cri - S_r_frz + S_s_melt;
                         S_s.x[i][j][k] = S_i_au + S_d_au + S_agg + S_rim 
                             + S_s_dep + S_i_cri + S_r_cri + S_r_frz - S_s_melt;
-                        if((is_land(h, i, j, k)) && (is_land(h, i+1, j, k))){
+                        if((is_land(h,i,j,k)) && (is_land(h,i+1,j,k))){
                             S_c_c.x[i][j][k] = 0.;
                             S_v.x[i][j][k] = 0.;
                             S_c.x[i][j][k] = 0.;
@@ -1077,16 +984,60 @@ void cAtmosphereModel::Two_Category_Ice_Scheme(){
                         // rain and snow integration
                         if(P_rain.x[i+1][j][k] < 0.)  P_rain.x[i+1][j][k] = 0.;
                         if(P_snow.x[i+1][j][k] < 0.)  P_snow.x[i+1][j][k] = 0.;
-                        double step = get_layer_height(i+1) - get_layer_height(i);
+//                        double step = (log(rad.z[i+1] + 1.) 
+//                            - log(rad.z[i] + 1.)) * L_atm/(double)(im-1);
+//                        double zeta = 3.715;
+//                        double step = (log((rad.z[i+1] - 1.) * L_atm/(double)(im-1) + 1.)
+//                            - log((rad.z[i] - 1.) * L_atm/(double)(im-1) + 1.))/zeta;
+//                        double step = get_layer_height(i+1) - get_layer_height(i);
+                        double step = 1.;
                         P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
-                             + coeff_Precipitation * r_humid 
-                             * S_r.x[i+1][j][k] * step;  // in kg/(m2 * s) == mm/s 
+                            + r_humid * S_r.x[i][j][k] * step;  // in kg/(m2 * s) == mm/s 
                         if(t_Celsius < 0.)  P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
-                             + coeff_Precipitation * r_humid * coeff_snow 
-                             * S_s.x[i+1][j][k] * step; 
+                            + r_humid * S_s.x[i][j][k] * step;  // in kg/(m2 * s) == mm/s 
                         else  P_snow.x[i][j][k] = 0.;
                         if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
                         if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
+
+/*
+    cout.precision(4);
+    cout.setf(ios::fixed);
+    if((j == 90) && (k == 180)) cout 
+        << "  i = " << i 
+        << "  Sev = " << S_ev * 1e3 
+        << "  Sidep = " << S_i_dep * 1e3 
+        << "  Ssdep = " << S_s_dep * 1e3 
+        << "  Snuc = " << S_nuc * 1e3 
+        << "  Scau = " << S_c_au * 1e3 
+        << "  Sagg = " << S_agg * 1e3 
+        << "  Scfrz = " << S_c_frz * 1e3 
+        << "  Simelt = " << S_i_melt * 1e3 
+        << "  Srim = " << S_rim * 1e3 
+        << "  Sshed = " << S_shed * 1e3 
+        << "  Siau = " << S_i_au * 1e3
+        << "  Sdau = " << S_d_au * 1e3
+        << "  Sac = " << S_ac * 1e3 << endl;
+*/
+
+    cout.precision(6);
+    cout.setf(ios::fixed);
+    if((j == 90) && (k == 180)) cout 
+        << "  i = " << i 
+//        << "  r_d = " << r_dry 
+//        << "  r_h = " << r_humid 
+        << "  step = " << step 
+        << "  S_c_c = " << S_c_c.x[i][j][k] * 1e3 
+        << "  S_v = " << S_v.x[i][j][k] * 1e3 
+        << "  S_c = " << S_c.x[i][j][k] * 1e3 
+        << "  S_i = " << S_i.x[i][j][k] * 1e3 
+        << "  S_r = " << S_r.x[i][j][k] * 1e3 
+        << "  S_s = " << S_s.x[i][j][k] * 1e3 
+        << "  P_rain = " << P_rain.x[i][j][k] 
+        << "  P_snow = " << P_snow.x[i][j][k] 
+        << "  c = " << c.x[i][j][k] * 1e3
+        << "  cloud = " << cloud.x[i][j][k] * 1e3
+        << "  ice = " << ice.x[i][j][k] * 1e3 << endl;
+
                     }  // end i RainSnow
                 }  // end j
             }  // end k
@@ -1104,11 +1055,12 @@ void cAtmosphereModel::Value_Limitation_Atm(){
             if(Precipitation.y[j][k] >= 25.)  Precipitation.y[j][k] = 25.;
             if(Precipitation.y[j][k] <= 0)  Precipitation.y[j][k] = 0.;
             for(int i = 0; i < im; i++){
-
                 if(u.x[i][j][k] >= .106)  u.x[i][j][k] = .106;
                 if(u.x[i][j][k] <= - .106)  u.x[i][j][k] = - .106;
-                if(v.x[i][j][k] >= 1.125)  v.x[i][j][k] = 1.125;
-                if(v.x[i][j][k] <= - 1.125)  v.x[i][j][k] = - 1.125;
+//                if(v.x[i][j][k] >= 1.125)  v.x[i][j][k] = 1.125;
+//                if(v.x[i][j][k] <= - 1.125)  v.x[i][j][k] = - 1.125;
+                if(v.x[i][j][k] >= 0.5)  v.x[i][j][k] = 0.5;
+                if(v.x[i][j][k] <= - 0.5)  v.x[i][j][k] = - 0.5;
                 if(w.x[i][j][k] >= 3.5)  w.x[i][j][k] = 3.5;
                 if(w.x[i][j][k] <= - 1.469)  w.x[i][j][k] = - 1.469;
                 if(t.x[i][j][k] >= 1.165)  t.x[i][j][k] = 1.165;  // == 45 °C
@@ -1272,6 +1224,8 @@ void cAtmosphereModel::WaterVapourEvaporation(){
         for(int j = 0; j < jm; j++){
             for(int i = 0; i < im; i++){
                 if(c.x[i][j][k] < 0.)  c.x[i][j][k] = 0.;
+                if(cloud.x[i][j][k] < 0.)  cloud.x[i][j][k] = 0.;
+                if(ice.x[i][j][k] < 0.)  ice.x[i][j][k] = 0.;
                 if(P_rain.x[i][j][k] < 0.)  P_rain.x[i][j][k] = 0.;
                 if(P_snow.x[i][j][k] < 0.)  P_snow.x[i][j][k] = 0.;
             }
@@ -1288,8 +1242,8 @@ void cAtmosphereModel::WaterVapourEvaporation(){
                 float e = 100. * c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in Pa
                 float a = e/(R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
                 double step = get_layer_height(i+1) - get_layer_height(i);
-                precipitable_water.y[j][k] +=  a * step;
-                 // mass of water in kg/m²
+                precipitable_water.y[j][k] += a * step;
+                // mass of water in kg/m²
                 // precipitable_water mass in 1 kg/m² compares to 1 mm height, with water density kg/ (m² * mm)
             }
         }
@@ -1425,10 +1379,11 @@ void cAtmosphereModel::Pressure_Limitation_Atm(){
             for(int i = 0; i < im; i++){
                 if(p_dyn.x[i][j][k] >= .25)  p_dyn.x[i][j][k] = .25;
                 if(p_dyn.x[i][j][k] <= - .25)  p_dyn.x[i][j][k] = - .25;
-
+/*
                 if(is_land(h, i, j, k)){
                     p_dyn.x[i][j][k] = 0.;
                 }
+*/
                 p_dynn.x[i][j][k] = p_dyn.x[i][j][k];
             }
         }

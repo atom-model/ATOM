@@ -181,7 +181,8 @@ private:
         float h = L_atm/(im-1);
         for(int i=0; i<im; i++){
             m_layer_heights.push_back((exp(zeta * (rad.z[ i ] - 1.)) - 1) * h);
-            //std::cout << m_layer_heights.back() << std::endl;
+//            m_layer_heights.push_back((exp(i) - 1.) * h);
+//            std::cout << m_layer_heights.back() << std::endl;
         } 
         return;
     }
