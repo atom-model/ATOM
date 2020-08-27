@@ -110,6 +110,8 @@ namespace AtomUtils{
 
     void fft_gaussian_filter(Array& data, int sigma);
 
+    void fft_gaussian_filter_3d(Array& data, int sigma);
+
     void mirror_padding(double* data, size_t i_len, size_t p_len);
     
     void fft_gaussian_filter(double* _data, double* kernel, size_t len);

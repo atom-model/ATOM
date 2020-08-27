@@ -8,7 +8,7 @@
 #include <Array.h>
 #include <Utils.h>
 
-#define FFT_DEBUG
+//#define FFT_DEBUG
 
 //Some of the code below was copied from
 //https://rosettacode.org/wiki/Fast_Fourier_transform#C.2B.2B
@@ -256,6 +256,91 @@ void AtomUtils::fft_gaussian_filter(double* _data, double* kernel, size_t len){
         }
     }
     return; 
+}
+
+//do the fft in 3 directions
+void AtomUtils::fft_gaussian_filter_3d(Array& data, int sigma)
+{
+    using namespace std;
+    int jm=data.jm, km=data.km, im=data.im;
+
+    //filter k direction
+    int len_k = next_power_of_two(km); //data size must be power of 2
+    //init kernel
+    double* kernel_k = new double[len_k];
+    init_gaussian_kernel(kernel_k, sigma, len_k);
+
+    double* src_k = new double[len_k]();
+    for(int i=0; i<im; i++){
+        for(int j=0; j<jm; j++){
+            //take the data out    
+            for(int k=0; k<km; k++){
+                src_k[k] = data.x[i][j][k]; 
+            }
+            //padding and filter
+            mirror_padding(src_k, km, len_k);
+            fft_gaussian_filter(src_k, kernel_k, len_k);
+            //put the filtered data back
+            for(int k=0; k<km; k++){
+                data.x[i][j][k] = src_k[k]; 
+            }
+        }
+    }
+    delete[] kernel_k;
+    delete[] src_k;
+
+
+    //filter i direction
+    int len_i = next_power_of_two(im); //data size must be power of 2
+    //init kernel
+    double* kernel_i = new double[len_i];
+    init_gaussian_kernel(kernel_i, sigma, len_i);
+
+    double* src_i = new double[len_i]();
+    for(int k=0; k<km; k++){
+        for(int j=0; j<jm; j++){
+            //take the data out    
+            for(int i=0; i<im; i++){
+                src_i[i] = data.x[i][j][k];
+            }
+            //padding and filter
+            mirror_padding(src_i, im, len_i);
+            fft_gaussian_filter(src_i, kernel_i, len_i);
+            //put the filtered data back
+            for(int i=0; i<im; i++){
+                data.x[i][j][k] = src_i[i];
+            }
+        }
+    }
+    delete[] kernel_i;
+    delete[] src_i;
+
+
+    //filter j direction
+    int len_j = next_power_of_two(jm); //data size must be power of 2
+    //init kernel
+    double* kernel_j = new double[len_j];
+    init_gaussian_kernel(kernel_j, sigma, len_j);
+
+    double* src_j = new double[len_j]();
+    for(int i=0; i<im; i++){
+        for(int k=0; k<km; k++){
+            //take the data out    
+            for(int j=0; j<jm; j++){
+                src_j[j] = data.x[i][j][k];
+            }
+            //padding and filter
+            mirror_padding(src_j, jm, len_j);
+            fft_gaussian_filter(src_j, kernel_j, len_j);
+            //put the filtered data back
+            for(int j=0; j<jm; j++){
+                data.x[i][j][k] = src_j[j];
+            }
+        }
+    }
+    delete[] kernel_j;
+    delete[] src_j;
+
 }
 
 #ifdef FFT_DEBUG
