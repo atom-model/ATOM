@@ -110,6 +110,10 @@ namespace AtomUtils{
 
     void fft_gaussian_filter(Array& data, int sigma);
 
+    void mirror_padding(double* data, size_t i_len, size_t p_len);
+    
+    void fft_gaussian_filter(double* _data, double* kernel, size_t len);
+    
     template<class T>
     void set_values(T* a, T value, int len){
         for(int i = 0 ; i < len; i++){

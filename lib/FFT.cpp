@@ -8,7 +8,7 @@
 #include <Array.h>
 #include <Utils.h>
 
-//#define FFT_DEBUG
+#define FFT_DEBUG
 
 //Some of the code below was copied from
 //https://rosettacode.org/wiki/Fast_Fourier_transform#C.2B.2B
@@ -206,11 +206,64 @@ void AtomUtils::fft_gaussian_filter(Array& in_data, int sigma){
     return;
 }
 
+//mirror padding the data
+//i_len: the length of the input data
+//p_len: the length after the padding
+//data:  array of size p_len, the first i_len are input data, this function will pad it to p_len
+void AtomUtils::mirror_padding(double* data, size_t i_len, size_t p_len)
+{
+    if (p_len <= i_len) return;
+
+    for(int j=i_len; j<p_len; j++)
+    {
+        if(j<i_len+(p_len-i_len)/2)//the first half
+            data[j] = data[(i_len-1)-(j-i_len)]; //use the data from the end
+        else//second half
+            data[j] = data[(p_len-1)-j];//use the data from the beginning
+    }
+}
+
+//data and kernel must be the same size len
+//result will replace the input data
+void AtomUtils::fft_gaussian_filter(double* _data, double* kernel, size_t len){
+    CArray k_data(len), data(len);
+    for(int i =0; i<len; i++){
+        k_data[i] = Complex(kernel[i]);
+        data[i] = Complex(_data[i]);
+    }
+
+    //fft gaussian kernel data
+    fft_ex(k_data);
+    //fft input data
+    fft_ex(data);
+
+    //apply the gaussian filter in frequency domain
+    for(int j =0; j<len; j++)
+    {
+        data[j] = Complex(data[j].real()*k_data[j].real(), data[j].imag()*k_data[j].real());
+    }
+
+    // inverse fft
+    ifft(data);
+
+    for(int j =0; j<len; j++)
+    {
+        //the result data need shift
+        if(j>=len/2){
+            _data[j-len/2] = data[j].real();
+        }else{
+            _data[j+len/2] = data[j].real();
+        }
+    }
+    return; 
+}
+
 #ifdef FFT_DEBUG
  
 int main()
 {
     using namespace std;
+    using namespace AtomUtils;
     int m=361, n=181;
 
     int nn = next_power_of_two(n);
@@ -307,7 +360,7 @@ int main()
                 std::cout << data[i].real() << ",";
         }
     }
-
+    std::cout << std::endl;
     std::ofstream os("output.bin", std::ios::binary | std::ios::out);
     for(int j=0; j<m*n; j++){
         os.write(reinterpret_cast<char*>(&dst[j]), sizeof(double)) ;
@@ -316,6 +369,32 @@ int main()
 
     delete[] src;
     delete[] dst;
+
+    //test fft 1-d array
+    int len_1 = next_power_of_two(100);
+    double* kernel_1 = new double[len_1];
+    
+    init_gaussian_kernel(kernel_1, 5, len_1);
+    
+    double* src_1 = new double[len_1](); 
+    for(int i=0; i<10; i++)
+        std::fill_n(src_1+10*i, 10, i);
+
+    std::cout << "original data: " << std::endl;
+    for(int i=0; i<len_1; i++)
+        std::cout << src_1[i] << ", ";
+    std::cout << std::endl;
+
+    mirror_padding(src_1, 100, len_1);
+    fft_gaussian_filter(src_1, kernel_1, len_1);
+
+    std::cout << "filtered data: " << std::endl;
+    for(int i=0; i<len_1; i++)
+        std::cout << src_1[i] << ", ";
+    std::cout << std::endl;
+
+    delete[] kernel_1;
+    delete[] src_1;
 
     return 0;
 }
