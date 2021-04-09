@@ -6,8 +6,7 @@
 
 #include <sstream>
 
-class PythonStream : public std::stringbuf
-{
+class PythonStream : public std::stringbuf{
 public:
     static void OverrideCout();
     static bool is_enable();

@@ -189,13 +189,13 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 //    goto Printout;
 //    IC_vwt_WestEastCoast();
 //    IC_t_WestEastCoast();
+//    fft_gaussian_filter_3d(t,1);
 //    goto Printout;
     PressureDensity();
     init_water_vapour();
 //    goto Printout;
     SaturationAdjustment();
 //    goto Printout;
-    fft_gaussian_filter_3d(t,1);
     fft_gaussian_filter_3d(c,1);
     fft_gaussian_filter_3d(cloud,1);
     fft_gaussian_filter_3d(ice,1);
@@ -294,22 +294,20 @@ void cAtmosphereModel::run_3D_loop(){
                 endl << " Ma = " << (int)*get_current_time() << "     n = " << iter_cnt << "    velocity_iter_max = " << velocity_iter_max << 
                 "     velocity_iter = " << velocity_iter << "    pressure_iter_max = " << pressure_iter_max << 
                 "    pressure_iter = " << pressure_iter << endl;
+            if(velocity_iter % 2 == 0){
+                SaturationAdjustment();
+//                RadiationMultiLayer(); 
+//                PressureDensity();
+//                WaterVapourEvaporation();
+                TwoCategoryIceScheme(); 
+                MoistConvection();
+//                USStand_DewPoint_HumidRel();
+            }
+            solveRungeKutta_3D_Atmosphere();
             BC_radius();
             BC_theta();
             BC_phi();
             BC_SolidGround();
-/*
-            if(velocity_iter % 2 == 0){
-                SaturationAdjustment();
-                RadiationMultiLayer(); 
-//                PressureDensity();
-//                WaterVapourEvaporation();
-//                TwoCategoryIceScheme(); 
-//                MoistConvection();
-//                USStand_DewPoint_HumidRel();
-            }
-*/
-            solveRungeKutta_3D_Atmosphere();
             ValueLimitationAtm();
             store_intermediate_data_3D(1.);
             LatentHeat(); 
@@ -855,21 +853,12 @@ void cAtmosphereModel::init_water_vapour(){
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
-/*
             for(int i = i_mount; i >= 0; i--){
                 if((is_land(h, i, j, k))&&(i <= i_mount)){
                     c.x[i][j][k] = c.x[i_mount][j][k];
                     cloud.x[i][j][k] = cloud.x[i_mount][j][k];
                     ice.x[i][j][k] = ice.x[i_mount][j][k];
-//                    t.x[i][j][k] = t.x[i_mount][j][k];
                 }
-            }
-*/
-            if(is_land(h, 0, j, k)){
-                c.x[0][j][k] = c.x[i_mount][j][k];
-                cloud.x[0][j][k] = cloud.x[i_mount][j][k];
-                ice.x[0][j][k] = ice.x[i_mount][j][k];
-                t.x[0][j][k] = t.x[i_mount][j][k];
             }
         }
     }
@@ -1079,7 +1068,7 @@ void cAtmosphereModel::init_temperature(){
             }
         }
     }
-/*
+
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
@@ -1090,7 +1079,7 @@ void cAtmosphereModel::init_temperature(){
             }
         }
     }
-*/
+
 }
 /*
 *

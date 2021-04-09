@@ -24,43 +24,34 @@ using namespace AtomUtils;
 #define MAXK 361
 
 Array::Array(int idim, int jdim, int kdim, double val):
-    x(NULL) 
-{
-    initArray(idim, jdim, kdim, val);
+    x(NULL){
+        initArray(idim, jdim, kdim, val);
 }
-
-Array::~Array ( )
-{
-    for ( int i = 0; i < im; i++ )
-    {
-        for ( int j = 0; j < jm; j++ )
-        {
-            delete [  ] x[ i ][ j ];
+/*
+*
+*/
+Array::~Array(){
+    for(int i = 0; i < im; i++){
+        for(int j = 0; j < jm; j++){
+            delete[] x[ i ][ j ];
         }
     }
-
-    for ( int i = 0; i < im; i++ )
-    {
-        delete [  ] x[ i ];
+    for(int i = 0; i < im; i++){
+        delete[] x[ i ];
     }
-
-    delete [  ] x;
+    delete[] x;
 }
-
-
-void Array::initArray ( int im, int jm, int km, double aa )
-{
+/*
+*
+*/
+void Array::initArray(int im, int jm, int km, double aa){
     if(x){
         assert(im == this->im);
         assert(jm == this->jm);
         assert(km == this->km);
-
-        for ( int i = 0; i < im; i++ )
-        {
-            for ( int j = 0; j < jm; j++ )
-            {
-                for ( int k = 0; k < km; k++ )
-                {
+        for(int i = 0; i < im; i++){
+            for(int j = 0; j < jm; j++){
+                for(int k = 0; k < km; k++){
                     x[ i ][ j ][ k ] = aa;
                 }
             }
@@ -69,59 +60,42 @@ void Array::initArray ( int im, int jm, int km, double aa )
         assert(im <= MAXI);
         assert(jm <= MAXJ);
         assert(km <= MAXK);
-
         this->im = im;
         this->jm = jm;
         this->km = km;
-
         x = new double**[im];
-
-        for ( int i = 0; i < im; i++ )
-        {
+        for(int i = 0; i < im; i++){
             x[ i ] = new double*[jm];
-
-            for ( int j = 0; j < jm; j++ )
-            {
+            for(int j = 0; j < jm; j++){
                 x[ i ][ j ] = new double[km];
-                for ( int k = 0; k < km; k++ )
-                {
+                for(int k = 0; k < km; k++){
                     x[ i ][ j ][ k ] = aa;
                 }
             }
         }    
     }
 }
-
-
-void Array::printArray ( int im, int jm, int km )
-{
+/*
+*
+*/
+void Array::printArray(int im, int jm, int km){
     assert(im == this->im);
     assert(jm == this->jm);
     assert(km == this->km);
-
-    cout.precision ( 3 );
-    cout.setf ( ios::fixed );
-
-//      for ( int i = 0; i < im; i++ )
-      for ( int i = 0; i <= 0; i++ )
-    {
-//        cout << "i = " << i << "   " << "im = " << im << "   " << "( transfer test of x in 'print_Array()' )" << endl;
-//        cout << endl;
-//        cout << "  phi = k-direction ======>  theta = j-direction downwards :::::::::: r-level = " << i << endl;
+    cout.precision(3);
+    cout.setf(ios::fixed);
+//    for(int i = im-1; i < im; i++){
+//    for(int i = im-4; i <= im-4; i++){
+    for(int i = im-20; i <= im-20; i++){
         cout << endl;
-
-        for ( int j = 0; j < jm; j+=4 )
-//    for ( int i = 0; i < im ; i++ )
-//        for ( int j = 0; j < im; j++ )
-        {
-            for ( int k = 0; k < km; k+=20 )
-//            for ( int k = 0; k < km; k++ )
-            {
-                cout.width ( 4 );
-                cout.fill( ' ' );
-
-//                 cout << x[ i ][ j ][ k ] << " (" << &x[ i ][ j ][ k ] << ")" << " ";
-                cout << x[ i ][ j ][ k ] << " ";
+        cout << "  phi = k-direction in  " << km-1 << "  longitudinal steps " << endl
+             << "  theta = j-direction in  " << jm-1 << "  latitudinal steps " << endl
+             << "  r = i-direction at level  " << i << endl << endl;
+        for(int j = 0; j < jm; j+=4){
+            for(int k = 0; k < km; k+=20){
+                cout.width(4);
+                cout.fill(' ');
+                cout << x[i][j][k] << " ";
             }
             cout << endl;
         }
@@ -129,7 +103,9 @@ void Array::printArray ( int im, int jm, int km )
     }
     cout << endl;
 }
-
+/*
+*
+*/
 void Array::inspect(const std::string& prefix) const{
     std::vector<double> mins(im, 0), maxes(im, 0), means(im, 0), s_means(im, 0);
     for(int i=0; i<im; i++){
