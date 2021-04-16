@@ -29,76 +29,77 @@ void cAtmosphereModel::init_velocities(){
     init_u(u,150);
     init_u(u,180);
 
-    //initialise v, tropopause, surface
+//initialise v, tropopause, surface
     //equator
     init_v_or_w(v, 90, 0, 0); // lat:0
-    
-    //polar cell
+
+//polar cells
     //northern polar cell
-    init_v_or_w(v, 0, 0, 0);  //lat: 90
-//    init_v_or_w(v, 15, -1, 0.5); //lat: 75
-    init_v_or_w(v, 15, -.1, 0.05); //lat: 75
-
+    init_v_or_w(v, 0, 0.5, 0.5);  //lat: 90
+//    init_v_or_w(v, 15, -0.2, 0.2); //lat: 75
+    init_v_or_w(v, 15, 0.5, 0.6); //lat: 75
     //southern polar cell
-    init_v_or_w(v, 180, 0, 0); //lat: -90
-//    init_v_or_w(v, 165, -1, 0.5); //lat: -75
-    init_v_or_w(v, 165, -.1, 0.05); //lat: -75
+    init_v_or_w(v, 180, 0.5, 0.5); //lat: -90
+//    init_v_or_w(v, 165, -0.2, 0.2); //lat: -75
+    init_v_or_w(v, 165, 0.5, 0.6); //lat: -75
 
-    //Ferrel cell
+//Ferrel cells
     //northern Ferrel cell
-//    init_v_or_w(v, 30, 1, 0.5); //lat: 60
-    init_v_or_w(v, 30, .2, 0.1); //lat: 60
-    init_v_or_w(v, 45, 1, -0.1); //lat: 45   
-
+    init_v_or_w(v, 30, -0.2, 0.0); //lat: 60
+//    init_v_or_w(v, 30, -0.5, 0.0); //lat: 60
+    init_v_or_w(v, 45, 1.0, -1.5); //lat: 45   
     //southern Ferrel cell
-//    init_v_or_w(v, 150, 1, 0.5); //lat: -60
-    init_v_or_w(v, 150, .2, 0.1); //lat: -60
-    init_v_or_w(v, 135, 1, -0.1); //lat: -45   
+    init_v_or_w(v, 150, -0.2, 0.0); //lat: -60
+//    init_v_or_w(v, 150, -0.5, 0.0); //lat: -60
+    init_v_or_w(v, 135, 1.0, -1.5); //lat: -45   
 
-    // Hadley cell
+// Hadley cells
     //northern Hadley cell
-    init_v_or_w(v, 60, -1, 0.25); //lat: 30
-    init_v_or_w(v, 75, -1, 1); //lat: 15   
-
+    init_v_or_w(v, 60, 0.0, 0.5); //lat: 30
+//    init_v_or_w(v, 60, 0.0, -0.5); //lat: 30
+    init_v_or_w(v, 75, -1.0, 2.5); //lat: 15   
     //southern Hadley cell
-    init_v_or_w(v, 120, -1, 0.25); //lat: -30
-    init_v_or_w(v, 105, -1, 1); //lat: -15 
+    init_v_or_w(v, 120, 0.0, 0.5); //lat: -30
+//    init_v_or_w(v, 120, 0.0, -0.5); //lat: -30
+    init_v_or_w(v, 105, -1.0, 2.5); //lat: -15 
 
-    //initialise w, tropopause, surface
+//initialise w, tropopause, surface
     //equator
-    init_v_or_w(w, 90, -7.5, -1); //lat: 0
-//    init_v_or_w(w, 90, -7.5, -.5); //lat: 0
+    init_v_or_w(w, 90, 5.0, -8.0); //lat: 0
     
-    //polar cell
+//polar cells
     //northern polar cell
-    init_v_or_w(w, 0, 0, -0.01); //lat: 90
-
+    init_v_or_w(w, 0, -0.1, -1.0); //lat: 90
     //southern polar cell
-    init_v_or_w(w, 180, 0, -0.01); //lat: -90
+    init_v_or_w(w, 180, -0.1, -1.0); //lat: -90
 
-    //Ferrel cell
+//Ferrel cells
     //northern Ferrel cell
-    init_v_or_w(w, 30, 10, -0.2); //lat: 60
-
+    init_v_or_w(w, 30, 10.0, 3.0); //lat: 60
     //southern Ferrel cell
-    init_v_or_w(w, 150, 10, -0.2); //lat: -60
+    init_v_or_w(w, 150, 10.0, 3.0); //lat: -60
  
-    // Hadley cell
+// Hadley cells
     //northern Hadley cell
-    init_v_or_w(w, 60, 30, 1); //lat: 30
-
+    init_v_or_w(w, 60, 27.5, 1.0); //lat: 30
     //southern Hadley cell
-    init_v_or_w(w, 120, 30, 1); //lat: -30
+    init_v_or_w(w, 120, 27.5, 1.0); //lat: -30
+
+    //northern Hadley cell max velocity at 45
+    init_v_or_w(w, 45, 50.0, 12.5); //lat: 45
+    //southern Hadley cell max velocity at 135
+    init_v_or_w(w, 135, 50.0, 12.5); //lat: 135
 
     // forming diagonals 
     //northen hemisphere
     form_diagonals(u, 0, 30);
     form_diagonals(w, 0, 30);
+    form_diagonals(w, 30, 45);
     form_diagonals(v, 0, 15);
     form_diagonals(v, 15, 30);
 
     form_diagonals(u, 30, 60);
-    form_diagonals(w, 30, 60);
+    form_diagonals(w, 45, 60);
     form_diagonals(v, 30, 45);
     form_diagonals(v, 45, 60);
 
@@ -110,11 +111,12 @@ void cAtmosphereModel::init_velocities(){
     //southen hemisphere
     form_diagonals(u, 90, 120);
     form_diagonals(w, 90, 120);
+    form_diagonals(w, 120, 135);
     form_diagonals(v, 90, 105);
     form_diagonals(v, 105, 120);
 
     form_diagonals(u, 120, 150);
-    form_diagonals(w, 120, 150);
+    form_diagonals(w, 135, 150);
     form_diagonals(v, 120, 135);
     form_diagonals(v, 135, 150);
 
@@ -152,9 +154,9 @@ void cAtmosphereModel::init_velocities(){
                 if (is_land (h, i, j, k))     
                     u.x[i][j][k] = v.x[i][j][k] = w.x[i][j][k] = 0.;
                 else{
-                    u.x[i][j][k] = u.x[i][j][k] / u_0;
-                    v.x[i][j][k] = v.x[i][j][k] / u_0;
-                    w.x[i][j][k] = w.x[i][j][k] / u_0;
+                    u.x[i][j][k] = u.x[i][j][k]/u_0;
+                    v.x[i][j][k] = v.x[i][j][k]/u_0;
+                    w.x[i][j][k] = w.x[i][j][k]/u_0;
                 }
             }
         }
@@ -178,7 +180,6 @@ void cAtmosphereModel::smooth_transition(Array &u, Array &v, Array &w, int lat){
         }
     }
 }
-
 /*
 *
 */
@@ -192,27 +193,24 @@ void cAtmosphereModel::form_diagonals(Array &a, int start, int end){
         }
     }
 }
-
 /*
 *
 */
 void  cAtmosphereModel::init_u(Array &u, int j){
-    float ua_00 = 1,
-//          ua_30 = 1,
-          ua_30 = .8,
-//          ua_60 = 0.5,
-          ua_60 = 0.2,
-//          ua_90 = 0.5;
-          //ua_90 = 0.2;
-          ua_90 = 0.05;
+    float ua_00 = 0.02894,  // omega = vertical pressure velocity: u = - omega/(density*g) in m/s, omega in mb/d
+          ua_30 = 0.02315,  // u = - 1.1574e⁻³ * omega
+          ua_60 = 0.01736,  // Understanding the Effect of Convective Momentum Transport on Climate Simulations: The Role of Convective Heating
+//          ua_90 = 0.011574;  // authors: Xiaoliang Song, Xiaoliang Wu, Guang Zhang and Raymond W. Arritt, Journal of Climate vol 21 pp. 5034, Oct. 2008 and ResearchGate
+          ua_90 = 0.005;  // authors: Xiaoliang Song, Xiaoliang Wu, Guang Zhang and Raymond W. Arritt, Journal of Climate vol 21 pp. 5034, Oct. 2008 and ResearchGate
     int tropopause_layer = get_tropopause_layer(j);
     float tropopause_height = get_layer_height(tropopause_layer);
     for(int k = 0; k < km; k++){
         for(int i = 0; i < tropopause_layer; i++){
-            float layer_height = get_layer_height(i), half_tropopause_height = tropopause_height/2.;
+            float layer_height = get_layer_height(i), 
+                half_tropopause_height = tropopause_height/3.;
             float ratio;
             if(layer_height < half_tropopause_height){    
-                ratio = layer_height / half_tropopause_height; 
+                ratio = layer_height/(half_tropopause_height/3.);
                 switch(j){
                     case 90:  u.x[i][90][k] = ua_00 * ratio; break;
                     case 60:  u.x[i][60][k] = - ua_30 * ratio; break;
@@ -223,7 +221,7 @@ void  cAtmosphereModel::init_u(Array &u, int j){
                     case 180: u.x[i][180][k] = - ua_90 * ratio; break;
                 }
             }else{
-                ratio = (tropopause_height-layer_height) / half_tropopause_height;
+                ratio = (tropopause_height-layer_height)/half_tropopause_height;
                 switch(j){
                     case 90:  u.x[i][90][k] = ua_00 * ratio; break;
                     case 60:  u.x[i][60][k] = -ua_30 * ratio; break;
@@ -237,7 +235,6 @@ void  cAtmosphereModel::init_u(Array &u, int j){
         }
     }
 }
-
 /*
 *
 */
@@ -260,7 +257,6 @@ void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int j, double coeff_trop, dou
     }
     init_v_or_w_above_tropopause(v_or_w, j, coeff_trop);
 }
-
 /*
 *
 */

@@ -68,12 +68,59 @@ void cHydrosphereModel::solveRungeKutta_3D_Hydrosphere(){
                 v.x[i][j][k] = vn.x[i][j][k] + dt * (kv1 + 2. * kv2 + 2. * kv3 + kv4)/6.;
                 w.x[i][j][k] = wn.x[i][j][k] + dt * (kw1 + 2. * kw2 + 2. * kw3 + kw4)/6.;
                 c.x[i][j][k] = cn.x[i][j][k] + dt * (kc1 + 2. * kc2 + 2. * kc3 + kc4)/6.;
+/*
+    cout.precision(8);
+    if((j == 6) &&(k == 180)) cout << "north" << endl
+        << "   i = " << i << "   j = " << j << "   k = " << k  << endl
+        << "   dt = " << dt
+        << "   kt1 = " << kt1
+        << "   kt2 = " << kt2
+        << "   kt3 = " << kt3
+        << "   kt4 = " << kt4 << endl
+        << "   dt = " << dt
+        << "   ku1 = " << ku1
+        << "   ku2 = " << ku2
+        << "   ku3 = " << ku3
+        << "   ku4 = " << ku4 << endl
+        << "   dt = " << dt
+        << "   kv1 = " << kv1
+        << "   kv2 = " << kv2
+        << "   kv3 = " << kv3
+        << "   kv4 = " << kv4 << endl
+        << "   dt = " << dt
+        << "   kw1 = " << kw1
+        << "   kw2 = " << kw2
+        << "   kw3 = " << kw3
+        << "   kw4 = " << kw4 << endl
+        << "   dt = " << dt
+        << "   kc1 = " << kc1
+        << "   kc2 = " << kc2
+        << "   kc3 = " << kc3
+        << "   kc4 = " << kc4 << endl
+        << "   t = " << t.x[i][j][k]
+        << "   u = " << u.x[i][j][k]
+        << "   v = " << v.x[i][j][k]
+        << "   w = " << w.x[i][j][k]
+        << "   c = " << c.x[i][j][k] << endl
+        << "   tn = " << tn.x[i][j][k]
+        << "   un = " << un.x[i][j][k]
+        << "   vn = " << vn.x[i][j][k]
+        << "   wn = " << wn.x[i][j][k]
+        << "   cn = " << cn.x[i][j][k]
+        << "   rhs_t = " << rhs_t.x[i][j][k]
+        << "   rhs_u = " << rhs_u.x[i][j][k]
+        << "   rhs_v = " << rhs_v.x[i][j][k]
+        << "   rhs_w = " << rhs_w.x[i][j][k]
+        << "   rhs_c = " << rhs_t.x[i][j][k]
+        << endl;
+*/
             }
         }
     }
 }
-
-
+/*
+*
+*/
 void cHydrosphereModel::solveRungeKutta_2D_Hydrosphere(){
     float kv1, kw1;
     float kv2, kw2;

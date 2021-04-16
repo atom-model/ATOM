@@ -51,9 +51,15 @@ namespace AtomUtils{
         return x*x - 2*x;
     }
 
-    inline double Agnesi(double x, double equator){
-        return pow(equator, 3.) // Versiera di Agnesi
-            / ( pow(equator, 2.) + pow(x, 2.));
+    inline double Humility_critical(double x, double Hu_cr_max, 
+        double Hu_cr_mid){
+        return (Hu_cr_max - Hu_cr_mid) * (x * x - 2.0 * x) 
+            + Hu_cr_max;
+    }
+
+    inline double Agnesi(double a, double x){
+        return pow(a, 3.0) // Versiera di Agnesi
+            /(pow(a, 2.0) + pow(x, 2.0));
     }
 
     inline bool is_east_coast(const Array& h, int j, int k){
@@ -100,7 +106,9 @@ namespace AtomUtils{
         return exp(co_1 * (T_K - 273.15) / (T_K - co_2));                        // temperature in °K
     }
 
-    double C_Dalton (double coeff_Dalton, double u_0, double v, double w);
+    double C_Dalton(int i, int j, int k, double coeff_Dalton, double u_0, Array &v, Array &w);
+
+    double Humility_critical(int i);
 
     void read_IC(const string& fn, double** a, int jm, int km);
 

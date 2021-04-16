@@ -89,7 +89,6 @@ namespace ParaViewAtm{
 void cAtmosphereModel::paraview_panorama_vts(string &Name_Bathymetry_File, int n){
     using namespace ParaViewAtm;
     double x, y, z, dx, dy, dz;
-    double coeff_p = 1e-2 * r_air * u_0 * u_0; // in hPa = 0.77056
     string Atmosphere_panorama_vts_File_Name = output_path + "/[" 
         + Name_Bathymetry_File + "]_Atm_panorama_" + std::to_string(n) + ".vts";
     ofstream Atmosphere_panorama_vts_File;
@@ -134,18 +133,32 @@ void cAtmosphereModel::paraview_panorama_vts(string &Name_Bathymetry_File, int n
     }
     Atmosphere_panorama_vts_File <<  "\n"  << endl;
     Atmosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
-    dump_array("Epsilon_3D", epsilon_3D, 1.0, Atmosphere_panorama_vts_File);
-    dump_array("WaterVapour", c, 1000.0, Atmosphere_panorama_vts_File);
-    dump_array("CloudWater", cloud, 1000.0, Atmosphere_panorama_vts_File);
-    dump_array("CloudIce", ice, 1000.0, Atmosphere_panorama_vts_File);
-    dump_array("PrecipitationRain", P_rain, 86400., Atmosphere_panorama_vts_File);
-    dump_array("PrecipitationSnow", P_snow, 86400., Atmosphere_panorama_vts_File);
-    dump_array("PressureDynamic", p_dyn, coeff_p, Atmosphere_panorama_vts_File);
+    dump_array("Epsilon_3D", epsilon, 1.0, Atmosphere_panorama_vts_File);
+    dump_array("WaterVapour", c, 1000., Atmosphere_panorama_vts_File);
+    dump_array("CloudWater", cloud, 1e6, Atmosphere_panorama_vts_File);
+    dump_array("CloudIce", ice, 1e6, Atmosphere_panorama_vts_File);
+    dump_array("PrecipitationRain", P_rain, 8.64e4, Atmosphere_panorama_vts_File);
+    dump_array("PrecipitationSnow", P_snow, 8.64e4, Atmosphere_panorama_vts_File);
+//    dump_array("PrecipitationConv", P_conv, 8.64e4, Atmosphere_panorama_vts_File);
+    dump_array("PressureDynamic", p_dyn, r_air * u_0 * u_0 * 1e-2, Atmosphere_panorama_vts_File);
     dump_array("PressureStatic", p_stat, 1.0, Atmosphere_panorama_vts_File);
     dump_array("BuoyancyForce", BuoyancyForce, 1.0, Atmosphere_panorama_vts_File);
+    dump_array("CoriolisForce", CoriolisForce, 7.292e5, Atmosphere_panorama_vts_File);
+    dump_array("PressureGradientForce", PressureGradientForce, 1., Atmosphere_panorama_vts_File);
     dump_array("CO2-Concentration", co2, co2_0, Atmosphere_panorama_vts_File);
     dump_array("Q_Latent", Q_Latent, 1.0, Atmosphere_panorama_vts_File);
+    dump_array("Q_Radiation", radiation, 1.0, Atmosphere_panorama_vts_File);
     dump_array("Q_Sensible", Q_Sensible, 1.0, Atmosphere_panorama_vts_File);
+//    dump_array("CloudBase", i_Base, 1, Atmosphere_panorama_vts_File);
+//    dump_array("CloudLFS", i_LFS, 1, Atmosphere_panorama_vts_File);
+    dump_array("q_v_u", q_v_u, 1000., Atmosphere_panorama_vts_File);
+    dump_array("q_v_d", q_v_d, 1000., Atmosphere_panorama_vts_File);
+    dump_array("q_c_u", q_c_u, 1000., Atmosphere_panorama_vts_File);
+    dump_array("g_p", g_p, 1000., Atmosphere_panorama_vts_File);
+    dump_array("c_u", c_u, 1000., Atmosphere_panorama_vts_File);
+    dump_array("PrecipitationConv", P_conv, 8.64e4, Atmosphere_panorama_vts_File);
+    dump_array("MassStreamfunction", stream, 1., Atmosphere_panorama_vts_File);
+
     Atmosphere_panorama_vts_File <<  "   </PointData>\n" << endl;
     Atmosphere_panorama_vts_File <<  "   <Points>\n"  << endl;
     Atmosphere_panorama_vts_File <<  "    <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">\n"  << endl;
@@ -188,7 +201,6 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
     int Ma, int i_radial, int n){
     using namespace ParaViewAtm;
     double x, y, z, dx, dy;
-    double coeff_p = 1e-2 * r_air * u_0 * u_0; // in hPa = 0.77056
     string Atmosphere_radial_File_Name = output_path + "/[" 
         + Name_Bathymetry_File + "]_Atm_radial_" + std::to_string(i_radial) 
         + "_" + std::to_string(n) + ".vtk";
@@ -232,26 +244,17 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
             }
         }
     }
-    float t_u, height, E_Rain, q_Rain;
-    for(int k = 0; k < km; k++){
-        for(int j = 0; j < jm; j++){
-            for(int i = 0; i < im; i++){
-                t_u = t.x[i][j][k] * t_0; // in K
-                E_Rain = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // water vapour amount at saturation with water formation in kg/kg
-                if(c.x[i][j][k] >= q_Rain){
-                    dew_point_temperature.y[j][k] = t_u - t_0;
-                    height = get_layer_height(i);
-                    condensation_level.y[j][k] = height;
-                    break;
-                }
-            }
-        }
-    }
     Atmosphere_vtk_radial_File <<  "POINT_DATA " << jm * km << endl;
     dump_radial("u-Component", u, u_0, i_radial, Atmosphere_vtk_radial_File);
     dump_radial("v-Component", v, u_0, i_radial, Atmosphere_vtk_radial_File);
     dump_radial("w-Component", w, u_0, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("u_u", u_u, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("v_u", v_u, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("w_u", w_u, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("u_d", u_d, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("v_d", v_d, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("w_d", w_d, 1., i_radial, Atmosphere_vtk_radial_File);
+
     Atmosphere_vtk_radial_File <<  "SCALARS Temperature float " << 1 << endl;
     Atmosphere_vtk_radial_File <<  "LOOKUP_TABLE default"  <<endl;
     for(int j = 0; j < jm; j++){
@@ -261,36 +264,52 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
         }
     }
     dump_radial_2d("Temperature_NASA", temp_NASA, 1., Atmosphere_vtk_radial_File);
-    dump_radial_2d("DewPointTemp", dew_point_temperature, 1., Atmosphere_vtk_radial_File);
-    dump_radial_2d("CondensLevel", condensation_level, 1.e-3, Atmosphere_vtk_radial_File);
     dump_radial("Topography", h, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Topography_m", Topography, 1., Atmosphere_vtk_radial_File);
     dump_radial("WaterVapour", c, 1000., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial("CloudWater", cloud, 1000., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial("CloudIce", ice, 1000., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial("PrecipitationRain", P_rain, 86400., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial("PrecipitationSnow", P_snow, 86400., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial_2d("Precipitation", Precipitation, 1., Atmosphere_vtk_radial_File);
+    dump_radial("CloudWater", cloud, 1e3, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("CloudIce", ice, 1e3, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("PrecipitationRain", P_rain, 8.64e4, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("PrecipitationSnow", P_snow, 8.64e4, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("PrecipitationConv", P_conv, 8.64e4, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial_2d("Precipitation", Precipitation, 8.64e4, Atmosphere_vtk_radial_File);
     dump_radial_2d("PrecipitableWater", precipitable_water, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Precipitation_NASA", precipitation_NASA, 1., Atmosphere_vtk_radial_File);
-    dump_radial("PressureDynamic", p_dyn, coeff_p, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("PressureDynamic", p_dyn, r_air * u_0 * u_0 * 1e-2, i_radial, Atmosphere_vtk_radial_File);
     dump_radial("PressureStatic", p_stat, 1., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial("Epsilon_3D", epsilon_3D, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("r_dry", r_dry, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("r_humid", r_humid, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("Epsilon", epsilon, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("albedo_2D", albedo, 1., Atmosphere_vtk_radial_File);
-    dump_radial_2d("epsilon_2D", epsilon, 1., Atmosphere_vtk_radial_File);
+    dump_radial_2d("epsilon_2D", epsilon_2D, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Q_radiation_2D", Q_radiation, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Q_bottom_2D", Q_bottom, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Q_latent_2D", Q_latent, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Q_sensible_2D", Q_sensible, 1., Atmosphere_vtk_radial_File);
     dump_radial("BuoyancyForce", BuoyancyForce, 1., i_radial, Atmosphere_vtk_radial_File);
-    dump_radial("Q_Radiation", radiation_3D, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("CoriolisForce", CoriolisForce, 7.292e5, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("PressureGradientForce", PressureGradientForce, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("Q_Radiation", radiation, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("Q_Latent", Q_Latent, 1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial("Q_Sensible", Q_Sensible, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("TempStandard", TempStand, 1., i_radial, Atmosphere_vtk_radial_File);
+//    dump_radial("TempDewPoint", TempDewPoint, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("Humidity_rel", HumidityRel, .1, i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Atmosphere_vtk_radial_File);
     dump_radial_2d("Heat_Evaporation", Q_Evaporation, 1., Atmosphere_vtk_radial_File);
     dump_radial("Evap-Precip", aux_w, -1., i_radial, Atmosphere_vtk_radial_File);
     dump_radial_2d("Vegetation", Vegetation, 1., Atmosphere_vtk_radial_File);
     dump_radial("CO2-Concentration", co2, co2_0, i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("M_updraft", M_u, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("M_downdraft", M_d, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial_2d("CloudBase", i_Base, 1, Atmosphere_vtk_radial_File);
+    dump_radial_2d("CloudLFS", i_LFS, 1, Atmosphere_vtk_radial_File);
+    dump_radial("c_u", c_u, 1000., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("e_d", e_d, 1000., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("q_v_d", q_v_d, 1000., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("MassStreamfunction", stream, 1., i_radial, Atmosphere_vtk_radial_File);
+    dump_radial("u_Streamfunction", u_stream, 1., i_radial, Atmosphere_vtk_radial_File);
+
     Atmosphere_vtk_radial_File <<  "VECTORS v-w-Cell float " << endl;
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
@@ -298,6 +317,23 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
                 << " " << w.x[i_radial][j][k] << " " << z << endl;
         }
     }
+
+    Atmosphere_vtk_radial_File <<  "VECTORS v-w-Updraft float " << endl;
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            Atmosphere_vtk_radial_File << v_u.x[i_radial][j][k] 
+                << " " << w_u.x[i_radial][j][k] << " " << z << endl;
+        }
+    }
+
+    Atmosphere_vtk_radial_File <<  "VECTORS v-w-Downdraft float " << endl;
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            Atmosphere_vtk_radial_File << v_d.x[i_radial][j][k] 
+                << " " << w_d.x[i_radial][j][k] << " " << z << endl;
+        }
+    }
+
     Atmosphere_vtk_radial_File.close();
     cout << "   File:  " << "[" 
         + Name_Bathymetry_File + "]_Atm_radial_" + std::to_string(i_radial) 
@@ -311,7 +347,6 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
     int k_zonal, int n){
     using namespace ParaViewAtm;
     double x, y, z, dx, dy;
-    double coeff_p = 1e-2 * r_air * u_0 * u_0; // in hPa = 0.77056
     string Atmosphere_zonal_File_Name = output_path + "/[" + Name_Bathymetry_File 
         + "]_Atm_zonal_" + std::to_string(k_zonal) + "_" + std::to_string(n) + ".vtk";
     ofstream Atmosphere_vtk_zonal_File;
@@ -346,6 +381,7 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
     dump_zonal("u-Component", u, u_0, k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("v-Component", v, u_0, k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("w-Component", w, u_0, k_zonal, Atmosphere_vtk_zonal_File);
+
     Atmosphere_vtk_zonal_File <<  "SCALARS Temperature float " << 1 << endl;
     Atmosphere_vtk_zonal_File <<  "LOOKUP_TABLE default"  <<endl;
     for(int i = 0; i < im; i++){
@@ -354,107 +390,121 @@ void cAtmosphereModel::paraview_vtk_zonal(string &Name_Bathymetry_File,
                 - t_0 << endl;
         }
     }
-    for(int i = 0; i < im; i++){
+    for(int i = 0; i <= im-1; i++){
         for(int j = 0; j < jm; j++){
             aux_w.x[i][j][k_zonal] = c.x[i][j][k_zonal] 
-                + cloud.x[i][j][k_zonal] + ice.x[i][j][k_zonal];
+                + cloud.x[i][j][k_zonal] + ice.x[i][j][k_zonal]
+                - MC_q.x[i][j][k_zonal];
             float t_u = t.x[i][j][k_zonal] * t_0;
-            float T = t_u;
-            float E_Rain = hp * exp_func(T, 17.2694, 35.86);
-            float E_Ice = hp * exp_func(T, 21.8746, 7.66);
-            float q_Rain = ep * E_Rain/(p_stat.x[i][j][k_zonal] - E_Rain);
-            float q_Ice = ep * E_Ice/(p_stat.x[i][j][k_zonal] - E_Ice);
+            float E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
+            float E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
+            float q_Rain = ep * E_Rain/(p_dyn.x[i][j][k_zonal] - E_Rain);
+            float q_Ice = ep * E_Ice/(p_dyn.x[i][j][k_zonal] - E_Ice);
             aux_u.x[i][j][k_zonal] = c.x[i][j][k_zonal] - q_Rain;
-            if(T <= t_0){
+            if(t_u <= t_0){
                 aux_v.x[i][j][k_zonal] = c.x[i][j][k_zonal] - q_Ice;
             }
             else  aux_v.x[i][j][k_zonal] = 0.;
             double height = get_layer_height(i);
-            BuoyancyForce.x[i][j][k_zonal] = height;
-        }
-    }
-    temp_tropopause = std::vector<double>(jm, t_tropopause_pole);
-    int j_max = jm-1;
-    int j_half = j_max/2;
-    for(int j=j_half; j>=0; j--){
-        double x = sqrt(pow(t_tropopause,3)/t_tropopause_pole 
-            - pow(t_tropopause,2)) * (double)(j_half-j) 
-           /(double)j_half;
-        temp_tropopause[j] = Agnesi(x, t_tropopause); 
-    }
-    for(int j=j_max; j>j_half; j--){
-        temp_tropopause[j] = temp_tropopause[j_max-j];
-    }
-    AtomUtils::smooth_tropopause(jm, temp_tropopause);
-    for(int j = 0; j < jm; j++){
-        for(int k = 0; k < km; k++){
-            int i_mount = i_topography[j][k];
-            int i_trop = get_tropopause_layer(j);
-            M_u.x[0][j][k] = t.x[0][j][k];
-//            for(int i = i_mount; i < im; i++){
-            for(int i = 0; i < im; i++){
-                if(i < i_trop){
-                    if(i>i_mount){
-                        // linear temperature decay up to tropopause
-                        // compares to the US Standard Atmosphere 
-                        // with variable tropopause location
-                        M_u.x[i][j][k] = (temp_tropopause[j] - M_u.x[0][j][k]) * 
-                            (get_layer_height(i)/get_layer_height(i_trop)) + 
-                            M_u.x[0][j][k]; 
-                        // US Standard Atmosphere
-//                        M_u.x[i][j][k] = M_u.x[0][j][k] - 6.5 * 
-//                            (double)(get_layer_height(i)/1000.)/t_0;
-                    }else{
-                        M_u.x[i][j][k] = (temp_tropopause[j] - M_u.x[0][j][k]) * 
-                            (get_layer_height(i)/get_layer_height(i_trop)) + 
-                            M_u.x[0][j][k]; 
-
-                    }
-                }else{ // above tropopause
-                    M_u.x[i][j][k] = temp_tropopause[j]; //inside mountain
-                }
-            }
-        }
-    }
-    for(int k = 0; k < km; k++){
-        for(int j = 0; j < jm; j++){
-            for(int i = 0; i < im; i++){
-                M_u.x[i][j][k] = M_u.x[i][j][k] * t_0 - t_0;
-            }
+            aux_t.x[i][j][k_zonal] = height;
         }
     }
     dump_zonal("Topography", h, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("WaterVapour", c, 1000., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("Temp_Standard", M_u, 1., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("CloudWater", cloud, 1000., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("CloudIce", ice, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("TempStandard", TempStand, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("TempDewPoint", TempDewPoint, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("Humidity_rel", HumidityRel, .1, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("CloudWater", cloud, 1e3, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("CloudIce", ice, 1e3, k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Saturation_Water", aux_u, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Saturation_Ice", aux_v, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Total_Water", aux_w, 1000., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("PrecipitationRain", P_rain, 86400., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("PrecipitationSnow", P_snow, 86400., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("PrecipitationRain", P_rain, 8.64e4, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("PrecipitationSnow", P_snow, 8.64e4, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("PrecipitationConv", P_conv, 8.64e4, k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Source_WaterVapour", S_v, 1000., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Source_CloudWater", S_c, 1000., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Source_CloudIce", S_i, 1000., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Source_Rain", S_r, 1000., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Source_Snow", S_s, 1000., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Source_CloudWater_CondEvap", S_c_c, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("r_dry", r_dry, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("r_humid", r_humid, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("M_u", M_u, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("M_d", M_d, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("MC_t", MC_t, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("MC_q", MC_q, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("MC_v", MC_v, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("MC_w", MC_w, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("g_p", g_p, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("e_d", e_d, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("e_p", e_p, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("e_l", e_l, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("c_u", c_u, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("q_c_u", q_c_u, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("q_v_u", q_v_u, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("q_v_d", q_v_d, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("s", s, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("s_u", s_u, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("s_d", s_d, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("u_u", u_u, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("u_d", u_d, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("v_u", v_u, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("v_d", v_d, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("w_u", w_u, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("w_d", w_d, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("E_u", E_u, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("D_u", D_u, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("E_d", E_d, 1000., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("D_d", D_d, 1000., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("BuoyancyForce", BuoyancyForce, 1., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("Q_Radiation", radiation_3D, 1., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("Epsilon_3D", epsilon_3D, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("CoriolisForce", CoriolisForce, 7.292e5, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("PressureGradientForce", PressureGradientForce, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("Q_Radiation", radiation, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("Epsilon", epsilon, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Q_Latent", Q_Latent, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("Q_Sensible", Q_Sensible, 1., k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("PressureDynamic", p_dyn, coeff_p, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("PressureDynamic", p_dyn, r_air * u_0 * u_0 * 1e-2, k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("PressureStatic", p_stat, 1., k_zonal, Atmosphere_vtk_zonal_File);
     dump_zonal("CO2-Concentration", co2, co2_0, k_zonal, Atmosphere_vtk_zonal_File);
-    dump_zonal("height", BuoyancyForce, .001, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("height", aux_t, .001, k_zonal, Atmosphere_vtk_zonal_File);
+//    dump_zonal("CloudBase", i_Base, 1, k_zonal, Atmosphere_vtk_zonal_File);
+//    dump_zonal("CloudLFS", i_LFS, 1, k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("MassStreamfunction", stream, 1., k_zonal, Atmosphere_vtk_zonal_File);
+    dump_zonal("u_Streamfunction", u_stream, 1., k_zonal, Atmosphere_vtk_zonal_File);
+
     Atmosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
-            Atmosphere_vtk_zonal_File << u.x[i][j][k_zonal] << " " 
-                << v.x[i][j][k_zonal] << " " << z << endl;
+            Atmosphere_vtk_zonal_File << u.x[i][j][k_zonal]/u_0 << " " 
+                << v.x[i][j][k_zonal]/u_0 << " " << z << endl;
         }
     }
+
+    Atmosphere_vtk_zonal_File <<  "VECTORS u-v-Stream float" << endl;
+    for(int i = 0; i < im; i++){
+        for(int j = 0; j < jm; j++){
+            Atmosphere_vtk_zonal_File << u_stream.x[i][j][k_zonal]/u_0 << " " 
+                << v.x[i][j][k_zonal]/u_0 << " " << z << endl;
+        }
+    }
+
+    Atmosphere_vtk_zonal_File <<  "VECTORS u-v-Updraft float " << endl;
+    for(int i = 0; i < im; i++){
+        for(int j = 0; j < jm; j++){
+            Atmosphere_vtk_zonal_File << u_u.x[i][j][k_zonal]/u_0 
+                << " " << v_u.x[i][j][k_zonal]/u_0 << " " << z << endl;
+        }
+    }
+
+    Atmosphere_vtk_zonal_File <<  "VECTORS u_v-Downdraft float " << endl;
+    for(int i = 0; i < im; i++){
+        for(int j = 0; j < jm; j++){
+            Atmosphere_vtk_zonal_File << u_d.x[i][j][k_zonal]/u_0 
+                << " " << v_d.x[i][j][k_zonal]/u_0 << " " << z << endl;
+        }
+    }
+
     Atmosphere_vtk_zonal_File.close();
     cout << "   File:  " << "[" + Name_Bathymetry_File 
         + "]_Atm_zonal_" + std::to_string(k_zonal) + "_" + std::to_string(n) + ".vtk" 
@@ -467,7 +517,6 @@ void cAtmosphereModel::paraview_vtk_longal(string &Name_Bathymetry_File,
     int j_longal, int n){
     using namespace ParaViewAtm;
     double x, y, z, dx, dz;
-    double coeff_p = 1e-2 * r_air * u_0 * u_0; // in hPa = 0.77056
     string Atmosphere_longal_File_Name = output_path + "/[" + Name_Bathymetry_File 
         + "]_Atm_longal_" + std::to_string(j_longal) + "_" + std::to_string(n) + ".vtk";
     ofstream Atmosphere_vtk_longal_File;
@@ -514,26 +563,68 @@ void cAtmosphereModel::paraview_vtk_longal(string &Name_Bathymetry_File,
     for(int i = 0; i < im; i++){
         for(int k = 0; k < km; k++){
             aux_w.x[i][j_longal][k] = c.x[i][j_longal][k] 
-                + cloud.x[i][j_longal][k] + ice.x[i][j_longal][k];
+                + cloud.x[i][j_longal][k] + ice.x[i][j_longal][k]
+                - MC_q.x[i][j_longal][k];
             double height = get_layer_height(i);
-            aux_v.x[i][j_longal][k] = height;
+            aux_t.x[i][j_longal][k] = height;
         }
     }
     dump_longal("Topography", h, 1., j_longal, Atmosphere_vtk_longal_File);
     dump_longal("WaterVapour", c, 1000., j_longal, Atmosphere_vtk_longal_File);
-    dump_longal("CloudWater", cloud, 1000., j_longal, Atmosphere_vtk_longal_File);
-    dump_longal("CloudIce", ice, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("CloudWater", cloud, 1e3, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("CloudIce", ice, 1e3, j_longal, Atmosphere_vtk_longal_File);
     dump_longal("Total_Water", aux_w, 1000., j_longal, Atmosphere_vtk_longal_File);
-    dump_longal("PrecipitationRain", P_rain, 86400., j_longal, Atmosphere_vtk_longal_File);
-    dump_longal("PrecipitationSnow", P_snow, 86400., j_longal, Atmosphere_vtk_longal_File);
-    dump_longal("PressureDynamic", p_dyn, coeff_p, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("PrecipitationRain", P_rain, 8.64e4, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("PrecipitationSnow", P_snow, 8.64e4, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("PrecipitationConv", P_conv, 8.64e4, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("PressureDynamic", p_dyn, r_air * u_0 * u_0 * 1e-2, j_longal, Atmosphere_vtk_longal_File);
     dump_longal("PressureStatic", p_stat, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("r_dry", r_dry, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("r_humid", r_humid, 1., j_longal, Atmosphere_vtk_longal_File);
     dump_longal("BuoyancyForce", BuoyancyForce, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("CoriolisForce", CoriolisForce, 7.292e5, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("PressureGradientForce", PressureGradientForce, 1., j_longal, Atmosphere_vtk_longal_File);
     dump_longal("Q_Latent", Q_Latent, 1., j_longal, Atmosphere_vtk_longal_File);
     dump_longal("Q_Sensible", Q_Sensible, 1., j_longal, Atmosphere_vtk_longal_File);
-    dump_longal("Epsilon_3D", epsilon_3D, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("Q_Radiation", radiation, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("TempStandard", TempStand, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("TempDewPoint", TempDewPoint, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("Humidity_rel", HumidityRel, .1, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("Epsilon", epsilon, 1., j_longal, Atmosphere_vtk_longal_File);
     dump_longal("CO2-Concentration", co2, co2_0, j_longal, Atmosphere_vtk_longal_File);
-    dump_longal("height", aux_v, .001, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("height", aux_t, .001, j_longal, Atmosphere_vtk_longal_File);
+//    dump_longal("CloudBase", i_Base, 1, j_longal, Atmosphere_vtk_longal_File);
+//    dump_longal("CloudLFS", i_LFS, 1, j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("M_u", M_u, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("M_d", M_d, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("MC_t", MC_t, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("MC_q", MC_q, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("MC_v", MC_v, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("MC_w", MC_w, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("g_p", g_p, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("e_d", e_d, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("e_p", e_p, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("e_l", e_l, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("c_u", c_u, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("q_c_u", q_c_u, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("q_v_u", q_v_u, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("q_v_d", q_v_d, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("s", s, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("s_u", s_u, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("s_d", s_d, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("u_u", u_u, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("u_d", u_d, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("v_u", v_u, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("v_d", v_d, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("w_u", w_u, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("w_d", w_d, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("E_u", E_u, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("D_u", D_u, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("E_d", E_d, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("D_d", D_d, 1000., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("MassStreamfunction", stream, 1., j_longal, Atmosphere_vtk_longal_File);
+    dump_longal("u_Streamfunction", u_stream, 1., j_longal, Atmosphere_vtk_longal_File);
+
     Atmosphere_vtk_longal_File <<  "VECTORS u-w-Cell float" << endl;
     for(int i = 0; i < im; i++){
         for(int k = 0; k < km; k++){
@@ -541,6 +632,23 @@ void cAtmosphereModel::paraview_vtk_longal(string &Name_Bathymetry_File,
                 << " " << y << " " << w.x[i][j_longal][k] << endl;
         }
     }
+
+    Atmosphere_vtk_longal_File <<  "VECTORS u-w-Updraft float " << endl;
+    for(int i = 0; i < im; i++){
+        for(int k = 0; k < km; k++){
+            Atmosphere_vtk_longal_File << u_u.x[i][j_longal][k] 
+                << " " << w_u.x[i][j_longal][k] << " " << z << endl;
+        }
+    }
+
+    Atmosphere_vtk_longal_File <<  "VECTORS u-w-Downdraft float " << endl;
+    for(int i = 0; i < im; i++){
+        for(int k = 0; k < km; k++){
+            Atmosphere_vtk_longal_File << u_d.x[i][j_longal][k] 
+                << " " << w_d.x[i][j_longal][k] << " " << z << endl;
+        }
+    }
+
     Atmosphere_vtk_longal_File.close();
     cout << "   File:  " << "[" + Name_Bathymetry_File 
         + "]_Atm_longal_" + std::to_string(j_longal) + "_" + std::to_string(n) + ".vtk" 

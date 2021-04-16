@@ -214,7 +214,7 @@ void AtomUtils::mirror_padding(double* data, size_t i_len, size_t p_len)
 {
     if (p_len <= i_len) return;
 
-    for(int j=i_len; j<p_len; j++)
+    for(size_t j=i_len; j<p_len; j++)
     {
         if(j<i_len+(p_len-i_len)/2)//the first half
             data[j] = data[(i_len-1)-(j-i_len)]; //use the data from the end
@@ -227,7 +227,7 @@ void AtomUtils::mirror_padding(double* data, size_t i_len, size_t p_len)
 //result will replace the input data
 void AtomUtils::fft_gaussian_filter(double* _data, double* kernel, size_t len){
     CArray k_data(len), data(len);
-    for(int i =0; i<len; i++){
+    for(size_t i =0; i<len; i++){
         k_data[i] = Complex(kernel[i]);
         data[i] = Complex(_data[i]);
     }
@@ -238,7 +238,7 @@ void AtomUtils::fft_gaussian_filter(double* _data, double* kernel, size_t len){
     fft_ex(data);
 
     //apply the gaussian filter in frequency domain
-    for(int j =0; j<len; j++)
+    for(size_t j =0; j<len; j++)
     {
         data[j] = Complex(data[j].real()*k_data[j].real(), data[j].imag()*k_data[j].real());
     }
@@ -246,7 +246,7 @@ void AtomUtils::fft_gaussian_filter(double* _data, double* kernel, size_t len){
     // inverse fft
     ifft(data);
 
-    for(int j =0; j<len; j++)
+    for(size_t j =0; j<len; j++)
     {
         //the result data need shift
         if(j>=len/2){

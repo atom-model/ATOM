@@ -27,7 +27,9 @@ Array::Array(int idim, int jdim, int kdim, double val):
     x(NULL){
         initArray(idim, jdim, kdim, val);
 }
-
+/*
+*
+*/
 Array::~Array(){
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
@@ -39,7 +41,9 @@ Array::~Array(){
     }
     delete[] x;
 }
-
+/*
+*
+*/
 void Array::initArray(int im, int jm, int km, double aa){
     if(x){
         assert(im == this->im);
@@ -71,46 +75,37 @@ void Array::initArray(int im, int jm, int km, double aa){
         }    
     }
 }
-
-
+/*
+*
+*/
 void Array::printArray(int im, int jm, int km){
     assert(im == this->im);
     assert(jm == this->jm);
     assert(km == this->km);
     cout.precision(3);
     cout.setf(ios::fixed);
-
-      for(int i = im-1; i < im; i++){
-//      for(int i = 0; i <= 0; i++){
-//        cout << "  phi = k-direction ======>  theta = j-direction downwards :::::::::: r-level = " << i << endl;
+//    for(int i = im-1; i < im; i++){
+//    for(int i = im-4; i <= im-4; i++){
+    for(int i = im-20; i <= im-20; i++){
         cout << endl;
+        cout << "  phi = k-direction in  " << km-1 << "  longitudinal steps " << endl
+             << "  theta = j-direction in  " << jm-1 << "  latitudinal steps " << endl
+             << "  r = i-direction at level  " << i << endl << endl;
         for(int j = 0; j < jm; j+=4){
             for(int k = 0; k < km; k+=20){
                 cout.width(4);
                 cout.fill(' ');
-                cout << x[ i ][ j ][ k ] << " ";
+                cout << x[i][j][k] << " ";
             }
             cout << endl;
         }
         cout << endl;
     }
     cout << endl;
-
-/*
-      for(int i = 0; i < im; i++){
-//        cout << endl;
-        for(int j = 0; j < jm; j+=6){
-                cout.width(4);
-                cout.fill(' ');
-                cout << x[ i ][ j ][ 180 ] << " ";
-//            cout << endl;
-        }
-        cout << endl;
-    }
-    cout << endl;
-*/
 }
-
+/*
+*
+*/
 void Array::inspect(const std::string& prefix) const{
     std::vector<double> mins(im, 0), maxes(im, 0), means(im, 0), s_means(im, 0);
     for(int i=0; i<im; i++){

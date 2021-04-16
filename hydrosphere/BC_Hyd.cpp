@@ -32,9 +32,9 @@ void cHydrosphereModel::BC_radius(){
             p_dyn.x[0][j][k] = c43 * p_dyn.x[1][j][k] - c13 * p_dyn.x[2][j][k];
 
 //            u.x[im-1][j][k] = c43 * u.x[im-2][j][k] - c13 * u.x[im-3][j][k];
-            u.x[im-1][j][k] = 0.;
-            v.x[im-1][j][k] = c43 * v.x[im-2][j][k] - c13 * v.x[im-3][j][k];
-            w.x[im-1][j][k] = c43 * w.x[im-2][j][k] - c13 * w.x[im-3][j][k];
+//            u.x[im-1][j][k] = 0.;
+//            v.x[im-1][j][k] = c43 * v.x[im-2][j][k] - c13 * v.x[im-3][j][k];
+//            w.x[im-1][j][k] = c43 * w.x[im-2][j][k] - c13 * w.x[im-3][j][k];
 //            c.x[im-1][j][k] = c43 * c.x[im-2][j][k] - c13 * c.x[im-3][j][k];
             p_dyn.x[im-1][j][k] = c43 * p_dyn.x[im-2][j][k] - c13 * p_dyn.x[im-3][j][k];
 

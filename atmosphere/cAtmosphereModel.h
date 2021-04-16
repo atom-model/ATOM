@@ -8,20 +8,13 @@
 #include <fstream>
 #include <limits>
 #include <functional>
+
 #include "Array.h"
-#include "Array_2D.h"
 #include "Array_1D.h"
+#include "Array_2D.h"
 #include "tinyxml2.h"
 #include "PythonStream.h"
-/*
-class BC_Atmosphere;
-class RungeKutta_Atmosphere;
-class BC_Bathymetry_Atmosphere;
-class RHS_Atmosphere;
-class Pressure_Atm;
-class Results_MSL_Atm;
-class BC_Thermo;
-*/
+
 using namespace std;
 using namespace tinyxml2;
 
@@ -161,19 +154,36 @@ private:
         return calculate_mean_temperature(t);
     }
 
-    const  int c43 = 4./3., c13 = 1./3.;
+    const int c43 = 4./3., c13 = 1./3.;
+
+    static const int im=41, jm=181, km=361, nm=200;
+
+    double step_diff = 0.0;
 
     std::vector<std::vector<int> > i_topography;
+//    std::vector<std::vector<int> > i_Base;
+//    std::vector<std::vector<int> > i_LFS;
+    std::vector<std::vector<double> > M_u_Base;
+    std::vector<std::vector<double> > M_d_LFS;
+    std::vector<double> step;
     std::vector<double> tropopause_layers; // keep the tropopause layer index
     std::vector<double> temp_tropopause; // lateral temperature distribution along the tropopause
+    std::vector<double> cloud_loc; // lateral cloudwater distribution
+    std::vector<double> cloud_max; // lateral cloud_max distribution
+    std::vector<double> ice_loc; // lateral ice distribution
+    std::vector<double> ice_max; // lateral ice_max distribution
+    std::vector<double> c_land_red;
+    std::vector<double> c_ocean_red;
 
+    void init_steps();
     void init_tropopause_layers();
     void restrain_temperature();
-    void Pressure_Limitation_Atm();
-    void Value_Limitation_Atm();
+    void ValueLimitationAtm();
     void vegetation_distribution();
     void BC_SolidGround(); 
     void init_co2();
+    void init_temperature();
+    void init_dynamic_pressure();
     void init_water_vapour();
     void init_velocities();
     void init_layer_heights(){
@@ -194,26 +204,29 @@ private:
 //    void init_v_or_w_above_tropopause(Array &v_or_w, int lat_1, int lat_2, double coeff);
     void form_diagonals(Array &a, int start, int end);
     void smooth_transition(Array &u, Array &v, Array &w, int lat);
-    void BC_Radiation_multi_layer();
-    void init_temperature();
+    void RadiationMultiLayer();
     void save_data();
     void save_array(const string& fn, const Array& a);
-    void Ice_Water_Saturation_Adjustment();
-    void Two_Category_Ice_Scheme();
-    void BC_PressureStat();
-    void Latent_Heat();
-    void IC_WestEastCoast();   
+    void SaturationAdjustment();
+    void TwoCategoryIceScheme();
+    void PressureDensity();
+    void LatentHeat();
+    void MassStreamfunction();
+    void USStand_DewPoint_HumidRel();
+    void IC_vwt_WestEastCoast();   
+    void IC_t_WestEastCoast();
     void read_NASA_temperature(const string &fn);
     void read_NASA_precipitation(const string&);
     void BC_radius();
     void BC_theta();
     void BC_phi();
+    void BC_pole();
     void computePressure_3D();
     void computePressure_2D();
     void print_welcome_msg();
     void print_final_remarks();
     void WaterVapourEvaporation();
-    void near_wall_values();
+    void MoistConvection();
     void store_intermediate_data_2D(float coeff=1);
     void store_intermediate_data_3D(float coeff=1);
     void adjust_temperature_IC(double** t, int jm, int km);
@@ -223,7 +236,7 @@ private:
     void paraview_vtk_radial(string &Name_Bathymetry_File, int Ma, int i_radial, int n);
     void paraview_vtk_zonal(string &Name_Bathymetry_File, int k_zonal, int n);
     void paraview_vtk_longal(string &Name_Bathymetry_File, int j_longal, int n); 
-    void Atmosphere_v_w_Transfer(string &Name_Bathymetry_File);
+    void Atmosphere_v_w_Transfer(const string &Name_Bathymetry_File);
     void Atmosphere_PlotData(string &Name_Bathymetry_File, int iter_cnt);
     void run_data_atm();
     void searchMinMax_2D(string, string, 
@@ -244,8 +257,6 @@ private:
     std::set<float> m_time_list;
     std::set<float>::const_iterator m_current_time;
 
-    static const int im=41, jm=181, km=361, nm=200;
-
     int iter_cnt, iter_cnt_3d, iter_cnt_2d; // iteration count
 
     string bathymetry_name;
@@ -264,6 +275,7 @@ private:
     Array_1D rad; // radial coordinate direction
     Array_1D the; // lateral coordinate direction
     Array_1D phi; // longitudinal coordinate direction
+    Array_1D aux_grad_v; // auxilliar array
 
     Array_2D Topography; // topography
     Array_2D value_top; // auxiliar topography
@@ -275,7 +287,7 @@ private:
     Array_2D temperature_NASA; // surface temperature from NASA
     Array_2D temp_NASA; // surface temperature from NASA for print function
     Array_2D albedo; // albedo = reflectivity
-    Array_2D epsilon; // epsilon = absorptivity
+    Array_2D epsilon_2D; // epsilon = absorptivity
     Array_2D Q_radiation; // heat from the radiation balance in [W/m2]
     Array_2D Q_Evaporation; // evaporation heat of water by Kuttler
     Array_2D Q_latent; // latent heat from bottom values by the energy transport equation
@@ -288,6 +300,7 @@ private:
     Array_2D dew_point_temperature; // dew point temperature
     Array_2D condensation_level; // local condensation level
     Array_2D c_fix; // local surface water vapour fixed for iterations
+//    Array_2D aux_2D; // local surface water vapour fixed for iterations
     Array h; // bathymetry, depth from sea level
     Array t; // temperature
     Array u; // u-component velocity component in r-direction
@@ -307,7 +320,12 @@ private:
     Array co2n; // CO2 new
     Array p_dyn; // dynamic pressure
     Array p_dynn; // dynamic pressure
+    Array stream; // mass stream function
+    Array u_stream; // u-velocity by mass stream function
     Array p_stat; // static pressure
+    Array TempStand; // US Standard Atmosphere Temperature
+    Array TempDewPoint; // Dew Point Temperature
+    Array HumidityRel; // relative humidity
     Array rhs_t; // auxilliar field RHS temperature
     Array rhs_u; // auxilliar field RHS u-velocity component
     Array rhs_v; // auxilliar field RHS v-velocity component
@@ -319,11 +337,14 @@ private:
     Array aux_u; // auxilliar field u-velocity component
     Array aux_v; // auxilliar field v-velocity component
     Array aux_w; // auxilliar field w-velocity component
+    Array aux_t; // auxilliar field t
     Array Q_Latent; // latent heat
     Array Q_Sensible; // sensible heat
     Array BuoyancyForce; // buoyancy force, Boussinesque approximation
-    Array epsilon_3D; // emissivity/ absorptivity
-    Array radiation_3D; // radiation
+    Array CoriolisForce; // Coriolis force terms
+    Array PressureGradientForce; // Force caused by normal pressure gradient
+    Array epsilon; // emissivity/ absorptivity
+    Array radiation; // radiation
     Array P_rain; // rain precipitation mass rate
     Array P_snow; // snow precipitation mass rate
     Array P_conv; // rain formation by cloud convection
@@ -335,10 +356,35 @@ private:
     Array S_c_c; // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
     Array M_u; // moist convection within the updraft
     Array M_d; // moist convection within the downdraft
-    Array MC_s; // moist convection acting on dry static energy
+    Array MC_t; // moist convection acting on dry static energy
     Array MC_q; // moist convection acting on water vapour development
     Array MC_v; // moist convection acting on v-velocity component
     Array MC_w; // moist convection acting on w-velocity component
+    Array r_dry; // density of dry air
+    Array r_humid; // density of humid air
+    Array g_p; // conversion cloud droplets to raindrops
+    Array c_u; // condensation in the updraft
+    Array e_d; // evaporation of precipitation in the downdraft
+    Array e_l; // evaporation of cloud water in the environment
+    Array e_p; // evaporation of cloud water in the environment
+    Array s; // dry static energy
+    Array s_u; // dry static energy in the updraft
+    Array s_d; // dry static energy in the downdraft
+    Array u_u; // u-velocity component in the updraft
+    Array u_d; // u-velocity component in the downdraft
+    Array v_u; // u-velocity component in the updraft
+    Array v_d; // u-velocity component in the downdraft
+    Array w_u; // u-velocity component in the updraft
+    Array w_d; // u-velocity component in the downdraft
+    Array q_v_u; // water vapour in the updraft
+    Array q_v_d; // water vapour in the downdraft
+    Array q_c_u; // cloud water in the updraft
+    Array E_u; // moist entrainment in the updraft
+    Array D_u; // moist detrainment in the updraft
+    Array E_d; // moist entrainment in the downdraft
+    Array D_d; // moist detrainment in the downdraft
+    Array_2D i_Base; // locations of the cloud base
+    Array_2D i_LFS; // locations of the cloud top
 };
 
 #endif

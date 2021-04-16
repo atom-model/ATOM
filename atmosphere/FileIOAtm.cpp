@@ -15,7 +15,7 @@
 
 using namespace std;
 
-void cAtmosphereModel::Atmosphere_v_w_Transfer(string &Name_Bathymetry_File){
+void cAtmosphereModel::Atmosphere_v_w_Transfer(const string &Name_Bathymetry_File){
     string Name_v_w_Transfer_File = output_path + "/[" + Name_Bathymetry_File + "]_Transfer_Atm.vw";
     ofstream v_w_Transfer_File;
     v_w_Transfer_File.precision(4);
@@ -29,6 +29,9 @@ void cAtmosphereModel::Atmosphere_v_w_Transfer(string &Name_Bathymetry_File){
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
 // velocity components in m/s, p_dyn in hPa, Precipitation and Evaporation_Dalton in mm/d
+//            v_w_Transfer_File << v.x[0][j][k] * u_0 << " " << w.x[0][j][k] * u_0 << " " << 
+//                t.x[0][j][k] << " " << p_dyn.x[0][j][k] << " " << Evaporation_Dalton.y[j][k] << 
+//                " " << Precipitation.y[j][k] << endl;
             v_w_Transfer_File << v.x[0][j][k] * u_0 << " " << w.x[0][j][k] * u_0 << " " << 
                 t.x[0][j][k] << " " << p_dyn.x[0][j][k] << " " << Evaporation_Dalton.y[j][k] << 
                 " " << Precipitation.y[j][k] << endl;

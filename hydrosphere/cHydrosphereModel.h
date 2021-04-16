@@ -78,6 +78,7 @@ private:
     void save_data();
     void run_data_hyd();
     void EkmanSpiral();
+    void IC_t_WestEastCoast();
     void IC_u_WestEastCoast();
     void IC_Equatorial_Currents();
     void IC_CircumPolar_Current();
@@ -92,16 +93,18 @@ private:
     void store_intermediate_data_3D(float coeff=1);
     void print_welcome_msg();
     void print_min_max_hyd();
-    void BC_Evaporation();
     void BC_radius();
     void BC_theta();
     void BC_phi();
     void BC_SolidGround();
-    void BC_SeaGround(const string &bathymetry_file);
+    void init_bathymetry(const string &bathymetry_file);
     void BC_Surface_Salinity_NASA(const string &Name_SurfaceSalinity_File);
     void BC_Surface_Temperature_NASA
        (const string &Name_SurfaceTemperature_File);
-    void BC_Temperature_Salinity();
+    void init_temperature();
+    void init_salinity();
+    void init_dynamic_pressure();
+    void SalinityEvaporation();
     void Pressure_Limitation_Hyd();
     void Value_Limitation_Hyd();
     void land_oceanFraction();
@@ -111,7 +114,7 @@ private:
     void paraview_vtk_radial(const string &Name_Bathymetry_File, int i_radial, int n);
     void paraview_vtk_longal(const string &Name_Bathymetry_File, int j_longal, int n);
     void Hydrosphere_PlotData(const string &bathymetry_name, int iter_cnt);
-    void Atmosphere_TransferFile_read(const string &bathymetry_name);
+    void Atmosphere_v_w_Transfer(const string &bathymetry_name);
     void run_2D_loop();
     void run_3D_loop();
     void searchMinMax_2D(string, string, 
@@ -126,12 +129,22 @@ private:
 
     static cHydrosphereModel* m_model;
 
+    float get_mean_temperature_from_curve(float time) const;
+
+    std::map<float,float> m_temperature_curve;
+
+    bool is_temperature_curve_loaded(){
+        return !m_temperature_curve.empty();
+    }
+
     static const int im=41, jm=181, km=361, nm=200;
-//    const  int c43 = 4./3., c13 = 1./3.;
-//    double coeff_p = 10.*p_0/(r_0_water*u_0*u_0);
+    static const double the0, phi0, r0;
+    const  int c43 = 4./3., c13 = 1./3.;
 
     PythonStream ps;
     std::streambuf *backup;
+
+    std::vector<std::vector<int> > i_bathymetry;
 
     std::set<float> m_time_list;
     std::set<float>::const_iterator m_current_time;
@@ -162,7 +175,10 @@ private:
     Array_2D salinity_evaporation; // additional salinity by evaporation
     Array_2D Evaporation_Dalton; // evaporation by Penman in [mm/d]
     Array_2D Precipitation; // areas of higher precipitation
+    Array_2D temperature_NASA; // surface temperature from NASA
     Array_2D c_fix; // local surface salinity fixed for iterations
+    Array_2D v_wind; // v-component of surface wind
+    Array_2D w_wind; // w-component of surface wind
 
     Array h; // bathymetry, depth from sea level
     Array t; // temperature
@@ -197,6 +213,8 @@ private:
 
     Array r_water; // water density as function of pressure
     Array r_salt_water; // salt water density as function of pressure and temperature
-    Array BuoyancyForce_3D; // 3D buoyancy force
+    Array BuoyancyForce; // 3D buoyancy force
+    Array CoriolisForce; // Coriolis force terms
+    Array PressureGradientForce; // Force caused by normal pressure gradient
 };
 #endif
