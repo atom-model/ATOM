@@ -24,12 +24,12 @@ using namespace std;
 using namespace AtomUtils;
 
 void cAtmosphereModel::RadiationMultiLayer(){
+cout << "      RadiationMultiLayer" << endl;
     // class element for the computation of the radiation and the temperature distribution
     // computation of the local temperature based on short and long wave radiation
     // multi layer radiation model
     temp_tropopause = std::vector<double>(jm, t_tropopause_pole);
     std::vector<double> step(im, 0);
-//    std::vector<double> coord_stretch(im, 0);
     int j_max = jm-1;
     int j_half = j_max/2;
 //    double temp_eff = t_tropopause_pole - t_tropopause_equator;
@@ -37,12 +37,12 @@ void cAtmosphereModel::RadiationMultiLayer(){
         temp_tropopause[j] = t_tropopause_equator;
     }
     for(int j=j_max; j>j_half; j--){
-        temp_tropopause[j] = temp_tropopause[j_max-j];
+//        temp_tropopause[j] = temp_tropopause[j_max-j];
     }
 //    AtomUtils::smooth_tropopause(jm, temp_tropopause);
     std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
     load_map_from_file(pole_temperature_file, pole_temp_map); 
-    double rad_eff = rad_pole - rad_equator;
+//    double rad_eff = rad_pole - rad_equator;
     double albedo_co2_eff = albedo_pole - albedo_equator;
     // effective temperature, albedo and emissivity/absorptivity for the two layer model
     for(int j = 0; j < jm; j++){
@@ -70,15 +70,14 @@ void cAtmosphereModel::RadiationMultiLayer(){
             i_mount = i_topography[j][k];
             // shortwave radiation from the sun absobed at the surface 47%
             // in W/m², assumption of parabolic surface radiation at zero level
-            radiation_surface.y[j][k] = rad_eff * parabola((double)j
-                /(double)j_half) + rad_pole;
+//            radiation_surface.y[j][k] = rad_eff * parabola((double)j
+//                /(double)j_half) + rad_pole;
             t.x[i_trop][j][k] = t_tropopause_equator;
             for(int i = 0; i < i_trop; i++){
                 double t_u = t.x[i][j][k] * t_0;
-                step[i] = get_layer_height(i+1)
-                    - get_layer_height(i);
-//                    step[i] = log((get_layer_height(i+1) + 1.0)
-//                        /(get_layer_height(i) + 1.0));
+//                step[i] = get_layer_height(i+1) - get_layer_height(i);
+                step[i] = log((get_layer_height(i+1) + 1.0)
+                    /(get_layer_height(i) + 1.0));
                 // radial parabolic distribution, start on zero level
                 // dependency given by Häckel, Meteorologie, p. 205 (law by F. Baur and H. Philips, 1934)
                 // epsilon_eff describe the effect in the emissivity computation of other gases like CO2
@@ -89,8 +88,8 @@ void cAtmosphereModel::RadiationMultiLayer(){
                 // applicable models described in K. H. Byun and L.-D. Chen: 
                 // Total emissivity of CO°2 near earth condition, Journal of Mechanical Science and Technology 27 (10)(2013)3183-3189)
                 double P_c = (1e-6 * p_stat.x[i][j][k] 
-                             * co2.x[i][j][k] * co2_0/p_0);  // in atm partial pressure of CO2
-                double u_c = P_c * step[i] * 100.0; // in atm*cm model by Atwater and Ball
+                             * co2.x[i][j][k] * co2_0/p_0);  // in atm, partial pressure of CO2
+                double u_c = P_c * step[i] * 100.0; // in atm*cm, model by Atwater and Ball
 //                u_c = 300.0/0.9869 * P_c * step[i] * 100.0/(t.x[i][j][k] * t_0); 
                         // modell by Yamamoto and Sasamori
                  // influence on the emissivity by carbon dioxcide by the law by Bliss
@@ -120,7 +119,8 @@ void cAtmosphereModel::RadiationMultiLayer(){
 //                epsilon.x[i][j][k] = eps_co2 + 1.24 * pow((e/t_u),1/7); // (Brutsaert, 1975, -40 <=> 45°C), emissivity seems too high
 //                epsilon.x[i][j][k] = eps_co2 + 1.24 * pow((e/t_u),0.143); // (Brutsaert, 1975, -40 <=> 45°C), emissivity seems too high
 //                epsilon.x[i][j][k] = 0.98 * pow((e/t_u), 0.0687); // atmospheric emissivity by Vogel/Bliss, emissivity seems too high
-                radiation.x[i][j][k] = sigma * pow(t_u, 4.0);
+//                radiation.x[i][j][k] = sigma * pow(t_u, 4.0);
+                radiation.x[i][j][k] = (1.0 - epsilon.x[i][j][k]) * sigma * pow(t_u, 4.0);
                 aux_t.x[i][j][k] = t.x[i][j][k];
 /*
                 cout.precision(6);
@@ -158,9 +158,9 @@ void cAtmosphereModel::RadiationMultiLayer(){
             }
             // above tropopause
             for(int i = i_trop; i < im; i++){
-                epsilon.x[i][j][k] = epsilon.x[i][j][k];
-                radiation.x[i][j][k] = sigma * pow(t.x[i][j][k] * t_0, 4.0);
-                aux_t.x[i][j][k] = t.x[i][j][k];
+                epsilon.x[i][j][k] = epsilon.x[i_trop][j][k];
+                radiation.x[i][j][k] = sigma * pow(t.x[i_trop][j][k] * t_0, 4.0);
+                aux_t.x[i][j][k] = t.x[i_trop][j][k];
             }
         }  // end k
     }  // end j
@@ -179,11 +179,14 @@ void cAtmosphereModel::RadiationMultiLayer(){
             std::vector<std::vector<double> > CC(im, std::vector<double>(im, 0.0));
             double CCC = 0.0, DDD = 0.0;
             for(int iter_rad = 1;  iter_rad <= 10; iter_rad++){ // max of iter_rad may be varied
+//            for(int iter_rad = 1;  iter_rad <= 4; iter_rad++){ // max of iter_rad may be varied
 //                t.x[i_trop][j][k] = temp_tropopause[j];
                 t.x[i_trop][j][k] = t_tropopause_equator;
                 radiation.x[i_trop][j][k] = sigma
                     * pow(t.x[i_trop][j][k] * t_0, 4.0); // radiation at the tropopause
-                radiation.x[i_mount][j][k] = sigma
+//                radiation.x[i_mount][j][k] = sigma
+//                    * pow(t.x[i_mount][j][k] * t_0, 4.0); // radiation leaving the surface
+                radiation.x[i_mount][j][k] = epsilon.x[i_mount][j][k] * sigma
                     * pow(t.x[i_mount][j][k] * t_0, 4.0); // radiation leaving the surface
 
 //                AA[i_mount] = radiation_surface.y[j][k]/radiation.x[i_trop][j][k];// non-dimensional surface radiation
@@ -191,18 +194,8 @@ void cAtmosphereModel::RadiationMultiLayer(){
                 CC[i_mount][i_mount] = 0.; // no absorption of radiation on the surface by water vapour
                 for(int i = i_mount+1; i <= i_trop; i++){
                     aux_t.x[i][j][k] = t.x[i][j][k];
-
-
-//                    coord_stretch[i] = 1.0 - (get_layer_height(i+1)
-//                    - get_layer_height(i)/get_layer_height(i+1));
-//                    coord_stretch[i] = log(((double)(i+1) + 1.0)/((double)i + 1.0));
-//                    coord_stretch[i] = log(((double)i + 1.0)/((double)(i-1) + 1.0));
-//                    coord_stretch[i] = 1.0 + log(((double)i + 1.0)/((double)(i-1) + 1.0));
-
-
                     AA[i] = AA[i-1] * (1.0 - epsilon.x[i][j][k]); // transmitted radiation from each layer
                     double rad_tmp = sigma * pow(t.x[i][j][k] * t_0, 4.0) 
-//                    double rad_tmp = coord_stretch[i] * sigma * pow(t.x[i][j][k] * t_0, 4.0) 
                         /radiation.x[i_trop][j][k];
                     CC[i][i]= epsilon.x[i][j][k] * rad_tmp; // absorbed radiation in each layer
                     radiation.x[i][j][k] = 
@@ -218,8 +211,6 @@ void cAtmosphereModel::RadiationMultiLayer(){
                     if(i == i_mount){
                         bb = - radiation.x[i][j][k];
                         cc = radiation.x[i+1][j][k];
-//                        bb = - coord_stretch[i] * radiation.x[i][j][k];
-//                        cc = coord_stretch[i] * radiation.x[i+1][j][k];
                         dd = - AA[i];
                         alfa[i] = cc/bb;
                         beta[i] = dd/bb;
@@ -233,9 +224,6 @@ void cAtmosphereModel::RadiationMultiLayer(){
                         aa = radiation.x[i-1][j][k];
                         bb = - 2.0 * radiation.x[i][j][k];
                         cc = radiation.x[i+1][j][k];
-//                        aa = coord_stretch[i] * radiation.x[i-1][j][k];
-//                        bb = - coord_stretch[i] * 2.0 * radiation.x[i][j][k];
-//                        cc = coord_stretch[i] * radiation.x[i+1][j][k];
                         dd = - AA[i-1] + AA[i] + CCC - DDD;
                         alfa[i] = cc/(bb - aa * alfa[i-1]);
                         beta[i] = (dd - aa * beta[i-1]) 
@@ -252,7 +240,6 @@ void cAtmosphereModel::RadiationMultiLayer(){
                     // Thomas algorithm, recurrence formula
                     radiation.x[i][j][k] = - alfa[i] 
                         * radiation.x[i+1][j][k] + beta[i];
-//                        * coord_stretch[i] * radiation.x[i+1][j][k] + beta[i];
                     t.x[i][j][k] = pow(radiation.x[i][j][k] 
                         /sigma, 0.25)/t_0;
 /*
@@ -305,11 +292,13 @@ void cAtmosphereModel::RadiationMultiLayer(){
         }
     }
 */
+cout << "      RadiationMultiLayer ended" << endl;
 }
 /*
 *
 */
 void cAtmosphereModel::PressureDensity(){
+cout << "      PressureDensity" << endl;
 // static pressure is understood by a zero velocity field
     double t_u = 0.0;
     double R_W_R_A = R_WaterVapour/R_Air;
@@ -382,11 +371,13 @@ void cAtmosphereModel::PressureDensity(){
             }
         }
     }
+cout << "      PressureDensity ended" << endl;
 }
 /*
 *
 */
 void cAtmosphereModel::LatentHeat(){
+cout << "      LatentHeat" << endl;
     float Q_Latent_Ice = 0.; 
     float coeff_Q = cp_l * r_air * t_0; // coefficient for Q_Sensible
     float coeff_lat = 1.e6 * 50.; // diffusion coefficient for water vapour in air (50)
@@ -483,6 +474,7 @@ void cAtmosphereModel::LatentHeat(){
             Q_Sensible.x[i][j][0] = Q_Sensible.x[i][j][km-1] = (b1+ b2)/2.;
         }
     }
+cout << "      LatentHeat ended" << endl;
 }
 /*
 *
@@ -493,6 +485,7 @@ void cAtmosphereModel::LatentHeat(){
 //Ice_Water_SaturationAdjustment, distribution of cloud ice and cloud water 
 //dependent on water vapour amount and temperature
 void cAtmosphereModel::SaturationAdjustment(){ 
+cout << "      SaturationAdjustment" << endl;
 // constant coefficients for the adjustment of cloud water and cloud ice amount vice versa
     int iter_prec_end = 10;
     int iter_prec = 0;
@@ -708,6 +701,7 @@ void cAtmosphereModel::SaturationAdjustment(){
             }
         }
     }
+cout << "      SaturationAdjustment ended" << endl;
     return;
 }
 /*
@@ -716,6 +710,7 @@ void cAtmosphereModel::SaturationAdjustment(){
 // Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
 // resulting the precipitation distribution formed of rain and snow
 void cAtmosphereModel::TwoCategoryIceScheme(){   
+cout << "      TwoCategoryIceScheme" << endl;
     // constant coefficients for the transport of cloud water and cloud ice amount vice versa, 
     // rain and snow in the parameterization procedures
 //    double R_A_R_W = R_Air/R_WaterVapour;
@@ -789,6 +784,7 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
                     dt_rain_dim = step[i]/1.6; 
                     // adjusted rain fall time step by fixed velocities == 1.6 m/s by variable local step size
                     dt_snow_dim = step[i]/0.96; 
+                    // adjusted snow fall time step by fixed velocities == 0.96 m/s by variable local step size
                     // ice and snow average size 
                     if(!(t_u > t_0)){  
                         N_i = N_i_0 * exp(0.2 * (t_0 - t_u));
@@ -975,8 +971,14 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
             }  // end j
         }  // end k
     }  // end if true
+/*
+*
+*/
     fft_gaussian_filter_3d(P_rain,1);
     fft_gaussian_filter_3d(P_snow,1);
+/*
+*
+*/
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
@@ -988,12 +990,14 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
             }
         }
     }
+cout << "      TwoCategoryIceScheme ended" << endl;
     return;
 }
 /*
 *
 */
 void cAtmosphereModel::ValueLimitationAtm(){
+cout << "      ValueLimitationAtm" << endl;
 // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -1014,9 +1018,9 @@ void cAtmosphereModel::ValueLimitationAtm(){
                 if(cloud.x[i][j][k] < 0.0)  cloud.x[i][j][k] = 0.0;
                 if(ice.x[i][j][k] >= 0.01)  ice.x[i][j][k] = 0.01;
                 if(ice.x[i][j][k] < 0.0)  ice.x[i][j][k] = 0.0;
-                if(P_rain.x[i][j][k] >= 10.0)  P_rain.x[i][j][k] = 10.0;
-                if(P_snow.x[i][j][k] >= 1.0)  P_snow.x[i][j][k] = 1.0;
-                if(P_conv.x[i][j][k] >= 10.0)  P_conv.x[i][j][k] = 10.0;
+//                if(P_rain.x[i][j][k] >= 10.0)  P_rain.x[i][j][k] = 10.0;
+//                if(P_snow.x[i][j][k] >= 1.0)  P_snow.x[i][j][k] = 1.0;
+//                if(P_conv.x[i][j][k] >= 10.0)  P_conv.x[i][j][k] = 10.0;
                 if(P_rain.x[i][j][k] < 0.0)  P_rain.x[i][j][k] = 0.0;
                 if(P_snow.x[i][j][k] < 0.0)  P_snow.x[i][j][k] = 0.0;
                 if(P_conv.x[i][j][k] < 0.0)  P_conv.x[i][j][k] = 0.0;
@@ -1025,11 +1029,13 @@ void cAtmosphereModel::ValueLimitationAtm(){
             }
         }
     }
+cout << "      ValueLimitationAtm ended" << endl;
 }
 /*
 *
 */
 void cAtmosphereModel::MoistConvection(){
+cout << "      MoistConvection" << endl;
 // collection of coefficients for phase transformation
     int i_base = 0;
     int ii_base_beg = 1;
@@ -1730,7 +1736,9 @@ void cAtmosphereModel::MoistConvection(){
 // RHS for thermodynamic forcing due to moist convection
             for(int i = 0; i < im-1; i++){
 //                int i_mount = i_topography[j][k];
-                step[i] = get_layer_height(i+1) - get_layer_height(i);  // local atmospheric shell thickness
+//                step[i] = get_layer_height(i+1) - get_layer_height(i);  // local atmospheric shell thickness
+                step[i] = log((get_layer_height(i+1) + 1.0)
+                    /(get_layer_height(i) + 1.0));
                 if((t.x[i][j][k] * t_0) >= t_0) L_latent = lv;
                 else L_latent = ls;
                 MC_t.x[i][j][k] = 
@@ -1905,11 +1913,13 @@ void cAtmosphereModel::MoistConvection(){
             }
         }
     }
+cout << "      MoistConvection ended" << endl;
 }
 /*
 *
 */
 void cAtmosphereModel::WaterVapourEvaporation(){ 
+cout << "      WaterVapourEvaporation" << endl;
 // preparations for water vapour increase due to the differences between evaporation and precipitation 
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
 // amount of additional water vapour by the difference of evaporation and precipitation is negligible but functional
@@ -2041,11 +2051,13 @@ void cAtmosphereModel::WaterVapourEvaporation(){
             } // iter_prec 
         } // end j
     } // end k
+cout << "      WaterVapourEvaporation ended" << endl;
 }
 /*
 *
 */
 void cAtmosphereModel::USStand_DewPoint_HumidRel(){
+cout << "      USStand_DewPoint_HumidRel" << endl;
     temp_tropopause = std::vector<double>(jm, t_tropopause_pole);
     int j_max = jm-1;
     int j_half = j_max/2;
@@ -2109,5 +2121,6 @@ void cAtmosphereModel::USStand_DewPoint_HumidRel(){
             }
         }
     }
+cout << "      USStand_DewPoint_HumidRel ended" << endl;
 }
 

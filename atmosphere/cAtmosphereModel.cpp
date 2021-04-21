@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "Accuracy_Atm.h"
 #include "Utils.h"
 #include "Config.h"
 #include "AtomMath.h"
@@ -195,6 +194,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 //    goto Printout;
     PressureDensity();
     init_water_vapour();
+    init_co2();
 //    goto Printout;
     SaturationAdjustment();
 //    goto Printout;
@@ -226,7 +226,6 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 */
     MoistConvection();
 //    WaterVapourEvaporation();
-    init_co2();
     USStand_DewPoint_HumidRel();
     print_min_max_atm();
     run_data_atm();
@@ -312,7 +311,7 @@ void cAtmosphereModel::run_3D_loop(){
             BC_radius();
             BC_theta();
             BC_phi();
-            BC_SolidGround();
+//            BC_SolidGround();
 /*
             if(velocity_iter % 2 == 0){
                 SaturationAdjustment();
@@ -710,6 +709,7 @@ void cAtmosphereModel::restrain_temperature(){
 *
 */
 void cAtmosphereModel::init_water_vapour(){
+cout << "      init_water_vapour" << endl;
     // initial and boundary conditions of water vapour on water and land surfaces
     // a value of 0.04 stands for 40 g/kg, g water vapour per kg dry air
     // water vapour contents computed by Clausius-Clapeyron-formula
@@ -797,10 +797,10 @@ void cAtmosphereModel::init_water_vapour(){
     double cloud_max_pole = 0.75;  // for Humility_critical approach
 //    double cloud_max_equator = 4.0; // for Agnesi approach
 //    double cloud_max_pole = 1.0; // for Agnesi approach
-    double ice_max_equator = 0.75;  // for Humility_critical approach
-    double ice_max_pole = 0.2;  // for Humility_critical approach
-//    double ice_max_equator = 1.0; // for Agnesi approach
-//    double ice_max_pole = 0.25; // for Agnesi approach
+//    double ice_max_equator = 0.75;  // for Humility_critical approach
+//    double ice_max_pole = 0.2;  // for Humility_critical approach
+    double ice_max_equator = 1.0; // for Agnesi approach
+    double ice_max_pole = 0.25; // for Agnesi approach
     cloud_max = std::vector<double>(jm, cloud_max_pole);  // scaling of the maximum amount of cloud water
     cloud_loc = std::vector<double>(jm, cloud_loc_pole); // radial location of cloud water maximum
     ice_max = std::vector<double>(jm, ice_max_pole);  // scaling of the maximum amount of cloud water
@@ -921,11 +921,13 @@ void cAtmosphereModel::init_water_vapour(){
         }
     }
 */
+cout << "      init_water_vapour ended" << endl;
 }
 /*
 *
 */
 void cAtmosphereModel::init_temperature(){
+cout << "      init_temperature" << endl;
     // Lenton_etal_COPSE_time_temp, constant paleo mean temperature, added to the surface initial temperature
     // difference between mean temperature (Ma) and mean temperature (previous Ma) == t_paleo_add
     int Ma = *get_current_time();
@@ -933,7 +935,8 @@ void cAtmosphereModel::init_temperature(){
     double t_pole = pow((rad_pole/sigma),0.25)/t_0;  // surface temperature at the poles t_pole = 0.9451 compares to -15.°C compares to 253.15 K
     double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map);
     double t_paleo_add = 0.0; 
-    if(!is_first_time_slice()){
+//    if(!is_first_time_slice()){
+    if(Ma > 0){
         if((NASATemperature != 0)&&(*get_current_time() > 0))  
             t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
                 - get_mean_temperature_from_curve(*get_previous_time());
@@ -942,6 +945,7 @@ void cAtmosphereModel::init_temperature(){
                 - t_average;
         t_paleo_add /= t_0; // non-dimensional 
     }
+
     cout.precision(3);
     const char* time_slice_comment = "      time slice of Paleo-AGCM:";
     const char* time_slice_number = " Ma = ";
@@ -960,14 +964,14 @@ void cAtmosphereModel::init_temperature(){
     cout << endl << setiosflags(ios::left) << setw(55) << setfill('.') 
         << temperature_comment << resetiosflags(ios::left) << setw(13) 
         << temperature_gain << " = " << setw(7) << setfill(' ') 
-        << t_paleo << setw(5) << temperature_unit << endl << setw(55) 
+        << t_paleo_add * t_0 << setw(5) << temperature_unit << endl << setw(55) 
         << setfill('.') << setiosflags(ios::left) << temperature_modern 
         << resetiosflags(ios::left) << setw(13) << temperature_average 
         << " = " << setw(7) << setfill(' ') << t_average << setw(5) 
         << temperature_unit << endl << setw(55) << setfill('.') 
         << setiosflags(ios::left) << temperature_paleo << resetiosflags(ios::left) 
         << setw(13) << temperature_average_pal << " = "  << setw(7) 
-        << setfill(' ') << t_average + t_paleo << setw(5) 
+        << setfill(' ') << t_average + t_paleo_add * t_0 << setw(5) 
         << temperature_unit << endl;
     // temperatur distribution at a prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
@@ -1128,11 +1132,13 @@ void cAtmosphereModel::init_temperature(){
         }
     }
 */
+cout << "      init_temperature ended" << endl;
 }
 /*
 *
 */
 void cAtmosphereModel::init_dynamic_pressure(){
+cout << "      init_dynamic_pressure" << endl;
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
@@ -1145,6 +1151,7 @@ void cAtmosphereModel::init_dynamic_pressure(){
             }
         }
     }
+cout << "      init_dynamic_pressure ended" << endl;
 }
 /*
 *
@@ -1244,14 +1251,29 @@ void cAtmosphereModel::init_topography(const string &topo_filename){
 *
 */
 void cAtmosphereModel::init_co2(){
+cout << "      init_co2" << endl;
     // initial and boundary conditions of CO2 content on water and land surfaces
-    // parabolic CO2 content distribution from pole to pole accepted
-    // CO2-distribution by Ruddiman approximated by a parabola
-    co2_paleo = 3.2886 * pow ((t_paleo + t_average), 2) - 32.8859 *
-        (t_paleo + t_average) + 102.2148;  // in ppm
+    // Lenton_etal_COPSE_time_temp, constant paleo mean temperature, added to the surface initial temperature
+    // difference between mean temperature (Ma) and mean temperature (previous Ma) == t_paleo_add
+    int Ma = *get_current_time();
+    double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map);
+    double t_paleo_add = 0.0; 
+    if(Ma > 0){
+        if((NASATemperature != 0)&&(*get_current_time() > 0))  
+            t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
+                - get_mean_temperature_from_curve(*get_previous_time());
+        if(NASATemperature == 0)  
+            t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
+                - t_average;
+    }
+    co2_paleo = 3.2886 * pow ((t_paleo_add + t_average), 2) - 32.8859 *
+        (t_paleo_add + t_average) + 102.2148;  // in ppm
     co2_average = 3.2886 * pow (t_average, 2) - 32.8859 * t_average + 102.2148;  // in ppm
     co2_paleo = co2_paleo - co2_average;
     cout.precision(3);
+    const char* temperature_comment = "      temperature increase at paleo times: ";
+    const char* temperature_gain = " t increase";
+    const char* temperature_unit =  "°C ";
     const char* co_comment = "      co2 increase at paleo times: ";
     const char* co_gain = " co2 increase";
     const char* co_modern = "      mean co2 at modern times: ";
@@ -1259,7 +1281,11 @@ void cAtmosphereModel::init_co2(){
     const char* co_average_str = " co2 modern";
     const char* co_average_pal = " co2 paleo";
     const char* co_unit =  "ppm ";
-    cout << endl << setiosflags (ios::left) << setw (55) << setfill ('.') <<
+    cout << endl << setiosflags(ios::left) << setw(55) << setfill('.') 
+        << temperature_comment << resetiosflags(ios::left) << setw(13) 
+        << temperature_gain << " = " << setw(7) << setfill(' ') 
+        << t_paleo_add << setw(5) << temperature_unit << endl
+        << setiosflags (ios::left) << setw (55) << setfill ('.') <<
         co_comment << resetiosflags (ios::left)         << setw (12) << co_gain << " = "
         << setw (7) << setfill (' ') << co2_paleo << setw (5) << co_unit << 
         endl << setw (55) << setfill ('.')  << setiosflags (ios::left) << co_modern
@@ -1335,6 +1361,7 @@ void cAtmosphereModel::init_co2(){
             }
         }
     }
+cout << "      init_co2 ended" << endl;
 }
 /*
 *
@@ -1396,10 +1423,10 @@ void cAtmosphereModel::BC_SolidGround(){
 //                    c.x[i][j][k] = 0.; 
 //                    cloud.x[i][j][k] = 0.;
 //                    ice.x[i][j][k] = 0.;
-                    P_rain.x[i][j][k] = 0.;
-                    P_snow.x[i][j][k] = 0.;
+//                    P_rain.x[i][j][k] = 0.;
+//                    P_snow.x[i][j][k] = 0.;
 //                    co2.x[i][j][k] = 1.;  // = 280 ppm
-                    p_dyn.x[i][j][k] = 0.;
+//                    p_dyn.x[i][j][k] = 0.;
                 } // is_land
             } // i
         } // k
@@ -1690,6 +1717,7 @@ void cAtmosphereModel::IC_vwt_WestEastCoast(){
 *
 */
 void cAtmosphereModel::IC_t_WestEastCoast(){
+cout << "      IC_t_WestEastCoast" << endl;
 // initial conditions for temperature at 
 // the sea surface close to west coasts
 // transition between coast flows and open sea flows included
@@ -1739,6 +1767,7 @@ void cAtmosphereModel::IC_t_WestEastCoast(){
             } // end if
         } // end k
     } // end j
+cout << "      IC_t_WestEastCoast ended" << endl;
 }
 /*
 *

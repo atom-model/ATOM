@@ -279,7 +279,8 @@ void cAtmosphereModel::run_data_atm(){
         }
     }
 //    double coeff_prec = 86400.;  // dimensions see below
-    double coeff_prec = 1.;  // dimensions see below    no convertion from mm/s to mm/a
+//    double coeff_prec = 1.;  // dimensions see below    no convertion from mm/s to mm/a
+    double coeff_prec = 15.74;  // intermediate coefficient to fit the needs, must be corrected soon!!!!!!
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] 

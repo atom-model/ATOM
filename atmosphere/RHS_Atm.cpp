@@ -258,8 +258,6 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
     CoriolisForce.x[i][j][k] = sqrt((pow (coriolis_rad, 2) 
         + pow (coriolis_the, 2) + pow (coriolis_phi, 2))/3.);
     BuoyancyForce.x[i][j][k] = buoyancy * coeff_buoy * t.x[i][j][k]/t_0 * g;
-//    int i_mount = i_topography[j][k];
-//    if(i == i_mount)  dpdr = 0.0;
     PressureGradientForce.x[i][j][k] = - coeff_buoy * coeff_p * dpdr;
 
     rhs_t.x[i][j][k] = - (u.x[i][j][k] * dtdr + v.x[i][j][k] * dtdthe/rm
@@ -303,8 +301,6 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
         + dvdphi * 2. * costhe/rm2sinthe2)/re
         + coriolis_phi
         + coeff_MC_vel * MC_w.x[i][j][k]
-//        + cc * h_0_k * w.x[i][j][k]/dphi2;
-//        + cc * h_0_i * w.x[i][j][k]/dphi2;
         + cc * h_0_i * w.x[i][j][k]/dr2 * exp_2_rm;
     rhs_c.x[i][j][k] = - (u.x[i][j][k] * dcdr + v.x[i][j][k] * dcdthe/rm
         + w.x[i][j][k] * dcdphi/rmsinthe) 

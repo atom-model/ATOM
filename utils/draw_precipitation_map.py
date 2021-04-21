@@ -71,7 +71,7 @@ def draw_precipitation_map(time=0, data_dir='./', output_dir='/tmp/atom/', topo_
 
     xi, yi = m(x, y)
     img_data = m.transform_scalar(data, np.arange(-180,180),np.arange(-90,90),361,181)
-    cs = m.imshow(img_data,alpha=0.5, vmin=0, vmax=20, cmap='jet')
+    cs = m.imshow(img_data,alpha=0.5, vmin=0, vmax=2, cmap='jet')
 
     m.contour( xi.reshape((361,181)), yi.reshape((361,181)), topo.reshape((361,181)),
                             colors ='k', linewidths= 0.3 )

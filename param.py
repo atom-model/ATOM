@@ -29,23 +29,29 @@ def main():
             ('t_paleo_max', 'maximum add of mean temperature in °C during paleo times', 'double', 10.0),
             ('t_paleo', 'value at modern times', 'double', 0.0),
 
+#            ('time_start', 'start time', 'int', 0),
+#            ('time_end', 'end time', 'int', 0),
             ('time_start', 'start time', 'int', 0),
-            ('time_end', 'end time', 'int', 0),
+            ('time_end', 'end time', 'int', 50),
             ('time_step', 'step size between timeslices', 'int', 10),
             ('omega', 'rotation rate of the earth in rad/s', 'double', 7.292e-5),
         ],
         'atmosphere': [
             ('velocity_iter_max_2D', 'the number of velocity iterations', 'int',2),
             ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 5),
+
 #            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
 #            ('pressure_iter_max', 'the number of pressure iterations', 'int', 8),
+
+#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
+#            ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
+#            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
+
             ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
-            ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
-            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
-#           ('pressure_iter_max', 'the number of pressure iterations', 'int', 1),
-#           ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
-#           ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 9.3),
-            ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 2.0),
+           ('pressure_iter_max', 'the number of pressure iterations', 'int', 1),
+           ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
+
+           ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 1.0),
 
             ('WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0),
             ('buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
@@ -105,10 +111,10 @@ def main():
             ('t_land', 'temperature increase on land by 2°C(1°C compares to t_land = 0.003661)', 'double', 0.0),
 
             ('c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.0005 compares to 0.0005 kg/kg', 'double', 0.0005),
-            ('c_land', 'water vapour reduction on land(30% of the saturation value)', 'double', 0.3),
-            ('c_ocean', 'water vapour reduction on sea surface(50% of the saturation value)', 'double', 0.5),
-#            ('c_land', 'water vapour reduction on land(30% of the saturation value)', 'double', 0.6),
-#            ('c_ocean', 'water vapour reduction on sea surface(50% of the saturation value)', 'double', 0.8),
+#            ('c_land', 'water vapour reduction on land(30% of the saturation value)', 'double', 0.4),
+#            ('c_ocean', 'water vapour reduction on sea surface(50% of the saturation value)', 'double', 0.6),
+            ('c_land', 'water vapour reduction on land(30% of the saturation value)', 'double', 0.5),
+            ('c_ocean', 'water vapour reduction on sea surface(50% of the saturation value)', 'double', 0.7),
 
             ('co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0),
             ('co2_paleo', 'value at modern times', 'double', 330.0),
@@ -121,9 +127,14 @@ def main():
             ('input_path', 'directory where Atmosphere output can be read(must end in /)', 'string', 'output'),
             ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2),
             ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10),
+
+#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
+#            ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
+#            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
+
             ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
-            ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
-            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
+           ('pressure_iter_max', 'the number of pressure iterations', 'int', 1),
+           ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
 
             ('buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
 

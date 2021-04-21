@@ -19,6 +19,8 @@ from draw_temperature_plot import draw_temperature_plot
 from draw_precipitation_map import draw_precipitation_map, draw_nasa_precipitation_and_diff_map
 from draw_precipitation_evaporation_diff_map import draw_precipitation_evaporation_diff_map
 
+RUN_HYD=True
+
 def main(maps_only=False):
     atm_model = Atmosphere()
     hyd_model = Hydrosphere()
@@ -40,13 +42,15 @@ def main(maps_only=False):
         for t in range(len(times)):
             time = times[t]
             atm_model.run_time_slice(time)
-            hyd_model.run_time_slice(time)
+            if RUN_HYD:
+                hyd_model.run_time_slice(time)
             if t<len(times)-1:
                 reconstruct_temperature(time,times[t+1], BATHYMETRY_SUFFIX) 
-                #reconstruct_precipitation(time,times[t+1], BATHYMETRY_SUFFIX)
-                reconstruct_salinity(time,times[t+1], BATHYMETRY_SUFFIX)
-                reconstruct_wind_v(time,times[t+1], BATHYMETRY_SUFFIX)
-                reconstruct_wind_w(time,times[t+1], BATHYMETRY_SUFFIX)
+                ###reconstruct_precipitation(time,times[t+1], BATHYMETRY_SUFFIX)
+                if RUN_HYD:
+                    reconstruct_salinity(time,times[t+1], BATHYMETRY_SUFFIX)
+                    reconstruct_wind_v(time,times[t+1], BATHYMETRY_SUFFIX)
+                    reconstruct_wind_w(time,times[t+1], BATHYMETRY_SUFFIX)
     try:
         topo_dir = '../data/topo_grids/'
         topo_suffix = 'smooth'
@@ -66,9 +70,10 @@ def main(maps_only=False):
 
         hyd_sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'ekman_pumping', 
             'upwelling', 'downwelling', 'velocity']
-    
-        create_hyd_maps.create_all_maps(hyd_sub_dirs, start_time, end_time, time_step, hyd_map_output_dir,
-            atom_output_dir, topo_dir, topo_suffix)
+        
+        if RUN_HYD:
+            create_hyd_maps.create_all_maps(hyd_sub_dirs, start_time, end_time, time_step, hyd_map_output_dir,
+                atom_output_dir, topo_dir, topo_suffix)
 
         if not os.path.isdir(atm_map_output_dir+'/precipitation/'):
             os.mkdir(atm_map_output_dir+'/precipitation/')
