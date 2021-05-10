@@ -1,4 +1,5 @@
 import os, sys
+import contextlib
 import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -215,6 +216,7 @@ import reconstruct_atom_data as r_tool
 from pyatom import Atmosphere, Hydrosphere
 
 def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
+    print('start running model')
     #create the models
     atm_model = Atmosphere()
     hyd_model = Hydrosphere()
@@ -238,8 +240,13 @@ def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
 
     #run the models
     for idx, time in enumerate(times):
+        print('running the model at {} Ma'.format(time))
+        f = open(os.devnull, 'w')
+        old_stdout = sys.stdout
+        sys.stdout = f 
         atm_model.run_time_slice(time)
         hyd_model.run_time_slice(time)#hyd model depends on atm model. must run atm model before hyd model
+        sys.stdout = old_stdout
         if idx < len(times)-1:
             r_tool.reconstruct_temperature(time,times[idx+1]) 
             r_tool.reconstruct_precipitation(time,times[idx+1])
@@ -262,7 +269,7 @@ def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
     os.system('rm buffer_land_tmp.nc buffer_land_tmp.xyz buffer_ocean_tmp.xyz buffer_tmp.xyz fill_ocean_tmp.nc gmt.history')
     os.system('rm gmt_grdblend_clobber.nc gmt_surface_fill_the_gap.nc gmt_surface_fill_the_gap_filter.nc tmp.xyz')
     os.system('rm nearest_neighbour_fill_the_gap.nc')
-
+    print('Done!')
 
 def draw_surfacre_wind_velocity_map(time):
     def down_sample(a):
@@ -635,4 +642,74 @@ def draw_ocean_current_velocity_map_100(time):
     depth = (40 - layer_idx) * 5
     cbar = m.colorbar(cs, location='bottom', pad="10%", label='Velocity (m/s)')
     plt.title("Ocean Current Velocity at {0}Ma ".format(time))
+    plt.show()
+
+
+def plot_motion_path(lon,lat,times,RelativePlate = 0):
+    import pygplates
+
+    #assign plate id first
+    rotation_dir = ATOM_HOME + 'reconstruction/data'
+    rotation_model = pygplates.RotationModel(
+            rotation_dir + '/Rotations/Global_EarthByte_230-0Ma_GK07_AREPS.rot' )
+    static_polygon_features = pygplates.FeatureCollection(
+            './Muller_etal_2016_AREPS/Global_EarthByte_GPlates_PresentDay_StaticPlatePolygons_2015_v1.shp' )
+
+    point_feature = pygplates.Feature()
+    point_feature.set_geometry(pygplates.PointOnSphere(float(lat),float(lon)))
+
+    assigned_point_feature = pygplates.partition_into_plates(
+            static_polygon_features,
+            rotation_model,
+            point_feature,
+            properties_to_copy = [
+                pygplates.PartitionProperty.reconstruction_plate_id,
+                pygplates.PartitionProperty.valid_time_period],
+            )
+
+    MovingPlate = assigned_point_feature[0].get_reconstruction_plate_id()
+    if MovingPlate==0:
+        print('The location ({0}, {1}) is in ocean at the present day.'.format(lon,lat))
+        print('In this practice, points in ocean do not move.')
+        print('Choose a location on continent and try again.')
+
+    # Create the motion path feature
+    seed_points_at_digitisation_time = pygplates.MultiPointOnSphere([(lat, lon)])
+    motion_path_feature = pygplates.Feature.create_motion_path(
+            seed_points_at_digitisation_time,
+            times,
+            valid_time=(200., 0.),
+            relative_plate=RelativePlate,
+            reconstruction_plate_id = MovingPlate)
+
+    # Create the shape of the motion path
+    reconstruction_time = 0
+    reconstructed_motion_paths = []
+    pygplates.reconstruct(
+            motion_path_feature, rotation_model, reconstructed_motion_paths, reconstruction_time,
+            reconstruct_type=pygplates.ReconstructType.motion_path)
+
+    # get the reconstructed coordinates into numpy arrays
+    for reconstructed_motion_path in reconstructed_motion_paths:
+        trail = reconstructed_motion_path.get_motion_path().to_lat_lon_array()
+
+    ## Plotting - note that we use the median of the motion path coordinates as the map center
+    fig = plt.figure(figsize=(10,10), dpi=100)
+    pmap = Basemap(projection='ortho',lon_0=np.median(trail[:,1]),lat_0=np.median(trail[:,0]),resolution='l')
+    pmap.drawcoastlines(linewidth=0.25)
+    pmap.fillcontinents(color='darkkhaki',lake_color='aliceblue')
+    clip_path = pmap.drawmapboundary(fill_color='aliceblue')
+    pmap.drawmeridians(np.arange(0,360,15))
+    pmap.drawparallels(np.arange(-90,90,15))
+
+    x, y = pmap(np.flipud(trail[:,1]), np.flipud(trail[:,0]))
+    pmap.plot(x[0],y[0],'ko')
+    pmap.plot(x,y,'r')
+    l1=pmap.scatter(x, y, 60, c=times, marker='h',
+                              cmap=plt.cm.jet_r, edgecolor='w', clip_path=clip_path, zorder=2)
+    plt.title('Motion Path of point({2},{3}) on plate {0} relative to {1}'.format(MovingPlate,RelativePlate,lon,lat))
+
+    cbar = pmap.colorbar(l1,location='right',pad="5%")
+    cbar.set_label('Age (Ma)',fontsize=12)
+
     plt.show()
