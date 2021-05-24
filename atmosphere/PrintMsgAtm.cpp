@@ -115,6 +115,7 @@ void cAtmosphereModel::print_min_max_atm(){
     cout << endl << " secondary data: " << endl << endl;
     searchMinMax_2D(" max heat Evaporation ", " min heat Evaporation ", " kJ/kg", Q_Evaporation, 1.);
     searchMinMax_2D(" max Evaporation Dalton ", " min Evaporation Dalton ", "mm/d", Evaporation_Dalton, 1.);
+    searchMinMax_2D(" max Evaporation Penman ", " min Evaporation Penman ", "mm/d", Evaporation_Penman, 1.);
     cout << endl << " properties of the atmosphere at the surface: " 
         << endl << endl;
     searchMinMax_2D(" max 2D albedo ", " min 2D albedo ", "%", albedo, 1.);

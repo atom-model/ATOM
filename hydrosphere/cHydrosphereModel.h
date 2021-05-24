@@ -75,6 +75,7 @@ private:
     void reset_arrays();
     void write_file(std::string &bathymetry_name, 
         std::string &output_path, bool is_final_result);
+    void load_temperature_curve();
     void save_data();
     void run_data_hyd();
     void EkmanSpiral();
@@ -173,7 +174,8 @@ private:
     Array_2D Salt_total;   // rate of salt summed up in a vertical column
     Array_2D BuoyancyForce_2D; // radiation balance at the surface
     Array_2D salinity_evaporation; // additional salinity by evaporation
-    Array_2D Evaporation_Dalton; // evaporation by Penman in [mm/d]
+    Array_2D Evaporation_Dalton; // evaporation by Dalton in [mm/d]
+    Array_2D Evaporation_Penman; // evaporation by Penman in [mm/d]
     Array_2D Precipitation; // areas of higher precipitation
     Array_2D temperature_NASA; // surface temperature from NASA
     Array_2D c_fix; // local surface salinity fixed for iterations

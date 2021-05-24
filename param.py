@@ -10,7 +10,7 @@ def main():
             ('BathymetrySuffix', '', 'string', 'Ma_smooth.xyz'),
             ('verbose', '', 'bool', False),
             ('output_path', 'directory where model outputs should be placed(must end in /)', 'string', 'output/'),
-            ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', True),
+            ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', False),
             ('debug','flag to control if the program is running in debug mode', 'bool', False),
             #parameters for data reconstruction
             ('velocity_w_file',"",'string','../data/w_surface.txt'),
@@ -21,7 +21,7 @@ def main():
             ('temperature_curve_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
             ('pole_temperature_file', '', 'string', '../data/pole_temperature.txt'),
             ('reconstruction_script_path', '', 'string', '../reconstruction/reconstruct_atom_data.py'),
-            ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', False),
+            ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True),
             ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
             ('sun', 'while no variable sun position wanted', 'int', 0),
             ('NASATemperature', 'surface temperature given by NASA', 'int', 0),
@@ -29,10 +29,16 @@ def main():
             ('t_paleo_max', 'maximum add of mean temperature in °C during paleo times', 'double', 10.0),
             ('t_paleo', 'value at modern times', 'double', 0.0),
 
+            ('rad_equator', 'long wave radiation in W/m2, t_equator = 1.0976 compares to 28.0°C = to 299.81 K', 'double', 458.09),
+            ('rad_pole', 'long wave radiation in W/m2, t_pole = 0.9436 compares to -15.4°C = to 250.25 K', 'double', 250.25),
+            ('rad_equator_short', 'short wave radiation in W/m2', 'double', 320.0),
+            ('rad_pole_short', 'short wave radiation in W/m2', 'double', 0.0),
+            ('sigma', 'Stefan-Boltzmann constant W/(m²*K4)', 'double', 5.670280e-8),
+
 #            ('time_start', 'start time', 'int', 0),
 #            ('time_end', 'end time', 'int', 0),
             ('time_start', 'start time', 'int', 0),
-            ('time_end', 'end time', 'int', 50),
+            ('time_end', 'end time', 'int', 60),
             ('time_step', 'step size between timeslices', 'int', 10),
             ('omega', 'rotation rate of the earth in rad/s', 'double', 7.292e-5),
         ],
@@ -48,10 +54,10 @@ def main():
 #            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
             ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
-           ('pressure_iter_max', 'the number of pressure iterations', 'int', 1),
-           ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
+            ('pressure_iter_max', 'the number of pressure iterations', 'int', 1),
+            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
 
-           ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 1.0),
+            ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 1.0),
 
             ('WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0),
             ('buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
@@ -67,10 +73,6 @@ def main():
             ('L_atm', 'extension of the atmosphere shell in m, 16000 m/40 steps = 400 m', 'double', 16000.),
             ('tropopause_pole', 'extension of the troposphere at the poles in m', 'double', 8000.),
             ('tropopause_equator', 'extension of the troposphere at the equator in m', 'double', 15000.),
-
-            ('rad_equator', 'long wave radiation in W/m2, t_equator = 1.1025 compares to 28.0°C = to 299.15 K', 'double', 458.09),
-            ('rad_pole', 'long wave radiation in W/m2, t_pole = 0.9451 compares to -15.°C = to 253.15 K', 'double', 234.91),
-            ('sigma', 'Stefan-Boltzmann constant W/(m²*K4)', 'double', 5.670280e-8),
 
             ('albedo_pole', 'albedo around the poles', 'double', 0.8),
             ('albedo_equator', 'albedo around the equator', 'double', 0.4),
@@ -108,13 +110,13 @@ def main():
             ('t_average', 'mean temperature of the modern earth in °C', 'double', 15.4),
             ('t_tropopause_equator', 'temperature at the tropopause at the equator, t = 0.817 compares to -50°C compares to 223.15 K', 'double', 0.817),
             ('t_tropopause_pole', 'temperature at the tropopause at the pole, t = 0.784 compares to -59°C compares to 214.15 K', 'double', 0.784),
-            ('t_land', 'temperature increase on land by 2°C(1°C compares to t_land = 0.003661)', 'double', 0.0),
+            ('t_land', 'temperature increase on land by 2°C(1°C compares to t_land = 0.003661)', 'double', 0.007322),
 
             ('c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.0005 compares to 0.0005 kg/kg', 'double', 0.0005),
 #            ('c_land', 'water vapour reduction on land(30% of the saturation value)', 'double', 0.4),
-#            ('c_ocean', 'water vapour reduction on sea surface(50% of the saturation value)', 'double', 0.6),
-            ('c_land', 'water vapour reduction on land(30% of the saturation value)', 'double', 0.5),
-            ('c_ocean', 'water vapour reduction on sea surface(50% of the saturation value)', 'double', 0.7),
+#            ('c_ocean', 'water vapour reduction on sea surface(50% of the saturation value)', 'double', 0.55),
+            ('c_land', 'water vapour reduction on land(50% of the saturation value)', 'double', 0.55),
+            ('c_ocean', 'water vapour reduction on sea surface(70% of the saturation value)', 'double', 0.65),
 
             ('co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0),
             ('co2_paleo', 'value at modern times', 'double', 330.0),
@@ -155,8 +157,8 @@ def main():
 
             ('t_land', 'temperature increase on land by 2°C(1°C compares to t_land = 0.003661)', 'double', 0.0),
             ('t_average', 'mean temperature of the modern earth', 'double', 15.4),
-            ('t_equator', 'temperature t_0 = 1.1025 compares to 28.0° C compares to 301.15 K', 'double', 1.1025),
-            ('t_pole', 'compares to -1.9°C, freezing temperature of sea water at poles', 'double', 0.9930),
+#            ('t_equator', 'temperature t_0 = 1.1025 compares to 28.0° C compares to 301.15 K', 'double', 1.1025),
+            ('t_pole_salt', 'compares to -1.9°C, freezing temperature of sea water at poles', 'double', 0.9930),
         ]
     }
     XML_READ_FUNCS = {

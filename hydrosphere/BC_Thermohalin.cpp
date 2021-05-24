@@ -25,6 +25,7 @@ using namespace std;
 using namespace AtomUtils;
 
 void cHydrosphereModel::PresStat_SaltWaterDens(){
+cout << endl << "      PresStat_SaltWaterDens" << endl;
 // hydrostatic pressure, equations of state for water and salt water density
 // as functions of salinity, temperature and hydrostatic pressure
     double t_Celsius_0 = 0.;
@@ -86,11 +87,13 @@ void cHydrosphereModel::PresStat_SaltWaterDens(){
             }
         }
     }
+cout << "      PresStat_SaltWaterDens ended" << endl;
 }
 /*
 *
 */
 void cHydrosphereModel::Value_Limitation_Hyd(){
+cout << endl << "      Value_Limitation_Hyd" << endl;
 // the limiting values depend on local singular behaviour
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -115,16 +118,18 @@ void cHydrosphereModel::Value_Limitation_Hyd(){
 
                 if(t.x[i][j][k] >= 1.147)  t.x[i][j][k] = 1.147; //40.15 °C
                 if(t.x[i][j][k] <= 0.9927)  t.x[i][j][k] = 0.9927;// -1.0 °C
-                if(c.x[i][j][k] * c_0 >= 40.)  c.x[i][j][k] = 1.1561;  // 40.0 psu
+                if(c.x[i][j][k] * c_0 >= 50.)  c.x[i][j][k] = 1.4451;  // 50.0 psu
                 if(c.x[i][j][k] * c_0 <= 32.)  c.x[i][j][k] = 0.9249;      // 32.0 psu
             }
         }
     }
+cout << "      Value_Limitation_Hyd ended" << endl;
 }
 /*
 *
 */
 void cHydrosphereModel::SalinityEvaporation(){
+cout << endl << "      SalinityEvaporation" << endl;
 // preparations for salinity increase due to evaporation minus precipitation
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
     double coeff_salinity = 1.1574e-8 * L_hyd/(r_0_water * u_0 * c_0);  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
@@ -135,7 +140,8 @@ void cHydrosphereModel::SalinityEvaporation(){
         for(int j = 0; j < jm; j++){
             c_fix.y[j][k] = c.x[im-1][j][k];
                 evap_precip = coeff_salinity 
-                    * (Evaporation_Dalton.y[j][k] - Precipitation.y[j][k]);  // in m/s
+//                    * (Evaporation_Dalton.y[j][k] - Precipitation.y[j][k]);  // in m/s
+                    * (Evaporation_Penman.y[j][k] - Precipitation.y[j][k]);  // in m/s
 //            sal_flux = - (- 3. * c.x[im-1][j][k] + 4. * c.x[im-2][j][k]  // 1. order derivative, 2. order accurate
 //                - c.x[im-3][j][k])/(2. * step) 
 //                * (1. - 2. * c.x[im-1][j][k]);
@@ -147,7 +153,7 @@ void cHydrosphereModel::SalinityEvaporation(){
                 salinity_evaporation.y[j][k] = 0.;
             c.x[im-1][j][k] = c_fix.y[j][k] 
                 + salinity_evaporation.y[j][k];
-
+/*
             cout.precision(8);
             cout.setf(ios::fixed);
             if((j == 90)&&(k == 180)) cout << endl
@@ -157,13 +163,15 @@ void cHydrosphereModel::SalinityEvaporation(){
                 << "   r_0_water = " << r_0_water 
                 << "   r_salt_water = " << r_salt_water.x[im-1][j][k] << endl
                 << "   evap_precip = " << evap_precip/coeff_salinity
-                << "   evap = " << Evaporation_Dalton.y[j][k] 
+//                << "   evap = " << Evaporation_Dalton.y[j][k] 
+                << "   evap = " << Evaporation_Penman.y[j][k] 
                 << "   prec = " << Precipitation.y[j][k] << endl
                 << "   sal_flux = " << sal_flux * c_0  << endl
                 << "   salinity_evaporation = " << salinity_evaporation.y[j][k] * c_0 << endl
                 << "   c_fix = " << c_fix.y[j][k] * c_0 
                 << "   c = " << c.x[im-1][j][k] * c_0 
                 << "   c_0 = " << c_0 << endl;
+*/
 /*
                 int i_trans = 37; // 15 m vertical extension of ocean surface evaporation, arbitrary 
 //                int i_trans = 20; // 15 m vertical extension of ocean surface evaporation, arbitrary 
@@ -188,6 +196,7 @@ void cHydrosphereModel::SalinityEvaporation(){
 */
         }
     }
+cout << "      SalinityEvaporation ended" << endl;
 }
 /*
 *

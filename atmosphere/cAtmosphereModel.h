@@ -166,6 +166,7 @@ private:
     std::vector<std::vector<double> > M_u_Base;
     std::vector<std::vector<double> > M_d_LFS;
     std::vector<double> step;
+    std::vector<double> short_wave_radiation; // lateral short wave radiation
     std::vector<double> tropopause_layers; // keep the tropopause layer index
     std::vector<double> temp_tropopause; // lateral temperature distribution along the tropopause
     std::vector<double> cloud_loc; // lateral cloudwater distribution

@@ -76,7 +76,18 @@ void cAtmosphereModel::run_data_atm(){
 // SL stands for sea level
     double f_Penman = 2.;
 //    float exp_pressure = g/(1.e-2 * gam * R_Air);
-// calculation of a total quantity as sum on all values in a virtual column in r-direction
+// short wave radiation
+    short_wave_radiation = std::vector<double>(jm, rad_pole_short);
+    int j_max = jm-1;
+    int j_half = j_max/2;
+    double rad_short_eff = rad_pole_short - rad_equator_short;
+    for(int j=j_half; j>=0; j--){
+        short_wave_radiation[j] = rad_short_eff * parabola((double)j
+            /(double)j_half) + rad_pole_short;
+    }
+    for(int j=j_max; j>j_half; j--){
+        short_wave_radiation[j] = short_wave_radiation[j_max-j];
+    }
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             precipitable_water.y[j][k] = 0.;
@@ -101,29 +112,45 @@ void cAtmosphereModel::run_data_atm(){
                         * v.x[i+1][j][k] + w.x[i+1][j][k] 
                         * w.x[i+1][j][k])/2.)* u_0 * 3.6) * sat_deficit;
                         // ventilation-humidity Penmans formula
-                    if(is_land(h, i, j, k))  Q_Evaporation.y[j][k] = 2300.;  // minimum value used for printout
+                    double del_gam = 0.439 + 0.0112 * t.x[i][j][k];
+                    double gam_del = 0.5495 + 0.01119 * t.x[i][j][k];
+                    double e_sa = E * 100.0;
+                    double r = e/e_sa;
+//                    double u_bar = sqrt((v.x[i+1][j][k] 
+//                        * v.x[i+1][j][k] + w.x[i+1][j][k] 
+//                        * w.x[i+1][j][k])/2.0) * u_0;
+                    double u_bar = sqrt((v.x[i][j][k] 
+                        * v.x[i][j][k] + w.x[i][j][k] 
+                        * w.x[i][j][k])/2.0) * u_0;
+                    double R_net = short_wave_radiation[j]/radiation.x[0][j][k];
+                    if(is_land(h, i, j, k))  Q_Evaporation.y[j][k] = 2300.0;  // minimum value used for printout
                     Q_latent.y[j][k] = Q_Latent.x[i][j][k];  // latente heat in [W/m2] from energy transport equation
                     Q_sensible.y[j][k] = Q_Sensible.x[i][j][k];  // sensible heat in [W/m2] from energy transport equation
                     Q_bottom.y[j][k] = -(Q_radiation.y[j][k] 
                         - Q_latent.y[j][k] - Q_sensible.y[j][k]);    // difference understood as heat into the ground
                     Evaporation_Dalton.y[j][k] = C_Dalton(i+1, j, k, 
-                        coeff_Dalton, u_0, v, w) * sat_deficit * 24.;  // mm/h in mm/d
+                        coeff_Dalton, u_0, v, w) * sat_deficit * 24.0;  // mm/h in mm/d
 //                    Evaporation_Dalton.y[j][k] = 0.; 
                         // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m² * d)
-                    if(Evaporation_Dalton.y[j][k] <= 0.) Evaporation_Dalton.y[j][k] = 0.;
-                    Evaporation_Penman.y[j][k] = f_Penman * .0346 
+                    if(Evaporation_Dalton.y[j][k] <= 0.0) Evaporation_Dalton.y[j][k] = 0.0;
+/*
+                    Evaporation_Penman.y[j][k] = f_Penman * 0.0346 
                         * ((Q_radiation.y[j][k] + Q_bottom.y[j][k]) * Delta 
                         + gamma * E_a)/(Delta + gamma);
-                        // .0346 coefficient W/m2 corresponds to mm/d (Kraus)
-                    if(Evaporation_Penman.y[j][k] <= 0.) Evaporation_Penman.y[j][k] = 0.;
+                        // 0.0346 coefficient W/m2 corresponds to mm/d (Kraus)
+*/
+                    Evaporation_Penman.y[j][k] = del_gam * R_net/lv  // in mm/d
+                        + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
+                        * (1.0 - r) * e_sa;
+                    if(Evaporation_Penman.y[j][k] <= 0.0) Evaporation_Penman.y[j][k] = 0.0;
                     // vapour gradient causes values too high at shelf corners
-                    if(is_land(h, i, j, k))  Evaporation_Dalton.y[j][k] 
-                        = .5 * Evaporation_Penman.y[j][k];
+//                    if(is_land(h, i, j, k))  Evaporation_Dalton.y[j][k] 
+//                        = 0.5 * Evaporation_Penman.y[j][k];
                 }
 // only on the sea surface
                 if((i == 0)&&(is_air(h, 0, j, k))){
                     if(i == 0)  p_stat.x[0][j][k] = (r_air * R_Air 
-                        * t.x[0][j][k] * t_0) * .01;  // given in hPa
+                        * t.x[0][j][k] * t_0) * 0.01;  // given in hPa
                     double t_Celsius = t.x[0][j][k] * t_0 - t_0;
                     double e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in Pa
                     double t_denom = t_Celsius + 234.175;
@@ -131,31 +158,45 @@ void cAtmosphereModel::run_data_atm(){
                     double Delta = 4000. * E/(t_denom * t_denom);  // gradient of the water vapour pressure curve in hPa/K, coef = 234.175 * 17.0809
                     double sat_deficit = E - e;  // saturation deficit in hPa/K
                     double gamma = p_stat.x[0][j][k] * cp_l/(ep * lv);  // Psychrometer constant in hPa/K
-                    double E_a = .35 * (1. + .15 * sqrt((v.x[1][j][k] * v.x[1][j][k] 
+                    double E_a = .35 * (1.0 + .15 * sqrt((v.x[1][j][k] * v.x[1][j][k] 
                         + w.x[1][j][k] * w.x[1][j][k])/2.) * u_0 * 3.6) 
                         * sat_deficit;  // ventilation-humidity Penmans formula
-                    if(t_Celsius >= - 2.) Q_Evaporation.y[j][k] =
+                    double del_gam = 0.439 + 0.0112 * t.x[i][j][k];
+                    double gam_del = 0.5495 + 0.01119 * t.x[i][j][k];
+                    double e_sa = E * 100.0;
+                    double r = e/e_sa;
+//                    double u_bar = sqrt((v.x[i+1][j][k] 
+//                        * v.x[i+1][j][k] + w.x[i+1][j][k] 
+//                        * w.x[i+1][j][k])/2.0) * u_0;
+                    double u_bar = sqrt((v.x[i][j][k] 
+                        * v.x[i][j][k] + w.x[i][j][k] 
+                        * w.x[i][j][k])/2.0) * u_0;
+                    double R_net = short_wave_radiation[j]/radiation.x[0][j][k];
+                    if(t_Celsius >= - 2.0) Q_Evaporation.y[j][k] =
                         (2500.8 - 2.372 * (t.x[0][j][k] * t_0 - t_0));    // heat of Evaporation of water in [kJ/kg] (Kuttler) => variable lv
                     else  Q_Evaporation.y[j][k] = (2500.8 - 2.372 *
-                       (t.x[0][j][k] * t_0 - t_0)) + 300.; // heat of Evaporation of ice + 300 [kJ/kg]
+                       (t.x[0][j][k] * t_0 - t_0)) + 300.0; // heat of Evaporation of ice + 300 [kJ/kg]
                     Q_latent.y[j][k] = Q_Latent.x[0][j][k];  // latente heat in [W/m2] from energy transport equation
                     Q_sensible.y[j][k] = Q_Sensible.x[0][j][k];  // sensible heat in [W/m2] from energy transport equation
                     Q_bottom.y[j][k] = -(Q_radiation.y[j][k] 
                         - Q_latent.y[j][k] - Q_sensible.y[j][k]);  // difference understood as heat of the ground
                     Evaporation_Dalton.y[j][k] = C_Dalton(1, j, k, 
-                        coeff_Dalton, u_0, v, w) * sat_deficit * 24.;  // ocean surface evaporation, mm/h in mm/d
-//                    Evaporation_Dalton.y[j][k] = 0.; 
+                        coeff_Dalton, u_0, v, w) * sat_deficit * 24.0;  // ocean surface evaporation, mm/h in mm/d
+//                    Evaporation_Dalton.y[j][k] = 0.0; 
                     // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m² * s)
                       // not air but ocean surface temperature
                       // should be involved in water vapour saturation difference, it is not the saturation deficit
-                    if(Evaporation_Dalton.y[j][k] <= 0.) 
-                        Evaporation_Dalton.y[j][k] = 0.;
-                    Evaporation_Penman.y[j][k] = f_Penman * .0346 
-                        * ((Q_radiation.y[j][k] + Q_bottom.y[j][k]) 
-                        * Delta + gamma * E_a)/(Delta + gamma);
+                    if(Evaporation_Dalton.y[j][k] <= 0.0) 
+                        Evaporation_Dalton.y[j][k] = 0.0;
+//                    Evaporation_Penman.y[j][k] = f_Penman * .0346 
+//                        * ((Q_radiation.y[j][k] + Q_bottom.y[j][k]) 
+//                        * Delta + gamma * E_a)/(Delta + gamma);
                         // .0346 coefficient W/m2 corresponds to mm/d (Kraus)
-                    if(Evaporation_Penman.y[j][k] <= 0.) 
-                        Evaporation_Penman.y[j][k] = 0.;
+                    Evaporation_Penman.y[j][k] = del_gam * R_net/lv  // in mm/d
+                        + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
+                        * (1.0 - r) * e_sa;
+                    if(Evaporation_Penman.y[j][k] <= 0.0) 
+                        Evaporation_Penman.y[j][k] = 0.0;
                 }
             }
         }
@@ -280,7 +321,7 @@ void cAtmosphereModel::run_data_atm(){
     }
 //    double coeff_prec = 86400.;  // dimensions see below
 //    double coeff_prec = 1.;  // dimensions see below    no convertion from mm/s to mm/a
-    double coeff_prec = 15.74;  // intermediate coefficient to fit the needs, must be corrected soon!!!!!!
+    double coeff_prec = 500.0;  // intermediate coefficient to fit the needs, must be corrected soon!!!!!!
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] 

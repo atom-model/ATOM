@@ -51,8 +51,8 @@ void cHydrosphereModel::Hydrosphere_PlotData(const string &Name_Bathymetry_File,
             double vel_mag = sqrt(pow(v.x[im-1][j][k] * u_0 , 2) + pow(w.x[im-1][j][k] * u_0, 2));
             PlotData_File << k << " " << 90-j << " " << h.x[im-1][j][k] << " " << v.x[im-1][j][k] * u_0 
             << " " << w.x[im-1][j][k] * u_0 << " " << vel_mag << " " << t.x[im-1][j][k] * t_0 - t_0 
-            << " " << c.x[im-1][j][k] << " " << EkmanPumping.y[j][k] << " " << Upwelling.y[j][k] 
-            << "   " << -Downwelling.y[j][k] << " " <<  endl;
+            << " " << c.x[im-1][j][k] * c_0 << " " << EkmanPumping.y[j][k] << " " << Upwelling.y[j][k] 
+            << "   " << Downwelling.y[j][k] << " " <<  endl;
         }
     }
 }

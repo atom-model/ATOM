@@ -57,7 +57,7 @@ analyze:
 python: libatom.a python/pyatom.so
 
 python/pyatom.so: python/pyatom.pyx python/atom.pxd libatom.a
-	cd python && python setup.py build_ext --inplace
+	cd python && python3 setup.py build_ext --inplace
 
 # copy pyatom.so from python dir to benchmark dir
 $(TARGET_DIR)/pyatom.so: python/pyatom.so

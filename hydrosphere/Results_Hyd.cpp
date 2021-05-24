@@ -104,6 +104,8 @@ void cHydrosphereModel::run_data_hyd(){
                 /(2. * rm * dthe) 
                 + (aux_w.x[i_max][j][k+1] - aux_w.x[i_max][j][k-1])
                 /(2. * rmsinthe * dphi));
+            if(EkmanPumping.y[j][k] >= 40.0)  EkmanPumping.y[j][k] = 40.0;
+            if(EkmanPumping.y[j][k] <= - 40.0)  EkmanPumping.y[j][k] = - 40.0;
             if(is_land(h, i_max, j, k)){
                 EkmanPumping.y[j][k] = 0.;
             }

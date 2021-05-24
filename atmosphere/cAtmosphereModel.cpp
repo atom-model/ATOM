@@ -48,7 +48,6 @@ const double cAtmosphereModel::r0 = 1.; // non-dimensional
 //const double cAtmosphereModel::r0 = 6731000.; // in m
 
 cAtmosphereModel::cAtmosphereModel():
-//    std::vector<double> step(im, 0);
     i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0))),
     is_node_weights_initialised(false), 
     has_welcome_msg_printed(false){
@@ -186,6 +185,15 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     if(debug) save_data();
     iter_cnt_3d++;
     init_velocities();
+/*
+*
+*/
+    fft_gaussian_filter_3d(u,1);
+    fft_gaussian_filter_3d(v,1);
+    fft_gaussian_filter_3d(w,1);
+/*
+*
+*/
 //    goto Printout;
     init_temperature();
 //    goto Printout;
@@ -194,7 +202,6 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 //    goto Printout;
     PressureDensity();
     init_water_vapour();
-    init_co2();
 //    goto Printout;
     SaturationAdjustment();
 //    goto Printout;
@@ -208,6 +215,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 /*
 *
 */
+    init_co2();
     RadiationMultiLayer(); 
 //    goto Printout;
     MassStreamfunction(); 
@@ -215,20 +223,11 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     TwoCategoryIceScheme(); 
 //    goto Printout;
     ValueLimitationAtm();
-/*
-*
-*/
-    fft_gaussian_filter_3d(u,1);
-    fft_gaussian_filter_3d(v,1);
-    fft_gaussian_filter_3d(w,1);
-/*
-*
-*/
     MoistConvection();
 //    WaterVapourEvaporation();
     USStand_DewPoint_HumidRel();
-    print_min_max_atm();
     run_data_atm();
+    print_min_max_atm();
 //    goto Printout;
 //    store_intermediate_data_2D(1.);
     store_intermediate_data_3D(1.);
@@ -291,6 +290,7 @@ void cAtmosphereModel::run_2D_loop(){
 *
 */
 void cAtmosphereModel::run_3D_loop(){ 
+cout << endl << "      run_3D_loop atm" << endl;
     iter_cnt = 1;
     iter_cnt_3d = 0;
     if(debug){
@@ -324,8 +324,8 @@ void cAtmosphereModel::run_3D_loop(){
             }
 */
             solveRungeKutta_3D_Atmosphere();
-            fft_gaussian_filter_3d(t,1);
-            fft_gaussian_filter_3d(u,1);
+//            fft_gaussian_filter_3d(t,1);
+//            fft_gaussian_filter_3d(u,1);
 //            fft_gaussian_filter_3d(v,1);
 //            fft_gaussian_filter_3d(w,1);
             ValueLimitationAtm();
@@ -338,7 +338,6 @@ void cAtmosphereModel::run_3D_loop(){
             iter_cnt++;
             iter_cnt_3d++;
             if(debug) save_data();
-//        if(iter_cnt_3d >= 1) break;
         }//end of velocity loop
         computePressure_3D();
         if(pressure_iter % checkpoint == 0){
@@ -351,6 +350,7 @@ void cAtmosphereModel::run_3D_loop(){
             break;
         }
     }//end of pressure loop
+cout << endl << "      run_3D_loop atm ended" << endl;
 }
 /*
 *
@@ -709,7 +709,7 @@ void cAtmosphereModel::restrain_temperature(){
 *
 */
 void cAtmosphereModel::init_water_vapour(){
-cout << "      init_water_vapour" << endl;
+cout << endl << "      init_water_vapour" << endl;
     // initial and boundary conditions of water vapour on water and land surfaces
     // a value of 0.04 stands for 40 g/kg, g water vapour per kg dry air
     // water vapour contents computed by Clausius-Clapeyron-formula
@@ -717,12 +717,12 @@ cout << "      init_water_vapour" << endl;
     double E = 0.0;
     double t_u = 0.0;
     double c_land_min = c_tropopause;
-//    double c_land_eff = c_land_min - c_land;  // coefficient for the vertical decrease of water vapour over land
+    double c_land_eff = c_land_min - c_land;  // coefficient for the vertical decrease of water vapour over land
     double c_ocean_min = c_tropopause;
-//    double c_ocean_eff = c_ocean_min - c_ocean;  // coefficient for the vertical decrease of water vapour over ocean
+    double c_ocean_eff = c_ocean_min - c_ocean;  // coefficient for the vertical decrease of water vapour over ocean
     c_land_red = std::vector<double>(im, c_land_min);
     c_ocean_red = std::vector<double>(im, c_ocean_min);
-    double d_i_max = (double)(im-1);
+//    double d_i_max = (double)(im-1);
     for(int j = 0; j < jm; j++){
 //        int i_trop = get_tropopause_layer(j);
         int i_trop = im-1;
@@ -739,21 +739,23 @@ cout << "      init_water_vapour" << endl;
             if(is_land(h, 0, j, k))
                 c.x[i_mount][j][k] = c_land * ep * E/(p_stat.x[i_mount][j][k] - E); // relativ water vapour contents on land surface reduced by factor in kg/kg
             for(int i = i_mount; i < im; i++){
-                double d_i = (double)i;
-//                c_land_red[i] = c_land - sqrt(c_land_eff * c_land_eff
-//                    * d_i/d_i_max);  // radially parabolic decrease with height
-//                c_ocean_red[i] = c_ocean - sqrt(c_ocean_eff * c_ocean_eff
-//                    * d_i/d_i_max);  // radially parabolic decrease with height;
-
-                c_land_red[i] = c_land * (1.0 - d_i/d_i_max);  // linear decrease with height
-                c_ocean_red[i] = c_ocean * (1.0 - d_i/d_i_max);  // linear decrease with height;
-
-//                c_land_red[i] = c_land;  // linear decrease with height
-//                c_ocean_red[i] = c_ocean;  // linear decrease with height;
-
-//                c_land_red[i] = 1.0;  // linear decrease with height
-//                c_ocean_red[i] = 1.0;  // linear decrease with height;
+//                double d_i = (double)i;
 /*
+                c_land_red[i] = c_land - sqrt(c_land_eff * c_land_eff
+                    * d_i/d_i_max);  // radially parabolic decrease with height
+                c_ocean_red[i] = c_ocean - sqrt(c_ocean_eff * c_ocean_eff
+                    * d_i/d_i_max);  // radially parabolic decrease with height
+*/
+/*
+                c_land_red[i] = c_land * (1.0 - d_i/d_i_max);  // linear decrease with height
+                c_ocean_red[i] = c_ocean * (1.0 - d_i/d_i_max);  // linear decrease with height
+*/
+                c_land_red[i] = c_land;  // constant, best approach
+                c_ocean_red[i] = c_ocean;  // constant, best approach
+
+//                c_land_red[i] = 1.0;  // constant
+//                c_ocean_red[i] = 1.0;  // constant
+
                 t_u = t.x[i][j][k] * t_0;
                 if(t_u >= t_0)
                     E = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
@@ -765,11 +767,16 @@ cout << "      init_water_vapour" << endl;
                 if(is_land(h, 0, j, k))
                     c.x[i][j][k] = c_land_red[i] * ep * E
                         /(p_stat.x[i][j][k] - E); // relativ water vapour contents on land surface reduced by factor in kg/kg
-*/
-                double x = get_layer_height(i) 
+
+/*
+                double c_m = 0.016;
+                double x = get_layer_height(i) // most probable way to initialise the vertical parabolic water vapour distribution
                      /get_layer_height(i_trop); 
-                    c.x[i][j][k] = 
-                        parabola_interp(c_tropopause, c.x[i_mount][j][k], x); 
+                c.x[i][j][k] = 
+                    parabola_interp(c_tropopause, c.x[i_mount][j][k], x);  // parabolic decrease with height
+                c.x[i][j][k] = c_m 
+                    - sqrt(c_tropopause * c_tropopause * x);  // linear decrease with height
+*/
 /*
                 cout.precision(5);
                 cout.setf(ios::fixed);
@@ -789,30 +796,46 @@ cout << "      init_water_vapour" << endl;
 *       initial distribution of cloud water and ice water
 */
     // cloud water and cloud ice distribution formed by the curve Versiera (Witch) of Agnesi, algebraic curve of 3. order
+    // or Humility_critical approach from the textbook: Numerical Weather Prediction, Jean Coiffier, p. 211
+    int i_cloud_beg = 19;
+    int i_cloud_mid = 22;
+    int i_cloud_end = 25;
+
+    int i_ice_beg = 25;
+    int i_ice_mid = 28;
+    int i_ice_end = 31;
+
     double cloud_loc_equator = 22.0;
-    double cloud_loc_pole = 22.0;
+    double cloud_loc_pole = 18.0;
+
     double ice_loc_equator = 28.0;
-    double ice_loc_pole = 28.0;
+    double ice_loc_pole = 24.0;
+
     double cloud_max_equator = 3.0;  // for Humility_critical approach
     double cloud_max_pole = 0.75;  // for Humility_critical approach
-//    double cloud_max_equator = 4.0; // for Agnesi approach
-//    double cloud_max_pole = 1.0; // for Agnesi approach
-//    double ice_max_equator = 0.75;  // for Humility_critical approach
-//    double ice_max_pole = 0.2;  // for Humility_critical approach
-    double ice_max_equator = 1.0; // for Agnesi approach
-    double ice_max_pole = 0.25; // for Agnesi approach
+
+    double ice_max_equator = 1.0; // for Humility_critical approach
+    double ice_max_pole = 0.25; // for Humility_critical approach
+
     cloud_max = std::vector<double>(jm, cloud_max_pole);  // scaling of the maximum amount of cloud water
     cloud_loc = std::vector<double>(jm, cloud_loc_pole); // radial location of cloud water maximum
     ice_max = std::vector<double>(jm, ice_max_pole);  // scaling of the maximum amount of cloud water
     ice_loc = std::vector<double>(jm, ice_loc_pole); // radial location of cloud water maximum
-    double cloud_scale = 1.0e-3; // scaling of the maximum amount of cloud water
-    double ice_scale = 5.0e-4; // scaling of the maximum  amount of cloud ice
+
+    double cloud_scale = 1.4e-3; // scaling of the maximum amount of cloud water
+    double ice_scale = 7.0e-4; // scaling of the maximum  amount of cloud ice
+//    double cloud_scale = 0.7e-3; // scaling of the maximum amount of cloud water
+//    double ice_scale = 3.5e-5; // scaling of the maximum  amount of cloud ice
+
     double x_cloud = 0.0;
     double x_ice = 0.0;
+
     double cloud_loc_eff = cloud_loc_pole - cloud_loc_equator;  // coefficient for the zonal parabolic cloudwater extention
     double cloud_max_eff = cloud_max_pole - cloud_max_equator;  // coefficient for the zonal parabolic cloudwater extention
+
     double ice_loc_eff = ice_loc_pole - ice_loc_equator;  // coefficient for the zonal parabolic cloudwater extention
     double ice_max_eff = ice_max_pole - ice_max_equator;  // coefficient for the zonal parabolic cloudwater extention
+
     double d_j_half = (double)(jm-1)/2.0;
     for(int j = 0; j < jm; j++){
         double d_j = (double)j;
@@ -820,26 +843,25 @@ cout << "      init_water_vapour" << endl;
             * parabola((double)d_j/(double)d_j_half) + cloud_loc_pole;
         cloud_max[j] = cloud_max_eff 
             * parabola((double)d_j/(double)d_j_half) + cloud_max_pole;
+
         ice_loc[j] = ice_loc_eff 
             * parabola((double)d_j/(double)d_j_half) + ice_loc_pole;
         ice_max[j] = ice_max_eff 
             * parabola((double)d_j/(double)d_j_half) + ice_max_pole;
     }
     for(int j = 0; j < jm; j++){
-//        int i_trop = tropopause_layers[j];
-        int i_trop = im-1;
         double cloud_Agnesi_loc = (int)cloud_loc[j];
         double ice_Agnesi_loc = (int)ice_loc[j];
+
         double d_i_max_cloud = get_layer_height(cloud_Agnesi_loc);
         double d_i_max_ice = get_layer_height(ice_Agnesi_loc);
         for(int k = 0; k < km; k++){
-            int i_mount = i_topography[j][k];
-            for(int i = i_trop; i >= i_mount; i--){
+            for(int i = i_cloud_end; i >= i_cloud_beg; i--){
                 double d_i = get_layer_height(i);
-                x_cloud = (d_i_max_cloud - d_i)/d_i_max_cloud; // for Agnesi approach
-//                x_cloud = (double)i/cloud_loc[j];  // for Humility_critical approach
-                cloud.x[i][j][k] = cloud_scale * Agnesi(cloud_max[j], x_cloud); // for Agnesi approach
-//                cloud.x[i][j][k] = Humility_critical(x_cloud, 0.0, cloud_max[j]); // for Humility_critical approach 
+                x_cloud = d_i/d_i_max_cloud;
+//                cloud.x[i][j][k] = cloud_scale * Agnesi(cloud_max[j], x_cloud); // for Agnesi approach
+                cloud.x[i][j][k] = cloud_scale * Humility_critical(x_cloud, cloud_max[i_cloud_mid], cloud_max[j]); // for Humility_critical approach 
+                if(is_land(h, i, j, k)) cloud.x[i][j][k] = 0.0;
 /*
                 cout.precision(8);
                 cout.setf(ios::fixed);
@@ -859,12 +881,13 @@ cout << "      init_water_vapour" << endl;
 */
             } // end i cloud
 
-            for(int i = i_trop; i >= i_mount; i--){
+            for(int i = i_ice_end; i >= i_ice_beg; i--){
                 double d_i = get_layer_height(i);
-                x_ice = (d_i_max_ice - d_i)/d_i_max_ice; // for Agnesi approach
-//                x_ice = (double)i/ice_loc[j];  // for Humility_critical approach
-                ice.x[i][j][k] = ice_scale * Agnesi(ice_max[j], x_ice); // for Agnesi approach
-//                ice.x[i][j][k] = Humility_critical(x_ice, 0.0, ice_max[j]);  // for Humility_critical approach
+                x_ice = d_i/d_i_max_ice;
+//                ice.x[i][j][k] = ice_scale * Agnesi(ice_max[j], x_ice); // for Agnesi approach
+                ice.x[i][j][k] = ice_scale * Humility_critical(x_ice, ice_max[i_ice_mid], ice_max[j]); // for Humility_critical approach 
+                if(is_land(h, i, j, k)) ice.x[i][j][k] = 0.0;
+                ice.x[i][j][k] = 0.0;
 /*
                 cout.precision(8);
                 cout.setf(ios::fixed);
@@ -888,55 +911,46 @@ cout << "      init_water_vapour" << endl;
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
-/*
             for(int i = i_mount; i >= 0; i--){
                 if((is_land(h, i, j, k))&&(i < i_mount)){
-                    c.x[i][j][k] = c.x[i_mount][j][k];
-                    cloud.x[i][j][k] = cloud.x[i_mount][j][k];
-                    ice.x[i][j][k] = ice.x[i_mount][j][k];
-//                    t.x[i][j][k] = t.x[i_mount][j][k];
+                    c.x[i][j][k] = 0.0;
+                    cloud.x[i][j][k] = 0.0;
+                    ice.x[i][j][k] = 0.0;
                 }
             }
-*/
-
-            if(is_land(h, 0, j, k)){
-                c.x[0][j][k] = c.x[i_mount][j][k];
-                cloud.x[0][j][k] = cloud.x[i_mount][j][k];
-                ice.x[0][j][k] = ice.x[i_mount][j][k];
-                t.x[0][j][k] = t.x[i_mount][j][k];
-            }
-
         }
     }
-/*
     for(int i=0; i<im; i++){
         for(int j=0; j<jm; j++){
             for(int k=0; k<km; k++){
-                cloud.x[i][j][k] = 0.0;
-                ice.x[i][j][k] = 0.0;
-//                c.x[i][j][k] = c.x[i][j][k] 
-//                    + cloud.x[i][j][k] + ice.x[i][j][k];
-//                c.x[i][j][k] = c.x[i][j][k] + cloud.x[i][j][k];
+//                cloud.x[i][j][k] = 0.0; // no cloud water
+//                ice.x[i][j][k] = 0.0; // no cloud ice
+                c.x[i][j][k] = c.x[i][j][k] // cloud water and ice added to water vapour
+                    + cloud.x[i][j][k] + ice.x[i][j][k];
             }
         }
     }
-*/
 cout << "      init_water_vapour ended" << endl;
 }
 /*
 *
 */
 void cAtmosphereModel::init_temperature(){
-cout << "      init_temperature" << endl;
+cout << endl << "      init_temperature" << endl;
     // Lenton_etal_COPSE_time_temp, constant paleo mean temperature, added to the surface initial temperature
     // difference between mean temperature (Ma) and mean temperature (previous Ma) == t_paleo_add
+    std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
     int Ma = *get_current_time();
-    double t_equator = pow((rad_equator/sigma),0.25)/t_0;  // surface temperature t_0 = 1.1025 compares to 28.0° C compares to 299.15 K
-    double t_pole = pow((rad_pole/sigma),0.25)/t_0;  // surface temperature at the poles t_pole = 0.9451 compares to -15.°C compares to 253.15 K
+    double t_equator = pow((rad_equator/sigma),0.25)/t_0;  // surface temperature at the equator t_equator = 1.0976 compares to 28.0°C = to 299.81 K
+    double t_pole = pow((rad_pole/sigma),0.25)/t_0;  // surface temperature at the poles t_pole = 0.9436 compares to -15.4°C = to 250.25 K
+    double t_eff = t_pole - t_equator;
     double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map);
+    load_map_from_file(pole_temperature_file, pole_temp_map); 
+    float pole_temperature = (1.0 + get_pole_temperature(*get_current_time(), 
+        pole_temp_map)/t_0) - t_pole;
+
     double t_paleo_add = 0.0; 
-//    if(!is_first_time_slice()){
-    if(Ma > 0){
+    if(!is_first_time_slice()){
         if((NASATemperature != 0)&&(*get_current_time() > 0))  
             t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
                 - get_mean_temperature_from_curve(*get_previous_time());
@@ -956,28 +970,42 @@ cout << "      init_temperature" << endl;
         << setw(12) << time_slice_unit << endl << endl;
     const char* temperature_comment = "      temperature increase at paleo times: ";
     const char* temperature_gain = " t increase";
+    const char* temperature_pole_comment = "      pole temperature increase: ";
+    const char* temperature_gain_pole = " t pole increase";
     const char* temperature_modern = "      mean temperature at modern times: ";
     const char* temperature_paleo = "      mean temperature at paleo times: ";
     const char* temperature_average = " t modern";
     const char* temperature_average_pal = " t paleo";
     const char* temperature_unit =  "°C ";
-    cout << endl << setiosflags(ios::left) << setw(55) << setfill('.') 
+    cout << endl << setiosflags(ios::left) 
+        << setw(55) << setfill('.') 
         << temperature_comment << resetiosflags(ios::left) << setw(13) 
         << temperature_gain << " = " << setw(7) << setfill(' ') 
-        << t_paleo_add * t_0 << setw(5) << temperature_unit << endl << setw(55) 
-        << setfill('.') << setiosflags(ios::left) << temperature_modern 
+        << t_paleo_add * t_0 << setw(5) << temperature_unit << endl 
+
+        << setiosflags(ios::left) 
+        << setw(52) << setfill('.') 
+        << temperature_pole_comment << resetiosflags(ios::left) << setw(13) 
+        << temperature_gain_pole << " = " << setw(7) << setfill(' ') 
+        << pole_temperature * t_0 << setw(5) << temperature_unit << endl 
+
+        << setw(55) << setfill('.') 
+        << setiosflags(ios::left) << temperature_modern 
         << resetiosflags(ios::left) << setw(13) << temperature_average 
         << " = " << setw(7) << setfill(' ') << t_average << setw(5) 
-        << temperature_unit << endl << setw(55) << setfill('.') 
+        << temperature_unit << endl 
+
+        << setw(55) << setfill('.') 
         << setiosflags(ios::left) << temperature_paleo << resetiosflags(ios::left) 
         << setw(13) << temperature_average_pal << " = "  << setw(7) 
         << setfill(' ') << t_average + t_paleo_add * t_0 << setw(5) 
         << temperature_unit << endl;
+/*
     // temperatur distribution at a prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
     // sun_position_lon = 180, position of sun k = 180 means 0° or 180° E (Greenwich, zero meridian)
     // asymmetric temperature distribution from pole to pole for  j_d  maximum temperature (linear equation + parabola)
-    if((*get_current_time() > 0) && (sun == 1)){
+    if((*get_current_time() > 0)&&(sun == 1)){
         double j_par = sun_position_lat; // position of maximum temperature, sun position
         j_par = j_par + declination; // angle of sun axis, declination = 23,4°
         double j_pol = jm-1;
@@ -1023,39 +1051,43 @@ cout << "      init_temperature" << endl;
             }
         }
     }// temperatur distribution at aa prescribed sun position
+*/
     // pole temperature adjustment, combination of linear time dependent functions 
     // Stein/Rüdiger/Parish locally constant pole temperature
     // difference between pole temperature (Ma) and pole temperature (previous Ma)
-    std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
-    load_map_from_file(pole_temperature_file, pole_temp_map); 
     double d_j_half = (double)(jm-1)/2.0;
     float t_pole_diff_ocean = 0.0;
     float t_pole_diff_land = 0.0;
     //the t_pole_diff_ocean should be the difference between this time slice and the previous one
     if(!is_first_time_slice()){
-        t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map)
+        t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map)  // no differences between t_pole_diff_ocean and t_pole_diff_land
             - get_pole_temperature(*get_previous_time(), pole_temp_map);
         t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map)
             - get_pole_temperature(*get_previous_time(), pole_temp_map);
     }
     // in °C, constant local pole temperature as function of Ma for hothouse climates 
-    float pole_temperature = 1 + get_pole_temperature(*get_current_time(), 
-        pole_temp_map)/t_0;
-//    float pole_temperature = t_pole;
-    float t_eff = pole_temperature - t_equator;  // coefficient for the zonal parabolic temperature distribution
-    if((pole_temperature != t_pole)||(Ma > 0)){  // RadiationMultiLayer needs adjusted radiation values
-        double temp_equator_adjusted = pole_temperature + t_paleo_add;
-        rad_pole = sigma * pow((temp_equator_adjusted * t_0),4.0);
-    }
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             double d_j = (double)j;
             if(NASATemperature == 0){  // parabolic ocean surface temperature assumed
-                t.x[0][j][k] = t_eff * parabola((double)d_j/(double)d_j_half) 
-                    + pole_temperature + t_paleo_add;
+                t.x[0][j][k] = t_eff 
+                    * parabola((double)d_j/(double)d_j_half) + t_pole;
+                t.x[0][j][k] += t_paleo_add + m_model->t_land
+                    + pole_temperature * fabs(parabola((double)d_j
+                    /(double)d_j_half) + 1.0);
                 if(is_land(h, 0, j, k)){
                     t.x[0][j][k] += m_model->t_land;
                 }
+/*
+    cout.precision(9);
+    if(k == 180) 
+        cout << j << "     " << pole_temperature * t_0
+            << "      " << pole_temperature * fabs(parabola((double)d_j
+                /(double)d_j_half) + 1.0) * t_0
+            << "     " << t_pole * t_0 - t_0
+            << "     " << t.x[0][j][k] * t_0 - t_0
+            << endl;
+*/
             }else{  // if(NASATemperature == 1) ocean surface temperature based on NASA temperature distribution
                 // transported for later time slices Ma by use_earthbyte_reconstruction
                 if(is_land (h, 0, j, k)){  // on land a parabolic distribution assumed, no NASA based data transportable
@@ -1103,15 +1135,27 @@ cout << "      init_temperature" << endl;
         temp_tropopause[j] = temp_tropopause[j_max-j];
     }
 //    AtomUtils::smooth_tropopause(jm, temp_tropopause);
+
+
+    double a_s = 0.0;
+    double a_s0 = 3.5; // paper by Ali Varmaghani
+    double a_sm = 8.0; // paper by Ali Varmaghani
+    double height_m = get_layer_height(im-1);
+
+
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
 //            int i_trop = get_tropopause_layer(j);
 //            int i_trop = im-1;
             for(int i = i_mount; i < im; i++){
-                // US Standard Atmosphere
+                // US Standard Atmosphere with constant lapse rate
+//                t.x[i][j][k] = t.x[0][j][k] 
+//                    - 6.5 * get_layer_height(i)/1000.0/t_0;
+                // saturation adiabatic lapse rate approximated by a straight line with height
+                a_s = (a_sm - a_s0) * get_layer_height(i)/height_m + a_s0;
                 t.x[i][j][k] = t.x[0][j][k] 
-                    - 6.5 * get_layer_height(i)/1000.0/t_0;
+                    - a_s * get_layer_height(i)/1000.0/t_0;
 /*
                 }else{ // above tropopause
                     t.x[i][j][k] = temp_tropopause[j];
@@ -1138,7 +1182,7 @@ cout << "      init_temperature ended" << endl;
 *
 */
 void cAtmosphereModel::init_dynamic_pressure(){
-cout << "      init_dynamic_pressure" << endl;
+cout << endl << "      init_dynamic_pressure" << endl;
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
@@ -1251,7 +1295,7 @@ void cAtmosphereModel::init_topography(const string &topo_filename){
 *
 */
 void cAtmosphereModel::init_co2(){
-cout << "      init_co2" << endl;
+cout << endl << "      init_co2" << endl;
     // initial and boundary conditions of CO2 content on water and land surfaces
     // Lenton_etal_COPSE_time_temp, constant paleo mean temperature, added to the surface initial temperature
     // difference between mean temperature (Ma) and mean temperature (previous Ma) == t_paleo_add
@@ -1285,8 +1329,8 @@ cout << "      init_co2" << endl;
         << temperature_comment << resetiosflags(ios::left) << setw(13) 
         << temperature_gain << " = " << setw(7) << setfill(' ') 
         << t_paleo_add << setw(5) << temperature_unit << endl
-        << setiosflags (ios::left) << setw (55) << setfill ('.') <<
-        co_comment << resetiosflags (ios::left)         << setw (12) << co_gain << " = "
+        << setiosflags (ios::left) << setw (55) << setfill ('.')
+        << co_comment << resetiosflags (ios::left)         << setw (12) << co_gain << " = "
         << setw (7) << setfill (' ') << co2_paleo << setw (5) << co_unit << 
         endl << setw (55) << setfill ('.')  << setiosflags (ios::left) << co_modern
         << resetiosflags (ios::left) << setw (13) << co_average_str  << " = "

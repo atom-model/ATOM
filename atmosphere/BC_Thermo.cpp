@@ -24,7 +24,7 @@ using namespace std;
 using namespace AtomUtils;
 
 void cAtmosphereModel::RadiationMultiLayer(){
-cout << "      RadiationMultiLayer" << endl;
+cout << endl << "      RadiationMultiLayer" << endl;
     // class element for the computation of the radiation and the temperature distribution
     // computation of the local temperature based on short and long wave radiation
     // multi layer radiation model
@@ -117,9 +117,7 @@ cout << "      RadiationMultiLayer" << endl;
 //                epsilon.x[i][j][k] = eps_co2 + (0.7 + 5.95e-5 * e
 //                    * exp(1500.0/t_u)); // (Idso, 1981, -40 <=> 45°C), values too high
 //                epsilon.x[i][j][k] = eps_co2 + 1.24 * pow((e/t_u),1/7); // (Brutsaert, 1975, -40 <=> 45°C), emissivity seems too high
-//                epsilon.x[i][j][k] = eps_co2 + 1.24 * pow((e/t_u),0.143); // (Brutsaert, 1975, -40 <=> 45°C), emissivity seems too high
 //                epsilon.x[i][j][k] = 0.98 * pow((e/t_u), 0.0687); // atmospheric emissivity by Vogel/Bliss, emissivity seems too high
-//                radiation.x[i][j][k] = sigma * pow(t_u, 4.0);
                 radiation.x[i][j][k] = (1.0 - epsilon.x[i][j][k]) * sigma * pow(t_u, 4.0);
                 aux_t.x[i][j][k] = t.x[i][j][k];
 /*
@@ -298,7 +296,7 @@ cout << "      RadiationMultiLayer ended" << endl;
 *
 */
 void cAtmosphereModel::PressureDensity(){
-cout << "      PressureDensity" << endl;
+cout << endl << "      PressureDensity" << endl;
 // static pressure is understood by a zero velocity field
     double t_u = 0.0;
     double R_W_R_A = R_WaterVapour/R_Air;
@@ -377,7 +375,7 @@ cout << "      PressureDensity ended" << endl;
 *
 */
 void cAtmosphereModel::LatentHeat(){
-cout << "      LatentHeat" << endl;
+cout << endl << "      LatentHeat" << endl;
     float Q_Latent_Ice = 0.; 
     float coeff_Q = cp_l * r_air * t_0; // coefficient for Q_Sensible
     float coeff_lat = 1.e6 * 50.; // diffusion coefficient for water vapour in air (50)
@@ -485,7 +483,7 @@ cout << "      LatentHeat ended" << endl;
 //Ice_Water_SaturationAdjustment, distribution of cloud ice and cloud water 
 //dependent on water vapour amount and temperature
 void cAtmosphereModel::SaturationAdjustment(){ 
-cout << "      SaturationAdjustment" << endl;
+cout << endl << "      SaturationAdjustment" << endl;
 // constant coefficients for the adjustment of cloud water and cloud ice amount vice versa
     int iter_prec_end = 10;
     int iter_prec = 0;
@@ -527,6 +525,8 @@ cout << "      SaturationAdjustment" << endl;
                 q_v_b = c.x[i][j][k];
                 q_c_b = cloud.x[i][j][k];
                 q_i_b = ice.x[i][j][k];
+//                q_c_b = 0.0;
+//                q_i_b = 0.0;
                 T = t_u; // in K
                 E_Rain = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                 E_Ice = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the water phase at t < 0°C in hPa
@@ -551,6 +551,7 @@ cout << "      SaturationAdjustment" << endl;
                         d_q_c = - d_q_v * CND;
                         d_q_i = - d_q_v * DEP;
                         d_t = (lv * d_q_c + ls * d_q_i)/cp_l; // in K, temperature changes
+//                        d_t = 0.1 * (lv * d_q_c + ls * d_q_i)/cp_l; // in K, temperature changes
                         T = T + d_t; // in K
                         q_v_b = q_v_b + d_q_v;  // new values
                         q_c_b = q_c_b + d_q_c;
@@ -710,7 +711,7 @@ cout << "      SaturationAdjustment ended" << endl;
 // Two-Category-Ice-Scheme, COSMO-module from the German Weather Forecast, 
 // resulting the precipitation distribution formed of rain and snow
 void cAtmosphereModel::TwoCategoryIceScheme(){   
-cout << "      TwoCategoryIceScheme" << endl;
+cout << endl << "      TwoCategoryIceScheme" << endl;
     // constant coefficients for the transport of cloud water and cloud ice amount vice versa, 
     // rain and snow in the parameterization procedures
 //    double R_A_R_W = R_Air/R_WaterVapour;
@@ -805,7 +806,7 @@ cout << "      TwoCategoryIceScheme" << endl;
                     else  S_c_frz = 0.0;
                     if(!(t_Celsius > 0.0)){  //temperature <= 0
                         if(c.x[i][j][k] > q_Ice){  // supersaturation
-                            S_i_dep = c_i_dep * N_i * pow(m_i, (1./3.)) 
+                            S_i_dep = c_i_dep * N_i * pow(m_i, (1.0/3.0)) 
                                 * (c.x[i][j][k] - q_Ice);  // supersaturation, < III >
                         }else if(- ice.x[i][j][k]  > c.x[i][j][k] - q_Ice) 
                             S_i_dep = - ice.x[i][j][k]/dt_snow_dim; // subsaturation, < III >
@@ -851,14 +852,14 @@ cout << "      TwoCategoryIceScheme" << endl;
                     }
                     // diffusional growth of rain and snow
                     if(t_u < t_0){  // temperature below zero
-                        S_s_dep = c_s_dep * (1. + b_s_dep 
+                        S_s_dep = c_s_dep * (1.0 + b_s_dep 
                             * pow(P_snow.x[i][j][k],(5.0/26.0))) * 
                             (c.x[i][j][k] - q_Ice) 
                             * pow(P_snow.x[i][j][k],(8.0/13.0));
                          // deposition/sublimation of snow, < XIV >
                         S_ev = 0.0;
                     }else{  
-                        S_ev = a_ev * (1. + b_ev 
+                        S_ev = a_ev * (1.0 + b_ev 
                             * pow(P_rain.x[i][j][k],(1.0/6.0))) *
                             (q_Rain - c.x[i][j][k]) 
                             * pow(P_rain.x[i][j][k],(4.0/9.0));
@@ -878,15 +879,15 @@ cout << "      TwoCategoryIceScheme" << endl;
                         float q_Rain_t_in = ep * E_Rain_t_in/(p_t_in 
                             - E_Rain_t_in);
                             // water vapour amount at saturation with water formation in kg/kg
-                        S_s_melt = c_s_melt * (1. + b_s_melt 
+                        S_s_melt = c_s_melt * (1.0 + b_s_melt 
                             * pow(P_snow.x[i][j][k],(5.0/26.0))) *
                             ((t_u - t_0) + a_s_melt * (c.x[i][j][k] 
                             - q_Rain_t_in)) * pow(P_snow.x[i][j][k], 
-                            (8./13.));  // melting rate of snow to form rain, < XVI >
+                            (8.0/13.0));  // melting rate of snow to form rain, < XVI >
                     }
                     if(t_r_frz - t_u > 0.0)
-                        S_r_frz = c_r_frz * pow((t_r_frz - t_u), 
-                            (3./2.)) * pow(P_rain.x[i][j][k],(3.0/2.0));
+                        S_r_frz = c_r_frz * pow((t_r_frz - t_u), (3.0/2.0)) 
+                            * pow(P_rain.x[i][j][k],(3.0/2.0));
                             // immersion freezing and contact nucleation, < XVII >
                     else  S_r_frz = 0.0;
                     // sinks and sources
@@ -997,7 +998,7 @@ cout << "      TwoCategoryIceScheme ended" << endl;
 *
 */
 void cAtmosphereModel::ValueLimitationAtm(){
-cout << "      ValueLimitationAtm" << endl;
+cout << endl << "      ValueLimitationAtm" << endl;
 // class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -1035,7 +1036,7 @@ cout << "      ValueLimitationAtm ended" << endl;
 *
 */
 void cAtmosphereModel::MoistConvection(){
-cout << "      MoistConvection" << endl;
+cout << endl << "      MoistConvection" << endl;
 // collection of coefficients for phase transformation
     int i_base = 0;
     int ii_base_beg = 1;
@@ -1919,85 +1920,152 @@ cout << "      MoistConvection ended" << endl;
 *
 */
 void cAtmosphereModel::WaterVapourEvaporation(){ 
-cout << "      WaterVapourEvaporation" << endl;
+cout << endl << "      WaterVapourEvaporation" << endl;
 // preparations for water vapour increase due to the differences between evaporation and precipitation 
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
 // amount of additional water vapour by the difference of evaporation and precipitation is negligible but functional
-//    double c_surf_ocean = .8; // 80% humidity
-//    double c_surf_ocean = .9; // 90% humidity
-    double c_surf_ocean = 1.; // 100% humidity
-//    double rm = log(get_layer_height(0)/L_atm + 1.);
-    double rm = log(rad.z[0] + 1.);
-    double exp_rm = 1./(rm + 1.);
+    std::vector<double> step(im, 0);
+//    double c_surf_ocean = 0.8; // 80% humidity
+//    double c_surf_ocean = 0.9; // 90% humidity
+    double c_surf_ocean = 1.0; // 100% humidity
+//    double rm = log(get_layer_height(0)/L_atm + 1.0);
+    double rm = log(rad.z[0] + 1.0);
+    double exp_rm = 1./(rm + 1.0);
     double evap_precip = 0.0;
     double vapour_surface_n = 0.0;
     double vapour_surface = 0.0;
-    double coeff_evap = 1.1574e-8;  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
-    float e, E_Rain, E_Ice, sat_deficit;
+    double coeff_evap = 1.1574e-8;  // 1.1574-8 is the conversion of (Evap-Prec) from in mm/d to m/s
+    double e = 0.0;  // water vapour pressure in Pa
+    double e_sa = 0.0;  // water vapour pressure in Pa
+    double r = 0.0;
+    double u_bar = 0.0;
+    double R_net = 0.0;
+    double t_u = 0.0;
+    double E_Rain = 0.0;
+    double E_Ice = 0.0;
+    double sat_deficit = 0.0;
+    double del_gam = 0.0;
+    double gam_del = 0.0;
+// short wave radiation
+    short_wave_radiation = std::vector<double>(jm, rad_pole_short);
+    int j_max = jm-1;
+    int j_half = j_max/2;
+    double rad_short_eff = rad_pole_short - rad_equator_short;
+    for(int j=j_half; j>=0; j--){
+        short_wave_radiation[j] = rad_short_eff * parabola((double)j
+            /(double)j_half) + rad_pole_short;
+    }
+    for(int j=j_max; j>j_half; j--){
+        short_wave_radiation[j] = short_wave_radiation[j_max-j];
+    }
+  // saturation vapour pressure in the water phase for t > 0°C in hPa
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            int i = get_surface_layer(j,k);
+//            step[0] = log((get_layer_height(1) + 1.0)
+//                /(get_layer_height(0) + 1.0));
+            step[0] = get_layer_height(1) - get_layer_height(0);
             c.x[0][j][k] = c_surf_ocean * hp * ep * exp(17.0809 
                 * (t.x[0][j][k] * t_0 - t_0)/(234.175 
                 + (t.x[0][j][k] * t_0 - t_0)))/((r_air * R_Air 
-                * t.x[0][j][k] * t_0) * .01);
+                * t.x[0][j][k] * t_0) * 0.01);
             c_fix.y[j][k] = c.x[0][j][k];
-            float t_u = t.x[i][j][k] * t_0;
-            float t_Celsius = t_u - t_0;
-            if(t_Celsius >= 0.0){
-                if(is_land(h, i, j, k)){
+            t_u = t.x[0][j][k] * t_0;
+            del_gam = 0.439 + 0.0112 * t.x[0][j][k];
+            gam_del = 0.5495 + 0.01119 * t.x[0][j][k];
+//            double u_bar = sqrt((v.x[1][j][k] 
+//                * v.x[1][j][k] + w.x[1][j][k] 
+//                * w.x[1][j][k])/2.0) * u_0;
+            u_bar = sqrt((v.x[0][j][k] 
+                * v.x[0][j][k] + w.x[0][j][k] 
+                * w.x[0][j][k])/2.0) * u_0;
+            R_net = short_wave_radiation[j]/radiation.x[0][j][k];
+            if((t.x[0][j][k] * t_0) >= t_0){
+                if(is_land(h, 0, j, k)){
                     t_u = (t.x[0][j][k] + t_land) * t_0;
-//                    e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in hPa
-                    e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in hPa
+                    e = c.x[0][j][k] * p_stat.x[0][j][k]/ep;  // water vapour pressure in hPa
                     E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
                     sat_deficit = E_Rain - e;  // saturation deficit in hPa
-                    Evaporation_Dalton.y[j][k] = C_Dalton(i+1, j, k, 
-                        coeff_Dalton, u_0, v, w) * sat_deficit * 24.;  // mm/h in mm/d
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(0, j, k, coeff_Dalton, u_0, v, w) 
+                        * sat_deficit * 24.0;  // mm/h in mm/d
+                    e_sa = E_Rain * 100.0;
+                    r = e/e_sa;
+                    Evaporation_Penman.y[j][k] = del_gam * R_net/lv // in mm/d
+                        + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
+                        * (1.0 - r) * e_sa;
                 } // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m²*s) = mm/s
                 if(is_water(h, 0, j, k)){
-//                    e = c.x[0][j][k] * p_stat.x[0][j][k]/ep;  // water vapour pressure in hPa
                     e = c.x[0][j][k] * p_stat.x[0][j][k]/ep;  // water vapour pressure in hPa
                     t_u = t.x[0][j][k] * t_0;
                     E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
                     sat_deficit = E_Rain - e;  // saturation deficit in hPa
-                    Evaporation_Dalton.y[j][k] = C_Dalton(0, j, k, 
-                        coeff_Dalton, u_0, v, w) * sat_deficit * 24.;  // mm/h in mm/d
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(0, j, k, coeff_Dalton, u_0, v, w) 
+                        * sat_deficit * 24.0;  // mm/h in mm/d
+                    e_sa = E_Rain * 100.0;
+                    r = e/e_sa;
+                    Evaporation_Penman.y[j][k] = del_gam * R_net/lv  // in mm/d
+                        + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
+                        * (1.0 - r) * e_sa;
                 }
             }
-            if(t_Celsius <= 0.0){
-                if(is_land(h, i, j, k)){
+            if((t.x[0][j][k] * t_0) < t_0){
+                if(is_land(h, 0, j, k)){
                     t_u = (t.x[0][j][k] + t_land) * t_0;
-//                    e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in hPa
-                    e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in hPa
+                    e = c.x[0][j][k] * p_stat.x[0][j][k]/ep;  // water vapour pressure in hPa
                     E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
                     sat_deficit = (E_Ice - e);  // saturation deficit in hPa
-                    Evaporation_Dalton.y[j][k] = C_Dalton(i+1, j, k, coeff_Dalton, u_0, v,
-                        w) * sat_deficit * 24.;  // mm/h in mm/d
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(1, j, k, coeff_Dalton, u_0, v, w) 
+                        * sat_deficit * 24.;  // mm/h in mm/d
+                    e_sa = E_Ice * 100.0;
+                    r = e/e_sa;
+                    Evaporation_Penman.y[j][k] = del_gam * R_net/lv  // in mm/d
+                        + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
+                        * (1.0 - r) * e_sa;
                 }
                 if(is_water(h, 0, j, k)){
                     e = c.x[0][j][k] * p_stat.x[0][j][k]/ep;  // water vapour pressure in hPa
-                    t_u = (t.x[0][j][k] + t_land) * t_0;
+                    t_u = t.x[0][j][k] * t_0;
                     E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
                     sat_deficit = (E_Ice - e);  // saturation deficit in hPa
-                    Evaporation_Dalton.y[j][k] = C_Dalton(0, j, k, coeff_Dalton, u_0, v,
-                        w) * sat_deficit * 24.;  // mm/h in mm/d
+                    Evaporation_Dalton.y[j][k] = 
+                        C_Dalton(0, j, k, coeff_Dalton, u_0, v, w) 
+                        * sat_deficit * 24.0;  // mm/h in mm/d
+                    e_sa = E_Ice * 100.0;
+                    r = e/e_sa;
+                    Evaporation_Penman.y[j][k] = del_gam * R_net/lv // in mm/d
+                        + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
+                        * (1.0 - r) * e_sa;
                 }
             }
             if(Evaporation_Dalton.y[j][k] <= 0.0)  
                 Evaporation_Dalton.y[j][k] = 0.0;
+            if(Evaporation_Penman.y[j][k] <= 0.0)  
+                Evaporation_Penman.y[j][k] = 0.0;
+//            evap_precip = coeff_evap * (Evaporation_Dalton.y[j][k] 
+//                - 8.64e4 * Precipitation.y[j][k]); // in mm/d
+            evap_precip = coeff_evap * (Evaporation_Penman.y[j][k] 
+                - 8.64e4 * Precipitation.y[j][k]); // in mm/s
             for(int iter_prec = 1; iter_prec <= 10; iter_prec++){ // iter_prec may be varied
-                evap_precip = coeff_evap * (Evaporation_Dalton.y[j][k] - Precipitation.y[j][k]); // in mm/s
-                vapour_surface = - ((- 3. * c.x[0][j][k] + 4. * c.x[1][j][k] 
-                    - c.x[2][j][k])/(2. * dr) * exp_rm // 1. order derivative, 2. order accurate
-                    * (1. - 2. * c.x[0][j][k]) * evap_precip) * r_humid.x[0][j][k]; 
-//                vapour_surface = - (c.x[1][j][k] - c.x[0][j][k]) // 1. order derivative, 1. order accurate
-//                   /dr * exp_rm * (1. + 2. * c.x[0][j][k]) * evap_precip;
-//                if(iter_prec == 1)  vapour_surface_n = .9 * vapour_surface;
-                if(iter_prec == 1)  vapour_surface = .9 * vapour_surface_n;
+//                vapour_surface = - ((- 3.0 * c.x[0][j][k] 
+/*
+                vapour_surface = + ((- 3.0 * c.x[0][j][k] 
+                    + 4.0 * c.x[1][j][k] - c.x[2][j][k])/(2.0 * dr) 
+                    * exp_rm * (1.0 - 2. * c.x[0][j][k]) * evap_precip) 
+                    * r_humid.x[0][j][k];  // 1. order derivative, 2. order accurate
+*/
+                vapour_surface = + ((- 3.0 * c.x[0][j][k] 
+                    + 4.0 * c.x[1][j][k] - c.x[2][j][k])/(2.0 * step[0]) 
+                    * (1.0 - 2. * c.x[0][j][k]) * evap_precip);  // 1. order derivative, 2. order accurate
+//                vapour_surface = - (c.x[1][j][k] - c.x[0][j][k])
+//                   /dr * exp_rm * (1.0 + 2.0 * c.x[0][j][k]) * evap_precip; // 1. order derivative, 1. order accurate
+//                if(iter_prec == 1)  vapour_surface = 0.9 * vapour_surface_n;
+                if(iter_prec == 1)  vapour_surface = 0.9 * vapour_surface;
                 vapour_evaporation.y[j][k] = vapour_surface;
                 if(is_land(h, 0, j, k)) vapour_evaporation.y[j][k] = 0.0;
                 c.x[0][j][k] = c_fix.y[j][k] + vapour_evaporation.y[j][k];
-/*
+
                 cout.precision(8);
                 cout.setf(ios::fixed);
                 if((j == 120)&&(k == 180)) cout << endl
@@ -2005,27 +2073,28 @@ cout << "      WaterVapourEvaporation" << endl;
                     << "  it = " << iter_prec << endl
                     << "  j = " << j << "  k = " << k << endl
                     << "  vap_evap = " << vapour_evaporation.y[j][k] * 1e3 << endl
-                    << "  vap_diff = " << fabs(vapour_surface/vapour_surface_n - 1.) 
-                    << "  vap_surf = " << vapour_surface 
-                    << "  vap_surf_n = " << vapour_surface_n << endl
+                    << "  vap_diff = " << fabs(vapour_surface/vapour_surface_n - 1.)  * 1e3
+                    << "  vap_surf = " << vapour_surface * 1e3
+                    << "  vap_surf_n = " << vapour_surface_n * 1e3 << endl
                     << "  c_fix = " << c_fix.y[j][k] * 1e3 
                     << "  c = " << c.x[0][j][k] * 1e3 << endl
                     << "  v = " << v.x[0][j][k] * u_0
                     << "  w = " << w.x[0][j][k] * u_0
                     << "  vel_magnitude = " << sqrt(v.x[0][j][k] * v.x[0][j][k] 
                         + w.x[0][j][k] * w.x[0][j][k]) * u_0 
-                    << "  c_grad_1 = " << (c.x[1][j][k] - c.x[0][j][k])/dr * exp_rm
+                    << "  c_grad_1 = " << (c.x[1][j][k] - c.x[0][j][k])/step[0]
                     << "  c_grad_2 = " << (- 3. * c.x[0][j][k] + 4. * c.x[1][j][k] 
-                        - c.x[2][j][k]) /(2. * dr) * exp_rm << endl
+                        - c.x[2][j][k]) /(2. * step[0]) << endl
                     << "  sat_deficit = " << sat_deficit 
                     << "  e = " << e 
                     << "  E_Rain = " << E_Rain << endl
-                    << "  C_Dalton = " << C_Dalton(i+1, j, k, coeff_Dalton, u_0, v, w)
+                    << "  C_Dalton = " << C_Dalton(1, j, k, coeff_Dalton, u_0, v, w)
                         * sat_deficit * 2.778e-4
                     << "  Evap-Prec = " << evap_precip 
-                    << "  Evap = " << Evaporation_Dalton.y[j][k] 
-                    << "  Prec = " << Precipitation.y[j][k] << endl;
-*/
+                    << "  Evap_Dalton = " << Evaporation_Dalton.y[j][k] 
+                    << "  Evap_Penman = " << Evaporation_Penman.y[j][k] 
+                    << "  Prec = " << 8.64e4 * Precipitation.y[j][k] << endl;
+
 /*
                 int i_trans = 3; // 2 ~ 129 m vertical extension of ocean surface evaporation, arbitrary 
                 for(int i = 0; i < i_trans; i++){
@@ -2045,7 +2114,7 @@ cout << "      WaterVapourEvaporation" << endl;
                     }
                 } // end i
 */
-                if(fabs(vapour_surface/vapour_surface_n - 1.) 
+                if(fabs(vapour_surface/vapour_surface_n - 1.0) 
                     <= 1.e-5)  break;  
                 vapour_surface_n = vapour_surface;
             } // iter_prec 
@@ -2057,7 +2126,7 @@ cout << "      WaterVapourEvaporation ended" << endl;
 *
 */
 void cAtmosphereModel::USStand_DewPoint_HumidRel(){
-cout << "      USStand_DewPoint_HumidRel" << endl;
+cout << endl << "      USStand_DewPoint_HumidRel" << endl;
     temp_tropopause = std::vector<double>(jm, t_tropopause_pole);
     int j_max = jm-1;
     int j_half = j_max/2;

@@ -61,7 +61,8 @@ void cAtmosphereModel::Atmosphere_PlotData (string &Name_Bathymetry_File, int it
             PlotData_File << k << " " << 90-j << " " << h.x[0][j][k] << " " << v.x[0][j][k] * u_0 << " " 
                 << w.x[0][j][k] * u_0 << " " << vel_mag << " " << t.x[0][j][k] * t_0 - t_0 << " " 
                 << c.x[0][j][k] * 1000. << " " << Precipitation.y[j][k] * 86400.0 << " " << precipitable_water.y[j][k] 
-                << " " <<  Evaporation_Dalton.y[j][k] << " " << endl;
+//                << " " <<  Evaporation_Dalton.y[j][k] << " " << endl;
+                << " " <<  Evaporation_Penman.y[j][k] << " " << endl;
         }
     }
 }

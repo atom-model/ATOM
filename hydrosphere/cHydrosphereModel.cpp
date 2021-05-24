@@ -134,13 +134,12 @@ void cHydrosphereModel::LoadConfig(const char *filename){
 *
 */
 void cHydrosphereModel::RunTimeSlice(int Ma){
+    if(!is_temperature_curve_loaded()) 
+        load_temperature_curve();
     reset_arrays();
     rad.Coordinates(im, r0, dr);
     the.Coordinates(jm, the0, dthe);
     phi.Coordinates(km, phi0, dphi);
-//    rad.printArray_1D(im);
-//    the.printArray_1D(jm);
-//    phi.printArray_1D(km);
     m_current_time = m_time_list.insert(float(Ma)).first;
     mkdir(output_path.c_str(), 0777);
     Ma = int(round(*get_current_time()));
@@ -185,12 +184,6 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     iter_cnt_3d++;
     land_oceanFraction();
     EkmanSpiral();
-/*
-    BC_radius();
-    BC_theta();
-    BC_phi();
-    BC_SolidGround();
-*/
     Value_Limitation_Hyd();
 //    goto Printout;
 //    IC_u_WestEastCoast();
@@ -201,6 +194,7 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
 //    goto Printout;
     fft_gaussian_filter_3d(t,1);
     init_salinity();
+//    goto Printout;
     PresStat_SaltWaterDens();
     SalinityEvaporation();
     init_dynamic_pressure();
@@ -212,10 +206,11 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
 //    fft_gaussian_filter_3d(v,1);
 //    fft_gaussian_filter_3d(w,1);
 //    goto Printout;
+    run_data_hyd(); 
+    print_min_max_hyd();
     run_3D_loop();
 //    goto Printout;
     cout << endl << endl;
-//    if(debug) save_data();
 /*
     Printout:
     run_data_hyd(); 
@@ -247,6 +242,7 @@ void cHydrosphereModel::reset_arrays(){
     BuoyancyForce_2D.initArray_2D(jm, km, 0.); // radiation balance at the surface
     salinity_evaporation.initArray_2D(jm, km, 0.); // additional salinity by evaporation
     Evaporation_Dalton.initArray_2D(jm, km, 0.); // evaporation by Dalton in [mm/d]
+    Evaporation_Penman.initArray_2D(jm, km, 0.); // evaporation by Penman in [mm/d]
     Precipitation.initArray_2D(jm, km, 0.); // areas of higher precipitation
     temperature_NASA.initArray_2D(jm, km, 0.); // surface temperature from NASA
     c_fix.initArray_2D(jm, km, 0.); // local surface salinity fixed for iterations
@@ -360,10 +356,10 @@ void  cHydrosphereModel::save_data(){
     for(int i=0; i<im; i++){
         for(int j=0; j<jm; j++){
             for(int k=0; k<km; k++){
-                c_t.x[i][j][k] = c.x[i][j][k] * 35.;
+                c_t.x[i][j][k] = c.x[i][j][k] * c_0;
                 v_t.x[i][j][k] = v.x[i][j][k] * u_0;
                 w_t.x[i][j][k] = w.x[i][j][k] * u_0;
-                t_t.x[i][j][k] = t.x[i][j][k] * 273.15 - 273.15;
+                t_t.x[i][j][k] = t.x[i][j][k] * t_0 - t_0;
             }
         }
     }
@@ -448,6 +444,7 @@ void  cHydrosphereModel::run_2D_loop(){
 *
 */
 void  cHydrosphereModel::run_3D_loop(){
+cout << endl << "      run_3D_loop hyd" << endl;
     iter_cnt = 1;
     iter_cnt_3d = 0;
     for(int pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++){
@@ -499,7 +496,7 @@ void  cHydrosphereModel::run_3D_loop(){
             break;
         }
     }// end of pressure loop
-    return;
+cout << endl << "      run_3D_loop hyd ended" << endl;
 }
 /*
 *
@@ -565,7 +562,7 @@ void cHydrosphereModel::EkmanSpiral(){
             Az = pow((T_yz/(r_0_water * V_0)),2)/f;  // in m*m/s
             a = sqrt(f/(2. * Az));  // in 1/m
             D_E_op = sqrt(2. * Az * M_PI * M_PI/f);  // in m
-
+/*
     if((j == 75) &&(k == 180)) cout << endl << "Ekman-Layer north" << endl
         << "   j = " << j << "   k = " << k << endl
         << "   sinthe = " << sinthe << "   sqrt(sinthe) = " << sqrt(sinthe) << endl
@@ -607,7 +604,7 @@ void cHydrosphereModel::EkmanSpiral(){
         << "   a = " << a
         << "   i_Ekman = " << i_Ekman 
         << endl << endl;
-
+*/
             if(j <= (jm-1)/2){
                 if((w_wind.y[j][k] <= 0.)&&(v_wind.y[j][k] >= 0.)){
                     if((alfa >= 0.)&&(alfa <= 45./pi180)){  // section I (j = 83 - 90) (7°N - 0°N)
@@ -651,6 +648,7 @@ void cHydrosphereModel::EkmanSpiral(){
 //                    cos_a_z = cos(angle_new + a_z);
                     v.x[i][j][k] = V_0 * exp_a_z * sin_a_z; 
                     w.x[i][j][k] = V_0 * exp_a_z * cos_a_z;
+/*
     if((j == 75) &&(k == 180)) cout << "north" << endl
         << "   i = " << i << "   j = " << j << "   k = " << k  << endl
         << "   rad = " << rad.z[i] << endl
@@ -674,6 +672,7 @@ void cHydrosphereModel::EkmanSpiral(){
         << "   Az = " << Az
         << "   a = " << a
         << endl;
+*/
                 }
             }
             if(j > (jm-1)/2){
@@ -714,7 +713,7 @@ void cHydrosphereModel::EkmanSpiral(){
                     cos_a_z = cos(angle + a_z);
                     v.x[i][j][k] = V_0 * exp_a_z * sin_a_z; 
                     w.x[i][j][k] = V_0 * exp_a_z * cos_a_z;
-
+/*
     if((j == 105) &&(k == 180)) cout << "south" << endl
         << "   i = " << i << "   j = " << j << "   k = " << k  << endl
         << "   rad = " << rad.z[i] << endl
@@ -738,7 +737,7 @@ void cHydrosphereModel::EkmanSpiral(){
         << "   Az = " << Az
         << "   a = " << a
         << endl;
-
+*/
                 }
             }
         }
@@ -818,7 +817,7 @@ void cHydrosphereModel::EkmanSpiral(){
                     /(2. * rm * dthe) 
                     + (w.x[i-1][j][k+1] - w.x[i-1][j][k-1])
                     /(2. * rmsinthe * dphi));
-
+/*
     if((j == 75) &&(k == 180)) cout << "north pumping" << endl
         << "   i = " << i << "   j = " << j << "   k = " << k  << endl
         << "   aux_v = " << aux_v.x[i][j][k] 
@@ -839,7 +838,7 @@ void cHydrosphereModel::EkmanSpiral(){
         << "   rm = " << rm
         << "   dr = " << dr
         << "   residuum = " << residuum << endl;
-
+*/
             }
         }
     }
@@ -929,18 +928,20 @@ void cHydrosphereModel::init_bathymetry(const string &bathymetry_file){
 *
 */
 void cHydrosphereModel::init_temperature(){
-    if(debug){
-        Array tmp = (t-1)*t_0;
-        logger()<<"20180912: Enter BCT ... "<<std::endl;
-        tmp.inspect("20180912: ");
-    }
-    // logger() << std::endl << "enter BC_Temperature: temperature max: " << (t.max()-1)*t_0 << std::endl;
-    // logger() << "enter BC_Temperature: temperature min: " << (t.min()-1)*t_0 << std::endl << std::endl;
-
+cout << endl << "      init_temperature" << endl;
     // Lenton_etal_COPSE_time_temp, constant paleo mean temperature, added to the surface initial temperature
     // difference between mean temperature (Ma) and mean temperature (previous Ma) == t_paleo_add
+    std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
+    int Ma = *get_current_time();
+    double t_equator = pow((rad_equator/sigma),0.25)/t_0;  // surface temperature at the equator t_equator = 1.0976 compares to 28.0°C = to 299.81 K
+    double t_pole = pow((rad_pole/sigma),0.25)/t_0;  // surface temperature at the poles t_pole = 0.9436 compares to -15.4°C = to 250.25 K
+    double t_eff = t_pole - t_equator;
     double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map);
-    double t_paleo_add = 0; 
+    load_map_from_file(pole_temperature_file, pole_temp_map); 
+    float pole_temperature = (1.0 + get_pole_temperature(*get_current_time(), 
+        pole_temp_map)/t_0) - t_pole;
+//    if(pole_temperature <= t_pole)  pole_temperature = t_pole;
+    double t_paleo_add = 0.0; 
     if(!is_first_time_slice()){
         if((NASATemperature != 0)&&(*get_current_time() > 0))  
             t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
@@ -950,9 +951,9 @@ void cHydrosphereModel::init_temperature(){
                 - t_average;
         t_paleo_add /= t_0; // non-dimensional 
     }
+
     cout.precision(3);
-    int Ma = *get_current_time();
-    const char* time_slice_comment = "      time slice of Paleo-AGCM:";
+    const char* time_slice_comment = "      time slice of Paleo-OGCM:";
     const char* time_slice_number = " Ma = ";
     const char* time_slice_unit = " million years";
     cout << endl << setiosflags(ios::left) << setw(55) << setfill('.') 
@@ -961,22 +962,35 @@ void cHydrosphereModel::init_temperature(){
         << setw(12) << time_slice_unit << endl << endl;
     const char* temperature_comment = "      temperature increase at paleo times: ";
     const char* temperature_gain = " t increase";
+    const char* temperature_pole_comment = "      pole temperature increase: ";
+    const char* temperature_gain_pole = " t pole increase";
     const char* temperature_modern = "      mean temperature at modern times: ";
     const char* temperature_paleo = "      mean temperature at paleo times: ";
     const char* temperature_average = " t modern";
     const char* temperature_average_pal = " t paleo";
     const char* temperature_unit =  "°C ";
-    cout << endl << setiosflags(ios::left) << setw(55) << setfill('.') 
+    cout << endl << setiosflags(ios::left) 
+        << setw(55) << setfill('.') 
         << temperature_comment << resetiosflags(ios::left) << setw(13) 
         << temperature_gain << " = " << setw(7) << setfill(' ') 
-        << t_paleo << setw(5) << temperature_unit << endl << setw(55) 
-        << setfill('.') << setiosflags(ios::left) << temperature_modern 
+        << t_paleo_add * t_0 << setw(5) << temperature_unit << endl 
+
+        << setiosflags(ios::left) 
+        << setw(52) << setfill('.') 
+        << temperature_pole_comment << resetiosflags(ios::left) << setw(13) 
+        << temperature_gain_pole << " = " << setw(7) << setfill(' ') 
+        << pole_temperature * t_0 << setw(5) << temperature_unit << endl 
+
+        << setw(55) << setfill('.') 
+        << setiosflags(ios::left) << temperature_modern 
         << resetiosflags(ios::left) << setw(13) << temperature_average 
         << " = " << setw(7) << setfill(' ') << t_average << setw(5) 
-        << temperature_unit << endl << setw(55) << setfill('.') 
+        << temperature_unit << endl 
+
+        << setw(55) << setfill('.') 
         << setiosflags(ios::left) << temperature_paleo << resetiosflags(ios::left) 
         << setw(13) << temperature_average_pal << " = "  << setw(7) 
-        << setfill(' ') << t_average + t_paleo << setw(5) 
+        << setfill(' ') << t_average + t_paleo_add * t_0 << setw(5) 
         << temperature_unit << endl;
     // temperatur distribution at a prescribed sun position
     // sun_position_lat = 60,    position of sun j = 120 means 30°S, j = 60 means 30°N
@@ -1033,35 +1047,40 @@ void cHydrosphereModel::init_temperature(){
     // pole temperature adjustment, combination of linear time dependent functions 
     // Stein/Rüdiger/Parish locally constant pole temperature
     // difference between pole temperature (Ma) and pole temperature (previous Ma)
-    std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
-    load_map_from_file(pole_temperature_file, pole_temp_map); 
-    double d_j_half = (double)(jm-1)/2.;
-    float t_pole_diff_ocean = 0.;
-    float t_pole_diff_land = 0.;
+    double d_j_half = (double)(jm-1)/2.0;
+    float t_pole_diff_ocean = 0.0;
+    float t_pole_diff_land = 0.0;
     //the t_pole_diff_ocean should be the difference between this time slice and the previous one
     if(!is_first_time_slice()){
-        t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map)
+        t_pole_diff_ocean = get_pole_temperature(*get_current_time(), pole_temp_map)  // no differences between t_pole_diff_ocean and t_pole_diff_land
             - get_pole_temperature(*get_previous_time(), pole_temp_map);
         t_pole_diff_land = get_pole_temperature(*get_current_time(), pole_temp_map)
             - get_pole_temperature(*get_previous_time(), pole_temp_map);
     }
     // in °C, constant local pole temperature as function of Ma for hothouse climates 
-    float pole_temperature = 1 + get_pole_temperature(*get_current_time(), 
-        pole_temp_map)/t_0;
-    if(pole_temperature <= t_pole)  pole_temperature = t_pole;
-//    float pole_temperature = t_pole;
-    float t_eff = pole_temperature - t_equator;  // coefficient for the zonal parabolic temperature distribution
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             double d_j = (double)j;
             if(NASATemperature == 0){  // parabolic ocean surface temperature assumed
-                t.x[im-1][j][k] = t_eff * parabola((double)d_j/(double)d_j_half) 
-                    + pole_temperature + t_paleo_add;
-//                srand(time(NULL));
-//                t.x[im-1][j][k] += (rand() % 10 - 5)/50./t_0;
+                t.x[im-1][j][k] = t_eff 
+                    * parabola((double)d_j/(double)d_j_half) + t_pole;
+                t.x[im-1][j][k] += t_paleo_add + m_model->t_land
+                    + pole_temperature * fabs(parabola((double)d_j
+                    /(double)d_j_half) + 1.0);
+                if(t.x[im-1][j][k] <= t_pole_salt)  t.x[im-1][j][k] = t_pole_salt;
                 if(is_land(h, im-1, j, k)){
                     t.x[im-1][j][k] += m_model->t_land;
                 }
+/*
+    cout.precision(9);
+    if(k == 180) 
+        cout << j << "     " << pole_temperature * t_0
+            << "      " << pole_temperature * fabs(parabola((double)d_j
+                /(double)d_j_half) + 1.0) * t_0
+            << "     " << t_pole * t_0 - t_0
+            << "     " << t.x[im-1][j][k] * t_0 - t_0
+            << endl;
+*/
             }else{  // if(NASATemperature == 1) ocean surface temperature based on NASA temperature distribution
                 // transported for later time slices Ma by use_earthbyte_reconstruction
                 if(is_land (h, im-1, j, k)){  // on land a parabolic distribution assumed, no NASA based data transportable
@@ -1070,7 +1089,8 @@ void cHydrosphereModel::init_temperature(){
 //                            + pole_temperature) + t_paleo_add + m_model->t_land;
                         t.x[im-1][j][k] += t_paleo_add + m_model->t_land
                             + t_pole_diff_land * fabs(parabola((double)d_j
-                            /(double)d_j_half) + 1.)/t_0;
+                            /(double)d_j_half) + 1.0)/t_0;
+                        if(t.x[im-1][j][k] <= t_pole_salt)  t.x[im-1][j][k] = t_pole_salt;
                         // land surface temperature increased by mean t_paleo_add
                         // and by a zonally equatorwards decreasing temperature difference is added
                         // Stein/Rüdiger/Parish pole temperature decreasing equator wards
@@ -1084,7 +1104,8 @@ void cHydrosphereModel::init_temperature(){
                         // Stein/Rüdiger/Parish pole temperature decreasing equator wards
                         t.x[im-1][j][k] += t_paleo_add 
                             + t_pole_diff_ocean * fabs(parabola((double)d_j 
-                           /(double)d_j_half) + 1.)/t_0;
+                           /(double)d_j_half) + 1.0)/t_0;
+                        if(t.x[im-1][j][k] <= t_pole_salt)  t.x[im-1][j][k] = t_pole_salt;
                     }
                     if(*get_current_time() == 0)
                         t.x[im-1][j][k] = temperature_NASA.y[j][k];  // initial temperature by NASA for Ma=0
@@ -1092,15 +1113,11 @@ void cHydrosphereModel::init_temperature(){
             }// else(NASATemperature == 1)
         }// for j
     }// for k
-
-
-
-
     int i_beg = 0; // 200m depth  
-    double tm_tbeg = 0.;
+    double tm_tbeg = 0.0;
     double d_i_max =(double)i_max;
     double d_i_beg =(double)i_beg;
-    double d_i = 0.;
+    double d_i = 0.0;
 // distribution of t and c with increasing depth
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -1126,53 +1143,36 @@ void cHydrosphereModel::init_temperature(){
             }
         }
     }
-
-
-
-
+cout << "      init_temperature ended" << endl;
 }
 /*
 *
 */
 void cHydrosphereModel::init_salinity(){
-    // initial conditions for salt content and temperature and salinity decrease below the sea surface
+cout << endl << "      init_salinity" << endl;
+    // Lenton_etal_COPSE_time_temp, constant paleo mean temperature, added to the surface initial temperature
+    // difference between mean temperature (Ma) and mean temperature (previous Ma) == t_paleo_add
     int Ma = *get_current_time();
-    double t_paleo_coeff = t_paleo_max/((double)Ma_max_half -
-       ((double)Ma_max_half *(double)Ma_max_half/(double)Ma_max));   // in °C
-    double t_paleo = t_paleo_coeff *(-((double)Ma *(double)Ma)/(double)Ma_max +(double)Ma);   // in °C
-    if(Ma == 0)  t_paleo = 0.;
-    t_paleo = 0.;
-    cout.precision(3);
-    string time_slice_comment = "      time slice of Paleo-AGCM:";
-    string time_slice_number = " Ma = ";
-    string time_slice_unit = " million years";
-    cout << endl << setiosflags(ios::left) << setw(50) << setfill('.')
-        << time_slice_comment << setw(6) << std::fixed << setfill(' ')
-        << time_slice_number << setw(3) << Ma << setw(12) << time_slice_unit 
-        << endl << endl;
-    string temperature_comment = "      temperature increase at cretaceous times: ";
-    string temperature_gain = " t increase";
-    string temperature_modern = "      mean temperature at modern times: ";
-    string temperature_paleo = "      mean temperature at cretaceous times: ";
-    string temperature_average = " t modern";
-    string temperature_average_cret = " t cretaceous";
-    string temperature_unit =  "°C ";
-    cout << endl << setiosflags(ios::left) << setw(50) << setfill('.') 
-        << temperature_comment << resetiosflags(ios::left) << setw(12) 
-        << temperature_gain << " = " << setw(7) << setfill(' ') 
-        << t_paleo << setw(5) << temperature_unit << endl << setw(50) 
-        << setfill('.') << setiosflags(ios::left) << temperature_modern 
-        << resetiosflags(ios::left) << setw(13) << temperature_average 
-        << " = " << setw(7) << setfill(' ') << t_average << setw(5) 
-        << temperature_unit << endl << setw(50) << setfill('.') 
-        << setiosflags(ios::left) << temperature_paleo 
-        << resetiosflags(ios::left) << setw(13) << temperature_average_cret 
-        << " = " << setw(7) << setfill(' ') << t_average + t_paleo 
-        << setw(5) << temperature_unit << endl;
+    double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map);
+    double t_paleo_add = 0; 
+    if(!is_first_time_slice()){
+        if((NASATemperature != 0)&&(*get_current_time() > 0))  
+            t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
+                - get_mean_temperature_from_curve(*get_previous_time());
+        if(NASATemperature == 0)  
+            t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
+                - t_average;
+        t_paleo_add /= t_0; // non-dimensional 
+    }
+
     double c_average = (t_average + 346.)/10.;// in psu, relation taken from "Ocean Circulation, The Open University"
-    double c_paleo = (t_average + t_paleo + 346.)/10.;// in psu
+    double c_paleo = (t_average + t_paleo_add * t_0 + 346.)/10.;// in psu
     c_paleo = c_paleo - c_average;
     if(Ma == 0)  c_paleo = 0.;
+    cout.precision(3);
+    string temperature_comment = "      temperature increase at paleo times: ";
+    string temperature_gain = " t increase";
+    string temperature_unit =  "°C ";
     string salinity_comment = "      salinity increase at paleo times: ";
     string salinity_gain = " salinity increase";
     string salinity_modern = "      mean salinity at modern times: ";
@@ -1180,24 +1180,25 @@ void cHydrosphereModel::init_salinity(){
     string salinity_average = " salinity modern";
     string salinity_average_pal = " salinity paleo";
     string salinity_unit =  "psu ";
-    cout << endl << setiosflags(ios::left) << setw(50) << setfill('.') 
+    cout << endl << setiosflags(ios::left) << setw(55) << setfill('.') 
+        << temperature_comment << resetiosflags(ios::left) << setw(13) 
+        << temperature_gain << " = " << setw(7) << setfill(' ') 
+        << t_paleo_add * t_0 << setw(5) << temperature_unit << endl
+        << setiosflags (ios::left) << setw (50) << setfill ('.')
         << salinity_comment << resetiosflags(ios::left) << setw(12) 
         << salinity_gain << " = " << setw(7) << setfill(' ') << c_paleo 
-        << setw(5) << salinity_unit << endl << setw(50) << setfill('.') 
+        << setw(5) << salinity_unit << endl << setw(52) << setfill('.') 
         << setiosflags(ios::left) << salinity_modern << resetiosflags(ios::left) 
         << setw(13) << salinity_average  << " = " << setw(7) << setfill(' ') 
-        << c_average << setw(5) << salinity_unit << endl << setw(50) 
+        << c_average << setw(5) << salinity_unit << endl << setw(53) 
         << setfill('.') << setiosflags(ios::left) << salinity_paleo 
         << resetiosflags(ios::left) << setw(13) << salinity_average_pal 
         << " = " << setw(7) << setfill(' ') << c_average + c_paleo 
         << setw(5) << salinity_unit << endl;
 
-
     double C_p = 999.83;
-    double beta_p = .808;
-    double r_0_saltwater = 1027.;  // in kg/m³
-//    double r_0_saltwater = 1026.;  // in kg/m³
-
+    double beta_p = 0.808;
+    double r_0_saltwater = 1027.0;  // in kg/m³
 
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -1207,33 +1208,33 @@ void cHydrosphereModel::init_salinity(){
 //                    t_Celsius = t_pole * t_0 - t_0;
 //                c.x[im-1][j][k] = ((t_Celsius + 346.)/10.)/c_0;
 //                if(c.x[im-1][j][k] <= 1.) c.x[im-1][j][k] = 1.;
-                double alfa_t_p = .0708 *(1. + .068 * t_Celsius);
-                double gamma_t_p = .003 *(1. - .012 * t_Celsius);
+                double alfa_t_p = 0.0708 *(1.0 + 0.068 * t_Celsius);
+                double gamma_t_p = 0.003 *(1.0 - 0.012 * t_Celsius);
                 c.x[im-1][j][k] = ((r_0_saltwater - C_p  //in kg/m³ approximation by Gill (saltwater.pdf)
-                    + (alfa_t_p + 35. * gamma_t_p)       // salt water density assumed as constant
+                    + (alfa_t_p + 35.0 * gamma_t_p)       // salt water density assumed as constant
                     * t_Celsius)/(beta_p + gamma_t_p * t_Celsius))/c_0;
-                if(c.x[im-1][j][k] <= 1.) c.x[im-1][j][k] = 1.;
+                if(c.x[im-1][j][k] <= 1.) c.x[im-1][j][k] = 1.0;
 
 
             }else{
-                c.x[im-1][j][k] = 1.;
+                c.x[im-1][j][k] = 1.0;
             }
         }
     }
     int i_beg = 0; // 200m depth  
-//    double tm_tbeg = 0.;
-    double cm_cbeg = 0.;
+//    double tm_tbeg = 0.0;
+    double cm_cbeg = 0.0;
     double d_i_max =(double)i_max;
     double d_i_beg =(double)i_beg;
-    double d_i = 0.;
+    double d_i = 0.0;
 // distribution of t and c with increasing depth
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-//            tm_tbeg = (t.x[im-1][j][k] - 1.) 
+//            tm_tbeg = (t.x[im-1][j][k] - 1.0) 
 //                /(d_i_max * d_i_max - d_i_beg * d_i_beg);
 //            if(t.x[im-1][j][k] <= t_pole)
 //                t.x[im-1][j][k] = t_pole;
-            cm_cbeg = (c.x[im-1][j][k] - 1.) 
+            cm_cbeg = (c.x[im-1][j][k] - 1.0) 
                 /(d_i_max * d_i_max - d_i_beg * d_i_beg);
             for(int i = i_beg; i < im-1; i++){
                     d_i = (double)i;
@@ -1251,7 +1252,7 @@ void cHydrosphereModel::init_salinity(){
             int i_sea_mount = i_bathymetry[j][k];
             for(int i = 0; i < im; i++){
                 if((is_land(h, i, j, k))&&(i < i_sea_mount)){
-                    c.x[i][j][k] = 1.;
+                    c.x[i][j][k] = 1.0;
                 }
                 if((is_land(h, 0, j, k))&&(i == 0)){
                     c.x[0][j][k] = c.x[i_sea_mount][j][k];
@@ -1259,23 +1260,26 @@ void cHydrosphereModel::init_salinity(){
             }
         }
     }
+cout << "      init_salinity ended" << endl;
 }
 /*
 *
 */
 void cHydrosphereModel::init_dynamic_pressure(){
+cout << endl << "      init_dynamic_pressure" << endl;
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
                 p_dyn.x[i][j][k] = 0.5 * r_salt_water.x[i][j][k] 
                     * sqrt(((u.x[i][j][k] * u.x[i][j][k]) 
                     + (v.x[i][j][k] * v.x[i][j][k]) 
-                    + (w.x[i][j][k] * w.x[i][j][k]))/3.) * u_0;
+                    + (w.x[i][j][k] * w.x[i][j][k]))/3.0) * u_0;
                 if(is_land(h, i, j, k))
-                    p_dyn.x[i][j][k] = 0.;
+                    p_dyn.x[i][j][k] = 0.0;
             }
         }
     }
+cout << "      init_dynamic_pressure ended" << endl;
 }
 /*
 *
@@ -1285,12 +1289,12 @@ void cHydrosphereModel::BC_SolidGround(){
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
                 if(is_land(h, i, j, k)){
-                    p_dyn.x[i][j][k] = 0.;
-                    t.x[i][j][k] = 1.;
-                    c.x[i][j][k] = 1.;
-                    u.x[i][j][k] = 0.;
-                    v.x[i][j][k] = 0.;
-                    w.x[i][j][k] = 0.;
+                    p_dyn.x[i][j][k] = 0.0;
+                    t.x[i][j][k] = 1.0;
+                    c.x[i][j][k] = 1.0;
+                    u.x[i][j][k] = 0.0;
+                    v.x[i][j][k] = 0.0;
+                    w.x[i][j][k] = 0.0;
                     r_water.x[i][j][k] = r_0_water;
                     r_salt_water.x[i][j][k] = r_0_water;
                 }
@@ -1310,7 +1314,7 @@ void cHydrosphereModel::IC_t_WestEastCoast(){
     int k_mid_temp = 15; //  maximun extension of temperature management from the west coasts
 //    int k_mid_temp = 10; //  maximun extension of temperature management from the west coasts
     int k_temp = 0; //  maximun extension of temperature management from the west coasts
-    double temp_inter = 0.;
+    double temp_inter = 0.0;
     double temp_red = 0.95;
     for(int j = 0; j < jm; j++){
         for(int k = 1; k < km-1; k++){
@@ -1326,7 +1330,7 @@ void cHydrosphereModel::IC_t_WestEastCoast(){
                            /(double)k_mid_temp * (double)l + t_neg; // decreasing temperature leaving west coasts
                             // upwelling along west coasts lowers temperature
                         if(is_land(h, im-1, j, k-l))  t.x[im-1][j][k-l] = temp_inter;
-                        if(t.x[im-1][j][k-l] <= t_pole)  t.x[im-1][j][k-l] = t_pole;
+                        if(t.x[im-1][j][k-l] <= t_pole_salt)  t.x[im-1][j][k-l] = t_pole_salt;
                     }
                     break;
                 } // end while
@@ -1348,7 +1352,7 @@ void cHydrosphereModel::IC_t_WestEastCoast(){
                        /(double)k_mid_eq * (double)l + t_neg; // decreasing temperature leaving west coasts
                         // upwelling regions along equatorial currents beginning on west coasts lower the local temperature
                     if(is_land(h, im-1, j, k-l))  t.x[im-1][j][k-l] = temp_inter;
-                    if(t.x[im-1][j][k-l] <= t_pole)  t.x[im-1][j][k-l] = t_pole;
+                    if(t.x[im-1][j][k-l] <= t_pole_salt)  t.x[im-1][j][k-l] = t_pole_salt;
                 }
             } // end if
         } // end k
@@ -1701,6 +1705,12 @@ void cHydrosphereModel::BC_Surface_Salinity_NASA(const string &Name_SurfaceSalin
         k++;
     }
     Name_SurfaceSalinity_File_Read.close();
+}
+/*
+*
+*/
+void cHydrosphereModel::load_temperature_curve(){
+    load_map_from_file(temperature_curve_file, m_temperature_curve);
 }
 /*
 *
