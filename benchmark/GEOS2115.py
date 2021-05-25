@@ -236,11 +236,11 @@ def run_model(start_time, end_time, time_step, av=2, ap=2, hv=2, hp=2):
     hyd_model.velocity_iter_max = hv
     hyd_model.pressure_iter_max = hp
 
-    times = range(start_time, end_time+1, time_step)
+    times = list(range(start_time, end_time+1, time_step))
 
     #run the models
     for idx, time in enumerate(times):
-        print('running the model at {} Ma'.format(time))
+        print(('running the model at {} Ma'.format(time)))
         f = open(os.devnull, 'w')
         old_stdout = sys.stdout
         sys.stdout = f 
@@ -506,7 +506,7 @@ def draw_plot_through_time(property_name, lon, lat, start_time, end_time, time_s
             p = geom.to_lat_lon_list()[0]
             data.append(d[int(p[0])+90, int(p[1])+180])  
     
-    plt.plot(range(start_time, end_time+1, time_step), data)
+    plt.plot(list(range(start_time, end_time+1, time_step)), data)
     if property_name == 'precipitation':
         plt.ylabel("Precipitation (mm/yr)")
     elif property_name == 'air_velocity':
@@ -669,7 +669,7 @@ def plot_motion_path(lon,lat,times,RelativePlate = 0):
 
     MovingPlate = assigned_point_feature[0].get_reconstruction_plate_id()
     if MovingPlate==0:
-        print('The location ({0}, {1}) is in ocean at the present day.'.format(lon,lat))
+        print(('The location ({0}, {1}) is in ocean at the present day.'.format(lon,lat)))
         print('In this practice, points in ocean do not move.')
         print('Choose a location on continent and try again.')
 

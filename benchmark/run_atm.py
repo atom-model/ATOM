@@ -26,8 +26,8 @@ atm_model.load_config( './config_atm.xml' )
 start_time = atm_model.time_start
 end_time = atm_model.time_end
 time_step = atm_model.time_step
-print('{0}  {1}  {2}'.format(start_time,end_time, time_step))
-times = range(start_time, end_time+1, time_step)
+print(('{0}  {1}  {2}'.format(start_time,end_time, time_step)))
+times = list(range(start_time, end_time+1, time_step))
 
 atom_output_dir = atm_model.output_path
 

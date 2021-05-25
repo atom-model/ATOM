@@ -257,7 +257,7 @@ def main():
 
 
     def write_pxi(input_filename, output_filename, substitutions):
-        data = open(input_filename, 'rb').read()
+        data = open(input_filename, 'r').read()
         indent = '    '
         for key, classname, sections in substitutions:
             rep = ''

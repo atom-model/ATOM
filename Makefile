@@ -45,7 +45,7 @@ hyd: libatom.a $(HYD_CLI_OBJ)
 $(PARAM_OUTPUTS): param.py
 # explicitly clean dependent files
 	rm -f atmosphere/cAtmosphereModel.o hydrosphere/cHydrosphereModel.o
-	python param.py
+	python3 param.py
 
 
 test: atm hyd python test/main.o
@@ -57,7 +57,7 @@ analyze:
 python: libatom.a python/pyatom.so
 
 python/pyatom.so: python/pyatom.pyx python/atom.pxd libatom.a
-	cd python && python3 setup.py build_ext --inplace
+	cd python && python3 setup.py build_ext --inplace && cp pyatom.*.so pyatom.so
 
 # copy pyatom.so from python dir to benchmark dir
 $(TARGET_DIR)/pyatom.so: python/pyatom.so
