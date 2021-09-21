@@ -116,9 +116,18 @@ namespace AtomUtils{
 
     void smooth_tropopause(int jm, std::vector<double> &value);
 
+    // apply the fft gaussian filter along the j direction
+    // the result will replace the input array
+    // sigma parameter controls how blurry the result will be
     void fft_gaussian_filter(Array& data, int sigma);
 
+    //do the fft in all 3 directions
     void fft_gaussian_filter_3d(Array& data, int sigma);
+
+    // do the fft in one direction
+    // the valid directions are 'i', 'j' and 'k'
+    // sigma is the Standard deviation for Gaussian kernel and controls how blurry the result will be
+    void fft_gaussian_filter_3d(Array& data, int sigma, char direction);
 
     void mirror_padding(double* data, size_t i_len, size_t p_len);
     
