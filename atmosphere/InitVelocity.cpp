@@ -161,6 +161,7 @@ void cAtmosphereModel::init_velocities(){
             }
         }
     }
+    return;
 }
 /*
 *
@@ -179,6 +180,7 @@ void cAtmosphereModel::smooth_transition(Array &u, Array &v, Array &w, int lat){
             }
         }
     }
+    return;
 }
 /*
 *
@@ -192,6 +194,7 @@ void cAtmosphereModel::form_diagonals(Array &a, int start, int end){
             }
         }
     }
+    return;
 }
 /*
 *
@@ -234,6 +237,7 @@ void  cAtmosphereModel::init_u(Array &u, int j){
             }
         }
     }
+    return;
 }
 /*
 *
@@ -256,6 +260,7 @@ void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int j, double coeff_trop, dou
         }
     }
     init_v_or_w_above_tropopause(v_or_w, j, coeff_trop);
+    return;
 }
 /*
 *
@@ -270,4 +275,5 @@ void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int j, doubl
                 (get_layer_height(im-1) - tropopause_height);
         }
     }
+    return;
 }

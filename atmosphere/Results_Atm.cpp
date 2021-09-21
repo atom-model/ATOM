@@ -74,8 +74,9 @@ void cAtmosphereModel::run_data_atm(){
 // precipitation and cloud formation by formulas from Häckel
 // dry adiabatic lapse rate and saturated adiabatic lapse rate = temperature decrease with hight
 // SL stands for sea level
-    double f_Penman = 2.;
-//    float exp_pressure = g/(1.e-2 * gam * R_Air);
+//    double f_Penman = 2.;
+//    float exp_pressure = g/(gam * R_Air);
+
 // short wave radiation
     short_wave_radiation = std::vector<double>(jm, rad_pole_short);
     int j_max = jm-1;
@@ -104,13 +105,13 @@ void cAtmosphereModel::run_data_atm(){
                     double t_denom = t_Celsius + 234.175;
                     double E = hp * exp(17.0809 * t_Celsius/t_denom);
                     // saturation vapour pressure in the water phase for t > 0°C in hPa
-                    double Delta = 4000. * E/(t_denom * t_denom);
+//                    double Delta = 4000. * E/(t_denom * t_denom);
                     // gradient of the water vapour pressure curve in hPa/K, coef = 234.175 * 17.0809
                     double sat_deficit = E - e;  // saturation deficit in hPa
-                    double gamma = p_stat.x[0][j][k] * cp_l /(ep * lv);  // Psychrometer constant in hPa/K
-                    double E_a = .35 *(1. + .15 * sqrt((v.x[i+1][j][k] 
-                        * v.x[i+1][j][k] + w.x[i+1][j][k] 
-                        * w.x[i+1][j][k])/2.)* u_0 * 3.6) * sat_deficit;
+//                    double gamma = p_stat.x[0][j][k] * cp_l /(ep * lv);  // Psychrometer constant in hPa/K
+//                    double E_a = .35 *(1. + .15 * sqrt((v.x[i+1][j][k] 
+//                        * v.x[i+1][j][k] + w.x[i+1][j][k] 
+//                        * w.x[i+1][j][k])/2.)* u_0 * 3.6) * sat_deficit;
                         // ventilation-humidity Penmans formula
                     double del_gam = 0.439 + 0.0112 * t.x[i][j][k];
                     double gam_del = 0.5495 + 0.01119 * t.x[i][j][k];
@@ -124,13 +125,14 @@ void cAtmosphereModel::run_data_atm(){
                         * w.x[i][j][k])/2.0) * u_0;
                     double R_net = short_wave_radiation[j]/radiation.x[0][j][k];
                     if(is_land(h, i, j, k))  Q_Evaporation.y[j][k] = 2300.0;  // minimum value used for printout
-                    Q_latent.y[j][k] = Q_Latent.x[i][j][k];  // latente heat in [W/m2] from energy transport equation
-                    Q_sensible.y[j][k] = Q_Sensible.x[i][j][k];  // sensible heat in [W/m2] from energy transport equation
-                    Q_bottom.y[j][k] = -(Q_radiation.y[j][k] 
-                        - Q_latent.y[j][k] - Q_sensible.y[j][k]);    // difference understood as heat into the ground
-                    Evaporation_Dalton.y[j][k] = C_Dalton(i+1, j, k, 
-                        coeff_Dalton, u_0, v, w) * sat_deficit * 24.0;  // mm/h in mm/d
-//                    Evaporation_Dalton.y[j][k] = 0.; 
+//                    Q_latent.y[j][k] = Q_Latent.x[i][j][k];  // latente heat in [W/m2] from energy transport equation
+//                    Q_sensible.y[j][k] = Q_Sensible.x[i][j][k];  // sensible heat in [W/m2] from energy transport equation
+                    Q_bottom.y[j][k] = -(radiation.x[0][j][k] 
+                        - Q_Latent.x[0][j][k] - Q_Sensible.x[0][j][k]);    // difference understood as heat into the ground
+                    if(is_water(h, 0, j, k))
+                        Evaporation_Dalton.y[j][k] = C_Dalton(1, j, k, 
+                            coeff_Dalton, u_0, v, w) * sat_deficit * 24.0;  // mm/h in mm/d
+                    else  Evaporation_Dalton.y[j][k] = 0.; 
                         // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m² * d)
                     if(Evaporation_Dalton.y[j][k] <= 0.0) Evaporation_Dalton.y[j][k] = 0.0;
 /*
@@ -139,13 +141,12 @@ void cAtmosphereModel::run_data_atm(){
                         + gamma * E_a)/(Delta + gamma);
                         // 0.0346 coefficient W/m2 corresponds to mm/d (Kraus)
 */
-                    Evaporation_Penman.y[j][k] = del_gam * R_net/lv  // in mm/d
-                        + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
-                        * (1.0 - r) * e_sa;
+                    if(is_land(h, 0, j, k))
+                        Evaporation_Penman.y[j][k] = del_gam * R_net/lv  // in mm/d
+                            + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
+                            * (1.0 - r) * e_sa;
+                    else  Evaporation_Penman.y[j][k] = 0.0;
                     if(Evaporation_Penman.y[j][k] <= 0.0) Evaporation_Penman.y[j][k] = 0.0;
-                    // vapour gradient causes values too high at shelf corners
-//                    if(is_land(h, i, j, k))  Evaporation_Dalton.y[j][k] 
-//                        = 0.5 * Evaporation_Penman.y[j][k];
                 }
 // only on the sea surface
                 if((i == 0)&&(is_air(h, 0, j, k))){
@@ -155,12 +156,12 @@ void cAtmosphereModel::run_data_atm(){
                     double e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in Pa
                     double t_denom = t_Celsius + 234.175;
                     double E = hp * exp(17.0809 * t_Celsius/t_denom);  // saturation vapour pressure in the water phase for t > 0°C in hPa
-                    double Delta = 4000. * E/(t_denom * t_denom);  // gradient of the water vapour pressure curve in hPa/K, coef = 234.175 * 17.0809
+//                    double Delta = 4000. * E/(t_denom * t_denom);  // gradient of the water vapour pressure curve in hPa/K, coef = 234.175 * 17.0809
                     double sat_deficit = E - e;  // saturation deficit in hPa/K
-                    double gamma = p_stat.x[0][j][k] * cp_l/(ep * lv);  // Psychrometer constant in hPa/K
-                    double E_a = .35 * (1.0 + .15 * sqrt((v.x[1][j][k] * v.x[1][j][k] 
-                        + w.x[1][j][k] * w.x[1][j][k])/2.) * u_0 * 3.6) 
-                        * sat_deficit;  // ventilation-humidity Penmans formula
+//                    double gamma = p_stat.x[0][j][k] * cp_l/(ep * lv);  // Psychrometer constant in hPa/K
+//                    double E_a = .35 * (1.0 + .15 * sqrt((v.x[1][j][k] * v.x[1][j][k] 
+//                        + w.x[1][j][k] * w.x[1][j][k])/2.) * u_0 * 3.6) 
+//                        * sat_deficit;  // ventilation-humidity Penmans formula
                     double del_gam = 0.439 + 0.0112 * t.x[i][j][k];
                     double gam_del = 0.5495 + 0.01119 * t.x[i][j][k];
                     double e_sa = E * 100.0;
@@ -176,27 +177,28 @@ void cAtmosphereModel::run_data_atm(){
                         (2500.8 - 2.372 * (t.x[0][j][k] * t_0 - t_0));    // heat of Evaporation of water in [kJ/kg] (Kuttler) => variable lv
                     else  Q_Evaporation.y[j][k] = (2500.8 - 2.372 *
                        (t.x[0][j][k] * t_0 - t_0)) + 300.0; // heat of Evaporation of ice + 300 [kJ/kg]
-                    Q_latent.y[j][k] = Q_Latent.x[0][j][k];  // latente heat in [W/m2] from energy transport equation
-                    Q_sensible.y[j][k] = Q_Sensible.x[0][j][k];  // sensible heat in [W/m2] from energy transport equation
-                    Q_bottom.y[j][k] = -(Q_radiation.y[j][k] 
-                        - Q_latent.y[j][k] - Q_sensible.y[j][k]);  // difference understood as heat of the ground
-                    Evaporation_Dalton.y[j][k] = C_Dalton(1, j, k, 
-                        coeff_Dalton, u_0, v, w) * sat_deficit * 24.0;  // ocean surface evaporation, mm/h in mm/d
-//                    Evaporation_Dalton.y[j][k] = 0.0; 
-                    // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m² * s)
-                      // not air but ocean surface temperature
-                      // should be involved in water vapour saturation difference, it is not the saturation deficit
-                    if(Evaporation_Dalton.y[j][k] <= 0.0) 
-                        Evaporation_Dalton.y[j][k] = 0.0;
-//                    Evaporation_Penman.y[j][k] = f_Penman * .0346 
-//                        * ((Q_radiation.y[j][k] + Q_bottom.y[j][k]) 
-//                        * Delta + gamma * E_a)/(Delta + gamma);
-                        // .0346 coefficient W/m2 corresponds to mm/d (Kraus)
-                    Evaporation_Penman.y[j][k] = del_gam * R_net/lv  // in mm/d
-                        + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
-                        * (1.0 - r) * e_sa;
-                    if(Evaporation_Penman.y[j][k] <= 0.0) 
-                        Evaporation_Penman.y[j][k] = 0.0;
+//                    Q_latent.y[j][k] = Q_Latent.x[0][j][k];  // latente heat in [W/m2] from energy transport equation
+//                    Q_sensible.y[j][k] = Q_Sensible.x[0][j][k];  // sensible heat in [W/m2] from energy transport equation
+                    Q_bottom.y[j][k] = -(radiation.x[0][j][k] 
+                        - Q_Latent.x[0][j][k] - Q_Sensible.x[0][j][k]);  // difference understood as heat of the ground
+                    if(is_water(h, 0, j, k))
+                        Evaporation_Dalton.y[j][k] = C_Dalton(1, j, k, 
+                            coeff_Dalton, u_0, v, w) * sat_deficit * 24.0;  // mm/h in mm/d
+                    else  Evaporation_Dalton.y[j][k] = 0.; 
+                        // simplified formula for Evaporation by Dalton law dependent on surface water velocity in kg/(m² * d)
+                    if(Evaporation_Dalton.y[j][k] <= 0.0) Evaporation_Dalton.y[j][k] = 0.0;
+/*
+                    Evaporation_Penman.y[j][k] = f_Penman * 0.0346 
+                        * ((Q_radiation.y[j][k] + Q_bottom.y[j][k]) * Delta 
+                        + gamma * E_a)/(Delta + gamma);
+                        // 0.0346 coefficient W/m2 corresponds to mm/d (Kraus)
+*/
+                    if(is_land(h, 0, j, k))
+                        Evaporation_Penman.y[j][k] = del_gam * R_net/lv  // in mm/d
+                            + gam_del * 0.0026 * (1.0 + 0.54 * u_bar) 
+                            * (1.0 - r) * e_sa;
+                    else  Evaporation_Penman.y[j][k] = 0.0;
+                    if(Evaporation_Penman.y[j][k] <= 0.0) Evaporation_Penman.y[j][k] = 0.0;
                 }
             }
         }
@@ -296,6 +298,7 @@ void cAtmosphereModel::run_data_atm(){
     double precipitation_average = 0.;
     double Evaporation_Penman_average = 0.;
     double Evaporation_Dalton_average = 0.;
+    double Evaporation_average = 0.;
     double co2_average = 0.;
     double temperature_NASA_average = 0.;
     double temperature_average = 0.;
@@ -319,19 +322,17 @@ void cAtmosphereModel::run_data_atm(){
             }
         }
     }
-//    double coeff_prec = 86400.;  // dimensions see below
-//    double coeff_prec = 1.;  // dimensions see below    no convertion from mm/s to mm/a
-    double coeff_prec = 500.0;  // intermediate coefficient to fit the needs, must be corrected soon!!!!!!
+//    double coeff_prec = 8.64e4;  // dimensions see below
+    double coeff_prec = 1.0;  // dimensions see below    no convertion from mm/s to mm/a
+//    double coeff_prec = 50.0;  // intermediate coefficient to fit the needs, must be corrected soon!!!!!!
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] 
                 + P_snow.x[0][j][k] + P_conv.x[0][j][k]);
             // 60 s * 60 m * 24 h = 86400 s == 1 d
             // Precipitation, P_conv, P_rain and P_snow in kg/(m²*s) = mm/s
-            // Precipitation in 86400. * kg/(m²*d) = 86400 mm/d
+            // Precipitation in 86400 * kg/(m²*d) = 86400 mm/d
             // kg/(m² * s) == mm/s(Kraus, p. 94)
-//            if(Precipitation.y[j][k] >= 25.) Precipitation.y[j][k] = 25.;
-//            if(Precipitation.y[j][k] <= 0.) Precipitation.y[j][k] = 0.;
         }
     }
     temperature_NASA_average = GetMean_2D(jm, km, temperature_NASA);
@@ -343,6 +344,7 @@ void cAtmosphereModel::run_data_atm(){
     co2_average = GetMean_2D(jm, km, co2_total);
     Evaporation_Penman_average = 365. * GetMean_2D(jm, km, Evaporation_Penman);
     Evaporation_Dalton_average = 365. * GetMean_2D(jm, km, Evaporation_Dalton);
+    Evaporation_average = Evaporation_Penman_average + Evaporation_Dalton_average;
     cout.precision(2);
     level = "m";
     deg_north = "°N";
@@ -364,8 +366,8 @@ void cAtmosphereModel::run_data_atm(){
     string name_Value_13 = " Evaporation_Penman_average per day ";
     string name_Value_14 = " Evaporation_Dalton_average per year ";
     string name_Value_15 = " Evaporation_Dalton_average per day ";
-    string name_Value_16 = " to fill ";
-    string name_Value_17 = " to fill ";
+    string name_Value_16 = " Evaporation_average per year ";
+    string name_Value_17 = " Evaporation_average per day ";
     string name_Value_18 = " to fill ";
     string name_Value_19 = " to fill ";
     string name_Value_20 = " to fill ";
@@ -531,8 +533,17 @@ void cAtmosphereModel::run_data_atm(){
         << Value_12 << setw(6) << name_unit_mma << "   " << setiosflags(ios::left)
         << setw(40) << setfill('.') << name_Value_13 << " = "
         << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ')
-        << Value_12/365. << setw(6) << name_unit_mmd
-        << endl << endl << endl;
+        << Value_12/365. << setw(6) << name_unit_mmd << endl;
+    double Value_20 = Evaporation_average;
+    cout << setw(6) << setiosflags(ios::left) << setw(40) << setfill('.')
+        << name_Value_22 << " = " << resetiosflags(ios::left) << setw(7)
+        << fixed << setfill(' ') << Value_9 << setw(6) << name_unit_ppm
+        << "   " << setiosflags(ios::left) << setw(40) << setfill('.') << name_Value_16
+        << " = " << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ')
+        << Value_20 << setw(6) << name_unit_mma << "   " << setiosflags(ios::left)
+        << setw(40) << setfill('.') << name_Value_17 << " = "
+        << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ')
+        << Value_20/365. << setw(6) << name_unit_mmd << endl << endl;
     double Value_25 =temperature_NASA_average;
     double Value_26 = temperature_average;
     double Value_27 = temperature_expected_average;
@@ -545,6 +556,7 @@ void cAtmosphereModel::run_data_atm(){
         << setw(40) << setfill('.') << name_Value_27 << " = "
         << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ')
         << Value_27 << setw(6) << name_unit_t << endl << endl << endl;
+    return;
 }
 /*
 *

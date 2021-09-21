@@ -38,6 +38,7 @@ void cAtmosphereModel::Atmosphere_v_w_Transfer(const string &Name_Bathymetry_Fil
         }
     }
     v_w_Transfer_File.close();
+    return;
 }
 
 
@@ -65,5 +66,6 @@ void cAtmosphereModel::Atmosphere_PlotData (string &Name_Bathymetry_File, int it
                 << " " <<  Evaporation_Penman.y[j][k] << " " << endl;
         }
     }
+    return;
 }
 

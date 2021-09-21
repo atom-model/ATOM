@@ -6,7 +6,7 @@ RUN apt-get update -y
 
 RUN apt-get install -y git python-pip gcc
 
-RUN pip install -U setuptools
+RUN pip install setuptools
 RUN pip install -U pip
 RUN pip install jupyter
 RUN pip install netcdf4
@@ -76,6 +76,8 @@ RUN apt-get update; apt-get install -y curl \
 
 RUN curl https://www.earthbyte.org/webdav/ftp/incoming/mchin/ATOM_data/atom_data.tar.gz \
     | tar -xzvC /build/ATOM/benchmark/output
+
+RUN pip install shapely
 
 # setup space for working in
 VOLUME /home/workspace/output

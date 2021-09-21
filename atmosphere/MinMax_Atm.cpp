@@ -71,8 +71,8 @@ void cAtmosphereModel::searchMinMax_3D(string name_maxValue, string name_minValu
             }
         }
     }
-    int imax_level = imax * 400;
-    int imin_level = imin * 400;
+    int imax_level = get_layer_height(imax);
+    int imin_level = get_layer_height(imin);
     //  maximum latitude and longitude units recalculated
     HemisphereCoords coords = convert_coords(kmax, jmax);
     int jmax_deg = coords.lat;
@@ -99,6 +99,7 @@ void cAtmosphereModel::searchMinMax_3D(string name_maxValue, string name_minValu
         resetiosflags(ios::left) << setw(12) << fixed << setfill(' ') << minValue << setw(6) << 
         name_unitValue << setw(5)  << jmin_deg << setw(3) << deg_lat_min << setw(4) << kmin_deg << 
         setw(3) << deg_lon_min  << setw(6) << imin_level << setw(2) << level << endl;
+    return;
 }
 /*
 *
@@ -149,17 +150,6 @@ void cAtmosphereModel::searchMinMax_2D(string name_maxValue, string name_minValu
         resetiosflags(ios::left) << setw(12) << fixed << setfill(' ') << minValue << setw(6) << 
         name_unitValue << setw(5)  << jmin_deg << setw(3) << deg_lat_min << setw(4) << kmin_deg << 
         setw(3) << deg_lon_min  << setw(6) << imin_level << setw(2) << level << endl;
-}
-/*
-*
-*/
-double cAtmosphereModel::out_maxValue() const{
-    return maxValue;
-}
-/*
-*
-*/
-double cAtmosphereModel::out_minValue() const{
-    return minValue;
+    return;
 }
 

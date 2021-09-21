@@ -167,20 +167,25 @@ private:
     std::vector<std::vector<double> > M_d_LFS;
     std::vector<double> step;
     std::vector<double> short_wave_radiation; // lateral short wave radiation
+    std::vector<double> radiation_original; // original radiation
     std::vector<double> tropopause_layers; // keep the tropopause layer index
-    std::vector<double> temp_tropopause; // lateral temperature distribution along the tropopause
+//    std::vector<double> temp_tropopause; // lateral temperature distribution along the tropopause
     std::vector<double> cloud_loc; // lateral cloudwater distribution
     std::vector<double> cloud_max; // lateral cloud_max distribution
     std::vector<double> ice_loc; // lateral ice distribution
     std::vector<double> ice_max; // lateral ice_max distribution
     std::vector<double> c_land_red;
     std::vector<double> c_ocean_red;
+    std::vector<double> CAPE;
+    std::vector<double> K_u;
+    std::vector<double> K_d;
+    std::vector<double> lapse_rate;
 
     void init_steps();
     void init_tropopause_layers();
     void restrain_temperature();
     void ValueLimitationAtm();
-    void vegetation_distribution();
+    void VegetationDistribution();
     void BC_SolidGround(); 
     void init_co2();
     void init_temperature();
@@ -191,8 +196,7 @@ private:
         const float zeta = 3.715;
         float h = L_atm/(im-1);
         for(int i=0; i<im; i++){
-            m_layer_heights.push_back((exp(zeta * (rad.z[ i ] - 1.)) - 1) * h);
-//            m_layer_heights.push_back((exp(i) - 1.) * h);
+            m_layer_heights.push_back((exp(zeta * (rad.z[i] - 1.)) - 1) * h);
 //            std::cout << m_layer_heights.back() << std::endl;
         } 
         return;
@@ -213,11 +217,9 @@ private:
     void PressureDensity();
     void LatentHeat();
     void MassStreamfunction();
-    void USStand_DewPoint_HumidRel();
+    void StandAtm_DewPoint_HumidRel();
     void IC_vwt_WestEastCoast();   
     void IC_t_WestEastCoast();
-    void read_NASA_temperature(const string &fn);
-    void read_NASA_precipitation(const string&);
     void BC_radius();
     void BC_theta();
     void BC_phi();
@@ -247,9 +249,6 @@ private:
         std::function< double(double) > lambda = default_lambda,
         bool print_heading=false);
 
-    double out_maxValue() const;
-    double out_minValue() const;
-
     static cAtmosphereModel* m_model;
 
     PythonStream ps;
@@ -263,7 +262,6 @@ private:
     string bathymetry_name;
 
     double coeff_mmWS;    // coeff_mmWS = 1.2041/0.0094 [ kg/m³/kg/m³ ] = 128,0827 [/]
-    double max_Precipitation;
     double maxValue;
     double minValue;
 
@@ -284,9 +282,9 @@ private:
     Array_2D Precipitation; // areas of higher precipitation
     Array_2D precipitable_water; // areas of precipitable water in the air
     Array_2D precipitation_NASA; // surface precipitation from NASA
-    Array_2D radiation_surface; // direct sun radiation, short wave
     Array_2D temperature_NASA; // surface temperature from NASA
     Array_2D temp_NASA; // surface temperature from NASA for print function
+    Array_2D temp_reconst; // surface temperature from reconstuction tool
     Array_2D albedo; // albedo = reflectivity
     Array_2D epsilon_2D; // epsilon = absorptivity
     Array_2D Q_radiation; // heat from the radiation balance in [W/m2]
@@ -310,6 +308,7 @@ private:
     Array c; // water vapour
     Array cloud; // cloud water
     Array ice; // cloud ice
+    Array cloudiness; // cloudiness, N in literature
     Array co2; // CO2
     Array tn; // temperature new
     Array un; // u-velocity component in r-direction new

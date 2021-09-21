@@ -34,20 +34,24 @@ void cAtmosphereModel::BC_radius(){
 //            ice.x[0][j][k] = c43 * ice.x[1][j][k] - c13 * ice.x[2][j][k];
 //            co2.x[0][j][k] = c43 * co2.x[1][j][k] - c13 * co2.x[2][j][k];
 
-            t.x[im-1][j][k] = t.x[im-4][j][k] - 3. * t.x[im-3][j][k] + 3. * t.x[im-2][j][k];
             u.x[im-1][j][k] = 0.;
             v.x[im-1][j][k] = 0.;
             w.x[im-1][j][k] = 0.;
+//            t.x[im-1][j][k] = t.x[im-4][j][k] - 3. * t.x[im-3][j][k] + 3. * t.x[im-2][j][k];
 //            p_dyn.x[im-1][j][k] = p_dyn.x[im-4][j][k] - 3. * p_dyn.x[im-3][j][k] + 3. * p_dyn.x[im-2][j][k];
 //            c.x[im-1][j][k] = c.x[im-4][j][k] - 3. * c.x[im-3][j][k] + 3. * c.x[im-2][j][k];
 //            cloud.x[im-1][j][k] = cloud.x[im-4][j][k] - 3. * cloud.x[im-3][j][k] + 3. * cloud.x[im-2][j][k];
+//            ice.x[im-1][j][k] = ice.x[im-4][j][k] - 3. * ice.x[im-3][j][k] + 3. * ice.x[im-2][j][k];
+//            co2.x[im-1][j][k] = co2.x[im-4][j][k] - 3. * co2.x[im-3][j][k] + 3. * co2.x[im-2][j][k];
+            t.x[im-1][j][k] = c43 * t.x[im-2][j][k] - c13 * t.x[im-3][j][k];
             p_dyn.x[im-1][j][k] = c43 * p_dyn.x[im-2][j][k] - c13 * p_dyn.x[im-3][j][k];
             c.x[im-1][j][k] = c43 * c.x[im-2][j][k] - c13 * c.x[im-3][j][k];
             cloud.x[im-1][j][k] = c43 * cloud.x[im-2][j][k] - c13 * cloud.x[im-3][j][k];
-            ice.x[im-1][j][k] = ice.x[im-4][j][k] - 3. * ice.x[im-3][j][k] + 3. * ice.x[im-2][j][k];
-            co2.x[im-1][j][k] = co2.x[im-4][j][k] - 3. * co2.x[im-3][j][k] + 3. * co2.x[im-2][j][k];
+            ice.x[im-1][j][k] = c43 * ice.x[im-2][j][k] - c13 * ice.x[im-3][j][k];
+            co2.x[im-1][j][k] = c43 * co2.x[im-2][j][k] - c13 * co2.x[im-3][j][k];
         }
     }
+    return;
 }
 /*
 *
@@ -81,7 +85,7 @@ void cAtmosphereModel::BC_theta(){
             co2.x[i][jm-1][k] = c43 * co2.x[i][jm-2][k] - c13 * co2.x[i][jm-3][k];
         }
     }
-
+    return;
 }
 /*
 *
@@ -118,6 +122,7 @@ void cAtmosphereModel::BC_phi(){
             co2.x[i][j][0] = co2.x[i][j][km-1] = (co2.x[i][j][0] + co2.x[i][j][km-1]) / 2.;
         }
     }
+    return;
 }
 /*
 *

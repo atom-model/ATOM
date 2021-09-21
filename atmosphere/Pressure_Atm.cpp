@@ -17,6 +17,7 @@ using namespace std;
 using namespace AtomUtils;
 
 void cAtmosphereModel::computePressure_3D(){
+    cout << endl << "      computePressure_3D" << endl;
     for(int j = 1; j < jm-1; j++){
         for(int k = 1; k < km-1; k++){
             aux_u.x[0][j][k] = c43 * aux_u.x[1][j][k] - c13 * aux_u.x[2][j][k];
@@ -111,6 +112,7 @@ void cAtmosphereModel::computePressure_3D(){
     double drhs_udr = 0;
     double drhs_vdthe = 0;
     double drhs_wdphi = 0;
+    rad.Coordinates(im, r0, dr);
     for(int i = 1; i < im-1; i++){
     rm = rad.z[i];
     double exp_rm = 1./(rm + 1.);
@@ -262,7 +264,9 @@ void cAtmosphereModel::computePressure_3D(){
             }
         }
     }
-    fft_gaussian_filter_3d(p_dyn,1);
+    cout << "      computePressure_3D ended" << endl;
+//    fft_gaussian_filter_3d(p_dyn,1);
+    return;
 }
 /*
 *
@@ -390,4 +394,5 @@ void cAtmosphereModel::computePressure_2D(){
                 }
         }
     }
+    return;
 }

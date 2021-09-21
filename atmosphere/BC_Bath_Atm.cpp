@@ -139,6 +139,7 @@ void BC_Bathymetry_Atmosphere::BC_MountainSurface(string &topo_filename,
             }
         }
     }
+    return;
 }
 /*
 *
@@ -182,5 +183,6 @@ void BC_Bathymetry_Atmosphere::land_oceanFraction(Array &h){
         << setfill(' ') << co2_vegetation << endl << setiosflags(ios::left) 
         << setw(50) << "      valid for one single point on the surface"<< endl << endl;
     cout << endl;
+    return;
 }
 

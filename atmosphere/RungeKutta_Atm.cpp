@@ -100,6 +100,7 @@ void cAtmosphereModel::solveRungeKutta_3D_Atmosphere(){
             }
         }
     }
+    return;
 }
 
 void cAtmosphereModel::solveRungeKutta_2D_Atmosphere(){
@@ -130,4 +131,5 @@ void cAtmosphereModel::solveRungeKutta_2D_Atmosphere(){
                 + 2. * kw3 + kw4) / 6.;
         }
     }
+    return;
 }

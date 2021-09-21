@@ -511,8 +511,8 @@ void cHydrosphereModel::EkmanSpiral(){
     // surface wind vector driving the Ekman spiral in the Ekman layer
     // northern and southern hemisphere
     cout.precision(8);
-    int i_Ekman = 0;
-    int i_max = im-1;
+//    int i_Ekman = 0;
+//    int i_max = im-1;
     double a = 0.; // a in 1/m
     double Ekman_angle = 45./pi180;
     double sinthe = 0.;
@@ -530,8 +530,8 @@ void cHydrosphereModel::EkmanSpiral(){
     double T_yz = 0.;  // wind stress in v-direction ( y, j ) in kg/(m*s2)
     double f = 0.;  // Coriolis parameter in 1/s
     double Az = 0.;  // constant vertical eddy viscosity in m2/s
-    double D_E = 0.;  // Ekman layer depth in m
-    double D_E_op = 0.;  // Ekman layer depth opposite to the surface wind in m
+//    double D_E = 0.;  // Ekman layer depth in m
+//    double D_E_op = 0.;  // Ekman layer depth opposite to the surface wind in m
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){ // in m/s
             v_wind.y[j][k] = v.x[im-1][j][k];
@@ -554,14 +554,14 @@ void cHydrosphereModel::EkmanSpiral(){
             U_10 = sqrt(v_wind.y[j][k] * v_wind.y[j][k] 
                 + w_wind.y[j][k] * w_wind.y[j][k]); // in m/s, dimensional surface wind velocity U_10 in m/s
                 // original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 139, eq. 9.16
-            D_E = 7.6/sqrt(sinthe) * U_10; // in m
-            i_Ekman = int(D_E/L_hyd * (double)i_max);
+//            double D_E = 7.6/sqrt(sinthe) * U_10; // in m
+//            double i_Ekman = int(D_E/L_hyd * (double)i_max);
             T_yz = r_air * CD * U_10 * U_10;  // in kg/(m*s*s))
             V_0 = 0.0127 * U_10/sqrt(sinthe);  // in m/s
             f = 2. * omega * fabs(sinthe);  // in 1/s
             Az = pow((T_yz/(r_0_water * V_0)),2)/f;  // in m*m/s
             a = sqrt(f/(2. * Az));  // in 1/m
-            D_E_op = sqrt(2. * Az * M_PI * M_PI/f);  // in m
+//            double D_E_op = sqrt(2. * Az * M_PI * M_PI/f);  // in m
 /*
     if((j == 75) &&(k == 180)) cout << endl << "Ekman-Layer north" << endl
         << "   j = " << j << "   k = " << k << endl
@@ -812,11 +812,13 @@ void cHydrosphereModel::EkmanSpiral(){
                 if((j>90)&&(j<=92)){
                     u.x[i][j][k] = u.x[i][87][k];
                 }
+/*
                 double residuum = (u.x[i][j][k] - u.x[i-1][j][k])/dr 
                     + ((v.x[i-1][j+1][k] - v.x[i-1][j-1][k])
                     /(2. * rm * dthe) 
                     + (w.x[i-1][j][k+1] - w.x[i-1][j][k-1])
                     /(2. * rmsinthe * dphi));
+*/
 /*
     if((j == 75) &&(k == 180)) cout << "north pumping" << endl
         << "   i = " << i << "   j = " << j << "   k = " << k  << endl
@@ -943,10 +945,10 @@ cout << endl << "      init_temperature" << endl;
 //    if(pole_temperature <= t_pole)  pole_temperature = t_pole;
     double t_paleo_add = 0.0; 
     if(!is_first_time_slice()){
-        if((NASATemperature != 0)&&(*get_current_time() > 0))  
+        if((use_NASA_temperature)&&(*get_current_time() > 0))  
             t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
                 - get_mean_temperature_from_curve(*get_previous_time());
-        if(NASATemperature == 0)  
+        if(!use_NASA_temperature)  
             t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
                 - t_average;
         t_paleo_add /= t_0; // non-dimensional 
@@ -1061,7 +1063,7 @@ cout << endl << "      init_temperature" << endl;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             double d_j = (double)j;
-            if(NASATemperature == 0){  // parabolic ocean surface temperature assumed
+            if(use_NASA_temperature){  // parabolic ocean surface temperature assumed
                 t.x[im-1][j][k] = t_eff 
                     * parabola((double)d_j/(double)d_j_half) + t_pole;
                 t.x[im-1][j][k] += t_paleo_add + m_model->t_land
@@ -1156,10 +1158,10 @@ cout << endl << "      init_salinity" << endl;
     double get_pole_temperature(int Ma, const std::map<float, float> &pole_temp_map);
     double t_paleo_add = 0; 
     if(!is_first_time_slice()){
-        if((NASATemperature != 0)&&(*get_current_time() > 0))  
+        if((use_NASA_temperature)&&(*get_current_time() > 0))  
             t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
                 - get_mean_temperature_from_curve(*get_previous_time());
-        if(NASATemperature == 0)  
+        if(!use_NASA_temperature)  
             t_paleo_add = get_mean_temperature_from_curve(*get_current_time())
                 - t_average;
         t_paleo_add /= t_0; // non-dimensional 

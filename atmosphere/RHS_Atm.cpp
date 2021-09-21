@@ -60,6 +60,7 @@ using namespace AtomUtils;
 *
 */
 void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
+    rad.Coordinates(im, r0, dr);
     double cc = - 1.0;  // factor leads to better results 
 //  (Reinout vander Meulen, The immersed Boundary Method for the Incompressible Navier-Stokes Equations)
     double dr2 = dr * dr;
@@ -459,11 +460,13 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
         << "   rhs_w = " << rhs_w.x[i][j][k]
         << "   rhs_c = " << rhs_t.x[i][j][k] << endl;
 */
+    return;
 }
 /*
 *
 */
 void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
+    rad.Coordinates(im, r0, dr);
     double cc = - 1.;  // factor leads to better results (adapted method)
 //  (Reinout vander Meulen, The immersed Boundary Method for the Incompressible Navier-Stokes Equations)
 //    double coeff_p = 100. * p_0/(r_air*u_0*u_0);
@@ -637,6 +640,7 @@ void cAtmosphereModel::RK_RHS_2D_Atmosphere(int j, int k){
         aux_u.x[0][j][k] = aux_v.x[0][j][k] = aux_w.x[0][j][k] = 0.;
     }
 
+    return;
 }
 
 
