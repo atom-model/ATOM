@@ -156,13 +156,4 @@ void cHydrosphereModel::searchMinMax_2D(string name_maxValue, string name_minVal
 /*
 *
 */
-double cHydrosphereModel::out_maxValue() const{
-    return maxValue;
-}
-/*
-*
-*/
-double cHydrosphereModel::out_minValue() const{
-    return minValue;
-}
 

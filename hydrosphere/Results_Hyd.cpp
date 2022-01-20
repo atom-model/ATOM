@@ -10,17 +10,29 @@
 #include <cmath>
 #include <cstring>
 #include <iomanip>
-#include "Array.h"
-#include "Array_2D.h"
-#include "Array_1D.h"
+
 #include "cHydrosphereModel.h"
 #include "Utils.h"
 
 using namespace std;
 using namespace AtomUtils;
 
+#define dxdthe_a(X) \
+    (h_d_j * (X->x[i][j+1][k] - X->x[i][j-1][k])/(2. * dthe))
+#define dxdthe_b(X) \
+    (h_d_j * (- 3. * X->x[i][j][k] + 4. * X->x[i][j+1][k] - X->x[i][j+2][k])/(2. * dthe))
+#define dxdthe_c(X) \
+    (- h_d_j * (- 3. * X->x[i][j][k] + 4. * X->x[i][j-1][k] - X->x[i][j-2][k])/(2. * dthe))
+#define dxdphi_a(X) \
+    (h_d_k * (X->x[i][j][k+1] - X->x[i][j][k-1])/(2. * dphi))
+#define dxdphi_b(X) \
+    (h_d_k * (- 3. * X->x[i][j][k] + 4. * X->x[i][j][k+1] - X->x[i][j][k+2])/(2. * dphi))
+#define dxdphi_c(X) \
+    (- h_d_k * (- 3. * X->x[i][j][k] + 4. * X->x[i][j][k-1] - X->x[i][j][k-2])/(2. * dphi))
+
 void cHydrosphereModel::run_data_hyd(){
 // total upwelling as sum on normal velocity component values in a virtual vertical column
+    int i_max = im-1;
     int i_half = (im-1)/2;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -29,15 +41,12 @@ void cHydrosphereModel::run_data_hyd(){
             EkmanPumping.y[j][k] = 0.;  // Ekman pumping
             SaltFinger.y[j][k] = 0.;  // SaltFinger
             SaltDiffusion.y[j][k] = 0.;  // SaltFinger
-            BuoyancyForce_2D.y[j][k] = 0.; // Saltdiffusion
             Salt_total.y[j][k] = 0.;  // total Salt
         }
     }
 // Ekman layer computation, variable EkmanPumping is equal to the vertical velocity u at the surface
     double rm = 0.;
-    double sinthe = 0.;
     double rmsinthe = 0.;
-    int i_max = im-1;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             aux_grad_v.z[0] = r_salt_water.x[0][j][k] * v.x[0][j][k] * u_0;
@@ -65,7 +74,7 @@ void cHydrosphereModel::run_data_hyd(){
                 aux_w.x[i_max][j][k] = simpson(0, i_max, dr, aux_grad_w);
             }else  cout << "   i_max-0  must be an even number to use the Simpson integration method" << endl;
 */
-            double dr_rm = dr * L_hyd/(double)(im-1);
+            double dr_rm = dr * L_hyd/(double)i_max;
             aux_v.x[i_max][j][k] = trapezoidal(0, i_max, dr_rm, aux_grad_v);
             aux_w.x[i_max][j][k] = trapezoidal(0, i_max, dr_rm, aux_grad_w);
 
@@ -87,25 +96,105 @@ void cHydrosphereModel::run_data_hyd(){
 */
         }
     }
-    double coeff_pumping = 1./(365 * 24 * 60 * 60); // = 3.171e-8 produces EkmanPumping in m/a
+    for(int k = 0; k < km; k++){
+        aux_v.x[i_max][0][k] = c43 * aux_v.x[i_max][1][k] - c13 * aux_v.x[i_max][2][k];
+        aux_v.x[i_max][jm-1][k] = c43 * aux_v.x[i_max][jm-2][k] - c13 * aux_v.x[i_max][jm-3][k];
+        aux_w.x[i_max][0][k] = c43 * aux_w.x[i_max][1][k] - c13 * aux_w.x[i_max][2][k];
+        aux_w.x[i_max][jm-1][k] = c43 * aux_w.x[i_max][jm-2][k] - c13 * aux_w.x[i_max][jm-3][k];
+    }
+    for(int j = 0; j < jm; j++){
+        aux_v.x[i_max][j][0] = c43 * aux_v.x[i_max][j][1] - c13 * aux_v.x[i_max][j][2];
+        aux_v.x[i_max][j][km-1] = c43 * aux_v.x[i_max][j][km-2] - c13 * aux_v.x[i_max][j][km-3];
+        aux_v.x[i_max][j][0] = aux_v.x[i_max][j][km-1] = (aux_v.x[i_max][j][0] + aux_v.x[i_max][j][km-1])/2.;
+        aux_w.x[i_max][j][0] = c43 * aux_w.x[i_max][j][1] - c13 * aux_w.x[i_max][j][2];
+        aux_w.x[i_max][j][km-1] = c43 * aux_w.x[i_max][j][km-2] - c13 * aux_w.x[i_max][j][km-3];
+        aux_w.x[i_max][j][0] = aux_w.x[i_max][j][km-1] = (aux_w.x[i_max][j][0] + aux_w.x[i_max][j][km-1])/2.;
+    }
+    int i = i_max; // for the defined macros
+    double coeff_pumping = 864.0; // produces EkmanPumping from m/s into cm/d
     for(int k = 1; k < km-1; k++){
         for(int j = 1; j < jm-1; j++){
-            if(j <= 90)
-                sinthe = sin(the.z[j]);
-            if(j > 90){
-                int j_rev = 90 - fabs(j - 90);
-                sinthe = sin(the.z[j_rev]);
+            double sinthe = sin(the.z[j]);
+            rm = L_hyd;
+            rmsinthe = rm * sinthe;
+            double h_d_j = 0.0;
+            double h_d_k = 0.0;
+            if(is_water(h, im-1, j, k)){
+                h_d_j = 1.0;
+                h_d_k = 1.0;
+           }
+           if(is_land(h, im-1, j, k)){
+               h_d_j = 0.0;
+               h_d_k = 0.0;
             }
-            if(sinthe == 0.)  sinthe = 1.e-5;
-            rm = rad.z[i_max] * L_hyd;
-            rmsinthe = rm * sin(the.z[j]);
-            EkmanPumping.y[j][k] = - coeff_pumping * 
-                ((aux_v.x[i_max][j+1][k] - aux_v.x[i_max][j-1][k])
+            std::vector<Array*> arrays_1{&aux_v, &aux_w};
+            enum array_index_1{i_v_1, i_w_1, last_array_index_1};
+            std::vector<double> dxdthe_vals(last_array_index_1), 
+                                dxdphi_vals(last_array_index_1);
+            bool the_flag = false, phi_flag = false;
+            if((j >= 2)&&(j < jm-3)){
+                if((is_land(h, 0, j, k))
+                    &&((is_air(h, 0, j+1, k)) 
+                    &&(is_air(h, 0, j+2, k)))){
+                    for(int n=0; n<last_array_index_1; n++)
+                        dxdthe_vals[n] = dxdthe_b(arrays_1[n]);
+                    the_flag = true;
+                }
+                if((is_land(h, 0, j, k))
+                    &&(is_air(h, 0, j-1, k)) 
+                    &&(is_air(h, 0, j-2, k))){
+                    for(int n=0; n<last_array_index_1; n++)
+                        dxdthe_vals[n] = dxdthe_c(arrays_1[n]);
+                    the_flag = true;
+                }
+            }
+            if((k >= 2)&&(k < km-3)){
+                if((is_land(h, 0, j, k))
+                    &&(is_air(h, 0, j, k+1)) 
+                    &&(is_air(h, 0, j, k+2))){
+                    for(int n=0; n<last_array_index_1; n++)
+                        dxdphi_vals[n] = dxdphi_b(arrays_1[n]);
+                    phi_flag = true;
+                }
+                if((is_land(h, 0, j, k))
+                    &&(is_air(h, 0, j, k-1)) 
+                    &&(is_air(h, 0, j, k-2))){
+                    for(int n=0; n<last_array_index_1; n++)
+                        dxdphi_vals[n] = dxdphi_c(arrays_1[n]);
+                    phi_flag = true;
+                }
+            }
+            for(int n=0; n<last_array_index_1; n++){
+                if(!the_flag) dxdthe_vals[n] = dxdthe_a(arrays_1[n]);
+                if(!phi_flag) dxdphi_vals[n] = dxdphi_a(arrays_1[n]);
+            }
+            double dvdthe = dxdthe_vals[i_v_1];
+            double dwdphi = dxdphi_vals[i_w_1];
+            EkmanPumping.y[j][k] = - coeff_pumping 
+                /r_salt_water.x[i_max][j][k] 
+                * (dvdthe/rm + dwdphi/rmsinthe);
+/*
+            EkmanPumping.y[j][k] = - coeff_pumping // no refinement around walls
+                /r_salt_water.x[i_max][j][k] 
+                * ((aux_v.x[i_max][j+1][k] - aux_v.x[i_max][j-1][k])
                 /(2. * rm * dthe) 
                 + (aux_w.x[i_max][j][k+1] - aux_w.x[i_max][j][k-1])
                 /(2. * rmsinthe * dphi));
-            if(EkmanPumping.y[j][k] >= 40.0)  EkmanPumping.y[j][k] = 40.0;
-            if(EkmanPumping.y[j][k] <= - 40.0)  EkmanPumping.y[j][k] = - 40.0;
+*/
+/*
+            if((j>=88)&&(j<=90)){
+                EkmanPumping.y[j][k] = EkmanPumping.y[87][k];
+            }
+            if((j>90)&&(j<=92)){
+                EkmanPumping.y[j][k] = EkmanPumping.y[87][k];
+            }
+*/
+/*
+            if(EkmanPumping.y[j][k] >= 50.0)  
+                EkmanPumping.y[j][k] = 50.0; // in cm/d
+            if(EkmanPumping.y[j][k] < 50.0)  
+                EkmanPumping.y[j][k] = -50.0; // in cm/d
+*/
             if(is_land(h, i_max, j, k)){
                 EkmanPumping.y[j][k] = 0.;
             }
@@ -165,54 +254,77 @@ void cHydrosphereModel::run_data_hyd(){
                 if(is_water( h, i, j, k)){
                     SaltFinger.y[j][k] += Salt_Finger.x[i][j][k];
                     SaltDiffusion.y[j][k] += Salt_Diffusion.x[i][j][k];
-                    BuoyancyForce_2D.y[j][k] += BuoyancyForce.x[i][j][k];
                     Salt_total.y[j][k] += c.x[i][j][k];
                 }
             }
         }
     }
+    double coeff_buoy = r_0_water * (u_0 * u_0)/L_hyd; // coefficient for bouancy term = 0.2871
+    double coeff_Coriolis = r_0_water * u_0; // coefficient for Coriolis term = 239.28
+    double coriolis = 1.0;
+
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             Salt_Finger.x[0][j][k] = c43 * Salt_Finger.x[1][j][k] -
                 c13 * Salt_Finger.x[2][j][k];
-            Salt_Finger.x[im-1][j][k] = c43 * Salt_Finger.x[im-2][j][k] -
-                c13 * Salt_Finger.x[im-3][j][k];
+//            Salt_Finger.x[i_max][j][k] = c43 * Salt_Finger.x[im-2][j][k] -
+//                c13 * Salt_Finger.x[im-3][j][k];
             Salt_Diffusion.x[0][j][k] = c43 * Salt_Diffusion.x[1][j][k] -
                 c13 * Salt_Diffusion.x[2][j][k];
-            Salt_Diffusion.x[im-1][j][k] = c43 * Salt_Diffusion.x[im-2][j][k] -
-                c13 * Salt_Diffusion.x[im-3][j][k];
+//            Salt_Diffusion.x[i_max][j][k] = c43 * Salt_Diffusion.x[im-2][j][k] -
+//                c13 * Salt_Diffusion.x[im-3][j][k];
             Salt_Balance.x[0][j][k] = c43 * Salt_Balance.x[1][j][k] -
                 c13 * Salt_Balance.x[2][j][k];
-            Salt_Balance.x[im-1][j][k] = c43 * Salt_Balance.x[im-2][j][k] -
-                c13 * Salt_Balance.x[im-3][j][k];
-/*
-            BuoyancyForce.x[0][j][k] = c43 * BuoyancyForce.x[1][j][k] -
-                c13 * BuoyancyForce.x[2][j][k];
-            BuoyancyForce.x[im-1][j][k] = c43 * BuoyancyForce.x[im-2][j][k] -
-                c13 * BuoyancyForce.x[im-3][j][k];
-            CoriolisForce.x[0][j][k] = c43 * CoriolisForce.x[1][j][k] 
-                - c13 * CoriolisForce.x[2][j][k];
-            CoriolisForce.x[im-1][j][k] = c43 * CoriolisForce.x[im-2][j][k] 
-                - c13 * CoriolisForce.x[im-3][j][k];
-            PressureGradientForce.x[0][j][k] = c43 * PressureGradientForce.x[1][j][k] 
-                - c13 * PressureGradientForce.x[2][j][k];
-            PressureGradientForce.x[im-1][j][k] = c43 * PressureGradientForce.x[im-2][j][k] 
-                - c13 * PressureGradientForce.x[im-3][j][k];
-*/
-            BuoyancyForce.x[0][j][k] = BuoyancyForce.x[3][j][k] 
-                - 3. * BuoyancyForce.x[2][j][k] + 3. * BuoyancyForce.x[1][j][k];  // extrapolation
-            BuoyancyForce.x[im-1][j][k] = BuoyancyForce.x[im-4][j][k] 
-                - 3. * BuoyancyForce.x[im-3][j][k] + 3. * BuoyancyForce.x[im-2][j][k];  // extrapolation
+//            Salt_Balance.x[i_max][j][k] = c43 * Salt_Balance.x[im-2][j][k] -
+//                c13 * Salt_Balance.x[im-3][j][k];
+            Salt_Finger.x[im-1][j][k] = 
+                Salt_Finger.x[im-4][j][k] 
+                - 3.0 * Salt_Finger.x[im-3][j][k] 
+                + 3.0 * Salt_Finger.x[im-2][j][k];  // extrapolation
+            Salt_Diffusion.x[im-1][j][k] = 
+                Salt_Diffusion.x[im-4][j][k] 
+                - 3.0 * Salt_Diffusion.x[im-3][j][k] 
+                + 3.0 * Salt_Diffusion.x[im-2][j][k];  // extrapolation
+            Salt_Balance.x[im-1][j][k] = 
+                Salt_Balance.x[im-4][j][k] 
+                - 3.0 * Salt_Balance.x[im-3][j][k] 
+                + 3.0 * Salt_Balance.x[im-2][j][k];  // extrapolation
+            BuoyancyForce.x[0][j][k] = 
+                BuoyancyForce.x[3][j][k] 
+                - 3.0 * BuoyancyForce.x[2][j][k] 
+                + 3.0 * BuoyancyForce.x[1][j][k];  // extrapolation
+            CoriolisForce.x[0][j][k] = 
+                CoriolisForce.x[3][j][k] 
+                - 3.0 * CoriolisForce.x[2][j][k] 
+                + 3.0 * CoriolisForce.x[1][j][k];  // extrapolation
+            PressureGradientForce.x[0][j][k] = 
+                PressureGradientForce.x[3][j][k] 
+                - 3.0 * PressureGradientForce.x[2][j][k] 
+                + 3.0 * PressureGradientForce.x[1][j][k];  // extrapolation
 
-            CoriolisForce.x[0][j][k] = CoriolisForce.x[3][j][k] 
-                - 3. * CoriolisForce.x[2][j][k] + 3. * CoriolisForce.x[1][j][k];  // extrapolation
-            CoriolisForce.x[im-1][j][k] = CoriolisForce.x[im-4][j][k] 
-                - 3. * CoriolisForce.x[im-3][j][k] + 3. * CoriolisForce.x[im-2][j][k];  // extrapolation
-
-            PressureGradientForce.x[0][j][k] = PressureGradientForce.x[3][j][k] 
-                - 3. * PressureGradientForce.x[2][j][k] + 3. * PressureGradientForce.x[1][j][k];  // extrapolation
-            PressureGradientForce.x[im-1][j][k] = PressureGradientForce.x[im-4][j][k] 
-                - 3. * PressureGradientForce.x[im-3][j][k] + 3. * PressureGradientForce.x[im-2][j][k];  // extrapolation
+            double dpdr = p_dyn.x[i_max][j][k] = p_dyn.x[im-4][j][k] 
+                - 3. * p_dyn.x[im-3][j][k] + 3. * p_dyn.x[im-2][j][k];  // extrapolation
+            double sinthe_coriolis = sin(the.z[j]);
+            double costhe = cos(the.z[j]);
+            double coriolis_rad = coriolis * 2.0 * omega
+                * costhe * w.x[i_max][j][k];
+            double coriolis_the = - coriolis * 2.0 * omega
+                * sinthe_coriolis * w.x[i_max][j][k];
+            double coriolis_phi = coriolis * 2.0 * omega
+                * (sinthe_coriolis * v.x[i_max][j][k] 
+                - costhe * u.x[i_max][j][k]);
+            CoriolisForce.x[i_max][j][k] = coeff_Coriolis 
+                * sqrt((pow (coriolis_rad,2) 
+                + pow (coriolis_the,2) 
+                + pow (coriolis_phi,2))/3.0);
+            BuoyancyForce.x[i_max][j][k] = buoyancy 
+                * r_0_water * (t.x[i_max][j][k] - 1.0) * g;
+            PressureGradientForce.x[i_max][j][k] = - coeff_buoy * dpdr;
+            if(is_land(h, i_max, j, k)){
+                BuoyancyForce.x[i_max][j][k] = 0.0;
+                PressureGradientForce.x[i_max][j][k] = 0.0;
+                CoriolisForce.x[i_max][j][k] = 0.0;
+            }
         }
     }
     for(int k = 0; k < km; k++){
@@ -287,29 +399,37 @@ void cHydrosphereModel::run_data_hyd(){
 /*
 *
 */
-void cHydrosphereModel::land_oceanFraction(){
-    double h_point_max = (jm-1) * (km-1);
-    double h_land = 0;
-    for(int j = 0; j < jm; j++){
-        for(int k = 0; k < km; k++){
-            if(is_land( h, im-1, j, k))  h_land++;
-        }
-    }
-    double h_ocean = h_point_max - h_land;
-    double ocean_land =(double)h_ocean/(double)h_land;
-    cout.precision(3);
-    cout << endl;
-    cout << setiosflags(ios::left) << setw(50) << setfill('.')
-        << "      total number of points at constant hight " << " = " << resetiosflags(ios::left)
-        << setw(7) << fixed << setfill(' ') << h_point_max << endl << setiosflags(ios::left)
-        << setw(50) << setfill('.') << "      number of points on the ocean surface " << " = "
-        << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ') << h_ocean << endl
-        << setiosflags(ios::left) << setw(50) << setfill('.') << "      number of points on the land surface "
-        << " = " << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ') << h_land
-        << endl << setiosflags(ios::left) << setw(50) << setfill('.') << "      ocean/land ratio "
-        << " = " << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ')
-        << ocean_land << endl << endl;
-    cout << endl;
+void cHydrosphereModel::print_min_max_hyd(){
+    cout << endl << " flow properties: " << endl << endl;
+    searchMinMax_3D(" max temperature ", " min temperature ", 
+        " deg", t, 273.15, [](double i)->double{return i - 273.15;}, true);
+    searchMinMax_3D(" max u-component ", " min u-component ", "m/s", u, u_0);
+    searchMinMax_3D(" max v-component ", " min v-component ", "m/s", v, u_0);
+    searchMinMax_3D(" max w-component ", " min w-component ", "m/s", w, u_0);
+    searchMinMax_3D(" max pressure dynamic ", " min pressure dynamic ", "hPa", p_dyn, 1.0);
+    searchMinMax_3D(" max pressure static ", " min pressure static ", "bar", p_stat, 1.0);
+    searchMinMax_3D(" max water density ", " min water density ", "kg/m3", r_water, 1.0);
+    searchMinMax_3D(" max salt water density ", " min salt water density ", "kg/m3", r_salt_water, 1.0);
+    cout << endl << " salinity based results in the three dimensional space: " << endl << endl;
+    searchMinMax_3D(" max salt concentration ", " min salt concentration ", "psu", c, c_0);
+    searchMinMax_3D(" max salt balance ", " min salt balance ", "kg/m3", Salt_Balance, 1.0);
+    searchMinMax_3D(" max salt finger ", " min salt finger ", "kg/m3", Salt_Finger, 1.0);
+    searchMinMax_3D(" max salt diffusion ", " min salt diffusion ", "kg/m3", Salt_Diffusion, 1.0);
+    cout << endl << " forces per unit volume: " << endl << endl;
+    searchMinMax_3D(" max pressure force ", " min pressure force ", "N", PressureGradientForce, 1.0);
+    searchMinMax_3D(" max buoyancy force ", " min buoyancy force ", "N", BuoyancyForce, 1.0);
+    searchMinMax_3D(" max Coriolis force ", " min Coriolis force ", "N", CoriolisForce, 1.0);
+    cout << endl << " salt concentration averaged for the two dimensional surface plane: " << endl << endl;
+    searchMinMax_2D(" max salt total ", " min salt total ", "psu", Salt_total, c_0);
+    searchMinMax_2D(" max Salt_Finger ", " min Salt_Finger ", "kg/m3", SaltFinger, 1.0);
+    searchMinMax_2D(" max Salt_Diffusion ", " min Salt_Diffusion ", "kg/m3", SaltDiffusion, 1.0);
+    cout << endl << " deep currents averaged for a two dimensional plane: " << endl << endl;
+    searchMinMax_2D(" max EkmanPumping ", " min EkmanPumping ", "cm/d", EkmanPumping, 1.0);
+    searchMinMax_2D(" max upwelling ", " min upwelling ", "cm/d", Upwelling, 1.0);
+    searchMinMax_2D(" max downwelling ", " min downwelling ", "cm/d", Downwelling, 1.0);
+    searchMinMax_2D(" max bathymetry ", " min bathymetry ", "m", Bathymetry, 1.0);
 }
-
+/*
+ * 
+*/
 

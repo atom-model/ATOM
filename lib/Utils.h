@@ -1,13 +1,18 @@
 #ifndef _UTILS_
 #define _UTILS_
 
+#include <string>
+#include <set>
+#include <map>
+#include <vector>
+
 #include <iostream>
 #include <fstream>
 #include <limits>
-#include <map>
 
 #include "Array.h"
 #include "Array_1D.h"
+#include "Array_2D.h"
 
 #define logger() \
 if (false) ; \
@@ -15,6 +20,7 @@ else get_logger()
 
 namespace AtomUtils{
     using namespace std;
+
     struct HemisphereCoords{
         double lat, lon;
         string east_or_west, north_or_south;
@@ -22,123 +28,107 @@ namespace AtomUtils{
 
     HemisphereCoords convert_coords(double lon, double lat);
 
-    int lon_2_index(double lon);
-    int lat_2_index(double lat);
-
     std::ofstream& get_logger();
+
+    std::tuple<double, int, int, int>
+        max_diff(int i, int j, int k, const Array &a1, const Array &a2);
 
     inline bool is_land(const Array& h, int i, int j, int k){
         return fabs(h.x[i][j][k] - 1) < std::numeric_limits<double>::epsilon();
     }
-
     inline bool is_air(const Array& h, int i, int j, int k){
         return !is_land(h,i,j,k);
     }
-
     inline bool is_water(const Array& h, int i, int j, int k){
         return !is_land(h,i,j,k);
     }
-
     inline bool is_ocean_surface(const Array& h, int i, int j, int k){
         return i==0 && !is_land(h, i, j, k);
     }
-
     inline bool is_land_surface(const Array& h, int i, int j, int k){
         return is_land(h, i, j, k) && !is_land(h, i+1, j, k);
     }
-
-    inline double parabola(double x){
-        return x*x - 2*x;
-    }
-
-    inline double Humility_critical(double x, double Hu_cr_max, 
-        double Hu_cr_mid){
-        return (Hu_cr_max - Hu_cr_mid) * (x * x - 2.0 * x) 
-            + Hu_cr_max;
-    }
-
-    inline double Agnesi(double a, double x){
-        return pow(a, 3.0) // Versiera di Agnesi
-            /(pow(a, 2.0) + pow(x, 2.0));
-    }
-
     inline bool is_east_coast(const Array& h, int j, int k){
         if(k == h.get_km()-1 ) return false;//on grid boundary
         return is_land(h, 0, j, k) && !is_land(h, 0, j, k+1);
     }
-
     inline bool is_west_coast(const Array& h, int j, int k){
         if( k == 0 ) return false;//on grid boundary
         return is_land(h, 0, j, k) && !is_land(h, 0, j, k-1);
     }
-
     inline bool is_north_coast(const Array& h, int j, int k){
         if( j == 0 ) return false;//on grid boundary
         return is_land(h, 0, j, k) && !is_land(h, 0, j-1, k);
     }
-
     inline bool is_south_coast(const Array& h, int j, int k){
         if(j == h.get_jm()-1 ) return false;//on grid boundary
         return is_land(h, 0, j, k) && !is_land(h, 0, j+1, k);
     }
 
-    //change data coordinate system from -180° _ 0° _ +180° to 0°- 360°
-    void move_data(double* data, int len);
-    void move_data(std::vector<int>& data, int len);
+    inline double parabola(double x){
+        return x*x - 2*x;
+    }
+    inline double Humility_critical(double x, double Hu_cr_max, 
+        double Hu_cr_mid){
+        return (Hu_cr_max - Hu_cr_mid) * (x * x - 2.0 * x) 
+            + Hu_cr_max;
+    }
+    inline double Agnesi(double a, double x){
+        return pow(a, 3.0) // Versiera di Agnesi
+            /(pow(a, 2.0) + pow(x, 2.0));
+    }
+    inline double exp_func(double T_K, const double co_1, const double co_2){
+        return exp(co_1 * (T_K - 273.15) / (T_K - co_2));  // temperature in °K
+    }
 
-    void move_data_to_new_arrays(int im, int jm, int km, double coeff, std::vector<Array*>& arrays, 
-                        std::vector<Array*>& new_arrays);
+    int lon_2_index(double lon);
+    int lat_2_index(double lat);
+    int RunStart(string comment);
+    int RunEnd(string comment, int Ma, int Run_start);
 
-    void move_data_to_new_arrays( int jm, int km, double coeff, std::vector<Array*>& arrays, 
-                        std::vector<Array*>& new_arrays, int i = 0);
-
-    std::tuple<double, int, int, int>
-    max_diff(int i, int j, int k, const Array &a1, const Array &a2);
-
-    void load_map_from_file(const std::string& fn, std::map<float, float>& m);
-
-    // integration tools
+    double C_Dalton(int i, int j, int k, double coeff_Dalton, 
+        double u_0, Array &v, Array &w);
+    double Humility_critical(int i);
     double simpson(int n1, int n2, double dstep, Array_1D &value);
     double trapezoidal(int n1, int n2, double dstep, Array_1D &value);
     double rectangular(int n1, int n2, double dstep, Array_1D &value);
-
-    inline double exp_func(double T_K, const double co_1, const double co_2){
-        return exp(co_1 * (T_K - 273.15) / (T_K - co_2));                        // temperature in °K
-    }
-
-    double C_Dalton(int i, int j, int k, double coeff_Dalton, double u_0, Array &v, Array &w);
-
-    double Humility_critical(int i);
+    double GetMean_3D(int jm, int km, Array &val_3D);
+    double GetMean_2D(int jm, int km, Array_2D &val_2D);
 
     void read_IC(const string& fn, double** a, int jm, int km);
-
     void smooth_steps(int k, int im, int jm, Array &value);
-
     void smooth_tropopause(int jm, std::vector<double> &value);
-
+    void load_map_from_file(const std::string& fn, std::map<float, float>& m);
+    void CalculateNodeWeights(int jm, int km);
+    void calculate_node_weights();
     //do the fft in all 3 directions
     void fft_gaussian_filter_3d(Array& data, int sigma);
-
     // do the fft in one direction
     // the valid directions are 'i', 'j' and 'k'
     // sigma is the Standard deviation for Gaussian kernel and controls how blurry the result will be
     //the result will replace the input array
     void fft_gaussian_filter_3d(Array& data, int sigma, char direction);
-
     void mirror_padding(double* data, size_t i_len, size_t p_len);
-    
     void fft_gaussian_filter(double* _data, double* kernel, size_t len);
-    
+    //change data coordinate system from -180° _ 0° _ +180° to 0°- 360°
+    void move_data(double* data, int len);
+    void move_data(std::vector<int>& data, int len);
+    void move_data_to_new_arrays(int im, int jm, int km, double coeff, 
+        std::vector<Array*>& arrays, std::vector<Array*>& new_arrays);
+    void move_data_to_new_arrays( int jm, int km, double coeff, 
+        std::vector<Array*>& arrays, 
+        std::vector<Array*>& new_arrays, int i = 0);
+    void land_oceanFraction(int i_local, int jm, int km, Array &val_3D);
+    void use_presets(bool preset_1, bool preset_2, bool preset_3);
+
     template<class T>
     void set_values(T* a, T value, int len){
         for(int i = 0 ; i < len; i++){
             a[i] = value;
         }
     }
-
     template<class T>
-    void chessboard_grid(T** a, int j, int k, int jm, int km)
-    {
+    void chessboard_grid(T** a, int j, int k, int jm, int km){
         T value_1 = 0.9, value_2 = 1.1;
         T* line_1 = new T[km];
         T* line_2 = new T[km];
@@ -177,7 +167,6 @@ namespace AtomUtils{
                 cnt = 0;
             }
         }
-
         delete[] line_1;
         delete[] line_2;
         return;

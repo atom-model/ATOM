@@ -10,14 +10,15 @@ import numpy as np
 from draw_vectors import draw_velocity
 from common_functions import calculate_spherical_mean
 
+
 map_cfg = {
-    'temperature': (6, -20, 30, u'Temperature (Celsius °C)'),
+    'temperature': (6, -20, 40, u'Temperature (Celsius °C)'),
     'v_velocity': (3, -0.05, 0.05, 'v_velocity (m/s)'),
     'w_velocity': (4, -0.03, 0.1, 'w_velocity (m/s)'),
-    'salinity': (7, 34, 39, 'Salinity (psu)'),
-    'Ekman_pumping': (8, 0, 0.06, 'Ekman Pumping (m/s)'),
-    'upwelling': (9, 0, 0.06, 'Upwelling (m/s)'),
-    'downwelling': (10, 0, 0.06, 'Downwelling (m/s)')
+    'salinity': (7, 34, 40, 'Salinity (psu)'),
+    'Ekman_pumping': (8, -10.0, 10.0, 'Ekman Pumping (cm/d)'),
+    'upwelling': (9, 0, 10.0, 'Upwelling (cm/d)'),
+    'downwelling': (10, -10.0, 0.0, 'Downwelling (cm/d)')
 }
 
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
@@ -29,7 +30,6 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         if directory not in map_cfg:
             print('unrecognized component: ' + directory)
             return
-
         data = np.genfromtxt(data_dir + '/[{0}Ma_{1}.xyz]_PlotData_Hyd.xyz'.format(time, topo_suffix), skip_header=1)
         index = map_cfg[directory][0]
         x = data[:,0]
@@ -74,7 +74,7 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         else:
             plt.title("{1} at {0}Ma".format(time, directory.capitalize()))
         
-        plt.savefig(output_dir+'/'+directory+'/{0}_Ma_{1}.png'.format(time, directory), bbox_inches='tight')
+        plt.savefig(output_dir +'/'+ directory +'/{0}_Ma_{1}.png'.format(time, directory), bbox_inches='tight')
         print(output_dir + '/' + directory + '/{0}_Ma_{1}.png has been saved!'.format(time, directory))
         #plt.show()
         plt.close()
@@ -101,8 +101,8 @@ def create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_
 
     try:
         for d in sub_dirs:
-            if not os.path.exists(output_dir+'/'+d):
-                os.makedirs(output_dir+'/'+d)
+            if not os.path.exists(output_dir + '/' + d):
+                os.makedirs(output_dir + '/' + d)
             create_maps(d, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
     except:
         import traceback
@@ -117,15 +117,11 @@ def create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_
     print("The output dir is: " + os.path.abspath(output_dir) )
     print("Creating hyd maps complete!")
 
-
 if  __name__ == "__main__":
 
     data_dir = '../benchmark/output'
-    topo_dir = '../data/topo_grids/'
+    topo_dir = '../data/topo_grids'
     topo_suffix = 'smooth'
-    start_time = 0
-    end_time = 10
-    time_step = 5
     output_dir = './hyd_maps'
 
     sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'Ekman_pumping', 
@@ -139,12 +135,8 @@ if  __name__ == "__main__":
         topo_suffix = sys.argv[5]
         topo_dir = sys.argv[6]
     except:
-        print("Usage: python " + sys.argv[0] + 
-            ' 0 10 5 ../benchmark/output smooth ../data/topo_grids/')
+        print('Usage: python ' + sys.argv[0] + ' 0 10 5 ../benchmark/output smooth ../data/topo_grids/')
         sys.exit(1)
 
     create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
-
-
-
 

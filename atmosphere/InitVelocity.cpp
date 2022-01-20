@@ -7,6 +7,7 @@ using namespace AtomUtils;
 *
 */
 void cAtmosphereModel::init_velocities(){
+    cout << endl << "      AGCM: init_velocities" << endl;
     // boundary condition for the velocity components in the circulation cells
 
     // latest version by Grotjahn (Global Atmospheric Circulations, 1993)
@@ -35,32 +36,28 @@ void cAtmosphereModel::init_velocities(){
 
 //polar cells
     //northern polar cell
-    init_v_or_w(v, 0, 0.5, 0.5);  //lat: 90
-//    init_v_or_w(v, 15, -0.2, 0.2); //lat: 75
+//    init_v_or_w(v, 0, 0.5, 0.5);  //lat: 90
+    init_v_or_w(v, 0, 0.5, 0.0);  //lat: 90
     init_v_or_w(v, 15, 0.5, 0.6); //lat: 75
     //southern polar cell
-    init_v_or_w(v, 180, 0.5, 0.5); //lat: -90
-//    init_v_or_w(v, 165, -0.2, 0.2); //lat: -75
+//    init_v_or_w(v, 180, 0.5, 0.5); //lat: -90
+    init_v_or_w(v, 180, 0.5, 0.0); //lat: -90
     init_v_or_w(v, 165, 0.5, 0.6); //lat: -75
 
 //Ferrel cells
     //northern Ferrel cell
     init_v_or_w(v, 30, -0.2, 0.0); //lat: 60
-//    init_v_or_w(v, 30, -0.5, 0.0); //lat: 60
     init_v_or_w(v, 45, 1.0, -1.5); //lat: 45   
     //southern Ferrel cell
     init_v_or_w(v, 150, -0.2, 0.0); //lat: -60
-//    init_v_or_w(v, 150, -0.5, 0.0); //lat: -60
     init_v_or_w(v, 135, 1.0, -1.5); //lat: -45   
 
 // Hadley cells
     //northern Hadley cell
     init_v_or_w(v, 60, 0.0, 0.5); //lat: 30
-//    init_v_or_w(v, 60, 0.0, -0.5); //lat: 30
     init_v_or_w(v, 75, -1.0, 2.5); //lat: 15   
     //southern Hadley cell
     init_v_or_w(v, 120, 0.0, 0.5); //lat: -30
-//    init_v_or_w(v, 120, 0.0, -0.5); //lat: -30
     init_v_or_w(v, 105, -1.0, 2.5); //lat: -15 
 
 //initialise w, tropopause, surface
@@ -69,9 +66,11 @@ void cAtmosphereModel::init_velocities(){
     
 //polar cells
     //northern polar cell
-    init_v_or_w(w, 0, -0.1, -1.0); //lat: 90
+//    init_v_or_w(w, 0, -0.1, -1.0); //lat: 90
+    init_v_or_w(w, 0, -0.1, -0.0); //lat: 90
     //southern polar cell
-    init_v_or_w(w, 180, -0.1, -1.0); //lat: -90
+//    init_v_or_w(w, 180, -0.1, -1.0); //lat: -90
+    init_v_or_w(w, 180, -0.1, -0.0); //lat: -90
 
 //Ferrel cells
     //northern Ferrel cell
@@ -161,6 +160,7 @@ void cAtmosphereModel::init_velocities(){
             }
         }
     }
+    cout << "      AGCM: init_velocities ended" << endl;
     return;
 }
 /*
@@ -200,20 +200,22 @@ void cAtmosphereModel::form_diagonals(Array &a, int start, int end){
 *
 */
 void  cAtmosphereModel::init_u(Array &u, int j){
+//    cout << endl << "      AGCM: init_u" << endl;
     float ua_00 = 0.02894,  // omega = vertical pressure velocity: u = - omega/(density*g) in m/s, omega in mb/d
           ua_30 = 0.02315,  // u = - 1.1574e⁻³ * omega
           ua_60 = 0.01736,  // Understanding the Effect of Convective Momentum Transport on Climate Simulations: The Role of Convective Heating
-//          ua_90 = 0.011574;  // authors: Xiaoliang Song, Xiaoliang Wu, Guang Zhang and Raymond W. Arritt, Journal of Climate vol 21 pp. 5034, Oct. 2008 and ResearchGate
-          ua_90 = 0.005;  // authors: Xiaoliang Song, Xiaoliang Wu, Guang Zhang and Raymond W. Arritt, Journal of Climate vol 21 pp. 5034, Oct. 2008 and ResearchGate
+          ua_90 = 0.011574;  // authors: Xiaoliang Song, Xiaoliang Wu, Guang Zhang and Raymond W. Arritt, Journal of Climate vol 21 pp. 5034, Oct. 2008 and ResearchGate
+//          ua_90 = 0.005;  // authors: Xiaoliang Song, Xiaoliang Wu, Guang Zhang and Raymond W. Arritt, Journal of Climate vol 21 pp. 5034, Oct. 2008 and ResearchGate
+//          ua_90 = 0.0;  // authors: Xiaoliang Song, Xiaoliang Wu, Guang Zhang and Raymond W. Arritt, Journal of Climate vol 21 pp. 5034, Oct. 2008 and ResearchGate
     int tropopause_layer = get_tropopause_layer(j);
     float tropopause_height = get_layer_height(tropopause_layer);
     for(int k = 0; k < km; k++){
         for(int i = 0; i < tropopause_layer; i++){
             float layer_height = get_layer_height(i), 
-                half_tropopause_height = tropopause_height/3.;
+                half_tropopause_height = tropopause_height/3.0;
             float ratio;
             if(layer_height < half_tropopause_height){    
-                ratio = layer_height/(half_tropopause_height/3.);
+                ratio = layer_height/(half_tropopause_height/3.0);
                 switch(j){
                     case 90:  u.x[i][90][k] = ua_00 * ratio; break;
                     case 60:  u.x[i][60][k] = - ua_30 * ratio; break;
@@ -237,12 +239,14 @@ void  cAtmosphereModel::init_u(Array &u, int j){
             }
         }
     }
+//    cout << "      AGCM: init_u ended" << endl;
     return;
 }
 /*
 *
 */
 void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int j, double coeff_trop, double coeff_sl){
+//    cout << endl << "      AGCM: init_v_or_w" << endl;
     int tropopause_layer = get_tropopause_layer(j);
     double tropopause_height = get_layer_height(tropopause_layer);
     for(int k = 0; k < km; k++){
@@ -260,13 +264,15 @@ void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int j, double coeff_trop, dou
         }
     }
     init_v_or_w_above_tropopause(v_or_w, j, coeff_trop);
+//    cout << "      AGCM: init_v_or_w ended" << endl;
     return;
 }
 /*
 *
 */
 void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int j, double coeff){
-    int tropopause_layer = get_tropopause_layer(j);
+//     cout << endl << "      AGCM: init_v_or_w_above_tropopause" << endl;
+   int tropopause_layer = get_tropopause_layer(j);
     if(tropopause_layer >= im-1) return;
     double tropopause_height = get_layer_height(tropopause_layer);
     for(int k = 0; k < km; k++){
@@ -275,5 +281,6 @@ void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int j, doubl
                 (get_layer_height(im-1) - tropopause_height);
         }
     }
+//     cout << "      AGCM: init_v_or_w_above_tropopause ended" << endl;
     return;
 }

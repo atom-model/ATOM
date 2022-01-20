@@ -133,6 +133,8 @@ def get_coastline_polygons_from_topography(filename):
                 y = cp[:,1]
                 lons, lats = m(x,y,inverse=True)
                 new_shape = geometry.Polygon([(i[0], i[1]) for i in zip(lons, lats)])
+                if not new_shape.is_valid:
+                    continue
                 if ncp == 0:
                     poly = new_shape
                 else:
@@ -189,12 +191,13 @@ def reconstruct_grid(from_time, input_grid, to_time, output_grid, reconstruction
     data = np.genfromtxt(input_grid)
     data = convert_atom_to_gmt(data[:,2])
     
-    if from_time == 0:
-        topo = np.genfromtxt(TOPO_DIR+'/0Ma_smooth.xyz')   
+    #if from_time == 0:
+    if True:
+        topo = np.genfromtxt(TOPO_DIR+'/{}Ma_smooth.xyz'.format(from_time))
         topo = topo[:,2]
         topo[topo>0] = True
         topo[topo<=0] = False
-        remove_data_nearby_coastline(data, topo, 5)
+        remove_data_nearby_coastline(data, topo, 10)
         
     data = add_lon_lat_to_gmt_data(data)
 
@@ -313,11 +316,11 @@ def reconstruct_velocity_grid(from_time, input_grid, to_time, output_grid, recon
     
     #if from_time == 0:
     if True:
-        topo = np.genfromtxt('../data/topo_grids/{}Ma_smooth.xyz'.format(from_time))   
+        topo = np.genfromtxt(TOPO_DIR+'/{}Ma_smooth.xyz'.format(from_time))   
         topo = topo[:,2]
         topo[topo>0] = True
         topo[topo<=0] = False
-        remove_data_nearby_coastline(data, topo, 5)
+        remove_data_nearby_coastline(data, topo, 10)
         
     data = add_lon_lat_to_gmt_data(data)
 
@@ -486,6 +489,9 @@ def main():
         traceback.print_exc()
 
 if __name__ == "__main__":
+    #for ma in range(0,141,5):
+    #    print(ma)
+    #    get_coastline_polygons_from_topography('../data/topo_grids/{}Ma_smooth.xyz'.format(ma))
     main()
 
 

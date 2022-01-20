@@ -12,13 +12,13 @@ from draw_topo import draw_topography
 from common_functions import calculate_spherical_mean
 
 map_cfg = {
-    'temperature': (6, -20, 40, u'Temperature (Celsius °C)'),
+    'temperature': (12, -20, 40, u'Temperature (Celsius °C)'),
     'v_velocity': (3, -1, 1, 'v_velocity (m/s)'),
     'w_velocity': (4, -8, 9, 'w_velocity (m/s)'),
     'water_vapour': (7, 0, 25, 'Water Vapour (g/kg)'),
-    'precipitation': (8, 0, 20, 'Precipitation (mm/yr)'),
-    'precipitable_water': (9, 0, 200, 'Precipitable Water (mm)'),
-    'evaporation': (10, 0, 2500, 'Evaporation (mm/yr)'),
+    'precipitation': (8, 0, 5000, 'Precipitation (mm/yr)'),
+    'precipitable_water': (9, 0, 80, 'Precipitable Water (mm)'),
+    'evaporation': (10, 0, 5000, 'Evaporation (mm/yr)'),
 }
 
 def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
@@ -85,7 +85,6 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
         #plt.show()
         plt.close()
 
-
 def create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix):
     answer = ""
     if os.path.exists(output_dir):
@@ -108,8 +107,8 @@ def create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_
     
     try:
         for d in sub_dirs:
-            if not os.path.exists(output_dir+'/'+d):
-                os.makedirs(output_dir+'/'+d)
+            if not os.path.exists(output_dir + '/' + d):
+                os.makedirs(output_dir + '/' + d)
             create_maps(d, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)
     except:
         import traceback
@@ -129,14 +128,8 @@ if  __name__ == "__main__":
     data_dir = '../benchmark/output'
     topo_dir = '../data/topo_grids'
     topo_suffix = 'smooth'
-    start_time = 0
-    end_time = 10
-    time_step = 5
     output_dir = './atm_maps'
 
-    # v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), 
-    # precipitation(mm), precipitable water(mm)
-    #sub_dirs = ['precipitable_water']
     sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 
         'precipitation', 'precipitable_water', 'topography', 'velocity', 'evaporation']
 
@@ -146,9 +139,9 @@ if  __name__ == "__main__":
         time_step = int(sys.argv[3])
         data_dir = sys.argv[4]
         topo_suffix = sys.argv[5]
-        #topo_dir = sys.argv[6]
+        topo_dir = sys.argv[6]
     except:
-        print("Use 'python create_atm_maps.py 0 100 5 ../benchmark/output smooth' to override the default settings")
+        print('Usage: python ' + sys.argv[0] + ' 0 10 5 ../benchmark/output smooth ../data/topo_grids/')
         sys.exit(1)
 
     create_all_maps(sub_dirs, start_time, end_time, time_step, output_dir, data_dir, topo_dir, topo_suffix)

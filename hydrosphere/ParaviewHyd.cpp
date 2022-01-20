@@ -230,21 +230,21 @@ void cHydrosphereModel::paraview_panorama_vts(const string &Name_Bathymetry_File
     }
     Hydrosphere_panorama_vts_File <<  "\n"  << endl;
     Hydrosphere_panorama_vts_File <<  "    </DataArray>\n" << endl;
-    dump_array("Bathymetry", h, 1., Hydrosphere_panorama_vts_File);
+    dump_array("Bathymetry", h, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("u-velocity", u, u_0, Hydrosphere_panorama_vts_File);
     dump_array("v-velocity", v, u_0, Hydrosphere_panorama_vts_File);
     dump_array("w-velocity", w, u_0, Hydrosphere_panorama_vts_File);
     dump_array("Temperature", t, 1.0, Hydrosphere_panorama_vts_File);
-    dump_array("PressureDynamic", p_dyn, r_0_water * u_0 * u_0 * 1e-2, Hydrosphere_panorama_vts_File);
+    dump_array("PressureDynamic", p_dyn, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("PressureStatic", p_stat, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("Salinity", c, c_0, Hydrosphere_panorama_vts_File);
-    dump_array("DensityWater", r_water, 1., Hydrosphere_panorama_vts_File);
-    dump_array("DensitySaltWater", r_salt_water, 1., Hydrosphere_panorama_vts_File);
-    dump_array("SaltFinger", Salt_Finger, 1., Hydrosphere_panorama_vts_File);
-    dump_array("SaltDiffusion", Salt_Diffusion, 1., Hydrosphere_panorama_vts_File);
-    dump_array("SaltBalance", Salt_Balance, 1., Hydrosphere_panorama_vts_File);
-    dump_array("BuoyancyForce", BuoyancyForce, 1., Hydrosphere_panorama_vts_File);
-    dump_array("CoriolisForce", CoriolisForce, 7.292e5, Hydrosphere_panorama_vts_File);
+    dump_array("DensityWater", r_water, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("DensitySaltWater", r_salt_water, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("SaltFinger", Salt_Finger, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("SaltDiffusion", Salt_Diffusion, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("SaltBalance", Salt_Balance, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("BuoyancyForce", BuoyancyForce, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("CoriolisForce", CoriolisForce, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("PressureGradientForce", PressureGradientForce, 1., Hydrosphere_panorama_vts_File);
     Hydrosphere_panorama_vts_File <<  "   </PointData>\n" << endl;
     Hydrosphere_panorama_vts_File <<  "   <Points>\n"  << endl;
@@ -258,7 +258,7 @@ void cHydrosphereModel::paraview_panorama_vts(const string &Name_Bathymetry_File
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             for(int i = 0; i < im; i++){
-                if(k == 0 || j == 0) x = 0.;
+                if(k == 0 || j == 0) x = 0.0;
                 else x = x + dx;
                 Hydrosphere_panorama_vts_File << x << " " << y << " " << z  << endl;
             }
@@ -320,22 +320,25 @@ void cHydrosphereModel::paraview_vtk_longal(const string &Name_Bathymetry_File,
         x = x + dx;
     }
     Hydrosphere_vtk_longal_File <<  "POINT_DATA " << im * km << endl;
-    dump_longal("Bathymetry", h, 1., j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("Bathymetry", h, 1.0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("u-Component", u, u_0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("v-Component", v, u_0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("w-Component", w, u_0, j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("Temperature", t, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("PressureDynamic", p_dyn, r_0_water * u_0 * u_0 * 1e-2, j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("PressureStatic", p_stat, 1., j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("rhs_u", rhs_u, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("rhs_v", rhs_v, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("rhs_w", rhs_w, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("Temperature", t, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("PressureDynamic", p_dyn, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("PressureStatic", p_stat, 1.0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("Salinity", c, c_0, j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("DensityWater", r_water, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("DensitySaltWater", r_salt_water, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("SaltFinger", Salt_Finger, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("SaltDiffusion", Salt_Diffusion, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("SaltBalance", Salt_Balance, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("BuoyancyForce", BuoyancyForce, 1., j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("CoriolisForce", CoriolisForce, 7.292e5, j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("PressureGradientForce", PressureGradientForce, 1., j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("DensityWater", r_water, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("DensitySaltWater", r_salt_water, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("SaltFinger", Salt_Finger, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("SaltDiffusion", Salt_Diffusion, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("SaltBalance", Salt_Balance, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("BuoyancyForce", BuoyancyForce, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("CoriolisForce", CoriolisForce, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+    dump_longal("PressureGradientForce", PressureGradientForce, 1.0, j_longal, Hydrosphere_vtk_longal_File);
     Hydrosphere_vtk_longal_File <<  "VECTORS u-w-Cell float" << endl;
     for(int i = 0; i < im; i++){
         for(int k = 0; k < km; k++){
@@ -395,29 +398,32 @@ void cHydrosphereModel::paraview_vtk_radial(const string &Name_Bathymetry_File,
             if(is_land(h, i_radial, j, k))  aux_v.x[i_radial][j][k] = 0.;
         }
     }
-    dump_radial("Bathymetry", h, 1., i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("Bathymetry", h, 1.0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial_2d("Bathymetry_m", Bathymetry, 1., Hydrosphere_vtk_radial_File);
     dump_radial("u-Component", u, u_0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("v-Component", v, u_0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("w-Component", w, u_0, i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("PressureDynamic", p_dyn, r_0_water * u_0 * u_0 * 1e-2, i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("PressureStatic", p_stat, 1., i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("rhs_u", rhs_u, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("rhs_v", rhs_v, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("rhs_w", rhs_w, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("PressureDynamic", p_dyn, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("PressureStatic", p_stat, 1.0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("Salinity", c, c_0, i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("DensityWater", r_water, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("DensitySaltWater", r_salt_water, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("SaltFinger", Salt_Finger, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("SaltDiffusion", Salt_Diffusion, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("SaltBalance", Salt_Balance, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("BuoyancyForce", BuoyancyForce, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("CoriolisForce", CoriolisForce, 7.292e5, i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("PressureGradientForce", PressureGradientForce, 1., i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial_2d("EkmanPumping", EkmanPumping, 1., Hydrosphere_vtk_radial_File);
-    dump_radial_2d("Upwelling", Upwelling, 1., Hydrosphere_vtk_radial_File);
-    dump_radial_2d("Downwelling", Downwelling, 1., Hydrosphere_vtk_radial_File);
-    dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1., Hydrosphere_vtk_radial_File);
-    dump_radial_2d("Precipitation", Precipitation, 1., Hydrosphere_vtk_radial_File);
-    dump_radial_2d("SalinityEvapPrec", salinity_evaporation, 1e8 * c_0, Hydrosphere_vtk_radial_File);
-    dump_radial("Evap-Precip", aux_v, 1., i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("DensityWater", r_water, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("DensitySaltWater", r_salt_water, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("SaltFinger", Salt_Finger, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("SaltDiffusion", Salt_Diffusion, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("SaltBalance", Salt_Balance, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("BuoyancyForce", BuoyancyForce, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("CoriolisForce", CoriolisForce, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial("PressureGradientForce", PressureGradientForce, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+    dump_radial_2d("EkmanPumping", EkmanPumping, 1.0, Hydrosphere_vtk_radial_File);
+    dump_radial_2d("Upwelling", Upwelling, 1.0, Hydrosphere_vtk_radial_File);
+    dump_radial_2d("Downwelling", Downwelling, 1.0, Hydrosphere_vtk_radial_File);
+    dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1.0, Hydrosphere_vtk_radial_File);
+    dump_radial_2d("Precipitation", Precipitation, 1.0, Hydrosphere_vtk_radial_File);
+    dump_radial_2d("SalinityEvapPrec", salinity_evaporation, 1.0, Hydrosphere_vtk_radial_File);
+    dump_radial("Evap-Precip", aux_v, 1.0, i_radial, Hydrosphere_vtk_radial_File);
     Hydrosphere_vtk_radial_File <<  "VECTORS v-w-Cell float" << endl;
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
@@ -476,22 +482,25 @@ void cHydrosphereModel::paraview_vtk_zonal(const string &Name_Bathymetry_File,
             }
         }
     }
-    dump_zonal("Bathymetry", h, 1., k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("Bathymetry", h, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("u-Component", u, u_0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("v-Component", v, u_0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("w-Component", w, u_0, k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("Temperature", aux_u, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("PressureDynamic", p_dyn, r_0_water * u_0 * u_0 * 1e-2, k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("PressureStatic", p_stat, 1., k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("rhs_u", rhs_u, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("rhs_v", rhs_v, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("rhs_w", rhs_w, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("Temperature", aux_u, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("PressureDynamic", p_dyn, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("PressureStatic", p_stat, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("Salinity", c, c_0, k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("DensityWater", r_water, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("DensitySaltWater", r_salt_water, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("SaltFinger", Salt_Finger, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("SaltDiffusion", Salt_Diffusion, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("SaltBalance", Salt_Balance, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("BuoyancyForce", BuoyancyForce, 1., k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("CoriolisForce", CoriolisForce, 7.292e5, k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("PressureGradientForce", PressureGradientForce, 1., k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("DensityWater", r_water, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("DensitySaltWater", r_salt_water, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("SaltFinger", Salt_Finger, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("SaltDiffusion", Salt_Diffusion, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("SaltBalance", Salt_Balance, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("BuoyancyForce", BuoyancyForce, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("CoriolisForce", CoriolisForce, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+    dump_zonal("PressureGradientForce", PressureGradientForce, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
     Hydrosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){

@@ -35,23 +35,10 @@ void cAtmosphereModel::RadiationMultiLayer(){
     std::vector<double> AA(im, 0.0);
     std::vector<double> CA(im, 0.0);
     std::vector<std::vector<double> > CC(im, std::vector<double>(im, 0.0));
-    std::map<float, float> pole_temp_map;  // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
     short_wave_radiation = std::vector<double>(jm, rad_pole_short);
     radiation_original = std::vector<double>(im, 0.0);
     int j_max = jm-1;
     int j_half = j_max/2;
-/*
-//    double temp_eff = t_tropopause_pole - t_tropopause_equator;
-    for(int j=j_half; j>=0; j--){
-        temp_tropopause[j] = t_tropopause_equator;
-    }
-    for(int j=j_max; j>j_half; j--){
-//        temp_tropopause[j] = temp_tropopause[j_max-j];
-    }
-//    AtomUtils::smooth_tropopause(jm, temp_tropopause);
-*/
-    load_map_from_file(pole_temperature_file, pole_temp_map);   // Stein/Rüdiger/Parish linear pole temperature (Ma) distribution
-//    double rad_eff = rad_pole - rad_equator;
     double albedo_eff = albedo_pole - albedo_equator;
     // effective temperature, albedo and emissivity/absorptivity for the two layer model
     for(int j = 0; j < jm; j++){
@@ -160,6 +147,7 @@ void cAtmosphereModel::RadiationMultiLayer(){
                 if(epsilon.x[i][j][k] > 1.)  epsilon.x[i][j][k] = 1.;
             }  // end i
             epsilon_2D.y[j][k] = epsilon.x[0][j][k];
+/*
             // inside mountains
             for(int i = i_mount-1; i >= 0; i--){
                 if(is_land(h, i, j, k)){
@@ -168,6 +156,7 @@ void cAtmosphereModel::RadiationMultiLayer(){
                     radiation_original[i] = radiation.x[i_mount][j][k];
                 }
             } // end i
+*/
 /*
             // above tropopause
             for(int i = i_trop; i < im; i++){
@@ -291,7 +280,8 @@ void cAtmosphereModel::RadiationMultiLayer(){
             } // end i
             radiation.x[i_trop][j][k] = epsilon.x[i_trop][j][k] 
                 * radiation.x[i_trop][j][k]/( - CA[i_trop-1] + CA[i_trop]);
-            for(int i = i_trop-1; i >= i_mount; i--){
+//            for(int i = i_trop-1; i >= i_mount; i--){
+            for(int i = i_trop-1; i >= 0; i--){
             // Thomas algorithm, recurrence formula
                 radiation.x[i][j][k] = alfa[i] * radiation.x[i+1][j][k] 
                     + beta[i];
@@ -325,7 +315,8 @@ void cAtmosphereModel::RadiationMultiLayer(){
                     << "  CA[i+1] - CA[i] = " << CA[i+1] - CA[i] << endl << endl;
 */
             } // end i
-            for(int i = i_mount; i <= i_trop; i++){
+//            for(int i = i_mount; i <= i_trop; i++){
+            for(int i = 0; i <= i_trop; i++){
                 radiation.x[i][j][k] = radiation_original[i] + radiation.x[i][j][k];
                 t.x[i][j][k] = pow(radiation.x[i][j][k]/sigma, 0.25)/t_0;
 /*
@@ -348,7 +339,7 @@ void cAtmosphereModel::RadiationMultiLayer(){
 */
         } // end k
     } // end j
-
+/*
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
@@ -360,6 +351,7 @@ void cAtmosphereModel::RadiationMultiLayer(){
             }
         }
     }
+*/
     cout << "      RadiationMultiLayer ended" << endl;
     return;
 }
@@ -371,36 +363,24 @@ void cAtmosphereModel::PressureDensity(){
 // static pressure is understood by a zero velocity field
     double R_W_R_A = R_WaterVapour/R_Air;
     double beta = 42.0; // in K, COSMO
-    double p_SL = p_0;  // reference pressure in hPa, COSMO
-    double t_0_parabola = 0.0;
+    double t_u = 0.0;
+    double height = 0.0;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            int i_mount = i_topography[j][k];
-            double t_u_pole = t.x[0][0][k] * t_0;
-            double t_u_equator = t.x[0][90][k] * t_0;
-            double height = get_layer_height(i_mount);
-            double t_u = t.x[0][j][k] * t_0;  // NASA-temperature at height but projected to zero level in K
-            double t_eff = t_u_pole - t_u_equator;
-            t_0_parabola = (t_eff * parabola((double)j
-                /((double)(jm-1)/2.0)) + t_u_pole);
-            if(is_land(h, 0, j, k)){
-                r_dry.x[0][j][k] = 1e2 * p_SL/(R_Air * t_0_parabola); // in kg/m3, COSMO
-                p_stat.x[0][j][k] = 1e-2 * (r_dry.x[0][j][k] * R_Air * t_0_parabola);  // reference static pressure given in hPa, by gas equation
-                p_stat.x[i_mount][j][k] = p_stat.x[0][j][k] // potential static pressure expected at height by barometric height formula,
-                    * exp(- t_u/beta * (1.0 - sqrt(1.0 
-                    - (2.0 * beta * g * height)
-                    /(R_Air * t_u * t_u)))); // COSMO
-            }else{
-                r_dry.x[0][j][k] = 1e2 * p_SL/(R_Air * t.x[0][j][k]); // in kg/m3, COSMO
-                p_stat.x[0][j][k] = 1e-2 * (r_dry.x[0][j][k] * R_Air * t.x[0][j][k]);  // reference static pressure given in hPa, by gas equation
-            }
+//            int i_mount = i_topography[j][k];
+            int i_mount = 0;
+            height = get_layer_height(i_mount);
+//            t_u = t.x[0][j][k] * t_0;  // NASA-temperature at height but projected to zero level in K
+            t_u = temp_reconst.y[j][k] + t_0;  // NASA-temperature at height but projected to zero level in K
+            p_stat.x[0][j][k] = 1e-2 * (r_air * R_Air * t_u);  // reference static pressure given in hPa, by gas equation
+            r_dry.x[0][j][k] = 1e2 * p_stat.x[0][j][k]
+                /(R_Air * t_u); // in kg/m3, COSMO
             for(int i = i_mount; i < im; i++){
-                double height = get_layer_height(i);
-                double t_u = t.x[i][j][k] * t_0;
+                height = get_layer_height(i);
+//                t_u = t.x[i][j][k] * t_0;
                 p_stat.x[i][j][k] = p_stat.x[0][j][k] // potential static pressure expected at height by barometric height formula,
-                    * exp(- t.x[0][j][k] * t_0/beta * (1.0 - sqrt(1.0 
-                    - (2.0 * beta * g * height)
-                    /(R_Air * t.x[0][j][k] * t_0 * t.x[0][j][k] * t_0)))); // COSMO
+                    * exp(- t_u/beta * (1.0 - sqrt(1.0 
+                    - (2.0 * beta * g * height)/(R_Air * t_u * t_u)))); // COSMO
                 r_dry.x[i][j][k] = 1e2 * p_stat.x[i][j][k]/(R_Air * t_u);
                 r_humid.x[i][j][k] = 1e2 * p_stat.x[i][j][k]
                     /(R_Air * (1. + (R_W_R_A - 1.0) * c.x[i][j][k] 
@@ -421,9 +401,14 @@ void cAtmosphereModel::PressureDensity(){
             }
         }
     }
+/*
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
+            p_stat_landscape.y[j][k] = p_stat.x[i_mount][j][k]; // in hPa
+            r_dry_landscape.y[j][k] = r_dry.x[i_mount][j][k]; // in kg/m³
+            r_humid_landscape.y[j][k] = r_humid.x[i_mount][j][k]; // in kg/m³
+
             for(int i = i_mount; i >= 0; i--){
                 if((is_land(h, i, j, k))&&(i <= i_mount)){
                     p_stat.x[i][j][k] = p_stat.x[i_mount][j][k];
@@ -431,113 +416,110 @@ void cAtmosphereModel::PressureDensity(){
                     r_humid.x[i][j][k] = r_humid.x[i_mount][j][k];
                 }
             }
+
         }
     }
+*/
     cout << "      PressureDensity ended" << endl;
     return;
 }
 /*
 *
 */
-void cAtmosphereModel::LatentHeat(){
-    cout << endl << "      LatentHeat" << endl;
-    float Q_Latent_Ice = 0.; 
-    float coeff_Q = cp_l * r_air * t_0; // coefficient for Q_Sensible
-    float coeff_lat = 1.e6 * 50.; // diffusion coefficient for water vapour in air (50)
+void cAtmosphereModel::LatentSensibleHeat(){
+    cout << endl << "      LatentSensibleHeat" << endl;
+    float Q_Latent_Ice = 0.0; 
+    float coeff_S = cp_l * r_air * t_0; // coefficient for Q_Sensible
+    float coeff_L = r_water_vapour * c_0; // coefficient for Q_Latent
+    float coeff_lat = 5.4e4; // diffusion coefficient for water vapour in air, coefficient meets the ratio 27 % to 5 % of latent to sensible heat
     float coeff_sen = 2.7; // diffusion coefficient for sensible heat transfer in air
-    float a, e, step, step_p, step_m;
-    for(int j = 0; j < jm; j++){
+    float step, step_p, step_m;
+    for(int j = 1; j < jm-1; j++){
     // water vapour can condensate/evaporate und sublimate/vaporize
     // water vapour turns to or developes from water or ice
-    // latent heat of water vapour
-        for(int k = 0; k < km; k++){
-            int i_mount = get_surface_layer(j, k);
-            for(int i = i_mount+1; i < im-2; i++){
+        for(int k = 1; k < km-1; k++){
+            for(int i = 1; i < im-1; i++){
                 step_p = (get_layer_height(i+1) - get_layer_height(i));
                 step_m = (get_layer_height(i) - get_layer_height(i-1));
-/*
-                step_p = log((get_layer_height(i+1)/L_atm + 1.)
-                    /(get_layer_height(i)/L_atm + 1.)) * L_atm;  // local atmospheric shell thickness
-                step_m = log((get_layer_height(i)/L_atm + 1.)
-                    /(get_layer_height(i-1)/L_atm + 1.)) * L_atm;  // local atmospheric shell thickness
-*/
                 step = step_p + step_m;
-
-                e = .01 * c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in Pa
-                if(i > i_mount){
-                    a = e/(R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
-                    Q_Latent.x[i][j][k] = - lv * a 
-                        * (c.x[i+1][j][k] - c.x[i-1][j][k])/step;
-                    Q_Latent_Ice = - ls * a * (ice.x[i+1][j][k] 
-                        - ice.x[i-1][j][k])/step;
-                    Q_Sensible.x[i][j][k] = - coeff_sen * coeff_Q 
-                        * (t.x[i+1][j][k] - t.x[i-1][j][k])/step;  // sensible heat in [W/m2] from energy transport equation
-                }
-                if(i == i_mount){
-                    a = e/(R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
-                    Q_Latent.x[i][j][k] = - lv * a 
-                        * (- 3. * c.x[i][j][k] + 4. * c.x[i+1][j][k] 
-                        - c.x[i+2][j][k])/step;
-                    Q_Latent_Ice = - ls * a * (- 3. * ice.x[i][j][k] +
-                        4. * ice.x[i+1][j][k] 
-                        - ice.x[i+2][j][k])/step;
-                    // sensible heat in [W/m2] from energy transport equation
-                    Q_Sensible.x[i][j][k] = - coeff_sen * coeff_Q 
-                        * (- 3. * t.x[i][j][k] +
-                        4. * t.x[i+1][j][k] - t.x[i+2][j][k])/step;
-                }
+                Q_Latent.x[i][j][k] = - lv
+                    * (c.x[i+1][j][k] - c.x[i-1][j][k])/step;
+                Q_Latent_Ice = - ls 
+                    * (ice.x[i+1][j][k] - ice.x[i-1][j][k])/step;
+                Q_Sensible.x[i][j][k] = + coeff_sen * coeff_S 
+                    * (t.x[i+1][j][k] - t.x[i-1][j][k])/step;  // sensible heat in [W/m2] from energy transport equation
                 Q_Latent.x[i][j][k] = 
-                    coeff_lat * (Q_Latent.x[i][j][k] + Q_Latent_Ice);
+                    coeff_lat * coeff_L 
+                        * (Q_Latent.x[i][j][k] + Q_Latent_Ice);
             }
         }
     }
-    float c43 = 4./3.;
-    float c13 = 1./3.;
-    for(int k = 1; k < km-1; k++){
-        for(int j = 1; j < jm-1; j++){
-            int i_mount = get_surface_layer(j, k);
-            Q_Latent.x[im-1][j][k] = c43 * Q_Latent.x[im-2][j][k] -
-                c13 * Q_Latent.x[im-3][j][k];
-            Q_Sensible.x[im-1][j][k] = c43 * Q_Sensible.x[im-2][j][k] -
-                c13 * Q_Sensible.x[im-3][j][k];
-            if(is_land (h, 0, j, k)){  
-                Q_Latent.x[0][j][k] = Q_Latent.x[i_mount][j][k];
-                Q_Sensible.x[0][j][k] = Q_Sensible.x[i_mount][j][k];
-            }else{
-                Q_Latent.x[0][j][k] = c43 * Q_Latent.x[1][j][k] -
-                    c13 * Q_Latent.x[2][j][k];
-                Q_Sensible.x[0][j][k] = c43 * Q_Sensible.x[1][j][k] -
-                    c13 * Q_Sensible.x[2][j][k];
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            Q_Latent.x[im-1][j][k] = Q_Latent.x[im-4][j][k] 
+                - 3.0 * Q_Latent.x[im-3][j][k] 
+                + 3.0 * Q_Latent.x[im-2][j][k];
+            Q_Sensible.x[im-1][j][k] = Q_Sensible.x[im-4][j][k] 
+                - 3.0 * Q_Sensible.x[im-3][j][k] 
+                + 3.0 * Q_Sensible.x[im-2][j][k];
+                }
             }
-        }
-    }
     for(int k = 0; k < km; k++){
         for(int i = 0; i < im; i++){
-            Q_Latent.x[i][0][k] = c43 * Q_Latent.x[i][1][k] -
-                 c13 * Q_Latent.x[i][2][k];
-            Q_Latent.x[i][jm-1][k] = c43 * Q_Latent.x[i][jm-2][k] -
-                 c13 * Q_Latent.x[i][jm-3][k];
-            Q_Sensible.x[i][0][k] = c43 * Q_Sensible.x[i][1][k] -
-                 c13 * Q_Sensible.x[i][2][k];
-            Q_Sensible.x[i][jm-1][k] = c43 * Q_Sensible.x[i][jm-2][k] -
-                 c13 * Q_Sensible.x[i][jm-3][k];
+            Q_Latent.x[i][0][k] = c43 * Q_Latent.x[i][1][k] 
+                - c13 * Q_Latent.x[i][2][k];
+            Q_Latent.x[i][jm-1][k] = c43 * Q_Latent.x[i][jm-2][k] 
+                - c13 * Q_Latent.x[i][jm-3][k];
+            Q_Sensible.x[i][0][k] = c43 * Q_Sensible.x[i][1][k] 
+                - c13 * Q_Sensible.x[i][2][k];
+            Q_Sensible.x[i][jm-1][k] = c43 * Q_Sensible.x[i][jm-2][k] 
+                - c13 * Q_Sensible.x[i][jm-3][k];
         }
     }
     for(int i = 0; i < im; i++){
-        for(int j = 1; j < jm-1; j++){
-            float b1 = c43 * Q_Latent.x[i][j][1] 
-                - c13 * Q_Latent.x[i][j][2];
-            float b2 = c43 * Q_Latent.x[i][j][km-2] 
-                - c13 * Q_Latent.x[i][j][km-3];
-            Q_Latent.x[i][j][0] = Q_Latent.x[i][j][km-1] = (b1+ b2)/2.;
-            b1 = c43 * Q_Sensible.x[i][j][1] 
-                - c13 * Q_Sensible.x[i][j][2];
-            b2 = c43 * Q_Sensible.x[i][j][km-2] 
-                - c13 * Q_Sensible.x[i][j][km-3];
-            Q_Sensible.x[i][j][0] = Q_Sensible.x[i][j][km-1] = (b1+ b2)/2.;
+        for(int j = 0; j < jm; j++){
+            Q_Latent.x[i][j][0] = c43 * Q_Latent.x[i][j][1] 
+                - c13 * Q_Latent.x[i][j][2];  // von Neumann boundary condition dt/dphi = 0.0
+            Q_Latent.x[i][j][km-1] = c43 * Q_Latent.x[i][j][km-2] 
+                - c13 * Q_Latent.x[i][j][km-3];  // von Neumann boundary condition dt/dphi = 0.0
+/*
+            Q_Latent.x[i][j][0] = Q_Latent.x[i][j][1] 
+                - 3.0 * Q_Latent.x[i][j][2] 
+                + 3.0 * Q_Latent.x[i][j][3];  // extrapolation
+            Q_Latent.x[i][j][km-1] = Q_Latent.x[im-4][j][km-4] 
+                - 3.0 * Q_Latent.x[im-3][j][km-3] 
+                + 3.0 * Q_Latent.x[im-2][j][km-2];  // extrapolation
+*/
+            Q_Latent.x[i][j][0] = Q_Latent.x[i][j][km-1] 
+                = (Q_Latent.x[i][j][0] + Q_Latent.x[i][j][km-1])/2.0;
+            Q_Sensible.x[i][j][0] = c43 * Q_Sensible.x[i][j][1] 
+                - c13 * Q_Sensible.x[i][j][2];  // von Neumann boundary condition dt/dphi = 0.0
+            Q_Sensible.x[i][j][km-1] = c43 * Q_Sensible.x[i][j][km-2] 
+                - c13 * Q_Sensible.x[i][j][km-3];  // von Neumann boundary condition dt/dphi = 0.0
+/*
+            Q_Sensible.x[i][j][0] = Q_Sensible.x[i][j][1] 
+                - 3.0 * Q_Sensible.x[i][j][2] 
+                + 3.0 * Q_Sensible.x[i][j][3];  // extrapolation
+            Q_Sensible.x[i][j][km-1] = Q_Sensible.x[im-4][j][km-4] 
+                - 3.0 * Q_Sensible.x[im-3][j][km-3] 
+                + 3.0 * Q_Sensible.x[im-2][j][km-2];  // extrapolation
+            Q_Sensible.x[i][j][0] = Q_Sensible.x[i][j][km-1] 
+                = (Q_Sensible.x[i][j][0] + Q_Sensible.x[i][j][km-1])/2.0;
+*/
         }
     }
-    cout << "      LatentHeat ended" << endl;
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            int i_mount = i_topography[j][k];
+            for(int i = i_mount; i >= 0; i--){
+                if((is_land(h, i, j, k))&&(i < i_mount)){
+                    Q_Latent.x[i][j][k] = Q_Latent.x[i_mount][j][k];
+                    Q_Sensible.x[i][j][k] = Q_Sensible.x[i_mount][j][k];
+                }
+            }
+        }
+    }
+    cout << "      LatentSensibleHeat ended" << endl;
     return;
 }
 /*
@@ -558,12 +540,9 @@ void cAtmosphereModel::SaturationAdjustment(){
     int k_sat = 0;
     double height_sat = 0.0;
     double maxValue_sat = 0.0;
-    int Ma = *get_current_time();
     int iter_prec_end = 10;
 //    int iter_prec_end = 3;
     int iter_prec = 0;
-//    double R_A_R_W = R_Air/R_WaterVapour;
-//    float t_00 = 236.15;
     float q_v_hyp = 0.0;
     float dt_dim = (dr + dthe + dphi)/3.0 * L_atm/u_0; // dimensional time step = 39.93333 s
 //    float dt_dim = dt * L_atm/u_0; // dimensional time step = 0.1 s
@@ -595,9 +574,9 @@ void cAtmosphereModel::SaturationAdjustment(){
             double d_j = (double)j;
             cloud_loc[j] = cloud_loc_eff 
                 * parabola((double)d_j/(double)d_j_half) + cloud_loc_pole;
-            double d_i_max_cloud_loc = cloud_loc[j];
+//            double d_i_max_cloud_loc = cloud_loc[j];
             for(int i = 0; i < im; i++){
-                double height = get_layer_height(i);
+//                double height = get_layer_height(i);
                 t_u = t.x[i][j][k] * t_0; // in K
                 if(t_u <= t_00){
                     cloud.x[i][j][k] = 0.0;
@@ -614,9 +593,10 @@ void cAtmosphereModel::SaturationAdjustment(){
                 E_Rain = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                 E_Ice = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the water phase at t < 0°C in hPa
                 q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
-                double d_i = (double)i;
-                double x_cloud = d_i/d_i_max_cloud_loc;
-                q_Rain = q_Rain * Humility_critical(x_cloud, 1.0, 0.8); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
+//                double d_i = (double)i;
+//                double x_cloud = d_i/d_i_max_cloud_loc;
+//                q_Rain = q_Rain * Humility_critical(x_cloud, 1.0, 0.8); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
+                q_Rain = ep * E_Rain/(p_stat.x[i][j][k] - E_Rain);; // relativ water vapour contents on ocean surface reduced by factor in kg/kg
                 q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
                 q_v_hyp = q_v_b;
                 if((c.x[i][j][k] >= q_Rain)&&(T > t_00)){ // condition for cloud water and ice formation, available water vapor greater than at saturation
@@ -639,7 +619,6 @@ void cAtmosphereModel::SaturationAdjustment(){
                         d_q_c = - d_q_v * CND;
                         d_q_i = - d_q_v * DEP;
                         d_t = (lv * d_q_c + ls * d_q_i)/cp_l; // in K, temperature changes
-//                        T = T + d_t; // in K
                         T = T - d_t; // in K
                         q_v_b = q_v_b + d_q_v;  // new values
                         q_c_b = q_c_b + d_q_c;
@@ -736,11 +715,17 @@ void cAtmosphereModel::SaturationAdjustment(){
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
-            if(is_land(h, 0, j, k)){
-                c.x[0][j][k] = c.x[i_mount][j][k];
-                cloud.x[0][j][k] = cloud.x[i_mount][j][k];
-                ice.x[0][j][k] = ice.x[i_mount][j][k];
-                t.x[0][j][k] = t.x[i_mount][j][k];
+            for(int i = i_mount; i >= 0; i--){
+                if(is_land(h, i, j, k)){
+                    c.x[i][j][k] = c.x[i_mount][j][k];
+                    cloud.x[i][j][k] = cloud.x[i_mount][j][k];
+                    ice.x[i][j][k] = ice.x[i_mount][j][k];
+                }
+                if(t.x[i][j][k] * t_0 <= t_00){
+                    c.x[i][j][k] = 0.0;
+                    cloud.x[i][j][k] = 0.0;
+                    ice.x[i][j][k] = 0.0;
+                }
             }
         }
     }
@@ -776,11 +761,12 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
     cout << endl << "      TwoCategoryIceScheme" << endl;
     // constant coefficients for the transport of cloud water and cloud ice amount vice versa, 
     // rain and snow in the parameterization procedures
-    int Ma = *get_current_time();
     bool rain = false;
     bool snow = false;
     double P_Rain = 0.0;
     double P_Snow = 0.0;
+    double Rain = 0.0;
+    double Snow = 0.0;
     int i_rain = 0;
     int i_snow = 0;
     int j_rain = 0;
@@ -791,7 +777,6 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
     double height_snow = 0.0;
     double maxValue_rain = 0.0;
     double maxValue_snow = 0.0;
-//    double R_A_R_W = R_Air/R_WaterVapour;
     float N_i_0 = 1.0e2,  // in m-3
           m_i_0 = 1.0e-12,  // in kg
           m_i_max = 1.0e-9,  // in kg
@@ -839,11 +824,13 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
                 if(ice.x[i][j][k] < 0.0)  ice.x[i][j][k] = 0.0;
                 if(P_rain.x[i][j][k] < 0.0)  P_rain.x[i][j][k] = 0.0;
                 if(P_snow.x[i][j][k] < 0.0)  P_snow.x[i][j][k] = 0.0;
+                P_rain.x[i][j][k] = 0.0;
+                P_snow.x[i][j][k] = 0.0;
             }
         }
     }
-    for(int k = 0; k < km; k++){
-        for(int j = 0; j < jm; j++){
+    for(int k = 1; k < km-1; k++){
+        for(int j = 1; j < jm-1; j++){
             P_rain.x[im-1][j][k] = 0.0;
             P_snow.x[im-1][j][k] = 0.0;
             P_rain.x[im-2][j][k] = 0.0;
@@ -852,15 +839,7 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
             S_s.x[im-1][j][k] = 0.0;
             S_r.x[im-2][j][k] = 0.0;
             S_s.x[im-2][j][k] = 0.0;
-            double Rain = 0.0;
-            double Snow = 0.0;
             for(int i = im-2; i >= 0; i--){
-/*
-                Rain = 0.5 * (P_rain.x[i+1][j][k] 
-                    + P_rain.x[i][j][k]);
-                Snow = 0.5 * (P_snow.x[i+1][j][k] 
-                    + P_snow.x[i][j][k]);
-*/
                 Rain = P_rain.x[i][j][k];
                 Snow = P_snow.x[i][j][k];
                 double t_u = t.x[i][j][k] * t_0;
@@ -871,8 +850,8 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
                 q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
                 dt_rain_dim = step[i]/1.6; // adjusted rain fall time step by fixed velocities == 1.6 m/s by variable local step size
                 dt_snow_dim = step[i]/0.96; // adjusted snow fall time step by fixed velocities == 0.96 m/s by variable local step size
-    // number density of ice particles and mass of cloud ice
-                if(!(t_u > t_0)){  
+        // number density of ice particles and mass of cloud ice
+                if((!(t_u > t_0)&&(!(t_u <= t_hn)))){  
                     N_i = N_i_0 * exp(0.2 * (t_0 - t_u)); // in 1/m³
                     m_i = r_humid.x[i][j][k] * ice.x[i][j][k]/N_i; // in kg
                     if(m_i > m_i_max) m_i = m_i_max;  // m_i_max = 1.0e-9, in kg
@@ -978,8 +957,7 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
                     S_s_melt = c_s_melt * (1.0 + b_s_melt   // melting rate of snow to form rain, < XVI >
                         * pow(Snow,(5.0/26.0))) *  // c_s_melt = 8.43e-5, (m2*s)/(K*kg)
                         ((t_u - t_0) + a_s_melt * (c.x[i][j][k] 
-                        - q_Rain_t_in)) * pow(Snow, 
-                        (8.0/13.0));
+                        - q_Rain_t_in)) * pow(Snow,(8.0/13.0));
                 }
                 if(t_r_frz - t_u > 0.0)
                     S_r_frz = c_r_frz * pow((t_r_frz - t_u), (3.0/2.0)) 
@@ -997,7 +975,8 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
                     - S_r_cri - S_r_frz + S_s_melt;
                 S_s.x[i][j][k] = S_i_au + S_d_au + S_agg + S_rim 
                     + S_s_dep + S_i_cri + S_r_cri + S_r_frz - S_s_melt;
-                if((is_land(h,i,j,k))&&(is_land(h,i+1,j,k))){
+
+                if(is_land(h,i,j,k)){
                     S_c_c.x[i][j][k] = 0.0;
                     S_v.x[i][j][k] = 0.0;
                     S_c.x[i][j][k] = 0.0;
@@ -1006,15 +985,18 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
                     S_s.x[i][j][k] = 0.0;
                 }
     // rain and snow integration
-//                int i_mount = i_topography[j][k];
                 if(t_u >= t_0)
-//                    P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
-//                        + r_humid.x[i+1][j][k] * 0.5 * (S_r.x[i+1][j][k] 
-//                        + S_r.x[i][j][k]) * step[i];  // in kg/(m2 * s) == mm/s 
+/*
+                    P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
+                        + r_humid.x[i+1][j][k] * 0.5 * (S_r.x[i+1][j][k] 
+                        + S_r.x[i][j][k]) * step[i];  // in kg/(m2 * s) == mm/s 
+*/
                     P_rain.x[i][j][k] = P_rain.x[i+1][j][k]
                         + r_humid.x[i+1][j][k] * S_r.x[i+1][j][k] 
                         * step[i];  // in kg/(m2 * s) == mm/s 
                 else  P_rain.x[i][j][k] = 0.0;
+                if(P_rain.x[i][j][k] >= 10.0/8.64e4)  P_rain.x[i][j][k] = 10.0/8.64e4;
+                if(P_rain.x[i][j][k] < 0.0)  P_rain.x[i][j][k] = 0.0;
                 if(P_rain.x[i][j][k] > 0.0){
                     rain = true;
                     if(P_rain.x[i][j][k] > maxValue_rain){
@@ -1037,13 +1019,17 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
                     }
                 }
                 if((t_u < t_0)&&(t_u >= t_00))
-//                    P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
-//                        + r_humid.x[i+1][j][k] * 0.5 * (S_s.x[i+1][j][k] 
-//                        + S_s.x[i][j][k]) * step[i];  // in kg/(m2 * s) == mm/s 
+/*
+                    P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
+                        + r_humid.x[i+1][j][k] * 0.5 * (S_s.x[i+1][j][k] 
+                        + S_s.x[i][j][k]) * step[i];  // in kg/(m2 * s) == mm/s 
+*/
                     P_snow.x[i][j][k] = P_snow.x[i+1][j][k]
                         + r_humid.x[i+1][j][k] * S_s.x[i+1][j][k] 
                         * step[i];  // in kg/(m2 * s) == mm/s 
                 else  P_snow.x[i][j][k] = 0.0;
+                if(P_snow.x[i][j][k] >= 1.0/8.64e4)  P_snow.x[i][j][k] = 1.0/8.64e4;
+                if(P_snow.x[i][j][k] < 0.0)  P_snow.x[i][j][k] = 0.0;
                 if(P_snow.x[i][j][k] > 0.0){
                     snow = true;
                     if(P_snow.x[i][j][k] > maxValue_snow){
@@ -1138,11 +1124,46 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
             }  // end i RainSnow
         }  // end j
     }  // end k
+
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            P_rain.x[im-1][j][k] = c43 * P_rain.x[im-2][j][k] 
+                - c13 * P_rain.x[im-3][j][k];
+            P_snow.x[im-1][j][k] = c43 * P_snow.x[im-2][j][k] 
+                - c13 * P_snow.x[im-3][j][k];
+                }
+            }
+    for(int k = 0; k < km; k++){
+        for(int i = 0; i < im; i++){
+            P_rain.x[i][0][k] = c43 * P_rain.x[i][1][k] 
+                - c13 * P_rain.x[i][2][k];
+            P_rain.x[i][jm-1][k] = c43 * P_rain.x[i][jm-2][k] 
+                - c13 * P_rain.x[i][jm-3][k];
+            P_snow.x[i][0][k] = c43 * P_snow.x[i][1][k] 
+                - c13 * P_snow.x[i][2][k];
+            P_snow.x[i][jm-1][k] = c43 * P_snow.x[i][jm-2][k] 
+                - c13 * P_snow.x[i][jm-3][k];
+        }
+    }
+    for(int i = 0; i < im; i++){
+        for(int j = 0; j < jm; j++){
+            P_rain.x[i][j][0] = c43 * P_rain.x[i][j][1] 
+                - c13 * P_rain.x[i][j][2];  // von Neumann boundary condition dt/dphi = 0.0
+            P_rain.x[i][j][km-1] = c43 * P_rain.x[i][j][km-2] 
+                - c13 * P_rain.x[i][j][km-3];  // von Neumann boundary condition dt/dphi = 0.0
+            P_rain.x[i][j][0] = P_rain.x[i][j][km-1] 
+                = (P_rain.x[i][j][0] + P_rain.x[i][j][km-1])/2.0;
+            P_snow.x[i][j][0] = c43 * P_snow.x[i][j][1] 
+                - c13 * P_snow.x[i][j][2];  // von Neumann boundary condition dt/dphi = 0.0
+            P_snow.x[i][j][km-1] = c43 * P_snow.x[i][j][km-2] 
+                - c13 * P_snow.x[i][j][km-3];  // von Neumann boundary condition dt/dphi = 0.0
+        }
+    }
 /*
 *
 */
-    fft_gaussian_filter_3d(P_rain,1);
-    fft_gaussian_filter_3d(P_snow,1);
+    AtomUtils::fft_gaussian_filter_3d(P_rain,1);
+    AtomUtils::fft_gaussian_filter_3d(P_snow,1);
 /*
 *
 */
@@ -1185,54 +1206,9 @@ void cAtmosphereModel::TwoCategoryIceScheme(){
 /*
 *
 */
-void cAtmosphereModel::ValueLimitationAtm(){
-    cout << endl << "      ValueLimitationAtm" << endl;
-// class element for the limitation of flow properties, to avoid unwanted growth around geometrical singularities
-    for(int k = 0; k < km; k++){
-        for(int j = 0; j < jm; j++){
-            if(Precipitation.y[j][k] >= 25.0)  Precipitation.y[j][k] = 25.0;
-            if(Precipitation.y[j][k] <= 0.0)  Precipitation.y[j][k] = 0.0;
-            for(int i = 0; i < im; i++){
-                if(u.x[i][j][k] >= 0.106)  u.x[i][j][k] = 0.106;
-                if(u.x[i][j][k] <= - 0.106)  u.x[i][j][k] = - 0.106;
-                if(v.x[i][j][k] >= 0.5)  v.x[i][j][k] = 0.5;
-                if(v.x[i][j][k] <= - 0.5)  v.x[i][j][k] = - 0.5;
-                if(w.x[i][j][k] >= 6.25)  w.x[i][j][k] = 6.25;
-                if(w.x[i][j][k] <= - 2.0)  w.x[i][j][k] = - 2.0;
-                if(t.x[i][j][k] >= 1.165)  t.x[i][j][k] = 1.165;  // == 45.0 °C
-                if(t.x[i][j][k] <= - 0.78)  t.x[i][j][k] = - 0.78;  // == 59.82 °C
-                if(c.x[i][j][k] >= 0.04)  c.x[i][j][k] = 0.04;
-                if(c.x[i][j][k] < 0.0)  c.x[i][j][k] = 0.0;
-                if(cloud.x[i][j][k] >= 0.02)  cloud.x[i][j][k] = 0.02;
-                if(cloud.x[i][j][k] < 0.0)  cloud.x[i][j][k] = 0.0;
-                if(ice.x[i][j][k] >= 0.01)  ice.x[i][j][k] = 0.01;
-                if(ice.x[i][j][k] < 0.0)  ice.x[i][j][k] = 0.0;
-                double t_u = t.x[i][j][k] * t_0;
-                if(t_u <= t_00){
-                    cloud.x[i][j][k] = 0.0;
-                    ice.x[i][j][k] = 0.0;
-                }
-                if(P_rain.x[i][j][k] >= 10.0/8.64e4)  P_rain.x[i][j][k] = 10.0/8.64e4;
-                if(P_snow.x[i][j][k] >= 1.0/8.64e4)  P_snow.x[i][j][k] = 1.0/8.64e4;
-                if(P_conv.x[i][j][k] >= 10.0/8.64e4)  P_conv.x[i][j][k] = 10.0/8.64e4;
-                if(P_rain.x[i][j][k] < 0.0)  P_rain.x[i][j][k] = 0.0;
-                if(P_snow.x[i][j][k] < 0.0)  P_snow.x[i][j][k] = 0.0;
-                if(P_conv.x[i][j][k] < 0.0)  P_conv.x[i][j][k] = 0.0;
-                if(co2.x[i][j][k] >= 5.36)  co2.x[i][j][k] = 5.36;
-                if(co2.x[i][j][k] <= 1.0)  co2.x[i][j][k] = 1.0;
-            }
-        }
-    }
-    cout << "      ValueLimitationAtm ended" << endl;
-    return;
-}
-/*
-*
-*/
 void cAtmosphereModel::MoistConvection(){
     cout << endl << "      MoistConvection" << endl;
 // collection of coefficients for phase transformation
-    int Ma = *get_current_time();
     int i_base = 0;
     int ii_base_beg = 1;
     int i_lfs = 0;
@@ -1261,27 +1237,49 @@ void cAtmosphereModel::MoistConvection(){
     double K_p = 0.0;  // in 1/s
 */
     double gam_d = - 0.3;  // from original paper by Tiedtke, gam_d = - 0.2, COSMO approach
-    double HumidityRelative = 0.0, L_latent = 0.0;
-    double q_buoy_base = 0.0, q_buoy_lfs = 0.0;
-    double E_Rain = 0.0, q_Rain = 0.0, e = 0.0;
+    double a_u = 1.0e0;  // area fraction in updraft to define the vertical velocity
+    double a_d = 1.0e0;  // area fraction in downdraft to define the vertical velocit
+    double HumidityRelative = 0.0;
+    double L_latent = 0.0;
+    double q_buoy_base = 0.0;
+    double q_buoy_lfs = 0.0;
+    double E_Rain = 0.0;
+    double q_Rain = 0.0;
+    double e = 0.0;
 //    double E_Ice = 0.0;
-    double E_Rain_add = 0.0, q_Rain_add = 0.0, q_Rain_add_base = 0.0;
-//    double E_Ice_add = 0.0, q_Ice = 0.0, q_Ice_add = 0.0;
-    double r_humid_add = 0.0, r_dry_add = 0.0, p_stat_add = 0.0;
-    double t_u = 0.0, t_u_add = 0.0, height = 0.0, height_base = 0.0, height_lfs = 0.0;
-//    double rm = 0.0, exp_rm = 0.0, sinthe = 0.0, rmsinthe = 0.0;
-    double rm = 0.0, exp_rm = 0.0;
-    double M_u_denom = 0.0, M_d_denom = 0.0, M_u_num = 0.0, M_d_num = 0.0;
-    double t_add_u = 1.000732; // == + 0.2 °C temperature increase for a lifting air parcel, given by ECMWF
-//    double t_add_u = 1.007322; // == + 2.0 °C temperature increase for a lifting air parcel
-    double q_v_u_add = 1e-4; // == 0.0001 kg/kg increase for a lifting air parcel, given by ECMWF
-//    double q_v_u_add = 1e-2; // == 0.01 kg/kg increase for a lifting air parcel
+    double E_Rain_add = 0.0;
+    double q_Rain_add = 0.0;
+    double q_Rain_add_base = 0.0;
+//    double E_Ice_add = 0.0;
+//    double q_Ice = 0.0;
+//    double q_Ice_add = 0.0;
+//    double r_humid_add = 0.0;
+//    double r_dry_add = 0.0;
+//    double p_stat_add = 0.0;
+    double r_humid_add = 0.0;
+//    double r_dry_add = 0.0;
+    double t_u = 0.0;
+    double t_u_add = 0.0;
+    double height = 0.0;
+//    double height_base = 0.0;
+//    double height_lfs = 0.0;
+    double rm = 0.0;
+    double exp_rm = 0.0;
+    double M_u_denom = 0.0;
+    double M_d_denom = 0.0;
+    double M_u_num = 0.0;
+    double M_d_num = 0.0;
+    double t_add_u = 1.000732; // 0.000732% temperature increase, actually used : still under construction!
+//    double t_add_u = 0.000732; //  in K == + 0.2 °C temperature increase for a lifting air parcel, given by ECMWF = European Center for Medium-Range Weather Forecast
+//    double q_v_u_add = 1e-4; // == 0.0001 kg/kg increase for a lifting air parcel, given by ECMWF
+    double q_v_u_add = 1e-3; // == 0.001 kg/kg increase for a lifting air parcel, testing
     std::vector<double> step(im, 0);
     std::vector<std::vector<double> > M_u_Base(jm, std::vector<double> (km, 0));
     std::vector<std::vector<double> > M_d_LFS(jm, std::vector<double> (km, 0));
+    std::vector<std::vector<double> > u_cloud_base(jm, std::vector<double> (km, 0));
     rad.Coordinates(im, r0, dr);
 /*
-    double dcdr = 0.0, dcdthe = 0.0, dcdphi = 0.0;
+    double dcdr = 0.0, dcdthe = 0.0, dcdphi = 0.0; // COSMO data
     for(int k = 1; k < km-1; k++){
         for(int j = 1; j < jm-1; j++){
             int i_mount = i_topography[j][k];
@@ -1378,7 +1376,7 @@ void cAtmosphereModel::MoistConvection(){
                (E_u.x[i][j][0] + E_u.x[i][j][km-1])/2.;
         }
     }
-    fft_gaussian_filter_3d(E_u,1);
+    AtomUtils::fft_gaussian_filter_3d(E_u,1);
 */
 // parameterisation of moist convection
     CAPE = std::vector<double>(im, 0.0);
@@ -1392,8 +1390,10 @@ void cAtmosphereModel::MoistConvection(){
             for(int ii_base = ii_base_beg; ii_base < im-1; ii_base++){
                 height = get_layer_height(ii_base);
                 t_u = t.x[ii_base][j][k] * t_0; // in K
-                t_u_add = t_add_u * t.x[ii_base][j][k] * t_0; // in K
-                r_dry_add = 1e2 * p_stat.x[ii_base][j][k]/(R_Air * t_u_add);
+//                t_u_add = t_add_u * t_u; // in K
+//                t_u_add = t_add_u * t_0 + t_u; // in K
+                t_u_add = t_add_u * t_u; // in K
+//                r_dry_add = 1e2 * p_stat.x[ii_base][j][k]/(R_Air * t_u_add);
                 r_humid_add = 1e2 * p_stat.x[ii_base][j][k]/(R_Air 
                     * (1. + (R_W_R_A - 1.) * c.x[ii_base][j][k] 
                     - cloud.x[ii_base][j][k] - ice.x[ii_base][j][k]) 
@@ -1428,13 +1428,24 @@ void cAtmosphereModel::MoistConvection(){
 */
                 if((HumidityRelative >= 80.0)&&(q_buoy_base >= 0.0)
                     &&(height >= 500.0)){ // search for cloud base, height threshold prescribed by ECMWF
-//                if((HumidityRelative >= 80.0)&&(q_buoy_base >= 0.0)){ // search for cloud base
                     i_Base.y[j][k] = (double)ii_base;
                     i_base = ii_base;
+                    if(is_land(h, i_base, j, k)){
+                       int i_mount = i_topography[j][k];
+                       u.x[i_base][j][k] = 0.0;
+                       v.x[i_base][j][k] = 0.0;
+                       w.x[i_base][j][k] = 0.0;
+                       c.x[i_base][j][k] = c.x[i_mount][j][k];
+                       cloud.x[i_base][j][k] = cloud.x[i_mount][j][k];
+                       ice.x[i_base][j][k] = ice.x[i_mount][j][k];
+                    }
+                    if(iter_cnt == -1)  u_cloud_base[j][k] = u.x[i_base][j][k];
                     M_u.x[i_base][j][k] = r_humid.x[i_base][j][k] 
-                        * u.x[i_base][j][k] * u_0;  // in kg/(m²s) [== mm/s] updraft at cloud base 
-                    if(M_u.x[i_base][j][k] <= 0.0) M_u.x[i_base][j][k] = 0.0;
+//                        * u.x[i_base][j][k] * u_0;  // in kg/(m²s) [== mm/s] updraft at cloud base 
+                        * u_cloud_base[j][k] * u_0;  // in kg/(m²s) [== mm/s] updraft at cloud base 
                     M_d_LFS[j][k] = gam_d * M_u.x[i_base][j][k];  // in kg/(m²s) [== mm/s] downdraft at cloud top 
+                    if(is_land(h, i_base, j, k))  
+                        M_u.x[i_base][j][k] = M_d_LFS[j][k] = 0.0;
                     s.x[i_base][j][k] = (cp_l * t_u + g * height)/s_0;
                     q_v_u.x[i_base][j][k] = c.x[i_base][j][k] + q_v_u_add;
                     q_c_u.x[i_base][j][k] = cloud.x[i_base][j][k];
@@ -1489,7 +1500,6 @@ void cAtmosphereModel::MoistConvection(){
                         << "  r_humid_add = " << r_humid_add << endl
                         << "  p_dyn = " << p_dyn.x[i_base][j][k] 
                         << "  p_stat = " << p_stat.x[i_base][j][k] 
-                        << "  p_stat_add = " << p_stat_add 
                         << "  M_u = " << M_u.x[i_base][j][k] 
                         << "  M_d_LFS = " << M_d_LFS[j][k] << endl
                         << "  rad = " << rad.z[i_base]
@@ -1511,17 +1521,15 @@ void cAtmosphereModel::MoistConvection(){
                 E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
                 q_Rain = ep * E_Rain/(p_stat.x[ii_lfs][j][k] - E_Rain); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
                 t_u_add = t_add_u * t.x[ii_lfs][j][k] * t_0; // in K
-                r_dry_add = 1e2 * p_stat.x[ii_lfs][j][k]/(R_Air * t_u_add);
+//                r_dry_add = 1e2 * p_stat.x[ii_lfs][j][k]/(R_Air * t_u_add);
                 r_humid_add = 1e2 * p_stat.x[ii_lfs][j][k]/(R_Air 
                     * (1. + (R_W_R_A - 1.) * c.x[ii_lfs][j][k] 
                     - cloud.x[ii_lfs][j][k] - ice.x[ii_lfs][j][k]) 
                     * t_u_add); 
                 q_v_d.x[ii_lfs][j][k] = c.x[ii_lfs][j][k];
-                q_buoy_lfs = .5 * (q_c_u.x[ii_lfs][j][k] + q_Rain_add) 
+                q_buoy_lfs = 0.5 * (q_c_u.x[ii_lfs][j][k] + q_Rain_add) 
                     - c.x[ii_lfs][j][k];
                 if((q_buoy_lfs <= 0.0)&&(t_u >= t_00)){ // search for cloud top
-//                if((q_buoy_lfs <= 0.0)&&(t_u >= t_0)){ // search for cloud top
-//                if((q_buoy_lfs <= 0.0)&&(t_u >= (t_0 - 5.0))){ // search for cloud top
                     i_LFS.y[j][k] = (double)ii_lfs;
                     i_lfs = ii_lfs;
                     if((t.x[i_lfs][j][k] * t_0) >= t_0) 
@@ -1531,12 +1539,12 @@ void cAtmosphereModel::MoistConvection(){
                     q_v_d.x[i_lfs][j][k] = c.x[i_lfs][j][k];
                     M_d.x[i_lfs][j][k] = M_d_LFS[j][k];  // in kg/(m²s) [== mm/s] downdraft at cloud top
                     u_d.x[i_lfs][j][k] = u.x[i_lfs][j][k] 
-                        + M_d.x[i_lfs][j][k]/(r_humid.x[i_lfs][j][k]); 
+                        + M_d.x[i_lfs][j][k]/(a_d * r_humid.x[i_lfs][j][k]); 
                     v_d.x[i_lfs][j][k] = v.x[i_lfs][j][k];
                     w_d.x[i_lfs][j][k] = w.x[i_lfs][j][k];
                     s_d.x[i_lfs][j][k] = s.x[i_lfs][j][k];
                     e_p.x[i_lfs][j][k] = 0.0;
-                    e_d.x[i_lfs][j][k] = q_v_d.x[i_lfs][j][k] - q_Rain;
+                    e_d.x[i_lfs][j][k] = 0.0;
 /*
                     cout.precision(6);
                     if((j == 90) &&(k == 180))  cout << endl 
@@ -1620,13 +1628,12 @@ void cAtmosphereModel::MoistConvection(){
     double f_t = 2.0;
     double del_u_1 = 0.75e-4; // 1/m
     double K_u_sqrt = 0.0;
-    double K_d_sqrt = 0.0;
+//    double K_d_sqrt = 0.0;
     double D_u_2 = 0.0;
     double del_M_u = 0.0;
-    double D_d_2 = 0.0;
-    double del_M_d = 0.0;
+//    double D_d_2 = 0.0;
+//    double del_M_d = 0.0;
     double eps_u_deep = 1.75e-3; // 1/m
-//    double eps_u_shal = 2.0 * eps_u_deep; // 1/m
     double alf_11 = 5.44e-4; // s
     double alf_22 = 5.09e-3;
     double alf_33 = 0.577;
@@ -1640,13 +1647,12 @@ void cAtmosphereModel::MoistConvection(){
         for(int j = 0; j < jm; j++){
             i_base = (int)i_Base.y[j][k];
             i_lfs = (int)i_LFS.y[j][k];
-            height_base = get_layer_height(i_base);
+//            height_base = get_layer_height(i_base);
             t_u_add = t_add_u * t.x[i_base][j][k] * t_0; // in K
             E_Rain_add = hp * exp_func(t_u_add, 17.2694, 35.86);
             q_Rain_add_base = ep * E_Rain_add/(p_stat.x[i_base][j][k] - E_Rain_add); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
             K_u = std::vector<double>(im, 0.0);
             K_u[i_base] = 0.5 * u_u.x[i_base][j][k] * u_u.x[i_base][j][k];
-//            i_tropopause = get_tropopause_layer(j);
             for(int i = i_base; i < im-1; i++){
                 height = get_layer_height(i);
                 step[i] = get_layer_height(i+1) - get_layer_height(i);  // in m local atmospheric shell thickness
@@ -1663,12 +1669,12 @@ void cAtmosphereModel::MoistConvection(){
 //              q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
 //                q_Ice_add = ep * E_Ice_add/(p_stat.x[i][j][k] - E_Ice_add); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
 //                r_dry_add = 1e2 * p_stat_add/(R_Air * t_u_add);
-                r_dry_add = 1e2 * p_stat.x[i][j][k]/(R_Air * t_u_add);
+//                r_dry_add = 1e2 * p_stat.x[i][j][k]/(R_Air * t_u_add);
                 r_humid_add = 1e2 * p_stat.x[i][j][k]/(R_Air * (1. 
                     + (R_W_R_A - 1.) * q_v_u.x[i][j][k] 
                     - q_c_u.x[i][j][k]) * t_u_add); 
                 q_buoy_base = r_humid_add - r_humid.x[i][j][k];
-                q_buoy_lfs = .5 * (q_v_u.x[i][j][k] + q_Rain_add) 
+                q_buoy_lfs = 0.5 * (q_v_u.x[i][j][k] + q_Rain_add) 
                     - c.x[i][j][k];
                 if(step[i] >= t_0) L_latent = lv;
                 else L_latent = ls;
@@ -1685,7 +1691,7 @@ void cAtmosphereModel::MoistConvection(){
 // CAPE (Convective Available Potential Energy) == difference between the moist adiabatic and the environmental temperature
                 rm = rad.z[i];
                 exp_rm = 1./(rm + 1.0);
-                CAPE[i+1] = CAPE[i] + g * (rad.z[i+1] - rad.z[i])
+                CAPE[i+1] = CAPE[i] + g * step[i]
                     /exp_rm * (t_u_add - t_u)/t_u;
 // water vapour in the updraft
                 if(q_v_u.x[i][j][k] >= q_Rain_add){
@@ -1696,8 +1702,9 @@ void cAtmosphereModel::MoistConvection(){
                     if(q_v_u.x[i][j][k] < 0.0) q_v_u.x[i][j][k] = q_Rain_add;
                 }else  q_c_u.x[i][j][k] = 0.0;
 // condensation within the updraft
-                if((q_v_u.x[i][j][k] - q_Rain) >= 0.0)
-                    c_u.x[i][j][k] = (q_v_u.x[i][j][k] - q_Rain) 
+//                if((q_v_u.x[i][j][k] - q_Rain) >= 0.0)
+                if((q_v_u.x[i][j][k] - q_Rain_add) >= 0.0)
+                    c_u.x[i][j][k] = (q_v_u.x[i][j][k] - q_Rain_add) 
                         * M_u.x[i][j][k]/(r_humid.x[i][j][k] * step[i]);  // in kg/(kg*s)
                 if(c_u.x[i][j][k] < 0.0) c_u.x[i][j][k] = 0.0;
 // specification of entrainment in the updraft
@@ -1719,7 +1726,7 @@ void cAtmosphereModel::MoistConvection(){
                         + del_u * M_u.x[i][j][k];  // in kg/(m³s)
 */
 // ECMWF approach
-                if((q_buoy_base < 0.0)&&(D_u.x[i][j][k] > 0.0)){ // search for non-buoyant situation
+                if(q_buoy_base < 0.0){ // search for non-buoyant situation
                     if(M_u.x[i][j][k] == 0.0)  M_u.x[i][j][k] = 1e-6;
                     K_u[i+1] = K_u[i] + step[i] 
                         * ((- E_u.x[i][j][k]/M_u.x[i][j][k]) 
@@ -1758,8 +1765,16 @@ void cAtmosphereModel::MoistConvection(){
                     double c_00 = 1.5e-3; // 1/s
                     double q_krit = 5.0e-4; // kg/kg
                     double w_u_u = 10.0; // m/s
-                    g_p.x[i][j][k] = M_u.x[i][j][k]/r_humid.x[i][j][k] 
+/*
+                    double w_u_g = 0.0;
+                    w_u_g = fabs(u_u.x[i][j][k]) * u_0;
+                    if(w_u_g >= w_u_u)  w_u_g = w_u_u;
+                    if(w_u_g == 0.0)  w_u_g = 1.0e-6;
+//                    if(w_u_g == 0.0)  w_u_g = 1.0;
+*/
+                    g_p.x[i][j][k] = M_u.x[i][j][k]/r_humid.x[i][j][k]  // original ECMWF formula
                         * (c_00/(0.75 * w_u_u)) 
+//                        * (c_00/(0.75 * w_u_g)) 
                         * (q_v_u.x[i][j][k] + q_c_u.x[i][j][k]) 
                         * (1.0 - exp(- pow((q_v_u.x[i][j][k] 
                         + q_c_u.x[i][j][k])/q_krit, 2.0)));  // in kg/(kg*s)
@@ -1769,13 +1784,9 @@ void cAtmosphereModel::MoistConvection(){
 // mass flux within the updraft
                 M_u.x[i+1][j][k] = M_u.x[i][j][k] 
                     - step[i] * (E_u.x[i][j][k] - D_u.x[i][j][k]);    // in kg/(m²s) integration from cloud base upwards
-                if(M_u.x[i][j][k] < 0.0)  M_u.x[i][j][k] = 0.0;
                 M_u_denom = M_u.x[i+1][j][k];
                 M_u_num = M_u.x[i][j][k] - step[i] * D_u.x[i][j][k];
                 if(M_u_denom == 0.0)  M_u_denom = 1e-6;
-// conditions within the updraft
-                u_u.x[i][j][k] = u.x[i][j][k] 
-                    + M_u.x[i][j][k]/(r_humid.x[i][j][k]);  // in m/s
 // dry entropy within the updraft
                 s_u.x[i+1][j][k] = (M_u_num * s_u.x[i][j][k] 
                     - step[i] * (E_u.x[i][j][k] * s.x[i][j][k] 
@@ -1795,12 +1806,16 @@ void cAtmosphereModel::MoistConvection(){
                     * (c_u.x[i][j][k] - g_p.x[i][j][k]))/M_u_denom;
                 if(q_c_u.x[i+1][j][k] < 0.0) q_c_u.x[i+1][j][k] = 0.0;
 // velocity components within the updraft
-                u_u.x[i+1][j][k] = u.x[i+1][j][k] 
-                    + M_u.x[i+1][j][k]/(r_humid.x[i+1][j][k]); 
+//                u_u.x[i+1][j][k] = u.x[i+1][j][k] 
+//                    + M_u.x[i+1][j][k]/(a_u * r_humid.x[i+1][j][k]); 
+                u_u.x[i+1][j][k] = u.x[i][j][k] 
+                    + M_u.x[i][j][k]/(a_u * r_humid.x[i][j][k]); 
+                if(u_u.x[i+1][j][k] > 2.5) u_u.x[i+1][j][k] = 2.5;
+                if(u_u.x[i+1][j][k] < - 2.5) u_u.x[i+1][j][k] = - 2.5;
                 v_u.x[i+1][j][k] = (M_u_num * v_u.x[i][j][k] 
                     - step[i] * E_u.x[i][j][k] * v.x[i][j][k])/M_u_denom;  // in m/s
-                if(v_u.x[i+1][j][k] > .1) v_u.x[i+1][j][k] = 0.1;
-                if(v_u.x[i+1][j][k] < -.1) v_u.x[i+1][j][k] = - 0.1;
+                if(v_u.x[i+1][j][k] > 0.1) v_u.x[i+1][j][k] = 0.1;
+                if(v_u.x[i+1][j][k] < - 0.1) v_u.x[i+1][j][k] = - 0.1;
                 w_u.x[i+1][j][k] = (M_u_num * w_u.x[i][j][k] 
                     - step[i] * E_u.x[i][j][k] * w.x[i][j][k])/M_u_denom;  // in m/s
                 if(w_u.x[i+1][j][k] > 10.0) w_u.x[i+1][j][k] = 10.0;
@@ -1884,7 +1899,7 @@ void cAtmosphereModel::MoistConvection(){
             i_base = (int)i_Base.y[j][k];
             i_lfs = (int)i_LFS.y[j][k];
             M_d.x[i_lfs][j][k] = M_d_LFS[j][k];
-            height_lfs = get_layer_height(i_lfs);
+//            height_lfs = get_layer_height(i_lfs);
             P_conv.x[i_lfs][j][k] = 0.0;
             t_u_add = t_add_u * t.x[i_base][j][k] * t_0; // in K
             E_Rain_add = hp * exp_func(t_u_add, 17.2694, 35.86);
@@ -1905,7 +1920,7 @@ void cAtmosphereModel::MoistConvection(){
                 q_Rain_add = ep * E_Rain_add/(p_stat.x[i][j][k] - E_Rain_add); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
 //              q_Ice = ep * E_Ice/(p_stat.x[i][j][k] - E_Ice); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
 //                q_Ice_add = ep * E_Ice_add/(p_stat.x[i][j][k] - E_Ice_add); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
-                r_dry_add = 1e2 * p_stat.x[i][j][k]/(R_Air * t_u_add);
+//                r_dry_add = 1e2 * p_stat.x[i][j][k]/(R_Air * t_u_add);
                 r_humid_add = 1e2 * p_stat.x[i][j][k]/(R_Air * (1. 
                     + (R_W_R_A - 1.) * q_v_d.x[i][j][k]) * t_u_add); 
                 q_buoy_base = r_humid_add - r_humid.x[i][j][k];
@@ -1924,19 +1939,19 @@ void cAtmosphereModel::MoistConvection(){
                     double p_ps = p_stat.x[i][j][k]/p_stat.x[0][j][k];
                     if(is_land(h, i, j, k))
                         e_p.x[i][j][k] = sig * alf_11 
-                            * (RH_crit_land * q_Rain - q_v_d.x[i][j][k])
+                            * (RH_crit_land * q_Rain_add - q_v_d.x[i][j][k])
                             * pow((sqrt(p_ps)/alf_22 * P_conv.x[i][j][k]/sig), 
                             alf_33); // original ECMWF formula
                     else 
                         e_p.x[i][j][k] = sig * alf_11 
-                            * (RH_crit_water * q_Rain - q_v_d.x[i][j][k])
+                            * (RH_crit_water * q_Rain_add - q_v_d.x[i][j][k])
                             * pow((sqrt(p_ps)/alf_22 * P_conv.x[i][j][k]/sig), 
                             alf_33); // original ECMWF formula
                 }
                 if(e_p.x[i][j][k] <= 0.0) e_p.x[i][j][k] = 0.0;
 // evaporation of rain precipitation within the downdraft
                 if((t_u_add >= t_0)&&(q_v_d.x[i][j][k] >= q_Rain))
-                    e_d.x[i][j][k] = - (q_Rain - q_v_d.x[i][j][k]) 
+                    e_d.x[i][j][k] = (q_v_d.x[i][j][k] - q_Rain)
                         * M_d.x[i][j][k]/(r_humid.x[i][j][k] * step[i]);  // in kg/(kg*s)
                 if(e_d.x[i][j][k] < 0.0) e_d.x[i][j][k] = 0.0;
 // specification of entrainment and detrainment in the up/downdraft
@@ -1945,11 +1960,15 @@ void cAtmosphereModel::MoistConvection(){
 //                D_d.x[i][j][k] = del_d * fabs(M_d.x[i][j][k]);
 
 // ECMWF approach
+/*
                 E_d.x[i][j][k] = eps_u_deep * M_d.x[i][j][k]
                     /r_humid.x[i][j][k] * (1.3 - HumidityRelative/100.0) 
                     * pow(q_Rain_add/q_Rain_add_base, 3.0);
-                if(E_d.x[i][j][k] <= - 0.008)  E_d.x[i][j][k] =  - 0.008;
-                if((q_buoy_base < 0.0)&&(D_d.x[i][j][k] < 0.0)){ // search for non-buoyant situation
+*/
+                E_d.x[i][j][k] = eps_u_deep * M_d.x[i][j][k]
+                    /r_humid.x[i][j][k];
+/*
+                if(q_buoy_base < 0.0){ // search for non-buoyant situation
                     if(M_d.x[i][j][k] == 0.0)  M_d.x[i][j][k] = 1e-6;
                     K_d[i-1] = K_d[i] + step[i] 
                         * ((- E_d.x[i][j][k]/M_d.x[i][j][k]) 
@@ -1967,17 +1986,16 @@ void cAtmosphereModel::MoistConvection(){
                     del_M_d = 0.0;
                     D_d_2 = 0.0;
                 }
+*/
                 D_d.x[i][j][k] = del_u_1 * M_d.x[i][j][k]  // in kg/(m³s)
-                    /r_humid.x[i][j][k] + D_d_2;
-                if(D_d.x[i][j][k] <= - 0.008)  D_d.x[i][j][k] = - 0.008;
+//                    /r_humid.x[i][j][k] + D_d_2;
+                    /r_humid.x[i][j][k];
 // mass flux within the downdraft
                 M_d.x[i-1][j][k] = M_d.x[i][j][k] 
                     + step[i] * (E_d.x[i][j][k] - D_d.x[i][j][k]);  // integration from LFS downwards
-                if(M_d.x[i-1][j][k] > 0.0)  M_d.x[i-1][j][k] = 0.0;
                 M_d_denom = M_d.x[i-1][j][k];
                 M_d_num = M_d.x[i][j][k] + step[i] * D_d.x[i][j][k];
                 if(M_d_denom == 0.0)  M_d_denom = 1e-6;
-                if(M_d.x[i][j][k] <= - 0.01)  M_d.x[i][j][k] = - 0.01;
 // dry entropy within the downdraft
                 if(t_u >= t_0) L_latent = lv;
                 else L_latent = ls;
@@ -1994,8 +2012,12 @@ void cAtmosphereModel::MoistConvection(){
                     q_v_d.x[i-1][j][k] = q_Rain;
                 if(q_v_d.x[i-1][j][k] <= 0.0) q_v_d.x[i-1][j][k] = q_Rain;
 // velocity components within the downdraft
-                u_d.x[i-1][j][k] = u.x[i-1][j][k] 
-                    + M_d.x[i-1][j][k]/(r_humid.x[i-1][j][k]); 
+//                u_d.x[i-1][j][k] = u.x[i-1][j][k] 
+//                    + M_d.x[i-1][j][k]/(a_d * r_humid.x[i-1][j][k]); 
+                u_d.x[i-1][j][k] = u.x[i][j][k] 
+                    + M_d.x[i-1][j][k]/(a_d * r_humid.x[i][j][k]); 
+                if(u_d.x[i-1][j][k] > 2.5) u_d.x[i-1][j][k] = 2.5;
+                if(u_d.x[i-1][j][k] < - 2.5) u_d.x[i-1][j][k] = - 2.5;
                 v_d.x[i-1][j][k] = (M_d_num * v_d.x[i][j][k] 
                     + step[i] * E_d.x[i][j][k] * v.x[i][j][k])/M_d_denom;
                 if(v_d.x[i+1][j][k] > .1) v_d.x[i+1][j][k] = 0.1;
@@ -2011,7 +2033,7 @@ void cAtmosphereModel::MoistConvection(){
                     - e_d.x[i][j][k]   // in kg/(kg*s)
                     - e_p.x[i][j][k]);  // in kg/(kg*s)
                 if(P_conv.x[i-1][j][k] <= 0.0) P_conv.x[i-1][j][k] = 0.0;
-//                if(P_conv.x[i-1][j][k] > 5.0/8.64e4)  P_conv.x[i-1][j][k] = 5.0/8.64e4; //assumed max value
+                if(P_conv.x[i-1][j][k] > 8.0/8.64e4)  P_conv.x[i-1][j][k] = 8.0/8.64e4; //assumed max value
                 if(P_conv.x[i-1][j][k] > 0.0){
                     moistconv = true;
                     if(P_conv.x[i-1][j][k] > maxValue){
@@ -2110,7 +2132,7 @@ void cAtmosphereModel::MoistConvection(){
 /*
 *
 */
-    fft_gaussian_filter_3d(P_conv,1);
+    AtomUtils::fft_gaussian_filter_3d(P_conv,1);
 /*
 *
 */
@@ -2118,7 +2140,6 @@ void cAtmosphereModel::MoistConvection(){
         for(int j = 0; j < jm; j++){
 // RHS for thermodynamic forcing due to moist convection
             for(int i = 0; i < im-1; i++){
-//                int i_mount = i_topography[j][k];
                 step[i] = get_layer_height(i+1) - get_layer_height(i);  // local atmospheric shell thickness
                 if((t.x[i][j][k] * t_0) >= t_0) L_latent = lv;
                 else L_latent = ls;
@@ -2499,39 +2520,51 @@ void cAtmosphereModel::WaterVapourEvaporation(){
 */
 void cAtmosphereModel::StandAtm_DewPoint_HumidRel(){
     cout << endl << "      StandAtm_DewPoint_HumidRel" << endl;
-    double e, E, t_u;
-//    AtomUtils::smooth_tropopause(jm, temp_tropopause);
+    double e, E, t_u, height;
+//    double beta = 42.0; // in K, COSMO
     for(int j = 0; j < jm; j++){
-//        int i_trop = get_tropopause_layer(j);
-        int i_trop = im-1;
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
-//            int i_mount = 0;
-            for(int i = i_mount; i < im; i++){
+            height = get_layer_height(i_mount);
+            TempStand.x[i_mount][j][k] = t.x[0][j][k] * t_0 - t_0;
+            TempStand.x[0][j][k] = TempStand.x[i_mount][j][k] 
+                + 6.5 * height/1000.0; // International Standard Atmosphere (ISA), higher temperatures than COSMO
+            for(int i = 0; i < im; i++){
+                height = get_layer_height(i);
                 t_u = t.x[i][j][k] * t_0; // in K
-                TempStand.x[0][j][k] = t.x[0][j][k] * t_0 - t_0;
-                e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in hPa
                 if(t_u >= t_0)
                     E = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the water phase at t > 0°C in hPa
                 else
                     E = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the ice phase at t < 0°C in hPa
-                if(i <= i_trop){
-                        // linear temperature decay up to tropopause
-                        // compares to the International Standard Atmosphere (ISA) 
-                        // with variable tropopause locations
-                        // International Standard Atmosphere (ISA)
-                        TempStand.x[i][j][k] = TempStand.x[0][j][k] 
-                            - 6.5 * get_layer_height(i)/1000.0;
-                        TempDewPoint.x[i][j][k] = (423.86 - 234.175 * log(e))
-                            /(log(e) - 18.89);  // in C°, Häckel, Meteorologie, p. 82
-                        HumidityRel.x[i][j][k] = e/E * 100.0;
-                        if(HumidityRel.x[i][j][k] > 100.0)
-                            HumidityRel.x[i][j][k] = 100.0;
-                }else{ // above tropopause
-                    TempStand.x[i][j][k] = TempStand.x[i_trop][j][k];
-                    TempDewPoint.x[i][j][k] = TempDewPoint.x[i_trop][j][k];
-                    HumidityRel.x[i][j][k] = HumidityRel.x[i_trop][j][k];
-                }
+                e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in hPa
+                if(e <= 0) e = 1e-3;
+                // linear temperature decay up to tropopause
+                // compares to the International Standard Atmosphere (ISA) 
+                TempStand.x[i][j][k] = TempStand.x[0][j][k] 
+                        - 6.5 * height/1000.0;
+//                TempStand.x[i][j][k] = TempStand.x[0][j][k] * sqrt(1.0 
+//                    - (2.0 * beta * g * height)
+//                    /(R_Air * TempStand.x[0][j][k] * TempStand.x[0][j][k])); // COSMO
+                TempDewPoint.x[i][j][k] = (423.86 - 234.175 * log(e))
+                    /(log(e) - 18.89);  // in C°, Häckel, Meteorologie, p. 82
+                HumidityRel.x[i][j][k] = e/E * 100.0;
+                if(HumidityRel.x[i][j][k] > 100.0)
+                    HumidityRel.x[i][j][k] = 100.0;
+/*
+                cout.precision(6);
+                cout.setf(ios::fixed);
+                if((j == 90) && (k == 180)) cout << endl 
+//                if((j == 62) && (k == 87)) cout << endl 
+                    << "  StandAtm_DewPoint_HumidRel" << endl
+                    << "  i = " << i 
+                    << "  height = " << get_layer_height(i) << endl
+                    << "  E = " << E
+                    << "  e = " << e << endl
+                    << "  TempStand = " << TempStand.x[i][j][k]
+                    << "  TempDewPoint = " << TempDewPoint.x[i][j][k]
+                    << "  HumidityRel = " << HumidityRel.x[i][j][k] << endl
+                    << "  t = " << t.x[i][j][k] * t_0 - t_0 << endl << endl;
+*/
             }
         }
     }
@@ -2539,7 +2572,7 @@ void cAtmosphereModel::StandAtm_DewPoint_HumidRel(){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
             for(int i = i_mount; i >= 0; i--){
-                if((is_land(h, i, j, k))&&(i <= i_mount)){
+                if(is_land(h, i, j, k)){
                     TempStand.x[i][j][k] = TempStand.x[i_mount][j][k];
                     TempDewPoint.x[i][j][k] = TempDewPoint.x[i_mount][j][k];
                     HumidityRel.x[i][j][k] = HumidityRel.x[i_mount][j][k];

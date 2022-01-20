@@ -12,14 +12,19 @@ def main():
             ('output_path', 'directory where model outputs should be placed(must end in /)', 'string', 'output/'),
             ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', False),
             ('debug','flag to control if the program is running in debug mode', 'bool', False),
+
             #parameters for data reconstruction
             ('velocity_w_file',"",'string','../data/w_surface.txt'),
             ('velocity_v_file',"",'string','../data/v_surface.txt'),
             ('temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
             ('precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
             ('salinity_file', '', 'string', '../data/SurfaceSalinity_NASA.xyz'),
-            ('temperature_curve_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
-            ('pole_temperature_file', '', 'string', '../data/pole_temperature.txt'),
+#            ('temperature_global_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
+#            ('temperature_global_file', '', 'string', '../data/scotese_etal_2020_equat_temp.txt'),
+#            ('temperature_pole_file', '', 'string', '../data/Stein_Rüdiger_Parish_linear_pole.txt'),
+            ('temperature_global_file', '', 'string', '../data/scotese_etal_2021_global_temp_1my.txt'),
+            ('temperature_equat_file', '', 'string', '../data/scotese_etal_2021_equat_temp_1my.txt'),
+            ('temperature_pole_file', '', 'string', '../data/scotese_etal_2021_polar_temp_1my.txt'),
             ('reconstruction_script_path', '', 'string', '../reconstruction/reconstruct_atom_data.py'),
             ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True),
             ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
@@ -30,41 +35,31 @@ def main():
             ('t_0', 'temperature in K compare to 0°C', 'double', 273.15),
             ('r_air', 'density of dry air in kg/m³ at 20°C', 'double', 1.2041),
             ('t_average', 'mean temperature of the modern earth in °C', 'double', 15.4),
+            ('t_pole_modern', 'pole temperature of the modern earth in °C', 'double', - 15.4),
+            ('t_land', 'temperature increase on land by 0°C(0°C compares to t_land = 0.0)', 'double', 0.0),
 
             ('t_paleo_max', 'maximum add of mean temperature in °C during paleo times', 'double', 10.0),
-            ('t_paleo', 'value at modern times', 'double', 0.0),
-
-            ('rad_equator', 'long wave radiation in W/m2, t_equator = 1.0976 compares to 28.0°C = to 299.81 K', 'double', 458.09),
-#            ('rad_pole', 'long wave radiation in W/m2, t_pole = 0.9436 compares to -15.4°C = to 250.25 K', 'double', 250.25),
-            ('rad_pole', 'long wave radiation in W/m2, t_pole = 0.9436 compares to -15.4°C = to 210.25 K', 'double', 210.25),
+ 
+            ('rad_equator', 'long wave radiation in W/m2, t_equator = 1.0976 compares to 28.0°C = 299.81 K', 'double', 458.09),
+            ('rad_pole', 'long wave radiation in W/m2, t_pole = 0.9436 compares to -15.4°C = 257.75 K', 'double', 250.26),
             ('rad_equator_short', 'short wave radiation in W/m2', 'double', 350.0),
             ('rad_pole_short', 'short wave radiation in W/m2', 'double', 50.0),
             ('sigma', 'Stefan-Boltzmann constant W/(m²*K4)', 'double', 5.670280e-8),
             ('omega', 'rotation rate of the earth in rad/s', 'double', 7.292e-5),
 
-#            ('time_start', 'start time', 'int', 0),
-#            ('time_end', 'end time', 'int', 0),
             ('time_start', 'start time', 'int', 0),
-#            ('time_end', 'end time', 'int', 60),
-            ('time_end', 'end time', 'int', 150),
+            ('time_end', 'end time', 'int', 170),
             ('time_step', 'step size between timeslices', 'int', 10),
         ],
         'atmosphere': [
-            ('velocity_iter_max_2D', 'the number of velocity iterations', 'int',2),
-            ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 5),
+            ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 6),
+            ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 2),
 
-#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
-#            ('pressure_iter_max', 'the number of pressure iterations', 'int', 8),
+            ('velocity_iter_max', 'the number of velocity iterations', 'int', 4),
+            ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
 
-#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
-#            ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
-#            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
-
-            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
-            ('pressure_iter_max', 'the number of pressure iterations', 'int', 1),
             ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
 
-#            ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 1.0),
             ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 0.5),
 
             ('WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0),
@@ -114,13 +109,7 @@ def main():
             ('c_0', 'maximum value of water vapour in kg/kg', 'double', 0.035),
             ('co2_0', 'maximum value of CO2 in ppm at preindustrial times', 'double', 280.0),
 
-#            ('t_land', 'temperature increase on land by 4°C(1°C compares to t_land = 0.003661)', 'double', 0.014644),
-#            ('t_land', 'temperature increase on land by 2°C(1°C compares to t_land = 0.003661)', 'double', 0.007322),
-            ('t_land', 'temperature increase on land by 0°C(0°C compares to t_land = 0.0)', 'double', 0.0),
-
             ('c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.0005 compares to 0.0005 kg/kg', 'double', 0.0005),
-#            ('c_land', 'water vapour reduction on land(80% of the saturation value)', 'double', 0.8),
-#            ('c_ocean', 'water vapour reduction on sea surface(80% of the saturation value)', 'double', 0.8),
             ('c_land', 'water vapour reduction on land(80.17% of the saturation value)', 'double', 0.8017),
             ('c_ocean', 'water vapour reduction on sea surface(80.17% of the saturation value)', 'double', 0.8017),
 
@@ -133,11 +122,13 @@ def main():
         ],
         'hydrosphere': [
             ('input_path', 'directory where Atmosphere output can be read(must end in /)', 'string', 'output'),
-            ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 2),
-            ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 10),
-            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
-           ('pressure_iter_max', 'the number of pressure iterations', 'int', 1),
-           ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
+
+            ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 6),
+            ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 2),
+
+            ('velocity_iter_max', 'the number of velocity iterations', 'int', 4),
+            ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
+            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
 
             ('buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
 
@@ -151,9 +142,8 @@ def main():
 
             ('c_0', 'rate of salt in psu at temperature t_0 in g/kg or psu', 'double', 34.6),
             ('u_0', 'annual mean of surface water velocity in m/s', 'double', 0.24),
-            ('r_0_water', 'reference density of fresh water in kg/m3', 'double', 997.),
-
-            ('t_land', 'temperature increase on land by 2°C(1°C compares to t_land = 0.003661)', 'double', 0.0),
+            ('r_0_water', 'reference density of fresh water in kg/m3', 'double', 997.0),
+            ('r_0_saltwater', 'reference density of salt water in kg/m3', 'double', 1027.0),
             ('t_pole_salt', 'compares to -1.9°C, freezing temperature of sea water at poles', 'double', 0.9930),
         ]
     }

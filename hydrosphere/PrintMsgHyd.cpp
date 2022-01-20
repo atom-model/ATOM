@@ -23,36 +23,53 @@ void cHydrosphereModel::print_welcome_msg(){
     }
 }
 /*
- * 
+*
 */
-void cHydrosphereModel::print_min_max_hyd(){
-    cout << endl << " flow properties: " << endl << endl;
-    searchMinMax_3D(" max temperature ", " min temperature ", 
-        " deg", t, 273.15, [](double i)->double{return i - 273.15;}, true);
-    searchMinMax_3D(" max u-component ", " min u-component ", "m/s", u, u_0);
-    searchMinMax_3D(" max v-component ", " min v-component ", "m/s", v, u_0);
-    searchMinMax_3D(" max w-component ", " min w-component ", "m/s", w, u_0);
-    searchMinMax_3D(" max pressure dynamic ", " min pressure dynamic ", "hPa", p_dyn, r_0_water * u_0 * u_0 * 1e-2);
-    searchMinMax_3D(" max pressure static ", " min pressure static ", "bar", p_stat, 1.);
-    searchMinMax_3D(" max water density ", " min water density ", "kg/m3", r_water, 1.);
-    searchMinMax_3D(" max salt water density ", " min salt water density ", "kg/m3", r_salt_water, 1.);
-    cout << endl << " salinity based results in the three dimensional space: " << endl << endl;
-    searchMinMax_3D(" max salt concentration ", " min salt concentration ", "psu", c, c_0);
-    searchMinMax_3D(" max salt balance ", " min salt balance ", "kg/m3", Salt_Balance, 1.);
-    searchMinMax_3D(" max salt finger ", " min salt finger ", "kg/m3", Salt_Finger, 1.);
-    searchMinMax_3D(" max salt diffusion ", " min salt diffusion ", "kg/m3", Salt_Diffusion, 1.);
-    cout << endl << " forces per unit volume: " << endl << endl;
-    searchMinMax_3D(" max pressure force ", " min pressure force ", "N/m3", PressureGradientForce, 1.);
-    searchMinMax_3D(" max buoyancy force ", " min buoyancy force ", "N/m3", BuoyancyForce, 1.);
-    searchMinMax_3D(" max Coriolis force ", " min Coriolis force ", "N/m3", CoriolisForce, 1.);
-    cout << endl << " salt concentration averaged for the two dimensional surface plane: " << endl << endl;
-    searchMinMax_2D(" max salt total ", " min salt total ", "psu", Salt_total, c_0);
-    searchMinMax_2D(" max Salt_Finger ", " min Salt_Finger ", "kg/m3", SaltFinger, 1.);
-    searchMinMax_2D(" max Salt_Diffusion ", " min Salt_Diffusion ", "kg/m3", SaltDiffusion, 1.);
-    searchMinMax_2D(" max BuoyancyForce_2D ", " min BuoyancyForce_2D ", "N", BuoyancyForce_2D, 1.);
-    cout << endl << " deep currents averaged for a two dimensional plane: " << endl << endl;
-    searchMinMax_2D(" max EkmanPumping ", " min EkmanPumping ", "m/a", EkmanPumping, 1.);
-    searchMinMax_2D(" max upwelling ", " min upwelling ", "m/a", Upwelling, 1.);
-    searchMinMax_2D(" max downwelling ", " min downwelling ", "m/a", Downwelling, 1.);
-    searchMinMax_2D(" max bathymetry ", " min bathymetry ", "m", Bathymetry, 1.);
+void cHydrosphereModel::print_final_remarks(){
+    cout << endl 
+    << "***** end of the Hydrosphere General Circulation Modell (OGCM) *****" 
+        << endl << endl;
+    cout << "\n\n";
+    return;
 }
+/*
+*
+*/
+void cHydrosphereModel::print_loop_3D_headings(){
+    cout << endl << endl;
+    cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
+    cout << " 3D OGCM iterational process" << endl;
+    cout << " max total iteration number nm = " << nm << endl << endl;
+    cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum \
+        and current number of velocity iterations, maximum and current number of pressure iterations " << endl
+        << endl << " Ma = " << (int)*get_current_time() 
+        << "     n = " << iter_cnt << "    velocity_iter_max = " 
+        << velocity_iter_max 
+        << "     velocity_iter = " << velocity_iter 
+        << "    pressure_iter_max = " << pressure_iter_max 
+        << "    pressure_iter = " << pressure_iter << endl;
+    return;
+}
+/*
+*
+*/
+void cHydrosphereModel::print_loop_2D_headings(){
+    cout << endl << endl;
+    cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
+    cout << " 2D OGCM iterational process" << endl;
+    cout << " max total iteration number nm = " 
+        << nm << endl << endl;
+        cout << " present state of the 2D computation " << endl 
+        << "  current time slice, number of iterations, \
+            maximum and current number of velocity iterations, maximum and current number of pressure iterations " 
+        << endl << endl << " Ma = " << (int)*get_current_time() << "     n = " 
+        << iter_cnt << "    velocity_iter_max_2D = " 
+        << velocity_iter_max_2D << "     velocity_iter_2D = " 
+        << velocity_iter_2D << "    pressure_iter_max_2D = " 
+        << pressure_iter_max_2D << "    pressure_iter_2D = " 
+        << pressure_iter_2D << endl;
+    return;
+}
+/*
+*
+*/

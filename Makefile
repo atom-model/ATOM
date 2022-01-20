@@ -12,9 +12,10 @@ atmosphere/FileIOAtm.o atmosphere/BC_Atm.o atmosphere/BC_Thermo.o atmosphere/RHS
 atmosphere/RungeKutta_Atm.o atmosphere/MinMax_Atm.o atmosphere/Accuracy_Atm.o \
 atmosphere/ParaviewAtm.o atmosphere/InitVelocity.o atmosphere/Results_Atm.o
 
-HYD_OBJ = hydrosphere/cHydrosphereModel.o hydrosphere/Accuracy_Hyd.o hydrosphere/BC_Hyd.o hydrosphere/PrintMsgHyd.o \
-hydrosphere/MinMax_Hyd.o hydrosphere/ParaviewHyd.o hydrosphere/RungeKutta_Hyd.o \
-hydrosphere/BC_Thermohalin.o hydrosphere/Pressure_Hyd.o hydrosphere/RHS_Hyd.o hydrosphere/Results_Hyd.o hydrosphere/FileIOHyd.o
+HYD_OBJ = hydrosphere/cHydrosphereModel.o hydrosphere/Pressure_Hyd.o hydrosphere/PrintMsgHyd.o \
+hydrosphere/FileIOHyd.o hydrosphere/BC_Hyd.o hydrosphere/BC_Thermohalin.o hydrosphere/RHS_Hyd.o \
+hydrosphere/RungeKutta_Hyd.o hydrosphere/MinMax_Hyd.o hydrosphere/Accuracy_Hyd.o \
+hydrosphere/ParaviewHyd.o hydrosphere/Results_Hyd.o
 
 XML_OBJ = tinyxml2/tinyxml2.o
 
@@ -37,7 +38,7 @@ libatom.a: $(PARAM_OUTPUTS) $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
 	ar rcs libatom.a $(LIB_OBJ) $(ATM_OBJ) $(HYD_OBJ) $(XML_OBJ)
 
 atm: libatom.a $(ATM_CLI_OBJ)
-	$(CXX) $(CFLAGS) $(ATM_CLI_OBJ) -L. -latom $(LDFLAGS) -o cli/atm
+	$(CXX) $(CFLAGS) $(ATM_CLI_OBJ) -L. -latom $(cFLAGS) -o cli/atm
 
 hyd: libatom.a $(HYD_CLI_OBJ)
 	$(CXX) $(CFLAGS) $(HYD_CLI_OBJ) -L. -latom $(LDFLAGS) -o cli/hyd

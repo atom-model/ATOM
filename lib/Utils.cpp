@@ -1,8 +1,16 @@
 #include <sstream>
+#include <iostream>
+#include <iomanip>
+#include <cstring>
 
 #include <Utils.h>
+#include "cAtmosphereModel.h"
+#include "cHydrosphereModel.h"
 
 using namespace AtomUtils;
+using namespace std;
+
+std::vector<std::vector<double> > m_node_weights;
 
 std::ofstream& AtomUtils::get_logger(){
     static std::ofstream o("atom_log.txt", std::ofstream::out);
@@ -53,6 +61,7 @@ void AtomUtils::move_data(double* data, int len){
         std::iter_swap(data+i, data+len/2+i);
     }
     data[len-1] = data[0];
+    return;
 }
 /*
 *
@@ -62,6 +71,7 @@ void AtomUtils::move_data(std::vector<int>& data, int len){
         std::iter_swap(data.begin()+i, data.begin()+len/2+i);
     }
     data[len-1] = data[0];
+    return;
 }
 /*
 *
@@ -74,12 +84,13 @@ void AtomUtils::move_data_to_new_arrays(int im, int jm, int km, double coeff,
     for ( int i = 0; i < im; i++ ){
         move_data_to_new_arrays(jm, km, coeff, arrays, new_arrays, i);
     }
+    return;
 }
 /*
 *
 */
-void AtomUtils::move_data_to_new_arrays(int jm, int km, double coeff, std::vector<Array*>& arrays, 
-                               std::vector<Array*>& new_arrays, int i){
+void AtomUtils::move_data_to_new_arrays(int jm, int km, double coeff, 
+    std::vector<Array*>& arrays, std::vector<Array*>& new_arrays, int i){
     assert(arrays.size() == new_arrays.size());
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++ ){
@@ -88,6 +99,7 @@ void AtomUtils::move_data_to_new_arrays(int jm, int km, double coeff, std::vecto
             }
         }
     }
+    return;
 }
 /*
 *
@@ -113,7 +125,8 @@ AtomUtils::max_diff(int im, int jm, int km, const Array &a1, const Array &a2){
 /*
 *
 */
-double AtomUtils::C_Dalton(int i, int j, int k, double coeff_Dalton, double u_0, Array &v, Array &w){
+double AtomUtils::C_Dalton(int i, int j, int k, double coeff_Dalton, 
+    double u_0, Array &v, Array &w){
     // variation of the evaporation coefficient in Dalton's evaporation law, parabola
     // air velocity measured 2m above sea level
     // for v_max = 10 m/s, but C_Dalton is function of v, should be included
@@ -144,6 +157,8 @@ double AtomUtils::Humility_critical(double x, double Hu_cr_max, double Hu_cr_mid
 *
 */
 void AtomUtils::read_IC(const string& fn, double** a, int jm, int km){
+    cout << endl << "      read_IC" << endl;
+    cout << "      " << fn << endl;
     ifstream ifs(fn);
     if(!ifs.is_open()){
         cerr << "ERROR: unable to open " << fn << "\n";
@@ -153,15 +168,17 @@ void AtomUtils::read_IC(const string& fn, double** a, int jm, int km){
     for(int k=0; k < km && !ifs.eof(); k++){
         for(int j=0; j < jm; j++){
             ifs >> lat >> lon >> d;
-            a[ j ][ k ] = d;
+            a[j][k] = d;
         }
     }
+    cout << "      read_IC ended" << endl;
+    return;
 }
 /*
 *
 */
 void AtomUtils::smooth_steps(int k, int im, int jm, Array &value){
-    double coeff = .5;
+    double coeff = 0.5;
     std::vector<std::vector<double> > inter(im, std::vector<double>(jm, 0));
     for(int i = 0; i < im ; i++){
         for(int j = 0; j < jm; j++){
@@ -170,29 +187,31 @@ void AtomUtils::smooth_steps(int k, int im, int jm, Array &value){
     }
     for(int i = 1; i < im-1 ; i++){
         for(int j = 1; j < jm-1; j++){
-            value.x[i][j][k] = ( coeff * inter[i][j] 
-                + ( 1. - coeff ) * ( inter[i+1][j] 
+            value.x[i][j][k] = (coeff * inter[i][j] 
+                + (1. - coeff) * (inter[i+1][j] 
                 + inter[i-1][j] + inter[i][j+1] 
-                + inter[i][j-1] ) / 4. );
+                + inter[i][j-1])/4.0);
         } 
     }
+    return;
 }
 /*
 *
 */
 void AtomUtils::smooth_tropopause(int jm, std::vector<double> &value){
-    double coeff = .5;
+    double coeff = 0.5;
     std::vector<double>inter(jm, 0);
     for(int j = 0; j < jm; j++){
         inter[j] = value[j];
     }
 //    for(int j = 1; j < jm-1; j++){
-//        value[j] = ( coeff * inter[j] + ( 1. - coeff ) 
-//            * ( inter[j+1] + inter[j-1] ) / 2. );
+//        value[j] = (coeff * inter[j] + (1.0 - coeff) 
+//            * (inter[j+1] + inter[j-1])/2.0);
     for(int j = 2; j < jm-2; j++){
-        value[j] = ( coeff * inter[j] + ( 1. - coeff ) 
-            * ( inter[j+1] + inter[j-1] + inter[j+2] + inter[j-2] ) / 4. );
+        value[j] = (coeff * inter[j] + (1. - coeff) 
+            * (inter[j+1] + inter[j-1] + inter[j+2] + inter[j-2])/4.0);
     } 
+    return;
 }
 /*
 *
@@ -200,17 +219,18 @@ void AtomUtils::smooth_tropopause(int jm, std::vector<double> &value){
 double AtomUtils::simpson(int n1, int n2, double dstep, Array_1D &value){
         double sum_even=0, sum_odd=0;
         if(n2 % 2 == 0){
-            for(int i = n1 + 1; i < n2; i+=2){sum_odd += 4*value.z[i];}
-            for(int i = n1 + 2; i < n2; i+=2){sum_even += 2*value.z[i];}
-        }else cout << "       n2    must be an even number to use the Simpson integration method" << endl;
+            for(int i = n1+1; i < n2; i+=2){sum_odd += 4 * value.z[i];}
+            for(int i = n1+2; i < n2; i+=2){sum_even += 2 * value.z[i];}
+        }else cout << "       n2    must be an even number to use the \
+            Simpson integration method" << endl;
     return dstep/3 * (value.z[n1] + sum_odd + sum_even + value.z[n2]); // Simpson Rule integration
 }
 /*
 *
 */
 double AtomUtils::trapezoidal(int n1, int n2, double dstep, Array_1D &value){
-        double sum=0;
-        for(int i = n1+1; i < n2; i++){sum += 2*value.z[i];}
+        double sum = 0;
+        for(int i = n1+1; i < n2; i++){sum += 2 * value.z[i];}
         return dstep/2 * (value.z[n1] + sum + value.z[n2]);  // Trapezoidal Rule integration
 }
 /*
@@ -224,7 +244,8 @@ double AtomUtils::rectangular(int n1, int n2, double dstep, Array_1D &value){
 /*
 *
 */
-void AtomUtils::load_map_from_file(const std::string& fn, std::map<float, float>& m){
+void AtomUtils::load_map_from_file(const std::string& fn, 
+    std::map<float, float>& m){
     std::string line;
     std::ifstream f(fn);
     if(!f.is_open()){
@@ -237,7 +258,194 @@ void AtomUtils::load_map_from_file(const std::string& fn, std::map<float, float>
         m.insert(std::pair<float,float>(key, val));
         //std::cout << key <<"  " << val << std::endl;
     }
+    return;
 }
 /*
 *
 */
+double AtomUtils::GetMean_3D(int jm, int km, Array &val_3D){
+    if(m_node_weights.size() != (unsigned)jm){
+        CalculateNodeWeights(jm, km);
+    }
+    double ret=0.0, weight=0.0;
+    for(int j=0; j<jm; j++){
+        for(int k=0; k<km; k++){
+            //std::cout << (val_3D.x[0][j][k]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
+            ret += val_3D.x[0][j][k] * m_node_weights[j][k];
+            weight += m_node_weights[j][k];
+        }
+    }
+    return ret/weight;
+}
+/*
+*
+*/
+double AtomUtils::GetMean_2D(int jm, int km, Array_2D &val_2D){
+    if(m_node_weights.size() != (unsigned)jm){
+        CalculateNodeWeights(jm, km);
+    }
+    double ret=0.0, weight=0.0;
+    for(int j=0; j<jm; j++){
+        for(int k=0; k<km; k++){
+            //std::cout << (val_2D.y[j][k]-1)*t_0 << "  " << m_node_weights[j][k] << std::endl;
+            ret += val_2D.y[j][k] * m_node_weights[j][k];
+            weight += m_node_weights[j][k];
+        }
+    }
+    return ret/weight;
+}
+/*
+*
+*/
+void AtomUtils::CalculateNodeWeights(int jm, int km){
+    //use cosine of latitude as weights for now
+    //longitudes: 0-360(km) latitudes: 90-(-90)(jm)
+    double weight = 0.0;
+    m_node_weights.clear();
+    for(int i=0; i<jm; i++){
+        if(i<=90){
+            weight = cos((90-i) * M_PI/180.0);
+        }else{
+            weight = cos((i-90) * M_PI/180.0);
+        }
+        m_node_weights.push_back(std::vector<double>());
+        m_node_weights[i].resize(km, weight);
+    }
+    return;
+}
+/*
+*
+*/
+void AtomUtils::land_oceanFraction(int i_local, int jm, int km, Array &val_3D){
+    int h_point_max = (jm-1) * (km-1);
+    int h_land = 0;
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            if(is_land( val_3D, i_local, j, k))  h_land++;
+        }
+    }
+    int h_ocean = h_point_max - h_land;
+    float land_percent = 100.0 * (float)h_land/(float)h_point_max;
+    float ocean_percent = 100.0 * (float)h_ocean/(float)h_point_max;
+
+    cout.precision(3);
+    cout << endl;
+    cout << setiosflags(ios::left) << setw(50) << setfill('.') 
+        << "      total number of points at constant hight " << " = " 
+        << resetiosflags(ios::left)
+        << setw(7) << fixed << setfill(' ') << h_point_max << endl 
+        << setiosflags(ios::left) << setw(50) << setfill('.') 
+        << "      number of points on the ocean surface " << " = "
+        << resetiosflags(ios::left) 
+        << setw(7) << fixed << setfill(' ') << h_ocean << endl
+        << setiosflags(ios::left) << setw(50) << setfill('.') 
+        << "      number of points on the land surface " << " = " 
+        << resetiosflags(ios::left) 
+        << setw(7) << fixed << setfill(' ') << h_land << endl 
+        << setiosflags(ios::left) << setw(50) << setfill('.') 
+        << "      ocean in % " << " = " << resetiosflags(ios::left) 
+        << setw(7) << fixed << setfill(' ')
+        << ocean_percent << endl
+        << setiosflags(ios::left) << setw(50) << setfill('.') 
+        << "      land in % " << " = " << resetiosflags(ios::left) 
+        << setw(7) << fixed << setfill(' ')
+        << land_percent << endl << endl;
+    cout << endl;
+    return;
+}
+/*
+*
+*/
+int AtomUtils::RunStart(string comment){
+    string at = "AGCM";
+    string hy = "OGCM";
+    string comment_1 = "";
+    string comment_2 = "";
+    if(comment.compare(at) == 0){
+        comment_1 = " ... AGCM: time and date at run time begin:   ";
+        comment_2 = "    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   \
+             Atmosphere General Circulation Model \
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% \n";
+    }
+    if(comment.compare(hy) == 0){
+        comment_1 = " ... OGCM: time and date at run time begin:   ";
+        comment_2 = "    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   \
+            Ocean General Circulation Model \
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% \n";
+    }
+    std::time_t Run_start;
+    struct tm * timeinfo_begin;
+    std::time(&Run_start);
+    timeinfo_begin = std::localtime(&Run_start);
+    std::cout << std::endl << std::endl;
+    std::cout << comment_2 
+        << std::endl << std::endl;
+    std::cout << comment_1 
+        << std::asctime(timeinfo_begin);
+    return Run_start;
+}
+/*
+*
+*/
+int AtomUtils::RunEnd(string comment, int Ma, int Run_start){
+    string at = "AGCM";
+    string hy = "OGCM";
+    string comment_1 = "";
+    string comment_2 = "";
+        if(comment.compare(at) == 0){
+        comment_1 = " ... AGCM: time and date at run time begin:   ";
+        comment_2 = "    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   \
+             Atmosphere General Circulation Model \
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% \n";
+    }
+    if(comment.compare(hy) == 0){
+        comment_1 = " ... OGCM: time and date at run time begin:   ";
+        comment_2 = "    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   \
+            Ocean General Circulation Model \
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% \n";
+    }
+    std::time_t Run_end;
+    std::time(&Run_end);
+    struct tm * timeinfo_end;
+    timeinfo_end = std::localtime(&Run_end);
+    std::cout << std::endl << std::endl;
+    std::cout << comment_2 
+        << std::endl << std::endl;
+    std::cout << comment_1 
+        << std::asctime(timeinfo_end);
+    int Run_total = Run_end - Run_start;
+    int Run_total_minutes = Run_total/60;
+    int Run_total_hours = Run_total_minutes/60;
+    std::cout << std::endl << " ... computed time slice:"
+        << "  Ma = " << Ma << std::endl << std::endl
+        << " ... computer time needed:" << std::endl << std::endl
+        << setw(20) << setfill(' ') << Run_total 
+        << " seconds" << std::endl
+        << " ... compares to:" << std::endl << std::endl
+        << setw(20) << setfill(' ') << Run_total_hours 
+        << " hours" << std::endl
+        << setw(20) << setfill(' ') << Run_total_minutes 
+        << " minutes" << std::endl
+        << setw(20) << setfill(' ') << Run_total%60 
+        << " seconds" << std::endl << std::endl
+        << std::endl;
+    return 0;
+}
+/*
+*
+*/
+void AtomUtils::use_presets(bool preset_1, bool preset_2, bool preset_3){
+    if(preset_1)
+        cout << endl << "      use_earthbyte_reconstruction is in use" << endl;
+    else
+        cout << endl << "      use_earthbyte_reconstruction is not in use" << endl;
+    if(preset_2)
+        cout << "      use_NASA_temperature is in use" << endl;
+    else
+        cout << "      use_NASA_temperature is not in use" << endl;
+    if(preset_3)
+        cout << "      use_NASA_velocity is in use" << endl;
+    else
+        cout << "      use_NASA_velocity is not in use" << endl;
+    return;
+}

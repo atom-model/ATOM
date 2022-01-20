@@ -59,7 +59,7 @@ public:
         }
     }
 
-    void printArray( int im, int jm, int km );
+    void printArray( string dir, int im, int jm, int km );
     void initArray( int im, int jm, int km, double value);
 
     int get_im() const {return im;}

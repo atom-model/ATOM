@@ -39,7 +39,6 @@ cout << endl << "      PresStat_SaltWaterDens" << endl;
     double beta_water = 8.8e-5;  // given in m³/(m³ * °C)
     double r_air = 1.2041;  // given in kg/m³
     double R_Air = 287.1;  // given in J/(kg*K)
-    double r_0_saltwater = 1027.;  // in kg/m³
 // hydrostatic pressure, water and salt water density at the surface
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
@@ -81,9 +80,19 @@ cout << endl << "      PresStat_SaltWaterDens" << endl;
                 r_salt_water.x[i][j][k] = C_p + beta_p * c.x[i][j][k] * c_0  //in kg/m³ approximation by Gill (saltwater.pdf)
                     - alfa_t_p * t_Celsius_1 - gamma_t_p
                     * ( 1. - c.x[i][j][k]) * c_0 * t_Celsius_1;
-            }
-            for(int i = im-1; i >= 0; i--){
-                if(is_land(h, i, j, k))  r_salt_water.x[i][j][k] = r_0_saltwater;  // arbitrary choosen for paraview plotting
+                if(is_land(h, i, j, k))  
+                    r_salt_water.x[i][j][k] = r_0_saltwater;
+/*
+    if((j == 75) &&(k == 180)) cout << "north" << endl
+//    if((j == 1) &&(k == 180)) cout << "north" << endl
+        << "   i = " << i << "   j = " << j << "   k = " << k  << endl
+        << "   d_i = " << d_i << endl
+        << "   p_km = " << p_km << endl
+        << "   r_water = " << r_water.x[i][j][k] 
+        << "   r_salt_water = " << r_salt_water.x[i][j][k] 
+        << "   p_stat = " << p_stat.x[i][j][k] << endl
+        << endl;
+*/
             }
         }
     }
@@ -92,47 +101,11 @@ cout << "      PresStat_SaltWaterDens ended" << endl;
 /*
 *
 */
-void cHydrosphereModel::Value_Limitation_Hyd(){
-cout << endl << "      Value_Limitation_Hyd" << endl;
-// the limiting values depend on local singular behaviour
-    for(int k = 0; k < km; k++){
-        for(int j = 0; j < jm; j++){
-/*
-            if(EkmanPumping.y[j][k] >= .01)  EkmanPumping.y[j][k] = .01; // in m/s
-            if(EkmanPumping.y[j][k] < .01)  EkmanPumping.y[j][k] = -.01; // in m/s
-            if(is_land(h, im-1, j, k))  EkmanPumping.y[j][k] = 0.;
-            if(Upwelling.y[j][k] >= .01)  Upwelling.y[j][k] = .01; // in m/s
-            else  Upwelling.y[j][k] = 0.;
-            if(Downwelling.y[j][k] < -.01)  Downwelling.y[j][k] = -.01; // in m/s
-            else  Downwelling.y[j][k] = 0.;
-*/
-            for(int i = 0; i < im; i++){
-/*
-                if(u.x[i][j][k] >= 0.01/u_0)  u.x[i][j][k] = 0.01/u_0; // non-dimensional
-                if(u.x[i][j][k] <= - 0.01/u_0)  u.x[i][j][k] = - 0.01/u_0; // non-dimensional
-*/
-                if(v.x[i][j][k] >= .125/u_0)  v.x[i][j][k] = .125/u_0;
-                if(v.x[i][j][k] <= - .125/u_0)  v.x[i][j][k] = - .125/u_0;
-                if(w.x[i][j][k] >= .125/u_0)  w.x[i][j][k] = .125/u_0;
-                if(w.x[i][j][k] <= - .125/u_0)  w.x[i][j][k] = - .125/u_0;
-
-                if(t.x[i][j][k] >= 1.147)  t.x[i][j][k] = 1.147; //40.15 °C
-                if(t.x[i][j][k] <= 0.9927)  t.x[i][j][k] = 0.9927;// -1.0 °C
-                if(c.x[i][j][k] * c_0 >= 50.)  c.x[i][j][k] = 1.4451;  // 50.0 psu
-                if(c.x[i][j][k] * c_0 <= 32.)  c.x[i][j][k] = 0.9249;      // 32.0 psu
-            }
-        }
-    }
-cout << "      Value_Limitation_Hyd ended" << endl;
-}
-/*
-*
-*/
 void cHydrosphereModel::SalinityEvaporation(){
 cout << endl << "      SalinityEvaporation" << endl;
 // preparations for salinity increase due to evaporation minus precipitation
 // procedure given in Rui Xin Huang, Ocean Circulation, p. 165
-    double coeff_salinity = 1.1574e-8 * L_hyd/(r_0_water * u_0 * c_0);  // 1.1574-8 is the conversion from (Evap-Prec) in mm/d to m/s
+    double coeff_salinity = 8.64e-7 * L_hyd/(r_0_water * u_0);
     double evap_precip = 0.;
     double sal_flux = 0.;
     double step = L_hyd/(double)(im-1);  // in m, 200/40 = 5m
@@ -140,8 +113,8 @@ cout << endl << "      SalinityEvaporation" << endl;
         for(int j = 0; j < jm; j++){
             c_fix.y[j][k] = c.x[im-1][j][k];
                 evap_precip = coeff_salinity 
-//                    * (Evaporation_Dalton.y[j][k] - Precipitation.y[j][k]);  // in m/s
-                    * (Evaporation_Penman.y[j][k] - Precipitation.y[j][k]);  // in m/s
+                    * (Evaporation_Dalton.y[j][k] - Precipitation.y[j][k]);  // in mm/d --> Dalton for evaporation on ocean
+//                    * (Evaporation_Penman.y[j][k] - Precipitation.y[j][k]);  // in mm/d --> Penman for evaporation on ocean
 //            sal_flux = - (- 3. * c.x[im-1][j][k] + 4. * c.x[im-2][j][k]  // 1. order derivative, 2. order accurate
 //                - c.x[im-3][j][k])/(2. * step) 
 //                * (1. - 2. * c.x[im-1][j][k]);

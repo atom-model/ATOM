@@ -1,20 +1,14 @@
-/*
- * Atmosphere General Circulation Modell ( AGCM ) applied to laminar flow
- * Program for the computation of geo-atmospherical circulating flows in a spherical shell
- * Finite difference scheme for the solution of the 3D Navier-Stokes equations
- * with 2 additional transport equations to describe the water vapour and co2 concentration
- * 4. order Runge-Kutta scheme to solve 2. order differential equations
- * 
- * class to build 3D arrays
-*/
-
 #include <algorithm>
 #include <cassert>
+#include <sstream>
 #include <iostream>
-#include <iomanip>   
+#include <iomanip>
+#include <cstring>
 
 #include "Array.h"
 #include "Utils.h"
+#include "cAtmosphereModel.h"
+#include "cHydrosphereModel.h"
 
 using namespace std;
 using namespace AtomUtils;
@@ -78,18 +72,38 @@ void Array::initArray(int im, int jm, int km, double aa){
 /*
 *
 */
-void Array::printArray(int im, int jm, int km){
+void Array::printArray(string dir, int im, int jm, int km){
     assert(im == this->im);
     assert(jm == this->jm);
     assert(km == this->km);
-    cout.precision(3);
+
+    cout.precision(6);
     cout.setf(ios::fixed);
-//    for(int i = im-1; i < im; i++){
-//    for(int i = im-4; i <= im-4; i++){
-    for(int i = im-20; i <= im-20; i++){
+
+    int i_beg = 0;
+    int i_end = 0;
+    string at = "AGCM";
+    string hy = "OGCM";
+    if(dir.compare(at) == 0){
+        i_beg = 0;
+        i_end = 0;
+        cout << endl << endl << " ...................... \
+ printout from atmosphere code at level = " << i_beg << "  ...................." 
+            << endl << endl;
+    }
+    if(dir.compare(hy) == 0){
+        i_beg = im-1;
+        i_end = im-1;
+        cout << endl << endl << " ...................... \
+ printout from hydrosphere code at level = " << i_end << "  ...................." 
+            << endl << endl;
+    }
+    for(int i = i_beg; i <= i_end; i++){
         cout << endl;
-        cout << "  phi = k-direction in  " << km-1 << "  longitudinal steps " << endl
-             << "  theta = j-direction in  " << jm-1 << "  latitudinal steps " << endl
+        cout << "  phi = k-direction in  " << km-1 
+            << "  longitudinal steps " << endl
+             << "  theta = j-direction in  " << jm-1 
+             << "  latitudinal steps " << endl
              << "  r = i-direction at level  " << i << endl << endl;
         for(int j = 0; j < jm; j+=4){
             for(int k = 0; k < km; k+=20){
