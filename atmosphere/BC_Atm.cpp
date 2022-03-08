@@ -16,17 +16,22 @@ void cAtmosphereModel::BC_radius(){
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
 //            t.x[0][j][k] = c43 * t.x[1][j][k] - c13 * t.x[2][j][k];
-            t.x[im-1][j][k] = t.x[im-4][j][k] - 3. * t.x[im-3][j][k] + 3. * t.x[im-2][j][k];
+            t.x[im-1][j][k] = t.x[im-4][j][k] - 3.0 * t.x[im-3][j][k] + 3.0 * t.x[im-2][j][k];
 //            t.x[im-1][j][k] = c43 * t.x[im-2][j][k] - c13 * t.x[im-3][j][k];
 
 //            u.x[0][j][k] = 0.;
-            u.x[0][j][k] = c43 * u.x[1][j][k] - c13 * u.x[2][j][k];
-            u.x[0][j][k] = c43 * u.x[1][j][k] - c13 * u.x[2][j][k];
-            v.x[0][j][k] = c43 * v.x[1][j][k] - c13 * v.x[2][j][k];
-            w.x[0][j][k] = c43 * w.x[1][j][k] - c13 * w.x[2][j][k];
-            u.x[im-1][j][k] = u.x[im-4][j][k] - 3. * u.x[im-3][j][k] + 3. * u.x[im-2][j][k];
-            v.x[im-1][j][k] = v.x[im-4][j][k] - 3. * v.x[im-3][j][k] + 3. * v.x[im-2][j][k];
-            w.x[im-1][j][k] = w.x[im-4][j][k] - 3. * w.x[im-3][j][k] + 3. * w.x[im-2][j][k];
+//            u.x[0][j][k] = c43 * u.x[1][j][k] - c13 * u.x[2][j][k];
+//            v.x[0][j][k] = c43 * v.x[1][j][k] - c13 * v.x[2][j][k];
+//            w.x[0][j][k] = c43 * w.x[1][j][k] - c13 * w.x[2][j][k];
+            u.x[0][j][k] = u.x[3][j][k] 
+                - 3.0 * u.x[2][j][k] + 3.0 * u.x[1][j][k];  // extrapolation
+            v.x[0][j][k] = v.x[3][j][k] 
+                - 3.0 * v.x[2][j][k] + 3.0 * v.x[1][j][k];  // extrapolation
+            w.x[0][j][k] = w.x[3][j][k] 
+                - 3.0 * w.x[2][j][k] + 3.0 * w.x[1][j][k];  // extrapolation
+            u.x[im-1][j][k] = u.x[im-4][j][k] - 3.0 * u.x[im-3][j][k] + 3.0 * u.x[im-2][j][k];
+            v.x[im-1][j][k] = v.x[im-4][j][k] - 3.0 * v.x[im-3][j][k] + 3.0 * v.x[im-2][j][k];
+            w.x[im-1][j][k] = w.x[im-4][j][k] - 3.0 * w.x[im-3][j][k] + 3.0 * w.x[im-2][j][k];
             if(is_air(h, 0, j, k)){
                 if(!use_NASA_velocity){
                     v.x[0][j][k] = c43 * v.x[1][j][k] - c13 * v.x[2][j][k];

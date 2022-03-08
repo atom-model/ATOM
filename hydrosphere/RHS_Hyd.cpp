@@ -77,6 +77,7 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
     if(sinthe == 0.0) sinthe = 1.0e-5;
     double sinthe2 = sinthe * sinthe;
     double costhe = cos(the.z[j]);
+    if(j > 90) costhe = - costhe;
     double rmsinthe = rm * sinthe;
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
@@ -99,7 +100,7 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
         h_0_i = 1.0;
         h_d_i = 0.0;
     }
-    std::vector<Array*> arrays_1{&u, &v, &w, &t, &p_dyn, &c};
+    std::vector<Array*> arrays_1{&u, &v, &w, &t, &p_stat, &c};
     std::vector<Array*> arrays_2{&u, &v, &w, &t, &c};
     enum array_index_1{i_u_1, i_v_1, i_w_1, i_t_1, i_p_1, i_c_1, 
         last_array_index_1};
@@ -248,10 +249,20 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
     double drodc = 0.7;    // gradient given in kg/m³/m
     double salt_water_ref = r_water.x[i][j][k] + drodc * c.x[i][j][k] * c_0;
                           // common linear approach for salt water based on fresh water
-    double coeff_g_p = 1.0; // coefficient allows the buoyancy term
+//    double coriolis = 0.0;
+//    double buoyancy = 0.0;
+    double coriolis = 1.0;
+    double buoyancy = 1.0;
+
+    double coeff_buoy_u = 1.0;
+
+    double coeff_buoy = r_0_water * g; // coefficient allows the buoyancy term
     double coeff_energy_p = u_0 * u_0/(cp_w * t_0); // coefficient for the source term = 2.33e-4
-    double coeff_buoy = r_0_water * (u_0 * u_0)/L_hyd; // coefficient for bouancy term = 0.2871
-    double coeff_Coriolis = r_0_water * u_0; // coefficient for Coriolis term = 239.28
+    double coeff_u_p = 0.5 * r_0_water * u_0 * u_0/L_hyd; // coefficient for pressure force term = 0.1489
+
+    double coeff_Coriolis = r_0_water * u_0 * omega; // coefficient for Coriolis term = 0.01797
+    double coeff_cor = 1.0; // coefficient for Coriolis term = 0.1458
+
     // Boussineq-approximation for the buoyancy force caused by salinity, higher salinity causes negative buoyancy
     Salt_Balance.x[i][j][k] = salt_water_ref - r_salt_water.x[i][j][k]; // difference of salinity compared to average
     if(Salt_Balance.x[i][j][k] < 0.0){
@@ -261,18 +272,20 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
         Salt_Finger.x[i][j][k] = Salt_Balance.x[i][j][k]; // for positiv salinity balance, lower than salt_water_ref
         Salt_Diffusion.x[i][j][k] = 0.0;
     }
-    double coriolis = 1.0;
-    double coriolis_rad = h_d_i * coriolis * 2.0 * omega
-        * costhe * w.x[i][j][k];
-    double coriolis_the = - coriolis * 2.0 * omega
-        * sinthe * w.x[i][j][k];
-    double coriolis_phi = coriolis * 2.0 * omega
-        * (sinthe * v.x[i][j][k] - costhe * u.x[i][j][k]);
-    CoriolisForce.x[i][j][k] = coeff_Coriolis * sqrt((pow (coriolis_rad,2) 
-        + pow (coriolis_the, 2) + pow (coriolis_phi,2))/3.0);
-    BuoyancyForce.x[i][j][k] = buoyancy * r_0_water 
-        * (t.x[i][j][k] - 1.0) * g;
-    PressureGradientForce.x[i][j][k] = - coeff_buoy * dpdr;
+    double coriolis_rad = h_d_i * 2.0 * costhe * w.x[i][j][k];
+    double coriolis_the = - h_d_i * 2.0 * sinthe * w.x[i][j][k];
+    double coriolis_phi = h_d_i * 2.0 * (sinthe * v.x[i][j][k] 
+        - costhe * u.x[i][j][k]);
+    CoriolisForce.x[i][j][k] = coriolis * coeff_Coriolis 
+        * sqrt((pow(coriolis_rad, 2) 
+        + pow(coriolis_the, 2) 
+        + pow(coriolis_phi, 2))/3.0);
+    BuoyancyForce.x[i][j][k] = buoyancy * coeff_buoy 
+        * (t.x[i][j][k] - 1.0);
+    PressureGradientForce.x[i][j][k] = - coeff_u_p 
+        * sqrt((pow(dpdr, 2) 
+        + pow(dpdthe/rm, 2) 
+        + pow(dpdphi/rmsinthe, 2))/3.0);
     if(is_land(h, i, j, k)){
         BuoyancyForce.x[i][j][k] = 0.0;
         PressureGradientForce.x[i][j][k] = 0.0;
@@ -290,12 +303,12 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
             - h_0_i * t.x[i][j][k]/dr2;
         rhs_u.x[i][j][k] = - (u.x[i][j][k] * dudr + v.x[i][j][k] * dudthe/rm 
             + w.x[i][j][k] * dudphi/rmsinthe) 
-            + coeff_g_p * (t.x[i][j][k] - 1.0) * g
+            + buoyancy * (t.x[i][j][k] - 1.0) * coeff_buoy_u
             - dpdr
             + ( h_d_i * 2.0 * u.x[i][j][k]/rm2 
             + 4.0 * dudr/rm + dudthe * costhe/rm2sinthe 
             )/re 
-            + coriolis_rad
+            + coriolis * coeff_cor * coriolis_rad
             - h_0_i * u.x[i][j][k]/dr2;
         rhs_v.x[i][j][k] = - (u.x[i][j][k] * dvdr + v.x[i][j][k] * dvdthe/rm 
             + w.x[i][j][k] * dvdphi/rmsinthe) 
@@ -305,7 +318,7 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
             - (1.0 + costhe/sinthe2)/rm2 * v.x[i][j][k] 
             + 2.0 * dudthe/rm2 
             - dwdphi * 2.0 * costhe/rm2sinthe2)/re 
-            + coriolis_the
+            + coriolis * coeff_cor * coriolis_the
             - h_0_i * v.x[i][j][k]/dr2;
         rhs_w.x[i][j][k] = - (u.x[i][j][k] * dwdr + v.x[i][j][k] * dwdthe/rm 
             + w.x[i][j][k] * dwdphi/rmsinthe) 
@@ -316,7 +329,7 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
             + 2.0 * dudphi/rm2sinthe 
 //            + dvdphi * 2.0 * costhe/rm2sinthe2
             )/re 
-            + coriolis_phi
+            + coriolis * coeff_cor * coriolis_phi
             - h_0_i * w.x[i][j][k]/dr2;
         rhs_c.x[i][j][k] = - (u.x[i][j][k] * dcdr + v.x[i][j][k] * dcdthe/rm 
             + w.x[i][j][k] * dcdphi/rmsinthe)
@@ -324,6 +337,7 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
     }
 
     else{
+
         rhs_t.x[i][j][k] = - (u.x[i][j][k] * dtdr + v.x[i][j][k] * dtdthe/rm  // Navier-Stokes equations
             + w.x[i][j][k] * dtdphi/rmsinthe) 
             + (d2tdr2 + dtdr * 2.0/rm + d2tdthe2/rm2 
@@ -334,12 +348,12 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
             - h_0_i * t.x[i][j][k]/dr2;
         rhs_u.x[i][j][k] = - (u.x[i][j][k] * dudr + v.x[i][j][k] * dudthe/rm 
             + w.x[i][j][k] * dudphi/rmsinthe) 
-            + coeff_g_p * (t.x[i][j][k] - 1.0) * g
+            + buoyancy * (t.x[i][j][k] - 1.0) * coeff_buoy_u
             - dpdr
             + (d2udr2 + h_d_i * 2.0 * u.x[i][j][k]/rm2 + d2udthe2/rm2 
             + 4.0 * dudr/rm + dudthe * costhe/rm2sinthe 
             + d2udphi2/rm2sinthe2)/re 
-            + coriolis_rad
+            + coriolis * coeff_cor * coriolis_rad
             - h_0_i * u.x[i][j][k]/dr2;
         rhs_v.x[i][j][k] = - (u.x[i][j][k] * dvdr + v.x[i][j][k] * dvdthe/rm 
             + w.x[i][j][k] * dvdphi/rmsinthe) 
@@ -349,7 +363,7 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
             - (1.0 + costhe/sinthe2)/rm2 * v.x[i][j][k] 
             + d2vdphi2/rm2sinthe2 + 2.0 * dudthe/rm2 
             - dwdphi * 2.0 * costhe/rm2sinthe2)/re 
-            + coriolis_the
+            + coriolis * coeff_cor * coriolis_the
             - h_0_i * v.x[i][j][k]/dr2;
         rhs_w.x[i][j][k] = - (u.x[i][j][k] * dwdr + v.x[i][j][k] * dwdthe/rm 
             + w.x[i][j][k] * dwdphi/rmsinthe) 
@@ -358,8 +372,9 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
             + dwdthe/rm2sinthe * costhe 
             - (1.0 + costhe/sinthe2)/rm2 * w.x[i][j][k] 
             + d2wdphi2/rm2sinthe2 + 2.0 * dudphi/rm2sinthe 
-            + dvdphi * 2.0 * costhe/rm2sinthe2)/re 
-            + coriolis_phi
+//            + dvdphi * 2.0 * costhe/rm2sinthe2
+            )/re 
+            + coriolis * coeff_cor * coriolis_phi
             - h_0_i * w.x[i][j][k]/dr2;
         rhs_c.x[i][j][k] = - (u.x[i][j][k] * dcdr + v.x[i][j][k] * dcdthe/rm 
             + w.x[i][j][k] * dcdphi/rmsinthe) 
@@ -378,7 +393,7 @@ void cHydrosphereModel::RK_RHS_3D_Hydrosphere(int i, int j, int k){
         u.x[i][j][k] = 0.0;
         v.x[i][j][k] = 0.0;
         w.x[i][j][k] = 0.0;
-        p_dyn.x[i][j][k] = 0.0;
+        p_stat.x[i][j][k] = 0.0;
         rhs_u.x[i][j][k] = 0.0;
         rhs_v.x[i][j][k] = 0.0;
         rhs_w.x[i][j][k] = 0.0;
@@ -519,6 +534,7 @@ void cHydrosphereModel::RK_RHS_2D_Hydrosphere(int i, int j, int k){
     if(sinthe == 0.0) sinthe = 1.0e-5;
     double sinthe2 = sinthe * sinthe;
     double costhe = cos(the.z[j]);
+    if(j > 90) costhe = - costhe;
     double rmsinthe = rm * sinthe;
     double rm2sinthe = rm2 * sinthe;
     double rm2sinthe2 = rm2 * sinthe2;
@@ -536,7 +552,7 @@ void cHydrosphereModel::RK_RHS_2D_Hydrosphere(int i, int j, int k){
         h_d_j = 0.0;
         h_d_k = 0.0;
     }
-    std::vector<Array*> arrays_1{&u, &v, &w, &p_dyn};
+    std::vector<Array*> arrays_1{&u, &v, &w, &p_stat};
     std::vector<Array*> arrays_2{&v, &w};
     enum array_index_1{i_u_1, i_v_1, i_w_1, i_p_1, last_array_index_1};
     enum array_index_2{i_v_2, i_w_2, last_array_index_2};
@@ -697,32 +713,32 @@ void cHydrosphereModel::RK_RHS_2D_Hydrosphere(int i, int j, int k){
         << "   uj-1 = " << u.x[im-1][j-1][k]
         << "   vj-1 = " << v.x[im-1][j-1][k]
         << "   wj-1 = " << w.x[im-1][j-1][k]
-        << "   pj-1 = " << p_dyn.x[im-1][j-1][k] << endl
+        << "   pj-1 = " << p_stat.x[im-1][j-1][k] << endl
 
         << "   uj   = " << u.x[im-1][j][k]
         << "   vj   = " << v.x[im-1][j][k]
         << "   wj   = " << w.x[im-1][j][k]
-        << "   pj   = " << p_dyn.x[im-1][j][k] << endl
+        << "   pj   = " << p_stat.x[im-1][j][k] << endl
 
         << "   uj+1 = " << u.x[im-1][j+1][k]
         << "   vj+1 = " << v.x[im-1][j+1][k]
         << "   wj+1 = " << w.x[im-1][j+1][k]
-        << "   pj+1 = " << p_dyn.x[im-1][j+1][k] << endl
+        << "   pj+1 = " << p_stat.x[im-1][j+1][k] << endl
 
         << "   uk-1 = " << u.x[im-1][j][k-1]
         << "   vk-1 = " << v.x[im-1][j][k-1]
         << "   wk-1 = " << w.x[im-1][j][k-1]
-        << "   pk-1 = " << p_dyn.x[im-1][j][k-1] << endl
+        << "   pk-1 = " << p_stat.x[im-1][j][k-1] << endl
 
         << "   uk   = " << u.x[im-1][j][k]
         << "   vk   = " << v.x[im-1][j][k]
         << "   wk   = " << w.x[im-1][j][k]
-        << "   pk   = " << p_dyn.x[im-1][j][k] << endl
+        << "   pk   = " << p_stat.x[im-1][j][k] << endl
 
         << "   uk+1 = " << u.x[im-1][j][k+1]
         << "   vk+1 = " << v.x[im-1][j][k+1]
         << "   wk+1 = " << w.x[im-1][j][k+1]
-        << "   pk+1 = " << p_dyn.x[im-1][j][k+1] << endl
+        << "   pk+1 = " << p_stat.x[im-1][j][k+1] << endl
 
         << "   un = " << un.x[im-1][j][k]
         << "   vn = " << vn.x[im-1][j][k]

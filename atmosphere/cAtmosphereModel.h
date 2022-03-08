@@ -38,7 +38,9 @@ public:
     }
 
     static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
-    static const double the0, phi0, r0;
+    static const double the0, phi0, r0, residuum_ref_atm;
+
+    double residuum_old, residuum_loop;
 
     int Ma;
 
@@ -154,7 +156,7 @@ private:
 
     const int c43 = 4.0/3.0, c13 = 1.0/3.0;
 
-    static const int im = 41, jm = 181, km = 361, nm = 200;
+    static const int im = 41, jm = 181, km = 361, nm = 500;
 
     double t_paleo_total = 0.0;
     double t_pole_total = 0.0;
@@ -185,6 +187,8 @@ private:
     std::vector<double> K_d;
     std::vector<double> lapse_rate;
     std::vector<float> m_layer_heights;
+
+    double find_residuum_atm();
 
     void SetDefaultConfig();
     void reset_arrays();
@@ -230,7 +234,10 @@ private:
     void save_data();
     void save_array(const string& fn, const Array& a);
     void SaturationAdjustment();
+    void ZeroCategoryIceScheme();
+    void OneCategoryIceScheme();
     void TwoCategoryIceScheme();
+    void ThreeCategoryIceScheme();
     void PressureDensity();
     void LatentSensibleHeat();
     void MassStreamfunction();
@@ -248,7 +255,8 @@ private:
     void print_loop_3D_headings();
     void print_loop_2D_headings();
     void WaterVapourEvaporation();
-    void MoistConvection();
+    void MoistConvectionMidL();
+    void MoistConvectionShall();
     void store_intermediate_data_2D(float coeff=1);
     void store_intermediate_data_3D(float coeff=1);
     void adjust_temperature_IC(double** t, int jm, int km);
@@ -309,6 +317,7 @@ private:
     Array c; // water vapour
     Array cloud; // cloud water
     Array ice; // cloud ice
+    Array gr; // cloud graupel
     Array cloudiness; // cloudiness, N in literature
     Array co2; // CO2
     Array tn; // temperature new
@@ -318,11 +327,12 @@ private:
     Array cn; // water vapour new
     Array cloudn; // cloud water new
     Array icen; // cloud ice new
+    Array grn; // cloud ice new
     Array co2n; // CO2 new
-    Array p_dyn; // dynamic pressure
+    Array p_stat; // dynamic pressure
     Array stream; // mass stream function
     Array u_stream; // u-velocity by mass stream function
-    Array p_stat; // static pressure
+    Array p_hydro; // static pressure
     Array TempStand; // US Standard Atmosphere Temperature
     Array TempDewPoint; // Dew Point Temperature
     Array HumidityRel; // relative humidity
@@ -333,6 +343,7 @@ private:
     Array rhs_c; // auxilliar field RHS water vapour
     Array rhs_cloud; // auxilliar field RHS cloud water
     Array rhs_ice; // auxilliar field RHS cloud ice
+    Array rhs_g; // auxilliar field RHS cloud graupel
     Array rhs_co2; // auxilliar field RHS CO2
     Array aux_u; // auxilliar field u-velocity component
     Array aux_v; // auxilliar field v-velocity component
@@ -347,12 +358,15 @@ private:
     Array radiation; // radiation
     Array P_rain; // rain precipitation mass rate
     Array P_snow; // snow precipitation mass rate
-    Array P_conv; // rain formation by cloud convection
-    Array S_v; // water vapour mass rate due to category two ice scheme
-    Array S_c; // cloud water mass rate due to category two ice scheme
-    Array S_i; // cloud ice mass rate due to category two ice scheme
-    Array S_r; // rain mass rate due to category two ice scheme
-    Array S_s; // snow mass rate due to category two ice scheme
+    Array P_graupel; // graupel precipitation mass rate
+    Array P_conv_midl; // rain formation by mid-level cloud convection
+    Array P_conv_shall; // rain formation by shallow cloud convection
+    Array S_v; // water vapour mass rate
+    Array S_c; // cloud water mass rate
+    Array S_i; // cloud ice mass rate
+    Array S_r; // rain mass rate
+    Array S_s; // snow mass rate
+    Array S_g; // graupel mass rate
     Array S_c_c; // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
     Array M_u; // moist convection within the updraft
     Array M_d; // moist convection within the downdraft

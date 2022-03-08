@@ -94,7 +94,7 @@ cout << endl << "      OGCM: AtmosphereDataTransfer" << endl;
             Transfer_File >> v.x[im-1][j][k];  //non-dimensional
             Transfer_File >> w.x[im-1][j][k];  //non-dimensional
             Transfer_File >> t.x[im-1][j][k];  //non-dimensional
-            Transfer_File >> p_dyn.x[im-1][j][k];  //dimensional in hPa
+            Transfer_File >> p_stat.x[im-1][j][k];  //dimensional in hPa
             Transfer_File >> Evaporation_Dalton.y[j][ k];  //dimensional in mm/d
             Transfer_File >> Precipitation.y[j][k];  //dimensional in mm/d
         }

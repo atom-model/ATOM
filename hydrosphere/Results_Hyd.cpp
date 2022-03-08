@@ -111,7 +111,7 @@ void cHydrosphereModel::run_data_hyd(){
         aux_w.x[i_max][j][0] = aux_w.x[i_max][j][km-1] = (aux_w.x[i_max][j][0] + aux_w.x[i_max][j][km-1])/2.;
     }
     int i = i_max; // for the defined macros
-    double coeff_pumping = 864.0; // produces EkmanPumping from m/s into cm/d
+    double coeff_pumping = 864.0; // transforms EkmanPumping from m/s into cm/d
     for(int k = 1; k < km-1; k++){
         for(int j = 1; j < jm-1; j++){
             double sinthe = sin(the.z[j]);
@@ -259,8 +259,8 @@ void cHydrosphereModel::run_data_hyd(){
             }
         }
     }
-    double coeff_buoy = r_0_water * (u_0 * u_0)/L_hyd; // coefficient for bouancy term = 0.2871
-    double coeff_Coriolis = r_0_water * u_0; // coefficient for Coriolis term = 239.28
+    double coeff_u_p = r_0_water * u_0 * u_0/L_hyd; // coefficient for bouancy term = 0.2871
+    double coeff_Coriolis = r_0_water * u_0 * omega; // coefficient for Coriolis term = 239.28
     double coriolis = 1.0;
 
     for(int k = 0; k < km; k++){
@@ -302,24 +302,22 @@ void cHydrosphereModel::run_data_hyd(){
                 - 3.0 * PressureGradientForce.x[2][j][k] 
                 + 3.0 * PressureGradientForce.x[1][j][k];  // extrapolation
 
-            double dpdr = p_dyn.x[i_max][j][k] = p_dyn.x[im-4][j][k] 
-                - 3. * p_dyn.x[im-3][j][k] + 3. * p_dyn.x[im-2][j][k];  // extrapolation
+            double dpdr = p_stat.x[i_max][j][k] = p_stat.x[im-4][j][k] 
+                - 3.0 * p_stat.x[im-3][j][k] + 3.0 * p_stat.x[im-2][j][k];  // extrapolation
             double sinthe_coriolis = sin(the.z[j]);
             double costhe = cos(the.z[j]);
-            double coriolis_rad = coriolis * 2.0 * omega
-                * costhe * w.x[i_max][j][k];
-            double coriolis_the = - coriolis * 2.0 * omega
-                * sinthe_coriolis * w.x[i_max][j][k];
-            double coriolis_phi = coriolis * 2.0 * omega
-                * (sinthe_coriolis * v.x[i_max][j][k] 
+            if(j > 90) costhe = - costhe;
+            double coriolis_rad = 2.0 * costhe * w.x[i_max][j][k];
+            double coriolis_the = - 2.0 * sinthe_coriolis * w.x[i_max][j][k];
+            double coriolis_phi = 2.0 * (sinthe_coriolis * v.x[i_max][j][k] 
                 - costhe * u.x[i_max][j][k]);
-            CoriolisForce.x[i_max][j][k] = coeff_Coriolis 
+            CoriolisForce.x[i_max][j][k] = coriolis * coeff_Coriolis 
                 * sqrt((pow (coriolis_rad,2) 
                 + pow (coriolis_the,2) 
                 + pow (coriolis_phi,2))/3.0);
-            BuoyancyForce.x[i_max][j][k] = buoyancy 
-                * r_0_water * (t.x[i_max][j][k] - 1.0) * g;
-            PressureGradientForce.x[i_max][j][k] = - coeff_buoy * dpdr;
+            BuoyancyForce.x[i_max][j][k] =  
+                r_0_water * (t.x[i_max][j][k] - 1.0) * g;
+            PressureGradientForce.x[i_max][j][k] = - coeff_u_p * dpdr;
             if(is_land(h, i_max, j, k)){
                 BuoyancyForce.x[i_max][j][k] = 0.0;
                 PressureGradientForce.x[i_max][j][k] = 0.0;
@@ -400,14 +398,37 @@ void cHydrosphereModel::run_data_hyd(){
 *
 */
 void cHydrosphereModel::print_min_max_hyd(){
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            for(int i = 0; i < im; i++){
+                aux_u.x[i][j][k] = (r_salt_water.x[i][j][k] * cp_w 
+                    * t.x[i][j][k] * t_0 
+                    + 0.5 * r_salt_water.x[i][j][k] 
+                    * pow(sqrt((u.x[i][j][k] * u.x[i][j][k] 
+                              + v.x[i][j][k] * v.x[i][j][k] 
+                              + w.x[i][j][k] * w.x[i][j][k]) 
+                              * u_0 * u_0/3.0), 2.0)) * 1.0e-5;
+                aux_v.x[i][j][k] = (0.5 * r_salt_water.x[i][j][k] 
+                    * pow(sqrt((u.x[i][j][k] * u.x[i][j][k] 
+                              + v.x[i][j][k] * v.x[i][j][k] 
+                              + w.x[i][j][k] * w.x[i][j][k]) 
+                              * u_0 * u_0/3.0), 2.0)) * 1.0e-5;
+                }
+            }
+        }
+
     cout << endl << " flow properties: " << endl << endl;
     searchMinMax_3D(" max temperature ", " min temperature ", 
         " deg", t, 273.15, [](double i)->double{return i - 273.15;}, true);
     searchMinMax_3D(" max u-component ", " min u-component ", "m/s", u, u_0);
     searchMinMax_3D(" max v-component ", " min v-component ", "m/s", v, u_0);
     searchMinMax_3D(" max w-component ", " min w-component ", "m/s", w, u_0);
-    searchMinMax_3D(" max pressure dynamic ", " min pressure dynamic ", "hPa", p_dyn, 1.0);
-    searchMinMax_3D(" max pressure static ", " min pressure static ", "bar", p_stat, 1.0);
+    searchMinMax_3D(" max pressure static ", " min pressure static ", 
+        "bar", p_hydro, 1.0);
+    searchMinMax_3D(" max pressure dynamic ", " min pressure dynamic ", 
+        "bar", aux_v, 1.0);
+    searchMinMax_3D(" max pressure total ", " min pressure total ", 
+        "bar", aux_u, 1.0);
     searchMinMax_3D(" max water density ", " min water density ", "kg/m3", r_water, 1.0);
     searchMinMax_3D(" max salt water density ", " min salt water density ", "kg/m3", r_salt_water, 1.0);
     cout << endl << " salinity based results in the three dimensional space: " << endl << endl;
@@ -416,9 +437,9 @@ void cHydrosphereModel::print_min_max_hyd(){
     searchMinMax_3D(" max salt finger ", " min salt finger ", "kg/m3", Salt_Finger, 1.0);
     searchMinMax_3D(" max salt diffusion ", " min salt diffusion ", "kg/m3", Salt_Diffusion, 1.0);
     cout << endl << " forces per unit volume: " << endl << endl;
-    searchMinMax_3D(" max pressure force ", " min pressure force ", "N", PressureGradientForce, 1.0);
-    searchMinMax_3D(" max buoyancy force ", " min buoyancy force ", "N", BuoyancyForce, 1.0);
-    searchMinMax_3D(" max Coriolis force ", " min Coriolis force ", "N", CoriolisForce, 1.0);
+    searchMinMax_3D(" max pressure force ", " min pressure force ", "N/m3", PressureGradientForce, 1.0);
+    searchMinMax_3D(" max buoyancy force ", " min buoyancy force ", "N/m3", BuoyancyForce, 1.0);
+    searchMinMax_3D(" max Coriolis force ", " min Coriolis force ", "N/m3", CoriolisForce, 1.0);
     cout << endl << " salt concentration averaged for the two dimensional surface plane: " << endl << endl;
     searchMinMax_2D(" max salt total ", " min salt total ", "psu", Salt_total, c_0);
     searchMinMax_2D(" max Salt_Finger ", " min Salt_Finger ", "kg/m3", SaltFinger, 1.0);

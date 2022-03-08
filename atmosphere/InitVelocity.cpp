@@ -11,10 +11,9 @@ void cAtmosphereModel::init_velocities(){
     // boundary condition for the velocity components in the circulation cells
 
     // latest version by Grotjahn (Global Atmospheric Circulations, 1993)
-    // default for the velocity components u, v, and w as initial conditions
+    // default for the zonally constant velocity components u, v, and w as initial conditions
 
-    // velocities given in m/s, 1 m/s compares to 3.6 km/h, non-dimensionalized by u_0 at the end of this class element
-    // do not change the velocity initial conditions !!
+    // velocities given in m/s, 1 m/s compares to 3.6 km/h, non-dimensionalized by u_0 
 
     // initial velocity components in the northern and southern
     // Pole, Ferrel and Hadley cells
@@ -55,14 +54,17 @@ void cAtmosphereModel::init_velocities(){
 // Hadley cells
     //northern Hadley cell
     init_v_or_w(v, 60, 0.0, 0.5); //lat: 30
-    init_v_or_w(v, 75, -1.0, 2.5); //lat: 15   
+//    init_v_or_w(v, 75, -1.0, 2.5); //lat: 15   
+    init_v_or_w(v, 75, -3.0, 2.5); //lat: 15   
     //southern Hadley cell
     init_v_or_w(v, 120, 0.0, 0.5); //lat: -30
-    init_v_or_w(v, 105, -1.0, 2.5); //lat: -15 
+//    init_v_or_w(v, 105, -1.0, 2.5); //lat: -15 
+    init_v_or_w(v, 105, -3.0, 2.5); //lat: -15 
 
 //initialise w, tropopause, surface
     //equator
-    init_v_or_w(w, 90, 5.0, -8.0); //lat: 0
+//    init_v_or_w(w, 90, 5.0, -8.0); //lat: 0
+    init_v_or_w(w, 90, 5.0, -5.0); //lat: 0
     
 //polar cells
     //northern polar cell
@@ -85,9 +87,11 @@ void cAtmosphereModel::init_velocities(){
     init_v_or_w(w, 120, 27.5, 1.0); //lat: -30
 
     //northern Hadley cell max velocity at 45
-    init_v_or_w(w, 45, 50.0, 12.5); //lat: 45
+//    init_v_or_w(w, 45, 50.0, 12.5); //lat: 45
+    init_v_or_w(w, 45, 35.0, 6.0); //lat: 45
     //southern Hadley cell max velocity at 135
-    init_v_or_w(w, 135, 50.0, 12.5); //lat: 135
+//    init_v_or_w(w, 135, 50.0, 12.5); //lat: 135
+    init_v_or_w(w, 135, 35.0, 6.0); //lat: 135
 
     // forming diagonals 
     //northen hemisphere
@@ -153,7 +157,8 @@ void cAtmosphereModel::init_velocities(){
                 if (is_land (h, i, j, k))     
                     u.x[i][j][k] = v.x[i][j][k] = w.x[i][j][k] = 0.;
                 else{
-                    u.x[i][j][k] = u.x[i][j][k]/u_0;
+//                    u.x[i][j][k] = u.x[i][j][k]/u_0;
+                    u.x[i][j][k] = 0.0;
                     v.x[i][j][k] = v.x[i][j][k]/u_0;
                     w.x[i][j][k] = w.x[i][j][k]/u_0;
                 }

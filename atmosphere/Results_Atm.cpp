@@ -18,6 +18,25 @@ using namespace std;
 using namespace AtomUtils;
 
 void cAtmosphereModel::print_min_max_atm(){
+    for(int j = 0; j < jm; j++){
+        for(int k = 0; k < km; k++){
+            for(int i = 0; i < im; i++){
+                aux_u.x[i][j][k] = (r_humid.x[i][j][k] * cp_l 
+                    * t.x[i][j][k] * t_0 
+                    + 0.5 * r_humid.x[i][j][k] 
+                    * pow(sqrt((u.x[i][j][k] * u.x[i][j][k] 
+                              + v.x[i][j][k] * v.x[i][j][k] 
+                              + w.x[i][j][k] * w.x[i][j][k]) 
+                              * u_0 * u_0/3.0), 2.0)) * 1.0e-2;
+                aux_v.x[i][j][k] = (0.5 * r_humid.x[i][j][k] 
+                    * pow(sqrt((u.x[i][j][k] * u.x[i][j][k] 
+                              + v.x[i][j][k] * v.x[i][j][k] 
+                              + w.x[i][j][k] * w.x[i][j][k]) 
+                              * u_0 * u_0/3.0), 2.0)) * 1.0e-2;
+                }
+            }
+        }
+
     cout << endl << " flow properties: " << endl << endl;
     searchMinMax_3D(" max temperature ", " min temperature ", 
         " deg", t, 273.15, [](double i)->double{return i - 273.15;}, true);
@@ -27,14 +46,20 @@ void cAtmosphereModel::print_min_max_atm(){
         "m/s", v, u_0);
     searchMinMax_3D(" max w-component ", " min w-component ", 
         "m/s", w, u_0);
-    searchMinMax_3D(" max pressure dynamic ", " min pressure dynamic ", 
-        "hPa", p_dyn, r_air * u_0 * u_0 * 1e-2);
     searchMinMax_3D(" max pressure static ", " min pressure static ", 
-        "hPa", p_stat, 1.0);
+        "hPa", p_stat, p_0);
+    searchMinMax_3D(" max pressure dynamic ", " min pressure dynamic ", 
+        "hPa", aux_v, 1.0);
+    searchMinMax_3D(" max pressure total ", " min pressure total ", 
+        "hPa", aux_u, 1.0);
+    searchMinMax_3D(" max pressure hydro ", " min pressure hydro ", 
+        "hPa", p_hydro, 1.0);
     searchMinMax_3D(" max density dry air ", " min density dry air ", 
         "kg/m3", r_dry, 1.0);
     searchMinMax_3D(" max density wet air ", " min density wet air ", 
         "kg/m3", r_humid, 1.0);
+    searchMinMax_3D(" max stream function ", " min stream function ", 
+        "kg/s", stream, 1.0e-10);
     cout << endl << " energies: " << endl << endl;
     searchMinMax_3D(" max radiation ",  " min radiation ", 
         "W/m2", radiation, 1.0);
@@ -49,10 +74,25 @@ void cAtmosphereModel::print_min_max_atm(){
         "g/kg", cloud, 1000.0);
     searchMinMax_3D(" max cloud ice ", " min cloud ice ", 
         "g/kg", ice, 1000.0);
+    searchMinMax_3D(" max cloud graupel ", " min cloud graupel ", 
+        "g/kg", gr, 1000.0);
     cout << endl << " precipitation: " << endl << endl;
-    searchMinMax_3D(" max rain ", " min rain ", "mm/d", P_rain, 8.64e4);
-    searchMinMax_3D(" max snow ", " min snow ", "mm/d", P_snow, 8.64e4);
-    searchMinMax_3D(" max conv ", " min conv ", "mm/d", P_conv, 8.64e4);
+    searchMinMax_3D(" max precipitation rain ", " min precipitation rain ", "mm/d", P_rain, 8.64e4);
+    searchMinMax_3D(" max precipitation snow ", " min precipitation snow ", "mm/d", P_snow, 8.64e4);
+    searchMinMax_3D(" max precipitation graup ", " min precipitation graup ", "mm/d", P_graupel, 8.64e4);
+    searchMinMax_3D(" max precipitation midl ", " min precipitation midl ", "mm/d", P_conv_midl, 8.64e4);
+    searchMinMax_3D(" max precipitation shal ", " min precipitation shal ", "mm/d", P_conv_shall, 8.64e4);
+
+    cout << endl << " two-category-ice-scheme: " << endl;
+    cout << endl << " --- parameterization: " << endl << endl;
+    searchMinMax_3D(" max S_v ", " min S_v ", "kg/kgs", S_v, 1000.0);
+    searchMinMax_3D(" max S_c ", " min S_c ", "kg/kgs", S_c, 1000.0);
+    searchMinMax_3D(" max S_i ", " min S_i ", "kg/kgs", S_i, 1000.0);
+    searchMinMax_3D(" max S_g ", " min S_g ", "kg/kgs", S_g, 1000.0);
+    searchMinMax_3D(" max S_r ", " min S_r ", "kg/kgs", S_r, 1000.0);
+    searchMinMax_3D(" max S_s ", " min S_s ", "kg/kgs", S_s, 1000.0);
+    searchMinMax_3D(" max S_c_c ", " min S_c_c ", "kg/kgs", S_c_c, 1000.0);
+
     cout << endl << " moist convection: " << endl;
     cout << endl << " --- up/downdraft: " << endl << endl;
     searchMinMax_3D(" max E_u ", " min E_u ", "kg/m3s", E_u, 1.0);
@@ -98,11 +138,11 @@ void cAtmosphereModel::print_min_max_atm(){
 
     cout << endl << " forces per unit volume: " << endl << endl;
     searchMinMax_3D(" max pressure force ", " min pressure force ", 
-        "N", PressureGradientForce, 1.0);
+        "N/m3", PressureGradientForce, 1.0);
     searchMinMax_3D(" max buoyancy force ", " min buoyancy force ", 
-        "N", BuoyancyForce, 1.0);
+        "N/m3", BuoyancyForce, 1.0);
     searchMinMax_3D(" max Coriolis force ", " min Coriolis force ", 
-        "N", CoriolisForce, 1.0);
+        "N/m3", CoriolisForce, 1.0);
 
     cout << endl << " printout of maximum and minimum values of properties at their locations: latitude, longitude" 
         << endl <<
@@ -112,7 +152,7 @@ void cAtmosphereModel::print_min_max_atm(){
     searchMinMax_2D(" max co2_total ", " min co2_total ", 
          " ppm ", co2_total, co2_0);
     cout << endl << " precipitation: " << endl << endl;
-    searchMinMax_2D(" max precipitation ", " min precipitation ", 
+    searchMinMax_2D(" max precipitation total ", " min precipitation total ", 
         "mm/d", Precipitation, 8.64e4);
     searchMinMax_2D(" max precipitable NASA ", " min precipitable NASA ", 
         "mm/d", precipitation_NASA, 1.0);
@@ -196,10 +236,10 @@ void cAtmosphereModel::run_data_atm(){
         for(int j = 0; j < jm; j++){
             // only on the sea surface
             if((is_air(h, 0, j, k))){
-                p_stat.x[0][j][k] = (r_air * R_Air 
+                p_hydro.x[0][j][k] = (r_air * R_Air 
                     * t.x[0][j][k] * t_0) * 0.01;  // given in hPa
                 double t_Celsius = t.x[0][j][k] * t_0 - t_0;
-                double e = c.x[0][j][k] * p_stat.x[0][j][k]/ep;  // water vapour pressure in Pa
+                double e = c.x[0][j][k] * p_hydro.x[0][j][k]/ep;  // water vapour pressure in Pa
                 double t_denom = t_Celsius + 234.175;
                 double E = hp * exp(17.0809 * t_Celsius/t_denom);  // saturation vapour pressure in the water phase for t > 0°C in hPa
                 double sat_deficit = E - e;  // saturation deficit in hPa/K
@@ -238,7 +278,7 @@ void cAtmosphereModel::run_data_atm(){
                 if((is_land(h, i, j, k))
                     &&(is_air(h, i+1, j, k))){
                     double t_Celsius = t.x[i][j][k] * t_0 - t_0;
-                    double e = c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in hPa
+                    double e = c.x[i][j][k] * p_hydro.x[i][j][k]/ep;  // water vapour pressure in hPa
                     double t_denom = t_Celsius + 234.175;
                     double E = hp * exp(17.0809 * t_Celsius/t_denom);
                     double sat_deficit = E - e;  // saturation deficit in hPa
@@ -268,11 +308,25 @@ void cAtmosphereModel::run_data_atm(){
             }
         }
     }
-    double coriolis = 1.0;
-    double coeff_Coriolis = r_air * u_0; // coefficient for Coriolis term = 9.6328
-    double coeff_buoy = r_air * (u_0 * u_0)/L_atm; // coefficient for bouancy term = 0.2871
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
+            BuoyancyForce.x[0][j][k] = 
+                BuoyancyForce.x[3][j][k] 
+                - 3.0 * BuoyancyForce.x[2][j][k] 
+                + 3.0 * BuoyancyForce.x[1][j][k];  // extrapolation
+            CoriolisForce.x[0][j][k] = 
+                CoriolisForce.x[3][j][k] 
+                - 3.0 * CoriolisForce.x[2][j][k] 
+                + 3.0 * CoriolisForce.x[1][j][k];  // extrapolation
+            PressureGradientForce.x[0][j][k] = 
+                PressureGradientForce.x[3][j][k] 
+                - 3.0 * PressureGradientForce.x[2][j][k] 
+                + 3.0 * PressureGradientForce.x[1][j][k];  // extrapolation
+            if(is_land(h, 0, j, k)){
+                BuoyancyForce.x[0][j][k] = 0.0;
+                PressureGradientForce.x[0][j][k] = 0.0;
+                CoriolisForce.x[0][j][k] = 0.0;
+            }
             BuoyancyForce.x[im-1][j][k] = 
                 BuoyancyForce.x[im-4][j][k] 
                 - 3.0 * BuoyancyForce.x[im-3][j][k] 
@@ -285,30 +339,6 @@ void cAtmosphereModel::run_data_atm(){
                 PressureGradientForce.x[im-4][j][k] 
                 - 3.0 * PressureGradientForce.x[im-3][j][k] 
                 + 3.0 * PressureGradientForce.x[im-2][j][k];  // extrapolation
-
-            double dpdr = p_dyn.x[0][j][k] = p_dyn.x[3][j][k] 
-                - 3. * p_dyn.x[2][j][k] + 3. * p_dyn.x[1][j][k];  // extrapolation
-            double sinthe = sin(the.z[j]);
-            double costhe = cos(the.z[j]);
-            double coriolis_rad = coriolis * 2.0 * omega
-                * costhe * w.x[0][j][k];
-            double coriolis_the = - coriolis * 2.0 * omega
-                * sinthe * w.x[0][j][k];
-            double coriolis_phi = coriolis * 2.0 * omega
-                * (sinthe * v.x[0][j][k] 
-                - costhe * u.x[0][j][k]);
-            CoriolisForce.x[0][j][k] = coeff_Coriolis 
-                * sqrt((pow (coriolis_rad,2) 
-                + pow (coriolis_the,2) 
-                + pow (coriolis_phi,2))/3.0);
-            BuoyancyForce.x[0][j][k] = buoyancy 
-                * r_air * (t.x[0][j][k] - 1.0) * g;
-            PressureGradientForce.x[0][j][k] = - coeff_buoy * dpdr;
-            if(is_land(h, 0, j, k)){
-                BuoyancyForce.x[0][j][k] = 0.0;
-                PressureGradientForce.x[0][j][k] = 0.0;
-                CoriolisForce.x[0][j][k] = 0.0;
-            }
         }
     }
     for(int k = 0; k < km; k++){
@@ -386,7 +416,7 @@ void cAtmosphereModel::run_data_atm(){
         for(int k = 0; k < km; k++){
             co2_total.y[j][k] = co2.x[0][j][k];
             for(int i = 0; i < im-1; i++){
-                double e = 100.0 * c.x[i][j][k] * p_stat.x[i][j][k]/ep;  // water vapour pressure in Pa
+                double e = 100.0 * c.x[i][j][k] * p_hydro.x[i][j][k]/ep;  // water vapour pressure in Pa
                 double a = e/(R_WaterVapour * t.x[i][j][k] * t_0);  // absolute humidity in kg/m³
                 double step = get_layer_height(i+1) - get_layer_height(i);
                 precipitable_water.y[j][k] +=  a * step;
@@ -407,9 +437,10 @@ void cAtmosphereModel::run_data_atm(){
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] 
-                + P_snow.x[0][j][k] + P_conv.x[0][j][k]);
+                + P_snow.x[0][j][k] + P_conv_midl.x[0][j][k] 
+                + P_conv_shall.x[0][j][k]);
             // 60 s * 60 m * 24 h = 86400 s == 1 d
-            // Precipitation, P_conv, P_rain and P_snow in kg/(m²*s) = mm/s
+            // Precipitation, P_conv_midl, P_rain and P_snow in kg/(m²*s) = mm/s
             // Precipitation in 86400 * kg/(m²*d) = 86400 mm/d
             // kg/(m² * s) == mm/s(Kraus, p. 94)
         }

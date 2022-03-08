@@ -38,7 +38,9 @@ public:
     }
 
     static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
-    static const double the0, phi0, r0;
+    static const double the0, phi0, r0, residuum_ref_hyd;
+
+    double residuum_old, residuum_loop;
 
     int Ma;
 
@@ -110,7 +112,7 @@ private:
 
     const int c43 = 4.0/3.0, c13 = 1.0/3.0;
 
-    static const int im = 41, jm = 181, km = 361, nm = 200;
+    static const int im = 41, jm = 181, km = 361, nm = 500;
 
     double t_paleo_total = 0.0;
     double t_pole_total = 0.0;
@@ -122,6 +124,8 @@ private:
     std::map<float,float> m_global_temperature_curve;
     std::map<float,float> m_equat_temperature_curve;
     std::map<float,float> m_pole_temperature_curve;
+
+    double find_residuum_hyd();
 
     void SetDefaultConfig();
     void reset_arrays();
@@ -223,8 +227,8 @@ private:
     Array wn; // w-velocity component in phi-direction new
     Array cn; // water vapour new
 
-    Array p_dyn; // dynamic pressure
-    Array p_stat; // static pressure
+    Array p_stat; // dynamic pressure
+    Array p_hydro; // static pressure
 
     Array rhs_t; // auxilliar field RHS temperature
     Array rhs_u; // auxilliar field RHS u-velocity component

@@ -59,6 +59,8 @@ const double cAtmosphereModel::phi0 = 0.;             // zero meridian in Greenw
 const double cAtmosphereModel::r0 = 1.0; // non-dimensional
 //const double cAtmosphereModel::r0 = 0.0; // non-dimensional
 
+const double cAtmosphereModel::residuum_ref_atm = 1.0e-2;     // criterium to finish global iterations
+
 cAtmosphereModel::cAtmosphereModel():
     i_topography(std::vector<std::vector<int> >(jm, std::vector<int>(km, 0))),
     has_printed_welcome_msg(false){
@@ -166,11 +168,14 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 
     init_dynamic_pressure();
 
-    BC_SolidGround();
-
     fft_gaussian_filter_3d(u,1);
     fft_gaussian_filter_3d(v,1);
     fft_gaussian_filter_3d(w,1);
+
+    BC_SolidGround();
+
+//    goto Printout;
+
 
     init_temperature(Ma);
 
@@ -184,7 +189,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 
 //    fft_gaussian_filter_3d(t, 3, direction_k);
     fft_gaussian_filter_3d(t,4);
-    fft_gaussian_filter_3d(p_stat,4);
+    fft_gaussian_filter_3d(p_hydro,4);
     fft_gaussian_filter_3d(r_dry,4);
 
     init_water_vapour(); // initialisation of water vapour based on the temperature profile
@@ -198,8 +203,23 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     fft_gaussian_filter_3d(ice,1);
 
     RadiationMultiLayer(); // incoming short wave and outgoing long wave radiation in dependence on atmosphere's emissivity ==> temperature 
-    TwoCategoryIceScheme(); // development of rain and snow fall
-    MoistConvection(); // precipitation due to local moist convection by buoyancy effects
+
+    switch(CategoryIceScheme){
+        case 0: ZeroCategoryIceScheme(); // development of rain and snow fall, water vapour and cloud water
+                break;
+        case 1: OneCategoryIceScheme(); // development of rain and snow fall, water vapour and cloud water
+                break;
+        case 2: TwoCategoryIceScheme(); // development of rain and snow fall, water vapour, cloud water and cloud ice
+                break;
+        case 3: ThreeCategoryIceScheme(); // development of rain and snow fall, water vapour, cloud water, cloud ice and graupel
+                break;
+    }
+
+    MoistConvectionMidL(); // precipitation due to local mid-level moist convection by buoyancy effects
+    MoistConvectionShall(); // precipitation due to local shallow moist convection by buoyancy effects
+
+//    goto Printout;
+
     StandAtm_DewPoint_HumidRel(); // International Standard Atmospher temperature profile, dew point temperature, relative humidity profile
     WaterVapourEvaporation(); // correction of surface water vapour by evaporation 
     MassStreamfunction(); // mass stream function
@@ -209,6 +229,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 
     if(iter_cnt_3d == 0){
         print_loop_3D_headings();
+        solveRungeKutta_3D_Atmosphere(); 
         print_min_max_atm(); // printing min/max values of variables
         run_data_atm(); // printing final results
         write_file(bathymetry_name, output_path, false); // printing files for ParaView, AtmosphereDataTransfer and AtmospherePlotData
@@ -219,6 +240,13 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     cout << endl << endl;
     run_3D_loop(); // iterational 3D loop to solve variables in 4-step Runge-Kutta time scheme
     cout << endl << endl;
+
+/*
+    Printout:
+    run_data_atm(); 
+    print_min_max_atm();
+    write_file(bathymetry_name, output_path, true);
+*/
 
     iter_cnt_3d++;
     save_data();    
@@ -273,6 +301,11 @@ void cAtmosphereModel::run_3D_loop(){
 cout << endl << "      AGCM: run_3D_loop atm ..........................." << endl;
     iter_cnt = 1;
     iter_cnt_3d = 0;
+    double residuum_loop = 0.0;
+    if(iter_cnt_3d == 0){
+        residuum_old = 1.0;
+        residuum_loop = 1.0;
+    }
     if(debug){
         save_data();
     }
@@ -285,18 +318,41 @@ cout << endl << "      AGCM: run_3D_loop atm ..........................." << end
             BC_SolidGround();
             if(velocity_iter % 2 == 0){
                 computePressure_3D();
+                residuum_loop = find_residuum_atm();
+                if(fabs(residuum_loop/residuum_old - 1.0) <= eps_residuum){
+                    cout << endl << "      AGCM: write_file in run_3D_loop atm, termination due to convergence .... relative error less than eps_residuum ..................." << endl;
+                    cout << endl << "      residuum_loop = " << residuum_loop
+                                 << "      residuum_old = " << residuum_old
+                                 << "      eps_residuum = " << eps_residuum
+                                 << "      absolute error = " 
+                                 << fabs(residuum_old - residuum_loop)
+                                 << "      relative error = " 
+                                 << fabs(residuum_loop/residuum_old - 1.0) << endl;
+                    write_file(bathymetry_name, output_path, false);
+                    goto endloop;
+                }else  cout << "      AGCM: write_file in find_residuum_atm, relative error is too high ......................." << endl << endl;
+                if(iter_cnt > nm){
+                    cout << "       nm = " << nm 
+                        << "     .....     maximum number of iterations   nm   reached!" 
+                        << endl;
+                    goto endloop;
+                }
             }
+/*
             if(velocity_iter % 4 == 0){
 //                SaturationAdjustment();
                 RadiationMultiLayer(); 
                 PressureDensity();
                 WaterVapourEvaporation();
                 TwoCategoryIceScheme(); 
-                MoistConvection();
+                MoistConvectionShall();
+                MoistConvectionMidL();
                 StandAtm_DewPoint_HumidRel();
                 LatentSensibleHeat(); 
             }
+*/
             solveRungeKutta_3D_Atmosphere();
+            residuum_old = residuum_loop;
             ValueLimitationAtm();
             store_intermediate_data_3D(1.0);
             print_min_max_atm();
@@ -309,13 +365,8 @@ cout << endl << "      AGCM: run_3D_loop atm ..........................." << end
             cout << endl << "      AGCM: write_file in run_3D_loop atm ......................." << endl;
             write_file(bathymetry_name, output_path, false);
         }
-        if(iter_cnt > nm){
-            cout << "       nm = " << nm 
-                << "     .....     maximum number of iterations   nm   reached!" 
-                << endl;
-            break;
-        }
     } // end of pressure loop
+    endloop:
     cout << endl << "      AGCM: run_3D_loop atm ended ..........................." << endl;
     return;
 }
@@ -406,6 +457,7 @@ void cAtmosphereModel::reset_arrays(){
     w.initArray(im, jm, km, 0.0); // w-component velocity component in phi-direction
     c.initArray(im, jm, km, 0.0); // water vapour
     cloud.initArray(im, jm, km, 0.0); // cloud water
+    gr.initArray(im, jm, km, 0.0); // cloud graupel
     ice.initArray(im, jm, km, 0.0); // cloud ice
     cloudiness.initArray(im, jm, km, 0.0); // cloudiness, N in literature
     co2.initArray(im, jm, km, 1.0); // CO2
@@ -417,10 +469,11 @@ void cAtmosphereModel::reset_arrays(){
     cn.initArray(im, jm, km, 1.0); // water vapour new
     cloudn.initArray(im, jm, km, 0.0); // cloud water new
     icen.initArray(im, jm, km, 0.0); // cloud ice new
+    grn.initArray(im, jm, km, 0.0); // cloud graupel new
     co2n.initArray(im, jm, km, 1.0); // CO2 new
 
-    p_dyn.initArray(im, jm, km, 0.0); // dynamic pressure
-    p_stat.initArray(im, jm, km, 1.0); // static pressure
+    p_stat.initArray(im, jm, km, 0.0); // dynamic pressure
+    p_hydro.initArray(im, jm, km, 1.0); // static pressure
 
     u_stream.initArray(im, jm, km, 0.0); // u-velocity by mass stream function
     stream.initArray(im, jm, km, 0.0); // mass streamfunction
@@ -432,6 +485,7 @@ void cAtmosphereModel::reset_arrays(){
     rhs_c.initArray(im, jm, km, 0.0); // auxilliar field RHS water vapour
     rhs_cloud.initArray(im, jm, km, 0.0); // auxilliar field RHS cloud water
     rhs_ice.initArray(im, jm, km, 0.0); // auxilliar field RHS cloud ice
+    rhs_g.initArray(im, jm, km, 0.0); // auxilliar field RHS cloud graupel
     rhs_co2.initArray(im, jm, km, 0.0); // auxilliar field RHS CO2
 
     aux_u.initArray(im, jm, km, 0.0); // auxilliar field u-velocity component
@@ -448,15 +502,18 @@ void cAtmosphereModel::reset_arrays(){
     radiation.initArray(im, jm, km, 0.0); // radiation
     P_rain.initArray(im, jm, km, 0.0); // rain precipitation mass rate
     P_snow.initArray(im, jm, km, 0.0); // snow precipitation mass rate
-    P_conv.initArray(im, jm, km, 0.0); // rain formation by cloud convection
+    P_graupel.initArray(im, jm, km, 0.0); // graupel precipitation mass rate
+    P_conv_midl.initArray(im, jm, km, 0.0); // rain formation by mid-level cloud convection
+    P_conv_shall.initArray(im, jm, km, 0.0); // rain formation by shallow cloud convection
     TempStand.initArray(im, jm, km, 0.0); // International Standard Atmosphere (ISA)
     TempDewPoint.initArray(im, jm, km, 0.0); // Dew Point Temperature
     HumidityRel.initArray(im, jm, km, 100.0); // relative humidity
-    S_v.initArray(im, jm, km, 0.0); // water vapour mass rate due to category two ice scheme
-    S_c.initArray(im, jm, km, 0.0); // cloud water mass rate due to category two ice scheme
-    S_i.initArray(im, jm, km, 0.0); // cloud ice mass rate due to category two ice scheme
-    S_r.initArray(im, jm, km, 0.0); // rain mass rate due to category two ice scheme
-    S_s.initArray(im, jm, km, 0.0); // snow mass rate due to category two ice scheme
+    S_v.initArray(im, jm, km, 0.0); // water vapour mass rate
+    S_c.initArray(im, jm, km, 0.0); // cloud water mass rate
+    S_i.initArray(im, jm, km, 0.0); // cloud ice mass rate
+    S_r.initArray(im, jm, km, 0.0); // rain mass rate
+    S_s.initArray(im, jm, km, 0.0); // snow mass rate
+    S_g.initArray(im, jm, km, 0.0); // graupel mass rate
     S_c_c.initArray(im, jm, km, 0.0); // cloud water mass rate due to condensation and evaporation in the saturation adjustment technique
     M_u.initArray(im, jm, km, 0.0); // moist convection within the updraft
     M_d.initArray(im, jm, km, 0.0); // moist convection within the downdraft
@@ -651,10 +708,10 @@ void cAtmosphereModel::init_water_vapour(){
                 E = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the water phase at t < 0°C in hPa
             if(is_air(h, 0, j, k))
                 c.x[i_mount][j][k] = c_ocean * ep * E
-                    /(p_stat.x[i_mount][j][k] - E); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
+                    /(p_hydro.x[i_mount][j][k] - E); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
             if(is_land(h, 0, j, k))
                 c.x[i_mount][j][k] = c_land * ep * E
-                    /(p_stat.x[i_mount][j][k] - E); // relativ water vapour contents on land surface reduced by factor in kg/kg
+                    /(p_hydro.x[i_mount][j][k] - E); // relativ water vapour contents on land surface reduced by factor in kg/kg
             for(int i = i_mount; i < im; i++){
 /*
                 double d_i = (double)i;
@@ -674,10 +731,10 @@ void cAtmosphereModel::init_water_vapour(){
                     E = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the water phase at t < 0°C in hPa
                 if(is_air(h, 0, j, k))
                     c.x[i][j][k] = c_ocean_red[i] * ep * E
-                        /(p_stat.x[i][j][k] - E); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
+                        /(p_hydro.x[i][j][k] - E); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
                 if(is_land(h, 0, j, k))
                     c.x[i][j][k] = c_land_red[i] * ep * E
-                        /(p_stat.x[i][j][k] - E); // relativ water vapour contents on land surface reduced by factor in kg/kg
+                        /(p_hydro.x[i][j][k] - E); // relativ water vapour contents on land surface reduced by factor in kg/kg
 /*
                 cout.precision(5);
                 cout.setf(ios::fixed);
@@ -685,7 +742,7 @@ void cAtmosphereModel::init_water_vapour(){
                     << "  WaterVapour" << endl 
                     << "  i = " << i << "  j = " << j << "  k = " << k << endl
                     << "  i_mount = " << i_mount << endl
-                    << "  p_stat = " << p_stat.x[i][j][k]
+                    << "  p_hydro = " << p_hydro.x[i][j][k]
                     << "  c = " << c.x[i][j][k] * 1e3 << endl
                     << "  c_land_red = " << c_land_red[i] 
                     << "  c_ocean_red = " << c_ocean_red[i]  << endl;
@@ -701,11 +758,9 @@ void cAtmosphereModel::init_water_vapour(){
     double h_T = 0.0;
     double cloud_loc_equator = 22.0;
     double cloud_loc_pole = 18.0;
-//    double alfa_s = 40.0;  // controles the amount of cloud water and cloud ice
-//    double alfa_s = 100.0;  // controles the amount of cloud water and cloud ice
-//     double alfa_s = 5.0;  // controles the amount of cloud water and cloud ice
-//     double alfa_s = 10.0;  // controles the amount of cloud water and cloud ice
+//     double alfa_s = 50.0;  // controles the amount of cloud water and cloud ice
      double alfa_s = 15.0;  // controles the amount of cloud water and cloud ice
+//     double alfa_s = 1.0;  // controles the amount of cloud water and cloud ice
     cloud_loc = std::vector<double>(jm, cloud_loc_pole); // radial location of cloud water maximum
     double cloud_loc_eff = cloud_loc_pole - cloud_loc_equator;  // coefficient for the zonal parabolic cloudwater extention
     double d_j_half = (double)(jm-1)/2.0;
@@ -717,21 +772,15 @@ void cAtmosphereModel::init_water_vapour(){
     for(int j = 0; j < jm; j++){
         double d_i_max_cloud_loc = cloud_loc[j];
         for(int k = 0; k < km; k++){
-//            int i_trop = get_tropopause_layer(j);
             int i_trop = im-1;
             int i_mount = i_topography[j][k];
             for(int i = i_mount; i <= i_trop; i++){
                 double d_i = (double)i;
                 x_cloud = d_i/d_i_max_cloud_loc;
                 t_u = t.x[i][j][k] * t_0;
-                if(t_u >= t_0)
-                    E = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
-                else
-                    E = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the water phase at t < 0°C in hPa
-//                if(is_air(h, i, j, k))
-                q_rain = ep * E/(p_stat.x[i][j][k] - E); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
-//                if(is_land(h, i, j, k))
-//                    q_rain = ep * E/(p_stat.x[i][j][k] - E); // relativ water vapour contents on land surface reduced by factor in kg/kg
+                if(t_u >= t_0)  E = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+                else            E = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the water phase at t < 0°C in hPa
+                q_rain = ep * E/(p_hydro.x[i][j][k] - E); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
                 double del_q_ls = c.x[i][j][k] - q_rain
                     * Humility_critical(x_cloud, 1.0, 0.8);
                 if(del_q_ls < 0.0)  del_q_ls = 0.0;
@@ -741,8 +790,9 @@ void cAtmosphereModel::init_water_vapour(){
                 if(t_u < t_0)
                     h_T = 1.0 - exp(- 0.5 * pow((t_u - t_0)/det_T_0, 2.0));
                 else  h_T = 0.0;
-                ice.x[i][j][k] = cloud.x[i][j][k] * h_T;
                 cloud.x[i][j][k] = cloud.x[i][j][k] * (1.0 - h_T);
+                ice.x[i][j][k] = cloud.x[i][j][k] * h_T;
+                gr.x[i][j][k] = cloud.x[i][j][k] * h_T;  // to be adjusted
                 if(c.x[i][j][k]/q_rain < 1.0)
                     cloudiness.x[i][j][k] = pow(c.x[i][j][k]/q_rain, 0.25)
                         * (1.0 - exp(- (100.0 * cloud.x[i][j][k]/(1.0 - h_T))
@@ -766,6 +816,7 @@ void cAtmosphereModel::init_water_vapour(){
                     << "   c = " << c.x[i][j][k] * 1e3
                     << "   cloud = " << cloud.x[i][j][k] * 1e3
                     << "   ice = " << ice.x[i][j][k] * 1e3
+                    << "   gr = " << gr.x[i][j][k] * 1e3
                     << "   cloudiness = " << cloudiness.x[i][j][k] << endl << endl;
 */
             } // end i cloud
@@ -774,30 +825,30 @@ void cAtmosphereModel::init_water_vapour(){
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             int i_mount = i_topography[j][k];
-            for(int i = i_mount; i >= 0; i--){
-                if(is_land(h, i, j, k)){
-                    c.x[i][j][k] = c.x[i_mount][j][k];
-                    cloud.x[i][j][k] = cloud.x[i_mount][j][k];
-                    ice.x[i][j][k] = ice.x[i_mount][j][k];
+                if(is_land(h, 0, j, k)){
+                    c.x[0][j][k] = c.x[i_mount][j][k];
+                    cloud.x[0][j][k] = cloud.x[i_mount][j][k];
+                    ice.x[0][j][k] = ice.x[i_mount][j][k];
+                    gr.x[0][j][k] = gr.x[i_mount][j][k];
                 }
+            for(int i = i_mount; i >= 0; i--){
                 if(t.x[i][j][k] * t_0 <= t_00){
                     c.x[i][j][k] = 0.0;
                     cloud.x[i][j][k] = 0.0;
                     ice.x[i][j][k] = 0.0;
+                    gr.x[i][j][k] = 0.0;
                 }
             }
         }
     }
-/*
     for(int i=0; i<im; i++){
         for(int j=0; j<jm; j++){
             for(int k=0; k<km; k++){
                 c.x[i][j][k] = c.x[i][j][k] // cloud water and ice added to water vapour
-                    + cloud.x[i][j][k] + ice.x[i][j][k];
+                    + cloud.x[i][j][k] + ice.x[i][j][k] + gr.x[i][j][k];
             }
         }
     }
-*/
     cout << "      AGCM: init_water_vapour ended" << endl;
     return;
 }
@@ -1053,21 +1104,21 @@ void cAtmosphereModel::init_temperature(int Ma){
                     t.x[0][j][k] = sqrt(t_u * t_u
                         + (2.0 * beta * g * height)/R_Air); // COSMO, fictional NASA-temperature or Reconstructed_Temperature projected from actual height to zero level in K
 //                     t.x[0][j][k] = t_u + 6.5 * height/1000.0; // International Standard Atmosphere (ISA), higher temperatures than COSMO
-                    p_stat.x[0][j][k] = 1e-2 * (r_air * R_Air * t.x[0][j][k]);  // reference static pressure given in hPa, by gas equation
-                    r_dry.x[0][j][k] = 1e2 * p_stat.x[0][j][k]
+                    p_hydro.x[0][j][k] = 1e-2 * (r_air * R_Air * t.x[0][j][k]);  // reference static pressure given in hPa, by gas equation
+                    r_dry.x[0][j][k] = 1e2 * p_hydro.x[0][j][k]
                          /(R_Air * t.x[0][j][k]); // in kg/m3, COSMO
                     temp_reconst.y[j][k] = t.x[0][j][k]; //  in K
                 }
 //                if((use_NASA_temperature)&&(*get_current_time() > 0)){
                 if(*get_current_time() > 0){
-                    p_stat.x[0][j][k] = 1e-2 * (r_air * R_Air * t_u);  // reference static pressure given in hPa, by gas equation
-                    r_dry.x[0][j][k] = 1e2 * p_stat.x[0][j][k]
+                    p_hydro.x[0][j][k] = 1e-2 * (r_air * R_Air * t_u);  // reference static pressure given in hPa, by gas equation
+                    r_dry.x[0][j][k] = 1e2 * p_hydro.x[0][j][k]
                         /(R_Air * t_u); // in kg/m3, COSMO
                     temp_reconst.y[j][k] = t_u; //  in K
                 }
             }else{
-                p_stat.x[0][j][k] = 1e-2 * (r_air * R_Air * t_u);  // reference static pressure given in hPa, by gas equation
-                r_dry.x[0][j][k] = 1e2 * p_stat.x[0][j][k]/(R_Air * t_u); // in kg/m3, COSMO
+                p_hydro.x[0][j][k] = 1e-2 * (r_air * R_Air * t_u);  // reference static pressure given in hPa, by gas equation
+                r_dry.x[0][j][k] = 1e2 * p_hydro.x[0][j][k]/(R_Air * t_u); // in kg/m3, COSMO
                 temp_reconst.y[j][k] = t_u; //  in K
                 temp_landscape.y[j][k] = t_u - t_0; // in °C
             }
@@ -1082,9 +1133,9 @@ void cAtmosphereModel::init_temperature(int Ma){
                 << "  r_air = " << r_air
                 << "  r_dry_zero = " << r_dry.x[0][j][k] << endl
                 << "  p_0 = " << p_0 << endl
-                << "  p_stat_0_ref = " << p_stat.x[0][j][k]
-                << "  p_stat_t_u_height = " << p_stat.x[i_mount][j][k]
-                << "  p_stat_zero = " << p_stat.x[0][j][k] << endl
+                << "  p_stat_0_ref = " << p_hydro.x[0][j][k]
+                << "  p_stat_t_u_height = " << p_hydro.x[i_mount][j][k]
+                << "  p_stat_zero = " << p_hydro.x[0][j][k] << endl
                 << "  t_land = " << t_land * t_0
                 << "  t_0 = " << t_0 - t_0 << endl
                 << "  t_0_parabola = " << t_0_parabola - t_0
@@ -1102,16 +1153,16 @@ void cAtmosphereModel::init_temperature(int Ma){
                     /(R_Air * temp_reconst.y[j][k] 
                     * temp_reconst.y[j][k])); // COSMO in K
 //                t.x[i][j][k] = temp_reconst.y[j][k] - 6.5 * height/1000.0; // International Standard Atmosphere (ISA), higher temperatures than COSMO
-                p_stat.x[i][j][k] = p_stat.x[0][j][k] 
+                p_hydro.x[i][j][k] = p_hydro.x[0][j][k] 
                     * exp(- temp_reconst.y[j][k]/beta 
                     * (1.0 - sqrt(1.0 - (2.0 * beta *g * height)
                     /(R_Air * temp_reconst.y[j][k] 
                     * temp_reconst.y[j][k]))));  // reference static pressure given in hPa, by COSMO
-                r_dry.x[i][j][k] = 1e2 * p_stat.x[i][j][k]
+                r_dry.x[i][j][k] = 1e2 * p_hydro.x[i][j][k]
                     /(R_Air * t.x[i][j][k]); // in kg/m3, COSMO
                 if((i == i_mount)&&(*get_current_time() >= 0)){
                     temp_landscape.y[j][k] = t.x[i_mount][j][k] - t_0; // in °C
-                    p_stat_landscape.y[j][k] = p_stat.x[i_mount][j][k]; // in hPa
+                    p_stat_landscape.y[j][k] = p_hydro.x[i_mount][j][k]; // in hPa
                     r_dry_landscape.y[j][k] = r_dry.x[i_mount][j][k]; // in kg/m³
                 }
             } // end i
@@ -1134,7 +1185,7 @@ void cAtmosphereModel::init_temperature(int Ma){
                 if(is_land(h, 0, j, k)){
 //                    t.x[i][j][k] = t.x[i_mount][j][k];
                     r_dry.x[i][j][k] = r_dry.x[i_mount][j][k];
-                    p_stat.x[i][j][k] = p_stat.x[i_mount][j][k];
+                    p_hydro.x[i][j][k] = p_hydro.x[i_mount][j][k];
                 }
             }
         }
@@ -1151,15 +1202,13 @@ void cAtmosphereModel::init_dynamic_pressure(){
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
-//                p_dyn.x[i][j][k] = 0.5 * r_humid.x[i][j][k] 
-//                p_dyn.x[i][j][k] = p_0 - 0.5 * r_humid.x[i][j][k] 
-//                p_dyn.x[i][j][k] = p_0 - 0.5 * r_air 
-                p_dyn.x[i][j][k] = 1e-2 * 0.5 * r_air // hPa
+                p_stat.x[i][j][k] = 1e-2 * 0.5 * r_air // hPa
                     * sqrt(((u.x[i][j][k] * u.x[i][j][k]) 
                     + (v.x[i][j][k] * v.x[i][j][k]) 
                     + (w.x[i][j][k] * w.x[i][j][k]))/3.0) * u_0;
                 if(is_land(h, i, j, k))
-                    p_dyn.x[i][j][k] = 0.0;
+                    p_stat.x[i][j][k] = 0.0;
+                if(p_stat.x[i][j][k] < 0.0) p_stat.x[i][j][k] = 0.0;
             }
         }
     }
@@ -1328,7 +1377,6 @@ void cAtmosphereModel::init_co2(int Ma){
                      // reciprocal formula for the temperature increase by co2, 
                      // delta_T = emittancy_total*ln(co2)/(4*coeff_em * t³)
                      // original formula by Nasif Nahle Sabag delta T(co2)
-                     // co2_paleo taken over from Ruddiman, p 86, effect of co2 on global temperature
                 co2.x[i_mount][j][k] = exp (4. * delta_T * coeff_em 
                      * pow((t.x[i_mount][j][k] * t_0), 3)/emittancy_total)
                      + co2_paleo + co2_ocean;
@@ -1337,7 +1385,6 @@ void cAtmosphereModel::init_co2(int Ma){
                      // reciprocal formula for the temperature increase by co2, 
                      // delta_T = emittancy_total*ln(co2)/(4*coeff_em * t³)
                      // original formula by Nasif Nahle Sabag delta T(co2)
-                     // co2_paleo taken over from Ruddiman, p 86, effect of co2 on global temperature
                 co2.x[i_mount][j][k] = exp (4. * delta_T * coeff_em 
                      * pow((t.x[i_mount][j][k] * t_0), 3)/emittancy_total)
                      + co2_paleo + co2_land - co2_vegetation
@@ -1439,8 +1486,10 @@ void cAtmosphereModel::ValueLimitationAtm(){
             if(Precipitation.y[j][k] >= 25.0)  Precipitation.y[j][k] = 25.0;
             if(Precipitation.y[j][k] <= 0.0)  Precipitation.y[j][k] = 0.0;
             for(int i = 0; i < im; i++){
-                if(u.x[i][j][k] >= 0.106)  u.x[i][j][k] = 0.106;
-                if(u.x[i][j][k] <= - 0.106)  u.x[i][j][k] = - 0.106;
+//                if(u.x[i][j][k] >= 0.106)  u.x[i][j][k] = 0.106;
+//                if(u.x[i][j][k] <= - 0.106)  u.x[i][j][k] = - 0.106;
+                if(u.x[i][j][k] >= 0.5)  u.x[i][j][k] = 0.5;
+                if(u.x[i][j][k] <= - 0.5)  u.x[i][j][k] = - 0.5;
                 if(v.x[i][j][k] >= 0.5)  v.x[i][j][k] = 0.5;
                 if(v.x[i][j][k] <= - 0.5)  v.x[i][j][k] = - 0.5;
                 if(w.x[i][j][k] >= 6.25)  w.x[i][j][k] = 6.25;
@@ -1460,12 +1509,15 @@ void cAtmosphereModel::ValueLimitationAtm(){
                 }
 //                if(P_rain.x[i][j][k] >= 10.0/8.64e4)  P_rain.x[i][j][k] = 10.0/8.64e4;
 //                if(P_snow.x[i][j][k] >= 1.0/8.64e4)  P_snow.x[i][j][k] = 1.0/8.64e4;
-//                if(P_conv.x[i][j][k] >= 10.0/8.64e4)  P_conv.x[i][j][k] = 10.0/8.64e4;
+//                if(P_conv_midl.x[i][j][k] >= 10.0/8.64e4)  P_conv_midl.x[i][j][k] = 10.0/8.64e4;
 //                if(P_rain.x[i][j][k] < 0.0)  P_rain.x[i][j][k] = 0.0;
 //                if(P_snow.x[i][j][k] < 0.0)  P_snow.x[i][j][k] = 0.0;
-                if(P_conv.x[i][j][k] < 0.0)  P_conv.x[i][j][k] = 0.0;
+                if(P_conv_midl.x[i][j][k] < 0.0)  P_conv_midl.x[i][j][k] = 0.0;
+                if(P_conv_shall.x[i][j][k] < 0.0)  P_conv_shall.x[i][j][k] = 0.0;
                 if(co2.x[i][j][k] >= 5.36)  co2.x[i][j][k] = 5.36;
                 if(co2.x[i][j][k] <= 1.0)  co2.x[i][j][k] = 1.0;
+                if(is_land(h, i, j, k))  p_stat.x[i][j][k] = 0.0;
+                if(p_stat.x[i][j][k] < 0.0) p_stat.x[i][j][k] = 0.0;
             }
         }
     }
@@ -1481,17 +1533,20 @@ void cAtmosphereModel::BC_SolidGround(){
         for(int k = 0; k < km; k++){
             for(int i = 0; i < im; i++){
                 if(is_land(h, i, j, k)){
-                    u.x[i][j][k] = 0.;
-                    v.x[i][j][k] = 0.;
-                    w.x[i][j][k] = 0.;
-//                    t.x[i][j][k] = 1.;  // = 273.15 K
-//                    c.x[i][j][k] = 0.; 
-//                    cloud.x[i][j][k] = 0.;
-//                    ice.x[i][j][k] = 0.;
-//                    P_rain.x[i][j][k] = 0.;
-//                    P_snow.x[i][j][k] = 0.;
-//                    co2.x[i][j][k] = 1.;  // = 280 ppm
-                    p_dyn.x[i][j][k] = 0.;
+                    u.x[i][j][k] = 0.0;
+                    v.x[i][j][k] = 0.0;
+                    w.x[i][j][k] = 0.0;
+                    un.x[i][j][k] = 0.0;
+                    vn.x[i][j][k] = 0.0;
+                    wn.x[i][j][k] = 0.0;
+//                    t.x[i][j][k] = 1.0;  // = 273.15 K
+//                    c.x[i][j][k] = 0.0; 
+//                    cloud.x[i][j][k] = 0.0;
+//                    ice.x[i][j][k] = 0.0;
+//                    P_rain.x[i][j][k] = 0.0;
+//                    P_snow.x[i][j][k] = 0.0;
+//                    co2.x[i][j][k] = 1.0;  // = 280 ppm
+                    p_stat.x[i][j][k] = 0.0;
                 } // is_land
             } // i
         } // k
@@ -1525,6 +1580,7 @@ void cAtmosphereModel::store_intermediate_data_3D(float coeff){
                 cn.x[i][j][k] = coeff * c.x[i][j][k];
                 cloudn.x[i][j][k] = coeff * cloud.x[i][j][k];
                 icen.x[i][j][k] = coeff * ice.x[i][j][k];
+                grn.x[i][j][k] = coeff * gr.x[i][j][k];
                 co2n.x[i][j][k] = coeff * co2.x[i][j][k];
             }
         }
@@ -1832,49 +1888,39 @@ void cAtmosphereModel::IC_t_WestEastCoast(){
 */
 void cAtmosphereModel::MassStreamfunction(){
     cout << endl << "      AGCM: MassStreamfunction" << endl;
-    double r0 = 6731000.; // in m Earth radius
-    double costhe = 0.;
-    double coeff_mass = 0.;
+    double r0 = 6731000.0; // in m Earth radius
+    double sinthe = 0.0;  // sin instead of cos function due to coordinate system
+    double coeff_mass = 0.0;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            costhe = cos(the.z[j]);
-            coeff_mass = 2. * M_PI * r0 * costhe/g;
-            aux_grad_v.z[0] = p_stat.x[0][j][k];
-            aux_v.x[0][j][k] = v.x[0][j][k] * aux_grad_v.z[0];
-            for(int i = 1; i < im; i++){
-                double height = get_layer_height(i-1);
-                double step_meter = get_layer_height(i) - height;
-                double dp = r_humid.x[i][j][k] * g * step_meter;
-                if(is_land(h, i, j, k)){
-                    aux_grad_v.z[i] = 0.;
-                }else{
-                    aux_grad_v.z[i] = p_stat.x[i][j][k];
-                }
-                aux_v.x[i][j][k] = v.x[i][j][k] * trapezoidal(0, i, dp, aux_grad_v);
-                stream.x[i][j][k] = coeff_mass * aux_v.x[i][j][k];  // in (kg/s)
-//                stream.x[i][j][k] = 1e-10 * stream.x[i][j][k];  // in (kg/s)/1e10
+            sinthe = sin(the.z[j]);
+            coeff_mass = 2.0 * M_PI * r0 * sinthe;
+            stream.x[im-1][j][k] = 0.0;
+            for(int i = im-2; i >= 0; i--){
+                double dp = get_layer_height(i+1) 
+                    - get_layer_height(i);
+                stream.x[i][j][k] = stream.x[i+1][j][k] 
+                    + coeff_mass * r_humid.x[i][j][k] * v.x[i][j][k] 
+                    * u_0 * dp;
+                if(is_land(h, i, j, k))  stream.x[i][j][k] = 0.0;
 /*
                 cout.precision(8);
                 if((j == 75) &&(k == 180)) cout << "north mass streamfunction" << endl
                     << "   i = " << i << "   j = " << j << "   k = " << k  << endl
-                    << "   aux_v = " << aux_v.x[i][j][k] 
-                    << "   stream = " << stream.x[i][j][k] << endl
+                    << "   stream = " << stream.x[i][j][k] * 1.0e-10 << endl
                     << "   u = " << u.x[i][j][k] 
                     << "   v = " << v.x[i][j][k] 
                     << "   w = " << w.x[i][j][k] << endl
                     << "   costhe = " << costhe
-                    << "   step_meter = " << step_meter
                     << "   dp = " << dp
                     << "   coeff_mass = " << coeff_mass << endl;
                 if((j == 105) &&(k == 180)) cout << "south mass streamfunction" << endl
                     << "   i = " << i << "   j = " << j << "   k = " << k  << endl
-                    << "   aux_v = " << aux_v.x[i][j][k] 
-                    << "   stream = " << stream.x[i][j][k] << endl
+                    << "   stream = " << stream.x[i][j][k] * 1.0e-10 << endl
                     << "   u = " << u.x[i][j][k] 
                     << "   v = " << v.x[i][j][k] 
                     << "   w = " << w.x[i][j][k] << endl
                     << "   costhe = " << costhe
-                    << "   step_meter = " << step_meter
                     << "   dp = " << dp
                     << "   coeff_mass = " << coeff_mass << endl;
 */
@@ -1882,20 +1928,112 @@ void cAtmosphereModel::MassStreamfunction(){
         }  // end j
     }  // end k
     for(int i = 1; i < im; i++){
-//        double rm = rad.z[i];
-        double rm = get_layer_height(i);
         for(int k = 0; k < km; k++){
             for(int j = 1; j < jm-1; j++){
-                costhe = cos(the.z[j]);
-                double coeff_mass_u = - g/(2. * M_PI * r0 * r0 * costhe);
+                sinthe = sin(the.z[j]);
+                double coeff_mass_u = - g/(2.0 * M_PI * r0 * r0 * sinthe);
                 u_stream.x[i][j][k] = coeff_mass_u 
                     * (stream.x[i][j+1][k] - stream.x[i][j-1][k])
-                    /(2. * rm * dthe);
+                    /(2.0 * dthe);
+                if(is_land(h, i, j, k))  u_stream.x[i][j][k] = 0.0;
             }
         }
     }
+
     cout << "      AGCM: MassStreamfunction ended" << endl;
     return;
+}
+/*
+*
+*/
+double cAtmosphereModel::find_residuum_atm(){
+    cout << endl << "      AGCM: find_residuum_atm" << endl;
+    bool residum_found = false;
+    double residuum_atm = 0.0;
+    double maxValue = 0.0;
+    double dudr = 0.0;
+    double dvdthe = 0.0;
+    double dwdphi = 0.0;
+    int i_error = 0;
+    int j_error = 0;
+    int k_error = 0;  
+//    for(int j = 1; j < jm-1; j++){
+    for(int j = 75; j <= 75; j++){
+        double sinthe = sin(the.z[j]);
+        if(sinthe == 0.0) sinthe = 1.0e-5;
+//        for(int k = 1; k < km-1; k++){
+        for(int k = 180; k <= 180; k++){
+            for(int i = 1; i < im-3; i++){
+                double rm = rad.z[i];
+                double exp_rm = 1.0/(rm + 1.0);
+                double rmsinthe = rm * sinthe;
+                if((is_air(h, i, j, k)&&(is_air(h, i-1, j, k)))
+                    &&(is_air(h, i, j, k)&&(is_air(h, i, j-1, k))
+                    &&(is_air(h, i, j+1, k)))
+                    &&(is_air(h, i, j, k)&&(is_air(h, i, j, k-1))
+                    &&(is_air(h, i, j, k+1)))){
+                    dudr = (u.x[i+1][j][k] - u.x[i-1][j][k])/dr * exp_rm;
+                    dvdthe = (v.x[i][j+1][k] - v.x[i][j-1][k])
+                        /(2.0 * rm * dthe);
+                    dwdphi = (w.x[i][j][k+1] - w.x[i][j][k-1])
+                        /(2.0 * rmsinthe * dphi);
+                    residuum_atm = fabs(dudr + dvdthe + dwdphi);
+                    if(residuum_atm > maxValue){
+                        maxValue = residuum_atm;
+                        i_error = i;
+                        j_error = j;
+                        k_error = k;
+                    }
+/*
+                    cout.precision(8);
+                    if((j == 75) &&(k == 180)) cout << "residuum_atm" << endl
+                        << "   i = " << i << "   j = " << j << "   k = " << k  << endl
+                        << "   u = " << u.x[i][j][k] 
+                        << "   v = " << v.x[i][j][k] 
+                        << "   w = " << w.x[i][j][k] << endl
+                        << "   dudr = " << dudr
+                        << "   dvdthe = " << dvdthe
+                        << "   dwdphi = " << dwdphi << endl
+                        << "   residuum_old = " << residuum_old
+                        << "   residuum_atm = " << residuum_atm
+                        << "   maxValue = " << maxValue
+                        << "   eps_residuum = " << eps_residuum << endl
+                        << "   i_error = " << i_error << "   j_error = " << j_error << "   k_error = " << k_error  << endl
+                        << "   relative error = " 
+                        << fabs(residuum_atm/residuum_old - 1.0) << endl
+                        << "   absolute error = " 
+                        << fabs(residuum_old - maxValue) << endl << endl;
+*/
+                }  // end if loop
+            }  //  end i
+        }  // end k
+    }  // end j
+                    if((residuum_old - maxValue) > 0.0){
+                        cout << endl << "      AGCM: write_file in find_residuum_atm, absolute error declining ......................." << endl;
+                        cout << endl << "      residuum_atm = " << maxValue
+                                     << "   residuum_old = " << residuum_old
+                                     << "   eps_residuum = " << eps_residuum << endl
+                                     << "   i_error = " << i_error << "   j_error = " << j_error << "   k_error = " << k_error  << endl
+                                     << "   relative error = " 
+                                     << fabs(residuum_atm/residuum_old - 1.0) << endl
+                                     << "   absolute error = " 
+                                     << fabs(residuum_old - maxValue) << endl;
+                        residum_found = true;
+                    }
+    if(residum_found == false){  
+        cout << "      AGCM: write_file in find_residuum_atm, absolute error is too high ......................." << endl;
+        cout << endl << "      residuum_atm = " << maxValue
+             << "      residuum_old = " << residuum_old
+             << "      eps_residuum = " << eps_residuum << endl
+             << "      i_error = " << i_error 
+             << "      j_error = " << j_error 
+             << "      k_error = " << k_error  << endl
+             << "      relative error = " 
+             << fabs(maxValue/residuum_old - 1.0) << endl
+             << "      absolute error = " 
+             << fabs(residuum_old - maxValue) << endl;
+    }
+    return maxValue;
 }
 
 

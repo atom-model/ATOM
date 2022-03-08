@@ -82,7 +82,7 @@ cout << endl << "      AGCM: AtmosphereDataTransfer" << endl;
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             Transfer_File << v.x[0][j][k] << " " << w.x[0][j][k] << " " <<   //v and w non-dimensional, t non-dim,
-                t.x[0][j][k] << " " << p_dyn.x[0][j][k] << " " << Evaporation_Dalton.y[j][k] << 
+                t.x[0][j][k] << " " << p_stat.x[0][j][k] << " " << Evaporation_Dalton.y[j][k] << 
                 " " << Precipitation.y[j][k] << endl;
         }
     }

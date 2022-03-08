@@ -14,10 +14,10 @@
 using namespace std;
 
 void cAtmosphereModel::solveRungeKutta_3D_Atmosphere(){
-    double kt1, ku1, kv1, kw1, kc1, kcloud1, kice1, kco1,
-           kt2, ku2, kv2, kw2, kc2, kcloud2, kice2, kco2, 
-           kt3, ku3, kv3, kw3, kc3, kcloud3, kice3, kco3, 
-           kt4, ku4, kv4, kw4, kc4, kcloud4, kice4, kco4;
+    double kt1, ku1, kv1, kw1, kc1, kcloud1, kice1, kg1, kco1,
+           kt2, ku2, kv2, kw2, kc2, kcloud2, kice2, kg2, kco2, 
+           kt3, ku3, kv3, kw3, kc3, kcloud3, kice3, kg3, kco3, 
+           kt4, ku4, kv4, kw4, kc4, kcloud4, kice4, kg4, kco4;
 cout << endl << " .................... solveRungeKutta_3D_Atmosphere begin" << endl;
     for(int i = 1; i < im-1; i++){
         for(int j = 1; j < jm-1; j++){
@@ -30,6 +30,7 @@ cout << endl << " .................... solveRungeKutta_3D_Atmosphere begin" << e
                 kc1 = rhs_c.x[i][j][k];
                 kcloud1 = rhs_cloud.x[i][j][k];
                 kice1 = rhs_ice.x[i][j][k];
+                kg1 = rhs_g.x[i][j][k];
                 kco1 = rhs_co2.x[i][j][k];
                 t.x[i][j][k] = tn.x[i][j][k] + kt1 * 0.5 * dt;
                 u.x[i][j][k] = un.x[i][j][k] + ku1 * 0.5 * dt;
@@ -38,6 +39,7 @@ cout << endl << " .................... solveRungeKutta_3D_Atmosphere begin" << e
                 c.x[i][j][k] = cn.x[i][j][k] + kc1 * 0.5 * dt;
                 cloud.x[i][j][k] = cloudn.x[i][j][k] + kcloud1 * 0.5 * dt;
                 ice.x[i][j][k] = icen.x[i][j][k] + kice1 * 0.5 * dt;
+                gr.x[i][j][k] = grn.x[i][j][k] + kg1 * 0.5 * dt;
                 co2.x[i][j][k] = co2n.x[i][j][k] + kco1 * 0.5 * dt;
                 RK_RHS_3D_Atmosphere(i, j, k);
                 kt2 = rhs_t.x[i][j][k];
@@ -47,6 +49,7 @@ cout << endl << " .................... solveRungeKutta_3D_Atmosphere begin" << e
                 kc2 = rhs_c.x[i][j][k];
                 kcloud2 = rhs_cloud.x[i][j][k];
                 kice2 = rhs_ice.x[i][j][k];
+                kg2 = rhs_g.x[i][j][k];
                 kco2 = rhs_co2.x[i][j][k];
                 t.x[i][j][k] = tn.x[i][j][k] + kt2 * 0.5 * dt;
                 u.x[i][j][k] = un.x[i][j][k] + ku2 * 0.5 * dt;
@@ -55,6 +58,7 @@ cout << endl << " .................... solveRungeKutta_3D_Atmosphere begin" << e
                 c.x[i][j][k] = cn.x[i][j][k] + kc2 * 0.5 * dt;
                 cloud.x[i][j][k] = cloudn.x[i][j][k] + kcloud2 * 0.5 * dt;
                 ice.x[i][j][k] = icen.x[i][j][k] + kice2 * 0.5 * dt;
+                gr.x[i][j][k] = grn.x[i][j][k] + kg2 * 0.5 * dt;
                 co2.x[i][j][k] = co2n.x[i][j][k] + kco2 * 0.5 * dt;
                 RK_RHS_3D_Atmosphere(i, j, k);
                 kt3 = rhs_t.x[i][j][k];
@@ -64,6 +68,7 @@ cout << endl << " .................... solveRungeKutta_3D_Atmosphere begin" << e
                 kc3 = rhs_c.x[i][j][k];
                 kcloud3 = rhs_cloud.x[i][j][k];
                 kice3 = rhs_ice.x[i][j][k];
+                kg3 = rhs_g.x[i][j][k];
                 kco3 = rhs_co2.x[i][j][k];
                 t.x[i][j][k] = tn.x[i][j][k] + kt3 * dt;
                 u.x[i][j][k] = un.x[i][j][k] + ku3 * dt;
@@ -72,6 +77,7 @@ cout << endl << " .................... solveRungeKutta_3D_Atmosphere begin" << e
                 c.x[i][j][k] = cn.x[i][j][k] + kc3 * dt;
                 cloud.x[i][j][k] = cloudn.x[i][j][k] + kcloud3 * dt;
                 ice.x[i][j][k] = icen.x[i][j][k] + kice3 * dt;
+                gr.x[i][j][k] = grn.x[i][j][k] + kg3 * dt;
                 co2.x[i][j][k] = co2n.x[i][j][k] + kco3 * dt;
                 RK_RHS_3D_Atmosphere(i, j, k);
                 kt4 = rhs_t.x[i][j][k];
@@ -81,6 +87,7 @@ cout << endl << " .................... solveRungeKutta_3D_Atmosphere begin" << e
                 kc4 = rhs_c.x[i][j][k];
                 kcloud4 = rhs_cloud.x[i][j][k];
                 kice4 = rhs_ice.x[i][j][k];
+                kg4 = rhs_g.x[i][j][k];
                 kco4 = rhs_co2.x[i][j][k];
                 t.x[i][j][k] = tn.x[i][j][k] 
                     + dt * (kt1 + 2.0 * kt2 + 2.0 * kt3 + kt4)/6.0;
@@ -98,6 +105,9 @@ cout << endl << " .................... solveRungeKutta_3D_Atmosphere begin" << e
                 ice.x[i][j][k] = icen.x[i][j][k] 
                     + dt * (kice1 + 2.0 * kice2 + 2.0 * kice3 
                     + kice4)/6.0;
+                gr.x[i][j][k] = grn.x[i][j][k] 
+                    + dt * (kg1 + 2.0 * kg2 + 2.0 * kg3 
+                    + kg4)/6.0;
                 co2.x[i][j][k] = co2n.x[i][j][k] 
                 + dt *(kco1 + 2.0 * kco2 + 2.0 * kco3 + kco4)/6.0;
             }

@@ -11,6 +11,7 @@ def main():
             ('verbose', '', 'bool', False),
             ('output_path', 'directory where model outputs should be placed(must end in /)', 'string', 'output/'),
             ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', False),
+#            ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', True),
             ('debug','flag to control if the program is running in debug mode', 'bool', False),
 
             #parameters for data reconstruction
@@ -29,11 +30,13 @@ def main():
             ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True),
             ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
             ('use_NASA_temperature', 'if use NASA temperature to initialise velocity', 'bool', True),
+            ('CategoryIceScheme', 'number chooses Zero(0)/One(1)/Two(2)/Three(3)-Category Ice Scheme', 'int', 3),
             ('sun', 'while no variable sun position wanted', 'int', 0),
 
             ('p_0', 'pressure at sea level in hPa', 'double', 1013.25),
             ('t_0', 'temperature in K compare to 0°C', 'double', 273.15),
             ('r_air', 'density of dry air in kg/m³ at 20°C', 'double', 1.2041),
+            ('r_0_water', 'reference density of fresh water in kg/m3', 'double', 997.0),
             ('t_average', 'mean temperature of the modern earth in °C', 'double', 15.4),
             ('t_pole_modern', 'pole temperature of the modern earth in °C', 'double', - 15.4),
             ('t_land', 'temperature increase on land by 0°C(0°C compares to t_land = 0.0)', 'double', 0.0),
@@ -47,24 +50,26 @@ def main():
             ('sigma', 'Stefan-Boltzmann constant W/(m²*K4)', 'double', 5.670280e-8),
             ('omega', 'rotation rate of the earth in rad/s', 'double', 7.292e-5),
 
+            ('eps_residuum', 'relative error, end of iterations reached, 1% error  allowed', 'double', 1.0e-2),
+
             ('time_start', 'start time', 'int', 0),
-            ('time_end', 'end time', 'int', 170),
+#            ('time_end', 'end time', 'int', 170),
+            ('time_end', 'end time', 'int', 0),
             ('time_step', 'step size between timeslices', 'int', 10),
         ],
         'atmosphere': [
             ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 6),
             ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 2),
 
+#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 16),
             ('velocity_iter_max', 'the number of velocity iterations', 'int', 4),
+#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
             ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
 
-            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
+#            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
+            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
             ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 0.5),
-
-            ('WaterVapour', 'water vapour influence on atmospheric thermodynamics', 'double', 1.0),
-            ('buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
-            ('CO2', 'CO2 influence on atmospheric thermodynamics', 'double', 1.0),
 
             ('declination', 'position of sun axis, today 23,4°, 21.12.: -23,4°, am 21.3. und 23.9.: 0°, 21.6.: +23,4°, in between sin form', 'int', 0),
             ('sun_position_lat', 'position of sun j = 120 means 30°S, j = 60 means 30°N', 'int', 60),
@@ -73,7 +78,7 @@ def main():
             ('Ma_max', 'parabolic temperature distribution 300 Ma(from Ruddiman)', 'int', 300),
             ('Ma_max_half', 'half of time scale', 'int', 150),
 
-            ('L_atm', 'extension of the atmosphere shell in m, 16000 m/40 steps = 400 m', 'double', 16000.),
+            ('L_atm', 'extension of the atmosphere shell in m, 16000 m/40 steps = 400 m', 'double', 16000.0),
             ('tropopause_pole', 'extension of the troposphere at the poles in m', 'double', 8000.),
             ('tropopause_equator', 'extension of the troposphere at the equator in m', 'double', 15000.),
 
@@ -105,6 +110,7 @@ def main():
 
             ('u_0', 'annual mean of surface wind velocity in m/s, 8 m/s compare to 28.8 km/h', 'double', 8.0),
             ('t_00', 'temperature in K compare to -37°C', 'double', 236.15),
+            ('t_000', 'temperature in K compare to -20°C', 'double', 235.15),
             ('s_0', 'entropy at 0°C, cp_l * t_0 in m²/s²', 'double', 274515.75),
             ('c_0', 'maximum value of water vapour in kg/kg', 'double', 0.035),
             ('co2_0', 'maximum value of CO2 in ppm at preindustrial times', 'double', 280.0),
@@ -127,10 +133,10 @@ def main():
             ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 2),
 
             ('velocity_iter_max', 'the number of velocity iterations', 'int', 4),
+#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 16),
             ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
-            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
-
-            ('buoyancy', 'buoyancy effect on the vertical velocity', 'double', 1.0),
+#            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
+            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
             ('L_hyd', 'extension of the hydrosphere shell in m, maximum depth of 200m compares to 40 * 5m', 'double', 200.0),
 
@@ -142,7 +148,6 @@ def main():
 
             ('c_0', 'rate of salt in psu at temperature t_0 in g/kg or psu', 'double', 34.6),
             ('u_0', 'annual mean of surface water velocity in m/s', 'double', 0.24),
-            ('r_0_water', 'reference density of fresh water in kg/m3', 'double', 997.0),
             ('r_0_saltwater', 'reference density of salt water in kg/m3', 'double', 1027.0),
             ('t_pole_salt', 'compares to -1.9°C, freezing temperature of sea water at poles', 'double', 0.9930),
         ]

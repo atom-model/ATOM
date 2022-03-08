@@ -225,23 +225,23 @@ void cHydrosphereModel::computePressure_3D(){
                 }
 
                 if(((j <= 10)||(j <= jm-11))||((k <= 10)||(k <= km-11))){ // prevents oscillations along pole regions
-                    p_dyn.x[i][j][k] =
-                         ((p_dyn.x[i+1][j][k] + p_dyn.x[i-1][j][k]) * num1 
-                        + (p_dyn.x[i][j+1][k] + p_dyn.x[i][j-1][k]) * num2 
-                        + (p_dyn.x[i][j][k+1] + p_dyn.x[i][j][k-1]) * num3 
+                    p_stat.x[i][j][k] =
+                         ((p_stat.x[i+1][j][k] + p_stat.x[i-1][j][k]) * num1 
+                        + (p_stat.x[i][j+1][k] + p_stat.x[i][j-1][k]) * num2 
+                        + (p_stat.x[i][j][k+1] + p_stat.x[i][j][k-1]) * num3 
                         )/denom;
                 }else{
-                    p_dyn.x[i][j][k] =
-                         ((p_dyn.x[i+1][j][k] + p_dyn.x[i-1][j][k]) * num1 
-                        + (p_dyn.x[i][j+1][k] + p_dyn.x[i][j-1][k]) * num2 
-                        + (p_dyn.x[i][j][k+1] + p_dyn.x[i][j][k-1]) * num3 
+                    p_stat.x[i][j][k] =
+                         ((p_stat.x[i+1][j][k] + p_stat.x[i-1][j][k]) * num1 
+                        + (p_stat.x[i][j+1][k] + p_stat.x[i][j-1][k]) * num2 
+                        + (p_stat.x[i][j][k+1] + p_stat.x[i][j][k-1]) * num3 
                         - (daux_udr - drhs_udr) 
                         - (daux_vdthe - drhs_vdthe)
                         - (daux_wdphi - drhs_wdphi)
                         )/denom;
                 }
-                if(is_land(h, i, j, k))  p_dyn.x[i][j][k] = 0.0;
-                if(p_dyn.x[i][j][k] < 0.0) p_dyn.x[i][j][k] = 0.0;
+                if(is_land(h, i, j, k))  p_stat.x[i][j][k] = 0.0;
+                if(p_stat.x[i][j][k] < 0.0) p_stat.x[i][j][k] = 0.0;
 /*
     cout.precision(12);
     if((j == 75) &&(k == 180)) cout << "northern hemisphere" << endl
@@ -274,17 +274,17 @@ void cHydrosphereModel::computePressure_3D(){
         << "   daux_wdphi = " << daux_wdphi
         << "   drhs_wdphi = " << drhs_wdphi << endl << endl
 
-        << "   p_dyni-1 = " << p_dyn.x[i-1][j][k]
-        << "   p_dyni   = " << p_dyn.x[i][j][k]
-        << "   p_dyni+1 = " << p_dyn.x[i+1][j][k] << endl
+        << "   p_dyni-1 = " << p_stat.x[i-1][j][k]
+        << "   p_dyni   = " << p_stat.x[i][j][k]
+        << "   p_dyni+1 = " << p_stat.x[i+1][j][k] << endl
 
-        << "   p_dynj-1 = " << p_dyn.x[i][j-1][k]
-        << "   p_dynj   = " << p_dyn.x[i][j][k]
-        << "   p_dynj+1 = " << p_dyn.x[i][j+1][k] << endl
+        << "   p_dynj-1 = " << p_stat.x[i][j-1][k]
+        << "   p_dynj   = " << p_stat.x[i][j][k]
+        << "   p_dynj+1 = " << p_stat.x[i][j+1][k] << endl
 
-        << "   p_dynk-1 = " << p_dyn.x[i][j][k-1]
-        << "   p_dynk   = " << p_dyn.x[i][j][k]
-        << "   p_dynk+1 = " << p_dyn.x[i][j][k+1] << endl << endl
+        << "   p_dynk-1 = " << p_stat.x[i][j][k-1]
+        << "   p_dynk   = " << p_stat.x[i][j][k]
+        << "   p_dynk+1 = " << p_stat.x[i][j][k+1] << endl << endl
 
         << "   ui-1 = " << u.x[i-1][j][k]
         << "   ui   = " << u.x[i][j][k]
@@ -328,31 +328,31 @@ void cHydrosphereModel::computePressure_3D(){
 
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            p_dyn.x[0][j][k] = c43 * p_dyn.x[1][j][k] -
-                c13 * p_dyn.x[2][j][k];
-            p_dyn.x[im-1][j][k] = p_dyn.x[im-4][j][k] 
-                - 3. * p_dyn.x[im-3][j][k] + 3. * p_dyn.x[im-2][j][k];  // extrapolation
+            p_stat.x[0][j][k] = c43 * p_stat.x[1][j][k] -
+                c13 * p_stat.x[2][j][k];
+            p_stat.x[im-1][j][k] = p_stat.x[im-4][j][k] 
+                - 3. * p_stat.x[im-3][j][k] + 3. * p_stat.x[im-2][j][k];  // extrapolation
         }
     }
     for(int k = 0; k < km; k++){
         for(int i = 0; i < im; i++){
-            p_dyn.x[i][0][k] = c43 * p_dyn.x[i][1][k] -
-                c13 * p_dyn.x[i][2][k];
-            p_dyn.x[i][jm-1][k] = c43 * p_dyn.x[i][jm-2][k] -
-                c13 * p_dyn.x[i][jm-3][k];
+            p_stat.x[i][0][k] = c43 * p_stat.x[i][1][k] -
+                c13 * p_stat.x[i][2][k];
+            p_stat.x[i][jm-1][k] = c43 * p_stat.x[i][jm-2][k] -
+                c13 * p_stat.x[i][jm-3][k];
         }
     }
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
-            p_dyn.x[i][j][0] = c43 * p_dyn.x[i][j][1] -
-                c13 * p_dyn.x[i][j][2];
-            p_dyn.x[i][j][km-1] = c43 * p_dyn.x[i][j][km-2] -
-                c13 * p_dyn.x[i][j][km-3];
-            p_dyn.x[i][j][0] = p_dyn.x[i][j][km-1] =
-               (p_dyn.x[i][j][0] + p_dyn.x[i][j][km-1])/2.;
+            p_stat.x[i][j][0] = c43 * p_stat.x[i][j][1] -
+                c13 * p_stat.x[i][j][2];
+            p_stat.x[i][j][km-1] = c43 * p_stat.x[i][j][km-2] -
+                c13 * p_stat.x[i][j][km-3];
+            p_stat.x[i][j][0] = p_stat.x[i][j][km-1] =
+               (p_stat.x[i][j][0] + p_stat.x[i][j][km-1])/2.;
         }
     }
-    cout << endl << "      OGCM: computePressure_3D ended" << endl;
+    cout << "      OGCM: computePressure_3D ended" << endl;
     return;
 }
 /*
@@ -532,28 +532,28 @@ void cHydrosphereModel::computePressure_2D(){
                     }
             }
             if(((j <= 10)||(j <= jm-11))||((k <= 10)||(k <= km-11))){ // prevents oscillations along pole regions
-            p_dyn.x[im-1][j][k] =
-                ((p_dyn.x[im-1][j+1][k] + p_dyn.x[im-1][j-1][k]) * num2 
-                + (p_dyn.x[im-1][j][k+1] + p_dyn.x[im-1][j][k-1]) * num3 
+            p_stat.x[im-1][j][k] =
+                ((p_stat.x[im-1][j+1][k] + p_stat.x[im-1][j-1][k]) * num2 
+                + (p_stat.x[im-1][j][k+1] + p_stat.x[im-1][j][k-1]) * num3 
                 )/denom;
             }else{
-            p_dyn.x[im-1][j][k] =
-                ((p_dyn.x[im-1][j+1][k] + p_dyn.x[im-1][j-1][k]) * num2 
-                + (p_dyn.x[im-1][j][k+1] + p_dyn.x[im-1][j][k-1]) * num3 
+            p_stat.x[im-1][j][k] =
+                ((p_stat.x[im-1][j+1][k] + p_stat.x[im-1][j-1][k]) * num2 
+                + (p_stat.x[im-1][j][k+1] + p_stat.x[im-1][j][k-1]) * num3 
                 - (daux_vdthe - drhs_vdthe)
                 - (daux_wdphi - drhs_wdphi)
                 )/denom;
             }
 /*
-            p_dyn.x[im-1][j][k] =
-                ((p_dyn.x[im-1][j+1][k] + p_dyn.x[im-1][j-1][k]) * num2 
-                + (p_dyn.x[im-1][j][k+1] + p_dyn.x[im-1][j][k-1]) * num3 
+            p_stat.x[im-1][j][k] =
+                ((p_stat.x[im-1][j+1][k] + p_stat.x[im-1][j-1][k]) * num2 
+                + (p_stat.x[im-1][j][k+1] + p_stat.x[im-1][j][k-1]) * num3 
                 - (daux_vdthe - drhs_vdthe)
 //                - (daux_wdphi - drhs_wdphi)
                 )/denom;
 */
-            if(is_land(h, im-1, j, k))  p_dyn.x[im-1][j][k] = 0.0;
-                if(p_dyn.x[im-1][j][k] < 0.0) p_dyn.x[im-1][j][k] = 0.0;
+            if(is_land(h, im-1, j, k))  p_stat.x[im-1][j][k] = 0.0;
+                if(p_stat.x[im-1][j][k] < 0.0) p_stat.x[im-1][j][k] = 0.0;
 
 
 /*
@@ -575,12 +575,12 @@ void cHydrosphereModel::computePressure_2D(){
         << "   daux_wdphi = " << daux_wdphi
         << "   drhs_wdphi = " << drhs_wdphi << endl << endl
 
-        << "   p_dynj-1 = " << p_dyn.x[im-1][j-1][k]
-        << "   p_dynj   = " << p_dyn.x[im-1][j][k]
-        << "   p_dynj+1 = " << p_dyn.x[im-1][j+1][k] << endl
-        << "   p_dynk-1 = " << p_dyn.x[im-1][j][k-1]
-        << "   p_dynk   = " << p_dyn.x[im-1][j][k]
-        << "   p_dynk+1 = " << p_dyn.x[im-1][j][k+1] << endl << endl
+        << "   p_dynj-1 = " << p_stat.x[im-1][j-1][k]
+        << "   p_dynj   = " << p_stat.x[im-1][j][k]
+        << "   p_dynj+1 = " << p_stat.x[im-1][j+1][k] << endl
+        << "   p_dynk-1 = " << p_stat.x[im-1][j][k-1]
+        << "   p_dynk   = " << p_stat.x[im-1][j][k]
+        << "   p_dynk+1 = " << p_stat.x[im-1][j][k+1] << endl << endl
 
         << "   aux_vj-1 = " << aux_v.x[im-1][j-1][k]
         << "   aux_vj   = " << aux_v.x[im-1][j][k]
@@ -613,18 +613,18 @@ void cHydrosphereModel::computePressure_2D(){
             }
         }
     for(int k = 0; k < km; k++){
-        p_dyn.x[im-1][0][k] = c43 * p_dyn.x[im-1][1][k] -
-            c13 * p_dyn.x[im-1][2][k];
-        p_dyn.x[im-1][jm-1][k] = c43 * p_dyn.x[im-1][jm-2][k] -
-            c13 * p_dyn.x[im-1][jm-3][k];
+        p_stat.x[im-1][0][k] = c43 * p_stat.x[im-1][1][k] -
+            c13 * p_stat.x[im-1][2][k];
+        p_stat.x[im-1][jm-1][k] = c43 * p_stat.x[im-1][jm-2][k] -
+            c13 * p_stat.x[im-1][jm-3][k];
     }
     for(int j = 0; j < jm; j++){
-        p_dyn.x[im-1][j][0] = c43 * p_dyn.x[im-1][j][1] -
-            c13 * p_dyn.x[im-1][j][2];
-        p_dyn.x[im-1][j][km-1] = c43 * p_dyn.x[im-1][j][km-2] -
-            c13 * p_dyn.x[im-1][j][km-3];
-        p_dyn.x[im-1][j][0] = p_dyn.x[im-1][j][km-1] =
-           (p_dyn.x[im-1][j][0] + p_dyn.x[im-1][j][km-1])/2.;
+        p_stat.x[im-1][j][0] = c43 * p_stat.x[im-1][j][1] -
+            c13 * p_stat.x[im-1][j][2];
+        p_stat.x[im-1][j][km-1] = c43 * p_stat.x[im-1][j][km-2] -
+            c13 * p_stat.x[im-1][j][km-3];
+        p_stat.x[im-1][j][0] = p_stat.x[im-1][j][km-1] =
+           (p_stat.x[im-1][j][0] + p_stat.x[im-1][j][km-1])/2.;
     }
     cout << endl << "      OGCM: computePressure_2D ended" << endl;
     return;
