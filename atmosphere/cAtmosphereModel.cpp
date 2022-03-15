@@ -227,13 +227,13 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     init_co2(Ma); // greenhouse gas co2 as function of temperature
     ValueLimitationAtm(); // value limitation prevents local formation of NANs
 
-    if(iter_cnt_3d == 0){
+    /*if(iter_cnt_3d == 0){
         print_loop_3D_headings();
         solveRungeKutta_3D_Atmosphere(); 
         print_min_max_atm(); // printing min/max values of variables
         run_data_atm(); // printing final results
         write_file(bathymetry_name, output_path, false); // printing files for ParaView, AtmosphereDataTransfer and AtmospherePlotData
-    }
+    }*/
 
     store_intermediate_data_2D(1.0);
     store_intermediate_data_3D(1.0);
