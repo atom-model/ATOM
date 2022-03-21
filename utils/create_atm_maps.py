@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
-from draw_atm_velocities  import draw_velocity
+from draw_vectors  import draw_velocity
 from draw_topo import draw_topography
 from common_functions import calculate_spherical_mean
 
@@ -28,7 +28,7 @@ def create_maps(directory, start_time, end_time, time_step, output_dir, data_dir
             continue
 
         if 'velocity' == directory:
-            draw_velocity(time, output_dir + "/velocity/", data_dir)
+            draw_velocity(time, output_dir + "/velocity/", data_dir, topo_suffix)
             continue
 
         if directory not in map_cfg:

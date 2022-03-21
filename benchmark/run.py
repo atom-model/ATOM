@@ -60,16 +60,30 @@ def main(maps_only=False):
 
         # v-velocity(m/s), w-velocity(m/s), velocity-mag(m/s), temperature(Celsius), water_vapour(g/kg), 
         # precipitation(mm), precipitable water(mm)
-        atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 
-                'precipitable_water', 'topography', 'velocity', 'evaporation']
-#        atm_sub_dirs = ['temperature','v_velocity','w_velocity', 'water_vapour', 
-#                'precipitation', 'precipitable_water', 'topography', 'velocity', 'evaporation']
+        atm_sub_dirs = [
+                        'temperature',
+                        'v_velocity',
+                        'w_velocity', 
+                        'water_vapour', 
+                        'precipitable_water', 
+                        'topography', 
+                        'velocity', 
+                        'evaporation'
+                        ]
 
         create_atm_maps.create_all_maps(atm_sub_dirs, start_time, end_time, time_step, atm_map_output_dir, 
             atom_output_dir, topo_dir, topo_suffix)
 
-        hyd_sub_dirs = ['temperature','v_velocity','w_velocity', 'salinity', 'ekman_pumping', 
-            'upwelling', 'downwelling', 'velocity']
+        hyd_sub_dirs = [
+                        'temperature',
+                        'v_velocity',
+                        'w_velocity', 
+                        'salinity', 
+                        'ekman_pumping', 
+                        'upwelling', 
+                        'downwelling', 
+                        'velocity'
+                        ]
         
         if RUN_HYD:
             create_hyd_maps.create_all_maps(hyd_sub_dirs, start_time, end_time, time_step, hyd_map_output_dir,
