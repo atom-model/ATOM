@@ -157,8 +157,8 @@ void cAtmosphereModel::init_velocities(){
                 if (is_land (h, i, j, k))     
                     u.x[i][j][k] = v.x[i][j][k] = w.x[i][j][k] = 0.;
                 else{
-//                    u.x[i][j][k] = u.x[i][j][k]/u_0;
-                    u.x[i][j][k] = 0.0;
+                    u.x[i][j][k] = u.x[i][j][k]/u_0;
+//                    u.x[i][j][k] = 0.0;
                     v.x[i][j][k] = v.x[i][j][k]/u_0;
                     w.x[i][j][k] = w.x[i][j][k]/u_0;
                 }
@@ -255,17 +255,15 @@ void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int j, double coeff_trop, dou
     int tropopause_layer = get_tropopause_layer(j);
     double tropopause_height = get_layer_height(tropopause_layer);
     for(int k = 0; k < km; k++){
-        if(use_NASA_velocity && is_ocean_surface(h, 0, j, k))
-        {
+        if(use_NASA_velocity&&is_ocean_surface(h, 0, j, k)){
             coeff_sl = v_or_w.x[0][j][k];
         }
-        if(!use_NASA_velocity && !is_ocean_surface(h, 0, j, k))
-        {
+        if(!use_NASA_velocity&&!is_ocean_surface(h, 0, j, k)){
             //coeff_sl = 0;
         }
         for(int i = 0; i < tropopause_layer; i++){
-            v_or_w.x[i][j][k] = (coeff_trop - coeff_sl) *
-                get_layer_height(i)/tropopause_height + coeff_sl;
+            v_or_w.x[i][j][k] = (coeff_trop - coeff_sl) 
+                * get_layer_height(i)/tropopause_height + coeff_sl;
         }
     }
     init_v_or_w_above_tropopause(v_or_w, j, coeff_trop);
@@ -277,13 +275,16 @@ void  cAtmosphereModel::init_v_or_w(Array &v_or_w, int j, double coeff_trop, dou
 */
 void  cAtmosphereModel::init_v_or_w_above_tropopause(Array &v_or_w, int j, double coeff){
 //     cout << endl << "      AGCM: init_v_or_w_above_tropopause" << endl;
-   int tropopause_layer = get_tropopause_layer(j);
+    int tropopause_layer = get_tropopause_layer(j);
     if(tropopause_layer >= im-1) return;
     double tropopause_height = get_layer_height(tropopause_layer);
     for(int k = 0; k < km; k++){
         for(int i = tropopause_layer; i < im; i++){
-            v_or_w.x[i][j][k] = coeff * (get_layer_height(im-1) - get_layer_height(i)) / 
-                (get_layer_height(im-1) - tropopause_height);
+            v_or_w.x[i][j][k] = coeff 
+                * (get_layer_height(im-1) - get_layer_height(i))
+                /(get_layer_height(im-1) - tropopause_height);
+//            if((use_NASA_velocity)&&(j > 90)&&(v_or_w.x[i][j][k] == v.x[i][j][k]))
+//                v.x[i][j][k] = - v.x[i][j][k];
         }
     }
 //     cout << "      AGCM: init_v_or_w_above_tropopause ended" << endl;

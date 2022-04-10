@@ -289,6 +289,8 @@ private:
     Array_2D precipitable_water; // areas of precipitable water in the air
     Array_2D precipitation_NASA; // surface precipitation from NASA
     Array_2D temperature_NASA; // surface temperature from NASA
+    Array_2D velocity_v_NASA; // surface v-velocity from NASA
+    Array_2D velocity_w_NASA; // surface w-velocity from NASA
     Array_2D temp_reconst; // surface temperature from reconstuction tool
     Array_2D temp_landscape; // landscape temperature
     Array_2D p_stat_landscape; // landscape static pressure

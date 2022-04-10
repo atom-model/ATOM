@@ -281,8 +281,12 @@ void cAtmosphereModel::paraview_vtk_radial(string &Name_Bathymetry_File,
                           + v.x[i_radial][j][k] * v.x[i_radial][j][k] 
                           + w.x[i_radial][j][k] * w.x[i_radial][j][k]) 
                           * u_0 * u_0/3.0), 2.0)) * 1.0e-2;
+//            velocity_v_NASA.y[j][k] = v.x[0][j][k];
+//            velocity_w_NASA.y[j][k] = w.x[0][j][k];
         }
     }
+    dump_radial_2d("v-velocity_NASA", velocity_v_NASA, 1.0, Atmosphere_vtk_radial_File);
+    dump_radial_2d("w-velocity_NASA", velocity_w_NASA, 1.0, Atmosphere_vtk_radial_File);
     dump_radial_2d("Temperature_NASA", temperature_NASA, 1.0, Atmosphere_vtk_radial_File);
     dump_radial_2d("Temperature_Reconst", temp_reconst, 1.0, Atmosphere_vtk_radial_File);
     dump_radial_2d("Temperature_Landscape", temp_landscape, 1.0, Atmosphere_vtk_radial_File);

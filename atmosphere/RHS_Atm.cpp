@@ -292,11 +292,44 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
         * sqrt((pow(dpdr, 2) 
         + pow(dpdthe/rm, 2) 
         + pow(dpdphi/rmsinthe, 2))/3.0);
+
+
+    double t_u = t.x[i][j][k] * t_0; // in K
+    double E_Rain = hp * exp_func(t_u, 17.2694, 35.86); // saturation water vapour pressure for the water phase at t > 0°C in hPa
+    double E_Ice = hp * exp_func(t_u, 21.8746, 7.66); // saturation water vapour pressure for the water phase at t < 0°C in hPa
+    double q_Rain = ep * E_Rain/(p_hydro.x[i][j][k] - E_Rain); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
+    double q_Ice = ep * E_Ice/(p_hydro.x[i][j][k] - E_Ice); // relativ water vapour contents on ocean surface reduced by factor in kg/kg
+    double Q_Latent_Ice = 0.0;
+    double coeff_S = lamda * t_0/L_atm; // coefficient for Q_Sensible = 0.0004473
+    double coeff_L = r_air * c_0 * lv * u_0/L_atm; // coefficient for Q_Latent = 53.0964
+    if(c.x[i][j][k] >= 0.85 * q_Rain){
+        Q_Latent.x[i][j][k] = (u.x[i][j][k] * dclouddr 
+        + v.x[i][j][k]/rm * dclouddthe 
+        + w.x[i][j][k]/rmsinthe * dclouddphi);
+    }else Q_Latent.x[i][j][k] = 0.0;
+    if(c.x[i][j][k] >= 0.85 * q_Ice){
+        Q_Latent_Ice = (u.x[i][j][k] * dicedr 
+        + v.x[i][j][k]/rm * dicedthe 
+        + w.x[i][j][k]/rmsinthe * dicedphi);
+    }else Q_Latent_Ice = 0.0;
+
+    Q_Latent.x[i][j][k] = coeff_L 
+        * (Q_Latent.x[i][j][k] + Q_Latent_Ice);
+
+    Q_Sensible.x[i][j][k] = coeff_S 
+        * (d2tdr2 + dtdr * 2./rm + d2tdthe2/rm2
+        + dtdthe * costhe/rm2sinthe + d2tdphi2/rm2sinthe2);  // sensible heat in [W/m2] from energy transport equation
+
     if(is_land(h, i, j, k)){
         BuoyancyForce.x[i][j][k] = 0.0;
         PressureGradientForce.x[i][j][k] = 0.0;
         CoriolisForce.x[i][j][k] = 0.0;
+        Q_Latent.x[i][j][k] = 0.0;
+        Q_Sensible.x[i][j][k] = 0.0;
     }
+
+
+
     rhs_t.x[i][j][k] = - (u.x[i][j][k] * dtdr + v.x[i][j][k] * dtdthe/rm // Navier-Stokes equations
         + w.x[i][j][k] * dtdphi/rmsinthe) 
         + (d2tdr2 + dtdr * 2./rm + d2tdthe2/rm2
@@ -309,16 +342,19 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
             * lv * r_humid.x[i][j][k]
         + coeff_energy * (S_i.x[i][j][k] + S_s.x[i][j][k] + S_g.x[i][j][k]) 
             * ls * r_humid.x[i][j][k]
+        + Q_Latent.x[i][j][k]/coeff_L
         - h_0_i * t.x[i][j][k]/dr2 * exp_2_rm;
+
     rhs_u.x[i][j][k] = - (u.x[i][j][k] * dudr + v.x[i][j][k] * dudthe/rm 
         + w.x[i][j][k] * dudphi/rmsinthe) 
-        + buoyancy * (t.x[i][j][k] - 1.0) * coeff_buoy_u
+        + buoyancy * t.x[i][j][k] * coeff_buoy_u
         - dpdr
         + (d2udr2 + h_d_i * 2.0 * u.x[i][j][k]/rm2 + d2udthe2/rm2
         + 4.0 * dudr/rm + dudthe * costhe/rm2sinthe 
         + d2udphi2/rm2sinthe2)/re
         + coriolis * coeff_cor * coriolis_rad
         - h_0_i * u.x[i][j][k]/dr2 * exp_2_rm;
+
     rhs_v.x[i][j][k] = - (u.x[i][j][k] * dvdr + v.x[i][j][k] * dvdthe/rm
         + w.x[i][j][k] * dvdphi/rmsinthe)
         - dpdthe/rm
@@ -330,6 +366,7 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
         + coriolis * coeff_cor * coriolis_the
         + coeff_MC_vel * MC_v.x[i][j][k]
         - h_0_i * v.x[i][j][k]/dr2 * exp_2_rm;
+
     rhs_w.x[i][j][k] = - (u.x[i][j][k] * dwdr + v.x[i][j][k] * dwdthe/rm
         + w.x[i][j][k] * dwdphi/rmsinthe)
         - dpdphi/rmsinthe
@@ -341,6 +378,7 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
         + coriolis * coeff_cor * coriolis_phi
         + coeff_MC_vel * MC_w.x[i][j][k]
         - h_0_i * w.x[i][j][k]/dr2 * exp_2_rm;
+
     rhs_c.x[i][j][k] = - (u.x[i][j][k] * dcdr + v.x[i][j][k] * dcdthe/rm
         + w.x[i][j][k] * dcdphi/rmsinthe) 
         + (d2cdr2 + dcdr * 2./rm 
@@ -350,6 +388,7 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
         + coeff_trans * S_v.x[i][j][k] * r_humid.x[i][j][k]
         + coeff_MC_q * MC_q.x[i][j][k]
         - h_0_i * c.x[i][j][k]/dr2 * exp_2_rm;
+
     rhs_cloud.x[i][j][k] = - (u.x[i][j][k] * dclouddr 
         + v.x[i][j][k] * dclouddthe/rm
         + w.x[i][j][k] * dclouddphi/rmsinthe) 
@@ -358,6 +397,7 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
         + d2clouddphi2/rm2sinthe2)/(sc_WaterVapour * re)
         + coeff_trans * S_c.x[i][j][k] * r_humid.x[i][j][k]
         - h_0_i * cloud.x[i][j][k]/dr2 * exp_2_rm;
+
     rhs_ice.x[i][j][k] = - (u.x[i][j][k] * dicedr 
         + v.x[i][j][k] * dicedthe/rm
         + w.x[i][j][k] * dicedphi/rmsinthe) 
@@ -366,6 +406,7 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
         + d2icedphi2/rm2sinthe2)/(sc_WaterVapour * re)
         + coeff_trans * S_i.x[i][j][k] * r_humid.x[i][j][k]
         - h_0_i * ice.x[i][j][k]/dr2 * exp_2_rm;
+
     rhs_g.x[i][j][k] = - (u.x[i][j][k] * dgdr 
         + v.x[i][j][k] * dgdthe/rm
         + w.x[i][j][k] * dgdphi/rmsinthe) 
@@ -374,6 +415,7 @@ void cAtmosphereModel::RK_RHS_3D_Atmosphere(int i, int j, int k){
         + d2gdphi2/rm2sinthe2)/(sc_WaterVapour * re)
         + coeff_trans * S_g.x[i][j][k] * r_humid.x[i][j][k]
         - h_0_i * gr.x[i][j][k]/dr2 * exp_2_rm;
+
     rhs_co2.x[i][j][k] = - (u.x[i][j][k] * dcodr 
         + v.x[i][j][k] * dcodthe/rm
         + w.x[i][j][k] * dcodphi/rmsinthe) 

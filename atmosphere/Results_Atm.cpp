@@ -66,7 +66,7 @@ void cAtmosphereModel::print_min_max_atm(){
     searchMinMax_3D(" max sensible heat ", " min sensible heat ", 
         "W/m2", Q_Sensible, 1.0);
     searchMinMax_3D(" max latent heat ", " min latent heat ", 
-        "W/m2", Q_Latent, 1.0);
+        "W/m3", Q_Latent, 1.0);
     cout << endl << " cloud thermodynamics: " << endl << endl;
     searchMinMax_3D(" max water vapour ",  " min water vapour ", 
         "g/kg", c, 1000.0);
@@ -322,10 +322,20 @@ void cAtmosphereModel::run_data_atm(){
                 PressureGradientForce.x[3][j][k] 
                 - 3.0 * PressureGradientForce.x[2][j][k] 
                 + 3.0 * PressureGradientForce.x[1][j][k];  // extrapolation
+            Q_Latent.x[0][j][k] = 
+                Q_Latent.x[3][j][k] 
+                - 3.0 * Q_Latent.x[2][j][k] 
+                + 3.0 * Q_Latent.x[1][j][k];  // extrapolation
+            Q_Sensible.x[0][j][k] = 
+                Q_Sensible.x[3][j][k] 
+                - 3.0 * Q_Sensible.x[2][j][k] 
+                + 3.0 * Q_Sensible.x[1][j][k];  // extrapolation
             if(is_land(h, 0, j, k)){
                 BuoyancyForce.x[0][j][k] = 0.0;
-                PressureGradientForce.x[0][j][k] = 0.0;
+                Q_Sensible.x[0][j][k] = 0.0;
                 CoriolisForce.x[0][j][k] = 0.0;
+                Q_Latent.x[0][j][k] = 0.0;
+                Q_Sensible.x[0][j][k] = 0.0;
             }
             BuoyancyForce.x[im-1][j][k] = 
                 BuoyancyForce.x[im-4][j][k] 
@@ -339,6 +349,14 @@ void cAtmosphereModel::run_data_atm(){
                 PressureGradientForce.x[im-4][j][k] 
                 - 3.0 * PressureGradientForce.x[im-3][j][k] 
                 + 3.0 * PressureGradientForce.x[im-2][j][k];  // extrapolation
+            Q_Latent.x[im-1][j][k] = 
+                Q_Latent.x[im-4][j][k] 
+                - 3.0 * Q_Latent.x[im-3][j][k] 
+                + 3.0 * Q_Latent.x[im-2][j][k];  // extrapolation
+            Q_Sensible.x[im-1][j][k] = 
+                Q_Sensible.x[im-4][j][k] 
+                - 3.0 * Q_Sensible.x[im-3][j][k] 
+                + 3.0 * Q_Sensible.x[im-2][j][k];  // extrapolation
         }
     }
     for(int k = 0; k < km; k++){
@@ -355,6 +373,14 @@ void cAtmosphereModel::run_data_atm(){
                 - c13 * PressureGradientForce.x[i][2][k];
             PressureGradientForce.x[i][jm-1][k] = c43 * PressureGradientForce.x[i][jm-2][k]       
                 - c13 * PressureGradientForce.x[i][jm-3][k];
+            Q_Latent.x[i][0][k] = c43 * Q_Latent.x[i][1][k] 
+                - c13 * Q_Latent.x[i][2][k];
+            Q_Latent.x[i][jm-1][k] = c43 * Q_Latent.x[i][jm-2][k]       
+                - c13 * Q_Latent.x[i][jm-3][k];
+            Q_Sensible.x[i][0][k] = c43 * Q_Sensible.x[i][1][k] 
+                - c13 * Q_Sensible.x[i][2][k];
+            Q_Sensible.x[i][jm-1][k] = c43 * Q_Sensible.x[i][jm-2][k]       
+                - c13 * Q_Sensible.x[i][jm-3][k];
         }
     }
     for(int i = 0; i < im; i++){
@@ -377,6 +403,18 @@ void cAtmosphereModel::run_data_atm(){
                 - c13 * PressureGradientForce.x[i][j][km-3];
             PressureGradientForce.x[i][j][0] = PressureGradientForce.x[i][j][km-1] =
                (PressureGradientForce.x[i][j][0] + PressureGradientForce.x[i][j][km-1])/ 2.;
+            Q_Latent.x[i][j][0] = c43 * Q_Latent.x[i][j][1] 
+                - c13 * Q_Latent.x[i][j][2];
+            Q_Latent.x[i][j][km-1] = c43 * Q_Latent.x[i][j][km-2] 
+                - c13 * Q_Latent.x[i][j][km-3];
+            Q_Latent.x[i][j][0] = Q_Latent.x[i][j][km-1] =
+               (Q_Latent.x[i][j][0] + Q_Latent.x[i][j][km-1])/ 2.;
+            Q_Sensible.x[i][j][0] = c43 * Q_Sensible.x[i][j][1] 
+                - c13 * Q_Sensible.x[i][j][2];
+            Q_Sensible.x[i][j][km-1] = c43 * Q_Sensible.x[i][j][km-2] 
+                - c13 * Q_Sensible.x[i][j][km-3];
+            Q_Sensible.x[i][j][0] = Q_Sensible.x[i][j][km-1] =
+               (Q_Sensible.x[i][j][0] + Q_Sensible.x[i][j][km-1])/ 2.;
         }
     }
 

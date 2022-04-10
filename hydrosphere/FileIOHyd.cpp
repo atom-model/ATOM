@@ -53,24 +53,10 @@ cout << endl << "      OGCM: read_Hydrosphere_Surface_Data .....................
         read_IC(velocity_v_file, v.x[im-1], jm, km);
         read_IC(velocity_w_file, w.x[im-1], jm, km);
     }
-    if(Ma != 0 && use_earthbyte_reconstruction)
+    if((Ma != 0)&&(use_earthbyte_reconstruction))
         read_IC(Name_SurfaceTemperature_File, t.x[im-1], jm, km);  // reconstructed temperature in °C
     read_IC(Name_SurfaceNASATemperature_File, temperature_NASA.y, jm, km);
     read_IC(Name_SurfacePrecipitation_File, precipitation_NASA.y, jm, km);
-    if(Ma != 0){
-        for(int j = 0; j < jm; j++){
-            for(int k = 0; k < km; k++){
-                t.x[im-1][j][k] = (t.x[im-1][j][k] + t_0)/t_0;
-                if(is_land(h, im-1, j, k))  t.x[im-1][j][k] = 1.0;
-            }
-        }
-    }else{
-        for(int j = 0; j < jm; j++){
-            for(int k = 0; k < km; k++){
-                if(is_land(h, im-1, j, k))  t.x[im-1][j][k] = 0.0;
-            }
-        }
-    }
     cout << endl << "      OGCM: read_Hydrosphere_Surface_Data ended ................." << endl;
     return;
 }

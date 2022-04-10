@@ -20,15 +20,15 @@ cout << endl << "      AGCM: read_Atmosphere_Surface_Data ......................
     //Prepare the temperature, precipitation and velocity data file
     string Name_SurfaceTemperature_File  = temperature_file;
     string Name_SurfaceNASATemperature_File  = temperature_file;
-    string Name_SurfacePrecipitation_File = precipitation_file;
+    string Name_SurfaceNASAPrecipitation_File = precipitation_file;
     if(Ma != 0 && use_earthbyte_reconstruction){
-        Name_SurfaceTemperature_File = output_path + "/" 
+        Name_SurfaceTemperature_File = output_path 
             + std::to_string(Ma) + "Ma_Reconstructed_Temperature.xyz";  // reconstructed temperature in °C
-//        Name_SurfacePrecipitation_File = output_path + "/" 
+//        Name_SurfaceNASAPrecipitation_File = output_path 
 //            + std::to_string(Ma) + "Ma_Reconstructed_Precipitation.xyz";    
-        velocity_v_file = output_path + "/" + std::to_string(Ma) 
+        velocity_v_file = output_path + std::to_string(Ma) 
             + "Ma_Reconstructed_wind_v.xyz";
-        velocity_w_file = output_path + "/" + std::to_string(Ma) 
+        velocity_w_file = output_path + std::to_string(Ma) 
             + "Ma_Reconstructed_wind_w.xyz";
         struct stat info;
 //        char direction_i = 'i', direction_j = 'j', direction_k = 'k';
@@ -36,7 +36,7 @@ cout << endl << "      AGCM: read_Atmosphere_Surface_Data ......................
              mkdir(output_path.c_str(), 0777);
         }
         if(stat(Name_SurfaceTemperature_File.c_str(), &info) != 0 || 
-//           stat(Name_SurfacePrecipitation_File.c_str(), &info) != 0 ||
+//           stat(Name_SurfaceNASAPrecipitation_File.c_str(), &info) != 0 ||
            stat(velocity_v_file.c_str(), &info) != 0 ||
            stat(velocity_w_file.c_str(), &info) != 0){
                std::string cmd_str = "python " + reconstruction_script_path 
@@ -57,10 +57,10 @@ cout << endl << "      AGCM: read_Atmosphere_Surface_Data ......................
         read_IC(velocity_v_file, v.x[0], jm, km);
         read_IC(velocity_w_file, w.x[0], jm, km);    
     }
-    if(Ma != 0 && use_earthbyte_reconstruction)
+    if((Ma != 0)&&(use_earthbyte_reconstruction))
         read_IC(Name_SurfaceTemperature_File, t.x[0], jm, km);  // reconstructed temperature in °C
     read_IC(Name_SurfaceNASATemperature_File, temperature_NASA.y, jm, km);
-    read_IC(Name_SurfacePrecipitation_File, precipitation_NASA.y, jm, km);
+    read_IC(Name_SurfaceNASAPrecipitation_File, precipitation_NASA.y, jm, km);
     cout << endl << "      AGCM: read_Atmosphere_Surface_Data ended ................." << endl;
     return;
 }
@@ -87,8 +87,6 @@ cout << endl << "      AGCM: AtmosphereDataTransfer" << endl;
         }
     }
     Transfer_File.close();
-//    v.printArray("AGCM", im, jm, km);
-//    w.printArray("AGCM", im, jm, km);
     cout << "      AGCM: AtmosphereDataTransfer ended" << endl;
     return;
 }

@@ -185,6 +185,8 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
 //    if(Ma <= 41)  IC_CircumPolar_Current(); // Drake passage closed 41 Ma ago
     init_temperature(Ma);
 
+//    goto Printout;
+    
     if(!use_NASA_temperature) 
         IC_t_WestEastCoast();
 
@@ -200,28 +202,17 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     PresStat_SaltWaterDens();
     SalinityEvaporation();
 
-    /*if(iter_cnt_3d == 0){
-        print_loop_3D_headings();
-        solveRungeKutta_3D_Hydrosphere(); 
-        print_min_max_hyd(); // printing min/max values of variables
-        run_data_hyd(); // printing final results
-        write_file(bathymetry_name, output_path, false); // printing files for ParaView, AtmosphereDataTransfer and AtmospherePlotData
-    }*/
-
     store_intermediate_data_2D(1.0);
     store_intermediate_data_3D(1.0);
     cout << endl << endl;
     run_3D_loop(); // iterational 3D loop to solve variables in 4-step Runge-Kutta time scheme
     cout << endl << endl;
-
 /*
     Printout:
     run_data_hyd(); 
     print_min_max_hyd();
     write_file(bathymetry_name, output_path, true);
 */
-
-
     iter_cnt_3d++;
     save_data();
     if(debug){
@@ -1020,25 +1011,25 @@ cout << endl << "      OGCM: init_temperature" << endl;
     if(is_first_time_slice()){
         int k_half = (km -1)/2;
         for(int j = 0; j < jm; j++){
-            t.x[0][j][k_half] = (t.x[0][j][k_half+1] 
-                + t.x[0][j][k_half-1])/2.;
+            t.x[im-1][j][k_half] = (t.x[im-1][j][k_half+1] 
+                + t.x[im-1][j][k_half-1])/2.0;
             temperature_NASA.y[j][k_half] = (temperature_NASA.y[j][k_half+1] +
-                temperature_NASA.y[j][k_half-1])/2.;
+                temperature_NASA.y[j][k_half-1])/2.0;
         }
     }
     // if use_earthbyte_reconstruction temperature in °C converted to non-dimensional
     if(Ma != 0 && use_earthbyte_reconstruction){
         for(int k = 0; k < km; k++){
             for(int j = 0; j < jm; j++){
-                t.x[0][j][k] = (t.x[0][j][k] + t_0)/t_0; // non-dimensional, (reconstructed temperature in °C)
-                temp_reconst.y[j][k] = t.x[0][j][k]; // non-dimensional
+                t.x[im-1][j][k] = (t.x[im-1][j][k] + t_0)/t_0; // non-dimensional, (reconstructed temperature in °C)
+                temp_reconst.y[j][k] = t.x[im-1][j][k]; // non-dimensional
             }
         }
     }
     if((is_first_time_slice())&&(use_earthbyte_reconstruction)&&(!use_NASA_temperature)){
         for(int k = 0; k < km; k++){
             for(int j = 0; j < jm; j++){
-                t.x[0][j][k] = (temperature_NASA.y[j][k] + t_0)/t_0; // non-dimensional
+                t.x[im-1][j][k] = (temperature_NASA.y[j][k] + t_0)/t_0; // non-dimensional
             }
         }
     }
@@ -1047,21 +1038,21 @@ cout << endl << "      OGCM: init_temperature" << endl;
     t_pole_modern = 
         get_temperatures_from_curve(0, m_pole_temperature_curve);
     t_global_mean_exp = 
-                get_temperatures_from_curve(*get_current_time(), 
-                m_global_temperature_curve);
+        get_temperatures_from_curve(*get_current_time(), 
+        m_global_temperature_curve);
     if(is_first_time_slice()){
         t_global_mean_exp = 
             get_temperatures_from_curve(0, 
                 m_global_temperature_curve);
         t_global_mean = GetMean_2D(jm, km, temperature_NASA);
     }
-    if(!is_first_time_slice()){
-        t_paleo_add = 
+    if(!is_first_time_slice()){                                         // temperature difference between adjacent time steps
+        t_paleo_add =                                                   // at poles
             get_temperatures_from_curve(*get_current_time(), 
             m_equat_temperature_curve)
             - get_temperatures_from_curve(*get_previous_time(), 
             m_equat_temperature_curve);
-        t_pole_add = 
+        t_pole_add =                                                    // at equator
             get_temperatures_from_curve(*get_current_time(), 
             m_pole_temperature_curve)
             - get_temperatures_from_curve(*get_previous_time(), 
@@ -1156,6 +1147,7 @@ cout << endl << "      OGCM: init_temperature" << endl;
         << " = " << setw(7) << setfill(' ') << t_pole_modern << setw(5) 
         << temperature_unit << endl;
 
+    double t_corr = 0.0;
     double d_j_half = (double)(jm-1)/2.0;
     double t_equator = (get_temperatures_from_curve(*get_current_time(), 
                 m_equat_temperature_curve) + t_0)/t_0;
@@ -1166,20 +1158,27 @@ cout << endl << "      OGCM: init_temperature" << endl;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             double d_j = (double)j;
-            if((!use_NASA_temperature)&&(*get_current_time() > 0)){  // parabolic ocean surface temperature assumed
-                t.x[0][j][k] = t_eff 
-                    * parabola((double)d_j/(double)d_j_half) + t_pole;
-            }else{  // if(use_NASA_temperature) ocean surface temperature based on NASA temperature distribution
-                if(*get_current_time() > 0){
-                    t.x[0][j][k] += t_eff_rec 
-                        * parabola((double)d_j/(double)d_j_half) 
-                        + t_pole_add;
+            t_corr = (t_eff_rec                                         // average temperature distributions in time at poles and equator corrects parabolic assumption
+                * parabola((double)d_j/(double)d_j_half)                // parabolic correction function from pole to pole, values t_corr to be added  
+                + t_pole_add);                                          // on any pole to pole reconstructed initial temperature assumtion
+            if((!use_NASA_temperature)&&(!use_earthbyte_reconstruction)){  // parabolic surface land and ocean temperature assumed
+                t.x[im-1][j][k] = t_eff 
+                    * parabola((double)d_j/(double)d_j_half) + t_pole;  // parabolic temperature assumption
+                t.x[im-1][j][k] = t.x[im-1][j][k] + t_corr;             // based on the parabolic temperature assumption
+            }
+            if((use_NASA_temperature)&&(use_earthbyte_reconstruction)){ // NASA surface temperature assumed and corrected by known local values
+                if(*get_current_time() == 0){
+                    t.x[im-1][j][k] = (temperature_NASA.y[j][k] + t_0)/t_0;  // initial temperature by NASA for Ma=0, non-dimensional
+                }else{
+                    t.x[im-1][j][k] = t.x[im-1][j][k] + t_corr;         // based on the reconstructed temperature
                 }
-                if(*get_current_time() == 0)
-                    t.x[0][j][k] = (temperature_NASA.y[j][k] + t_0)/t_0;  // initial temperature by NASA for Ma=0, non-dimensional
-            }// else(use_NASA_temperature)
-//            t_u = t.x[0][j][k] * t_0;  // 3D-temperature profile on land and ocean surfaces projected to zero level in K
-            temp_landscape.y[j][k] = t.x[0][j][k] * t_0 - t_0; // in °C
+                if(*get_current_time() >= Ma_switch){                   // parabolic temperature distribution starting at Ma_switch
+                    t.x[im-1][j][k] = t_eff 
+                        * parabola((double)d_j/(double)d_j_half) + t_pole;
+                    t.x[im-1][j][k] = t.x[im-1][j][k] + t_corr;         // based on the parabolic temperature assumption
+                }
+            }
+            temp_landscape.y[j][k] = t.x[im-1][j][k] * t_0 - t_0; // in °C
         }// for j
     }// for k
     t_global_mean = GetMean_2D(jm, km, temp_landscape);
@@ -1203,15 +1202,10 @@ cout << endl << "      OGCM: init_temperature" << endl;
     }
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
-//            int i_sea_mount = i_bathymetry[j][k];
             for(int i = 0; i < im; i++){
-//                if((is_land(h, i, j, k))&&(i < i_sea_mount)){
                 if(is_land(h, i, j, k)){
                     t.x[i][j][k] = 1.0;
                 }
-//                if((is_land(h, 0, j, k))&&(i == 0)){
-//                    t.x[0][j][k] = t.x[i_sea_mount][j][k];
-//                }
             }
         }
     }
@@ -1888,6 +1882,7 @@ double cHydrosphereModel::find_residuum_hyd(){
             }  //  end i
         }  // end k
     }  // end j
+                    cout.precision(8);
                     if((residuum_old - maxValue) > 0.0){
                         cout << endl << "      OGCM: write_file in find_residuum_hyd, absolute error declining ......................." << endl;
                         cout << endl << "      residuum_hyd = " << maxValue

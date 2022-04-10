@@ -11,7 +11,6 @@ def main():
             ('verbose', '', 'bool', False),
             ('output_path', 'directory where model outputs should be placed(must end in /)', 'string', 'output/'),
             ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', False),
-#            ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', True),
             ('debug','flag to control if the program is running in debug mode', 'bool', False),
 
             #parameters for data reconstruction
@@ -20,9 +19,6 @@ def main():
             ('temperature_file', '', 'string', '../data/SurfaceTemperature_NASA.xyz'),
             ('precipitation_file', '', 'string', '../data/SurfacePrecipitation_NASA.xyz'),
             ('salinity_file', '', 'string', '../data/SurfaceSalinity_NASA.xyz'),
-#            ('temperature_global_file', '', 'string', '../data/Lenton_etal_COPSE_time_temp.txt'),
-#            ('temperature_global_file', '', 'string', '../data/scotese_etal_2020_equat_temp.txt'),
-#            ('temperature_pole_file', '', 'string', '../data/Stein_Rüdiger_Parish_linear_pole.txt'),
             ('temperature_global_file', '', 'string', '../data/scotese_etal_2021_global_temp_1my.txt'),
             ('temperature_equat_file', '', 'string', '../data/scotese_etal_2021_equat_temp_1my.txt'),
             ('temperature_pole_file', '', 'string', '../data/scotese_etal_2021_polar_temp_1my.txt'),
@@ -30,6 +26,7 @@ def main():
             ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True),
             ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
             ('use_NASA_temperature', 'if use NASA temperature to initialise velocity', 'bool', True),
+            ('Ma_switch', 'switch initial temperatur from NASA to parabolic approach', 'int', 50),
             ('CategoryIceScheme', 'number chooses Zero(0)/One(1)/Two(2)/Three(3)-Category Ice Scheme', 'int', 3),
             ('sun', 'while no variable sun position wanted', 'int', 0),
 
@@ -53,20 +50,16 @@ def main():
             ('eps_residuum', 'relative error, end of iterations reached, 1% error  allowed', 'double', 1.0e-2),
 
             ('time_start', 'start time', 'int', 0),
-#            ('time_end', 'end time', 'int', 170),
-            ('time_end', 'end time', 'int', 0),
-            ('time_step', 'step size between timeslices', 'int', 10),
+            ('time_end', 'end time', 'int', 30),
+            ('time_step', 'step size between timeslices', 'int', 1),
         ],
         'atmosphere': [
             ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 6),
             ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 2),
 
-#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 16),
-            ('velocity_iter_max', 'the number of velocity iterations', 'int', 4),
-#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
+            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
             ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
 
-#            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
             ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
             ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 0.5),
@@ -104,7 +97,7 @@ def main():
             ('ls', 'specific latent vaporisation heat(sublimation heat) in J/kg', 'double', 2.83e6),
             ('cp_l', 'specific heat capacity of dry air at constant pressure and 20°C in J/(kg K)', 'double', 1005.0),
             ('cv_l', 'specific heat capacity of dry air at constant volume and 20°C in J/(kg K)', 'double', 717.0),
-            ('lamda', 'heat transfer coefficient of air in W/m² K)', 'double', 0.0262),
+            ('lamda', 'heat transfer coefficient of air in W/(m K)', 'double', 0.0262),
             ('r_co2', 'density of CO2 in kg/m³ at 25°C', 'double', 0.0019767),
             ('gam', 'constant slope of temperature    gam = 6.5 K/1000 m', 'double', 0.0065),
 
@@ -132,10 +125,8 @@ def main():
             ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 6),
             ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 2),
 
-            ('velocity_iter_max', 'the number of velocity iterations', 'int', 4),
-#            ('velocity_iter_max', 'the number of velocity iterations', 'int', 16),
+            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
             ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
-#            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 1),
             ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
 
             ('L_hyd', 'extension of the hydrosphere shell in m, maximum depth of 200m compares to 40 * 5m', 'double', 200.0),

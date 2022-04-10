@@ -158,96 +158,87 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     init_layer_heights();
     init_tropopause_layers();
 
-    read_Atmosphere_Surface_Data(Ma);
+    read_Atmosphere_Surface_Data(Ma);  // reading barthymetry data and NASA measurements
 
     if(!use_NASA_velocity){
-        init_velocities();
+        init_velocities();             // construction of zonal initial velocities from measurements
     }
     if(use_NASA_velocity)
-        IC_vwt_WestEastCoast();
+        IC_vwt_WestEastCoast();        // horizontal velocity initial condition and temperature adjustments along coasts
 
-    init_dynamic_pressure();
+    init_dynamic_pressure();           // initialization of static pressure data by dynamic pressure data to prevent zero values
 
     fft_gaussian_filter_3d(u,1);
     fft_gaussian_filter_3d(v,1);
     fft_gaussian_filter_3d(w,1);
 
-    BC_SolidGround();
+    BC_SolidGround();                  // description of values inside of mountain areas
+
+    init_temperature(Ma);              // initialization of temperature, hydrostatic pressure and density of dry air, reconstruction of potential surface values
 
 //    goto Printout;
 
-
-    init_temperature(Ma);
+//    t.printArray("AGCM", im, jm, km);
+//    temp_reconst.printArray_2D(jm, km);
 
     store_intermediate_data_2D(1.0);
     store_intermediate_data_3D(1.0);
 
-    land_oceanFraction(0, jm, km, h);
+    land_oceanFraction(0, jm, km, h);  // ratio of land to sea surface of the various time slices
 
     if(!use_NASA_temperature) 
-        IC_t_WestEastCoast();
+        IC_t_WestEastCoast();          // horizontal temperature adjustments along west coasts and equator line due to upwelling
 
 //    fft_gaussian_filter_3d(t, 3, direction_k);
     fft_gaussian_filter_3d(t,4);
     fft_gaussian_filter_3d(p_hydro,4);
     fft_gaussian_filter_3d(r_dry,4);
 
-    init_water_vapour(); // initialisation of water vapour based on the temperature profile
+    init_water_vapour();               // initialisation of water vapour, cloud water and cloud ice based on the temperature profile
 
-    PressureDensity(); // static pressure ==> barometric pressure without velocity gradients
+    PressureDensity();                 // recalculation of hydrostatic pressure and density of dry and humid air
 
-    SaturationAdjustment(); // cloud water and cloud ice formation in case of saturated water vapour 
+    SaturationAdjustment();            // based on the initial distribution, recomputation of the cloud water and cloud ice formation in case of saturated water vapour detected
 
     fft_gaussian_filter_3d(c,1);
     fft_gaussian_filter_3d(cloud,1);
     fft_gaussian_filter_3d(ice,1);
 
-    RadiationMultiLayer(); // incoming short wave and outgoing long wave radiation in dependence on atmosphere's emissivity ==> temperature 
+    RadiationMultiLayer();             // incoming short wave and outgoing long wave radiation in dependence on atmosphere's emissivity changes initial distribution of temperature 
 
     switch(CategoryIceScheme){
-        case 0: ZeroCategoryIceScheme(); // development of rain and snow fall, water vapour and cloud water
+        case 0: ZeroCategoryIceScheme();     // development of rain and snow fall, water vapour and cloud water
                 break;
-        case 1: OneCategoryIceScheme(); // development of rain and snow fall, water vapour and cloud water
+        case 1: OneCategoryIceScheme();      // development of rain and snow fall, water vapour and cloud water
                 break;
-        case 2: TwoCategoryIceScheme(); // development of rain and snow fall, water vapour, cloud water and cloud ice
+        case 2: TwoCategoryIceScheme();      // development of rain and snow fall, water vapour, cloud water and cloud ice
                 break;
-        case 3: ThreeCategoryIceScheme(); // development of rain and snow fall, water vapour, cloud water, cloud ice and graupel
+        case 3: ThreeCategoryIceScheme();    // development of rain and snow fall, water vapour, cloud water, cloud ice and graupel
                 break;
     }
 
-    MoistConvectionMidL(); // precipitation due to local mid-level moist convection by buoyancy effects
-    MoistConvectionShall(); // precipitation due to local shallow moist convection by buoyancy effects
+//    MoistConvectionMidL();             // precipitation due to local mid-level moist convection by buoyancy effects
+//    MoistConvectionShall();            // precipitation due to local shallow moist convection by buoyancy effects
 
-//    goto Printout;
+    StandAtm_DewPoint_HumidRel();      // International Standard Atmosphere temperature profile, dew point temperature, relative humidity profile
+    WaterVapourEvaporation();          // correction of surface water vapour by evaporation 
+    MassStreamfunction();              // mass stream function
+//    LatentSensibleHeat();              // latent and sensible heat
+    init_co2(Ma);                      // greenhouse gas co2 as function of temperature
 
-    StandAtm_DewPoint_HumidRel(); // International Standard Atmospher temperature profile, dew point temperature, relative humidity profile
-    WaterVapourEvaporation(); // correction of surface water vapour by evaporation 
-    MassStreamfunction(); // mass stream function
-    LatentSensibleHeat(); // latent and sensible heat
-    init_co2(Ma); // greenhouse gas co2 as function of temperature
-    ValueLimitationAtm(); // value limitation prevents local formation of NANs
-
-    /*if(iter_cnt_3d == 0){
-        print_loop_3D_headings();
-        solveRungeKutta_3D_Atmosphere(); 
-        print_min_max_atm(); // printing min/max values of variables
-        run_data_atm(); // printing final results
-        write_file(bathymetry_name, output_path, false); // printing files for ParaView, AtmosphereDataTransfer and AtmospherePlotData
-    }*/
+    ValueLimitationAtm();              // value limitation prevents local formation of NANs
 
     store_intermediate_data_2D(1.0);
     store_intermediate_data_3D(1.0);
     cout << endl << endl;
-    run_3D_loop(); // iterational 3D loop to solve variables in 4-step Runge-Kutta time scheme
+    run_3D_loop();                     // iterational 3D loop to solve variables in 4-step Runge-Kutta time scheme
     cout << endl << endl;
-
 /*
     Printout:
     run_data_atm(); 
     print_min_max_atm();
-    write_file(bathymetry_name, output_path, true);
+    write_file(bathymetry_name, output_path, true); // printing files for ParaView, AtmosphereDataTransfer and AtmospherePlotData
 */
-
     iter_cnt_3d++;
     save_data();    
     if(debug){
@@ -428,6 +419,8 @@ void cAtmosphereModel::reset_arrays(){
     precipitable_water.initArray_2D(jm, km, 0.0); // areas of precipitable water in the air
     precipitation_NASA.initArray_2D(jm, km, 0.0); // surface precipitation from NASA
     temperature_NASA.initArray_2D(jm, km, 0.0); // surface temperature from NASA
+    velocity_v_NASA.initArray_2D(jm, km, 0.0); // surface v-velocity from NASA
+    velocity_w_NASA.initArray_2D(jm, km, 0.0); // surface w-velocity from NASA
     temp_reconst.initArray_2D(jm, km, 0.0); // surface temperature from reconstruction tool
     temp_landscape.initArray_2D(jm, km, 0.0); // landscape temperature
     p_stat_landscape.initArray_2D(jm, km, 0.0); // landscape static pressure
@@ -585,11 +578,9 @@ void cAtmosphereModel::write_file(std::string &bathymetry_name,
     AtmospherePlotData(bathymetry_name, (is_final_result ? -1 : iter_cnt-1));
     paraview_vtk_radial(bathymetry_name, Ma, i_radial, iter_cnt-1); 
     int j_longal = 62;          // Mount Everest/Himalaya
-//    int j_longal = 22;          // Mount Everest/Himalaya
 //    int j_longal = 90;          // Pacific center
     paraview_vtk_longal(bathymetry_name, j_longal, iter_cnt-1); 
     int k_zonal = 87;           // Mount Everest/Himalaya
-//    int k_zonal = 328;           // Mount Everest/Himalaya
 //    int k_zonal = 180;          // Pacific center
     paraview_vtk_zonal(bathymetry_name, k_zonal, iter_cnt-1); 
     if(paraview_panorama_vts_flag){ //This function creates a large file. Use a flag to control if it is wanted.
@@ -758,7 +749,7 @@ void cAtmosphereModel::init_water_vapour(){
     double h_T = 0.0;
     double cloud_loc_equator = 22.0;
     double cloud_loc_pole = 18.0;
-//     double alfa_s = 50.0;  // controles the amount of cloud water and cloud ice
+//     double alfa_s = 30.0;  // controles the amount of cloud water and cloud ice
      double alfa_s = 15.0;  // controles the amount of cloud water and cloud ice
 //     double alfa_s = 1.0;  // controles the amount of cloud water and cloud ice
     cloud_loc = std::vector<double>(jm, cloud_loc_pole); // radial location of cloud water maximum
@@ -865,13 +856,13 @@ void cAtmosphereModel::init_temperature(int Ma){
         int k_half = (km -1)/2;
         for(int j = 0; j < jm; j++){
             t.x[0][j][k_half] = (t.x[0][j][k_half+1] 
-                + t.x[0][j][k_half-1])/2.;
+                + t.x[0][j][k_half-1])/2.0;
             temperature_NASA.y[j][k_half] = (temperature_NASA.y[j][k_half+1] +
-                temperature_NASA.y[j][k_half-1])/2.;
+                temperature_NASA.y[j][k_half-1])/2.0;
         }
     }
     // if use_earthbyte_reconstruction temperature in °C converted to non-dimensional
-    if(Ma != 0 && use_earthbyte_reconstruction){
+    if((Ma != 0)&&(use_earthbyte_reconstruction)){
         for(int k = 0; k < km; k++){
             for(int j = 0; j < jm; j++){
                 t.x[0][j][k] = (t.x[0][j][k] + t_0)/t_0; // non-dimensional, (reconstructed temperature in °C)
@@ -899,13 +890,13 @@ void cAtmosphereModel::init_temperature(int Ma){
                 m_global_temperature_curve);
         t_global_mean = GetMean_2D(jm, km, temperature_NASA);
     }
-    if(!is_first_time_slice()){
-        t_paleo_add = 
+    if(!is_first_time_slice()){                                         // temperature difference between adjacent time steps
+        t_paleo_add =                                                   // at poles
             get_temperatures_from_curve(*get_current_time(), 
             m_equat_temperature_curve)
             - get_temperatures_from_curve(*get_previous_time(), 
             m_equat_temperature_curve);
-        t_pole_add = 
+        t_pole_add =                                                    // at equator
             get_temperatures_from_curve(*get_current_time(), 
             m_pole_temperature_curve)
             - get_temperatures_from_curve(*get_previous_time(), 
@@ -1049,6 +1040,7 @@ void cAtmosphereModel::init_temperature(int Ma){
         }
     }// temperatur distribution at aa prescribed sun position
 */
+    double t_corr = 0.0;
     double d_j_half = (double)(jm-1)/2.0;
     double t_equator = (get_temperatures_from_curve(*get_current_time(), 
                 m_equat_temperature_curve) + t_0)/t_0;
@@ -1056,118 +1048,178 @@ void cAtmosphereModel::init_temperature(int Ma){
                 m_pole_temperature_curve) + t_0)/t_0;
     double t_eff = t_pole - t_equator;
     double t_eff_rec = t_pole_add - t_paleo_add;
-//    cout << t_equator * t_0 - t_0 <<"...." << t_pole * t_0 - t_0 << "...." << - t_eff * t_0 << endl;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             double d_j = (double)j;
-            if((!use_NASA_temperature)&&(*get_current_time() > 0)){  // parabolic ocean surface temperature assumed
+            t_corr = (t_eff_rec                                         // average temperature distributions in time at poles and equator corrects parabolic assumption
+                * parabola((double)d_j/(double)d_j_half)                // parabolic correction function from pole to pole, values t_corr to be added 
+                + t_pole_add);                                          // on any pole to pole reconstructed initial temperature assumtion
+            if((!use_NASA_temperature)&&(!use_earthbyte_reconstruction)){  // parabolic surface land and ocean temperature assumed
                 t.x[0][j][k] = t_eff 
-                    * parabola((double)d_j/(double)d_j_half) + t_pole;
+                    * parabola((double)d_j/(double)d_j_half) + t_pole;  // parabolic temperature assumption
+                t.x[0][j][k] = t.x[0][j][k] + t_corr;                   // based on the parabolic temperature assumption
                 if(is_land(h, 0, j, k)){
                     t.x[0][j][k] += m_model->t_land;
                 }
-            }else{  // if(use_NASA_temperature) ocean surface temperature based on NASA temperature distribution
-                // transported for later time slices Ma by use_earthbyte_reconstruction
-                if(is_land (h, 0, j, k)){  // on land a parabolic distribution assumed
-                    if(*get_current_time() > 0){
-                        t.x[0][j][k] = t_eff 
-                            * parabola((double)d_j/(double)d_j_half) 
-                            + t_pole
-                            + m_model->t_land;
+            }
+            if((use_NASA_temperature)&&(use_earthbyte_reconstruction)){ // NASA surface temperature assumed and corrected by known local values
+                if(*get_current_time() == 0){
+                    t.x[0][j][k] = (temperature_NASA.y[j][k] + t_0)/t_0;// initial temperature by NASA for Ma=0, non-dimensional
+                }else{
+                    t.x[0][j][k] = t.x[0][j][k] + t_corr;                // based on the reconstructed temperature
+                    if(is_land(h, 0, j, k)){
+                        t.x[0][j][k] += m_model->t_land;
                     }
-                    if(*get_current_time() == 0)
-                        t.x[0][j][k] = (temperature_NASA.y[j][k] + t_0)/t_0;  // initial temperature by NASA for Ma=0, non-dimensional
-                }else{ // if the location is ocean
-                    if(*get_current_time() > 0){
-                        t.x[0][j][k] += t_eff_rec 
-                            * parabola((double)d_j/(double)d_j_half) 
-                            + t_pole_add;
-                    }
-                    if(*get_current_time() == 0)
-                        t.x[0][j][k] = (temperature_NASA.y[j][k] + t_0)/t_0;  // initial temperature by NASA for Ma=0, non-dimensional
                 }
-            }// else(use_NASA_temperature)
+                if(*get_current_time() >= Ma_switch){                   // parabolic temperature distribution starting at Ma_switch
+                    t.x[0][j][k] = t_eff 
+                        * parabola((double)d_j/(double)d_j_half) + t_pole;
+                    t.x[0][j][k] = t.x[0][j][k] + t_corr;               // based on the parabolic temperature assumption
+                    if(is_land(h, 0, j, k)){
+                        t.x[0][j][k] += m_model->t_land;
+                    }
+                }
+            }
         }// for j
     }// for k
+//    t.printArray("AGCM", im, jm, km);
+//    temperature_NASA.printArray_2D(jm, km);
+//    int i_potential = 0;
     double beta = 42.0; // in K, COSMO
     double t_u = 0.0;
-    double height = 0.0;
+//    double height_mount = 0.0;
+//    double height_potential = 0.0;
+    double t_potential = 0.0;
+    double p_hydro_potential = 0.0;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             int i_mount = i_topography[j][k];
-            height = get_layer_height(i_mount);
-            t_u = t.x[0][j][k] * t_0;  // 3D-temperature profile on land and ocean surfaces projected to zero level in K
-            if(is_land(h, 0, j, k)){
-//                if((use_NASA_temperature)&&(*get_current_time() == 0)){
-                if(*get_current_time() == 0){
-                    temp_landscape.y[j][k] = temperature_NASA.y[j][k]; // in °C
-                    t.x[0][j][k] = sqrt(t_u * t_u
-                        + (2.0 * beta * g * height)/R_Air); // COSMO, fictional NASA-temperature or Reconstructed_Temperature projected from actual height to zero level in K
-//                     t.x[0][j][k] = t_u + 6.5 * height/1000.0; // International Standard Atmosphere (ISA), higher temperatures than COSMO
-                    p_hydro.x[0][j][k] = 1e-2 * (r_air * R_Air * t.x[0][j][k]);  // reference static pressure given in hPa, by gas equation
-                    r_dry.x[0][j][k] = 1e2 * p_hydro.x[0][j][k]
-                         /(R_Air * t.x[0][j][k]); // in kg/m3, COSMO
-                    temp_reconst.y[j][k] = t.x[0][j][k]; //  in K
-                }
-//                if((use_NASA_temperature)&&(*get_current_time() > 0)){
-                if(*get_current_time() > 0){
-                    p_hydro.x[0][j][k] = 1e-2 * (r_air * R_Air * t_u);  // reference static pressure given in hPa, by gas equation
-                    r_dry.x[0][j][k] = 1e2 * p_hydro.x[0][j][k]
-                        /(R_Air * t_u); // in kg/m3, COSMO
-                    temp_reconst.y[j][k] = t_u; //  in K
-                }
-            }else{
-                p_hydro.x[0][j][k] = 1e-2 * (r_air * R_Air * t_u);  // reference static pressure given in hPa, by gas equation
-                r_dry.x[0][j][k] = 1e2 * p_hydro.x[0][j][k]/(R_Air * t_u); // in kg/m3, COSMO
-                temp_reconst.y[j][k] = t_u; //  in K
-                temp_landscape.y[j][k] = t_u - t_0; // in °C
-            }
+//            height_mount = get_layer_height(i_mount);
+            if(*get_current_time() == 0){
+                if(is_land(h, 0, j, k)){
+                    t_u = t.x[0][j][k] * t_0;  // 3D-temperature profile on land and ocean surfaces projected to zero level in K
+                    temp_landscape.y[j][k] = temperature_NASA.y[j][k] + t_0; // in K
+                    // International Standard Atmosphere (ISA) with constant lapse rate, dry-adiabatic lifting
+                    for(int i = 0; i < im; i++){
+                        double height = get_layer_height(i);
+                        t.x[i][j][k] = t_u 
+                            * sqrt(1.0 - (2.0 * beta * g * height)
+                            /(R_Air * t_u * t_u)); // COSMO in K
+                        p_hydro.x[i][j][k] = p_0 * exp(- t_u/beta 
+                            * (1.0 - sqrt(1.0 - (2.0 * beta * g * height)
+                            /(R_Air * t_u * t_u))));  // reference static pressure given in hPa, by COSMO
 /*
-            cout.precision(6);
-            if((j == 90)&&(k == 180))  cout << endl 
-                << "  printout in init_temperature   &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << endl
-                << "  j = " << j << "  k = " << k << endl 
-                << "  i_mount = " << i_mount
-                << "  height = " << height << endl
-                << "  eta = " << cp_l/cv_l << endl
-                << "  r_air = " << r_air
-                << "  r_dry_zero = " << r_dry.x[0][j][k] << endl
-                << "  p_0 = " << p_0 << endl
-                << "  p_stat_0_ref = " << p_hydro.x[0][j][k]
-                << "  p_stat_t_u_height = " << p_hydro.x[i_mount][j][k]
-                << "  p_stat_zero = " << p_hydro.x[0][j][k] << endl
-                << "  t_land = " << t_land * t_0
-                << "  t_0 = " << t_0 - t_0 << endl
-                << "  t_0_parabola = " << t_0_parabola - t_0
-                << "  t_u_pole = " << t_u_pole - t_0
-                << "  t_u_equator = " << t_u_equator - t_0 << endl
-                << "  t_0_ref = " << t_0_20 - t_0
-                << "  t_u_height = " << t.x[i_mount][j][k] - t_0
-                << "  t_zero = " << t.x[0][j][k] - t_0 << endl << endl;
+                        if(i == i_mount){
+                            i_potential = i;
+                            height_potential = height;
+                            t_potential = t.x[i][j][k];
+                            p_hydro_potential = p_hydro.x[i][j][k];
+                        }
 */
-            // International Standard Atmosphere (ISA) with constant lapse rate, dry-adiabatic lifting
-            for(int i = 0; i < im; i++){
-                double height = get_layer_height(i);
-                t.x[i][j][k] = temp_reconst.y[j][k] 
-                    * sqrt(1.0 - (2.0 * beta * g * height)
-                    /(R_Air * temp_reconst.y[j][k] 
-                    * temp_reconst.y[j][k])); // COSMO in K
-//                t.x[i][j][k] = temp_reconst.y[j][k] - 6.5 * height/1000.0; // International Standard Atmosphere (ISA), higher temperatures than COSMO
-                p_hydro.x[i][j][k] = p_hydro.x[0][j][k] 
-                    * exp(- temp_reconst.y[j][k]/beta 
-                    * (1.0 - sqrt(1.0 - (2.0 * beta *g * height)
-                    /(R_Air * temp_reconst.y[j][k] 
-                    * temp_reconst.y[j][k]))));  // reference static pressure given in hPa, by COSMO
-                r_dry.x[i][j][k] = 1e2 * p_hydro.x[i][j][k]
-                    /(R_Air * t.x[i][j][k]); // in kg/m3, COSMO
-                if((i == i_mount)&&(*get_current_time() >= 0)){
+                    } // end i
+                    t.x[0][j][k] = t_potential/t_0 // potential temperature, landscape temperature projected to see level
+                        * pow(p_0/p_hydro_potential, R_Air/cp_l); // non-dimensional
+                    p_hydro.x[0][j][k] = p_hydro_potential // potential hydro static pressure, landscape pressure projected to see level
+                        * pow((t.x[0][j][k] * t_0)/t_potential, cp_l/R_Air);
+                    temp_reconst.y[j][k] = t.x[0][j][k] * t_0; //  in K
                     temp_landscape.y[j][k] = t.x[i_mount][j][k] - t_0; // in °C
                     p_stat_landscape.y[j][k] = p_hydro.x[i_mount][j][k]; // in hPa
-                    r_dry_landscape.y[j][k] = r_dry.x[i_mount][j][k]; // in kg/m³
+/*
+                    cout.precision(6);
+                    if((j == 62)&&(k == 87))  cout << endl 
+                        << "  printout in init_temperature (potential)  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << endl
+                        << "  Ma = " << (int)*get_current_time() << endl
+                        << "  j = " << j << "  k = " << k << endl 
+                        << "  i_mount = " << i_mount
+                        << "  i_potential = " << i_potential
+                        << "  height_mount = " << height_mount
+                        << "  height_potential = " << height_potential << endl << endl
+
+                        << "  r_air = " << r_air
+                        << "  p_0 = " << p_0
+                        << "  t_0 = " << t_0
+                        << "  t_land = " << t_land * t_0 << endl << endl
+
+                        << "  r_dry_potential = " << r_dry_potential
+                        << "  r_dry_sl = " << r_dry.x[0][j][k] << endl << endl
+
+                        << "  p_hydro_potential = " << p_hydro_potential
+                        << "  p_hydro_sl = " << p_hydro.x[0][j][k] << endl << endl
+
+                        << "  t_potential = " << t_potential - t_0
+                        << "  t_sl = " << t.x[0][j][k] * t_0 - t_0 << endl << endl;
+*/
+                }else{  // is_water
+                    t_u = t.x[0][j][k] * t_0;  // 3D-temperature profile on land and ocean surfaces projected to zero level in K
+                    p_hydro.x[0][j][k] = 1e-2 * (r_air * R_Air * t_u);  // reference static pressure given in hPa, by gas equation
+                    temp_reconst.y[j][k] = t_u; //  in K
+                    temp_landscape.y[j][k] = t_u - t_0; // in °C
                 }
-            } // end i
+            // Initial conditions proposed by COSMO, dry-adiabatic lifting
+                for(int i = 0; i < im; i++){
+                    double height = get_layer_height(i);
+                    t.x[i][j][k] = temp_reconst.y[j][k] 
+                        * sqrt(1.0 - (2.0 * beta * g * height)
+                        /(R_Air * temp_reconst.y[j][k] 
+                        * temp_reconst.y[j][k])); // COSMO in K
+//                t.x[i][j][k] = temp_reconst.y[j][k] - 6.5 * height/1000.0; // International Standard Atmosphere (ISA)
+                    p_hydro.x[i][j][k] = p_hydro.x[0][j][k] 
+                        * exp(- temp_reconst.y[j][k]/beta 
+                        * (1.0 - sqrt(1.0 - (2.0 * beta *g * height)
+                        /(R_Air * temp_reconst.y[j][k] 
+                        * temp_reconst.y[j][k]))));  // reference static pressure given in hPa, by COSMO
+                } // end i
+            }else{  // (*get_current_time() > 0)
+                t_u = t.x[0][j][k] * t_0;  // in K
+                p_hydro.x[0][j][k] = 1e-2 * (r_air * R_Air * t_u);  // reference static pressure given in hPa, by gas equation
+//                r_dry.x[0][j][k] = 1e2 * p_hydro.x[0][j][k]
+//                    /(R_Air * t_u); // in kg/m3
+                temp_reconst.y[j][k] = t_u; //  in K
+            // Initial conditions proposed by COSMO, dry-adiabatic lifting
+                for(int i = 0; i < im; i++){
+                    double height = get_layer_height(i);
+                    t.x[i][j][k] = temp_reconst.y[j][k] 
+                        * sqrt(1.0 - (2.0 * beta * g * height)
+                        /(R_Air * temp_reconst.y[j][k] 
+                        * temp_reconst.y[j][k])); // COSMO in K
+//                t.x[i][j][k] = temp_reconst.y[j][k] - 6.5 * height/1000.0; // International Standard Atmosphere (ISA)
+                    p_hydro.x[i][j][k] = p_hydro.x[0][j][k] 
+                        * exp(- temp_reconst.y[j][k]/beta 
+                        * (1.0 - sqrt(1.0 - (2.0 * beta *g * height)
+                        /(R_Air * temp_reconst.y[j][k] 
+                        * temp_reconst.y[j][k]))));  // reference static pressure given in hPa, by COSMO
+                } // end i
+                temp_landscape.y[j][k] = t.x[i_mount][j][k] - t_0; // in °C
+                p_stat_landscape.y[j][k] = p_hydro.x[i_mount][j][k]; // in hPa
+/*
+                cout.precision(6);
+                if((j == 62)&&(k == 87))  cout << endl 
+                    << "  printout in init_temperature   &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << endl
+                    << "  Ma = " << (int)*get_current_time() << endl
+                    << "  j = " << j << "  k = " << k << endl 
+
+                    << "  r_air = " << r_air
+                    << "  p_0 = " << p_0
+                    << "  t_0 = " << t_0
+                    << "  t_land = " << t_land * t_0 << endl << endl
+
+                    << "  i_mount = " << i_mount
+                    << "  height_mount = " << get_layer_height(i_mount) << endl << endl
+
+                    << "  r_dry_landscape = " << r_dry_landscape.y[j][k]
+                    << "  r_dry = " << r_dry.x[0][j][k] << endl << endl
+
+                    << "  p_hydro_landscape = " << p_stat_landscape.y[j][k]
+                    << "  p_hydro = " << p_hydro.x[0][j][k] << endl << endl
+
+                    << "  t_landscape = " << temp_landscape.y[j][k]
+                    << "  t_reconstruct = " << temp_reconst.y[j][k] - t_0
+                    << "  t = " << t.x[0][j][k] - t_0 << endl << endl;
+*/
+            }  // (*get_current_time() > 0)
         } // end k
     } // end j
+
     t_global_mean = GetMean_2D(jm, km, temp_landscape);
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
@@ -1177,20 +1229,6 @@ void cAtmosphereModel::init_temperature(int Ma){
             }
         }
     }
-
-    for(int j = 0; j < jm; j++){
-        for(int k = 0; k < km; k++){
-            int i_mount = i_topography[j][k];
-            for(int i = i_mount; i >= 0; i--){
-                if(is_land(h, 0, j, k)){
-//                    t.x[i][j][k] = t.x[i_mount][j][k];
-                    r_dry.x[i][j][k] = r_dry.x[i_mount][j][k];
-                    p_hydro.x[i][j][k] = p_hydro.x[i_mount][j][k];
-                }
-            }
-        }
-    }
-
     cout << "      AGCM: init_temperature ended" << endl;
     return;
 }
@@ -1506,12 +1544,16 @@ void cAtmosphereModel::ValueLimitationAtm(){
                 if(t_u <= t_00){
                     cloud.x[i][j][k] = 0.0;
                     ice.x[i][j][k] = 0.0;
+                    gr.x[i][j][k] = 0.0;
                 }
 //                if(P_rain.x[i][j][k] >= 10.0/8.64e4)  P_rain.x[i][j][k] = 10.0/8.64e4;
 //                if(P_snow.x[i][j][k] >= 1.0/8.64e4)  P_snow.x[i][j][k] = 1.0/8.64e4;
+//                if(P_graupel.x[i][j][k] >= 1.0/8.64e4)  P_graupel.x[i][j][k] = 1.0/8.64e4;
 //                if(P_conv_midl.x[i][j][k] >= 10.0/8.64e4)  P_conv_midl.x[i][j][k] = 10.0/8.64e4;
-//                if(P_rain.x[i][j][k] < 0.0)  P_rain.x[i][j][k] = 0.0;
-//                if(P_snow.x[i][j][k] < 0.0)  P_snow.x[i][j][k] = 0.0;
+//                if(P_conv_shall.x[i][j][k] >= 10.0/8.64e4)  P_conv_shall.x[i][j][k] = 10.0/8.64e4;
+                if(P_rain.x[i][j][k] < 0.0)  P_rain.x[i][j][k] = 0.0;
+                if(P_snow.x[i][j][k] < 0.0)  P_snow.x[i][j][k] = 0.0;
+                if(P_graupel.x[i][j][k] < 0.0)  P_graupel.x[i][j][k] = 0.0;
                 if(P_conv_midl.x[i][j][k] < 0.0)  P_conv_midl.x[i][j][k] = 0.0;
                 if(P_conv_shall.x[i][j][k] < 0.0)  P_conv_shall.x[i][j][k] = 0.0;
                 if(co2.x[i][j][k] >= 5.36)  co2.x[i][j][k] = 5.36;
@@ -2008,6 +2050,7 @@ double cAtmosphereModel::find_residuum_atm(){
             }  //  end i
         }  // end k
     }  // end j
+                    cout.precision(8);
                     if((residuum_old - maxValue) > 0.0){
                         cout << endl << "      AGCM: write_file in find_residuum_atm, absolute error declining ......................." << endl;
                         cout << endl << "      residuum_atm = " << maxValue
