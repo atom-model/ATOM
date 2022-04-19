@@ -4930,7 +4930,7 @@ void cAtmosphereModel::WaterVapourEvaporation(){
             R_net = short_wave_radiation[j]/radiation.x[0][j][k];
             if((t.x[0][j][k] * t_0) >= t_0){
                 if(is_land(h, 0, j, k)){
-                    t_u = (t.x[0][j][k] + t_land) * t_0;
+                    t_u = t.x[0][j][k] * t_0;
                     e = c.x[0][j][k] * p_hydro.x[0][j][k]/ep;  // water vapour pressure in hPa
                     E_Rain = hp * exp_func(t_u, 17.2694, 35.86);
                     sat_deficit = E_Rain - e;  // saturation deficit in hPa
@@ -4960,7 +4960,7 @@ void cAtmosphereModel::WaterVapourEvaporation(){
             }
             if((t.x[0][j][k] * t_0) < t_0){
                 if(is_land(h, 0, j, k)){
-                    t_u = (t.x[0][j][k] + t_land) * t_0;
+                    t_u = t.x[0][j][k] * t_0;
                     e = c.x[0][j][k] * p_hydro.x[0][j][k]/ep;  // water vapour pressure in hPa
                     E_Ice = hp * exp_func(t_u, 21.8746, 7.66);
                     sat_deficit = (E_Ice - e);  // saturation deficit in hPa

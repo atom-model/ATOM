@@ -36,7 +36,6 @@ def main():
             ('r_0_water', 'reference density of fresh water in kg/m3', 'double', 997.0),
             ('t_average', 'mean temperature of the modern earth in °C', 'double', 15.4),
             ('t_pole_modern', 'pole temperature of the modern earth in °C', 'double', - 15.4),
-            ('t_land', 'temperature increase on land by 0°C(0°C compares to t_land = 0.0)', 'double', 0.0),
 
             ('t_paleo_max', 'maximum add of mean temperature in °C during paleo times', 'double', 10.0),
  

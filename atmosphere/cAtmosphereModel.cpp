@@ -176,10 +176,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 
     init_temperature(Ma);              // initialization of temperature, hydrostatic pressure and density of dry air, reconstruction of potential surface values
 
-//    goto Printout;
-
-//    t.printArray("AGCM", im, jm, km);
-//    temp_reconst.printArray_2D(jm, km);
+    goto Printout;
 
     store_intermediate_data_2D(1.0);
     store_intermediate_data_3D(1.0);
@@ -192,14 +189,21 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 //    fft_gaussian_filter_3d(t, 3, direction_k);
     fft_gaussian_filter_3d(t,4);
     fft_gaussian_filter_3d(p_hydro,4);
-    fft_gaussian_filter_3d(r_dry,4);
+//    fft_gaussian_filter_3d(r_dry,4);
 
     init_water_vapour();               // initialisation of water vapour, cloud water and cloud ice based on the temperature profile
 
     PressureDensity();                 // recalculation of hydrostatic pressure and density of dry and humid air
 
     SaturationAdjustment();            // based on the initial distribution, recomputation of the cloud water and cloud ice formation in case of saturated water vapour detected
+/*
+    t.printArray("AGCM", im, jm, km);
+    temperature_NASA.printArray_2D(jm, km);
+    temp_reconst.printArray_2D(jm, km);
+    temp_landscape.printArray_2D(jm, km);
 
+    goto Printout;
+*/
     fft_gaussian_filter_3d(c,1);
     fft_gaussian_filter_3d(cloud,1);
     fft_gaussian_filter_3d(ice,1);
@@ -233,12 +237,12 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     cout << endl << endl;
     run_3D_loop();                     // iterational 3D loop to solve variables in 4-step Runge-Kutta time scheme
     cout << endl << endl;
-/*
+
     Printout:
     run_data_atm(); 
     print_min_max_atm();
     write_file(bathymetry_name, output_path, true); // printing files for ParaView, AtmosphereDataTransfer and AtmospherePlotData
-*/
+
     iter_cnt_3d++;
     save_data();    
     if(debug){
@@ -1040,6 +1044,7 @@ void cAtmosphereModel::init_temperature(int Ma){
         }
     }// temperatur distribution at aa prescribed sun position
 */
+
     double t_corr = 0.0;
     double d_j_half = (double)(jm-1)/2.0;
     double t_equator = (get_temperatures_from_curve(*get_current_time(), 
@@ -1058,43 +1063,33 @@ void cAtmosphereModel::init_temperature(int Ma){
                 t.x[0][j][k] = t_eff 
                     * parabola((double)d_j/(double)d_j_half) + t_pole;  // parabolic temperature assumption
                 t.x[0][j][k] = t.x[0][j][k] + t_corr;                   // based on the parabolic temperature assumption
-                if(is_land(h, 0, j, k)){
-                    t.x[0][j][k] += m_model->t_land;
-                }
             }
             if((use_NASA_temperature)&&(use_earthbyte_reconstruction)){ // NASA surface temperature assumed and corrected by known local values
                 if(*get_current_time() == 0){
                     t.x[0][j][k] = (temperature_NASA.y[j][k] + t_0)/t_0;// initial temperature by NASA for Ma=0, non-dimensional
                 }else{
-                    t.x[0][j][k] = t.x[0][j][k] + t_corr;                // based on the reconstructed temperature
-                    if(is_land(h, 0, j, k)){
-                        t.x[0][j][k] += m_model->t_land;
-                    }
+                    t.x[0][j][k] = t.x[0][j][k] + t_corr;               // on land and ocean the corrected reconstructed temperature necessary
                 }
                 if(*get_current_time() >= Ma_switch){                   // parabolic temperature distribution starting at Ma_switch
                     t.x[0][j][k] = t_eff 
                         * parabola((double)d_j/(double)d_j_half) + t_pole;
                     t.x[0][j][k] = t.x[0][j][k] + t_corr;               // based on the parabolic temperature assumption
-                    if(is_land(h, 0, j, k)){
-                        t.x[0][j][k] += m_model->t_land;
-                    }
                 }
             }
         }// for j
     }// for k
-//    t.printArray("AGCM", im, jm, km);
-//    temperature_NASA.printArray_2D(jm, km);
-//    int i_potential = 0;
+
+    int i_potential = 0;
     double beta = 42.0; // in K, COSMO
     double t_u = 0.0;
-//    double height_mount = 0.0;
-//    double height_potential = 0.0;
+    double height_mount = 0.0;
+    double height_potential = 0.0;
     double t_potential = 0.0;
     double p_hydro_potential = 0.0;
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             int i_mount = i_topography[j][k];
-//            height_mount = get_layer_height(i_mount);
+            height_mount = get_layer_height(i_mount);
             if(*get_current_time() == 0){
                 if(is_land(h, 0, j, k)){
                     t_u = t.x[0][j][k] * t_0;  // 3D-temperature profile on land and ocean surfaces projected to zero level in K
@@ -1108,14 +1103,14 @@ void cAtmosphereModel::init_temperature(int Ma){
                         p_hydro.x[i][j][k] = p_0 * exp(- t_u/beta 
                             * (1.0 - sqrt(1.0 - (2.0 * beta * g * height)
                             /(R_Air * t_u * t_u))));  // reference static pressure given in hPa, by COSMO
-/*
+
                         if(i == i_mount){
                             i_potential = i;
                             height_potential = height;
                             t_potential = t.x[i][j][k];
                             p_hydro_potential = p_hydro.x[i][j][k];
                         }
-*/
+
                     } // end i
                     t.x[0][j][k] = t_potential/t_0 // potential temperature, landscape temperature projected to see level
                         * pow(p_0/p_hydro_potential, R_Air/cp_l); // non-dimensional
@@ -1140,7 +1135,7 @@ void cAtmosphereModel::init_temperature(int Ma){
                         << "  t_0 = " << t_0
                         << "  t_land = " << t_land * t_0 << endl << endl
 
-                        << "  r_dry_potential = " << r_dry_potential
+//                        << "  r_dry_potential = " << r_dry_potential
                         << "  r_dry_sl = " << r_dry.x[0][j][k] << endl << endl
 
                         << "  p_hydro_potential = " << p_hydro_potential
@@ -1219,7 +1214,12 @@ void cAtmosphereModel::init_temperature(int Ma){
             }  // (*get_current_time() > 0)
         } // end k
     } // end j
-
+/*
+    t.printArray("AGCM", im, jm, km);
+    temperature_NASA.printArray_2D(jm, km);
+    temp_reconst.printArray_2D(jm, km);
+    temp_landscape.printArray_2D(jm, km);
+*/
     t_global_mean = GetMean_2D(jm, km, temp_landscape);
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
