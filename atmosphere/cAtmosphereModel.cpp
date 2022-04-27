@@ -176,7 +176,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
 
     init_temperature(Ma);              // initialization of temperature, hydrostatic pressure and density of dry air, reconstruction of potential surface values
 
-    goto Printout;
+//    goto Printout;
 
     store_intermediate_data_2D(1.0);
     store_intermediate_data_3D(1.0);
@@ -208,7 +208,7 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     fft_gaussian_filter_3d(cloud,1);
     fft_gaussian_filter_3d(ice,1);
 
-    RadiationMultiLayer();             // incoming short wave and outgoing long wave radiation in dependence on atmosphere's emissivity changes initial distribution of temperature 
+    RadiationMultiLayer();       // incoming short wave and outgoing long wave radiation in dependence on atmosphere's emissivity changes initial distribution of temperature 
 
     switch(CategoryIceScheme){
         case 0: ZeroCategoryIceScheme();     // development of rain and snow fall, water vapour and cloud water
@@ -237,12 +237,12 @@ void cAtmosphereModel::RunTimeSlice(int Ma){
     cout << endl << endl;
     run_3D_loop();                     // iterational 3D loop to solve variables in 4-step Runge-Kutta time scheme
     cout << endl << endl;
-
+/*
     Printout:
     run_data_atm(); 
     print_min_max_atm();
     write_file(bathymetry_name, output_path, true); // printing files for ParaView, AtmosphereDataTransfer and AtmospherePlotData
-
+*/
     iter_cnt_3d++;
     save_data();    
     if(debug){
@@ -894,6 +894,8 @@ void cAtmosphereModel::init_temperature(int Ma){
                 m_global_temperature_curve);
         t_global_mean = GetMean_2D(jm, km, temperature_NASA);
     }
+    t_global_mean = get_temperatures_from_curve(0, 
+                m_global_temperature_curve);;
     if(!is_first_time_slice()){                                         // temperature difference between adjacent time steps
         t_paleo_add =                                                   // at poles
             get_temperatures_from_curve(*get_current_time(), 
@@ -1053,6 +1055,11 @@ void cAtmosphereModel::init_temperature(int Ma){
                 m_pole_temperature_curve) + t_0)/t_0;
     double t_eff = t_pole - t_equator;
     double t_eff_rec = t_pole_add - t_paleo_add;
+
+//    double t_global_diff = 
+//               (t_global_mean_exp - t_global_mean)/t_0;
+//cout << endl << t_global_mean_exp << "     " << t_global_mean << "     " << t_global_mean_exp - t_global_mean << endl << endl;
+
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             double d_j = (double)j;
@@ -1068,12 +1075,11 @@ void cAtmosphereModel::init_temperature(int Ma){
                 if(*get_current_time() == 0){
                     t.x[0][j][k] = (temperature_NASA.y[j][k] + t_0)/t_0;// initial temperature by NASA for Ma=0, non-dimensional
                 }else{
-                    t.x[0][j][k] = t.x[0][j][k] + t_corr;               // on land and ocean the corrected reconstructed temperature necessary
-                }
+                    t.x[0][j][k] = t.x[0][j][k] + t_corr;// on land and ocean the corrected reconstructed temperature necessary
+               }
                 if(*get_current_time() >= Ma_switch){                   // parabolic temperature distribution starting at Ma_switch
                     t.x[0][j][k] = t_eff 
                         * parabola((double)d_j/(double)d_j_half) + t_pole;
-                    t.x[0][j][k] = t.x[0][j][k] + t_corr;               // based on the parabolic temperature assumption
                 }
             }
         }// for j
