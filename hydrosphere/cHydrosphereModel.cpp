@@ -35,19 +35,6 @@ using namespace std;
 using namespace tinyxml2;
 using namespace AtomUtils;
 
-#define dxdthe_a(X) \
-    (h_d_j * (X->x[i][j+1][k] - X->x[i][j-1][k])/(2.0 * dthe))
-#define dxdthe_b(X) \
-    (h_d_j * (- 3.0 * X->x[i][j][k] + 4.0 * X->x[i][j+1][k] - X->x[i][j+2][k])/(2.0 * dthe))
-#define dxdthe_c(X) \
-    (- h_d_j * (- 3.0 * X->x[i][j][k] + 4.0 * X->x[i][j-1][k] - X->x[i][j-2][k])/(2.0 * dthe))
-#define dxdphi_a(X) \
-    (h_d_k * (X->x[i][j][k+1] - X->x[i][j][k-1])/(2.0 * dphi))
-#define dxdphi_b(X) \
-    (h_d_k * (- 3.0 * X->x[i][j][k] + 4.0 * X->x[i][j][k+1] - X->x[i][j][k+2])/(2.0 * dphi))
-#define dxdphi_c(X) \
-    (- h_d_k * (- 3.0 * X->x[i][j][k] + 4.0 * X->x[i][j][k-1] - X->x[i][j][k-2])/(2.0 * dphi))
-
 extern std::vector<std::vector<double> > m_node_weights;
 
 cHydrosphereModel* cHydrosphereModel::m_model = NULL;
@@ -142,7 +129,7 @@ void cHydrosphereModel::LoadConfig(const char *filename){
 *
 */
 void cHydrosphereModel::RunTimeSlice(int Ma){
-    int start = RunStart(hy);
+    int start = AtomUtils::RunStart(hy);
 
     m_current_time = m_time_list.insert(int(Ma)).first;
 
@@ -167,42 +154,29 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     phi.Coordinates(km, phi0, dphi);
 
     read_Hydrosphere_Surface_Data(Ma);
+    HydrosphereDataTransfer(bathymetry_name);
 
+    init_temperature(Ma);
+    fft_gaussian_filter_3d(t,1);
+
+    if(!use_NASA_temperature) 
+        IC_t_WestEastCoast();
+
+    init_salinity();
+    PresStat_SaltWaterDens();
+    SalinityEvaporation();
     land_oceanFraction(im-1, jm, km, h);
 
     init_EkmanSpiral();
 
 //    goto Printout;
 
-    init_dynamic_pressure();
-
+    cout << endl << "      OGCM: velocities fft_gaussian_filter_3d in RunTimeSlice atm begin ......................." << endl;
     fft_gaussian_filter_3d(u,1);
     fft_gaussian_filter_3d(v,1);
     fft_gaussian_filter_3d(w,1);
+    cout << endl << "      OGCM: velocities fft_gaussian_filter_3d in RunTimeSlice atm end ......................." << endl;
 
-//    IC_u_WestEastCoast();
-//    IC_Equatorial_Currents();
-//    if(Ma <= 41)  IC_CircumPolar_Current(); // Drake passage closed 41 Ma ago
-    init_temperature(Ma);
-
-//    goto Printout;
-    
-    if(!use_NASA_temperature) 
-        IC_t_WestEastCoast();
-
-    init_salinity();
-
-    fft_gaussian_filter_3d(t,1);
-//    fft_gaussian_filter_3d(t, 3, direction_k);
-    fft_gaussian_filter_3d(c,1);
-
-    store_intermediate_data_2D(1.0);
-    store_intermediate_data_3D(1.0);
-
-    PresStat_SaltWaterDens();
-    SalinityEvaporation();
-
-    store_intermediate_data_2D(1.0);
     store_intermediate_data_3D(1.0);
     cout << endl << endl;
     run_3D_loop(); // iterational 3D loop to solve variables in 4-step Runge-Kutta time scheme
@@ -221,6 +195,12 @@ void cHydrosphereModel::RunTimeSlice(int Ma){
     RunEnd(hy, Ma, start);
     print_final_remarks();
     return;
+/*
+    t.printArray("OGCM", im, jm, km);
+    temperature_NASA.printArray_2D(jm, km);
+    temp_reconst.printArray_2D(jm, km);
+    temp_landscape.printArray_2D(jm, km);
+*/
 }
 /*
 *
@@ -237,9 +217,6 @@ void cHydrosphereModel::reset_arrays(){
     Upwelling.initArray_2D(jm, km, 0.0); // upwelling
     Downwelling.initArray_2D(jm, km, 0.0); // downwelling
     EkmanPumping.initArray_2D(jm, km, 0.0); // 2D Ekman pumping vertical velocity summed up in a vertical column
-    SaltFinger.initArray_2D(jm, km, 0.0);      // salt bulge of higher density
-    SaltDiffusion.initArray_2D(jm, km, 0.0);   // salt bulge of lower density
-    Salt_total.initArray_2D(jm, km, 0.0);     // rate of salt summed up in a vertical column
     salinity_evaporation.initArray_2D(jm, km, 0.0); // additional salinity by evaporation
     Evaporation_Dalton.initArray_2D(jm, km, 0.0); // evaporation by Dalton in [mm/d]
     Evaporation_Penman.initArray_2D(jm, km, 0.0); // evaporation by Penman in [mm/d]
@@ -265,7 +242,7 @@ void cHydrosphereModel::reset_arrays(){
     wn.initArray(im, jm, km, 0.0); // w-velocity component in phi-direction new
     cn.initArray(im, jm, km, 1.0); // salinity new
 
-    p_stat.initArray(im, jm, km, 0.0); // dynamic pressure
+    p_dyn.initArray(im, jm, km, 0.0); // dynamic pressure
     p_hydro.initArray(im, jm, km, 1.0); // static pressure
 
     rhs_t.initArray(im, jm, km, 0.0); // auxilliar field RHS temperature
@@ -410,57 +387,6 @@ void cHydrosphereModel::store_intermediate_data_3D(float coeff){
 /*
 *
 */
-void cHydrosphereModel::store_intermediate_data_2D(float coeff){   
-    for(int j = 0; j < jm; j++){   
-        for(int k = 0; k < km; k++){   
-            vn.x[im-1][j][k] = coeff * v.x[im-1][j][k];
-            wn.x[im-1][j][k] = coeff * w.x[im-1][j][k]; 
-        }
-    }
-    return;
-}
-/*
-*
-*/
-void cHydrosphereModel::run_2D_loop(){
-cout << endl << "      OGCM: run_2D_loop hyd ................................." << endl;
-    int switch_2D = 0;
-    iter_cnt = 1;
-    if(switch_2D != 1){
-        for(pressure_iter_2D = 1; pressure_iter_2D <= pressure_iter_max_2D; pressure_iter_2D++){
-            for(velocity_iter_2D = 1; velocity_iter_2D <= velocity_iter_max_2D; velocity_iter_2D++){
-                print_loop_2D_headings();
-                BC_theta();
-                BC_phi();
-                BC_SolidGround();
-                if(velocity_iter_2D % 2 == 0){
-                     computePressure_2D();
-                }
-                solveRungeKutta_2D_Hydrosphere();
-                ValueLimitationHyd();
-                store_intermediate_data_2D(1.0);
-                print_min_max_hyd();
-                run_data_hyd(); 
-                iter_cnt++;
-            }  //  ::::::   end of velocity loop_2D: if (velocity_iter_2D > velocity_iter_max_2D)   ::::::::::::::::::::::
-
-            if(pressure_iter_2D % checkpoint == 0){
-            cout << endl << "      OGCM: write_file in run_2D_loop hyd ......................." << endl;
-                write_file(bathymetry_name, output_path, false);
-            }
-
-            if(iter_cnt > nm){
-                cout << "       nm = " << nm << "     .....     maximum number of iterations   nm   reached!" << endl;
-                break;
-            }
-        } // :::::::::::::::::::   end of pressure loop_2D: if (pressure_iter_2D > pressure_iter_max_2D)   ::::::::::
-    } // ::::::::   end of 2D loop for initial surface conditions: if (switch_2D == 0)   :::::::::::::::::::::::::::::
-    cout << endl << "      OGCM: run_2D_loop hyd ended ................................" << endl;
-    return;
-}
-/*
-*
-*/
 void cHydrosphereModel::run_3D_loop(){
 cout << endl << "      OGCM: run_3D_loop hyd ..........................." << endl;
     iter_cnt = 1;
@@ -473,58 +399,114 @@ cout << endl << "      OGCM: run_3D_loop hyd ..........................." << end
     if(debug){
         save_data();
     }
-    for(pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++){
-        for(velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++){
-            print_loop_3D_headings();
-            BC_radius();
-            BC_theta();
-            BC_phi();
-            BC_SolidGround();
-            if(velocity_iter % 2 == 0){
-                computePressure_3D();
-                residuum_loop = find_residuum_hyd();
-                if(fabs(residuum_loop/residuum_old - 1.0) <= eps_residuum){
-                    cout << endl << "      OGCM: write_file in run_3D_loop hyd, termination due to convergence .... relative error less than eps_residuum ..................." << endl;
-                    cout << endl << "      residuum_loop = " << residuum_loop
-                                 << "   residuum_old = " << residuum_old
-                                 << "   eps_residuum = " << eps_residuum
-                                 << "   absolute error = " 
-                                 << fabs(residuum_old - residuum_loop)
-                                 << "   relative error = " 
-                                 << fabs(residuum_loop/residuum_old - 1.0) << endl;
-                    write_file(bathymetry_name, output_path, false);
-                    goto endloop;
-                }else  cout << "      OGCM: write_file in find_residuum_hyd, relative error is too high ......................." << endl << endl;
-                if(iter_cnt > nm){
-                    cout << "       nm = " << nm 
-                        << "     .....     maximum number of iterations   nm   reached!" 
-                        << endl;
-                    goto endloop;
+
+    if(iter_cnt > nm){
+        cout << "       nm = " << nm 
+            << "     .....     maximum number of iterations   nm   reached!" 
+            << endl;
+        goto loopend;
+    }else{
+
+    loopbegin:
+
+        cout << endl << "      AGCM: boundary conditions in run_3D_loop atm begin ......................." << endl;
+        BC_radius();
+        BC_theta();
+        BC_phi();
+        BC_SolidGround();
+        cout << endl << "      AGCM: boundary conditions in run_3D_loop atm end ......................." << endl;
+
+        for(pressure_iter = 1; pressure_iter <= pressure_iter_max; pressure_iter++){
+            for(velocity_iter = 1; velocity_iter <= velocity_iter_max; velocity_iter++){
+                print_loop_3D_headings();
+
+                if(velocity_iter % 2 == 0){
+                    residuum_loop = find_residuum_hyd();
+                    if(fabs(residuum_loop/residuum_old - 1.0) <= eps_residuum){
+                        cout << endl << "      OGCM: write_file in run_3D_loop hyd, termination due to convergence .... relative error less than eps_residuum ..................." << endl;
+                        cout << endl << "      residuum_loop = " << residuum_loop
+                                     << "   residuum_old = " << residuum_old
+                                     << "   eps_residuum = " << eps_residuum
+                                     << "   absolute error = " 
+                                     << fabs(residuum_old - residuum_loop)
+                                     << "   relative error = " 
+                                     << fabs(residuum_loop/residuum_old - 1.0) << endl;
+                        write_file(bathymetry_name, output_path, false);
+                        goto loopend;
+                    }else  cout << "      OGCM: write_file in find_residuum_hyd, relative error is too high ......................." << endl << endl;
+                    if(iter_cnt > nm){
+                        cout << "       nm = " << nm 
+                            << "     .....     maximum number of iterations   nm   reached!" 
+                            << endl;
+                        goto loopend;
+                    }
                 }
-            }
-/*
-            if(velocity_iter % 4 == 0){
-                PresStat_SaltWaterDens();
-                SalinityEvaporation();
-            }
-*/
-            solveRungeKutta_3D_Hydrosphere(); 
-            ValueLimitationHyd();
-            residuum_old = residuum_loop;
-            store_intermediate_data_3D(1.0);
-            print_min_max_hyd();
-            residuum_old = residuum_loop;
-            run_data_hyd();
-            iter_cnt++;
-            iter_cnt_3d++;
-            if(debug) save_data();
-        } // end of velocity loop
-        if(pressure_iter % checkpoint == 0){
-            cout << endl << "      OGCM: write_file in run_3D_loop hyd ......................." << endl;
+                if((velocity_iter == velocity_iter_max)
+                    &&(pressure_iter == pressure_iter_max)){
+                    cout << endl << "      AGCM: repetition of essential functions in run_3D_loop atm begin ......................." << endl;
+
+                    init_salinity();
+                    PresStat_SaltWaterDens();
+                    SalinityEvaporation();
+
+                    cout << endl << "      AGCM: repetition of essential functions in run_3D_loop atm end ......................." << endl;
+
+                    cout << endl << "      AGCM: essentials fft_gaussian_filter_3d in run_3D_loop atm begin ......................." << endl;
+                    fft_gaussian_filter_3d(t,1);
+                    fft_gaussian_filter_3d(u,1);
+                    fft_gaussian_filter_3d(v,1);
+                    fft_gaussian_filter_3d(w,1);
+                    fft_gaussian_filter_3d(p_dyn,1);
+                    cout << endl << "      AGCM: essentials fft_gaussian_filter_3d in run_3D_loop atm end ......................." << endl;
+
+                }
+
+                solveRungeKutta_3D_Hydrosphere(); 
+                if(iter_cnt == 1)  computePressure_3D();
+
+                cout << endl << "      AGCM: boundary conditions in run_3D_loop atm begin ......................." << endl;
+                BC_radius();
+                BC_theta();
+                BC_phi();
+                BC_SolidGround();
+                cout << endl << "      AGCM: boundary conditions in run_3D_loop atm end ......................." << endl;
+
+                residuum_old = residuum_loop;
+                ValueLimitationHyd();
+                store_intermediate_data_3D(1.0);
+                residuum_old = residuum_loop;
+                run_data_hyd();
+                print_min_max_hyd();
+                iter_cnt++;
+                iter_cnt_3d++;
+                if(debug) save_data();
+            } // end of velocity loop
+
+            computePressure_3D();
+
+            if((iter_cnt-1) % checkpoint == 0){
+                cout << endl << "      AGCM: write_file in run_3D_loop atm ......................." << endl;
+                write_file(bathymetry_name, output_path, false);
+
+//                iter_n = iter_n + checkpoint;
+//                cout << endl << " ................ checkpoint in run_3D_loop    " << iter_n << endl << endl;
+//                HydrosphereDataTransfer(bathymetry_name);
+                init_EkmanSpiral();
+//                store_intermediate_data_3D(1.0);
+
+                if((iter_cnt-1) >= nm)    goto loopend;
+           }
+        } // end of pressure loop
+    goto loopbegin;
+    }
+
+    loopend:
+
+    if((iter_cnt-1) >= nm){
+        cout << endl << "      AGCM: iter_cnt >= nm ......................." << endl;
+        if((iter_cnt-1) % checkpoint != 0)
             write_file(bathymetry_name, output_path, false);
-        }
-    } // end of pressure loop
-    endloop:
+    }
     cout << endl << "      OGCM: run_3D_loop hyd ended ..........................." << endl;
     return;
 }
@@ -560,18 +542,17 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
     double T_yz = 0.0;  // wind stress in v-direction ( y, j ) in kg/(m*s2)
     double f = 0.0;  // Coriolis parameter in 1/s
     double Az = 0.0;  // constant vertical eddy viscosity in m2/s
-//    double D_E = 0.0;  // Ekman layer depth in m
-//    double D_E_op = 0.0;  // Ekman layer depth opposite to the surface wind in m
     radius[0] = 1.0;
     for(int i = 1; i < im; i++){
         radius[i] = radius[i-1] - dr;
     }
     radius[im-1] = 0.0;
     for(int k = 0; k < km; k++){
-        for(int j = 0; j < jm; j++){           // non-dimensional
-            v_wind.y[j][k] = v.x[im-1][j][k];
-            w_wind.y[j][k] = w.x[im-1][j][k];
-
+        for(int j = 0; j < jm; j++){           // v and w non-dimensional called by HydrosphereDataTransfer
+//            v_wind.y[j][k] = v.x[im-1][j][k];
+//            w_wind.y[j][k] = w.x[im-1][j][k];
+            v_wind.y[j][k] = v.x[im-1][j][k] * u_0;  // m/s
+            w_wind.y[j][k] = w.x[im-1][j][k] * u_0;
             if(is_land(h, im-1, j, k)){
                 v_wind.y[j][k] = 0.0; 
                 w_wind.y[j][k] = 0.0;
@@ -580,8 +561,6 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
     }
     for(int k = 1; k < km-1; k++){
         for(int j = 1; j < jm-1; j++){
-//    for(int k = 0; k < km; k++){
-//        for(int j = 0; j < jm; j++){
             v_wind.y[90][k] = 0.0;
 //            if(w_wind.y[j][k] == 0.0) w_wind.y[j][k] = 1.0e-8;
             alfa = atan(fabs(v_wind.y[j][k]/w_wind.y[j][k]));
@@ -610,7 +589,6 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
         << "   alfa_deg = " << alfa * pi180 << endl
         << "   U_10 = " << U_10 
         << "   V_0 = " << V_0 << endl
-//        << "   D_E = " << D_E << "   D_E_op = " << D_E_op << endl
         << "   T_yz = " << T_yz << endl
         << "   f = " << f
         << "   Az = " << Az
@@ -631,7 +609,6 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
         << "   alfa_deg = " << alfa * pi180 << endl
         << "   U_10 = " << U_10 
         << "   V_0 = " << V_0 << endl
-//        << "   D_E = " << D_E << "   D_E_op = " << D_E_op << endl
         << "   T_yz = " << T_yz << endl
         << "   f = " << f
         << "   Az = " << Az
@@ -639,7 +616,7 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
 //        << "   i_Ekman = " << i_Ekman 
         << endl << endl;
 */
-            if(j <= (jm-1)/2){
+            if(j <= (jm-1)/2){  // northern hemisphere
                 if((w_wind.y[j][k] <= 0.0)&&(v_wind.y[j][k] >= 0.0)){
                     if((alfa >= 0.0)&&(alfa <= 45.0/pi180)){  // section I (j = 83 - 90) (7°N - 0°N)
                         angle = 180.0/pi180 - (alfa - Ekman_angle);
@@ -661,15 +638,16 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
                         angle = alfa + Ekman_angle;
                     }
                 }
+// vertical Ekman-velocities v and w northern hemisphere
 //              original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 137, eq. 9.9a/b, p. 138, eq. 9.11a/b
                 for(int i = 0; i < im; i++){
                     a_z = - a * radius[i] * L_hyd * dr;
                     exp_a_z = exp(a_z);
                     sin_a_z = sin(angle + a_z);
                     cos_a_z = cos(angle + a_z);
-                    v.x[i][j][k] = V_0 * exp_a_z * sin_a_z; 
+                    v.x[i][j][k] = V_0 * exp_a_z * sin_a_z; // m/s
                     w.x[i][j][k] = V_0 * exp_a_z * cos_a_z;
-                    v.x[i][90][k] = 0.0;
+//                    v.x[i][90][k] = 0.0;
                     if(is_land(h, i, j, k)){
                         v.x[i][j][k] = 0.0; 
                         w.x[i][j][k] = 0.0;
@@ -687,7 +665,6 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
         << "   alfa_deg = " << alfa * pi180
         << "   angle_deg = " << angle * pi180 << endl
 //        << "   Ekman = " << i_Ekman 
-//        << "   D_E = " << D_E << "   D_E_op = " << D_E_op << endl
         << "   T_yz = " << T_yz
         << "   U_10 = " << U_10
         << "   V_0 = " << V_0 << endl
@@ -702,7 +679,7 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
 */
                 } // i end north
             }
-            if(j > (jm-1)/2){
+            if(j > (jm-1)/2){  // southern hemisphere
                 if((w_wind.y[j][k] <= 0.0)&&(v_wind.y[j][k] <= 0.0)){
                     if((alfa >= 0.0)&&(alfa <= 45.0/pi180)){  // section I (j = 173 - 180) (7°S - 0°S)
                         angle = 180.0/pi180 - (alfa - Ekman_angle);
@@ -724,20 +701,19 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
                         angle = alfa + Ekman_angle;
                     }
                 }
+// vertical Ekman-velocities v and w southern hemisphere
 //              original law in Robert H. Stewart, Introduction to Physical Oceanography, p. 137, eq. 9.9a/b, p. 138, eq. 9.11a/b
                 for(int i = 0; i < im; i++){
                     a_z = - a * radius[i] * L_hyd * dr;
                     exp_a_z = exp(a_z);
                     sin_a_z = - sin(angle + a_z);
                     cos_a_z = cos(angle + a_z);
-                    v.x[i][j][k] = V_0 * exp_a_z * sin_a_z; 
+                    v.x[i][j][k] = V_0 * exp_a_z * sin_a_z; // m/s
                     w.x[i][j][k] = V_0 * exp_a_z * cos_a_z;
-                    v.x[i][90][k] = 0.0;
                     if(is_land(h, i, j, k)){
                         v.x[i][j][k] = 0.0; 
                         w.x[i][j][k] = 0.0;
                     }
-
 /*
     if((j == 105) &&(k == 180)) cout << "south" << endl
         << "   i = " << i << "   j = " << j << "   k = " << k  << endl
@@ -750,7 +726,6 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
         << "   alfa_deg = " << alfa * pi180
         << "   angle_deg = " << angle * pi180 << endl
 //        << "   Ekman = " << i_Ekman 
-//        << "   D_E = " << D_E << "   D_E_op = " << D_E_op << endl
         << "   T_yz = " << T_yz
         << "   U_10 = " << U_10
         << "   V_0 = " << V_0 << endl
@@ -765,24 +740,43 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
 */
                 } // i end south
             }
-        }
-    }
-
+        } // end j
+    } // end k
     for(int k = 0; k < km; k++){
         for(int i = 0; i < im; i++){
-//            v.x[i][0][k] = 0.0;
-//            w.x[i][0][k] = 0.0;
+/*
             v.x[i][0][k] = c43 * v.x[i][1][k] - c13 * v.x[i][2][k];
             w.x[i][0][k] = c43 * w.x[i][1][k] - c13 * w.x[i][2][k];
-//            v.x[i][jm-1][k] = 0.0;
-//            w.x[i][jm-1][k] = 0.0;
+
             v.x[i][jm-1][k] = c43 * v.x[i][jm-2][k] - c13 * v.x[i][jm-3][k];
             w.x[i][jm-1][k] = c43 * w.x[i][jm-2][k] - c13 * w.x[i][jm-3][k];
+*/
+/*
+            v.x[i][0][k] = v.x[i][3][k] 
+                - 3.0 * v.x[i][2][k] + 3.0 * v.x[i][1][k];  // extrapolation
+            w.x[i][jm-1][k] = w.x[i][3][k] 
+                - 3.0 * w.x[i][2][k] + 3.0 * w.x[i][1][k];  // extrapolation
+
+            v.x[i][jm-1][k] = v.x[i][jm-4][k] 
+                - 3.0 * v.x[i][jm-3][k] + 3.0 * v.x[i][jm-2][k];  // extrapolation
+            w.x[i][jm-1][k] = w.x[i][jm-4][k] 
+                - 3.0 * w.x[i][jm-3][k] + 3.0 * w.x[i][jm-2][k];  // extrapolation
+*/
+/*
+            v.x[i][0][k] = v.x[i][0][182];  // along k all values are the same north pole value
+            v.x[i][jm-1][k] = v.x[i][jm-1][182];  // along k all values are the same south pole value
+            w.x[i][0][k] = w.x[i][0][182];  // along k all values are the same north pole value
+            w.x[i][jm-1][k] = w.x[i][jm-1][182];  // along k all values are the same south pole value
+*/
+            v.x[i][0][k] = 0.0;  // along k all values are the same north pole value
+            v.x[i][jm-1][k] = 0.0;  // along k all values are the same south pole value
+            w.x[i][0][k] = 0.0;  // along k all values are the same north pole value
+            w.x[i][jm-1][k] = 0.0;  // along k all values are the same south pole value
+
         }
     }
-
     for(int i = 0; i < im; i++){
-        for(int j = 0; j < jm; j++){
+        for(int j = 1; j < jm-1; j++){
             v.x[i][j][0] = c43 * v.x[i][j][1] - c13 * v.x[i][j][2];
             w.x[i][j][0] = c43 * w.x[i][j][1] - c13 * w.x[i][j][2];
             v.x[i][j][km-1] = c43 * v.x[i][j][km-2] - c13 * v.x[i][j][km-3];
@@ -794,134 +788,88 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
         }
     }
 
+// vertical Ekman-velocity u
+    double dvdthe = 0.0, dwdphi = 0.0;
+
     for(int j = 1; j < jm-1; j++){
-        double dr_rm = dr * L_hyd/(double)(im-1);
+        double dr_rm = dr * L_hyd;  // m
         sinthe = sin(the.z[j]);
         if(sinthe == 0.0) sinthe = 1.0e-5;
         for(int k = 1; k <= km-1; k++){
-                u.x[0][j][k] = 0.0;
-            for(int i = 1; i <= im-1; i++){
-                rm = - L_hyd * (1.0 - rad.z[i]);
+            int i_mount = 0;
+            for(int i = 0; i < im-1; i++){
+                if((is_land(h, i, j, k))
+                    &&(is_water(h, i+1, j, k))){
+                        i_mount = i;
+                        u.x[i_mount][j][k] = 0.0;
+                        break;
+                }
+            }
+            u.x[0][j][k] = 0.0;
+            v.x[0][j][k] = 0.0;
+            w.x[0][j][k] = 0.0;
+            for(int i = i_mount+1; i < im; i++){
+                rm = (rad.z[i] - 1.0) * L_hyd;  // m
                 rmsinthe = rm * sinthe;
-                double h_d_j = 1.0;
-                double h_d_k = 1.0;
-                std::vector<Array*> arrays_1{&v, &w};
-                enum array_index_1{i_v_1, i_w_1, last_array_index_1};
-                std::vector<double> dxdthe_vals(last_array_index_1), 
-                                    dxdphi_vals(last_array_index_1);
-                bool the_flag = false, phi_flag = false;
-                if((j >= 1)&&(j < jm-2)){
-                    if((is_land(h, i, j, k))
-                        &&((is_water(h, i, j+1, k)) 
-                        &&(is_water(h, i, j+2, k)))){
-                        for(int n=0; n<last_array_index_1; n++)
-                            dxdthe_vals[n] = dxdthe_b(arrays_1[n]);
-                        the_flag = true;
-                    }
-                    if((is_land(h, i, j, k))
-                        &&(is_water(h, i, j-1, k)) 
-                        &&(is_water(h, i, j-2, k))){
-                        for(int n=0; n<last_array_index_1; n++)
-                            dxdthe_vals[n] = dxdthe_c(arrays_1[n]);
-                        the_flag = true;
-                    }
-                }
-                if((k >= 1)&&(k < km-2)){
-                    if((is_land(h, i, j, k))
-                        &&(is_water(h, i, j, k+1)) 
-                        &&(is_water(h, i, j, k+2))){
-                        for(int n=0; n<last_array_index_1; n++)
-                            dxdphi_vals[n] = dxdphi_b(arrays_1[n]);
-                        phi_flag = true;
-                    }
-                    if((is_land(h, i, j, k))
-                        &&(is_water(h, i, j, k-1)) 
-                        &&(is_water(h, i, j, k-2))){
-                        for(int n=0; n<last_array_index_1; n++)
-                            dxdphi_vals[n] = dxdphi_c(arrays_1[n]);
-                        phi_flag = true;
-                    }
-                }
-                for(int n=0; n<last_array_index_1; n++){
-                    if(!the_flag) dxdthe_vals[n] = dxdthe_a(arrays_1[n]);
-                    if(!phi_flag) dxdphi_vals[n] = dxdphi_a(arrays_1[n]);
-                }
-                double dvdthe = dxdthe_vals[i_v_1];
-                double dwdphi = dxdphi_vals[i_w_1];
 
-                u.x[i][j][k] = u.x[i-1][j][k] 
-                    - dr_rm * (dvdthe/rm + dwdphi/rmsinthe);
+                dvdthe = 
+                    (v.x[i][j+1][k] - v.x[i][j-1][k])
+                    /(2.0 * dthe * rm);
+                dwdphi = 
+                    (w.x[i][j][k+1] - w.x[i][j][k-1])
+                    /(2.0 * dphi * rmsinthe);
+
+                u.x[i][j][k] = u.x[i-1][j][k] - dr_rm * (dvdthe + dwdphi);  // m/s
 /*
-                double residuum = (u.x[i][j][k] - u.x[i-1][j][k])/dr 
+                double residuum = (u.x[i][j][k] - u.x[i-1][j][k])/dr_rm 
                     + ((v.x[i-1][j+1][k] - v.x[i-1][j-1][k])
-                    /(2. * rm * dthe) 
+                    /(2.0 * rm * dthe) 
                     + (w.x[i-1][j][k+1] - w.x[i-1][j][k-1])
-                    /(2. * rmsinthe * dphi));
-
+                    /(2.0 * rmsinthe * dphi));
                 if((j == 75) &&(k == 180)) cout << "north pumping" << endl
                     << "   i = " << i << "   j = " << j << "   k = " << k  << endl
                     << "   u = " << u.x[i][j][k] 
                     << "   v = " << v.x[i][j][k] 
                     << "   w = " << w.x[i][j][k] << endl
-                    << "   rm = " << rm
-                    << "   dr = " << dr
+                    << "   dvdthe = " << dvdthe 
+                    << "   dwdphi = " << dwdphi << endl
+                    << "   rm = " << rm << "   rad = " << rad.z[i] << "   radius = " << radius[i] << endl
+                    << "   dr = " << dr << "   dr_rm = " << dr_rm << "   dthe = " << dthe << "   dthe_rm = " << 2.0 * dthe/rm << "   dphi = " << dphi << "   dphi_rm = " << 2.0 * dphi/rmsinthe
                     << "   residuum = " << residuum << endl;
                 if((j == 105) &&(k == 180)) cout << "south pumping" << endl
                     << "   i = " << i << "   j = " << j << "   k = " << k  << endl
                     << "   u = " << u.x[i][j][k] 
                     << "   v = " << v.x[i][j][k] 
                     << "   w = " << w.x[i][j][k] << endl
-                    << "   rm = " << rm
-                    << "   dr = " << dr
+                    << "   dvdthe = " << dvdthe 
+                    << "   dwdphi = " << dwdphi << endl
+                    << "   rm = " << rm << "   rad = " << rad.z[i] << "   radius = " << radius[i] << endl
+                    << "   dr = " << dr << "   dr_rm = " << dr_rm << "   dthe = " << dthe << "   dthe_rm = " << 2.0 * dthe/rm << "   dphi = " << dphi << "   dphi_rm = " << 2.0 * dphi/rmsinthe
                     << "   residuum = " << residuum << endl;
 */
             }  // end i
         }  // end k
     }  // end j
-
-/*
-    for(int k = 0; k < km; k++){
-        for(int j = 0; j < jm; j++){
-//            u.x[0][j][k] = c43 * u.x[1][j][k] - c13 * u.x[2][j][k];
-            u.x[im-1][j][k] = u.x[im-4][j][k] 
-                - 3. * u.x[im-3][j][k] + 3. * u.x[im-2][j][k];  // extrapolation
-            u.x[0][j][k] = 0.0;
-//            u.x[im-1][j][k] = c43 * u.x[im-2][j][k] - c13 * u.x[im-3][j][k];
-//            u.x[im-1][j][k] = 0.0;
-        }
-    }
-*/
-
     for(int k = 0; k < km; k++){
         for(int i = 0; i < im; i++){
-            u.x[i][0][k] = c43 * u.x[i][1][k] - c13 * u.x[i][2][k];
-//            u.x[i][0][k] = 0.0;
-            u.x[i][jm-1][k] = c43 * u.x[i][jm-2][k] - c13 * u.x[i][jm-3][k];
-//            u.x[i][jm-1][k] = 0.0;
+            u.x[i][0][k] = 0.0;  // along k all values are the same north pole value
+            u.x[i][jm-1][k] = 0.0;  // along k all values are the same south pole value
         }
     }
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
             u.x[i][j][0] = c43 * u.x[i][j][1] - c13 * u.x[i][j][2];
+            u.x[i][j][km-1] = c43 * u.x[i][j][km-2] - c13 * u.x[i][j][km-3];
             u.x[i][j][0] = u.x[i][j][km-1] 
                 = (u.x[i][j][0] + u.x[i][j][km-1])/2.0;
         }
     }
-
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             for(int i = 0; i < im; i++){
-                u.x[i][j][k] = u.x[i][j][k]/u_0;
-//                u.x[i][j][k] = 0.0;
+                u.x[i][j][k] = u.x[i][j][k]/u_0;  // non-dimensional
                 v.x[i][j][k] = v.x[i][j][k]/u_0;
                 w.x[i][j][k] = w.x[i][j][k]/u_0;
-
-                if((j>=89)&&(j<=90)){
-                    u.x[i][j][k] = u.x[i][88][k];
-                }
-                if((j>90)&&(j<=91)){
-                    u.x[i][j][k] = u.x[i][88][k];
-                }
                 if(is_land(h, i, j, k)){
                     u.x[i][j][k] = 0.0;
                     v.x[i][j][k] = 0.0;
@@ -939,7 +887,7 @@ cout << endl << "      OGCM: init_EkmanSpiral" << endl;
 void cHydrosphereModel::init_bathymetry(const string &bathymetry_file){
     cout << endl << "      OGCM: init_bathymetry" << endl;
 //  default adjustment, h must be 0 everywhere
-    h.initArray(im, jm, km, 0.);
+    h.initArray(im, jm, km, 0.0);
     ifstream ifile(bathymetry_file);
     if (!ifile.is_open()){
         cerr << "ERROR: could not open bathymetry file " << bathymetry_file << "\n";
@@ -949,16 +897,16 @@ void cHydrosphereModel::init_bathymetry(const string &bathymetry_file){
     int j, k;
     for(j = 0; j < jm && !ifile.eof(); j++){
         for(k = 0; k < km && !ifile.eof(); k++){
-            depth = 999; // in case the height is NaN
+            depth = 999.0; // in case the height is NaN
             ifile >> lon >> lat >> depth;
-            if( depth > 0.){
-                depth = 0;
+            if( depth > 0.0){
+                depth = 0.0;
             }
             int i_boden = (im-1) + int(floor(depth/L_hyd * (im-1)));
             i_bathymetry[j][k] = i_boden;
             Bathymetry.y[j][k] = - depth;
             for(int i = 0; i <= i_boden; i++){
-                h.x[i][j][k] = 1.;
+                h.x[i][j][k] = 1.0;
             }
             if(ifile.fail()){
                 ifile.clear();
@@ -972,27 +920,29 @@ void cHydrosphereModel::init_bathymetry(const string &bathymetry_file){
         std::cerr << "wrong topography file size! aborting..."<<std::endl;
         abort();
     }
+
+//  reduction and smoothing of peaks and needles in bathymetry
+    for(int i = 0; i < im; i++){
+        for(int j = 1; j < jm-1; j++){
+            for(int k = 1; k < km-1; k++){
+                if((is_land(h, i, j, k))
+                    &&((is_water(h, i, j-1, k))
+                    &&(is_water(h, i, j+1, k))))
+                    h.x[i][j][k] = 0.0;
+                if((is_land(h, i, j, k))
+                    &&((is_water(h, i, j, k-1))
+                    &&(is_water(h, i, j, k+1))))
+                    h.x[i][j][k] = 0.0;
+            }
+        }
+    }
+
 //  rewrite bathymetric data from -180° - 0° - +180° to 0°- 360°
     for(int j = 0; j < jm; j++){
         move_data(Bathymetry.y[j], km);
         for(int i = 0; i < im; i++){
             move_data(h.x[i][j], km);
             move_data(i_bathymetry[j], km);
-        }
-    }
-
-//  reduction and smoothing of peaks and needles in the bathymetry
-    for(int i = 0; i < im; i++){
-        for(int j = 1; j < jm-1; j++){
-            for(int k = 1; k < km-1; k++){
-                if((is_land(h, i, j, k))
-                    &&((is_water(h, i, j-1, k))
-                    &&(is_water(h, i, j+1, k)))
-                    &&((is_water(h, i, j, k-1))
-                    &&(is_water(h, i, j, k+1)))){
-                    h.x[i][j][k] = 0.0;
-                }
-            }
         }
     }
     cout << "      OGCM: init_bathymetry ended" << endl;
@@ -1175,10 +1125,10 @@ cout << endl << "      OGCM: init_temperature" << endl;
                 if(*get_current_time() >= Ma_switch){                   // parabolic temperature distribution starting at Ma_switch
                     t.x[im-1][j][k] = t_eff 
                         * parabola((double)d_j/(double)d_j_half) + t_pole;
-                    t.x[im-1][j][k] = t.x[im-1][j][k] + t_corr;         // based on the parabolic temperature assumption
                 }
             }
             temp_landscape.y[j][k] = t.x[im-1][j][k] * t_0 - t_0; // in °C
+            if(t.x[im-1][j][k] <= t_pole_salt)  t.x[im-1][j][k] = t_pole_salt;
         }// for j
     }// for k
     t_global_mean = GetMean_2D(jm, km, temp_landscape);
@@ -1186,26 +1136,15 @@ cout << endl << "      OGCM: init_temperature" << endl;
     double tm_tbeg = 0.0;
     int i_max = im - 1;   // corresponds to sea level
     double d_i_max =(double)i_max;
-    double d_i_beg =(double)i_beg;
     double d_i = 0.0;
 // distribution of t with increasing depth
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            tm_tbeg = (t.x[im-1][j][k] - 1.0) 
-                /(d_i_max * d_i_max - d_i_beg * d_i_beg);
+            tm_tbeg = t.x[im-1][j][k] - 2.0/t_0;
             for(int i = i_beg; i < im-1; i++){
                     d_i = (double)i;
-                    t.x[i][j][k] = 1.0 + tm_tbeg 
-                        * (d_i * d_i - d_i_beg * d_i_beg);// parabolic approach
-            }
-        }
-    }
-    for(int j = 0; j < jm; j++){
-        for(int k = 0; k < km; k++){
-            for(int i = 0; i < im; i++){
-                if(is_land(h, i, j, k)){
-                    t.x[i][j][k] = 1.0;
-                }
+                    t.x[i][j][k] = (t.x[im-1][j][k] - tm_tbeg)
+                        /d_i_max * d_i + tm_tbeg;
             }
         }
     }
@@ -1262,93 +1201,53 @@ cout << endl << "      OGCM: init_salinity" << endl;
         << " = " << setw(7) << setfill(' ') << c_average + c_paleo 
         << setw(5) << salinity_unit << endl;
 
-    double C_p = 999.83;
-    double beta_p = 0.808;
+//    double C_p = 999.83;
+//    double beta_p = 0.808;
 
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            if(is_water(h, im-1, j, k)){
+//            if(is_water(h, im-1, j, k)){
                 double t_Celsius = t.x[im-1][j][k] * t_0 - t_0;
-//                if(t_Celsius <= t_pole * t_0 - t_0)
-//                    t_Celsius = t_pole * t_0 - t_0;
-//                c.x[im-1][j][k] = ((t_Celsius + 346.)/10.)/c_0;
-//                if(c.x[im-1][j][k] <= 1.) c.x[im-1][j][k] = 1.;
+
+                c.x[im-1][j][k] = ((t_Celsius + 346.0)/10.0)/c_0;
+/*
                 double alfa_t_p = 0.0708 *(1.0 + 0.068 * t_Celsius);
                 double gamma_t_p = 0.003 *(1.0 - 0.012 * t_Celsius);
-                c.x[im-1][j][k] = ((r_0_saltwater - C_p  //in kg/m³ approximation by Gill (saltwater.pdf)
-                    + (alfa_t_p + 35.0 * gamma_t_p)       // salt water density assumed as constant
-                    * t_Celsius)/(beta_p + gamma_t_p * t_Celsius))/c_0;
-                if(c.x[im-1][j][k] <= 1.) c.x[im-1][j][k] = 1.0;
 
-
-            }else{
-                c.x[im-1][j][k] = 1.0;
-            }
+                if(iter_cnt == 1){
+                    c.x[im-1][j][k] = ((r_0_saltwater - C_p  //in kg/m³ approximation by Gill (saltwater.pdf)
+                        + (alfa_t_p + 35.0 * gamma_t_p) * t_Celsius)  // salt water density assumed as constant
+                        /(beta_p + gamma_t_p * t_Celsius))/c_0;  // seawater density solved for salinity at surace
+                }else{
+                    c.x[im-1][j][k] = ((r_salt_water.x[im-1][j][k] - C_p  //in kg/m³ approximation by Gill (saltwater.pdf)
+                        + (alfa_t_p + 35.0 * gamma_t_p)       // salt water density variable
+                        * t_Celsius)/(beta_p + gamma_t_p * t_Celsius))/c_0;
+                }
+//                c.x[im-1][j][k] = 0.9 * c.x[im-1][j][k];
+*/
+//                if(c.x[im-1][j][k] <= 1.0) c.x[im-1][j][k] = 1.0;
+//            }else{
+//                c.x[im-1][j][k] = 1.0;
+//            }
         }
     }
     int i_beg = 0; // 200m depth  
-//    double tm_tbeg = 0.0;
     double cm_cbeg = 0.0;
     int i_max = im - 1;   // corresponds to sea level
     double d_i_max =(double)i_max;
-    double d_i_beg =(double)i_beg;
     double d_i = 0.0;
-// distribution of t and c with increasing depth
+// distribution of c with increasing depth
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-//            tm_tbeg = (t.x[im-1][j][k] - 1.0) 
-//                /(d_i_max * d_i_max - d_i_beg * d_i_beg);
-//            if(t.x[im-1][j][k] <= t_pole)
-//                t.x[im-1][j][k] = t_pole;
-            cm_cbeg = (c.x[im-1][j][k] - 1.0) 
-                /(d_i_max * d_i_max - d_i_beg * d_i_beg);
+            cm_cbeg = c.x[im-1][j][k] - 1.0/c_0;
             for(int i = i_beg; i < im-1; i++){
                     d_i = (double)i;
-//                    t.x[i][j][k] = 1. + tm_tbeg 
-//                        * (d_i * d_i - d_i_beg * d_i_beg);// parabolic approach
-//                    if(t.x[i][j][k] <= t_pole)
-//                        t.x[i][j][k] = t_pole;
-                    c.x[i][j][k] = 1. + cm_cbeg 
-                        * (d_i * d_i - d_i_beg * d_i_beg);// parabolic approach
-            }
-        }
-    }
-    for(int j = 0; j < jm; j++){
-        for(int k = 0; k < km; k++){
-            int i_sea_mount = i_bathymetry[j][k];
-            for(int i = 0; i < im; i++){
-                if((is_land(h, i, j, k))&&(i < i_sea_mount)){
-                    c.x[i][j][k] = 1.0;
-                }
-                if((is_land(h, 0, j, k))&&(i == 0)){
-                    c.x[0][j][k] = c.x[i_sea_mount][j][k];
-                }
+                    c.x[i][j][k] = (c.x[im-1][j][k] - cm_cbeg)
+                        /d_i_max * d_i + cm_cbeg;
             }
         }
     }
     cout << "      OGCM: init_salinity ended" << endl;
-    return;
-}
-/*
-*
-*/
-void cHydrosphereModel::init_dynamic_pressure(){
-cout << endl << "      OGCM: init_dynamic_pressure" << endl;
-    for(int i = 0; i < im; i++){
-        for(int j = 0; j < jm; j++){
-            for(int k = 0; k < km; k++){
-//                p_stat.x[i][j][k] = 0.5 * r_salt_water.x[i][j][k] 
-//                p_stat.x[i][j][k] = 1e-2 * 0.5 * r_0_water // hPa
-                p_stat.x[i][j][k] = 1e-2 * 0.5 * r_0_saltwater // hPa
-                    * sqrt(((u.x[i][j][k] * u.x[i][j][k]) 
-                    + (v.x[i][j][k] * v.x[i][j][k]) 
-                    + (w.x[i][j][k] * w.x[i][j][k]))/3.0) * u_0;
-                if(is_land(h, i, j, k))
-                    p_stat.x[i][j][k] = 0.0;
-            }
-        }
-    }
-    cout << "      OGCM: init_dynamic_pressure ended" << endl;
     return;
 }
 /*
@@ -1361,51 +1260,23 @@ cout << endl << "      Value_Limitation_Hyd" << endl;
         for(int j = 0; j < jm; j++){
             for(int i = 0; i < im; i++){
 
-                if(u.x[i][j][k] >= 0.06/u_0)  u.x[i][j][k] = 0.06/u_0; // non-dimensional
-                if(u.x[i][j][k] <= - 0.06/u_0)  u.x[i][j][k] = - 0.06/u_0; // non-dimensional
+                if(u.x[i][j][k] >= 0.5/u_0)  u.x[i][j][k] = 0.5/u_0; // non-dimensional
+                if(u.x[i][j][k] <= - 0.5/u_0)  u.x[i][j][k] = - 0.5/u_0; // non-dimensional
+                if(v.x[i][j][k] >= 0.5/u_0)  v.x[i][j][k] = 0.5/u_0;
+                if(v.x[i][j][k] <= - 0.5/u_0)  v.x[i][j][k] = - 0.5/u_0;
+                if(w.x[i][j][k] >= 0.5/u_0)  w.x[i][j][k] = 0.5/u_0;
+                if(w.x[i][j][k] <= - 0.5/u_0)  w.x[i][j][k] = - 0.5/u_0;
 
-                if(v.x[i][j][k] >= 0.06/u_0)  v.x[i][j][k] = 0.06/u_0;
-                if(v.x[i][j][k] <= - 0.06/u_0)  v.x[i][j][k] = - 0.06/u_0;
-                if(w.x[i][j][k] >= 0.06/u_0)  w.x[i][j][k] = 0.06/u_0;
-                if(w.x[i][j][k] <= - 0.06/u_0)  w.x[i][j][k] = - 0.06/u_0;
-
-                if(p_stat.x[i][j][k] >= 0.3)  p_stat.x[i][j][k] = 0.3; // hPa
-                if(p_stat.x[i][j][k] < 0.0) p_stat.x[i][j][k] = 0.0;
+                if(p_dyn.x[i][j][k] >= 0.3)  p_dyn.x[i][j][k] = 0.3; // hPa
+                if(p_dyn.x[i][j][k] < - 0.3) p_dyn.x[i][j][k] = - 0.3;
                 if(t.x[i][j][k] >= 1.147)  t.x[i][j][k] = 1.147; // 40.15 °C
-                if(t.x[i][j][k] <= 0.9927)  t.x[i][j][k] = 0.9927;// -1.0 °C
-                if(c.x[i][j][k] * c_0 >= 50.)  c.x[i][j][k] = 1.4451;  // 50.0 psu
-                if(c.x[i][j][k] * c_0 <= 32.)  c.x[i][j][k] = 0.9249;      // 32.0 psu
+                if(t.x[i][j][k] <= 0.9927)  t.x[i][j][k] = 0.9927;// -2.0 °C
+                if(c.x[i][j][k] * c_0 >= 40.0)  c.x[i][j][k] = 1.1561;  // 40.0 psu
+                if(c.x[i][j][k] * c_0 <= 32.0)  c.x[i][j][k] = 0.9249;      // 32.0 psu
             }
         }
     }
 cout << "      Value_Limitation_Hyd ended" << endl;
-}
-/*
-*
-*/
-void cHydrosphereModel::BC_SolidGround(){
-    cout << endl << "      OGCM: BC_SolidGround" << endl;
-    for(int i = 0; i < im; i++){
-        for(int j = 0; j < jm; j++){
-            for(int k = 0; k < km; k++){
-                if(is_land(h, i, j, k)){
-                    p_stat.x[i][j][k] = 0.0;
-                    t.x[i][j][k] = 1.0;
-                    c.x[i][j][k] = 1.0;
-                    u.x[i][j][k] = 0.0;
-                    v.x[i][j][k] = 0.0;
-                    w.x[i][j][k] = 0.0;
-                    un.x[i][j][k] = 0.0;
-                    vn.x[i][j][k] = 0.0;
-                    wn.x[i][j][k] = 0.0;
-                    r_water.x[i][j][k] = r_0_water;
-                    r_salt_water.x[i][j][k] = r_0_saltwater;
-                }
-            }
-        }
-    }
-    cout << "      OGCM: BC_SolidGround" << endl;
-    return;
 }
 /*
 *
@@ -1587,7 +1458,7 @@ void cHydrosphereModel::IC_u_WestEastCoast(){
     for(int i = 0; i < i_beg; i++){
         for(int j = 0; j < jm; j++){
             for(int k = 0; k < km; k++){
-                u.x[i][j][k] = 0.;
+                u.x[i][j][k] = 0.0;
             }
         }
     }

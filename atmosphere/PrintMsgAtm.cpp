@@ -37,38 +37,23 @@ void cAtmosphereModel::print_final_remarks(){
 *
 */
 void cAtmosphereModel::print_loop_3D_headings(){
+    cout.precision(7);
     cout << endl << endl;
     cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    3D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-    cout << " 3D AGCM iterational process" << endl;
+    cout << " 3D Euler flow for a AGCM iterational process solved by 4. order Runge-Kutta scheme" << endl;
+    if(use_stretched_coordinate_system)
+        cout << endl << "      coordinate stretching is in use" << endl << endl;
     cout << " max total iteration number nm = " << nm << endl << endl;
-    cout << " present state of the computation " << endl << " current time slice, number of iterations, maximum \
-        and current number of velocity iterations, maximum and current number of pressure iterations " << endl
-        << endl << " Ma = " << (int)*get_current_time() 
-        << "     n = " << iter_cnt << "    velocity_iter_max = " 
+    cout << " present state of the computation: " << endl 
+        << endl << " current time slice" 
+        << endl << "      Ma = " << (int)*get_current_time() << endl;
+
+    cout << endl << " number of iterations, maximum and current number of velocity iterations, maximum and current number of pressure iterations, control when to write output files (every how many pressure iterations) " << endl        << "      n = " << iter_cnt << "    velocity_iter_max = " 
         << velocity_iter_max 
         << "     velocity_iter = " << velocity_iter 
         << "    pressure_iter_max = " << pressure_iter_max 
-        << "    pressure_iter = " << pressure_iter << endl;
-    return;
-}
-/*
-*
-*/
-void cAtmosphereModel::print_loop_2D_headings(){
-    cout << endl << endl;
-    cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-    cout << " 2D AGCM iterational process" << endl;
-    cout << " max total iteration number nm = " 
-        << nm << endl << endl;
-        cout << " present state of the 2D computation " << endl 
-            << "  current time slice, number of iterations, \
-                maximum and current number of velocity iterations, maximum and current number of pressure iterations " 
-            << endl << endl << " Ma = " << (int)*get_current_time() << "     n = " 
-            << iter_cnt << "    velocity_iter_max_2D = " 
-            << velocity_iter_max_2D << "     velocity_iter_2D = " 
-            << velocity_iter_2D << "    pressure_iter_max_2D = " 
-            << pressure_iter_max_2D << "    pressure_iter_2D = " 
-            << pressure_iter_2D << endl;
+        << "    pressure_iter = " << pressure_iter
+        << "    checkpoint = " << checkpoint << endl;
     return;
 }
 /*

@@ -53,23 +53,6 @@ void cHydrosphereModel::print_loop_3D_headings(){
 /*
 *
 */
-void cHydrosphereModel::print_loop_2D_headings(){
-    cout << endl << endl;
-    cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>    2D    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-    cout << " 2D OGCM iterational process" << endl;
-    cout << " max total iteration number nm = " 
-        << nm << endl << endl;
-        cout << " present state of the 2D computation " << endl 
-        << "  current time slice, number of iterations, \
-            maximum and current number of velocity iterations, maximum and current number of pressure iterations " 
-        << endl << endl << " Ma = " << (int)*get_current_time() << "     n = " 
-        << iter_cnt << "    velocity_iter_max_2D = " 
-        << velocity_iter_max_2D << "     velocity_iter_2D = " 
-        << velocity_iter_2D << "    pressure_iter_max_2D = " 
-        << pressure_iter_max_2D << "    pressure_iter_2D = " 
-        << pressure_iter_2D << endl;
-    return;
-}
 /*
 *
 */

@@ -80,6 +80,9 @@ namespace AtomUtils{
     inline double exp_func(double T_K, const double co_1, const double co_2){
         return exp(co_1 * (T_K - 273.15) / (T_K - co_2));  // temperature in °K
     }
+    inline double blend(double phi1, double phi2, double F){
+        return F * phi1 + (1.0 - F) * phi2;
+    }
 
     int lon_2_index(double lon);
     int lat_2_index(double lat);

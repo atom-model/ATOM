@@ -50,12 +50,12 @@ cout << endl << "      PresStat_SaltWaterDens" << endl;
             p_km = 0.0;
             C_p = 999.83;
             beta_p = 0.808;
-            alfa_t_p = 0.0708 *(1. + 0.068 * t_Celsius_1);
-            gamma_t_p = 0.003 *(1. - 0.012 * t_Celsius_1);
+            alfa_t_p = 0.0708 * (1.0 + 0.068 * t_Celsius_1);
+            gamma_t_p = 0.003 * (1.0 - 0.012 * t_Celsius_1);
             r_salt_water.x[im-1][j][k] = C_p + beta_p 
-                * c.x[im-1][j][k] * c_0  //in kg/m³ approximation by Gill (saltwater.pdf)
+                * c.x[im-1][j][k] * c_0  //in kg/m³ approximation by Gill (seawater.pdf)
                 - alfa_t_p * t_Celsius_1 - gamma_t_p
-                * ( 1.0 - c.x[im-1][j][k]) * c_0 * t_Celsius_1;
+                * (35.0 - c.x[im-1][j][k] * c_0) * t_Celsius_1;
         }
     }
 // hydrostatic pressure, water and salt water density in the flow field
@@ -74,14 +74,14 @@ cout << endl << "      PresStat_SaltWaterDens" << endl;
                     - p_hydro.x[i+1][j][k])/E_water * 1e5);
                 p_km  = (double)(im-1-i) * (L_hyd/(double)(im-1))/1000.0;  // depth in km
                 C_p = 999.83 + 5.053 * p_km - 0.048 * p_km * p_km;
-                beta_p = 0.808 - 0.0085* p_km;
-                alfa_t_p = .0708 *(1.0 + 0.351 * p_km 
+                beta_p = 0.808 - 0.0085 * p_km;
+                alfa_t_p = .0708 * (1.0 + 0.351 * p_km 
                     + 0.068 * (1.0 - 0.0683 * p_km) * t_Celsius_1);
-                gamma_t_p = 0.003 *(1.0 - 0.059 * p_km 
+                gamma_t_p = 0.003 * (1.0 - 0.059 * p_km 
                     - 0.012 * (1.0 - 0.064 * p_km) * t_Celsius_1);
                 r_salt_water.x[i][j][k] = C_p + beta_p * c.x[i][j][k] * c_0  //in kg/m³ approximation by Gill (saltwater.pdf)
                     - alfa_t_p * t_Celsius_1 - gamma_t_p
-                    * ( 1.0 - c.x[i][j][k]) * c_0 * t_Celsius_1;
+                    * (35.0 - c.x[i][j][k] * c_0) * t_Celsius_1;
                 if(is_land(h, i, j, k))  
                     r_salt_water.x[i][j][k] = r_0_saltwater;
 /*
@@ -106,26 +106,36 @@ cout << "      PresStat_SaltWaterDens ended" << endl;
 void cHydrosphereModel::SalinityEvaporation(){
 cout << endl << "      SalinityEvaporation" << endl;
 // preparations for salinity increase due to evaporation minus precipitation
-// procedure given in Rui Xin Huang, Ocean Circulation, p. 165
-    double coeff_salinity = 8.64e-7 * L_hyd/(r_0_water * u_0);
-    double evap_precip = 0.;
-    double sal_flux = 0.;
+// procedure given in Rui Xin Huang, Ocean Circulation, p. 165          one-dimensional model in r-direction
+    double evap_precip = 0.0;
+    double precipitation_mean = GetMean_2D(jm, km, Precipitation);
+    double evaporation_mean = GetMean_2D(jm, km, Evaporation_Dalton);
+    double evap_precip_0 = evaporation_mean - precipitation_mean;
+    double coeff_c = c_0/1000.0;  // for transformation from salinity to saltmass)
+    double coeff_salinity = 1000.0/(r_0_water * evap_precip_0 * c_0);  // for non-dimensionalisation (factor 1000 for salinity/saltmass)
+    double sal_flux = 0.0;
     double step = L_hyd/(double)(im-1);  // in m, 200/40 = 5m
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             c_fix.y[j][k] = c.x[im-1][j][k];
-                evap_precip = coeff_salinity 
-                    * (Evaporation_Dalton.y[j][k] - Precipitation.y[j][k]);  // in mm/d --> Dalton for evaporation on ocean
-//                    * (Evaporation_Penman.y[j][k] - Precipitation.y[j][k]);  // in mm/d --> Penman for evaporation on ocean
-//            sal_flux = - (- 3.0 * c.x[im-1][j][k] + 4.0 * c.x[im-2][j][k]  // 1. order derivative, 2. order accurate
-//                - c.x[im-3][j][k])/(2.0 * step) 
-//                * (1.0 - 2.0 * c.x[im-1][j][k]);
-            sal_flux = - (c.x[im-1][j][k] - c.x[im-2][j][k])/step  // 1. order derivative, 1. order accurate
-                * (1.0 - 2.0 * c.x[im-1][j][k]);
-            salinity_evaporation.y[j][k] = r_salt_water.x[im-1][j][k] 
-                * sal_flux * evap_precip;
-            if(is_land(h, im-1, j, k))  
-                salinity_evaporation.y[j][k] = 0.0;
+            evap_precip =  
+                Evaporation_Dalton.y[j][k] - Precipitation.y[j][k];  // in mm/d --> Dalton for evaporation on ocean
+/*
+            sal_flux = - coeff_c * (- 3.0 * c.x[im-1][j][k] + 4.0 * c.x[im-2][j][k]  // 1. order derivative, 2. order accurate
+                - c.x[im-3][j][k])/(2.0 * step) 
+                * (1.0 - 2.0 * coeff_c * c.x[im-1][j][k]) * evap_precip;
+*/
+            sal_flux = - coeff_c * (c.x[im-1][j][k] - c.x[im-2][j][k])/step  // 1. order derivative, 1. order accurate
+                * (1.0 - 2.0 * coeff_c * c.x[im-1][j][k]) * evap_precip;
+
+            salinity_evaporation.y[j][k] =  coeff_salinity 
+                 * r_salt_water.x[im-1][j][k] * sal_flux;
+
+            if(salinity_evaporation.y[j][k] * c_0 >= 1.0)
+                salinity_evaporation.y[j][k] = 0.0289;  // 1.0 psu
+            if(salinity_evaporation.y[j][k] * c_0 <= -1.0)
+                salinity_evaporation.y[j][k] = -0.0289;      // -1.0 psu
+
             c.x[im-1][j][k] = c_fix.y[j][k] 
                 + salinity_evaporation.y[j][k];
 /*
@@ -146,28 +156,6 @@ cout << endl << "      SalinityEvaporation" << endl;
                 << "   c_fix = " << c_fix.y[j][k] * c_0 
                 << "   c = " << c.x[im-1][j][k] * c_0 
                 << "   c_0 = " << c_0 << endl;
-*/
-/*
-                int i_trans = 37; // 15 m vertical extension of ocean surface evaporation, arbitrary 
-//                int i_trans = 20; // 15 m vertical extension of ocean surface evaporation, arbitrary 
-                for(int i = i_trans; i <= im-1; i++){
-//                    if(i <= im-1){
-//                        if(i > 0){
-//                            double x = get_layer_height(i) 
-//                               /get_layer_height(i_trans); 
-                            double x = (double)i/(double)i_trans; 
-//                            c.x[i][j][k] = parabola_interp(c.x[i_trans][j][k], 
-//                                c.x[im-1][j][k], x); // parabolic transition
-                            c.x[i][j][k] = parabola_interp(c.x[i_trans][j][k], 
-                                c.x[im-1][j][k], x); // parabolic transition
-
-                            c.x[i][j][k] = (c.x[i_trans][j][k] - c.x[0][j][k]) 
-                                * (get_layer_height(i)/get_layer_height(i_trans)) 
-                                + c.x[im-1][j][k]; // linear transition
-
-//                        }
-//                    }
-                } // end i
 */
         }
     }

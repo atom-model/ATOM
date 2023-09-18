@@ -10,6 +10,7 @@ def main():
             ('BathymetrySuffix', '', 'string', 'Ma_smooth.xyz'),
             ('verbose', '', 'bool', False),
             ('output_path', 'directory where model outputs should be placed(must end in /)', 'string', 'output/'),
+#            ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', True),
             ('paraview_panorama_vts_flag','flag to control if create paraview panorama', 'bool', False),
             ('debug','flag to control if the program is running in debug mode', 'bool', False),
 
@@ -23,9 +24,14 @@ def main():
             ('temperature_equat_file', '', 'string', '../data/scotese_etal_2021_equat_temp_1my.txt'),
             ('temperature_pole_file', '', 'string', '../data/scotese_etal_2021_polar_temp_1my.txt'),
             ('reconstruction_script_path', '', 'string', '../reconstruction/reconstruct_atom_data.py'),
+
             ('use_earthbyte_reconstruction', 'control whether use earthbyte method to recontruct grids', 'bool', True),
+
+            ('use_stretched_coordinate_system', 'if use coordinate stretching', 'bool', True),
+
             ('use_NASA_velocity', 'if use NASA velocity to initialise velocity', 'bool', False),
             ('use_NASA_temperature', 'if use NASA temperature to initialise velocity', 'bool', True),
+
             ('Ma_switch', 'switch initial temperatur from NASA to parabolic approach', 'int', 50),
             ('CategoryIceScheme', 'number chooses Zero(0)/One(1)/Two(2)/Three(3)-Category Ice Scheme', 'int', 3),
             ('sun', 'while no variable sun position wanted', 'int', 0),
@@ -46,20 +52,19 @@ def main():
             ('sigma', 'Stefan-Boltzmann constant W/(m²*K4)', 'double', 5.670280e-8),
             ('omega', 'rotation rate of the earth in rad/s', 'double', 7.292e-5),
 
-            ('eps_residuum', 'relative error, end of iterations reached, 1% error  allowed', 'double', 1.0e-2),
+            ('eps_residuum', 'relative error, end of iterations reached, 1% error  allowed', 'double', 1.0e-6),
 
+            ('nm', 'maximum number of iterations', 'int', 8),
             ('time_start', 'start time', 'int', 0),
-            ('time_end', 'end time', 'int', 30),
-            ('time_step', 'step size between timeslices', 'int', 1),
-        ],
-        'atmosphere': [
-            ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 6),
-            ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 2),
+            ('time_end', 'end time', 'int', 70),
+            ('time_step', 'step size between timeslices', 'int', 10),
 
             ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
             ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
-
-            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
+            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 4),
+        ],
+        'atmosphere': [
+            ('zeta', 'coefficient for coordinate stretching', 'double', 3.715),
 
             ('coeff_Dalton', "diffusion coefficient in evaporation by Dalton", 'double', 0.5),
 
@@ -70,9 +75,10 @@ def main():
             ('Ma_max', 'parabolic temperature distribution 300 Ma(from Ruddiman)', 'int', 300),
             ('Ma_max_half', 'half of time scale', 'int', 150),
 
-            ('L_atm', 'extension of the atmosphere shell in m, 16000 m/40 steps = 400 m', 'double', 16000.0),
-            ('tropopause_pole', 'extension of the troposphere at the poles in m', 'double', 8000.),
-            ('tropopause_equator', 'extension of the troposphere at the equator in m', 'double', 15000.),
+            ('L_atm', 'extension of the atmosphere shell in m', 'double', 16000.0),
+            ('L_abl', 'extension of the ABL shell in m', 'double', 1000.0),
+            ('tropopause_pole', 'extension of the troposphere at the poles in m', 'double', 8000.0),
+            ('tropopause_equator', 'extension of the troposphere at the equator in m', 'double', 15000.0),
 
             ('albedo_pole', 'albedo around the poles', 'double', 0.8),
             ('albedo_equator', 'albedo around the equator', 'double', 0.1),
@@ -81,7 +87,7 @@ def main():
             ('epsilon_pole', 'emissivity and absorptivity caused by other gases than water vapour at the poles', 'double', 0.45),
             ('epsilon_tropopause', 'emissivity and absorptivity caused by other gases than water vapour in the tropopause', 'double', 0.001),
 
-            ('re', 'Reynolds number: ratio viscous to inertia forces, Re = u * L/nue', 'double', 1000.0),
+            ('re', 'Reynolds number: ratio viscous to inertia forces, Re = u * L/nue', 'double', 1.0),
             ('sc_WaterVapour', 'Schmidt number of water vapour, Sc = nue/D', 'double', 0.61),
             ('sc_CO2', 'Schmidt number of CO2', 'double', 0.96),
             ('pr', 'Prandtl number of air for laminar flows', 'double', 0.7179),
@@ -99,6 +105,7 @@ def main():
             ('lamda', 'heat transfer coefficient of air in W/(m K)', 'double', 0.0262),
             ('r_co2', 'density of CO2 in kg/m³ at 25°C', 'double', 0.0019767),
             ('gam', 'constant slope of temperature    gam = 6.5 K/1000 m', 'double', 0.0065),
+            ('nue_0', 'kinematic viscosity of air in m*m/s', 'double', 1.49e-5),
 
             ('u_0', 'annual mean of surface wind velocity in m/s, 8 m/s compare to 28.8 km/h', 'double', 8.0),
             ('t_00', 'temperature in K compare to -37°C', 'double', 236.15),
@@ -108,8 +115,10 @@ def main():
             ('co2_0', 'maximum value of CO2 in ppm at preindustrial times', 'double', 280.0),
 
             ('c_tropopause', 'minimum water vapour at tropopause c_tropopause = 0.0005 compares to 0.0005 kg/kg', 'double', 0.0005),
-            ('c_land', 'water vapour reduction on land(80.17% of the saturation value)', 'double', 0.8017),
-            ('c_ocean', 'water vapour reduction on sea surface(80.17% of the saturation value)', 'double', 0.8017),
+            ('c_land', 'water vapour reduction on land, extremely sensitive(80.17% of the saturation value)', 'double', 0.8017),
+            ('c_ocean', 'water vapour reduction on sea surface, extremely sensitive(80.17% of the saturation value)', 'double', 0.8017),
+
+            ('t_land', 'temperature correction on land(in K, reduces water vapour amount)', 'double', - 1.5),
 
             ('co2_average', 'rate of CO2 at preindustrial times', 'double', 280.0),
             ('co2_paleo', 'value at modern times', 'double', 330.0),
@@ -121,16 +130,9 @@ def main():
         'hydrosphere': [
             ('input_path', 'directory where Atmosphere output can be read(must end in /)', 'string', 'output'),
 
-            ('velocity_iter_max_2D', 'the number of velocity iterations ', 'int', 6),
-            ('pressure_iter_max_2D', 'the number of pressure iterations', 'int', 2),
-
-            ('velocity_iter_max', 'the number of velocity iterations', 'int', 2),
-            ('pressure_iter_max', 'the number of pressure iterations', 'int', 2),
-            ('checkpoint', "control when to write output files(every how many pressure iterations)", 'int', 2),
-
             ('L_hyd', 'extension of the hydrosphere shell in m, maximum depth of 200m compares to 40 * 5m', 'double', 200.0),
 
-            ('re', 'Reynolds number: ratio viscous to inertia forces, Re = u * L/nue', 'double', 10.0),
+            ('re', 'Reynolds number: ratio viscous to inertia forces, Re = u * L/nue', 'double', 1000.0),
             ('sc', 'Schmidt number for salt water', 'double', 1.7329),
             ('pr', 'Prandtl number for water', 'double', 6.957),
             ('g', 'gravitational acceleration of the earth', 'double', 9.8066),

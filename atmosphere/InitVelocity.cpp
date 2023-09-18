@@ -3,6 +3,12 @@
 
 using namespace std;
 using namespace AtomUtils;
+
+#include "cAtmosphereModel.h"
+#include "Utils.h"
+
+using namespace std;
+using namespace AtomUtils;
 /*
 *
 */

@@ -112,7 +112,9 @@ private:
 
     const int c43 = 4.0/3.0, c13 = 1.0/3.0;
 
-    static const int im = 41, jm = 181, km = 361, nm = 500;
+    static const int im = 41, jm = 181, km = 361;
+
+    int iter_n = 0;
 
     double t_paleo_total = 0.0;
     double t_pole_total = 0.0;
@@ -139,18 +141,13 @@ private:
     void IC_Equatorial_Currents();
     void IC_CircumPolar_Current();
     void PresStat_SaltWaterDens();
-    void solveRungeKutta_2D_Hydrosphere();
     void solveRungeKutta_3D_Hydrosphere();
     void RK_RHS_3D_Hydrosphere(int i, int j, int k);
-    void RK_RHS_2D_Hydrosphere(int i, int j, int k);
-    void computePressure_2D();
     void computePressure_3D();
-    void store_intermediate_data_2D(float coeff=1);
     void store_intermediate_data_3D(float coeff=1);
     void print_welcome_msg();
     void print_final_remarks();
     void print_loop_3D_headings();
-    void print_loop_2D_headings();
     void print_min_max_hyd();
     void BC_radius();
     void BC_theta();
@@ -161,9 +158,9 @@ private:
     void BC_Surface_Temperature_NASA
        (const string &Name_SurfaceTemperature_File);
     void init_EkmanSpiral();
+    void init_EkmanSpiral_surface();
     void init_temperature(int Ma);
     void init_salinity();
-    void init_dynamic_pressure();
     void SalinityEvaporation();
     void Pressure_Limitation_Hyd();
     void ValueLimitationHyd();
@@ -198,9 +195,6 @@ private:
     Array_2D Upwelling; // upwelling
     Array_2D Downwelling; // downwelling
     Array_2D EkmanPumping; // 2D bottom water summed up in a vertical column
-    Array_2D SaltFinger;   // salt bulge of higher density
-    Array_2D SaltDiffusion; // salt bulge of lower density
-    Array_2D Salt_total;   // rate of salt summed up in a vertical column
     Array_2D BuoyancyForce_2D; // radiation balance at the surface
     Array_2D salinity_evaporation; // additional salinity by evaporation
     Array_2D Evaporation_Dalton; // evaporation by Dalton in [mm/d]
@@ -227,7 +221,7 @@ private:
     Array wn; // w-velocity component in phi-direction new
     Array cn; // water vapour new
 
-    Array p_stat; // dynamic pressure
+    Array p_dyn; // dynamic pressure
     Array p_hydro; // static pressure
 
     Array rhs_t; // auxilliar field RHS temperature

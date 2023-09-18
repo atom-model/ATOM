@@ -35,6 +35,7 @@ cout << endl << "      AGCM: read_Atmosphere_Surface_Data ......................
         if(stat(output_path.c_str(), &info) != 0){
              mkdir(output_path.c_str(), 0777);
         }
+/*
         if(stat(Name_SurfaceTemperature_File.c_str(), &info) != 0 || 
 //           stat(Name_SurfaceNASAPrecipitation_File.c_str(), &info) != 0 ||
            stat(velocity_v_file.c_str(), &info) != 0 ||
@@ -47,6 +48,7 @@ cout << endl << "      AGCM: read_Atmosphere_Surface_Data ......................
                std::cout << " reconstruction script returned: " 
                    << ret << std::endl;
         } 
+*/
     }
     if(!has_printed_welcome_msg)  print_welcome_msg();
     bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
@@ -81,9 +83,9 @@ cout << endl << "      AGCM: AtmosphereDataTransfer" << endl;
     }
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
-            Transfer_File << v.x[0][j][k] << " " << w.x[0][j][k] << " " <<   //v and w non-dimensional, t non-dim,
-                t.x[0][j][k] << " " << p_stat.x[0][j][k] << " " << Evaporation_Dalton.y[j][k] << 
-                " " << Precipitation.y[j][k] << endl;
+            Transfer_File << v.x[0][j][k] << " " << w.x[0][j][k] << " " <<
+                t.x[0][j][k] << " " << p_dyn.x[0][j][k] << " " << Evaporation_Dalton.y[j][k] << 
+                " " << Precipitation.y[j][k] << endl; // v and w non-dimensional, t non-dim, p_dyn non-dim, Evaporation_Dalton mm/d, Precipitation mm/d
         }
     }
     Transfer_File.close();
@@ -134,13 +136,11 @@ cout << endl << "      AGCM: AtmospherePlotData" << endl;
                 << " " << Evaporation_Penman.y[j][k]
                 << " " << temp_reconst.y[j][k]
                 << " " << temp_landscape.y[j][k]
-                << " " << p_stat_landscape.y[j][k]
+                << " " << p_hydro_landscape.y[j][k]
                 << " " << r_dry_landscape.y[j][k]
                 << " " << r_humid_landscape.y[j][k] << " " << endl;
         }
     }
-//    v.printArray("AGCM", im, jm, km);
-//    w.printArray("AGCM", im, jm, km);
     cout << "      AGCM: AtmospherePlotData ended" << endl;
     return;
 }

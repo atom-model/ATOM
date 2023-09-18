@@ -85,8 +85,10 @@ void Array::printArray(string dir, int im, int jm, int km){
     string at = "AGCM";
     string hy = "OGCM";
     if(dir.compare(at) == 0){
-        i_beg = 0;
-        i_end = 0;
+//        i_beg = 0;
+//        i_end = 0;
+        i_beg = 1;
+        i_end = 1;
         cout << endl << endl << " ...................... \
  printout from atmosphere code at level = " << i_beg << "  ...................." 
             << endl << endl;

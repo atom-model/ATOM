@@ -154,7 +154,7 @@ void cHydrosphereModel::paraview_vts(const string &Name_Bathymetry_File, int n){
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             for(int i = 0; i < im; i++){
-                Hydrosphere_vts_File << p_stat.x[i][j][k]  << endl;
+                Hydrosphere_vts_File << p_dyn.x[i][j][k]  << endl;
             }
             Hydrosphere_vts_File <<  "\n"  << endl;
         }
@@ -235,14 +235,11 @@ void cHydrosphereModel::paraview_panorama_vts(const string &Name_Bathymetry_File
     dump_array("v-velocity", v, u_0, Hydrosphere_panorama_vts_File);
     dump_array("w-velocity", w, u_0, Hydrosphere_panorama_vts_File);
     dump_array("Temperature", t, 1.0, Hydrosphere_panorama_vts_File);
-    dump_array("PressureStatic", p_stat, 1.0, Hydrosphere_panorama_vts_File);
+    dump_array("PressureDynamic", p_dyn, p_0, Hydrosphere_panorama_vts_File);
     dump_array("PressureHydro", p_hydro, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("Salinity", c, c_0, Hydrosphere_panorama_vts_File);
     dump_array("DensityWater", r_water, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("DensitySaltWater", r_salt_water, 1.0, Hydrosphere_panorama_vts_File);
-    dump_array("SaltFinger", Salt_Finger, 1.0, Hydrosphere_panorama_vts_File);
-    dump_array("SaltDiffusion", Salt_Diffusion, 1.0, Hydrosphere_panorama_vts_File);
-    dump_array("SaltBalance", Salt_Balance, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("BuoyancyForce", BuoyancyForce, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("CoriolisForce", CoriolisForce, 1.0, Hydrosphere_panorama_vts_File);
     dump_array("PressureGradientForce", PressureGradientForce, 1., Hydrosphere_panorama_vts_File);
@@ -319,7 +316,8 @@ void cHydrosphereModel::paraview_vtk_longal(const string &Name_Bathymetry_File,
         z = 0.;
         x = x + dx;
     }
-/*
+    Hydrosphere_vtk_longal_File <<  "POINT_DATA " << im * km << endl;
+
     Hydrosphere_vtk_longal_File <<  "SCALARS Temperature float " << 1 << endl;
     Hydrosphere_vtk_longal_File <<  "LOOKUP_TABLE default"  <<endl;
     for(int i = 0; i < im; i++){
@@ -328,7 +326,8 @@ void cHydrosphereModel::paraview_vtk_longal(const string &Name_Bathymetry_File,
                 * t_0 - t_0 << endl;
         }
     }
-*/
+
+/*
     for(int i = 0; i < im; i++){
         for(int k = 0; k < km; k++){
             aux_u.x[i][j_longal][k] = (r_salt_water.x[i][j_longal][k] * cp_w 
@@ -347,19 +346,20 @@ void cHydrosphereModel::paraview_vtk_longal(const string &Name_Bathymetry_File,
                 * t.x[i][j_longal][k] * t_0 * 1.0e-2;
         }
     }
-    Hydrosphere_vtk_longal_File <<  "POINT_DATA " << im * km << endl;
+*/
     dump_longal("Bathymetry", h, 1.0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("u-Component", u, u_0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("v-Component", v, u_0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("w-Component", w, u_0, j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("Temperature", t, 1., j_longal, Hydrosphere_vtk_longal_File);
+/*
     dump_longal("rhs_u", rhs_u, 1.0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("rhs_v", rhs_v, 1.0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("rhs_w", rhs_w, 1.0, j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("PressureStatic", p_stat, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+*/
+    dump_longal("PressureDynamic", p_dyn, p_0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("PressureHydro", p_hydro, 1.0, j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("PressureTotal", aux_u, 1.0, j_longal, Hydrosphere_vtk_longal_File);
-    dump_longal("PressureDynamic", aux_v, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+//    dump_longal("PressureTotal", aux_u, 1.0, j_longal, Hydrosphere_vtk_longal_File);
+//    dump_longal("PressureDynamic", aux_v, 1.0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("Salinity", c, c_0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("DensityWater", r_water, 1.0, j_longal, Hydrosphere_vtk_longal_File);
     dump_longal("DensitySaltWater", r_salt_water, 1.0, j_longal, Hydrosphere_vtk_longal_File);
@@ -375,6 +375,7 @@ void cHydrosphereModel::paraview_vtk_longal(const string &Name_Bathymetry_File,
             Hydrosphere_vtk_longal_File << u.x[i][j_longal][k] << " " << y << " " << w.x[i][j_longal][k] << endl;
         }
     }
+
     Hydrosphere_vtk_longal_File.close();
     cout << "   File:  " << "[" + Name_Bathymetry_File 
         + "]_Hyd_longal_" + std::to_string(j_longal) + "_" + std::to_string(n) + ".vtk" 
@@ -425,7 +426,7 @@ void cHydrosphereModel::paraview_vtk_radial(const string &Name_Bathymetry_File,
         for(int k = 0; k < km; k++){
             Hydrosphere_vtk_radial_File << t.x[i_radial][j][k] * t_0 - t_0 << endl;
             aux_w.x[i_radial][j][k] = Evaporation_Dalton.y[j][k] - Precipitation.y[j][k];
-            if(is_land(h, i_radial, j, k))  aux_w.x[i_radial][j][k] = 0.;
+//            if(is_land(h, i_radial, j, k))  aux_w.x[i_radial][j][k] = 0.;
         }
     }
     Hydrosphere_vtk_radial_File <<  "SCALARS Temperature float " << 1 << endl;
@@ -434,6 +435,7 @@ void cHydrosphereModel::paraview_vtk_radial(const string &Name_Bathymetry_File,
         for(int k = 0; k < km; k++){
             Hydrosphere_vtk_radial_File << t.x[i_radial][j][k] * t_0 
                 - t_0 << endl;
+/*
             aux_u.x[i_radial][j][k] = (r_salt_water.x[i_radial][j][k] * cp_w 
                 * t.x[i_radial][j][k] * t_0 
                 + 0.5 * r_salt_water.x[i_radial][j][k] 
@@ -446,6 +448,7 @@ void cHydrosphereModel::paraview_vtk_radial(const string &Name_Bathymetry_File,
                           + v.x[i_radial][j][k] * v.x[i_radial][j][k] 
                           + w.x[i_radial][j][k] * w.x[i_radial][j][k]) 
                           * u_0 * u_0/3.0), 2.0)) * 1.0e-2;
+*/
         }
     }
     dump_radial("Bathymetry", h, 1.0, i_radial, Hydrosphere_vtk_radial_File);
@@ -453,13 +456,15 @@ void cHydrosphereModel::paraview_vtk_radial(const string &Name_Bathymetry_File,
     dump_radial("u-Component", u, u_0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("v-Component", v, u_0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("w-Component", w, u_0, i_radial, Hydrosphere_vtk_radial_File);
+/*
     dump_radial("rhs_u", rhs_u, 1.0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("rhs_v", rhs_v, 1.0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("rhs_w", rhs_w, 1.0, i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("PressureStatic", p_stat, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+*/
+    dump_radial("PressureDynamic", p_dyn, p_0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("PressureHydro", p_hydro, 1.0, i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("PressureTotal", aux_u, 1.0, i_radial, Hydrosphere_vtk_radial_File);
-    dump_radial("PressureDynamic", aux_v, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+//    dump_radial("PressureTotal", aux_u, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+//    dump_radial("PressureDynamic", aux_v, 1.0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("Salinity", c, c_0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("DensityWater", r_water, 1.0, i_radial, Hydrosphere_vtk_radial_File);
     dump_radial("DensitySaltWater", r_salt_water, 1.0, i_radial, Hydrosphere_vtk_radial_File);
@@ -474,14 +479,16 @@ void cHydrosphereModel::paraview_vtk_radial(const string &Name_Bathymetry_File,
     dump_radial_2d("Downwelling", Downwelling, 1.0, Hydrosphere_vtk_radial_File);
     dump_radial_2d("Evaporation_Dalton", Evaporation_Dalton, 1.0, Hydrosphere_vtk_radial_File);
     dump_radial_2d("Precipitation", Precipitation, 1.0, Hydrosphere_vtk_radial_File);
-    dump_radial_2d("SalinityEvapPrec", salinity_evaporation, 1.0, Hydrosphere_vtk_radial_File);
+    dump_radial_2d("SalinityEvapPrec", salinity_evaporation, c_0, Hydrosphere_vtk_radial_File);
     dump_radial("Evap-Precip", aux_w, 1.0, i_radial, Hydrosphere_vtk_radial_File);
+
     Hydrosphere_vtk_radial_File <<  "VECTORS v-w-Cell float" << endl;
     for(int j = 0; j < jm; j++){
         for(int k = 0; k < km; k++){
             Hydrosphere_vtk_radial_File << v.x[i_radial][j][k] << " " << w.x[i_radial][j][k] << " " << z << endl;
         }
     }
+
     Hydrosphere_vtk_radial_File.close();
     cout << "   File:  " << "[" 
         + Name_Bathymetry_File + "]_Hyd_radial_" + std::to_string(i_radial) 
@@ -537,6 +544,7 @@ void cHydrosphereModel::paraview_vtk_zonal(const string &Name_Bathymetry_File,
     }
     for(int i = 0; i <= im-1; i++){
         for(int j = 0; j < jm; j++){
+/*
             aux_u.x[i][j][k_zonal] = (r_salt_water.x[i][j][k_zonal] * cp_w 
                 * t.x[i][j][k_zonal] * t_0 
                 + 0.5 * r_salt_water.x[i][j][k_zonal] 
@@ -553,6 +561,7 @@ void cHydrosphereModel::paraview_vtk_zonal(const string &Name_Bathymetry_File,
                           + w.x[i][j][k_zonal] * w.x[i][j][k_zonal]) 
                           * u_0 * u_0/3.0), 2.0)) * 1.0e-2;
             if(is_land(h, i, j, k_zonal))  aux_v.x[i][j][k_zonal] = 0.0;
+*/
             aux_w.x[i][j][k_zonal] = r_salt_water.x[i][j][k_zonal] * cp_w 
                 * t.x[i][j][k_zonal] * t_0 * 1.0e-2;
         }
@@ -561,13 +570,15 @@ void cHydrosphereModel::paraview_vtk_zonal(const string &Name_Bathymetry_File,
     dump_zonal("u-Component", u, u_0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("v-Component", v, u_0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("w-Component", w, u_0, k_zonal, Hydrosphere_vtk_zonal_File);
+/*
     dump_zonal("rhs_u", rhs_u, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("rhs_v", rhs_v, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("rhs_w", rhs_w, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("PressureStatic", p_stat, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+*/
+    dump_zonal("PressureDynamic", p_dyn, p_0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("PressureHydro", p_hydro, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("PressureTotal", aux_u, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
-    dump_zonal("PressureDynamic", aux_v, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+//    dump_zonal("PressureTotal", aux_u, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+//    dump_zonal("PressureDynamic", aux_v, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("Energy_inner", aux_w, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("Salinity", c, c_0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("DensityWater", r_water, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
@@ -578,12 +589,14 @@ void cHydrosphereModel::paraview_vtk_zonal(const string &Name_Bathymetry_File,
     dump_zonal("BuoyancyForce", BuoyancyForce, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("CoriolisForce", CoriolisForce, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
     dump_zonal("PressureGradientForce", PressureGradientForce, 1.0, k_zonal, Hydrosphere_vtk_zonal_File);
+
     Hydrosphere_vtk_zonal_File <<  "VECTORS u-v-Cell float" << endl;
     for(int i = 0; i < im; i++){
         for(int j = 0; j < jm; j++){
             Hydrosphere_vtk_zonal_File << u.x[i][j][k_zonal] << " " << v.x[i][j][k_zonal] << " " << z << endl;
         }
     }
+
     Hydrosphere_vtk_zonal_File.close();
     cout << "   File:  " << "[" + Name_Bathymetry_File 
         + "]_Hyd_zonal_" + std::to_string(k_zonal) + "_" + std::to_string(n) + ".vtk" 

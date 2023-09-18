@@ -127,11 +127,14 @@ AtomUtils::max_diff(int im, int jm, int km, const Array &a1, const Array &a2){
 */
 double AtomUtils::C_Dalton(int i, int j, int k, double coeff_Dalton, 
     double u_0, Array &v, Array &w){
+    // Dalton law applied only to ocean surfaces, Penman law for land surfaces
     // variation of the evaporation coefficient in Dalton's evaporation law, parabola
     // air velocity measured 2m above sea level
-    // for v_max = 10 m/s, but C_Dalton is function of v, should be included
+    // for v_max = 10 m/s, but C_Dalton is function of velocity, should be included
     // Geiger ( 1961 ) by > Zmarsly, Kuttler, Pethe in mm/( h * hPa ), p. 133
-    double v_max = 10.;  // in m/s ..... Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
+    // coeff_Dalton to be found in param.py
+    // for ocean surfaces evaporation is of the same order as precipitation
+    double v_max = 10.0;  // in m/s ..... Geiger ( 1961 ) by Zmarsly, Kuttler, Pethe in m/s, p. 133
                        // for the modern world the global precipitation is 10% higher than evaporation
     double c_Dalton_max = 0.053; // in mm/(h * hPa)
     double vel_magnitude = sqrt(v.x[i][j][k] * v.x[i][j][k] 

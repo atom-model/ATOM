@@ -38,9 +38,10 @@ public:
     }
 
     static const double pi180, the_degree, phi_degree, dthe, dphi, dr, dt;
-    static const double the0, phi0, r0, residuum_ref_atm;
+    static const double the0, phi0, r0;
 
     double residuum_old, residuum_loop;
+    double tke_surf, dis_surf, tke_source_surf, dis_source_surf, nue_surf, prod_surf;
 
     int Ma;
 
@@ -156,7 +157,7 @@ private:
 
     const int c43 = 4.0/3.0, c13 = 1.0/3.0;
 
-    static const int im = 41, jm = 181, km = 361, nm = 500;
+    static const int im = 41, jm = 181, km = 361;
 
     double t_paleo_total = 0.0;
     double t_pole_total = 0.0;
@@ -195,7 +196,6 @@ private:
     void print_min_max_atm();
     void write_file(std::string &bathymetry_name, 
         std::string &output_path, bool is_final_result);
-    void run_2D_loop();
     void run_3D_loop();
     void load_global_temperature_curve();
     void load_equat_temperature_curve();
@@ -203,24 +203,24 @@ private:
     void calculate_node_weights();
     void init_steps();
     void init_tropopause_layers();
-    void RK_RHS_2D_Atmosphere(int i, int j, int k);
     void RK_RHS_3D_Atmosphere(int i, int j, int k);
-    void solveRungeKutta_2D_Atmosphere();
     void solveRungeKutta_3D_Atmosphere();
     void fft(Array &);
     void ValueLimitationAtm();
     void BC_SolidGround(); 
     void init_co2(int Ma);
     void init_temperature(int Ma);
-    void init_dynamic_pressure();
+    void init_temperature_adiabatic(int Ma);
     void init_water_vapour();
     void init_velocities();
     void init_layer_heights(){
-        const float zeta = 3.715;
-        float h = L_atm/(im-1);
+        double h = L_atm/(double)(im-1);
         for(int i=0; i<im; i++){
-            m_layer_heights.push_back((exp(zeta * (rad.z[i] - 1.)) - 1) * h);
-//            std::cout << m_layer_heights.back() << std::endl;
+            if(use_stretched_coordinate_system)
+                m_layer_heights.push_back((exp(zeta * (rad.z[i] - 1.0)) - 1.0) * h); // stretched coordinate system
+            else
+                m_layer_heights.push_back((rad.z[i] - 1.0) * L_atm);  // unstretched coordinate system
+//            std::cout << i << "     " << h << "     " << rad.z[i] - 1.0 << "     " << m_layer_heights.back() << std::endl;
         } 
         return;
     }
@@ -228,6 +228,7 @@ private:
     void init_u(Array &u, int j);
     void init_v_or_w(Array &v_or_w, int lat, double coeff_trop, double coeff_sl);
     void init_v_or_w_above_tropopause(Array &v_or_w, int lat, double coeff);
+    void init_v_or_w_below_base(Array &v_or_w, int i_base, int lat, double coeff);
     void form_diagonals(Array &a, int start, int end);
     void smooth_transition(Array &u, Array &v, Array &w, int lat);
     void RadiationMultiLayer();
@@ -249,16 +250,13 @@ private:
     void BC_phi();
     void BC_pole();
     void computePressure_3D();
-    void computePressure_2D();
     void print_welcome_msg();
     void print_final_remarks();
     void print_loop_3D_headings();
-    void print_loop_2D_headings();
     void WaterVapourEvaporation();
     void MoistConvectionMidL();
     void MoistConvectionShall();
-    void store_intermediate_data_2D(float coeff=1);
-    void store_intermediate_data_3D(float coeff=1);
+    void store_intermediate_data_3D(double coeff=1);
     void adjust_temperature_IC(double** t, int jm, int km);
     void check_data();
     void check_data(Array& a, Array&an, const std::string& name);
@@ -266,8 +264,8 @@ private:
     void paraview_vtk_radial(string &Name_Bathymetry_File, int Ma, int i_radial, int n);
     void paraview_vtk_zonal(string &Name_Bathymetry_File, int k_zonal, int n);
     void paraview_vtk_longal(string &Name_Bathymetry_File, int j_longal, int n); 
-    void AtmospherePlotData(const string &Name_Bathymetry_File, int iter_cnt);
     void AtmosphereDataTransfer(const string &Name_Bathymetry_File);
+    void AtmospherePlotData(const string &Name_Bathymetry_File, int iter_cnt);
     void read_Atmosphere_Surface_Data(int Ma);
     void run_data_atm();
     void searchMinMax_2D(string, string, 
@@ -293,7 +291,7 @@ private:
     Array_2D velocity_w_NASA; // surface w-velocity from NASA
     Array_2D temp_reconst; // surface temperature from reconstuction tool
     Array_2D temp_landscape; // landscape temperature
-    Array_2D p_stat_landscape; // landscape static pressure
+    Array_2D p_hydro_landscape; // landscape static pressure
     Array_2D r_dry_landscape; // landscape dry air density
     Array_2D r_humid_landscape; // landscape humid air density
     Array_2D albedo; // albedo = reflectivity
@@ -310,6 +308,7 @@ private:
     Array_2D dew_point_temperature; // dew point temperature
     Array_2D condensation_level; // local condensation level
     Array_2D c_fix; // local surface water vapour fixed for iterations
+    Array_2D tropopause_height; // local height of the tropopause
 
     Array h; // bathymetry, depth from sea level
     Array t; // temperature
@@ -322,6 +321,7 @@ private:
     Array gr; // cloud graupel
     Array cloudiness; // cloudiness, N in literature
     Array co2; // CO2
+
     Array tn; // temperature new
     Array un; // u-velocity component in r-direction new
     Array vn; // v-velocity component in theta-direction new
@@ -331,13 +331,15 @@ private:
     Array icen; // cloud ice new
     Array grn; // cloud ice new
     Array co2n; // CO2 new
-    Array p_stat; // dynamic pressure
+
+    Array p_dyn; // dynamic pressure
     Array stream; // mass stream function
     Array u_stream; // u-velocity by mass stream function
     Array p_hydro; // static pressure
     Array TempStand; // US Standard Atmosphere Temperature
     Array TempDewPoint; // Dew Point Temperature
     Array HumidityRel; // relative humidity
+
     Array rhs_t; // auxilliar field RHS temperature
     Array rhs_u; // auxilliar field RHS u-velocity component
     Array rhs_v; // auxilliar field RHS v-velocity component
@@ -347,6 +349,7 @@ private:
     Array rhs_ice; // auxilliar field RHS cloud ice
     Array rhs_g; // auxilliar field RHS cloud graupel
     Array rhs_co2; // auxilliar field RHS CO2
+
     Array aux_u; // auxilliar field u-velocity component
     Array aux_v; // auxilliar field v-velocity component
     Array aux_w; // auxilliar field w-velocity component

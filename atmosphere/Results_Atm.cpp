@@ -28,16 +28,15 @@ void cAtmosphereModel::print_min_max_atm(){
                               + v.x[i][j][k] * v.x[i][j][k] 
                               + w.x[i][j][k] * w.x[i][j][k]) 
                               * u_0 * u_0/3.0), 2.0)) * 1.0e-2;
-                aux_v.x[i][j][k] = (0.5 * r_humid.x[i][j][k] 
-                    * pow(sqrt((u.x[i][j][k] * u.x[i][j][k] 
-                              + v.x[i][j][k] * v.x[i][j][k] 
-                              + w.x[i][j][k] * w.x[i][j][k]) 
-                              * u_0 * u_0/3.0), 2.0)) * 1.0e-2;
+                aux_v.x[i][j][k] = r_humid.x[i][j][k] * cp_l 
+                    * t.x[i][j][k] * t_0 * 1.0e-2;
                 }
             }
         }
 
     cout << endl << " flow properties: " << endl << endl;
+    if(use_stretched_coordinate_system)
+        cout << endl << "      coordinate stretching is in use" << endl << endl;
     searchMinMax_3D(" max temperature ", " min temperature ", 
         " deg", t, 273.15, [](double i)->double{return i - 273.15;}, true);
     searchMinMax_3D(" max u-component ", " min u-component ", 
@@ -46,9 +45,9 @@ void cAtmosphereModel::print_min_max_atm(){
         "m/s", v, u_0);
     searchMinMax_3D(" max w-component ", " min w-component ", 
         "m/s", w, u_0);
-    searchMinMax_3D(" max pressure static ", " min pressure static ", 
-        "hPa", p_stat, p_0);
     searchMinMax_3D(" max pressure dynamic ", " min pressure dynamic ", 
+        "hPa", p_dyn, 1.0);
+    searchMinMax_3D(" max pressure static ", " min pressure static ", 
         "hPa", aux_v, 1.0);
     searchMinMax_3D(" max pressure total ", " min pressure total ", 
         "hPa", aux_u, 1.0);
@@ -76,12 +75,13 @@ void cAtmosphereModel::print_min_max_atm(){
         "g/kg", ice, 1000.0);
     searchMinMax_3D(" max cloud graupel ", " min cloud graupel ", 
         "g/kg", gr, 1000.0);
+
     cout << endl << " precipitation: " << endl << endl;
     searchMinMax_3D(" max precipitation rain ", " min precipitation rain ", "mm/d", P_rain, 8.64e4);
     searchMinMax_3D(" max precipitation snow ", " min precipitation snow ", "mm/d", P_snow, 8.64e4);
     searchMinMax_3D(" max precipitation graup ", " min precipitation graup ", "mm/d", P_graupel, 8.64e4);
-    searchMinMax_3D(" max precipitation midl ", " min precipitation midl ", "mm/d", P_conv_midl, 8.64e4);
-    searchMinMax_3D(" max precipitation shal ", " min precipitation shal ", "mm/d", P_conv_shall, 8.64e4);
+//    searchMinMax_3D(" max precipitation midl ", " min precipitation midl ", "mm/d", P_conv_midl, 8.64e4);
+//    searchMinMax_3D(" max precipitation shal ", " min precipitation shal ", "mm/d", P_conv_shall, 8.64e4);
 
     cout << endl << " two-category-ice-scheme: " << endl;
     cout << endl << " --- parameterization: " << endl << endl;
@@ -92,7 +92,7 @@ void cAtmosphereModel::print_min_max_atm(){
     searchMinMax_3D(" max S_r ", " min S_r ", "kg/kgs", S_r, 1000.0);
     searchMinMax_3D(" max S_s ", " min S_s ", "kg/kgs", S_s, 1000.0);
     searchMinMax_3D(" max S_c_c ", " min S_c_c ", "kg/kgs", S_c_c, 1000.0);
-
+/*
     cout << endl << " moist convection: " << endl;
     cout << endl << " --- up/downdraft: " << endl << endl;
     searchMinMax_3D(" max E_u ", " min E_u ", "kg/m3s", E_u, 1.0);
@@ -131,7 +131,7 @@ void cAtmosphereModel::print_min_max_atm(){
     searchMinMax_3D(" max s ", " min s ", "./.", s, 1.0);
     searchMinMax_3D(" max s_u ", " min s_u ", "./.", s_u, 1.0);
     searchMinMax_3D(" max s_d ", " min s_d ", "./.", s_d, 1.0);
-
+*/
     cout << endl << " greenhouse gas: " << endl << endl;
     searchMinMax_3D(" max co2 ", " min co2 ", "ppm", co2, co2_0);
     searchMinMax_3D(" max epsilon ",  " min epsilon ", "%", epsilon, 1.0);
@@ -153,7 +153,7 @@ void cAtmosphereModel::print_min_max_atm(){
          " ppm ", co2_total, co2_0);
     cout << endl << " precipitation: " << endl << endl;
     searchMinMax_2D(" max precipitation total ", " min precipitation total ", 
-        "mm/d", Precipitation, 8.64e4);
+        "mm/d", Precipitation, 1.0);
     searchMinMax_2D(" max precipitable NASA ", " min precipitable NASA ", 
         "mm/d", precipitation_NASA, 1.0);
     searchMinMax_2D(" max precipitable water ", " min precipitable water ", 
@@ -227,9 +227,9 @@ void cAtmosphereModel::run_data_atm(){
     }
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
-            precipitable_water.y[j][k] = 0.;
-            Evaporation_Penman.y[j][k] = 0.;
-            Evaporation_Dalton.y[j][k] = 0.;
+            precipitable_water.y[j][k] = 0.0;
+            Evaporation_Penman.y[j][k] = 0.0;
+            Evaporation_Dalton.y[j][k] = 0.0;
         }
     }
     for(int k = 0; k < km; k++){
@@ -256,8 +256,6 @@ void cAtmosphereModel::run_data_atm(){
                 else  Q_Evaporation.y[j][k] = (2500.8 - 2.372 *
                     (t.x[0][j][k] * t_0 - t_0)) + 300.0; // heat of Evaporation of ice + 300 [kJ/kg]
                 Q_radiation.y[j][k] = radiation.x[0][j][k];  // long wave radiation in [W/m2]
-                Q_latent.y[j][k] = Q_Latent.x[0][j][k];  // latente heat in [W/m2]
-                Q_sensible.y[j][k] = Q_Sensible.x[0][j][k];  // sensible heat in [W/m2]
                 Q_bottom.y[j][k] = - (radiation.x[0][j][k] 
                     - Q_Latent.x[0][j][k] - Q_Sensible.x[0][j][k]);  // difference understood as heat of the ground
                 if(is_air(h, 0, j, k))
@@ -293,7 +291,7 @@ void cAtmosphereModel::run_data_atm(){
                     if(is_land(h, i, j, k))  Q_Evaporation.y[j][k] = 2300.0;  // minimum value used for printout
                     if(is_water(h, 0, j, k))
                         Evaporation_Dalton.y[j][k] = 
-                            C_Dalton(1, j, k, coeff_Dalton, u_0, v, w) 
+                            C_Dalton(0, j, k, coeff_Dalton, u_0, v, w) 
                             * sat_deficit * 24.0;  // mm/h in mm/d
                     else  Evaporation_Dalton.y[j][k] = 0.0; 
                     if(Evaporation_Dalton.y[j][k] <= 0.0) 
@@ -322,6 +320,7 @@ void cAtmosphereModel::run_data_atm(){
                 PressureGradientForce.x[3][j][k] 
                 - 3.0 * PressureGradientForce.x[2][j][k] 
                 + 3.0 * PressureGradientForce.x[1][j][k];  // extrapolation
+/*
             Q_Latent.x[0][j][k] = 
                 Q_Latent.x[3][j][k] 
                 - 3.0 * Q_Latent.x[2][j][k] 
@@ -330,12 +329,12 @@ void cAtmosphereModel::run_data_atm(){
                 Q_Sensible.x[3][j][k] 
                 - 3.0 * Q_Sensible.x[2][j][k] 
                 + 3.0 * Q_Sensible.x[1][j][k];  // extrapolation
+*/
             if(is_land(h, 0, j, k)){
                 BuoyancyForce.x[0][j][k] = 0.0;
-                Q_Sensible.x[0][j][k] = 0.0;
                 CoriolisForce.x[0][j][k] = 0.0;
-                Q_Latent.x[0][j][k] = 0.0;
-                Q_Sensible.x[0][j][k] = 0.0;
+//                Q_Latent.x[0][j][k] = 0.0;
+//                Q_Sensible.x[0][j][k] = 0.0;
             }
             BuoyancyForce.x[im-1][j][k] = 
                 BuoyancyForce.x[im-4][j][k] 
@@ -349,6 +348,7 @@ void cAtmosphereModel::run_data_atm(){
                 PressureGradientForce.x[im-4][j][k] 
                 - 3.0 * PressureGradientForce.x[im-3][j][k] 
                 + 3.0 * PressureGradientForce.x[im-2][j][k];  // extrapolation
+/*
             Q_Latent.x[im-1][j][k] = 
                 Q_Latent.x[im-4][j][k] 
                 - 3.0 * Q_Latent.x[im-3][j][k] 
@@ -357,6 +357,7 @@ void cAtmosphereModel::run_data_atm(){
                 Q_Sensible.x[im-4][j][k] 
                 - 3.0 * Q_Sensible.x[im-3][j][k] 
                 + 3.0 * Q_Sensible.x[im-2][j][k];  // extrapolation
+*/
         }
     }
     for(int k = 0; k < km; k++){
@@ -373,6 +374,7 @@ void cAtmosphereModel::run_data_atm(){
                 - c13 * PressureGradientForce.x[i][2][k];
             PressureGradientForce.x[i][jm-1][k] = c43 * PressureGradientForce.x[i][jm-2][k]       
                 - c13 * PressureGradientForce.x[i][jm-3][k];
+/*
             Q_Latent.x[i][0][k] = c43 * Q_Latent.x[i][1][k] 
                 - c13 * Q_Latent.x[i][2][k];
             Q_Latent.x[i][jm-1][k] = c43 * Q_Latent.x[i][jm-2][k]       
@@ -381,6 +383,7 @@ void cAtmosphereModel::run_data_atm(){
                 - c13 * Q_Sensible.x[i][2][k];
             Q_Sensible.x[i][jm-1][k] = c43 * Q_Sensible.x[i][jm-2][k]       
                 - c13 * Q_Sensible.x[i][jm-3][k];
+*/
         }
     }
     for(int i = 0; i < im; i++){
@@ -403,6 +406,7 @@ void cAtmosphereModel::run_data_atm(){
                 - c13 * PressureGradientForce.x[i][j][km-3];
             PressureGradientForce.x[i][j][0] = PressureGradientForce.x[i][j][km-1] =
                (PressureGradientForce.x[i][j][0] + PressureGradientForce.x[i][j][km-1])/ 2.;
+/*
             Q_Latent.x[i][j][0] = c43 * Q_Latent.x[i][j][1] 
                 - c13 * Q_Latent.x[i][j][2];
             Q_Latent.x[i][j][km-1] = c43 * Q_Latent.x[i][j][km-2] 
@@ -415,6 +419,7 @@ void cAtmosphereModel::run_data_atm(){
                 - c13 * Q_Sensible.x[i][j][km-3];
             Q_Sensible.x[i][j][0] = Q_Sensible.x[i][j][km-1] =
                (Q_Sensible.x[i][j][0] + Q_Sensible.x[i][j][km-1])/ 2.;
+*/
         }
     }
 
@@ -459,19 +464,10 @@ void cAtmosphereModel::run_data_atm(){
                 double step = get_layer_height(i+1) - get_layer_height(i);
                 precipitable_water.y[j][k] +=  a * step;
                 // precipitable_water mass in 1 kg/m² compares to 1 mm height, with water density kg/(m² * mm)
-/*
-                if((j==90)&&(k==180))  cout << endl
-                    << "  precipitable water" << endl
-                    << "  i = " << i << endl
-                    << "  a = " << a 
-                    << "  e = " << e << endl 
-                    << "   " << height << "   " << precipitable_water.y[j][k] <<  endl;
-*/
             }
         }
     }
-//    double coeff_prec = 8.64e4;  // dimensions see below
-    double coeff_prec = 1.0;  // dimensions see below    no convertion from mm/s to mm/a
+    double coeff_prec = 8.64e4;  // dimensions see below   convertion from mm/s to mm/d
     for(int k = 0; k < km; k++){
         for(int j = 0; j < jm; j++){
             Precipitation.y[j][k] = coeff_prec * (P_rain.x[0][j][k] 
@@ -514,11 +510,11 @@ void cAtmosphereModel::run_data_atm(){
         get_temperatures_from_curve(*get_current_time(), 
         m_global_temperature_curve);
     precipitablewater_average = AtomUtils::GetMean_2D(jm, km, precipitable_water);
-    precipitation_average = 365. * AtomUtils::GetMean_2D(jm, km, Precipitation);
-    precipitation_NASA_average = 365. * AtomUtils::GetMean_2D(jm, km, precipitation_NASA);
+    precipitation_average = 365.0 * AtomUtils::GetMean_2D(jm, km, Precipitation);  // per annum
+    precipitation_NASA_average = 365.0 * AtomUtils::GetMean_2D(jm, km, precipitation_NASA);
     co2_average = AtomUtils::GetMean_2D(jm, km, co2_total);
-    Evaporation_Penman_average = 365. * AtomUtils::GetMean_2D(jm, km, Evaporation_Penman);
-    Evaporation_Dalton_average = 365. * AtomUtils::GetMean_2D(jm, km, Evaporation_Dalton);
+    Evaporation_Penman_average = 365.0 * AtomUtils::GetMean_2D(jm, km, Evaporation_Penman);
+    Evaporation_Dalton_average = 365.0 * AtomUtils::GetMean_2D(jm, km, Evaporation_Dalton);
     Evaporation_average = Evaporation_Penman_average + Evaporation_Dalton_average;
     cout.precision(2);
     level = "m";
@@ -667,8 +663,9 @@ void cAtmosphereModel::run_data_atm(){
     if(choice <= 3) goto preparation;
     cout << endl;
 */
+
     double Value_7 = precipitablewater_average;
-    double Value_8 = precipitation_average * 8.64e4;
+    double Value_8 = precipitation_average;
     cout << setw(6) << setiosflags(ios::left) << setw(40) << setfill('.')
         << name_Value_7 << " = " << resetiosflags(ios::left) << setw(7) << fixed
         << setfill(' ') << Value_7 << setw(6) << name_unit_mm << "   " << setiosflags(ios::left)
@@ -731,6 +728,7 @@ void cAtmosphereModel::run_data_atm(){
         << setw(40) << setfill('.') << name_Value_27 << " = "
         << resetiosflags(ios::left) << setw(7) << fixed << setfill(' ')
         << Value_27 << setw(6) << name_unit_t << endl << endl << endl;
+
     return;
 }
 /*

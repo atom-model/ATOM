@@ -8,13 +8,13 @@ CFLAGS = -ggdb -Wall -fPIC -std=c++11 -Ilib -Iatmosphere -Ihydrosphere -Itinyxml
 LIB_OBJ = lib/Array.o lib/Array_2D.o lib/Array_1D.o lib/Config.o lib/Utils.o lib/FFT.o
 
 ATM_OBJ = atmosphere/cAtmosphereModel.o atmosphere/Pressure_Atm.o atmosphere/PrintMsgAtm.o \
-atmosphere/FileIOAtm.o atmosphere/BC_Atm.o atmosphere/BC_Thermo.o atmosphere/RHS_Atm.o \
-atmosphere/RungeKutta_Atm.o atmosphere/MinMax_Atm.o \
+atmosphere/FileIOAtm.o atmosphere/BC_Atm.o atmosphere/BC_Thermo.o atmosphere/RHS_Atm_light.o \
+atmosphere/RK_Atm_light.o atmosphere/MinMax_Atm.o \
 atmosphere/ParaviewAtm.o atmosphere/InitVelocity.o atmosphere/Results_Atm.o
 
 HYD_OBJ = hydrosphere/cHydrosphereModel.o hydrosphere/Pressure_Hyd.o hydrosphere/PrintMsgHyd.o \
-hydrosphere/FileIOHyd.o hydrosphere/BC_Hyd.o hydrosphere/BC_Thermohalin.o hydrosphere/RHS_Hyd.o \
-hydrosphere/RungeKutta_Hyd.o hydrosphere/MinMax_Hyd.o \
+hydrosphere/FileIOHyd.o hydrosphere/BC_Hyd.o hydrosphere/BC_Thermohalin.o hydrosphere/RHS_Hyd_light.o \
+hydrosphere/RK_Hyd_light.o hydrosphere/MinMax_Hyd.o \
 hydrosphere/ParaviewHyd.o hydrosphere/Results_Hyd.o
 
 XML_OBJ = tinyxml2/tinyxml2.o
@@ -46,6 +46,7 @@ hyd: libatom.a $(HYD_CLI_OBJ)
 $(PARAM_OUTPUTS): param.py
 # explicitly clean dependent files
 	rm -f atmosphere/cAtmosphereModel.o hydrosphere/cHydrosphereModel.o
+
 	python param.py
 
 

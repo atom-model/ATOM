@@ -18,8 +18,6 @@ cout << endl << "      OGCM: read_Hydrosphere_Surface_Data .....................
     if(!is_pole_temperature_curve_loaded()) 
         load_pole_temperature_curve();
     //Prepare the temperature, precipitation and salinity, Name_Transfer_File
-//    cout.precision(6);
-//    cout.setf(ios::fixed);
     string Name_Transfer_File;
     stringstream ssName_v_w_Transfer_File;
     string Name_SurfaceTemperature_File = temperature_file;
@@ -45,6 +43,8 @@ cout << endl << "      OGCM: read_Hydrosphere_Surface_Data .....................
     }
     bathymetry_name = std::to_string(Ma) + BathymetrySuffix;
     if(!has_printed_welcome_msg)  print_welcome_msg();
+
+    iter_n = checkpoint;
     HydrosphereDataTransfer(bathymetry_name);
     cout << endl << "      bathymetry given by the x-y-z data set:    " 
         << bathymetry_name.c_str();
@@ -80,9 +80,14 @@ cout << endl << "      OGCM: AtmosphereDataTransfer" << endl;
             Transfer_File >> v.x[im-1][j][k];  //non-dimensional
             Transfer_File >> w.x[im-1][j][k];  //non-dimensional
             Transfer_File >> t.x[im-1][j][k];  //non-dimensional
-            Transfer_File >> p_stat.x[im-1][j][k];  //dimensional in hPa
-            Transfer_File >> Evaporation_Dalton.y[j][ k];  //dimensional in mm/d
+            Transfer_File >> p_dyn.x[im-1][j][k];  //non-dimensional
+            Transfer_File >> Evaporation_Dalton.y[j][k];  //dimensional in mm/d
             Transfer_File >> Precipitation.y[j][k];  //dimensional in mm/d
+
+            p_dyn.x[im-1][j][k] = 0.0;
+
+            if(is_land(h, im-1, j, k))
+                Precipitation.y[j][k] = 0.0;
         }
     }
     Transfer_File.close();
